@@ -2,13 +2,20 @@
 % Please edit documentation in R/format_NIOO.R
 \name{format_NIOO}
 \alias{format_NIOO}
-\title{Construct standard summary for Hoge Veluwe population}
+\title{Construct standard summary for main NIOO populations}
 \usage{
 format_NIOO(db = NULL, Species = c(14620, 14640), path = ".")
 }
 \arguments{
 \item{db}{Location of database}
+
+\item{Species}{Which species should be included? (default to great and blue tit)}
+
+\item{path}{Location where output files will be saved.}
+}
+\value{
+Generates 5 .csv files with data in a standard format.
 }
 \description{
-Construct standard summary for Hoge Veluwe population
+Construct standard summary for main NIOO populations
 }
