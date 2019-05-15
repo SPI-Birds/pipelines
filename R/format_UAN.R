@@ -35,7 +35,7 @@ format_UAN <- function(data_folder = choose.dir(), path = "."){
     transmute(BroodYear = year,
            Species = ifelse(SOORT == "pm", "GT", ifelse(SOORT == "pc", "BT", NA)),
            PopID = PopID,
-           BroodID = NN, NestboxName = PL,
+           BroodID = NN, NestboxID = PL,
            FemaleID = RW, MaleID = RM,
            ClutchType = ifelse(TY == 1, "First", ifelse(TY > 1, "Second/replacement", NA)),
            LayingDate = lubridate::dmy(LD),
@@ -106,7 +106,7 @@ format_UAN <- function(data_folder = choose.dir(), path = "."){
   print("Compiling nestbox information...")
 
   Nestbox_data <- BOX_info %>%
-    transmute(NestboxName = GBPL, NestboxID = NA, PopID = SA, Latitude = Y_deg, Longitude = X_deg, StartYear = YEARFIRST, EndYear = YEARLAST)
+    transmute(NestboxID = GBPL, PopID = SA, Latitude = Y_deg, Longitude = X_deg, StartYear = YEARFIRST, EndYear = YEARLAST)
 
   ###################
   # POPULATION DATA #
@@ -127,7 +127,7 @@ format_UAN <- function(data_folder = choose.dir(), path = "."){
     left_join(Plot_species, by = "PopID") %>%
     left_join(Nestbox_data %>%
                 group_by(PopID) %>%
-                summarise(TotalNestbox = length(unique(NestboxName))), by = "PopID") %>%
+                summarise(TotalNestbox = length(unique(NestboxID))), by = "PopID") %>%
     mutate(PopName = c("Boshoek", "Peerdsbos"))
 
   print("Saving .csv files...")
