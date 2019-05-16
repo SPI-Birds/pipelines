@@ -10,14 +10,17 @@
 #' @import DBI
 #' @import purrr
 
-format_NIOO <- function(db = NULL, Species = c(14620, 14640), path = "."){
+format_NIOO <- function(db = NULL,
+                        Species = c(14640, 14620, 13490, 14790, 14610, 14540, 14420, 11220, 14870, 15980),
+                        path = "."){
 
-  if(R.version$arch == "x86_64"){
-
-    stop("On Windows, this process will only work with a 32bit verison of R. \n
-         Please go to Tools > Global Options to change the R version.")
-
-  }
+  #This is not needed. Just check that the Access driver and version of R are both 64 bit
+  # if(R.version$arch == "x86_64"){
+  #
+  #   stop("On Windows, this process will only work with a 32bit verison of R. \n
+  #        Please go to Tools > Global Options to change the R version.")
+  #
+  # }
 
   if(is.null(db)){
 
@@ -31,7 +34,7 @@ format_NIOO <- function(db = NULL, Species = c(14620, 14640), path = "."){
 
   print("Connecting to database...")
 
-  ###N.B. THIS SEEMS TO REQUIRE R 32bit, it returns errors in 64bit
+  ###N.B. AS ABOVE. IF THE ACCESS DRIVER AND VERSION OF R ARE NOT 64 BIT THIS WILL RETURN AN ERROR
   #Connect to the NIOO database backend.
   connection <- DBI::dbConnect(drv = odbc::odbc(), .connection_string = paste0("Driver={Microsoft Access Driver (*.mdb, *.accdb)};Dbq=", db, ";Uid=Admin;Pwd=;"))
 
@@ -73,6 +76,14 @@ format_NIOO <- function(db = NULL, Species = c(14620, 14640), path = "."){
     left_join(dplyr::select(Area_data, AreaID = ID, PopID), by = "AreaID")
 
   ################
+  # SPECIES DATA #
+  ################
+
+  #Create a table of all chosen species and their codes.
+  Species_codes <- dplyr::tibble(SpeciesID = Species,
+                                 Code = c("GT", "BT", "PF", "NH", "CT", "CrT", "WT", "RS", "TC", "TS"))
+
+  ################
   # CAPTURE DATA #
   ################
 
@@ -92,10 +103,6 @@ format_NIOO <- function(db = NULL, Species = c(14620, 14640), path = "."){
                 select(CaptureID, CaptureDate, SpeciesID, Weight, Tarsus, Wing_Length), by = "CaptureID") %>%
     #Filter just GT and BT
     filter(SpeciesID %in% Species) %>%
-    #Create a new column that has the 2 letter ID for species
-    #Include information about the tarsus length measurement method
-    mutate(Species = ifelse(SpeciesID == 14620, "BT", ifelse(SpeciesID == 14640, "GT", NA)),
-           TarsusMethod = NA) %>%
     #Join in info on the capture type. This includes:
     #-Measurements of eggs
     #-Measurements of nestlings/juveniles (i.e. with down)
@@ -111,16 +118,25 @@ format_NIOO <- function(db = NULL, Species = c(14620, 14640), path = "."){
     # -Tarsus
     # -Wing_Length
     # -Age
-    select(CaptureDate, Species, Type = Name, IndvID, CaptureLocation,
-           ReleaseLocation, Weight, Tarsus, TarsusMethod, WingLength = Wing_Length) %>%
+    select(CaptureDate, SpeciesID, Type = Name, IndvID, CaptureLocation,
+           ReleaseLocation, Weight, Tarsus, WingLength = Wing_Length) %>%
+    collect() %>%
+    #Include species letter codes for all species
+    mutate(Species = purrr::map_chr(.x = .$SpeciesID,
+                                    .f = function(.x){
+
+                                      return(as.character(Species_codes[which(Species_codes$Species == .x), "Code"]))
+
+                                    })) %>%
+    #Remove SpeciesID
+    select(-SpeciesID) %>%
     #Arrange by species, indv and date
     arrange(Species, IndvID, CaptureDate) %>%
-    collect() %>%
     #Include three letter population codes for both the capture and release location (some individuals may have been translocated e.g. cross-fostering)
     left_join(dplyr::select(Locations, CaptureLocation = ID, CapturePop = PopID), by = "CaptureLocation") %>%
     left_join(dplyr::select(Locations, ReleaseLocation = ID, ReleasePop = PopID), by = "ReleaseLocation") %>%
     #Arrange columns
-    select(CaptureDate, Species, Type, IndvID, CapturePop, ReleasePop, Mass = Weight, Tarsus, TarsusMethod, WingLength)
+    select(CaptureDate, Species, Type, IndvID, CapturePop, ReleasePop, Mass = Weight, Tarsus, WingLength)
 
 
   ###################
@@ -183,7 +199,7 @@ format_NIOO <- function(db = NULL, Species = c(14620, 14640), path = "."){
 
   Brood_data  <- tbl(connection, "dbo_tbl_Brood") %>%
     #Subset only broods of designated species
-    filter(BroodSpecies %in% Species & BroodLocationID %in% Location_data$ID) %>%
+    filter(BroodSpecies %in% Species & BroodLocationID %in% Locations$ID) %>%
     #Create a new column that has the 2 letter ID for species
     mutate(Species = ifelse(BroodSpecies == 14620, "BT", "GT")) %>%
     #Extract basic info that we want:
