@@ -80,8 +80,9 @@ format_NIOO <- function(db = NULL,
   ################
 
   #Create a table of all chosen species and their codes.
-  Species_codes <- dplyr::tibble(SpeciesID = Species,
-                                 Code = c("GT", "BT", "PF", "NH", "CT", "CrT", "WT", "RS", "TC", "TS"))
+  Species_codes <- dplyr::tibble(SpeciesID = c(14640, 14620, 13490, 14790, 14610, 14540, 14420, 11220, 14870, 15980),
+                                 Code = c("GT", "BT", "PF", "NH", "CT", "CrT", "WT", "RS", "TC", "TS")) %>%
+    filter(SpeciesID %in% Species)
 
   ################
   # CAPTURE DATA #
@@ -109,6 +110,8 @@ format_NIOO <- function(db = NULL,
     #-Measurements of any bird that is already ringed
     left_join(tbl(connection, "dbo_tl_CaptureType") %>%
                 select(CaptureType = ID, Name), by = "CaptureType") %>%
+    #Remove cases where eggs were weighed
+    filter(CaptureType %in% c(1, 2)) %>%
     #Remove only the basic info we need
     # -CaptureDate
     # -CaptureLocation
@@ -119,24 +122,60 @@ format_NIOO <- function(db = NULL,
     # -Wing_Length
     # -Age
     select(CaptureID, CaptureDate, SpeciesID, Type = Name, IndvID, CaptureLocation,
-           ReleaseLocation, Weight, Tarsus, WingLength = Wing_Length) %>%
-    collect() %>%
-    #Include species letter codes for all species
-    mutate(Species = purrr::map_chr(.x = .$SpeciesID,
+           ReleaseLocation, Weight, Tarsus, WingLength = Wing_Length)
+
+  #Determine first capture year for all individuals.
+  #Use a direct SQL query to overcome some of the issues with translation in dbplyr
+  first_capt_qry <- DBI::dbSendQuery(conn = connection,
+                                 "SELECT dbo_tbl_Capture.Individual AS IndvID,
+                                      Min(dbo_tbl_Capture.CaptureDate) AS FirstCapt,
+                                      Max(dbo_tbl_Capture.CaptureType) > 1 AS CaughtAsChick
+                                 FROM dbo_tbl_Capture
+                                 GROUP BY dbo_tbl_Capture.Individual
+                                 ORDER BY dbo_tbl_Capture.Individual;")
+
+  first_capt <- DBI::dbFetch(first_capt_qry) %>%
+    mutate(CaughtAsChick = as.logical(CaughtAsChick * -1))
+
+  DBI::dbClearResult(first_capt_qry)
+
+  #Join into the capture data
+  Capture_data <- Capture_data %>%
+    collect() %T>%
+    {min_age_pb <<- dplyr::progress_estimated(n = nrow(.));
+     species_pb <<- dplyr::progress_estimated(n = nrow(.))} %>%
+    left_join(first_capt, by = "IndvID") %>%
+    #Determine minimum age at each capture.
+    mutate(raw_age = lubridate::interval(FirstCapt, CaptureDate) %/% lubridate::years(1)) %>%
+    #Adjust to include information on the age at first capture
+    mutate(min_age = purrr::map2_dbl(.x = .$raw_age,
+                                     .y = .$CaughtAsChick,
+                                     .f = function(.x, .y){
+
+                                       min_age_pb$tick()$print()
+
+                                       ifelse(.y == FALSE, .x + 1, .x)}
+
+                                     ),
+           #Include species letter codes for all species
+           Species = purrr::map_chr(.x = .$SpeciesID,
                                     .f = function(.x){
 
-                                      return(as.character(Species_codes[which(Species_codes$SpeciesID == .x), "Code"]))
+                                      species_pb$tick()$print()
 
-                                    })) %>%
+                                      as.character(Species_codes[which(Species_codes$SpeciesID == .x), "Code"])
+
+                                    }),
+           CapturePlot = NA, ReleasePlot = NA) %>%
     #Remove SpeciesID
-    select(-SpeciesID) %>%
+    select(-SpeciesID, -raw_age) %>%
     #Arrange by species, indv and date
     arrange(Species, IndvID, CaptureDate) %>%
     #Include three letter population codes for both the capture and release location (some individuals may have been translocated e.g. cross-fostering)
-    left_join(dplyr::select(Locations, CaptureLocation = ID, CapturePop = PopID), by = "CaptureLocation") %>%
-    left_join(dplyr::select(Locations, ReleaseLocation = ID, ReleasePop = PopID), by = "ReleaseLocation") %>%
+    left_join(dplyr::select(Locations, CaptureLocation = ID, CapturePopID = PopID), by = "CaptureLocation") %>%
+    left_join(dplyr::select(Locations, ReleaseLocation = ID, ReleasePopID = PopID), by = "ReleaseLocation") %>%
     #Arrange columns
-    select(CaptureID, CaptureDate, Species, Type, IndvID, CapturePop, ReleasePop, Mass = Weight, Tarsus, WingLength)
+    select(CaptureID, CaptureDate, Species, CapturePopID, CapturePlot, ReleasePopID, ReleasePlot, IndvID, Mass = Weight, Tarsus, WingLength, MinAge = min_age)
 
 
   ###################
@@ -168,10 +207,13 @@ format_NIOO <- function(db = NULL,
     left_join(Sex_data, by = "Sexe") %>%
     #Remove old sex info
     select(-Sexe) %>%
-    collect() %>%
+    collect() %T>%
+    {species_pb <<- dplyr::progress_estimated(n = nrow(.))} %>%
     #Include species letter codes for all species
     mutate(Species = purrr::map_chr(.x = .$SpeciesID,
                                     .f = function(.x){
+
+                                      species_pb$tick()$print()
 
                                       return(as.character(Species_codes[which(Species_codes$SpeciesID == .x), "Code"]))
 
@@ -185,7 +227,14 @@ format_NIOO <- function(db = NULL,
 
            BroodIDFledged = purrr::map2_dbl(.x = BroodID, .y = GeneticBroodID,
                                           #If there is a genetic broodID listed by no regular brood ID assume these are the same.
-                                          .f = ~ifelse(!is.na(.y) & is.na(.x), .y, .x))) %>%
+                                          .f = ~ifelse(!is.na(.y) & is.na(.x), .y, .x)),
+           Sex = purrr::map_chr(.x = .$Sex,
+                                .f = function(.x){
+
+                                  ifelse(grepl(pattern = "male", .x), "male",
+                                         ifelse(grepl(pattern = "female", .x), "female", NA))
+
+                                })) %>%
     select(BroodIDLaid, BroodIDFledged, Species, IndvID, RingNumber, RingYear, RingAge, Sex)
 
   ############################
@@ -199,8 +248,10 @@ format_NIOO <- function(db = NULL,
   Brood_data  <- tbl(connection, "dbo_tbl_Brood") %>%
     #Subset only broods of designated species
     filter(BroodSpecies %in% Species & BroodLocationID %in% Locations$ID) %>%
+    #Link the ClutchType info to text output.
+    left_join(tbl(connection, "dbo_tl_BroodType") %>% select(BroodType = ID, Description), by = "BroodType") %>%
     #Extract basic info that we want:
-    # - BroodYear
+    # - SampleYear
     # - BroodSpecies
     # - BroodLocationID (will be translated to an area name)
     # - RingNumberFemale
@@ -211,20 +262,35 @@ format_NIOO <- function(db = NULL,
     # - NumberHatched
     # - FledgeDate
     # - NumberFledged
-    select(BroodLocation = BroodLocationID, BroodYear, BroodSpecies, BroodID = ID, ClutchType_observed = BroodType, Female_ring = RingNumberFemale, Male_ring = RingNumberMale,
-           LayingDate = LayDate, ClutchSize, HatchDate, NumberHatched, FledgeDate, NumberFledged) %>%
+    select(BroodLocation = BroodLocationID, SampleYear = BroodYear, BroodSpecies, BroodID = ID, ClutchType_observed = Description, Female_ring = RingNumberFemale, Male_ring = RingNumberMale,
+           LayingDate = LayDate, ClutchSize, HatchDate, BroodSize = NumberHatched, FledgeDate, NumberFledged) %>%
     #Collect data so we can use map functions
     #This needs to be done because we are applying our function rowwise.
-    collect() %>%
+    collect() %T>%
+    {species_pb <<- dplyr::progress_estimated(n = nrow(.))} %>%
     #Include species letter codes for all species
     mutate(Species = purrr::map_chr(.x = .$BroodSpecies,
                                     .f = function(.x){
 
+                                      species_pb$print()$tick()
+
                                       return(as.character(Species_codes[which(Species_codes$SpeciesID == .x), "Code"]))
 
-                                    })) %>%
+                                    }),
+           Plot = NA,
+           LayingDate = lubridate::ymd(LayingDate)) %>%
     #Remove SpeciesID
     select(-BroodSpecies) %>%
+    #Adjust ClutchType names to fit "first", "second", "replacement".
+    #This means that we make things like 'different species inside one clutch' into NA/unknown.
+    mutate(ClutchType_observed = purrr::map_chr(.x = .$ClutchType_observed,
+                                                .f = function(.x){
+
+                                                  ifelse(grepl(pattern = "replacement", .x), "replacement",
+                                                         ifelse(grepl(pattern = "second clutch after|probably second|third clutch", .x), "second",
+                                                                ifelse(grepl(pattern = "first clutch", .x), "first", NA)))
+
+                                                })) %>%
     #Join in ID numbers for the parents of the brood from the individual table above
     left_join(select(Indv_data, Female_ring = RingNumber, FemaleID = IndvID) %>%
                 filter(Female_ring != ""), by = "Female_ring") %>%
@@ -232,28 +298,105 @@ format_NIOO <- function(db = NULL,
                 filter(Male_ring != ""), by = "Male_ring") %>%
     #Join location info (including site ID and nestbox ID)
     left_join(dplyr::select(Locations, BroodLocation  = ID, NestboxID = UserPlaceName, PopID), by = "BroodLocation") %>%
+    arrange(PopID, SampleYear, Species)
 
-  #Determine first laying date of every species in every year
-  #We will use this to create our ClutchType_calculated
-  # first_clutch_season <- Brood_data %>%
-  #   group_by(BroodYear, Species) %>%
-  #   summarise(first_clutch = min(lubridate::ymd(LayingDate), na.rm = T)) %>%
-  #   mutate(cutoff = first_clutch + 30)
+  clutchtype <- dplyr::progress_estimated(n = nrow(Brood_data))
 
-  #Create a calculated clutch type to go with the observed one
-    # mutate(ClutchType_calculated = purrr::pmap_chr(.l = list(LD = .$LayingDate,
-    #                                                          BoxID  = .$NestboxID,
-    #                                                          SpeciesCode    = .$Species),
-    #                                                .f = function(LD, BoxID, SpeciesCode, full_data){
-    #
-    #                                                  replace_cutoff <- filter(first_clutch_season, Species == SpeciesCode) %>% pull(cutoff)
-    #
-    #                                                  ifelse()
-    #
-    #                                                }, full_data = .))
+  #Determine laydate cut off for each species and the cumulative sum
+  Brood_data <- Brood_data %>%
+    #Go through and change all NA fledge numbers to 0s
+    rowwise() %>%
+    mutate(NumberFledged = ifelse(is.na(NumberFledged), 0, NumberFledged)) %>%
+    ungroup() %>%
+    group_by(SampleYear, Species) %>%
+    mutate(cutoff = min(LayingDate, na.rm = T) + 30) %>%
+    arrange(SampleYear, Species, NestboxID) %>%
+    group_by(SampleYear, Species, NestboxID) %>%
+    mutate(total_fledge = cumsum(NumberFledged), row = 1:n()) %>%
+    ungroup() %>%
+    mutate(ClutchType_calc = purrr::pmap_chr(.l = list(rows = .$row,
+                                                       cutoff_date = .$cutoff,
+                                                       nr_fledge_before = .$total_fledge,
+                                                       nr_fledge_now = .$NumberFledged,
+                                                       LD = .$LayingDate),
+                                             .f = function(rows, cutoff_date, nr_fledge_before, nr_fledge_now, LD){
 
-    select(BroodYear, Species, PopID, BroodID, NestboxID, FemaleID, MaleID, ClutchType_observed, LayingDate, ClutchSize, HatchDate, NumberHatched, FledgeDate, NumberFledged) %>%
-    arrange(PopID, BroodYear, Species)
+                                               clutchtype$tick()$print()
+
+                                               if(rows == 1){
+
+                                                 if(is.na(LD)){
+
+                                                   return(NA)
+
+                                                 } else {
+
+                                                   if(lubridate::ymd(LD) > lubridate::ymd(cutoff_date)){
+
+                                                     return("replacement")
+
+                                                   } else {
+
+                                                     return("first")
+
+                                                   }
+
+                                                 }
+
+                                               } else {
+
+                                                 if(nr_fledge_before - nr_fledge_now == 0){
+
+                                                   return("replacement")
+
+                                                 } else {
+
+                                                   return("second")
+
+                                                 }
+
+                                               }
+
+                                             })) %>%
+    select(SampleYear, Species, PopID, Plot, NestboxID, BroodID, FemaleID, MaleID, ClutchType_observed, ClutchType_calc, LayingDate, ClutchSize, HatchDate, BroodSize, FledgeDate, NumberFledged)
+
+
+    #This takes hours and still needs to be checked. Run this at a later point.
+    # #Determine average mass and tarsus of each brood
+    # #First we need to detemine the ID of all individuals that fledged in each brood.
+    # avg_mass_qry <- Indv_data %>%
+    #   filter(!is.na(BroodIDFledged)) %>%
+    #   group_by(BroodIDFledged) %>%
+    #   summarise(all_chicks = list(unique(IndvID))) %T>%
+    #   {avg_mass_pb <<- dplyr::progress_estimated(n = nrow(.)*2)} %>%
+    #   #Then we need to go through each row and determine mass and tarsus of these individuals as chicks in capture data
+    #   mutate(avg_mass = purrr::map_dbl(.x = .$all_chicks,
+    #                                    .f = function(.x, Capture_data){
+    #
+    #                                      avg_mass_pb$tick()$print()
+    #
+    #                                      Capture_data %>%
+    #                                        filter(IndvID %in% .x & !is.na(Mass) & Type == "Unringed") %>%
+    #                                        summarise(avg_mass = mean(Mass, na.rm = T)) %>%
+    #                                        pull(avg_mass)
+    #
+    #                                    }, Capture_data),
+    #          avg_tarsus = purrr::map_dbl(.x = .$all_chicks,
+    #                                      .f = function(.x, Capture_data){
+    #
+    #                                        avg_mass_pb$tick()$print()
+    #
+    #                                        Capture_data %>%
+    #                                          filter(IndvID %in% .x & !is.na(Tarsus) & Type == "Unringed") %>%
+    #                                          summarise(avg_tarsus = mean(Tarsus, na.rm = T)) %>%
+    #                                          pull(avg_tarsus)
+    #
+    #                                      }, Capture_data))
+    #
+    # #Join this data into the brood data
+    # Brood_data <- Brood_data %>%
+    #   left_join(avg_mass_qry %>% select(-all_chicks), by = "BroodIDFledged")
+
 
   ################
   # NESTBOX DATA #
@@ -266,9 +409,9 @@ format_NIOO <- function(db = NULL,
     collect() %>%
     #Join together information on the nestbox locations (e.g. latitude, longitude, nestbox name) and information on each nestbox that was there (e.g. how long before it was replaced).
     #This is necessary because one nestbox location could have multiple nestboxes erected at it over the study period.
-    left_join(select(Locations, Location = ID, NestboxName = UserPlaceName, Latitude, Longitude, PopID),
+    left_join(select(Locations, Location = ID, NestboxID = UserPlaceName, Latitude, Longitude, PopID),
               by = "Location") %>%
-    select(NestboxName, NestboxID = ID, PopID, Latitude, Longitude, StartYear, EndYear)
+    select(NestboxID, BoxNumber = ID, PopID, Latitude, Longitude, StartYear, EndYear)
 
   ###################
   # POPULATION DATA #
@@ -278,16 +421,14 @@ format_NIOO <- function(db = NULL,
 
   print("Compiling population summary information...")
 
-  browser()
-
   Pop_data <- Brood_data %>%
     #For each population, determine the first and last year that broods were recorded and the species observed
     group_by(PopID) %>%
-    summarise(StartYear = min(BroodYear), EndYear = max(BroodYear), Species = paste(unique(Species)[order(unique(Species))], collapse = ",")) %>%
+    summarise(StartYear = min(SampleYear), EndYear = max(SampleYear), Species = paste(unique(Species)[order(unique(Species))], collapse = ",")) %>%
     #Determine the number of unique nestbox locations in each population
     left_join(Nestbox_data %>%
                 group_by(PopID) %>%
-                summarise(TotalNestbox = length(unique(NestboxName))), by = "PopID") %>%
+                summarise(TotalNestbox = length(unique(BoxNumber))), by = "PopID") %>%
     #arrange in alphabetical order
     arrange(PopID) %>%
     #Include real names (also in alphabetical order)
