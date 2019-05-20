@@ -48,7 +48,7 @@ format_NIOO <- function(db = NULL,
   main_sites <- c("Buunderkamp", "Lichtenbeek", "Westerheide", "Hoge Veluwe", "Warnsborn", "Vlieland", "Oosterhout", "Liesbosch")
 
   #Extract the corresponding areas from the AreaGroup table
-  Area_data <- tbl(connection, "dbo_tl_AreaGroup") %>%
+  Locations <- tbl(connection, "dbo_tl_AreaGroup") %>%
     collect() %>%
     filter(grepl(pattern = paste(main_sites, collapse = "|"), Name)) %>%
     select(AreaGroup = ID, Name) %>%
@@ -120,21 +120,19 @@ format_NIOO <- function(db = NULL,
                                       return(as.character(Species_codes[which(Species_codes$SpeciesID == .x), "Code"]))
 
                                     })) %>%
-    #Remove SpeciesID
-    select(-SpeciesID) %>%
     #Use map to sort out brood laid and brood fledged
     mutate(BroodIDLaid = purrr::map2_dbl(.x = BroodID, .y = GeneticBroodID,
                                          #If there is no genetic brood listed but there is a regular broodID, assume these are the same
                                          .f = ~ifelse(is.na(.y) & !is.na(.x), .x, .y)),
 
            BroodIDRinged = purrr::map2_dbl(.x = BroodID, .y = GeneticBroodID,
-                                            #If there is a genetic broodID listed by no regular brood ID assume these are the same.
-                                            .f = ~ifelse(!is.na(.y) & is.na(.x), .y, .x)),
+                                           #If there is a genetic broodID listed by no regular brood ID assume these are the same.
+                                           .f = ~ifelse(!is.na(.y) & is.na(.x), .y, .x)),
            Sex = purrr::map_chr(.x = .$Sex,
                                 .f = function(.x){
 
-                                  ifelse(grepl(pattern = "male", .x), "male",
-                                         ifelse(grepl(pattern = "female", .x), "female", NA))
+                                  ifelse(grepl(pattern = "male", .x), "M",
+                                         ifelse(grepl(pattern = "F", .x), "female", "U"))
 
                                 })) %>%
     select(BroodIDLaid, BroodIDRinged, Species, IndvID, RingNumber, RingYear, RingAge, Sex)
@@ -221,17 +219,13 @@ format_NIOO <- function(db = NULL,
 
                                     }),
            CapturePlot = NA, ReleasePlot = NA) %>%
-    #Remove SpeciesID
-    select(-SpeciesID, -raw_age) %>%
     #Arrange by species, indv and date
     arrange(Species, IndvID, CaptureDate) %>%
     #Include three letter population codes for both the capture and release location (some individuals may have been translocated e.g. cross-fostering)
     left_join(dplyr::select(Locations, CaptureLocation = ID, CapturePopID = PopID), by = "CaptureLocation") %>%
     left_join(dplyr::select(Locations, ReleaseLocation = ID, ReleasePopID = PopID), by = "ReleaseLocation") %>%
     #Arrange columns
-    select(CaptureID, CaptureDate, Species, CapturePopID, CapturePlot, ReleasePopID, ReleasePlot, IndvID, Mass = Weight, Tarsus, WingLength, MinAge = min_age)
-
-
+    select(CaptureID, CaptureDate, CaptureTime, Species, CapturePopID, CapturePlot, ReleasePopID, ReleasePlot, IndvID, Mass = Weight, Tarsus, WingLength, MinAge)
 
   ##############
   # BROOD DATA #
@@ -403,9 +397,9 @@ format_NIOO <- function(db = NULL,
     collect() %>%
     #Join together information on the nestbox locations (e.g. latitude, longitude, nestbox name) and information on each nestbox that was there (e.g. how long before it was replaced).
     #This is necessary because one nestbox location could have multiple nestboxes erected at it over the study period.
-    left_join(select(Locations, Location = ID, NestboxID = UserPlaceName, Latitude, Longitude, PopID),
+    left_join(select(Locations, Location = ID, Latitude, Longitude, PopID),
               by = "Location") %>%
-    select(NestboxID, BoxNumber = ID, PopID, Latitude, Longitude, StartYear, EndYear)
+    select(LocationID = Location, NestboxID = ID, NestBoxType, PopID, Latitude, Longitude, StartYear, EndYear)
 
   ###################
   # POPULATION DATA #
