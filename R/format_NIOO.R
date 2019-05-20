@@ -157,12 +157,6 @@ format_NIOO <- function(db = NULL,
                 select(CaptureID, SpeciesID, Weight, Tarsus, Wing_Length), by = "CaptureID") %>%
     #Filter just GT and BT
     filter(SpeciesID %in% Species) %>%
-    #Join in info on the capture type. This includes:
-    #-Measurements of eggs
-    #-Measurements of nestlings/juveniles (i.e. with down)
-    #-Measurements of any bird that is already ringed
-    left_join(tbl(connection, "dbo_tl_CaptureType") %>%
-                select(CaptureType = ID, Name), by = "CaptureType") %>%
     #Remove cases where eggs were weighed
     filter(CaptureType %in% c(1, 2)) %>%
     #Remove only the basic info we need
@@ -174,42 +168,41 @@ format_NIOO <- function(db = NULL,
     # -Tarsus
     # -Wing_Length
     # -Age
-    select(CaptureID, CaptureDate, CaptureTime, SpeciesID, Type = Name, IndvID, CaptureLocation,
-           ReleaseLocation, Weight, Tarsus, WingLength = Wing_Length)
+    select(CaptureID, CaptureDate, CaptureTime, SpeciesID, IndvID, CaptureLocation,
+           ReleaseLocation, Weight, Tarsus, WingLength = Wing_Length) %>%
     #Join in information on when the individual was first ringed (left join from the IndvData)
+    #Need to collect to prevent warnings about different file sources
+    collect() %>%
+    left_join(select(Indv_data, IndvID, RingYear, RingAge), by = "IndvID") %>%
+    #Determine different in age at each capture (in years)
+    mutate(MinAge = lubridate::year(lubridate::ymd(CaptureDate)) - RingYear) %>%
+    #Adjust this value to account for age at ringing
+    mutate(MinAge = toupper(as.hexmode(purrr::pmap_dbl(.l = list(.x = RingAge,
+                                                   .y = MinAge),
+                                         .f = function(.x, .y){
 
+                                           if(is.na(.x) | .x == 0){
 
-  #Determine first capture year for all individuals.
-  #Use a direct SQL query to overcome some of the issues with translation in dbplyr
+                                             return(NA)
 
-  first_capt <- DBI::dbGetQuery(conn = connection,
-                                 "SELECT dbo_tbl_Capture.Individual AS IndvID,
-                                      Min(dbo_tbl_Capture.CaptureDate) AS FirstCapt,
-                                      Max(dbo_tbl_Capture.CaptureType) > 1 AS CaughtAsChick
-                                 FROM dbo_tbl_Capture
-                                 GROUP BY dbo_tbl_Capture.Individual
-                                 ORDER BY dbo_tbl_Capture.Individual;") %>%
-    mutate(CaughtAsChick = as.logical(CaughtAsChick * -1))
+                                           } else {
 
-  #Join into the capture data
-  Capture_data <- Capture_data %>%
-    collect() %T>%
-    {min_age_pb <<- dplyr::progress_estimated(n = nrow(.));
-     species_pb <<- dplyr::progress_estimated(n = nrow(.))} %>%
-    left_join(first_capt, by = "IndvID") %>%
-    #Determine minimum age at each capture.
-    mutate(raw_age = lubridate::interval(FirstCapt, CaptureDate) %/% lubridate::years(1)) %>%
+                                             if(.x < 4){
+
+                                               return(3 + 2*(.y))
+
+                                             } else {
+
+                                               return(.x + 2*(.y))
+
+                                             }
+
+                                           }
+
+                                         })))) %T>%
+    {species_pb <<- dplyr::progress_estimated(n = nrow(.))} %>%
     #Adjust to include information on the age at first capture
-    mutate(min_age = purrr::map2_dbl(.x = .$raw_age,
-                                     .y = .$CaughtAsChick,
-                                     .f = function(.x, .y){
-
-                                       min_age_pb$tick()$print()
-
-                                       ifelse(.y == FALSE, .x + 1, .x)}
-
-                                     ),
-           #Include species letter codes for all species
+    mutate(#Include species letter codes for all species
            Species = purrr::map_chr(.x = .$SpeciesID,
                                     .f = function(.x){
 
