@@ -11,7 +11,7 @@
 #' @import purrr
 
 format_NIOO <- function(db = NULL,
-                        Species = c(14640, 14620, 13490, 14790, 14610, 14540, 14420, 11220, 14870, 15980),
+                        Species = c(14640, 14620, 13490, 14790, 14610, 15980),
                         path = "."){
 
   #This is not needed. Just check that the Access driver and version of R are both 64 bit
@@ -47,136 +47,33 @@ format_NIOO <- function(db = NULL,
   #For now, we are subsetting the data to just include the main study sites.
   main_sites <- c("Buunderkamp", "Lichtenbeek", "Westerheide", "Hoge Veluwe", "Warnsborn", "Vlieland", "Oosterhout", "Liesbosch")
 
-  #Extract the area table
-  #Areas are inside populations (e.g. Hoge Veluwe has multiple area codes)
-  Area_data     <- tbl(connection, "dbo_tbl_Area") %>%
+  #Extract the corresponding areas from the AreaGroup table
+  Area_data <- tbl(connection, "dbo_tl_AreaGroup") %>%
     collect() %>%
-    #Only include areas that correspond to the main sites specified above
-    filter(grepl(paste(main_sites, collapse = "|"), Name)) %>%
-    #Change names to just use the three letter codes of the sites
-    mutate(PopID = purrr::map_chr(.x = Name, .f = function(x, main_sites){
+    filter(grepl(pattern = paste(main_sites, collapse = "|"), Name)) %>%
+    select(AreaGroup = ID, Name) %>%
+    #Create three letter PopID code
+    mutate(PopID = purrr::map_chr(.x = Name,
+                                  .f = function(.x){
 
-      site_name <- main_sites[unlist(lapply(main_sites, function(y){
+                                    toupper(substr(.x, start = 1, stop = 3))
 
-        grepl(y, x)
-
-      }))]
-
-      return(toupper(substr(site_name, 1, 3)))
-
-    }, main_sites))
-
-  #Extract the nestbox locations.
-  #Nestbox locations are WITHIN areas, which are within populations.
-  Locations <- tbl(connection, "dbo_tbl_Location") %>%
-    collect() %>%
-    #For now, we use the full UserPlaceName e.g. HV.0506.0 instead of splitting it up.
-    #This is probably easier because it will make sure that every nestbox ID is unique.
-    #Join in the names from the area table
-    left_join(dplyr::select(Area_data, AreaID = ID, PopID), by = "AreaID")
+                                  })) %>%
+    #Join in all the study areas (i.e. 'plots' within each population) that are included in these 8 target populations
+    left_join(tbl(connection, "dbo_tx_Area_AreaGroup") %>% select(Area, AreaGroup) %>% collect(), by = "AreaGroup") %>%
+    rename(AreaID = Area) %>%
+    #Join in all locations (i.e. nest boxes) that were inside each plot (i.e. AreaID) within each population (i.e. AreaGroup)
+    left_join(tbl(connection, "dbo_tbl_Location") %>% select(ID, UserPlaceName, AreaID, Latitude, Longitude) %>% collect(),
+              by = "AreaID")
 
   ################
   # SPECIES DATA #
   ################
 
   #Create a table of all chosen species and their codes.
-  Species_codes <- dplyr::tibble(SpeciesID = c(14640, 14620, 13490, 14790, 14610, 14540, 14420, 11220, 14870, 15980),
-                                 Code = c("GT", "BT", "PF", "NH", "CT", "CrT", "WT", "RS", "TC", "TS")) %>%
+  Species_codes <- dplyr::tibble(SpeciesID = c(14640, 14620, 13490, 14790, 14610, 15980),
+                                 Code = c("GT", "BT", "PF", "NH", "CT", "TS")) %>%
     filter(SpeciesID %in% Species)
-
-  ################
-  # CAPTURE DATA #
-  ################
-
-  #This contains info on what the different age codes mean.
-  #Age_data <- tbl(connection, "dbo_tl_Age") %>%
-    #select(Age_join = ID, Age = Description)
-
-  print("Compiling capture information...")
-
-  #Capture data includes all times an individual was captured (with measurements like mass, tarsus etc.).
-  #This will include first capture as nestling (for residents)
-  #This means there will be multiple records for a single individual.
-  Capture_data <- tbl(connection, "dbo_tbl_Capture") %>%
-    select(CaptureID = ID, IndvID = Individual, CaptureLocation, ReleaseLocation, CaptureType) %>%
-    #Join in weight, tarsus and wing_length from secondary capture data table.
-    left_join(tbl(connection, "dbo_vw_MI_CaptureCaptureData") %>%
-                select(CaptureID, CaptureDate, SpeciesID, Weight, Tarsus, Wing_Length), by = "CaptureID") %>%
-    #Filter just GT and BT
-    filter(SpeciesID %in% Species) %>%
-    #Join in info on the capture type. This includes:
-    #-Measurements of eggs
-    #-Measurements of nestlings/juveniles (i.e. with down)
-    #-Measurements of any bird that is already ringed
-    left_join(tbl(connection, "dbo_tl_CaptureType") %>%
-                select(CaptureType = ID, Name), by = "CaptureType") %>%
-    #Remove cases where eggs were weighed
-    filter(CaptureType %in% c(1, 2)) %>%
-    #Remove only the basic info we need
-    # -CaptureDate
-    # -CaptureLocation
-    # -IndividualNumber
-    # -SpeciesID
-    # -Weight
-    # -Tarsus
-    # -Wing_Length
-    # -Age
-    select(CaptureID, CaptureDate, SpeciesID, Type = Name, IndvID, CaptureLocation,
-           ReleaseLocation, Weight, Tarsus, WingLength = Wing_Length)
-
-  #Determine first capture year for all individuals.
-  #Use a direct SQL query to overcome some of the issues with translation in dbplyr
-  first_capt_qry <- DBI::dbSendQuery(conn = connection,
-                                 "SELECT dbo_tbl_Capture.Individual AS IndvID,
-                                      Min(dbo_tbl_Capture.CaptureDate) AS FirstCapt,
-                                      Max(dbo_tbl_Capture.CaptureType) > 1 AS CaughtAsChick
-                                 FROM dbo_tbl_Capture
-                                 GROUP BY dbo_tbl_Capture.Individual
-                                 ORDER BY dbo_tbl_Capture.Individual;")
-
-  first_capt <- DBI::dbFetch(first_capt_qry) %>%
-    mutate(CaughtAsChick = as.logical(CaughtAsChick * -1))
-
-  DBI::dbClearResult(first_capt_qry)
-
-  #Join into the capture data
-  Capture_data <- Capture_data %>%
-    collect() %T>%
-    {min_age_pb <<- dplyr::progress_estimated(n = nrow(.));
-     species_pb <<- dplyr::progress_estimated(n = nrow(.))} %>%
-    left_join(first_capt, by = "IndvID") %>%
-    #Determine minimum age at each capture.
-    mutate(raw_age = lubridate::interval(FirstCapt, CaptureDate) %/% lubridate::years(1)) %>%
-    #Adjust to include information on the age at first capture
-    mutate(min_age = purrr::map2_dbl(.x = .$raw_age,
-                                     .y = .$CaughtAsChick,
-                                     .f = function(.x, .y){
-
-                                       min_age_pb$tick()$print()
-
-                                       ifelse(.y == FALSE, .x + 1, .x)}
-
-                                     ),
-           #Include species letter codes for all species
-           Species = purrr::map_chr(.x = .$SpeciesID,
-                                    .f = function(.x){
-
-                                      species_pb$tick()$print()
-
-                                      as.character(Species_codes[which(Species_codes$SpeciesID == .x), "Code"])
-
-                                    }),
-           CapturePlot = NA, ReleasePlot = NA) %>%
-    #Remove SpeciesID
-    select(-SpeciesID, -raw_age) %>%
-    #Arrange by species, indv and date
-    arrange(Species, IndvID, CaptureDate) %>%
-    #Include three letter population codes for both the capture and release location (some individuals may have been translocated e.g. cross-fostering)
-    left_join(dplyr::select(Locations, CaptureLocation = ID, CapturePopID = PopID), by = "CaptureLocation") %>%
-    left_join(dplyr::select(Locations, ReleaseLocation = ID, ReleasePopID = PopID), by = "ReleaseLocation") %>%
-    #Arrange columns
-    select(CaptureID, CaptureDate, Species, CapturePopID, CapturePlot, ReleasePopID, ReleasePlot, IndvID, Mass = Weight, Tarsus, WingLength, MinAge = min_age)
-
 
   ###################
   # INDIVIDUAL DATA #
@@ -222,12 +119,12 @@ format_NIOO <- function(db = NULL,
     select(-SpeciesID) %>%
     #Use map to sort out brood laid and brood fledged
     mutate(BroodIDLaid = purrr::map2_dbl(.x = BroodID, .y = GeneticBroodID,
-                                          #If there is no genetic brood listed but there is a regular broodID, assume these are the same
-                                          .f = ~ifelse(is.na(.y) & !is.na(.x), .x, .y)),
+                                         #If there is no genetic brood listed but there is a regular broodID, assume these are the same
+                                         .f = ~ifelse(is.na(.y) & !is.na(.x), .x, .y)),
 
-           BroodIDFledged = purrr::map2_dbl(.x = BroodID, .y = GeneticBroodID,
-                                          #If there is a genetic broodID listed by no regular brood ID assume these are the same.
-                                          .f = ~ifelse(!is.na(.y) & is.na(.x), .y, .x)),
+           BroodIDRinged = purrr::map2_dbl(.x = BroodID, .y = GeneticBroodID,
+                                            #If there is a genetic broodID listed by no regular brood ID assume these are the same.
+                                            .f = ~ifelse(!is.na(.y) & is.na(.x), .y, .x)),
            Sex = purrr::map_chr(.x = .$Sex,
                                 .f = function(.x){
 
@@ -235,9 +132,101 @@ format_NIOO <- function(db = NULL,
                                          ifelse(grepl(pattern = "female", .x), "female", NA))
 
                                 })) %>%
-    select(BroodIDLaid, BroodIDFledged, Species, IndvID, RingNumber, RingYear, RingAge, Sex)
+    select(BroodIDLaid, BroodIDRinged, Species, IndvID, RingNumber, RingYear, RingAge, Sex)
 
-  ############################
+  ################
+  # CAPTURE DATA #
+  ################
+
+  #This contains info on what the different age codes mean.
+  #Age_data <- tbl(connection, "dbo_tl_Age") %>%
+    #select(Age_join = ID, Age = Description)
+
+  print("Compiling capture information...")
+
+  #Capture data includes all times an individual was captured (with measurements like mass, tarsus etc.).
+  #This will include first capture as nestling (for residents)
+  #This means there will be multiple records for a single individual.
+  Capture_data <- tbl(connection, "dbo_tbl_Capture") %>%
+    select(CaptureID = ID, CaptureDate, CaptureTime, IndvID = Individual, CaptureLocation, ReleaseLocation, CaptureType) %>%
+    #Join in weight, tarsus and wing_length from secondary capture data table.
+    left_join(tbl(connection, "dbo_vw_MI_CaptureCaptureData") %>%
+                select(CaptureID, SpeciesID, Weight, Tarsus, Wing_Length), by = "CaptureID") %>%
+    #Filter just GT and BT
+    filter(SpeciesID %in% Species) %>%
+    #Join in info on the capture type. This includes:
+    #-Measurements of eggs
+    #-Measurements of nestlings/juveniles (i.e. with down)
+    #-Measurements of any bird that is already ringed
+    left_join(tbl(connection, "dbo_tl_CaptureType") %>%
+                select(CaptureType = ID, Name), by = "CaptureType") %>%
+    #Remove cases where eggs were weighed
+    filter(CaptureType %in% c(1, 2)) %>%
+    #Remove only the basic info we need
+    # -CaptureDate
+    # -CaptureLocation
+    # -IndividualNumber
+    # -SpeciesID
+    # -Weight
+    # -Tarsus
+    # -Wing_Length
+    # -Age
+    select(CaptureID, CaptureDate, CaptureTime, SpeciesID, Type = Name, IndvID, CaptureLocation,
+           ReleaseLocation, Weight, Tarsus, WingLength = Wing_Length)
+    #Join in information on when the individual was first ringed (left join from the IndvData)
+
+
+  #Determine first capture year for all individuals.
+  #Use a direct SQL query to overcome some of the issues with translation in dbplyr
+
+  first_capt <- DBI::dbGetQuery(conn = connection,
+                                 "SELECT dbo_tbl_Capture.Individual AS IndvID,
+                                      Min(dbo_tbl_Capture.CaptureDate) AS FirstCapt,
+                                      Max(dbo_tbl_Capture.CaptureType) > 1 AS CaughtAsChick
+                                 FROM dbo_tbl_Capture
+                                 GROUP BY dbo_tbl_Capture.Individual
+                                 ORDER BY dbo_tbl_Capture.Individual;") %>%
+    mutate(CaughtAsChick = as.logical(CaughtAsChick * -1))
+
+  #Join into the capture data
+  Capture_data <- Capture_data %>%
+    collect() %T>%
+    {min_age_pb <<- dplyr::progress_estimated(n = nrow(.));
+     species_pb <<- dplyr::progress_estimated(n = nrow(.))} %>%
+    left_join(first_capt, by = "IndvID") %>%
+    #Determine minimum age at each capture.
+    mutate(raw_age = lubridate::interval(FirstCapt, CaptureDate) %/% lubridate::years(1)) %>%
+    #Adjust to include information on the age at first capture
+    mutate(min_age = purrr::map2_dbl(.x = .$raw_age,
+                                     .y = .$CaughtAsChick,
+                                     .f = function(.x, .y){
+
+                                       min_age_pb$tick()$print()
+
+                                       ifelse(.y == FALSE, .x + 1, .x)}
+
+                                     ),
+           #Include species letter codes for all species
+           Species = purrr::map_chr(.x = .$SpeciesID,
+                                    .f = function(.x){
+
+                                      species_pb$tick()$print()
+
+                                      as.character(Species_codes[which(Species_codes$SpeciesID == .x), "Code"])
+
+                                    }),
+           CapturePlot = NA, ReleasePlot = NA) %>%
+    #Remove SpeciesID
+    select(-SpeciesID, -raw_age) %>%
+    #Arrange by species, indv and date
+    arrange(Species, IndvID, CaptureDate) %>%
+    #Include three letter population codes for both the capture and release location (some individuals may have been translocated e.g. cross-fostering)
+    left_join(dplyr::select(Locations, CaptureLocation = ID, CapturePopID = PopID), by = "CaptureLocation") %>%
+    left_join(dplyr::select(Locations, ReleaseLocation = ID, ReleasePopID = PopID), by = "ReleaseLocation") %>%
+    #Arrange columns
+    select(CaptureID, CaptureDate, Species, CapturePopID, CapturePlot, ReleasePopID, ReleasePlot, IndvID, Mass = Weight, Tarsus, WingLength, MinAge = min_age)
+
+
 
   ##############
   # BROOD DATA #
