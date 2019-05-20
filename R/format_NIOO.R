@@ -11,13 +11,13 @@
 #' @import purrr
 
 format_NIOO <- function(db = NULL,
-                        Species = c(14640, 14620, 13490, 14790, 14610, 15980),
+                        Species = NULL,
                         path = "."){
 
   #This is not needed. Just check that the Access driver and version of R are both 64 bit
   # if(R.version$arch == "x86_64"){
   #
-  #   stop("On Windows, this process will only work with a 32bit verison of R. \n
+  #   stop("On Windows, this process will onl y work with a 32bit verison of R. \n
   #        Please go to Tools > Global Options to change the R version.")
   #
   # }
@@ -70,10 +70,15 @@ format_NIOO <- function(db = NULL,
   # SPECIES DATA #
   ################
 
-  #Create a table of all chosen species and their codes.
-  Species_codes <- dplyr::tibble(SpeciesID = c(14640, 14620, 13490, 14790, 14610, 15980),
-                                 Code = c("GT", "BT", "PF", "NH", "CT", "TS")) %>%
-    filter(SpeciesID %in% Species)
+  #Create a subset of chosen species
+  #Where argument 'species' is unused, include all species in the table
+  if(is.null(Species)){
+
+    Species <- Species_codes$SpeciesID
+
+  }
+
+  Species_codes <- filter(Species_codes, SpeciesID %in% Species)
 
   ###################
   # INDIVIDUAL DATA #
