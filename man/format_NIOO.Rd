@@ -2,20 +2,27 @@
 % Please edit documentation in R/format_NIOO.R
 \name{format_NIOO}
 \alias{format_NIOO}
-\title{Construct standard summary for main NIOO populations}
+\title{Construct standard summary for NIOO data.}
 \usage{
-format_NIOO(db = NULL, Species = c(14620, 14640), path = ".")
+format_NIOO(db = NULL, Species = NULL, path = ".")
 }
 \arguments{
-\item{db}{Location of database}
+\item{db}{Location of database file.}
 
-\item{Species}{Which species should be included? (default to great and blue tit)}
+\item{Species}{Which species should be included? If blank will return all major species (see details below).}
 
-\item{path}{Location where output files will be saved.}
+\item{path}{Location where output csv files will be saved.}
 }
 \value{
 Generates 5 .csv files with data in a standard format.
 }
 \description{
-Construct standard summary for main NIOO populations
+A pipeline to produce a standard output for 8 hole-nesting bird study populations
+at the Netherlands Institute of Ecology (NIOO-KNAW).
+Output follows the HNB standard breeding data format.
+}
+\details{
+\strong{Species}: By default will include great tit \emph{Parus major}; blue tit \emph{Cyanistes caeruleus};
+pied flycatcher \emph{Ficedula hypoleuca}; Eurasian nuthatch \emph{Sitta europaea};
+coal tit \emph{Periparus ater}; and tree sparrow \emph{Passer montanus}.
 }
