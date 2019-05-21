@@ -260,8 +260,6 @@ format_NIOO <- function(db = NULL,
                                     }),
            Plot = NA,
            LayingDate = lubridate::ymd(LayingDate)) %>%
-    #Remove SpeciesID
-    select(-BroodSpecies) %>%
     #Adjust ClutchType names to fit "first", "second", "replacement".
     #This means that we make things like 'different species inside one clutch' into NA/unknown.
     mutate(ClutchType_observed = purrr::map_chr(.x = .$ClutchType_observed,
@@ -272,66 +270,111 @@ format_NIOO <- function(db = NULL,
                                                                 ifelse(grepl(pattern = "first clutch", .x), "first", NA)))
 
                                                 })) %>%
+    #Make individuals with no ring number into NA
+    mutate(Female_ring = purrr::map_chr(.x = .$Female_ring,
+                                        .f = ~ifelse(.x == "0000000000"|.x == "",
+                                                     NA, .x)),
+           Male_ring = purrr::map_chr(.x = .$Male_ring,
+                                      .f = ~ifelse(.x == "0000000000"|.x == "",
+                                                   NA, .x))) %>%
+    ########### N.B. CURRENTLY THERE ARE A FEW (~25) RING NUMBERS THAT ARE ASSIGNED TO 2 INDIVIDUALS
+    ########### THIS MEANS THAT WE WILL GET A FEW DUPLICATE RECORDS WITH THIS APPROACH
+    ########### THESE NEED TO BE ADDRESSED IN THE DATABASE BEFORE THEY CAN BE FIXED HERE
     #Join in ID numbers for the parents of the brood from the individual table above
     left_join(select(Indv_data, Female_ring = RingNumber, FemaleID = IndvID) %>%
                 filter(Female_ring != ""), by = "Female_ring") %>%
     left_join(select(Indv_data, Male_ring = RingNumber, MaleID = IndvID) %>%
                 filter(Male_ring != ""), by = "Male_ring") %>%
     #Join location info (including site ID and nestbox ID)
-    left_join(dplyr::select(Locations, BroodLocation  = ID, NestboxID = UserPlaceName, PopID), by = "BroodLocation") %>%
-    arrange(PopID, SampleYear, Species)
+    left_join(dplyr::select(Locations, BroodLocation = ID, PopID), by = "BroodLocation") %>%
+    arrange(PopID, SampleYear, Species, FemaleID)
 
   clutchtype <- dplyr::progress_estimated(n = nrow(Brood_data))
 
   #Determine laydate cut off for each species and the cumulative sum
-  Brood_data <- Brood_data %>%
+  #Brood_data <- Brood_data %>%
+  x <- Brood_data %>%
     #Go through and change all NA fledge numbers to 0s
+    ### NEED TO SEND LOUIS A MESSAGE ABOUT THESE.
     rowwise() %>%
     mutate(NumberFledged = ifelse(is.na(NumberFledged), 0, NumberFledged)) %>%
     ungroup() %>%
-    group_by(SampleYear, Species) %>%
-    mutate(cutoff = min(LayingDate, na.rm = T) + 30) %>%
-    arrange(SampleYear, Species, NestboxID) %>%
-    group_by(SampleYear, Species, NestboxID) %>%
+    #Determine the 30 day cut-off for all species
+    ### NEED TO GO THROUGH AND DETERMINE WHETHER THE 30 DAY CUT OFF IS REASONABLE FOR ALL SPECIES
+    ### LOOK AT THIS LATER
+    group_by(PopID, SampleYear, Species) %>%
+    mutate(cutoff = tryCatch(expr = min(LayingDate, na.rm = T) + 30,
+           warning = function(...) return(NA))) %>%
+    # Determine brood type for each nest based on FEMALE (not nestbox)
+    arrange(SampleYear, Species, FemaleID) %>%
+    group_by(SampleYear, Species, FemaleID) %>%
     mutate(total_fledge = cumsum(NumberFledged), row = 1:n()) %>%
     ungroup() %>%
     mutate(ClutchType_calc = purrr::pmap_chr(.l = list(rows = .$row,
+                                                       femID = .$FemaleID,
                                                        cutoff_date = .$cutoff,
                                                        nr_fledge_before = .$total_fledge,
                                                        nr_fledge_now = .$NumberFledged,
                                                        LD = .$LayingDate),
-                                             .f = function(rows, cutoff_date, nr_fledge_before, nr_fledge_now, LD){
+                                             .f = function(rows, femID, cutoff_date, nr_fledge_before, nr_fledge_now, LD){
 
                                                clutchtype$tick()$print()
 
-                                               if(rows == 1){
+                                               #Firstly, check if the nest has a LD
+                                               #If not, we cannot calculate BroodType
 
-                                                 if(is.na(LD)){
+                                               if(is.na(LD)){
 
-                                                   return(NA)
+                                                 return(NA)
 
-                                                 } else {
+                                               }
 
-                                                   if(lubridate::ymd(LD) > lubridate::ymd(cutoff_date)){
+                                               #Next, check if the female is banded
+                                               #If a female is unbanded we assume the nest can NEVER be secondary
+                                               #If she had had a successful clutch before she would have been caught and banded
+                                               #Therefore it can only be first or replacement (based on 30d rule)
+                                               if(is.na(femID)){
 
-                                                     return("replacement")
-
-                                                   } else {
-
-                                                     return("first")
-
-                                                   }
-
-                                                 }
-
-                                               } else {
-
-                                                 if(nr_fledge_before - nr_fledge_now == 0){
+                                                 if(lubridate::ymd(LD) > lubridate::ymd(cutoff_date)){
 
                                                    return("replacement")
 
                                                  } else {
 
+                                                   return("first")
+
+                                                 }
+
+                                               }
+
+                                               #If she is banded, then we need to apply all rules
+                                               #If it's the first nest recorded for this female in this year...
+                                               if(rows == 1){
+
+                                                 #If it doesn't meet the 30 day rule, then name it as replacement
+                                                 if(lubridate::ymd(LD) > lubridate::ymd(cutoff_date)){
+
+                                                   return("replacement")
+
+                                                 } else {
+
+                                                   #Otherwise, we assume it was the first clutch
+                                                   return("first")
+
+                                                 }
+
+                                                 #If it's NOT the first nest of the season for this female
+                                               } else {
+
+                                                 #If there have been no fledglings before this point..
+                                                 if(nr_fledge_before - nr_fledge_now == 0){
+
+                                                   #Then it is a replacement
+                                                   return("replacement")
+
+                                                 } else {
+
+                                                   #Otherwise, it is a secondary clutch
                                                    return("second")
 
                                                  }
@@ -339,7 +382,7 @@ format_NIOO <- function(db = NULL,
                                                }
 
                                              })) %>%
-    select(SampleYear, Species, PopID, Plot, NestboxID, BroodID, FemaleID, MaleID, ClutchType_observed, ClutchType_calc, LayingDate, ClutchSize, HatchDate, BroodSize, FledgeDate, NumberFledged)
+    select(SampleYear, Species, PopID, Plot, LocationID = BroodLocation, BroodID, FemaleID, MaleID, ClutchType_observed, ClutchType_calc, LayingDate, ClutchSize, HatchDate, BroodSize, FledgeDate, NumberFledged)
 
 
     #This takes hours and still needs to be checked. Run this at a later point.
