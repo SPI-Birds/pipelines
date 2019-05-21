@@ -442,29 +442,6 @@ format_NIOO <- function(db = NULL,
               by = "Location") %>%
     select(LocationID = Location, NestboxID = ID, NestBoxType, PopID, Latitude, Longitude, StartYear, EndYear)
 
-  ###################
-  # POPULATION DATA #
-  ###################
-
-  #Create a final data frame that has summary information about each population.
-
-  print("Compiling population summary information...")
-
-  Pop_data <- Brood_data %>%
-    #For each population, determine the first and last year that broods were recorded and the species observed
-    group_by(PopID) %>%
-    summarise(StartYear = min(SampleYear), EndYear = max(SampleYear), Species = paste(unique(Species)[order(unique(Species))], collapse = ",")) %>%
-    #Determine the number of unique nestbox locations in each population
-    left_join(Nestbox_data %>%
-                group_by(PopID) %>%
-                summarise(TotalNestbox = length(unique(BoxNumber))), by = "PopID") %>%
-    #arrange in alphabetical order
-    arrange(PopID) %>%
-    #Include real names (also in alphabetical order)
-    mutate(PopName = as.character(main_sites[order(main_sites)])) %>%
-    #Arrange columns into a nice order
-    select(PopID, PopName, StartYear, EndYear, Species, TotalNestbox)
-
   print("Saving .csv files...")
 
   write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_NIOO.csv"), row.names = F)
@@ -474,8 +451,6 @@ format_NIOO <- function(db = NULL,
   write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_NIOO.csv"), row.names = F)
 
   write.csv(x = Nestbox_data, file = paste0(path, "\\Nestbox_data_NIOO.csv"), row.names = F)
-
-  write.csv(x = Pop_data, file = paste0(path, "\\Summary_data_NIOO.csv"), row.names = F)
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
