@@ -241,7 +241,7 @@ format_NIOO <- function(db = NULL,
     left_join(dplyr::select(Locations, CaptureLocation = ID, CapturePopID = PopID), by = "CaptureLocation") %>%
     left_join(dplyr::select(Locations, ReleaseLocation = ID, ReleasePopID = PopID), by = "ReleaseLocation") %>%
     #Arrange columns
-    select(CaptureID, CaptureDate, CaptureTime, IndvID, Species, CapturePopID, CapturePlot, ReleasePopID, ReleasePlot, Mass = Weight, Tarsus, WingLength, MinAge)
+    select(CaptureID, CaptureDate, CaptureTime, IndvID, Species, CapturePopID, CaptureLocation, ReleasePopID, ReleaseLocation, Mass = Weight, Tarsus, WingLength, MinAge)
 
   ##############
   # BROOD DATA #
@@ -271,8 +271,16 @@ format_NIOO <- function(db = NULL,
     # - FledgeDate
     # - NumberFledged
     select(SampleYear = BroodYear, BroodID = ID, BroodSpecies, BroodLocation = BroodLocationID, Female_ring = RingNumberFemale, Male_ring = RingNumberMale,
-           ClutchType_observed = Description, LayingDate = LayDate, ClutchSize, HatchDate, BroodSize = NumberHatched, FledgeDate, NumberFledged) %>%
-    collect() %T>%
+           ClutchType_observed = Description, LayingDate = LayDate, LayingDateError = LayDateDeviation,
+           ClutchSize, HatchDate, BroodSize = NumberHatched, BroodSizeError = NumberHatchedDeviation,
+           FledgeDate, NumberFledged, NumberFledgedError = NumberFledgedDeviation) %>%
+    collect() %>%
+    #Account for error in brood size
+    mutate(BroodSizeError = BroodSizeError/2, NumberFledgedError = NumberFledgedError/2, LayingDateError = LayingDateError/2,
+           BroodSize = BroodSize + BroodSizeError,
+           NumberFledged = NumberFledged + NumberFledgedError,
+           Mar1 = lubridate::ymd(paste0(SampleYear, "-3-1")),
+           LayingDate = as.numeric((lubridate::ymd(LayingDate) - Mar1) + LayingDateError)) %T>%
     #Turn species into letter codes
     {species_pb <<- dplyr::progress_estimated(n = nrow(.))} %>%
     #Include species letter codes for all species
@@ -284,8 +292,7 @@ format_NIOO <- function(db = NULL,
                                       return(as.character(Species_codes[which(Species_codes$SpeciesID == .x), "Code"]))
 
                                     }),
-           Plot = NA,
-           LayingDate = lubridate::ymd(LayingDate)) %>%
+           Plot = NA) %>%
     #Adjust ClutchType names to fit "first", "second", "replacement".
     #We ignore any uncertainty (e.g. "probably second" is just listed as "second")
     #ClutchTypes like 'different species inside one clutch' are listed as NA.
@@ -408,7 +415,8 @@ format_NIOO <- function(db = NULL,
                                                }
 
                                              })) %>%
-    select(SampleYear, Species, PopID, Plot, LocationID = BroodLocation, BroodID, FemaleID, MaleID, ClutchType_observed, ClutchType_calc, LayingDate, ClutchSize, HatchDate, BroodSize, FledgeDate, NumberFledged)
+    select(SampleYear, Species, PopID, Plot, LocationID = BroodLocation, BroodID, FemaleID, MaleID, ClutchType_observed, ClutchType_calc, LayingDate, LayingDateError,
+           ClutchSize, HatchDate, BroodSize, BroodSizeError, FledgeDate, NumberFledged, NumberFledgedError)
 
   #Next, we calculate mean mass, tarsus for all chicks in the brood
   #AT 14-16 DAYS POST HATCHING!!!
