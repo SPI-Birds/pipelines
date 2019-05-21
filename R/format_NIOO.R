@@ -109,7 +109,13 @@ format_NIOO <- function(db = NULL,
     left_join(Sex_data, by = "Sexe") %>%
     #Remove old sex info
     select(-Sexe) %>%
-    collect() %T>%
+    left_join(tbl(connection, "dbo_tbl_Brood") %>% select(GeneticBroodID = ID, ID = BroodLocationID), by = "GeneticBroodID") %>%
+    collect() %>%
+    #Add in first capture location
+    left_join(tbl(connection, "dbo_tbl_Capture") %>% arrange(Individual, CaptureDate, CaptureTime) %>% select(IndvID = Individual, CaptureLocation) %>% group_by(IndvID) %>%
+              collect() %>% slice(1), by = "IndvID") %>%
+    #Relate the capturelocation to the popID
+    left_join(select(Locations, PopID, CaptureLocation = ID), by = "CaptureLocation") %T>%
     {species_pb <<- dplyr::progress_estimated(n = nrow(.))} %>%
     #Include species letter codes for all species
     mutate(Species = purrr::map_chr(.x = .$SpeciesID,
@@ -135,15 +141,11 @@ format_NIOO <- function(db = NULL,
                                          ifelse(grepl(pattern = "F", .x), "female", "U"))
 
                                 })) %>%
-    select(BroodIDLaid, BroodIDRinged, Species, IndvID, RingNumber, RingYear, RingAge, Sex)
+    select(IndvID, RingNumber, Species, PopID, BroodIDLaid, BroodIDRinged, RingYear, RingAge, Sex)
 
   ################
   # CAPTURE DATA #
   ################
-
-  #This contains info on what the different age codes mean.
-  #Age_data <- tbl(connection, "dbo_tl_Age") %>%
-    #select(Age_join = ID, Age = Description)
 
   print("Compiling capture information...")
 
@@ -292,8 +294,7 @@ format_NIOO <- function(db = NULL,
   clutchtype <- dplyr::progress_estimated(n = nrow(Brood_data))
 
   #Determine laydate cut off for each species and the cumulative sum
-  #Brood_data <- Brood_data %>%
-  x <- Brood_data %>%
+  Brood_data <- Brood_data %>%
     #Go through and change all NA fledge numbers to 0s
     ### NEED TO SEND LOUIS A MESSAGE ABOUT THESE.
     rowwise() %>%
@@ -384,43 +385,22 @@ format_NIOO <- function(db = NULL,
                                              })) %>%
     select(SampleYear, Species, PopID, Plot, LocationID = BroodLocation, BroodID, FemaleID, MaleID, ClutchType_observed, ClutchType_calc, LayingDate, ClutchSize, HatchDate, BroodSize, FledgeDate, NumberFledged)
 
+  #Next, we calculate mean mass, tarsus for all chicks in the brood
+  #AT 14-16 DAYS POST HATCHING!!!
+  #IF THEY ARE NOT CAUGHT DURING THIS TIME, THEN LEAVE AS NA.
+  avg_mass <- Brood_data %>%
+    left_join(left_join(select(Capture_data, CaptureDate, IndvID, Mass, Tarsus), select(Indv_data, IndvID, BroodID = BroodIDRinged), by = "IndvID"), by = "BroodID") %>%
+    #Filter those that were not caught at 14 - 16 days
+    mutate(CaptureDate = lubridate::ymd(CaptureDate),
+           HatchDate = lubridate::ymd(HatchDate)) %>%
+    filter(CaptureDate > (HatchDate + 14) & CaptureDate < (HatchDate + 16)) %>%
+    group_by(BroodID) %>%
+    summarise(AvgMass = mean(Mass, na.rm = T),
+              AvgTarsus = mean(Tarsus, na.rm = T))
 
-    #This takes hours and still needs to be checked. Run this at a later point.
-    # #Determine average mass and tarsus of each brood
-    # #First we need to detemine the ID of all individuals that fledged in each brood.
-    # avg_mass_qry <- Indv_data %>%
-    #   filter(!is.na(BroodIDFledged)) %>%
-    #   group_by(BroodIDFledged) %>%
-    #   summarise(all_chicks = list(unique(IndvID))) %T>%
-    #   {avg_mass_pb <<- dplyr::progress_estimated(n = nrow(.)*2)} %>%
-    #   #Then we need to go through each row and determine mass and tarsus of these individuals as chicks in capture data
-    #   mutate(avg_mass = purrr::map_dbl(.x = .$all_chicks,
-    #                                    .f = function(.x, Capture_data){
-    #
-    #                                      avg_mass_pb$tick()$print()
-    #
-    #                                      Capture_data %>%
-    #                                        filter(IndvID %in% .x & !is.na(Mass) & Type == "Unringed") %>%
-    #                                        summarise(avg_mass = mean(Mass, na.rm = T)) %>%
-    #                                        pull(avg_mass)
-    #
-    #                                    }, Capture_data),
-    #          avg_tarsus = purrr::map_dbl(.x = .$all_chicks,
-    #                                      .f = function(.x, Capture_data){
-    #
-    #                                        avg_mass_pb$tick()$print()
-    #
-    #                                        Capture_data %>%
-    #                                          filter(IndvID %in% .x & !is.na(Tarsus) & Type == "Unringed") %>%
-    #                                          summarise(avg_tarsus = mean(Tarsus, na.rm = T)) %>%
-    #                                          pull(avg_tarsus)
-    #
-    #                                      }, Capture_data))
-    #
-    # #Join this data into the brood data
-    # Brood_data <- Brood_data %>%
-    #   left_join(avg_mass_qry %>% select(-all_chicks), by = "BroodIDFledged")
-
+  #Join this average mass data back into the brood data table
+  Brood_data <- Brood_data %>%
+    left_join(avg_mass, by = "BroodID")
 
   ################
   # NESTBOX DATA #
