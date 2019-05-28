@@ -7,6 +7,8 @@
 #' This section provides details on data management choices that are unique to this data.
 #' For a general description of the standard format please see XXXXX PLACE HOLDER!
 #'
+#' \strong{NumberFledged}: This population has no estimation of actual fledgling numbers.
+#' The last time nests are counted is 14 days post hatching. We use this as an estimation of fledling numbers.
 #' @param db Location of database file.
 #' @param Species A numeric vector. Which species should be included (EUring codes)? If blank will return all major species (see details below).
 #' @param path Location where output csv files will be saved.
@@ -154,11 +156,14 @@ format_Portugal <- function(db = NULL,
     mutate(cutoff = tryCatch(expr = min(as.numeric(LayingDateJulian), na.rm = T) + 30,
                              warning = function(...) return(NA))) %>%
     # Determine brood type for each nest based on female ID
-    arrange(Year, Species, FemaleID, LayingDateJulian) %>%
+    arrange(Year, Species, FemaleID, as.numeric(LayingDateJulian)) %>%
     group_by(Year, Species, FemaleID) %>%
     mutate(total_fledge = cumsum(NoChicksOlder14D), row = 1:n()) %>%
-    ungroup() %T>%
-    {clutchtype <<- dplyr::progress_estimated(n = nrow(.))} %>%
+    ungroup()
+
+  clutchtype <- dplyr::progress_estimated(n = nrow(Brood_data))
+
+  Brood_data <- Brood_data %>%
     mutate(ClutchType_calc = purrr::pmap_chr(.l = list(rows = .$row,
                                                        femID = .$FemaleID,
                                                        cutoff_date = .$cutoff,
@@ -231,7 +236,7 @@ format_Portugal <- function(db = NULL,
                                                }
 
                                              })) %>%
-    mutate(PopID = "CHO", Plot = NA, HatchDate = NA,
+    mutate(PopID = "CHO", Plot = NA,
            FledgeDate = NA) %>%
     #Select relevant columns and rename
     select(SampleYear = Year, Species, PopID, Plot,
@@ -239,7 +244,7 @@ format_Portugal <- function(db = NULL,
            ClutchType_observed,
            ClutchType_calc, LayingDate = LayingDateJulian,
            ClutchSize = FinalClutchSize,
-           HatchDate, BroodSize = NoChicksHatched,
+           HatchDate = HatchingDateJulian, BroodSize = NoChicksHatched,
            FledgeDate,
            NumberFledged = NoChicksOlder14D)
 
