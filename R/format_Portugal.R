@@ -30,6 +30,61 @@ format_Portugal <- function(db = NULL,
     #Change species to "GT" because it's only GT
     mutate(Species = "GT")
 
+  ################
+  # CAPTURE DATA #
+  ################
+
+  Catch_data <- all_data %>%
+    mutate(CaptureDate = lubridate::ymd(glue::glue("{Year}-01-01")) + JulianDate,
+           CapturePopID = "CHO", ReleasePopID = "CHO",
+           CapturePlot = NA, ReleasePlot = NA) %>%
+    #Determine age at first capture for every individual
+    arrange(Ring, CaptureDate) %>%
+    group_by(Ring) %>%
+    mutate(FirstAge = first(Age),
+           FirstYear = first(Year)) %>%
+    ungroup() %>%
+    #Determine age at capture using EUring
+    mutate(MinAge = purrr::pmap_dbl(.l = list(Age = .$FirstAge,
+                                              Year1 = .$FirstYear,
+                                              YearN = .$Year),
+                                    .f = function(Age, Year1, YearN){
+
+                                      if(is.na(Age)){
+
+                                        return(NA)
+
+                                      }
+
+                                      diff_yr <- (Year1 - YearN)
+
+                                      #If it was not caught as a chick
+                                      if(Age != "C"){
+
+                                        return(4 + 2*diff_yr)
+
+                                      } else {
+
+                                        if(diff_yr == 0){
+
+                                          return(1)
+
+                                        } else {
+
+                                          return(3 + 2*diff_yr)
+
+                                        }
+
+                                      }
+
+                                    })) %>%
+    select(CaptureDate, CaptureTime = Time,
+           IndvID = Ring, Species,
+           CapturePopID, CapturePlot,
+           ReleasePopID, ReleasePlot,
+           Mass = Weight, Tarsus, WingLength = Wing,
+           MinAge, ChickAge)
+
   ##############
   # BROOD DATA #
   ##############
@@ -172,6 +227,8 @@ format_Portugal <- function(db = NULL,
            HatchDate, BroodSize = NoChicksHatched,
            FledgeDate,
            NumberFledged = NoChicksOlder14D)
+
+
 
 
 }
