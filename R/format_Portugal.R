@@ -1,27 +1,37 @@
-#' Title
+#' Construct standard summary for data from Choupal, Portugal.
 #'
-#' @param db
-#' @param Species
-#' @param path
+#' A pipeline to produce a standard output for the great tit population
+#' in Choupal, Portugal, administered by the University of Coimbra.
+#' Output follows the HNB standard breeding data format.
 #'
-#' @return
+#' This section provides details on data management choices that are unique to this data.
+#' For a general description of the standard format please see XXXXX PLACE HOLDER!
+#'
+#' @param db Location of database file.
+#' @param Species A numeric vector. Which species should be included (EUring codes)? If blank will return all major species (see details below).
+#' @param path Location where output csv files will be saved.
+#'
+#' @return Generates 5 .csv files with data in a standard format.
 #' @export
 #' @import readxl
 #' @import janitor
 #' @import reshape2
-#'
-#' @examples
+#' @import magrittr
+
 format_Portugal <- function(db = NULL,
                             Species = NULL,
                             path = "."){
 
   if(is.null(db)){
 
-    print("Please select a database location...")
+    message("Please select a database location...")
 
     db <- file.choose()
 
   }
+
+  #Record start time to estimate processing time.
+  start_time <- Sys.time()
 
   #Read in data with readxl
   all_data <- read_excel(db) %>%
@@ -38,7 +48,9 @@ format_Portugal <- function(db = NULL,
   # CAPTURE DATA #
   ################
 
-  Catch_data <- all_data %>%
+  message("Compiling capture information...")
+
+  Capture_data <- all_data %>%
     mutate(CapturePopID = "CHO", ReleasePopID = "CHO",
            CapturePlot = NA, ReleasePlot = NA) %>%
     #Determine age at first capture for every individual
@@ -92,6 +104,8 @@ format_Portugal <- function(db = NULL,
   # BROOD DATA #
   ##############
 
+  message("Compiling brood information...")
+
   #The data is currently stored as capture data (i.e. each row is a capture)
   #This means there are multiple records for each brood, which we don't want.
 
@@ -101,12 +115,13 @@ format_Portugal <- function(db = NULL,
   #We're not interested in chick captures
   #These contain no brood data
   Brood_data <- all_data %>%
-    filter(!is.na(BroodId) & Age != "C")
+    filter(!is.na(BroodId))
 
   #Determine adults caught on the brood
   #Assume these are the parents
   #Reshape data so that sex is a column not a row
   Parents <- Brood_data %>%
+    filter(Age != "C") %>%
     select(BroodID, Ring, Sex) %>%
     #'No ringed/no ring' becomes NA
     mutate(Ring = map_chr(.x = Ring, .f = ~ifelse(grepl(pattern = "ring", .x), NA, .x))) %>%
@@ -126,7 +141,7 @@ format_Portugal <- function(db = NULL,
     #Remove columns that do not contain relevant brood info
     select(-CodeLine:-Ring, -JulianDate:-StanderdisedTime, -TrapingMethod,
            -BroodId:-Smear, -MeanEggWeight:-NºEggsWeighted) %>%
-    group_by(BroodID) %>%
+    mutate_all(as.character) %>%
     melt(id = c("BroodID", "Species", "Year", "Site", "Box", "FemaleID", "MaleID")) %>%
     dcast(BroodID + Species + Year + Site + Box + FemaleID + MaleID ~ ..., fun.aggregate = first) %>%
     rowwise() %>%
@@ -139,7 +154,7 @@ format_Portugal <- function(db = NULL,
     mutate(cutoff = tryCatch(expr = min(as.numeric(LayingDateJulian), na.rm = T) + 30,
                              warning = function(...) return(NA))) %>%
     # Determine brood type for each nest based on female ID
-    arrange(Year, Species, FemaleID) %>%
+    arrange(Year, Species, FemaleID, LayingDateJulian) %>%
     group_by(Year, Species, FemaleID) %>%
     mutate(total_fledge = cumsum(NoChicksOlder14D), row = 1:n()) %>%
     ungroup() %T>%
@@ -228,7 +243,7 @@ format_Portugal <- function(db = NULL,
            FledgeDate,
            NumberFledged = NoChicksOlder14D)
 
-  #For Catch_data, subset only those chicks that were 14 - 16 days when captured.
+  #For Capture_data, subset only those chicks that were 14 - 16 days when captured.
   avg_measure <- all_data %>%
     filter(!is.na(ChickAge) & ChickAge != "na") %>%
     mutate(ChickAge = as.numeric(ChickAge)) %>%
@@ -242,6 +257,8 @@ format_Portugal <- function(db = NULL,
   ###################
   # INDIVIDUAL DATA #
   ###################
+
+  message("Compiling individual information...")
 
   #Determine first age, brood, and ring year of each individual
   Indv_data <- all_data %>%
@@ -287,6 +304,32 @@ format_Portugal <- function(db = NULL,
                                     })) %>%
     select(Ring, Species, PopID, BroodIDLaid, BroodIDRinged, RingYear = FirstYr, RingAge, Sex)
 
+  ################
+  # NESTBOX DATA #
+  ################
 
+  message("Compiling nestbox information...")
+
+  Nestbox_data <- all_data %>%
+    mutate(LocationID = Box,
+           NestboxID = Box,
+           NestBoxType = NA, PopID = "CHO",
+           Latitude = NA, Longitude = NA,
+           StartYear = NA, EndYear = NA) %>%
+    select(LocationID:EndYear)
+
+  message("Saving .csv files...")
+
+  write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_CHO.csv"), row.names = F)
+
+  write.csv(x = Indv_data, file = paste0(path, "\\Indv_data_CHO.csv"), row.names = F)
+
+  write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_CHO.csv"), row.names = F)
+
+  write.csv(x = Nestbox_data, file = paste0(path, "\\Nestbox_data_CHO.csv"), row.names = F)
+
+  time <- difftime(Sys.time(), start_time, units = "sec")
+
+  message(paste0("All tables generated in ", round(time, 2), " seconds"))
 
 }
