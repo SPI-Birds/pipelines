@@ -28,15 +28,18 @@ format_Portugal <- function(db = NULL,
     #Clean all names with janitor
     janitor::clean_names(case = "upper_camel") %>%
     #Change species to "GT" because it's only GT
-    mutate(Species = "GT")
+    mutate(Species = "GT") %>%
+    #BroodIDs are not unique (they are repeated each year)
+    #We need to create unique IDs for each year
+    mutate(BroodID = paste(Year, BroodId, sep = "_"),
+           CaptureDate = lubridate::ymd(paste0(Year, "-01-01")) + JulianDate)
 
   ################
   # CAPTURE DATA #
   ################
 
   Catch_data <- all_data %>%
-    mutate(CaptureDate = lubridate::ymd(glue::glue("{Year}-01-01")) + JulianDate,
-           CapturePopID = "CHO", ReleasePopID = "CHO",
+    mutate(CapturePopID = "CHO", ReleasePopID = "CHO",
            CapturePlot = NA, ReleasePlot = NA) %>%
     #Determine age at first capture for every individual
     arrange(Ring, CaptureDate) %>%
@@ -98,10 +101,7 @@ format_Portugal <- function(db = NULL,
   #We're not interested in chick captures
   #These contain no brood data
   Brood_data <- all_data %>%
-    filter(!is.na(BroodId) & Age != "C") %>%
-    #BroodIDs are not unique (they are repeated each year)
-    #We need to create unique IDs for each year
-    mutate(BroodID = glue::glue('{Year}_{BroodId}'))
+    filter(!is.na(BroodId) & Age != "C")
 
   #Determine adults caught on the brood
   #Assume these are the parents
@@ -228,6 +228,64 @@ format_Portugal <- function(db = NULL,
            FledgeDate,
            NumberFledged = NoChicksOlder14D)
 
+  #For Catch_data, subset only those chicks that were 14 - 16 days when captured.
+  avg_measure <- all_data %>%
+    filter(!is.na(ChickAge) & ChickAge != "na") %>%
+    mutate(ChickAge = as.numeric(ChickAge)) %>%
+    filter(between(ChickAge, 14, 16)) %>%
+    group_by(BroodID) %>%
+    summarise(AvgMass = mean(Weight, na.rm = T), AvgTarsus = mean(Tarsus, na.rm = T))
+
+  #Add this data to the Brood_data
+  Brood_data <- left_join(Brood_data, avg_measure, by = "BroodID")
+
+  ###################
+  # INDIVIDUAL DATA #
+  ###################
+
+  #Determine first age, brood, and ring year of each individual
+  Indv_data <- all_data %>%
+    arrange(Ring, CaptureDate) %>%
+    mutate(Sex = na_if(x = Sex, y = "na")) %>%
+    group_by(Ring) %>%
+    summarise(FirstBrood = first(BroodID),
+              FirstYr = first(Year),
+              FirstAge = first(Age),
+              Sex = ifelse(all(is.na(Sex)), "U",
+                           ifelse(any(Sex %in% "M"), "M",
+                                  ifelse(any(Sex %in% "F"), "F", NA)))) %>%
+    mutate(Species = "GT", PopID = "CHO",
+           BroodIDLaid = purrr::pmap_chr(.l = list(FirstBrood = .$FirstBrood,
+                                                                   FirstAge = .$FirstAge),
+                                                         .f = function(FirstBrood, FirstAge){
+
+                                                           if(is.na(FirstAge) || FirstAge != "C"){
+
+                                                             return(NA)
+
+                                                           } else {
+
+                                                             return(FirstBrood)
+
+                                                           }
+
+                                                         }),
+           BroodIDRinged = BroodIDLaid,
+           RingAge = purrr::map_dbl(.x = .$FirstAge,
+                                    .f = function(.x){
+
+                                      if(is.na(.x) || .x != "C"){
+
+                                        return(4)
+
+                                      } else {
+
+                                        return(1)
+
+                                      }
+
+                                    })) %>%
+    select(Ring, Species, PopID, BroodIDLaid, BroodIDRinged, RingYear = FirstYr, RingAge, Sex)
 
 
 
