@@ -50,13 +50,17 @@ format_Portugal <- function(db = NULL,
     #Clean all names with janitor
     janitor::clean_names(case = "upper_camel") %>%
     #Change species to "GT" because it's only GT in Choupal
-    mutate(Species = "GT") %>%
+    #Add PopID and plot
+    mutate(Species = "GT",
+           PopID = "CHO", Plot = NA) %>%
     #BroodIDs are not unique (they are repeated each year)
     #We need to create unique IDs for each year
     #Convert capture date into a date object (not Julian days)
     #Need this to order captures chronologically
+    #Fix time format (it's currently trying to estimate date)
     mutate(BroodID = paste(Year, BroodId, sep = "_"),
-           CaptureDate = lubridate::ymd(paste0(Year, "-01-01")) + JulianDate)
+           CaptureDate = lubridate::ymd(paste0(Year, "-01-01")) + JulianDate,
+           Time = format.POSIXct(Time, format = "%H:%M:%S"))
 
   ################
   # CAPTURE DATA #
@@ -67,8 +71,8 @@ format_Portugal <- function(db = NULL,
   #Take all data and add population/plot info
   #There is only one population/plot
   Capture_data <- all_data %>%
-    mutate(CapturePopID = "CHO", ReleasePopID = "CHO",
-           CapturePlot = NA, ReleasePlot = NA) %>%
+    mutate(CapturePopID = PopID, ReleasePopID = PopID,
+           CapturePlot = Plot, ReleasePlot = Plot) %>%
     #Determine age at first capture for every individual
     #First arrange the data chronologically within each individual
     arrange(Ring, CaptureDate) %>%
@@ -121,6 +125,7 @@ format_Portugal <- function(db = NULL,
                                       }
 
                                     })) %>%
+
     #Select out only those columns we need.
     select(CaptureDate, CaptureTime = Time,
            IndvID = Ring, Species,
@@ -280,8 +285,7 @@ format_Portugal <- function(db = NULL,
                                              })) %>%
     #Add in population/plot info
     #Convert LayingDate and HatchDate to date objects
-    mutate(PopID = "CHO", Plot = NA,
-           FledgeDate = NA,
+    mutate(FledgeDate = NA,
            HatchDate = lubridate::ymd(paste0(Year, "-01-01")) + as.numeric(HatchingDateJulian),
            LayingDate = lubridate::ymd(paste0(Year, "-01-01")) + as.numeric(LayingDateJulian)) %>%
     #Select relevant columns and rename
@@ -320,7 +324,7 @@ format_Portugal <- function(db = NULL,
     #Replace 'na' with NA in Sex
     mutate(Sex = na_if(x = Sex, y = "na")) %>%
     #For every individual
-    group_by(Ring) %>%
+    group_by(PopID, Ring) %>%
     #Determine the first recorded broodID, year and age.
     #Determine if there were any records where sex was identified.
     summarise(FirstBrood = first(BroodID),
@@ -329,9 +333,7 @@ format_Portugal <- function(db = NULL,
               Sex = ifelse(all(is.na(Sex)), "U",
                            ifelse(any(Sex %in% "M"), "M",
                                   ifelse(any(Sex %in% "F"), "F", NA)))) %>%
-    #Add population ID
-    mutate(PopID = "CHO",
-           #Only assign a brood ID if they were first caught as a chick
+    mutate(#Only assign a brood ID if they were first caught as a chick
            #Otherwise, the broodID will be their first clutch as a parent
            BroodIDLaid = purrr::pmap_chr(.l = list(FirstBrood = .$FirstBrood,
                                                                    FirstAge = .$FirstAge),
@@ -381,7 +383,8 @@ format_Portugal <- function(db = NULL,
            NestboxID = unique(all_data$Box),
            NestBoxType = NA, PopID = "CHO",
            Latitude = NA, Longitude = NA,
-           StartYear = NA, EndYear = NA)
+           StartYear = NA, EndYear = NA) %>%
+    filter(!is.na(LocationID))
 
   message("Saving .csv files...")
 
