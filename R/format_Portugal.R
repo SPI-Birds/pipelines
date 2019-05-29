@@ -9,6 +9,7 @@
 #'
 #' \strong{NumberFledged}: This population has no estimation of actual fledgling numbers.
 #' The last time nests are counted is 14 days post hatching. We use this as an estimation of fledling numbers.
+#' This also affects \emph{ClutchType_calc} as \emph{NumberFledged} is used to estimated second clutches.
 #'
 #' \strong{MinAge, RingAge}: Any individual caught as a chick was assumed to
 #' have a EUring code of 1: 'Pullus: nestling or chick, unable to fly freely, still able to be caught by hand.'

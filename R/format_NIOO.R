@@ -16,6 +16,10 @@
 #'
 #' \strong{Sex}: We condense sex information to only include groups M, F, and U (unknown) following the EUring standard.
 #' Uncertainty in sex was ignored (e.g. 'male?' or 'female?').
+#'
+#' \strong{Measurement error}: For BroodSize, NumberFledged XXXX FILL IN a best estimate is provided.
+#' Best estimate is halfway between the minimum and maximum possible value. \emph{N.B.:} This means that the best estimate will not necessarily be an integer.
+#' Error is provided in BroodSizeError, NumberFledgedError etc. this is the absolute error (+/-) around the best estimate.
 #' @param db Location of database file.
 #' @param Species A numeric vector. Which species should be included (EUring codes)? If blank will return all major species (see details below).
 #' @param path Location where output csv files will be saved.
