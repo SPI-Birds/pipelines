@@ -17,5 +17,19 @@ format_Harjavalta(db = NULL, Species = NULL, path = ".")
 Generates 5 .csv files with data in a standard format.
 }
 \description{
-Construct standard summary for data from Harjavalta, Finland.
+A pipeline to produce a standard output for the hole nesting bird population
+in Harjavalta, Finland, administered by the University of Turku.
+Output follows the HNB standard breeding data format.
+}
+\details{
+This section provides details on data management choices that are unique to this data.
+For a general description of the standard format please see XXXXX PLACE HOLDER!
+
+\strong{Species}: Data from Harjavalta contains information on 23 different hole nesting species;
+however, only 4 of these (great tit, blue tit, coal tit, pied flycatcher) have >100 nest records.
+Only data from these 4 species is reported.
+
+\strong{Mass}: Mass of birds appears to be measured in mg. This is converted to grams to match other populations.
+
+\strong{Tarsus}: Tarsus length is measured for both left and right leg. Only left leg is reported.
 }
