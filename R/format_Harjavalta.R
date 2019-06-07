@@ -244,6 +244,99 @@ format_Harjavalta <- function(db = NULL,
     #Join these into Brood_data
     Brood_data_output <- left_join(Brood_data_output, Chick_avg, by = "BroodID")
 
+    ################
+    # CAPTURE DATA #
+    ################
+
+    message("Extracting capture data from paradox database")
+
+    #Extract table "Pullit.db" which contains brood data
+    Capture_data <- extract_paradox_db(path = db, file_name = "Rengas.DB")
+
+    #Change colnames to English to make data management more understandable
+    colnames(Capture_data) <- c("RingSeries", "RingNumber",
+                                "FirstRing", "SampleYear",
+                                "Month", "Day", "Time",
+                                "LocationID", "BroodID",
+                                "Observer", "RingNumber_Brood",
+                                "Species", "Sex",
+                                "Sex_method", "Age",
+                                "Age_method", "RingType",
+                                "Condition", "BirdStatus",
+                                "CaptureMethod", "NrNestlings",
+                                "WingLength", "Mass", "Moult",
+                                "FatScore", "ExtraInfo",
+                                "Plumage", "TailFeather",
+                                "ColLengthBlood",
+                                "LengthBlood", "Tarsus", "BreastMuscle",
+                                "HeadLength", "Tick")
+
+    Capture_data_output <- Capture_data %>%
+      #Create unique broodID
+      mutate(BroodID = paste(SampleYear, LocationID, BroodID, sep = "_")) %>%
+      #Create capture date
+      mutate(CaptureDate = as.Date(paste(Day, Month, SampleYear, sep = "/"), format = "%d/%m/%Y")) %>%
+      #Create capture time
+      mutate(CaptureTime = lubridate::hm(na_if(paste(Time, "00", sep = ":"), "NA:00"), quiet = TRUE)) %>%
+      #Create IndvID as a combo of RingSeries and RingNumber
+      mutate(IndvID = paste(RingSeries, RingNumber, sep = "-")) %>%
+      #Convert species codes to EUring codes and then remove only the major species
+      rowwise() %>%
+      mutate(Species = ifelse(Species == "FICHYP", Species_codes$Code[which(Species_codes$SpeciesID == 13490)],
+                              ifelse(Species == "PARCAE", Species_codes$Code[which(Species_codes$SpeciesID == 14620)],
+                                     ifelse(Species == "PARMAJ", Species_codes$Code[which(Species_codes$SpeciesID == 14640)],
+                                            ifelse(Species == "PARATE", Species_codes$Code[which(Species_codes$SpeciesID == 14610)], NA))))) %>%
+      filter(!is.na(Species)) %>%
+      #Add pop and plot id
+      mutate(CapturePopID = "HAR", CapturePlot = NA,
+             ReleasePopID = "HAR", ReleasePlot = NA,
+             #Divide mass by 10 to get back to grams
+             Mass = Mass/10)
+
+
+    #STILL NEED TO GO THROUGH AND ADD MIN AGE AND INCLUDE CHICK INFO!
+
+
+    ################
+    # NESTBOX DATA #
+    ################
+
+    message("Extracting location data from paradox database")
+
+    #Extract table "Pullit.db" which contains brood data
+    Nestbox_data <- extract_paradox_db(path = db, file_name = "Paikat.DB")
+
+    #Remove last 2 cols that have no info
+    Nestbox_data <- Nestbox_data %>%
+      select(-Aukko, -Malli)
+
+    #Rename columns to make data management more understandable
+    colnames(Nestbox_data) <- c("SampleYear", "LocationID",
+                                "ForestType", "PinusSylvestris",
+                                "PiceaAbies", "Betulasp",
+                                "PopulusTremula",
+                                "SorbusAcuparia",
+                                "Salixsp", "JuniperusCommunis",
+                                "Alnussp", "PrunusPadas",
+                                "TreeHeight", "BasalArea",
+                                "PineHeight", "SpruceHeight",
+                                "BirchHeight", "PineBasalArea",
+                                "SpruceBasalArea", "BirchBasalArea",
+                                "Latitude", "Longitude", "Municipality",
+                                "LocationName")
+
+    Nestbox_data_output <- Nestbox_data %>%
+      mutate(NestboxID = LocationID, PopID = "HAR",
+             NestBoxType = NA, StartYear = NA, EndYear = NA) %>%
+      select(LocationID, NestboxID, NestBoxType, PopID, Latitude, Longitude, StartYear, EndYear)
+
+    ###CURRENTLY ASSUMING THAT EACH LOCATION AND NEST BOX ARE IDENTICAL
+    ###GO THROUGH AND CHECK MORE THOROUGHLY
+
+    ###############
+    # EXPORT DATA #
+    ###############
+
     message("Saving .csv files...")
 
     write.csv(x = Brood_data_output, file = paste0(path, "\\Brood_data_HAR.csv"), row.names = F)
