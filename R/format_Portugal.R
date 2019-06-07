@@ -157,7 +157,7 @@ format_Portugal <- function(db = NULL,
     filter(Age != "C") %>%
     #Select only the Brood, Individual Id and their sex
     select(BroodID, Ring, Sex) %>%
-    #'No ringed/no ring' becomes NA
+    # "No ringed/no ring" becomes NA
     mutate(Ring = map_chr(.x = Ring, .f = ~ifelse(grepl(pattern = "ring", .x), NA, .x))) %>%
     #Reshape data so that we have a MaleID and FemaleID column
     #Rather than an individual row for each parent
