@@ -9,7 +9,7 @@ format_NIOO(db = NULL, Species = NULL, path = ".")
 \arguments{
 \item{db}{Location of database file.}
 
-\item{Species}{Which species should be included? If blank will return all major species (see details below).}
+\item{Species}{A numeric vector. Which species should be included (EUring codes)? If blank will return all major species (see details below).}
 
 \item{path}{Location where output csv files will be saved.}
 }
@@ -22,7 +22,20 @@ at the Netherlands Institute of Ecology (NIOO-KNAW).
 Output follows the HNB standard breeding data format.
 }
 \details{
-\strong{Species}: By default will include great tit \emph{Parus major}; blue tit \emph{Cyanistes caeruleus};
+This section provides details on data management choices that are unique to the NIOO database.
+For a general description of the standard format please see XXXXX PLACE HOLDER!
+
+\strong{Species}: By default the pipeline will include great tit \emph{Parus major}; blue tit \emph{Cyanistes caeruleus};
 pied flycatcher \emph{Ficedula hypoleuca}; Eurasian nuthatch \emph{Sitta europaea};
 coal tit \emph{Periparus ater}; and tree sparrow \emph{Passer montanus}.
+
+\strong{Populations}: This pipeline extracts data for 8 populations managed by
+NIOO-KNAW: Buunderkamp, Lichtenbeek, Westerheide, Hoge Veluwe, Warnsborn, Vlieland, Oosterhout, and Liesbosch.
+
+\strong{Sex}: We condense sex information to only include groups M, F, and U (unknown) following the EUring standard.
+Uncertainty in sex was ignored (e.g. 'male?' or 'female?').
+
+\strong{Measurement error}: For BroodSize, NumberFledged XXXX FILL IN a best estimate is provided.
+Best estimate is halfway between the minimum and maximum possible value. \emph{N.B.:} This means that the best estimate will not necessarily be an integer.
+Error is provided in BroodSizeError, NumberFledgedError etc. this is the absolute error (+/-) around the best estimate.
 }
