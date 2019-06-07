@@ -2,13 +2,18 @@
 % Please edit documentation in R/extract_paradox_db.R
 \name{extract_paradox_db}
 \alias{extract_paradox_db}
-\title{Title}
+\title{Convert paradox data file to data frame.}
 \usage{
-extract_paradox_db(db)
+extract_paradox_db(path, file_name)
 }
 \arguments{
-\item{db}{}
+\item{path}{Directory where paradox files are located.}
+
+\item{file_name}{File name of paradox file (.db) that will be converted.}
+}
+\value{
+A data frame
 }
 \description{
-Title
+Converts .db paradox data file into R data frame.
 }
