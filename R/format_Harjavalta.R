@@ -1,5 +1,19 @@
 #' Construct standard summary for data from Harjavalta, Finland.
 #'
+#' A pipeline to produce a standard output for the hole nesting bird population
+#' in Harjavalta, Finland, administered by the University of Turku.
+#' Output follows the HNB standard breeding data format.
+#'
+#' This section provides details on data management choices that are unique to this data.
+#' For a general description of the standard format please see XXXXX PLACE HOLDER!
+#'
+#' \strong{Species}: Data from Harjavalta contains information on 23 different hole nesting species;
+#' however, only 4 of these (great tit, blue tit, coal tit, pied flycatcher) have >100 nest records.
+#' Only data from these 4 species is reported.
+#'
+#' \strong{Mass}: Mass of birds appears to be measured in mg. This is converted to grams to match other populations.
+#'
+#' \strong{Tarsus}: Tarsus length is measured for both left and right leg. Only left leg is reported.
 #' @param db Location of database file.
 #' @param Species A numeric vector. Which species should be included (EUring codes)? If blank will return all major species (see details below).
 #' @param path Location where output csv files will be saved.
@@ -23,12 +37,6 @@ format_Harjavalta <- function(db = NULL,
 
   #Record start time to estimate processing time.
   start_time <- Sys.time()
-
-  ################
-  # CAPTURE DATA #
-  ################
-
-
 
   ##############
   # BROOD DATA #
@@ -177,6 +185,64 @@ format_Harjavalta <- function(db = NULL,
       select(SampleYear, Species, PopID, Plot, LocationID, BroodID, FemaleID, MaleID,
              ClutchType_observed, ClutchType_calc, LayingDate,
              ClutchSize, HatchDate, BroodSize, FledgeDate, NumberFledged)
+
+
+    #################
+    # NESTLING DATA #
+    #################
+
+    #Ringing data for nestlings and adults is stored separately.
+    #First we will extract nestling info so we can determine average mass/tarsus
+
+    message("Extracting nestling ringing data from paradox database")
+
+    #Extract table "Pullit.db" which contains brood data
+    Nestling_data <- extract_paradox_db(path = db, file_name = "Pullit.DB")
+
+    #Rename into English to make data management more readable
+    colnames(Nestling_data) <- c("SampleYear", "LocationID", "BroodID",
+                                 "Month", "Day", "Time", "NrNestlings",
+                                 "Last2DigitsRingNr", "Dead",
+                                 "Wing", "Mass", "LeftLegAbnormal",
+                                 "RightLegAbnormal", "Left3Primary",
+                                 "Right3Primary", "LeftRectrix",
+                                 "RightRectrix", "LeftTarsusLength",
+                                 "RightTarsusLength", "LeftTarsusWidth",
+                                 "RightTarsusWidth", "GTBreastYellow",
+                                 "Lutein", "BloodSample",
+                                 "ColLengthBlood", "LengthBlood",
+                                 "BreastFeatherLutein",
+                                 "NailClipping", "Sex",
+                                 "HeadLength", "Feces1", "Feces2")
+
+    #Remove unwanted columns
+    Nestling_data_output <- Nestling_data %>%
+      select(SampleYear:Mass, LeftTarsusLength:RightTarsusLength,
+             Sex) %>%
+      #Create unique broodID (SampleYear_LocationID_BroodID)
+      mutate(BroodID = paste(SampleYear, LocationID, BroodID, sep = "_")) %>%
+      #Create a date object for time of measurement
+      mutate(CatchDate = as.Date(paste(Day, Month, SampleYear, sep = "/"), format = "%d/%m/%Y")) %>%
+      #Filter only those nestlings from nests in brood data
+      filter(BroodID %in% unique(Brood_data_output$BroodID)) %>%
+      #Join hatch date data from brood data table above
+      left_join(select(Brood_data_output, BroodID, HatchDate), by = "BroodID") %>%
+      #Determine age at capture
+      mutate(ChickAge = as.numeric(CatchDate - HatchDate))
+
+    #Determine average mass and tarsus between 14 - 16 days old
+    #I just use left tarsus for now, need to check with Marcel
+    Chick_avg <- Nestling_data_output %>%
+      filter(between(ChickAge, 14, 16)) %>%
+      #Remove cases where tarsus or weight are 0 (make them NA)
+      mutate(Mass = na_if(Mass, 0),
+             LeftTarsusLength = na_if(LeftTarsusLength, 0)) %>%
+      group_by(BroodID) %>%
+      summarise(AvgMass = mean(Mass, na.rm = T)/10,
+                AvgTarsus = mean(LeftTarsusLength, na.rm = T))
+
+    #Join these into Brood_data
+    Brood_data_output <- left_join(Brood_data_output, Chick_avg, by = "BroodID")
 
     message("Saving .csv files...")
 
