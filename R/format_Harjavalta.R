@@ -189,6 +189,65 @@ format_Harjavalta <- function(db = NULL,
              ClutchType_observed, ClutchType_calc, LayingDate, LayingDateError,
              ClutchSize, HatchDate, HatchDateError, BroodSize, FledgeDate, NumberFledged, ExperimentID)
 
+
+
+    #################
+    # NESTLING DATA #
+    #################
+
+    #Ringing data for nestlings and adults is stored separately.
+    #First we will extract nestling info so we can determine average mass/tarsus
+
+    message("Extracting nestling ringing data from paradox database")
+
+    #Extract table "Pullit.db" which contains brood data
+    Nestling_data <- extract_paradox_db(path = db, file_name = "Pullit.DB")
+
+    #Rename into English to make data management more readable
+    colnames(Nestling_data) <- c("SampleYear", "LocationID", "BroodID",
+                                 "Month", "Day", "Time", "NrNestlings",
+                                 "Last2DigitsRingNr", "Dead",
+                                 "Wing", "Mass", "LeftLegAbnormal",
+                                 "RightLegAbnormal", "Left3Primary",
+                                 "Right3Primary", "LeftRectrix",
+                                 "RightRectrix", "LeftTarsusLength",
+                                 "RightTarsusLength", "LeftTarsusWidth",
+                                 "RightTarsusWidth", "GTBreastYellow",
+                                 "Lutein", "BloodSample",
+                                 "ColLengthBlood", "LengthBlood",
+                                 "BreastFeatherLutein",
+                                 "NailClipping", "Sex",
+                                 "HeadLength", "Feces1", "Feces2")
+
+    #Remove unwanted columns
+    Nestling_data_output <- Nestling_data %>%
+      select(SampleYear:Mass, LeftTarsusLength:RightTarsusLength,
+             Sex) %>%
+      #Create unique broodID (SampleYear_LocationID_BroodID)
+      mutate(BroodID = paste(SampleYear, LocationID, BroodID, sep = "_")) %>%
+      #Create a date object for time of measurement
+      mutate(CatchDate = as.Date(paste(Day, Month, SampleYear, sep = "/"), format = "%d/%m/%Y")) %>%
+      #Filter only those nestlings from nests in brood data (i.e. should be the main species)
+      filter(BroodID %in% unique(Brood_data_output$BroodID)) %>%
+      #Join hatch date data from brood data table above
+      left_join(select(Brood_data_output, BroodID, HatchDate), by = "BroodID") %>%
+      #Determine age at capture
+      mutate(ChickAge = as.numeric(CatchDate - HatchDate))
+
+    #Determine average mass and tarsus between 14 - 16 days old
+    #I just use left tarsus for now, need to check with Marcel
+    Chick_avg <- Nestling_data_output %>%
+      filter(between(ChickAge, 14, 16)) %>%
+      #Remove cases where tarsus or weight are 0 (make them NA)
+      mutate(Mass = na_if(Mass, 0),
+             LeftTarsusLength = na_if(LeftTarsusLength, 0)) %>%
+      group_by(BroodID) %>%
+      summarise(AvgMass = mean(Mass, na.rm = T)/10,
+                AvgTarsus = mean(LeftTarsusLength, na.rm = T))
+
+    #Join these into Brood_data
+    Brood_data_output <- left_join(Brood_data_output, Chick_avg, by = "BroodID")
+
     ################
     # CAPTURE DATA #
     ################
@@ -229,8 +288,13 @@ format_Harjavalta <- function(db = NULL,
       mutate(CaptureTime = lubridate::hm(na_if(paste(Time, "00", sep = ":"), "NA:00"), quiet = TRUE)) %>%
       #Remove cols that are not needed
       select(RingSeries:BroodID, LastRingNumber_Brood:Sex, Age, NrNestlings:Mass, Tarsus) %>%
-      #Convert RingNumber to a numeric for expanding data below
-      mutate(RingNumber = as.numeric(RingNumber), LastRingNumber_Brood = as.numeric(LastRingNumber_Brood))
+      #Convert species codes to EUring codes and then remove only the major species
+      rowwise() %>%
+      mutate(Species = ifelse(Species == "FICHYP", Species_codes$Code[which(Species_codes$SpeciesID == 13490)],
+                              ifelse(Species == "PARCAE", Species_codes$Code[which(Species_codes$SpeciesID == 14620)],
+                                     ifelse(Species == "PARMAJ", Species_codes$Code[which(Species_codes$SpeciesID == 14640)],
+                                            ifelse(Species == "PARATE", Species_codes$Code[which(Species_codes$SpeciesID == 14610)], NA))))) %>%
+      filter(!is.na(Species))
 
     #There are 4 nests where one of either RingNumber or LastRingNumber_Brood is wrong
     #Ask Tapio about these, currently, we just correct to make them work.
@@ -243,23 +307,28 @@ format_Harjavalta <- function(db = NULL,
 
         #If it is ringing an adult (i.e. is.na(NrNestlings))
         #Just return the same row
-        if(is.na(capture_data[row_nr, ]$LastRingNumber_Brood)){
+        if(is.na(capture_data[row_nr, ]$NrNestlings)){
 
-          return(capture_data[row_nr, ] %>% mutate(RingNumber = as.numeric(RingNumber)))
+          return(capture_data[row_nr, ] %>% mutate(ChickAge = 365))
 
         #Otherwise, if chicks have been ringed.
-        #Replicate the number of rows to match the number of chicks
+        #Replicate the number of rows to match the number of chick captures associated with this broodID in the nestling data
         } else {
 
-          #Replicate rows
-          output <- purrr::map_dfr(.x = 1:(as.numeric(capture_data[row_nr, ]$RingNumber) - as.numeric(capture_data[row_nr, ]$LastRingNumber_Brood) + 1),
-                                   .f = ~ capture_data[row_nr, ])
+          #Include all captures of chicks from these nests (not just first captures)
+          ##N.B. In Nestling_data, there are cases where last ring number 'A/B'. I suspect these are cases where a chick is measured but too young to ring.
+          #For now, all individuals with last ring number that contains letters or ? is just given NA instead.
+          #Capture data
+          chick_captures <- nestling_data[nestling_data$BroodID == capture_data[row_nr, ]$BroodID, ]
 
-          #Change RingNumber column to include all chicks
-          ##N.B. There are cases where there are more chicks that ringnumbers
-          #In Nestling_data, these appear to have last ring number 'A/B'. Not sure what this means...
-          #At the moment, we exclude these individuals and only save info from the rings list between RingNumber and LastRingNumber
-          output$RingNumber <- capture_data[row_nr, ]$RingNumber:capture_data[row_nr, ]$LastRingNumber_Brood
+          output <- tibble(RingSeries = capture_data[row_nr, ]$RingSeries,
+                           RingNumber = ifelse(grepl(paste(LETTERS, collapse = "|"), chick_captures$Last2DigitsRingNr), NA,
+                                               paste0(substr(capture_data[row_nr, ]$RingNumber, 1, nchar(capture_data[row_nr, ]$RingNumber) - 2), chick_captures$Last2DigitsRingNr)),
+                           FirstRing = NA, SampleYear = chick_captures$SampleYear, Month = chick_captures$Month, Day = chick_captures$Day,
+                           Time = chick_captures$Time, LocationID = chick_captures$LocationID, BroodID = chick_captures$BroodID,
+                           LastRingNumber_Brood = NA, Species = capture_data[row_nr, ]$Species,
+                           Sex = chick_captures$Sex, Age = "PP", NrNestlings = NA, WingLength = chick_captures$Wing,
+                           Mass = chick_captures$Mass, Tarsus = chick_captures$LeftTarsusLength, ChickAge = chick_captures$ChickAge)
 
           return(output)
 
@@ -267,6 +336,17 @@ format_Harjavalta <- function(db = NULL,
 
 
       }, capture_data = Capture_data_output, nestling_data = Nestling_data_output)
+
+    #THIS SEEMS TO WORK, ALTHOUGH IT IS RETURNING MORE RECORDS THAN EXPECTED
+    #We would expect the expanded data to be made of
+    #a) all capture records where there was no record of nestlings (i.e. adult captures)
+    #b) all nestling data where the brood was found in the capture data
+    x <- filter(Capture_data_output, !is.na(NrNestlings) | !is.na(LastRingNumber_Brood)) %>% pull(BroodID)
+    nrow(filter(Nestling_data_output, BroodID %in% x)) + nrow(filter(Capture_data_output, is.na(NrNestlings) & is.na(LastRingNumber_Brood)))
+    nrow(Capture_data_expand)
+
+    #There appear to be a couple of records extra.
+    #Need to look at this more.
 
       #Create IndvID as a combo of RingSeries and RingNumber
       mutate(IndvID = paste(RingSeries, RingNumber, sep = "-")) %>%
@@ -285,65 +365,6 @@ format_Harjavalta <- function(db = NULL,
 
 
     #STILL NEED TO GO THROUGH AND ADD MIN AGE AND INCLUDE CHICK INFO!
-
-
-      #################
-      # NESTLING DATA #
-      #################
-
-      #Ringing data for nestlings and adults is stored separately.
-      #First we will extract nestling info so we can determine average mass/tarsus
-
-      message("Extracting nestling ringing data from paradox database")
-
-      #Extract table "Pullit.db" which contains brood data
-      Nestling_data <- extract_paradox_db(path = db, file_name = "Pullit.DB")
-
-      #Rename into English to make data management more readable
-      colnames(Nestling_data) <- c("SampleYear", "LocationID", "BroodID",
-                                   "Month", "Day", "Time", "NrNestlings",
-                                   "Last2DigitsRingNr", "Dead",
-                                   "Wing", "Mass", "LeftLegAbnormal",
-                                   "RightLegAbnormal", "Left3Primary",
-                                   "Right3Primary", "LeftRectrix",
-                                   "RightRectrix", "LeftTarsusLength",
-                                   "RightTarsusLength", "LeftTarsusWidth",
-                                   "RightTarsusWidth", "GTBreastYellow",
-                                   "Lutein", "BloodSample",
-                                   "ColLengthBlood", "LengthBlood",
-                                   "BreastFeatherLutein",
-                                   "NailClipping", "Sex",
-                                   "HeadLength", "Feces1", "Feces2")
-
-      #Remove unwanted columns
-      Nestling_data_output <- Nestling_data %>%
-        select(SampleYear:Mass, LeftTarsusLength:RightTarsusLength,
-               Sex) %>%
-        #Create unique broodID (SampleYear_LocationID_BroodID)
-        mutate(BroodID = paste(SampleYear, LocationID, BroodID, sep = "_")) %>%
-        #Create a date object for time of measurement
-        mutate(CatchDate = as.Date(paste(Day, Month, SampleYear, sep = "/"), format = "%d/%m/%Y")) %>%
-        #Filter only those nestlings from nests in brood data (i.e. should be the main species)
-        filter(BroodID %in% unique(Brood_data_output$BroodID)) %>%
-        #Join hatch date data from brood data table above
-        left_join(select(Brood_data_output, BroodID, HatchDate), by = "BroodID") %>%
-        #Determine age at capture
-        mutate(ChickAge = as.numeric(CatchDate - HatchDate))
-
-      #Determine average mass and tarsus between 14 - 16 days old
-      #I just use left tarsus for now, need to check with Marcel
-      Chick_avg <- Nestling_data_output %>%
-        filter(between(ChickAge, 14, 16)) %>%
-        #Remove cases where tarsus or weight are 0 (make them NA)
-        mutate(Mass = na_if(Mass, 0),
-               LeftTarsusLength = na_if(LeftTarsusLength, 0)) %>%
-        group_by(BroodID) %>%
-        summarise(AvgMass = mean(Mass, na.rm = T)/10,
-                  AvgTarsus = mean(LeftTarsusLength, na.rm = T))
-
-      #Join these into Brood_data
-      Brood_data_output <- left_join(Brood_data_output, Chick_avg, by = "BroodID")
-
 
     ################
     # NESTBOX DATA #
