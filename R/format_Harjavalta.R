@@ -1,30 +1,74 @@
-#' Construct standard summary for data from Harjavalta, Finland.
+#'Construct standard summary for data from Harjavalta, Finland.
 #'
-#' A pipeline to produce a standard output for the hole nesting bird population
-#' in Harjavalta, Finland, administered by the University of Turku.
-#' Output follows the HNB standard breeding data format.
+#'A pipeline to produce a standard output for the hole nesting bird population
+#'in Harjavalta, Finland, administered by the University of Turku. Output
+#'follows the HNB standard breeding data format.
 #'
-#' This section provides details on data management choices that are unique to this data.
-#' For a general description of the standard format please see XXXXX PLACE HOLDER!
+#'This section provides details on data management choices that are unique to
+#'this data. For a general description of the standard format please see XXXXX
+#'PLACE HOLDER!
 #'
-#' \strong{Species}: Data from Harjavalta contains information on 23 different hole nesting species;
-#' however, only 4 of these (great tit, blue tit, coal tit, pied flycatcher) have >100 nest records.
-#' Only data from these 4 species is considered.
+#'\strong{Species}: Data from Harjavalta contains information on 23 different
+#'hole nesting species; however, only 4 of these (great tit, blue tit, coal tit,
+#'pied flycatcher) have >100 nest records. Only data from these 4 species is
+#'considered.
 #'
-#' \strong{LayingDateError & HatchDateError}: Accuracy of laying and hatch date are given as categories:
-#' 0-1; 1-2; 2-3; >3 (N.B. Need to check this with Tapio). More conservative error is provided (i.e. 0-1 is recorded as 1).
-#' For now >3 is recorded as 4. N.B. Need to check this with Tapio!!
+#'\strong{LayingDateError & HatchDateError}: Accuracy of laying and hatch date
+#'are given as categories: 0-1; 1-2; 2-3; >3 (N.B. Need to check this with
+#'Tapio). More conservative error is provided (i.e. 0-1 is recorded as 1). For
+#'now >3 is recorded as 4. N.B. Need to check this with Tapio!!
 #'
-#' \strong{Mass}: Mass of birds appears to be measured in mg. This is converted to grams to match other populations.
+#'\strong{Capture_data}: Combining capture data is fairly difficult with this
+#'dataset:
+#'- All data from adults when first ringed and recaptured are stored in the
+#' 'Ringing' table (Rengas.db). This is regular capture data that we can use
+#'without adjustment.
+#'- All data from chick captures are stored in the 'Nestling' table (Pullit.db).
+#'HOWEVER, the 'Nestling' table does not include information on the ring number
+#'nor the species of each individual, only the BroodID and the last 2 digits of
+#'the ring number.
+#'- When chicks were ringed for the first time, the ringing of ALL the chicks is
+#'recorded as one entry in 'Ringing'. The first and last ring number of the
+#'chicks ringed in the nest is given. Therefore, to determine the individual ID of
+#'every chick capture from 'Nestling' we need to link it to the correct BroodID
+#'and determine its ring number by taking the first x-2 characters of the
+#'given ring numbers and adding the last 2 digits from the 'Nestling' table.
+#'- Some chicks in 'Nestling' were captured and measured, but have no last 2
+#'digits of ring number is provided, I assume these were not ringed (e.g. too
+#'young). These data can be associated with a Brood and species, but not with an
+#'individual.
+#'- HOWEVER, the 'Nestling' and 'Ringing' tables don't always match. In some
+#'cases (>5000), there is a record of chicks being ringed in the 'Ringing' table, but no record of
+#'these chicks in the 'Nestling' table (e.g. BroodID: 2005_1908_1 or 2018_1216_1).
+#'- In some cases (~50), there is information on chicks being captured and given
+#'a ring number in the 'Nestling' table, but no record of this capture in the
+#' 'Ringing' table (e.g. BroodID: 2008_0222_1 or 2018_1378_2).
+#'- In some cases, there is a record of chicks being ringed in 'Ringing',
+#'but many of these chicks are missing in the 'Nestling' table (e.g. BroodID: 2007_1714_1).
+#'- In some cases, chicks were ringed with two different series and there are two different
+#'records of chick ringing.
+#'- In some cases, checks were recorded in 'Ringing' but have no matching
+#'BroodID in Brood_data (e.g. 2004_1012_0).
+#'- How do we deal with all these conflicts? For now, we assume that if a chick was listed as 'ringed' but has no record in
+#'the 'Nestlings' table, we assume it was ringed but not measurements were taken (e.g. tarsus);
+#'If a chick was captured in 'Nestlings' but is not recorded in 'Ringing' for now these will be excluded.
+#'These cases are the most problematic because to give these chicks a true ring number we need to know
+#'the rest of the ring number (not just last 2 digits). If they have no record in ringing, it is impossible
+#'to include this information!
 #'
-#' \strong{Tarsus}: Tarsus length is measured for both left and right leg. Only left leg is reported.
-#' @param db Location of database file.
-#' @param Species A numeric vector. Which species should be included (EUring codes)? If blank will return all major species (see details below).
-#' @param path Location where output csv files will be saved.
+#'\strong{Mass}: Mass of birds appears to be measured in mg. This is converted
+#'to grams to match other populations.
 #'
-#' @return Generates 5 .csv files with data in a standard format.
-#' @export
-#' @import reticulate
+#'\strong{Tarsus}: Tarsus length is measured for both left and right leg. Only
+#'left leg is reported.
+#'@param db Location of database file.
+#'@param Species A numeric vector. Which species should be included (EUring
+#'  codes)? If blank will return all major species (see details below).
+#'@param path Location where output csv files will be saved.
+#'
+#'@return Generates 5 .csv files with data in a standard format.
+#'@export
+#'@import reticulate
 
 format_Harjavalta <- function(db = NULL,
                               Species = NULL,
@@ -183,11 +227,13 @@ format_Harjavalta <- function(db = NULL,
 
                                              })) %>%
       #Add Fledge date (it is NA, this isn't recorded)
-      mutate(FledgeDate = NA) %>%
+      mutate(FledgeDate = NA, ClutchSizeError = NA, BroodSizeError = NA,
+             FledgeDateError = NA) %>%
       #Arrange columns correctly
       select(SampleYear, Species, PopID, Plot, LocationID, BroodID, FemaleID, MaleID,
              ClutchType_observed, ClutchType_calc, LayingDate, LayingDateError,
-             ClutchSize, HatchDate, HatchDateError, BroodSize, FledgeDate, NumberFledged, ExperimentID)
+             ClutchSize, ClutchSizeError, HatchDate, HatchDateError,
+             BroodSize, BroodSizeError, FledgeDate, FledgeDateError,NumberFledged, ExperimentID)
 
 
 
@@ -221,14 +267,12 @@ format_Harjavalta <- function(db = NULL,
 
     #Remove unwanted columns
     Nestling_data_output <- Nestling_data %>%
-      select(SampleYear:Mass, LeftTarsusLength:RightTarsusLength,
+      select(SampleYear:Mass, LeftTarsusLength,
              Sex) %>%
       #Create unique broodID (SampleYear_LocationID_BroodID)
       mutate(BroodID = paste(SampleYear, LocationID, BroodID, sep = "_")) %>%
       #Create a date object for time of measurement
       mutate(CatchDate = as.Date(paste(Day, Month, SampleYear, sep = "/"), format = "%d/%m/%Y")) %>%
-      #Filter only those nestlings from nests in brood data (i.e. should be the main species)
-      filter(BroodID %in% unique(Brood_data_output$BroodID)) %>%
       #Join hatch date data from brood data table above
       left_join(select(Brood_data_output, BroodID, HatchDate), by = "BroodID") %>%
       #Determine age at capture
@@ -246,6 +290,7 @@ format_Harjavalta <- function(db = NULL,
                 AvgTarsus = mean(LeftTarsusLength, na.rm = T))
 
     #Join these into Brood_data
+    #Only existing broods will be used.
     Brood_data_output <- left_join(Brood_data_output, Chick_avg, by = "BroodID")
 
     ################
@@ -297,66 +342,117 @@ format_Harjavalta <- function(db = NULL,
       filter(!is.na(Species))
 
     #There are 4 nests where one of either RingNumber or LastRingNumber_Brood is wrong
-    #Ask Tapio about these, currently, we just correct to make them work.
-    Capture_data_output[which(Capture_data_output$BroodID %in% c("2011_1604_1", "2013_2134_1", "2013_1341_1", "2006_1630_1") & Capture_data_output$FirstRing == "5"), ] <- c(403681, 464023, 417760, 956723)
+    #Ask Tapio about these, currently, we just correct RingNumber to make them work.
+    Capture_data_output[which(Capture_data_output$BroodID %in% c("2011_1604_1", "2013_2134_1", "2013_1341_1", "2006_1630_1") & Capture_data_output$FirstRing == "5"), ]$RingNumber <- c(403681, 464023, 417760, 956723)
+
+    #We are only interested in the adult ringing data from this database. The
+    #chick data is all in nestlings. Chick ringing has age == "PP", all others are assumed to be adults (even Age = NA).
+    Adult_capture    <- filter(Capture_data_output, Age != "PP" | is.na(Age)) %>%
+      mutate(RingNumber = as.integer(RingNumber), Capture_type = "Adult", Last2DigitsRingNr = NA) %>%
+      select(RingSeries, RingNumber, SampleYear:Time, BroodID, Species:Age, WingLength:Tarsus, Capture_type, Last2DigitsRingNr)
+
+    #Subset all info on chick captures
+    #This is needed because it contains the full ring information
+
+
+    ############SOMETHING IS WRONG HERE!!!
+    ####DON'T KNOW WHAT!!!
+
+    Ringed_chick_capture <- purrr::pmap_df(.l = filter(Capture_data_output, Age == "PP"),
+                                           .f = ~{
+
+                                             #If there is no 'last ring number' (col 10)
+                                             if(is.na(..10)){
+
+                                               #Assume only one chick was ringed
+                                               All_rings <- as.integer(..2)
+
+                                             } else {
+
+                                               #Otherwise, create a list of all chicks in the series
+                                               All_rings <- ..2:..10
+
+                                             }
+
+                                             #N.B. We remove Year, Month, Day,
+                                             #Time because these will come from
+                                             #nestling data
+
+                                             #N.B. There are a few cases (<100)
+                                             #where the capture data for chicks also has winglength/mass/tarsus
+                                             #It seems these are cases where only one chick was captured (e.g.340826 in 1993_1304_1),
+                                             #Or where multiple chicks were captured but only one measured (e.g. 428222 in 2011_0219_1).
+                                             #We assume that all this info is ALSO stored in Nestling data, and so we don't include it
+                                             return(tibble::tibble(RingSeries = ..1,
+                                                                   RingNumber = All_rings,
+                                                                   BroodID = ..9, Species = ..11, Sex = ..12, Age = ..13))
+
+                                           }) %>%
+      #Now, for each recorded chick ring number determine the last 2 digits of the ring
+      mutate(Last2DigitsRingNr = substr(RingNumber, start = nchar(RingNumber) - 1, stop = nchar(RingNumber)),
+             Capture_type = "Ringed_chick") %>%
+      #Join in all nestling data where the broodID and Last2Digits is the same
+      #N.B. We do left_join with BroodID and Last2Digits, so we can get multiple records for each chick
+      left_join(Nestling_data_output %>% select(SampleYear, BroodID, Month:Time, Last2DigitsRingNr, WingLength = Wing,
+                                                Mass, Tarsus = LeftTarsusLength), by = c("BroodID", "Last2DigitsRingNr"))
+
+    #Create a third data frame that is all the unringed records
+    #We still want to associate them with a Brood (and species), but there is no ring number to use.
+    #Link the BroodID from all unringed chicks with the Brood_data table so we can know the species.
+    Unringed_chick_capture <- left_join(filter(Nestling_data_output, grepl(paste(c(LETTERS, "\\?"), collapse = "|"), Last2DigitsRingNr)),
+                                   select(Brood_data_output, BroodID, Species), by = "BroodID") %>%
+      mutate(RingSeries = NA, RingNumber = NA, Age = "PP", Capture_type = "Unringed_chick") %>%
+      select(RingSeries, RingNumber, SampleYear, BroodID:Time,
+             Species, Sex, Age, WingLength = Wing, Mass, Tarsus = LeftTarsusLength, Capture_type, Last2DigitsRingNr)
+
+    #Join the ringed chick, unringed chick, and adult capture data together
+    Capture_data_expand <- dplyr::bind_rows(Adult_capture, Ringed_chick_capture, Unringed_chick_capture)
+
+    #We only want nestling data that is from broods in the capture data (because these are subset to just our species)
+    # Nestling_capture <- filter(Nestling_data_output, BroodID %in% unique(Capture_data_output$BroodID))
+
+
+
+
 
     #Expand data so that ringed chicks each have their own row.
     Capture_data_expand <- purrr::pmap_df(.l = list(row_nr = 1:nrow(Capture_data_output)), function(row_nr, capture_data, nestling_data){
 
       print(row_nr)
 
-        #If it is ringing an adult (i.e. is.na(NrNestlings))
-        #Just return the same row
-        if(is.na(capture_data[row_nr, ]$NrNestlings)){
 
-          return(capture_data[row_nr, ] %>% mutate(ChickAge = 365))
+      if(is.na(capture_data[row_nr, ]$NrNestlings) & is.na(capture_data[row_nr, ]$LastRingNumber_Brood)){
 
-        #Otherwise, if chicks have been ringed.
-        #Replicate the number of rows to match the number of chick captures associated with this broodID in the nestling data
-        } else {
+        #For now, we give a dummy chick age because it allows us to check how many adult/chick measures there are
+        #We can't use NA because some chicks also have NA age.
+        return(capture_data[row_nr, ] %>% mutate(ChickAge = 365))
 
-          #Include all captures of chicks from these nests (not just first captures)
-          ##N.B. In Nestling_data, there are cases where last ring number 'A/B'. I suspect these are cases where a chick is measured but too young to ring.
-          #For now, all individuals with last ring number that contains letters or ? is just given NA instead.
-          #Capture data
-          chick_captures <- nestling_data[nestling_data$BroodID == capture_data[row_nr, ]$BroodID, ]
+      } else {
 
-          output <- tibble(RingSeries = capture_data[row_nr, ]$RingSeries,
-                           RingNumber = ifelse(grepl(paste(LETTERS, collapse = "|"), chick_captures$Last2DigitsRingNr), NA,
-                                               paste0(substr(capture_data[row_nr, ]$RingNumber, 1, nchar(capture_data[row_nr, ]$RingNumber) - 2), chick_captures$Last2DigitsRingNr)),
-                           FirstRing = NA, SampleYear = chick_captures$SampleYear, Month = chick_captures$Month, Day = chick_captures$Day,
-                           Time = chick_captures$Time, LocationID = chick_captures$LocationID, BroodID = chick_captures$BroodID,
-                           LastRingNumber_Brood = NA, Species = capture_data[row_nr, ]$Species,
-                           Sex = chick_captures$Sex, Age = "PP", NrNestlings = NA, WingLength = chick_captures$Wing,
-                           Mass = chick_captures$Mass, Tarsus = chick_captures$LeftTarsusLength, ChickAge = chick_captures$ChickAge)
+        #Otherwise, if chicks have been ringed (i.e. NrNestlings or LastRingNumber_Brood are filled)...
+        #Add all data from the nestling table instead of the currently saved info
 
-          return(output)
+        ##N.B. In Nestling_data, there are cases where last ring number 'A/B'. I suspect these are cases where a chick is measured but not ringed.
+        #For now, all individuals with last ring number that contains letters or ? is just given NA instead.
+        chick_captures <- nestling_data[nestling_data$BroodID == capture_data[row_nr, ]$BroodID, ]
 
-        }
+        output <- tibble(RingSeries = capture_data[row_nr, ]$RingSeries,
+                         RingNumber = ifelse(grepl(paste(LETTERS, collapse = "|"), chick_captures$Last2DigitsRingNr), NA,
+                                             paste0(substr(capture_data[row_nr, ]$RingNumber, 1, nchar(capture_data[row_nr, ]$RingNumber) - 2), chick_captures$Last2DigitsRingNr)),
+                         FirstRing = NA, SampleYear = chick_captures$SampleYear, Month = chick_captures$Month, Day = chick_captures$Day,
+                         Time = chick_captures$Time, LocationID = chick_captures$LocationID, BroodID = chick_captures$BroodID,
+                         LastRingNumber_Brood = NA, Species = capture_data[row_nr, ]$Species,
+                         Sex = chick_captures$Sex, Age = "PP", NrNestlings = NA, WingLength = chick_captures$Wing,
+                         Mass = chick_captures$Mass, Tarsus = chick_captures$LeftTarsusLength, ChickAge = chick_captures$ChickAge)
 
+        return(output)
 
-      }, capture_data = Capture_data_output, nestling_data = Nestling_data_output)
+      }
+    }, capture_data = Capture_data_output, nestling_data = Nestling_data_output)
 
-    #THIS SEEMS TO WORK, ALTHOUGH IT IS RETURNING MORE RECORDS THAN EXPECTED
-    #We would expect the expanded data to be made of
-    #a) all capture records where there was no record of nestlings (i.e. adult captures)
-    #b) all nestling data where the brood was found in the capture data
-    x <- filter(Capture_data_output, !is.na(NrNestlings) | !is.na(LastRingNumber_Brood)) %>% pull(BroodID)
-    nrow(filter(Nestling_data_output, BroodID %in% x)) + nrow(filter(Capture_data_output, is.na(NrNestlings) & is.na(LastRingNumber_Brood)))
-    nrow(Capture_data_expand)
-
-    #There appear to be a couple of records extra.
-    #Need to look at this more.
-
+    Capture_data_expand <- Capture_data_expand %>%
       #Create IndvID as a combo of RingSeries and RingNumber
       mutate(IndvID = paste(RingSeries, RingNumber, sep = "-")) %>%
-      #Convert species codes to EUring codes and then remove only the major species
-      rowwise() %>%
-      mutate(Species = ifelse(Species == "FICHYP", Species_codes$Code[which(Species_codes$SpeciesID == 13490)],
-                              ifelse(Species == "PARCAE", Species_codes$Code[which(Species_codes$SpeciesID == 14620)],
-                                     ifelse(Species == "PARMAJ", Species_codes$Code[which(Species_codes$SpeciesID == 14640)],
-                                            ifelse(Species == "PARATE", Species_codes$Code[which(Species_codes$SpeciesID == 14610)], NA))))) %>%
-      filter(!is.na(Species)) %>%
       #Add pop and plot id
       mutate(CapturePopID = "HAR", CapturePlot = NA,
              ReleasePopID = "HAR", ReleasePlot = NA,
