@@ -157,7 +157,7 @@ format_Portugal <- function(db = NULL,
     filter(Age != "C") %>%
     #Select only the Brood, Individual Id and their sex
     select(BroodID, Ring, Sex) %>%
-    #'No ringed/no ring' becomes NA
+    # "No ringed/no ring" becomes NA
     mutate(Ring = map_chr(.x = Ring, .f = ~ifelse(grepl(pattern = "ring", .x), NA, .x))) %>%
     #Reshape data so that we have a MaleID and FemaleID column
     #Rather than an individual row for each parent
@@ -185,7 +185,7 @@ format_Portugal <- function(db = NULL,
     mutate_all(as.character) %>%
     #Melt and cast data so that we return the first value of relevant brood data
     #e.g. laying date, clutch size etc.
-    ##N.B. CHECK THIS TO MAKE SURE THAT THE FIRST RECORD IS ALWAYS CORRECT/REPRESENTATIVE
+    #I've checked manually and the first value is always correct in each brood
     melt(id = c("BroodID", "Species", "Year", "Site", "Box", "FemaleID", "MaleID")) %>%
     dcast(BroodID + Species + Year + Site + Box + FemaleID + MaleID ~ ..., fun.aggregate = first) %>%
     #Any case where chicks are not counted at 14d make as 0

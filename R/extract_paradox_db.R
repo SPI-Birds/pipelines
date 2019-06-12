@@ -1,19 +1,26 @@
-#' Title
+#' Convert paradox data file to data frame.
 #'
-#' @param db
+#' Converts .db paradox data file into R data frame.
+#' @param path Directory where paradox files are located.
+#' @param file_name File name of paradox file (.db) that will be converted.
 #'
-#' @return
+#' @return A data frame
 #' @export
 #' @import reticulate
-#'
-#' @examples
-extract_paradox_db <- function(db){
+
+extract_paradox_db <- function(path, file_name){
 
   reticulate::use_python(python = "C:\\Users\\Liam\\AppData\\Local\\Programs\\Python\\Python37")
 
   py_run_file(system.file("extdata", "paradox_extract.py", package = "HNBStandFormat", mustWork = TRUE))
 
-  data_frame_output <- purrr::map_dfr(.x = py$output_list, .f = function(row){
+  output_file <- py$extract_paradox(path = path, file_name = file_name)
+
+  pb <- dplyr::progress_estimated(n = length(output_file))
+
+  data_frame_output <- purrr::map_dfr(.x = output_file, .f = function(row){
+
+    pb$print()$tick()
 
     row <- purrr::map(.x = row, function(.x){
 

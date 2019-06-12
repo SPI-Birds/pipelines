@@ -1,44 +1,33 @@
 from pypxlib import Table
 from pandas import DataFrame
 
-paradox_db = Table("C:/Users/Liam/Downloads/Paikat.DB")
+def extract_paradox(path, file_name):
+  paradox_db = Table(path + "/" + file_name)
+  col_names = list(paradox_db.fields.keys())
+  output_list = []
+  all_rows = list(range(0, len(paradox_db)))
+  for row_num in all_rows:
+    row = paradox_db[row_num]
+    empty_dict = {}
+    for col in col_names:
+      empty_dict[col] = row[col]
+    output_list.append(empty_dict)
+  return output_list
 
-col_names = list(paradox_db.fields.keys())
-
-output_list = []
-
-all_rows = list(range(0, len(paradox_db)))
-
-for row_num in all_rows:
-  
-  row = paradox_db[row_num]
-  
-  empty_dict = {}
-  
-  for col in col_names:
-    
-    empty_dict[col] = row[col]
-
-  output_list.append(empty_dict)
-
-# for row_num in all_rows:
+#Alternative, may be quicker. Leave for now.
+# def extract_paradox(path, file_name):
+#   paradox_db = Table(path + "/" + file_name)
+#   col_names = list(paradox_db.fields.keys())
+#   output_dict = {}
 #   
-#   row = paradox_db[row_num]
-#   
-#   empty_list = []
-#   
+#   #Build keys for each column each with an empty lis
 #   for col in col_names:
-#     
-#     empty_list.append(row[col])
-#     
-#   output_dict[row_num] = empty_list
+#     output_dict[col] = []
+#   
+#   all_rows = list(range(0, len(paradox_db)))
+#   for row_num in all_rows:
+#     row = paradox_db[row_num]
+#     for col in col_names:
+#       output_dict[col].append(row[col])
+#   return output_dict
 
-# for row in paradox_db:
-#   
-#   empty_list = []
-#   
-#   for col in col_names:
-#     
-#     empty_list.append(row[col])
-#     
-#   output_list.append(tuple(empty_list))

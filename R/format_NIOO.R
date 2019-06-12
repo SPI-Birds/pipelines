@@ -419,8 +419,11 @@ format_NIOO <- function(db = NULL,
                                                }
 
                                              })) %>%
+    #Add extra columns where data was not provided
+    #N.B. Need to go through and include experiment ID
+    mutate(ClutchSizeError = NA, HatchDateError = NA, FledgeDateError = NA, ExperimentID = NA) %>%
     select(SampleYear, Species, PopID, Plot, LocationID = BroodLocation, BroodID, FemaleID, MaleID, ClutchType_observed, ClutchType_calc, LayingDate, LayingDateError,
-           ClutchSize, HatchDate, BroodSize, BroodSizeError, FledgeDate, NumberFledged, NumberFledgedError)
+           ClutchSize, ClutchSizeError, HatchDate, HatchDateError, BroodSize, BroodSizeError, FledgeDate, FledgeDateError, NumberFledged, NumberFledgedError, ExperimentID)
 
   #Next, we calculate mean mass, tarsus for all chicks in the brood
   #AT 14-16 DAYS POST HATCHING!!!
