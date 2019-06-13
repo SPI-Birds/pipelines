@@ -446,18 +446,32 @@ format_Harjavalta <- function(db = NULL,
     #Join the ringed chick, unringed chick, and adult capture data together
     Capture_data_expand <- dplyr::bind_rows(Adult_capture, Ringed_chick_capture, Unringed_chick_capture)
 
-    #We only want nestling data that is from broods in the capture data (because these are subset to just our species)
-    # Nestling_capture <- filter(Nestling_data_output, BroodID %in% unique(Capture_data_output$BroodID))
+    #Check the expected number of adults is correct
+    if(nrow(filter(Capture_data_output, Age != "PP" | is.na(Age))) != nrow(filter(Capture_data_expand, Capture_type == "Adult"))){
 
+      warning("Number of adults in capture table is different to expected")
 
+    }
 
+    #Check number of unringed chicks is correct
+    if(nrow(filter(Nestling_data, grepl(paste(c(LETTERS, "\\?"), collapse = "|"), Last2DigitsRingNr) & BroodID %in% unique(Brood_data_output$BroodID))) !=
+       nrow(filter(Capture_data_expand, Capture_type == "Unringed_chick"))){
 
+      warning("Number of unringed chicks in capture table is different to expected")
 
-    #Expand data so that ringed chicks each have their own row.
-    Capture_data_expand <- purrr::pmap_df(.l = list(row_nr = 1:nrow(Capture_data_output)), function(row_nr, capture_data, nestling_data){
+    }
 
-      print(row_nr)
+    #Check number of unringed chicks is correct
+    if(nrow(filter(Nestling_data_output, !grepl(paste(c(LETTERS, "\\?"), collapse = "|"), Last2DigitsRingNr) & BroodID %in% unique(Capture_data_output$BroodID))) !=
+       nrow(filter(Capture_data_expand, Capture_type == "Ringed_chick"))){
 
+      warning("Number of unringed chicks in capture table is different to expected")
+      warning("The number of ring chicks expected and observed differs because there are cases where:
+              a) chicks are recorded in Capture_data but not Nestling_data and
+              b) chicks are recorded in Nestling_data but not Capture data. We can't really
+              do anything about this programatically. These are probably typos that need to be fixed.")
+
+    }
 
       if(is.na(capture_data[row_nr, ]$NrNestlings) & is.na(capture_data[row_nr, ]$LastRingNumber_Brood)){
 
