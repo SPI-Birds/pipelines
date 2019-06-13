@@ -335,10 +335,6 @@ format_Harjavalta <- function(db = NULL,
     Capture_data_output <- Capture_data %>%
       #Create unique broodID
       mutate(BroodID = paste(SampleYear, LocationID, BroodID, sep = "_")) %>%
-      #Create capture date
-      mutate(CaptureDate = as.Date(paste(Day, Month, SampleYear, sep = "/"), format = "%d/%m/%Y")) %>%
-      #Create capture time
-      mutate(CaptureTime = lubridate::hm(na_if(paste(Time, "00", sep = ":"), "NA:00"), quiet = TRUE)) %>%
       #Remove cols that are not needed
       select(RingSeries:BroodID, LastRingNumber_Brood:Sex, Age, NrNestlings:Mass, Tarsus) %>%
       #Convert species codes to EUring codes and then remove only the major species
@@ -473,46 +469,72 @@ format_Harjavalta <- function(db = NULL,
 
     }
 
-      if(is.na(capture_data[row_nr, ]$NrNestlings) & is.na(capture_data[row_nr, ]$LastRingNumber_Brood)){
-
-        #For now, we give a dummy chick age because it allows us to check how many adult/chick measures there are
-        #We can't use NA because some chicks also have NA age.
-        return(capture_data[row_nr, ] %>% mutate(ChickAge = 365))
-
-      } else {
-
-        #Otherwise, if chicks have been ringed (i.e. NrNestlings or LastRingNumber_Brood are filled)...
-        #Add all data from the nestling table instead of the currently saved info
-
-        ##N.B. In Nestling_data, there are cases where last ring number 'A/B'. I suspect these are cases where a chick is measured but not ringed.
-        #For now, all individuals with last ring number that contains letters or ? is just given NA instead.
-        chick_captures <- nestling_data[nestling_data$BroodID == capture_data[row_nr, ]$BroodID, ]
-
-        output <- tibble(RingSeries = capture_data[row_nr, ]$RingSeries,
-                         RingNumber = ifelse(grepl(paste(LETTERS, collapse = "|"), chick_captures$Last2DigitsRingNr), NA,
-                                             paste0(substr(capture_data[row_nr, ]$RingNumber, 1, nchar(capture_data[row_nr, ]$RingNumber) - 2), chick_captures$Last2DigitsRingNr)),
-                         FirstRing = NA, SampleYear = chick_captures$SampleYear, Month = chick_captures$Month, Day = chick_captures$Day,
-                         Time = chick_captures$Time, LocationID = chick_captures$LocationID, BroodID = chick_captures$BroodID,
-                         LastRingNumber_Brood = NA, Species = capture_data[row_nr, ]$Species,
-                         Sex = chick_captures$Sex, Age = "PP", NrNestlings = NA, WingLength = chick_captures$Wing,
-                         Mass = chick_captures$Mass, Tarsus = chick_captures$LeftTarsusLength, ChickAge = chick_captures$ChickAge)
-
-        return(output)
-
-      }
-    }, capture_data = Capture_data_output, nestling_data = Nestling_data_output)
-
     Capture_data_expand <- Capture_data_expand %>%
-      #Create IndvID as a combo of RingSeries and RingNumber
-      mutate(IndvID = paste(RingSeries, RingNumber, sep = "-")) %>%
-      #Add pop and plot id
-      mutate(CapturePopID = "HAR", CapturePlot = NA,
-             ReleasePopID = "HAR", ReleasePlot = NA,
-             #Divide mass by 10 to get back to grams
-             Mass = Mass/10)
+      ungroup() %>%
+      mutate(Mass = Mass/10, Tarsus = na_if(y = 0, x = Tarsus)) %>%
+      #Create capture date
+      mutate(CaptureDate = as.Date(paste(Day, Month, SampleYear, sep = "/"), format = "%d/%m/%Y")) %>%
+      #Create capture time
+      mutate(CaptureTime = na_if(paste(Time, "00", sep = ":"), "NA:00"),
+             CapturePopID = "HAR", CaputrePlot = NA,
+             ReleasePopID = "HAR", ReleasePlot = NA) %>%
+      #Determine age at first capture for every individual
+      #First arrange the data chronologically within each individual
+      arrange(IndvID, CaptureDate) %>%
+      #Then, for each individual, determine the first age and year of capture
+      group_by(IndvID) %>%
+      mutate(FirstAge = first(Age),
+             FirstYear = first(SampleYear)) %>%
+      ungroup() %>%
+      #Calculate age at each capture using EUring codes
+      mutate(MinAge = purrr::pmap_dbl(.l = list(Age = .$FirstAge,
+                                                Year1 = .$FirstYear,
+                                                YearN = .$SampleYear),
+                                      .f = function(Age, Year1, YearN){
 
+                                        # If age at first capture is unknown
+                                        # we cannot determine age at later captures
+                                        if(is.na(Age)){
 
-    #STILL NEED TO GO THROUGH AND ADD MIN AGE AND INCLUDE CHICK INFO!
+                                          return(NA)
+
+                                        }
+
+                                        #Determine number of years since first capture...
+                                        diff_yr <- (YearN - Year1)
+
+                                        #If it was not caught as a chick...
+                                        if(!Age %in% c("PP", "PM")){
+
+                                          #Use categories where age is uncertain
+                                          #(6, 8)
+                                          return(4 + 2*diff_yr)
+
+                                        } else {
+
+                                          #If it was caught as a chick
+                                          if(diff_yr == 0){
+
+                                            if(Age == "PP"){
+
+                                              return(1)
+
+                                            } else if(Age == "PM"){
+
+                                              return(3)
+
+                                            }
+
+                                          } else {
+
+                                            #Otherwise, use categories where age is certain (5, 7, etc.)
+                                            return(3 + 2*diff_yr)
+
+                                          }
+
+                                        }
+
+                                      })) %>%
       select(CaptureDate, CaptureTime, IndvID, Species, CapturePopID, CaputrePlot,
              ReleasePopID, ReleasePlot, Mass, Tarsus, WingLength,
              Age, MinAge, ChickAge)
