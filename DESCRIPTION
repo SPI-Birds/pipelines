@@ -9,7 +9,8 @@ Encoding: UTF-8
 LazyData: true
 Imports: dplyr,
          DBI,
-         purrr
+         purrr,
+         stringr
 RoxygenNote: 6.1.1
 Suggests: 
     knitr,
