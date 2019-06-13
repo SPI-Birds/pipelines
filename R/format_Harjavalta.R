@@ -358,6 +358,8 @@ format_Harjavalta <- function(db = NULL,
     Adult_capture    <- filter(Capture_data_output, Age != "PP" | is.na(Age)) %>%
       mutate(RingNumber = RingNumber, Capture_type = "Adult", Last2DigitsRingNr = NA,
              ChickAge = NA) %>%
+      mutate(IndvID = paste(RingSeries, RingNumber, sep = "-")) %>%
+      select(IndvID, SampleYear:Time, BroodID, Species:Age, WingLength:Tarsus, Capture_type, Last2DigitsRingNr, ChickAge)
 
     #Subset all info on chick captures
     #This is needed because it contains the full ring information
@@ -424,6 +426,7 @@ format_Harjavalta <- function(db = NULL,
              #There are cases where there are nestling capture records but they don't include times
              Time = ifelse(is.na(SampleYear), Ring_Time, Time)) %>%
       ungroup() %>%
+      mutate(IndvID = paste(RingSeries, RingNumber, sep = "-")) %>%
       select(-Ring_Year, -Ring_Month, -Ring_Day, -Ring_Time, -RingSeries, -RingNumber)
 
     #Create a third data frame that is all the unringed records
