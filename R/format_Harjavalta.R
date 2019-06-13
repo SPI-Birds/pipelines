@@ -356,8 +356,8 @@ format_Harjavalta <- function(db = NULL,
     #We are only interested in the adult ringing data from this database. The
     #chick data is all in nestlings. Chick ringing has age == "PP", all others are assumed to be adults (even Age = NA).
     Adult_capture    <- filter(Capture_data_output, Age != "PP" | is.na(Age)) %>%
-      mutate(RingNumber = RingNumber, Capture_type = "Adult", Last2DigitsRingNr = NA) %>%
-      select(RingSeries, RingNumber, SampleYear:Time, BroodID, Species:Age, WingLength:Tarsus, Capture_type, Last2DigitsRingNr)
+      mutate(RingNumber = RingNumber, Capture_type = "Adult", Last2DigitsRingNr = NA,
+             ChickAge = NA) %>%
 
     #Subset all info on chick captures
     #This is needed because it contains the full ring information
@@ -412,7 +412,7 @@ format_Harjavalta <- function(db = NULL,
       #Join in all nestling data where the broodID and Last2Digits is the same
       #N.B. We do left_join with BroodID and Last2Digits, so we can get multiple records for each chick
       left_join(Nestling_data_output %>% select(SampleYear, BroodID, Month:Time, Last2DigitsRingNr, WingLength = Wing,
-                                                Mass, Tarsus = LeftTarsusLength), by = c("BroodID", "Last2DigitsRingNr"))
+                                                Mass, Tarsus = LeftTarsusLength, ChickAge), by = c("BroodID", "Last2DigitsRingNr")) %>%
       #There are multiple cases where chicks were listed as being ringed in Ringing (Rengas.db)
       #But they are not recorded anywhere in nestlings (Pullit.db)
       #When this is the case, use the capture data from Rengas.db.
@@ -491,6 +491,9 @@ format_Harjavalta <- function(db = NULL,
 
 
     #STILL NEED TO GO THROUGH AND ADD MIN AGE AND INCLUDE CHICK INFO!
+      select(CaptureDate, CaptureTime, IndvID, Species, CapturePopID, CaputrePlot,
+             ReleasePopID, ReleasePlot, Mass, Tarsus, WingLength,
+             Age, MinAge, ChickAge)
 
     ################
     # NESTBOX DATA #
