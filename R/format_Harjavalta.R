@@ -372,11 +372,14 @@ format_Harjavalta <- function(db = NULL,
 
                                              } else {
 
-                                               browser()
-
                                                #Determine first part of Ringnumber
-                                               ring_start <- substr(..2, start = 1, stop = nchar(RingNumber) - 1)
-                                               ring_ends  <- substr(..2, start = nchar(RingNumber) - 1, stop = nchar(RingNumber)):substr(..10, start = nchar(RingNumber) - 1, stop = nchar(RingNumber))
+                                               ring_start <- substr(..2, start = 1, stop = nchar(..2) - 3)
+
+                                               #We use the last 3 digits (rather than last 2) to deal with
+                                               #cases where the ring series passes 100 (e.g. 99 - 00).
+                                               ring_ends  <- substr(..2, start = nchar(..2) - 2, stop = nchar(..2)):substr(..10, start = nchar(..10) - 2, stop = nchar(..10))
+                                               #Pad numbers with leading 0s to ensure they're all the right length
+                                               ring_ends  <- stringr::str_pad(ring_ends, 3, pad = "0")
 
                                                #Otherwise, create a list of all chicks in the series
                                                All_rings <- paste0(ring_start, ring_ends)
