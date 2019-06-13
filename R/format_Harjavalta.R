@@ -429,14 +429,19 @@ format_Harjavalta <- function(db = NULL,
       mutate(IndvID = paste(RingSeries, RingNumber, sep = "-")) %>%
       select(-Ring_Year, -Ring_Month, -Ring_Day, -Ring_Time, -RingSeries, -RingNumber)
 
-    #Create a third data frame that is all the unringed records
-    #We still want to associate them with a Brood (and species), but there is no ring number to use.
-    #Link the BroodID from all unringed chicks with the Brood_data table so we can know the species.
-    Unringed_chick_capture <- left_join(filter(Nestling_data_output, grepl(paste(c(LETTERS, "\\?"), collapse = "|"), Last2DigitsRingNr)),
-                                   select(Brood_data_output, BroodID, Species), by = "BroodID") %>%
-      mutate(RingSeries = NA, RingNumber = NA, Age = "PP", Capture_type = "Unringed_chick") %>%
-      select(RingSeries, RingNumber, SampleYear, BroodID:Time,
-             Species, Sex, Age, WingLength = Wing, Mass, Tarsus = LeftTarsusLength, Capture_type, Last2DigitsRingNr)
+    #Create a third data frame that is all the unringed records We still want to
+    #associate them with a Brood (and species), but there is no ring number to
+    #use. Link the BroodID from all unringed chicks with the Brood_data and
+    #Capture_data table so we can know the species is correct.
+    Unringed_chick_capture <- Nestling_data_output %>%
+      filter(grepl(paste(c(LETTERS, "\\?"), collapse = "|"), Last2DigitsRingNr)) %>%
+      left_join(select(Brood_data_output, BroodID, Species), by = "BroodID") %>%
+      #Filter any cases where no species info was detected
+      #i.e. the brood wasn't from one of the 4 species.
+      filter(!is.na(Species)) %>%
+      mutate(Age = "PP", Capture_type = "Unringed_chick", IndvID = NA) %>%
+      select(IndvID, SampleYear, BroodID:Time,
+             Species, Sex, Age, WingLength = Wing, Mass, Tarsus = LeftTarsusLength, Capture_type, Last2DigitsRingNr, ChickAge)
 
     #Join the ringed chick, unringed chick, and adult capture data together
     Capture_data_expand <- dplyr::bind_rows(Adult_capture, Ringed_chick_capture, Unringed_chick_capture)
