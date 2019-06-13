@@ -49,12 +49,20 @@
 #'records of chick ringing.
 #'- In some cases, checks were recorded in 'Ringing' but have no matching
 #'BroodID in Brood_data (e.g. 2004_1012_0).
-#'- How do we deal with all these conflicts? For now, we assume that if a chick was listed as 'ringed' but has no record in
-#'the 'Nestlings' table, we assume it was ringed but not measurements were taken (e.g. tarsus);
-#'If a chick was captured in 'Nestlings' but is not recorded in 'Ringing' for now these will be excluded.
-#'These cases are the most problematic because to give these chicks a true ring number we need to know
-#'the rest of the ring number (not just last 2 digits). If they have no record in ringing, it is impossible
-#'to include this information!
+#'- In some cases, one BroodID is used in the 'Ringing' table and another in the 'Nestling' table
+#'even though the ring numbers are the same (e.g. 2018_0323_1/2)
+#'- How do we deal with all these conflicts? For now, we assume that if a chick
+#'was listed as 'ringed' but has no record in the 'Nestlings' table, we assume
+#'it was ringed but not measurements were taken (e.g. tarsus) or the
+#'measurements were not found because the BroodID was entered incorrectly. If a
+#'chick was captured in 'Nestlings' but is not recorded in 'Ringing' for now
+#'these will be excluded because they won't join to the data in 'Ringing'. These
+#'cases are the most problematic because to give these chicks a true ring number
+#'we need to know the rest of the ring number (not just last 2 digits). If they
+#'have no record in ringing, it is impossible to include this information!
+#'For records where no ring number is given (e.g. A), we include only those where
+#'the BroodID is in either the 'Ringing' table or the 'Brood' table. This ensures
+#'that the unringed chick is of the right species.
 #'
 #'\strong{Mass}: Mass of birds appears to be measured in mg. This is converted
 #'to grams to match other populations.
