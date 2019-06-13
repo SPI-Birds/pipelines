@@ -348,16 +348,11 @@ format_Harjavalta <- function(db = NULL,
     #We are only interested in the adult ringing data from this database. The
     #chick data is all in nestlings. Chick ringing has age == "PP", all others are assumed to be adults (even Age = NA).
     Adult_capture    <- filter(Capture_data_output, Age != "PP" | is.na(Age)) %>%
-      mutate(RingNumber = as.integer(RingNumber), Capture_type = "Adult", Last2DigitsRingNr = NA) %>%
+      mutate(RingNumber = RingNumber, Capture_type = "Adult", Last2DigitsRingNr = NA) %>%
       select(RingSeries, RingNumber, SampleYear:Time, BroodID, Species:Age, WingLength:Tarsus, Capture_type, Last2DigitsRingNr)
 
     #Subset all info on chick captures
     #This is needed because it contains the full ring information
-
-
-    ############SOMETHING IS WRONG HERE!!!
-    ####DON'T KNOW WHAT!!!
-
     Ringed_chick_capture <- purrr::pmap_df(.l = filter(Capture_data_output, Age == "PP"),
                                            .f = ~{
 
@@ -365,18 +360,29 @@ format_Harjavalta <- function(db = NULL,
                                              if(is.na(..10)){
 
                                                #Assume only one chick was ringed
-                                               All_rings <- as.integer(..2)
+                                               All_rings <- ..2
 
                                              } else {
 
+                                               browser()
+
+                                               #Determine first part of Ringnumber
+                                               ring_start <- substr(..2, start = 1, stop = nchar(RingNumber) - 1)
+                                               ring_ends  <- substr(..2, start = nchar(RingNumber) - 1, stop = nchar(RingNumber)):substr(..10, start = nchar(RingNumber) - 1, stop = nchar(RingNumber))
+
                                                #Otherwise, create a list of all chicks in the series
-                                               All_rings <- ..2:..10
+                                               All_rings <- paste0(ring_start, ring_ends)
 
                                              }
 
-                                             #N.B. We remove Year, Month, Day,
-                                             #Time because these will come from
-                                             #nestling data
+                                             #N.B. We include Year, Month, Day,
+                                             #This data is needed if chicks
+                                             #don't have info in nestling table
+                                             #in these cases we still want to
+                                             #know when the chick was supposedly
+                                             #captured even though it doesn't
+                                             #have any additional capture
+                                             #information.
 
                                              #N.B. There are a few cases (<100)
                                              #where the capture data for chicks also has winglength/mass/tarsus
@@ -384,7 +390,8 @@ format_Harjavalta <- function(db = NULL,
                                              #Or where multiple chicks were captured but only one measured (e.g. 428222 in 2011_0219_1).
                                              #We assume that all this info is ALSO stored in Nestling data, and so we don't include it
                                              return(tibble::tibble(RingSeries = ..1,
-                                                                   RingNumber = All_rings,
+                                                                   RingNumber = All_rings, Ring_Year = ..4,
+                                                                   Ring_Month = ..5, Ring_Day = ..6,
                                                                    BroodID = ..9, Species = ..11, Sex = ..12, Age = ..13))
 
                                            }) %>%
