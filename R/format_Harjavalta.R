@@ -402,7 +402,7 @@ format_Harjavalta <- function(db = NULL,
                                              #We assume that all this info is ALSO stored in Nestling data, and so we don't include it
                                              return(tibble::tibble(RingSeries = ..1,
                                                                    RingNumber = All_rings, Ring_Year = ..4,
-                                                                   Ring_Month = ..5, Ring_Day = ..6,
+                                                                   Ring_Month = ..5, Ring_Day = ..6, Ring_Time = ..7,
                                                                    BroodID = ..9, Species = ..11, Sex = ..12, Age = ..13))
 
                                            }) %>%
@@ -413,6 +413,18 @@ format_Harjavalta <- function(db = NULL,
       #N.B. We do left_join with BroodID and Last2Digits, so we can get multiple records for each chick
       left_join(Nestling_data_output %>% select(SampleYear, BroodID, Month:Time, Last2DigitsRingNr, WingLength = Wing,
                                                 Mass, Tarsus = LeftTarsusLength), by = c("BroodID", "Last2DigitsRingNr"))
+      #There are multiple cases where chicks were listed as being ringed in Ringing (Rengas.db)
+      #But they are not recorded anywhere in nestlings (Pullit.db)
+      #When this is the case, use the capture data from Rengas.db.
+      rowwise() %>%
+      mutate(SampleYear = ifelse(is.na(SampleYear), Ring_Year, SampleYear),
+             Month = ifelse(is.na(Month), Ring_Month, Month),
+             Day = ifelse(is.na(Day), Ring_Day, Day),
+             #For time, only add it if SampleYear is missing
+             #There are cases where there are nestling capture records but they don't include times
+             Time = ifelse(is.na(SampleYear), Ring_Time, Time)) %>%
+      ungroup() %>%
+      select(-Ring_Year, -Ring_Month, -Ring_Day, -Ring_Time, -RingSeries, -RingNumber)
 
     #Create a third data frame that is all the unringed records
     #We still want to associate them with a Brood (and species), but there is no ring number to use.
