@@ -83,7 +83,7 @@ format_Portugal <- function(db = NULL,
            FirstYear = first(Year)) %>%
     ungroup() %>%
     #Calculate age at each capture using EUring codes
-    mutate(MinAge = purrr::pmap_dbl(.l = list(Age = .$FirstAge,
+    mutate(Age_calc = purrr::pmap_dbl(.l = list(Age = .$FirstAge,
                                               Year1 = .$FirstYear,
                                               YearN = .$Year),
                                     .f = function(Age, Year1, YearN){
@@ -108,7 +108,7 @@ format_Portugal <- function(db = NULL,
                                           return(5 + 2*diff_yr)
 
                                         #Otherwise, when it was first caught it was at least EURING code 6.
-                                        } else {
+                                        } else if(Age == "adult"){
 
                                           #Use categories where age is uncertain
                                           #(6, 8)
@@ -136,14 +136,17 @@ format_Portugal <- function(db = NULL,
                                       }
 
                                     })) %>%
-
+    #Also include observed age (not calculated)
+    rowwise() %>%
+    mutate(Age_obsv = ifelse(Age == "C", 1, ifelse(Age == "first year", 5, ifelse(Age == "adult", 6, NA)))) %>%
+    ungroup() %>%
     #Select out only those columns we need.
     select(CaptureDate, CaptureTime = Time,
            IndvID = Ring, Species,
            CapturePopID, CapturePlot,
            ReleasePopID, ReleasePlot,
            Mass = Weight, Tarsus, WingLength = Wing,
-           MinAge, ChickAge)
+           Age_obsv, Age_calc, ChickAge)
 
   ##############
   # BROOD DATA #
