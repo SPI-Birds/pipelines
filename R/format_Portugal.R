@@ -97,7 +97,7 @@ format_Portugal <- function(db = NULL,
                                       }
 
                                       #Determine number of years since first capture...
-                                      diff_yr <- (Year1 - YearN)
+                                      diff_yr <- (YearN - Year1)
 
                                       #If it was not caught as a chick...
                                       if(Age != "C"){
