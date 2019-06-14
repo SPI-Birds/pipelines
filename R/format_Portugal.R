@@ -201,10 +201,6 @@ format_Portugal <- function(db = NULL,
     #I've checked manually and the first value is always correct in each brood
     melt(id = c("BroodID", "Species", "Year", "Site", "Box", "FemaleID", "MaleID")) %>%
     dcast(BroodID + Species + Year + Site + Box + FemaleID + MaleID ~ ..., fun.aggregate = first) %>%
-    #Any case where chicks are not counted at 14d make as 0
-    rowwise() %>%
-    mutate(NoChicksOlder14D = ifelse(is.na(NoChicksOlder14D), 0, as.numeric(NoChicksOlder14D))) %>%
-    ungroup() %>%
     #Determine the 30 day cut-off for each year
     group_by(Year) %>%
     mutate(cutoff = tryCatch(expr = min(as.numeric(LayingDateJulian), na.rm = T) + 30,
@@ -212,11 +208,39 @@ format_Portugal <- function(db = NULL,
     # Determine cumulative fledgling information for each clutch
     # Arrange data chronologically for each female in each year
     arrange(Year, FemaleID, as.numeric(LayingDateJulian)) %>%
-    group_by(Year, FemaleID) %>%
-    #Determine the cumulative number of fledglings produced
-    #up until the current clutch
-    #Use this to determine if a clutch is second/replacement
-    mutate(total_fledge = cumsum(NoChicksOlder14D), row = 1:n()) %>%
+    group_by(Year, FemaleID)
+
+  #Determine the cumulative number of fledglings produced up until the current
+  #clutch Use this to determine if a clutch is second/replacement We don't
+  #want cumsum because that includes the current row (e.g. 1, 2, 3 = 1, 3, 6)
+  #We want the first value to always be 0 because we're interested in the data
+  fledge_calc <- function(x, na.rm = TRUE){
+
+    if(na.rm){
+
+      #This func assumes that all NAs are just 0s.
+      #This is needed because otherwise cumsum returns all NAs
+      #However, all we need to know is if there was atleast 1 successful nest before the current nest
+      x[!complete.cases(x)] <- 0
+
+      nrs <- cumsum(x)
+
+    } else {
+
+      x <- is.na(x)
+
+      nrs <- cumsum(x)
+
+    }
+
+    return(c(0, nrs[1:(length(nrs) - 1)]))
+
+  }
+
+  Brood_data <- Brood_data %>%
+    mutate(total_fledge_narm = fledge_calc(NoChicksOlder14D, na.rm = TRUE),
+           total_fledge_na = fledge_calc(NoChicksOlder14D, na.rm = FALSE),
+           row = 1:n()) %>%
     ungroup()
 
   #Create a progress bar
@@ -227,8 +251,8 @@ format_Portugal <- function(db = NULL,
     mutate(ClutchType_calc = purrr::pmap_chr(.l = list(rows = .$row,
                                                        femID = .$FemaleID,
                                                        cutoff_date = .$cutoff,
-                                                       nr_fledge_before = .$total_fledge,
-                                                       nr_fledge_now = .$NoChicksOlder14D,
+                                                       nr_fledge_before = .$total_fledge_narm,
+                                                       any_na = .$total_fledge_na,
                                                        LD = as.numeric(.$LayingDateJulian)),
                                              .f = function(rows, femID, cutoff_date, nr_fledge_before, nr_fledge_now, LD){
 
@@ -281,16 +305,27 @@ format_Portugal <- function(db = NULL,
                                                #If it's NOT the first nest of the season for this female
                                                } else {
 
-                                                 #If there have been no fledglings before this point..
-                                                 if(nr_fledge_before - nr_fledge_now == 0){
+                                                 #If there were some successful clutches before this point...
+                                                 if(nr_fledge_before > 0){
 
-                                                   #Then it is a replacement
-                                                   return("replacement")
+                                                   #Then it is a second clutch
+                                                   #Even if some of the clutches were not checked (i.e. were NAs)
+                                                   return("second")
 
                                                  } else {
 
-                                                   #Otherwise, it is a secondary clutch
-                                                   return("second")
+                                                   #Otherwise, if there were no fledglings before this point
+                                                   #But there was at least 1 NA
+                                                   #Then we can't determine the clutch type
+                                                   if(any_na > 0){
+
+                                                     return(NA)
+
+                                                   } else {
+
+                                                     return("replacement")
+
+                                                   }
 
                                                  }
 
