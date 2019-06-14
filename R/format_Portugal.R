@@ -19,9 +19,14 @@
 #' \strong{ClutchType_observed}: In the raw data, there is no distinction between 'second' and 'replacement' clutches.
 #' Any clutch recorded as '2nd' is assumed to be a 'second' clutch under our definitions.
 #' 'ClutchType_calc' may give a more appropriate estimate of clutch type for this data.
+#'
 #' @param db Location of database file.
 #' @param Species A numeric vector. Which species should be included (EUring codes)? If blank will return all major species (see details below).
 #' @param path Location where output csv files will be saved.
+#' @param debug For internal use when editing pipelines. If TRUE, pipeline
+#'   generates a summary of pipeline data. This
+#'   includes: a) Histogram of continuous variables with mean/SD b) unique
+#'   values of all categorical variables.
 #'
 #' @return Generates 5 .csv files with data in a standard format.
 #' @export
@@ -32,7 +37,8 @@
 
 format_Portugal <- function(db = NULL,
                             Species = NULL,
-                            path = "."){
+                            path = ".",
+                            debug = FALSE){
 
   #Find database path
   if(is.null(db)){
@@ -434,6 +440,14 @@ format_Portugal <- function(db = NULL,
            Latitude = NA, Longitude = NA,
            StartYear = NA, EndYear = NA) %>%
     filter(!is.na(LocationID))
+
+  if(debug){
+
+    message("Generating debug report...")
+
+    generate_debug_report(path = path, Pop = "CHO", Brood_data = Brood_data, Capture_data = Capture_data, Indv_data = Indv_data)
+
+  }
 
   message("Saving .csv files...")
 
