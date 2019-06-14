@@ -102,9 +102,19 @@ format_Portugal <- function(db = NULL,
                                       #If it was not caught as a chick...
                                       if(Age != "C"){
 
-                                        #Use categories where age is uncertain
-                                        #(6, 8)
-                                        return(4 + 2*diff_yr)
+                                        #If it's listed as 'first year' then we know it was EURING code 5 at first capture
+                                        if(Age == "first year"){
+
+                                          return(5 + 2*diff_yr)
+
+                                        #Otherwise, when it was first caught it was at least EURING code 6.
+                                        } else {
+
+                                          #Use categories where age is uncertain
+                                          #(6, 8)
+                                          return(6 + 2*diff_yr)
+
+                                        }
 
                                       } else {
 
