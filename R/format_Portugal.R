@@ -212,10 +212,9 @@ format_Portugal <- function(db = NULL,
     group_by(Year) %>%
     mutate(cutoff = tryCatch(expr = min(as.numeric(LayingDateJulian), na.rm = T) + 30,
                              warning = function(...) return(NA))) %>%
-    # Determine cumulative fledgling information for each clutch
-    # Arrange data chronologically for each female in each year
-    arrange(Year, FemaleID, as.numeric(LayingDateJulian)) %>%
-    group_by(Year, FemaleID)
+    ungroup() %>%
+    #Turn all characters back to numeric
+    mutate_at(.vars = vars(Year, LayingDateJulian, InitialClutchSize, FinalClutchSize, NoChicksHatched, NoChicksOlder14D), as.numeric)
 
   #Determine the cumulative number of fledglings produced up until the current
   #clutch Use this to determine if a clutch is second/replacement We don't
@@ -396,6 +395,7 @@ format_Portugal <- function(db = NULL,
     summarise(FirstBrood = first(BroodID),
               FirstYr = first(Year),
               FirstAge = first(Age),
+              Species = "GT",
               Sex = ifelse(all(is.na(Sex)), "U",
                            ifelse(any(Sex %in% "M"), "M",
                                   ifelse(any(Sex %in% "F"), "F", NA)))) %>%
