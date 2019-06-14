@@ -67,7 +67,8 @@ format_Portugal <- function(db = NULL,
     #Fix time format (it's currently trying to estimate date)
     mutate(BroodID = paste(Year, BroodId, sep = "_"),
            CaptureDate = lubridate::ymd(paste0(Year, "-01-01")) + JulianDate,
-           Time = format.POSIXct(Time, format = "%H:%M:%S"))
+           Time = format.POSIXct(Time, format = "%H:%M:%S"),
+           ChickAge = as.numeric(na_if(ChickAge, "na")))
 
   ################
   # CAPTURE DATA #
@@ -356,9 +357,7 @@ format_Portugal <- function(db = NULL,
   #Finally, we add in average mass and tarsus measured for all chicks at 14d
   #From Capture_data, subset only those chicks that were 14 - 16 days when captured.
   avg_measure <- all_data %>%
-    filter(!is.na(ChickAge) & ChickAge != "na") %>%
-    mutate(ChickAge = as.numeric(ChickAge)) %>%
-    filter(between(ChickAge, 14, 16)) %>%
+    filter(!is.na(ChickAge) & between(ChickAge, 14, 16)) %>%
     #For every brood, determine the average mass and tarsus length
     group_by(BroodID) %>%
     summarise(AvgMass = mean(Weight, na.rm = T), AvgTarsus = mean(Tarsus, na.rm = T))
