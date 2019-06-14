@@ -240,11 +240,23 @@ format_Portugal <- function(db = NULL,
 
     }
 
-    return(c(0, nrs[1:(length(nrs) - 1)]))
+    if(length(x) == 1){
+
+      return(0)
+
+    } else {
+
+      return(c(0, nrs[1:(length(nrs) - 1)]))
+
+    }
 
   }
 
   Brood_data <- Brood_data %>%
+    # Determine cumulative fledgling information for each clutch
+    # Arrange data chronologically for each female in each year
+    arrange(Year, FemaleID, as.numeric(LayingDateJulian)) %>%
+    group_by(Year, FemaleID) %>%
     mutate(total_fledge_narm = fledge_calc(NoChicksOlder14D, na.rm = TRUE),
            total_fledge_na = fledge_calc(NoChicksOlder14D, na.rm = FALSE),
            row = 1:n()) %>%
@@ -261,7 +273,7 @@ format_Portugal <- function(db = NULL,
                                                        nr_fledge_before = .$total_fledge_narm,
                                                        any_na = .$total_fledge_na,
                                                        LD = as.numeric(.$LayingDateJulian)),
-                                             .f = function(rows, femID, cutoff_date, nr_fledge_before, nr_fledge_now, LD){
+                                             .f = function(rows, femID, cutoff_date, nr_fledge_before, any_na, LD){
 
                                                clutchtype$tick()$print()
 
