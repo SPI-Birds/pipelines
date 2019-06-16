@@ -493,14 +493,16 @@ format_Harjavalta <- function(db = NULL,
              FirstYear = first(SampleYear)) %>%
       ungroup() %>%
       #Calculate age at each capture using EUring codes
-      mutate(Age_calc = purrr::pmap_dbl(.l = list(Age = .$FirstAge,
-                                                Year1 = .$FirstYear,
-                                                YearN = .$SampleYear),
-                                      .f = function(Age, Year1, YearN){
+      mutate(Age_calc = purrr::pmap_dbl(.l = list(IndvID = .$IndvID,
+                                                  Age = .$FirstAge,
+                                                  Year1 = .$FirstYear,
+                                                  YearN = .$SampleYear),
+                                      .f = function(IndvID, Age, Year1, YearN){
 
                                         # If age at first capture is unknown
+                                        # or the bird is unringed
                                         # we cannot determine age at later captures
-                                        if(is.na(Age)){
+                                        if(is.na(Age) | is.na(IndvID)){
 
                                           return(NA)
 
