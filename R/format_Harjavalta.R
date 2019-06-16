@@ -565,7 +565,7 @@ format_Harjavalta <- function(db = NULL,
                 BroodIDLaid = first(BroodID),
                 BroodIDRinged = NA,
                 RingYear = first(lubridate::year(CaptureDate)),
-                RingAge = first(MinAge),
+                RingAge = first(Age_calc),
                 ####N.B. NEED TO DECIPHER THE SEX CODES FROM FINNISH
                 ### CURRENTLY THIS SEX DATA IS NOT USEFUL
                 Sex = first(Sex)) %>%
