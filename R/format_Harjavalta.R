@@ -541,8 +541,14 @@ format_Harjavalta <- function(db = NULL,
                                         }
 
                                       })) %>%
+      #Make AgeObsv, that doesn't require any calculation, just uses observations at the time of capture
+      #Assume that PP = 1, PM/FL = 3 (known to hatch this year), 1 = 5 (known to hatch last year),
+      #1+ = 4 (hatched atleast 1 year ago), 2 = 7 (known to hatch 2 years ago),
+      #2+ = 6 (hatched at least 2 years ago)
+      left_join(tibble::tibble(Age = c("PP", "PM", "FL", "1", "1+", "2", "2+"),
+                               Age_obsv = c(1, 3, 3, 5, 4, 7, 6)), by = "Age") %>%
       select(CaptureDate, CaptureTime, IndvID, Species, CapturePopID, CapturePlot,
-             ReleasePopID, ReleasePlot, Mass, Tarsus, WingLength, MinAge, ChickAge, Sex, BroodID)
+             ReleasePopID, ReleasePlot, Mass, Tarsus, WingLength, Age_obsv, Age_calc, ChickAge, Sex, BroodID)
 
     ###################
     # INDIVIDUAL DATA #
