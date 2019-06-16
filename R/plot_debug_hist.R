@@ -17,6 +17,13 @@ plot_debug_hist <- function(table, variable){
   variable <- enquo(variable)
   var_name <- snakecase::to_any_case(dplyr::quo_name(variable), case = "sentence")
 
+  #When variable is NA return NULL
+  if(table %>% pull(!!variable) %>% {all(is.na(.))}){
+
+    return(NULL)
+
+  }
+
   #Make a number of bins the same as the number of unique values
   bins <- table %>%
     summarise(bins = ifelse(length(unique(!!variable)) < 10, length(unique(!!variable)), length(unique(!!variable))/2))
