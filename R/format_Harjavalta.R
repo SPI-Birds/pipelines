@@ -493,7 +493,7 @@ format_Harjavalta <- function(db = NULL,
              FirstYear = first(SampleYear)) %>%
       ungroup() %>%
       #Calculate age at each capture using EUring codes
-      mutate(MinAge = purrr::pmap_dbl(.l = list(Age = .$FirstAge,
+      mutate(Age_calc = purrr::pmap_dbl(.l = list(Age = .$FirstAge,
                                                 Year1 = .$FirstYear,
                                                 YearN = .$SampleYear),
                                       .f = function(Age, Year1, YearN){
@@ -510,7 +510,7 @@ format_Harjavalta <- function(db = NULL,
                                         diff_yr <- (YearN - Year1)
 
                                         #If it was not caught as a chick...
-                                        if(!Age %in% c("PP", "PM")){
+                                        if(!Age %in% c("PP", "PM", "FL")){
 
                                           #Use categories where age is uncertain
                                           #(6, 8)
@@ -525,7 +525,9 @@ format_Harjavalta <- function(db = NULL,
 
                                               return(1)
 
-                                            } else if(Age == "PM"){
+                                              #Assume that "FL" == Fledgling.
+                                              #Need to check with Tapio
+                                            } else if(Age %in% c("PM", "FL")){
 
                                               return(3)
 
@@ -541,8 +543,12 @@ format_Harjavalta <- function(db = NULL,
                                         }
 
                                       })) %>%
+      #Make AgeObsv, that doesn't require any calculation, just uses observations at the time of capture
+      rowwise() %>%
+      mutate(Age_obsv = ifelse(Age == "PP", 1, ifelse(Age == "PM", 3, ifelse(Age == "")))) %>%
+      ungroup() %>%
       select(CaptureDate, CaptureTime, IndvID, Species, CapturePopID, CapturePlot,
-             ReleasePopID, ReleasePlot, Mass, Tarsus, WingLength, MinAge, ChickAge, Sex, BroodID)
+             ReleasePopID, ReleasePlot, Mass, Tarsus, WingLength, Age_calc, ChickAge, Sex, BroodID)
 
     ###################
     # INDIVIDUAL DATA #
