@@ -4,7 +4,8 @@
 \alias{format_Harjavalta}
 \title{Construct standard summary for data from Harjavalta, Finland.}
 \usage{
-format_Harjavalta(db = NULL, Species = NULL, path = ".")
+format_Harjavalta(db = NULL, Species = NULL, path = ".",
+  debug = FALSE)
 }
 \arguments{
 \item{db}{Location of database file.}
@@ -13,6 +14,11 @@ format_Harjavalta(db = NULL, Species = NULL, path = ".")
 codes)? If blank will return all major species (see details below).}
 
 \item{path}{Location where output csv files will be saved.}
+
+\item{debug}{For internal use when editing pipelines. If TRUE, pipeline
+generates a summary of pipeline data. This
+includes: a) Histogram of continuous variables with mean/SD b) unique
+values of all categorical variables.}
 }
 \value{
 Generates 5 .csv files with data in a standard format.

@@ -45,7 +45,7 @@ plot_debug_hist <- function(table, variable){
   if(length(unique(table$Species)) > 1){
 
     raw_dat <- raw_dat +
-      facet_wrap(facets = ~Species)
+      facet_wrap(facets = ~Species, scales = "free")
 
   }
 
