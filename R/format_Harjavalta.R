@@ -476,7 +476,7 @@ format_Harjavalta <- function(db = NULL,
       mutate(CaptureDate = as.Date(paste(Day, Month, SampleYear, sep = "/"), format = "%d/%m/%Y")) %>%
       #Create capture time
       mutate(CaptureTime = na_if(paste(Time, "00", sep = ":"), "NA:00"),
-             CapturePopID = "HAR", CaputrePlot = NA,
+             CapturePopID = "HAR", CapturePlot = NA,
              ReleasePopID = "HAR", ReleasePlot = NA) %>%
       #Determine age at first capture for every individual
       #First arrange the data chronologically within each individual
@@ -535,9 +535,34 @@ format_Harjavalta <- function(db = NULL,
                                         }
 
                                       })) %>%
-      select(CaptureDate, CaptureTime, IndvID, Species, CapturePopID, CaputrePlot,
-             ReleasePopID, ReleasePlot, Mass, Tarsus, WingLength,
-             Age, MinAge, ChickAge)
+      select(CaptureDate, CaptureTime, IndvID, Species, CapturePopID, CapturePlot,
+             ReleasePopID, ReleasePlot, Mass, Tarsus, WingLength, MinAge, ChickAge, Sex, BroodID)
+
+    ###################
+    # INDIVIDUAL DATA #
+    ###################
+
+    message("Compiling individual data...")
+
+    #Take capture data and determine general data for each individual
+    Indv_data <- Capture_data_expand %>%
+      filter(!is.na(IndvID)) %>%
+      arrange(IndvID, CaptureDate, CaptureTime) %>%
+      group_by(IndvID) %>%
+      summarise(Species = first(Species), PopID = "HAR",
+                BroodIDLaid = first(BroodID),
+                BroodIDRinged = NA,
+                RingYear = first(lubridate::year(CaptureDate)),
+                RingAge = first(MinAge),
+                ####N.B. NEED TO DECIPHER THE SEX CODES FROM FINNISH
+                ### CURRENTLY THIS SEX DATA IS NOT USEFUL
+                Sex = first(Sex)) %>%
+      rowwise() %>%
+      #For each individual, if their ring age was 1 or 3 (caught in first breeding year)
+      #Then we take their first BroodID, otherwise it is NA
+      mutate(BroodIDLaid = ifelse(RingAge %in% c(1, 3), BroodIDLaid, NA),
+             BroodIDRinged = BroodIDLaid) %>%
+      arrange(RingYear, IndvID)
 
     ################
     # NESTBOX DATA #
