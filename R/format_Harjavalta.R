@@ -69,10 +69,15 @@
 #'
 #'\strong{Tarsus}: Tarsus length is measured for both left and right leg. Only
 #'left leg is reported.
+#'
 #'@param db Location of database file.
 #'@param Species A numeric vector. Which species should be included (EUring
 #'  codes)? If blank will return all major species (see details below).
 #'@param path Location where output csv files will be saved.
+#'@param debug For internal use when editing pipelines. If TRUE, pipeline
+#'   generates a summary of pipeline data. This
+#'   includes: a) Histogram of continuous variables with mean/SD b) unique
+#'   values of all categorical variables.
 #'
 #'@return Generates 5 .csv files with data in a standard format.
 #'@export
@@ -80,7 +85,8 @@
 
 format_Harjavalta <- function(db = NULL,
                               Species = NULL,
-                              path = "."){
+                              path = ".",
+                              debug = FALSE){
 
   #Find database path
   if(is.null(db)){
@@ -600,6 +606,18 @@ format_Harjavalta <- function(db = NULL,
     ###CURRENTLY ASSUMING THAT EACH LOCATION AND NEST BOX ARE IDENTICAL
     ###GO THROUGH AND CHECK MORE THOROUGHLY
 
+    #########
+    # DEBUG #
+    #########
+
+    if(debug){
+
+      message("Generating debug report...")
+
+      generate_debug_report(path = path, Pop = "HAR", Brood_data = Brood_data_output, Capture_data = Capture_data_expand, Indv_data = Indv_data)
+
+    }
+
     ###############
     # EXPORT DATA #
     ###############
@@ -608,16 +626,14 @@ format_Harjavalta <- function(db = NULL,
 
     write.csv(x = Brood_data_output, file = paste0(path, "\\Brood_data_HAR.csv"), row.names = F)
 
-    # write.csv(x = Indv_data %>% select(-RingNumber), file = paste0(path, "\\Indv_data_HAR.csv"), row.names = F)
-    #
-    # write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_HAR.csv"), row.names = F)
-    #
-    # write.csv(x = Nestbox_data, file = paste0(path, "\\Nestbox_data_HAR.csv"), row.names = F)
+    write.csv(x = Indv_data, file = paste0(path, "\\Indv_data_HAR.csv"), row.names = F)
+
+    write.csv(x = Capture_data_expand %>% select(-Sex, -BroodID), file = paste0(path, "\\Capture_data_HAR.csv"), row.names = F)
+
+    write.csv(x = Nestbox_data, file = paste0(path, "\\Nestbox_data_HAR.csv"), row.names = F)
 
     time <- difftime(Sys.time(), start_time, units = "sec")
 
     message(paste0("All tables generated in ", round(time, 2), " seconds"))
-
-
 
 }
