@@ -493,7 +493,7 @@ format_Harjavalta <- function(db = NULL,
              FirstYear = first(SampleYear)) %>%
       ungroup() %>%
       #Calculate age at each capture using EUring codes
-      mutate(MinAge = purrr::pmap_dbl(.l = list(Age = .$FirstAge,
+      mutate(Age_calc = purrr::pmap_dbl(.l = list(Age = .$FirstAge,
                                                 Year1 = .$FirstYear,
                                                 YearN = .$SampleYear),
                                       .f = function(Age, Year1, YearN){
@@ -510,7 +510,7 @@ format_Harjavalta <- function(db = NULL,
                                         diff_yr <- (YearN - Year1)
 
                                         #If it was not caught as a chick...
-                                        if(!Age %in% c("PP", "PM")){
+                                        if(!Age %in% c("PP", "PM", "FL")){
 
                                           #Use categories where age is uncertain
                                           #(6, 8)
@@ -525,7 +525,7 @@ format_Harjavalta <- function(db = NULL,
 
                                               return(1)
 
-                                            } else if(Age == "PM"){
+                                            } else if(Age %in% c("PM", "FL")){
 
                                               return(3)
 
