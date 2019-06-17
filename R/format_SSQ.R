@@ -8,6 +8,14 @@
 #' this data. For a general description of the standard format please see XXXXX
 #' PLACE HOLDER!
 #'
+#' \strong{BroodID}: For now we make BroodID as a combination of: year of nest,
+#' nestID, layingdate. This is necessary because there are no other ways to distinguish
+#' a two broods laid in the same nest and same year.
+#'
+#' \strong{Species}: In the individual data, there are some cases where
+#' an IndvID is associated with >1 species. I assume these are just typos
+#' and I will just take the first species.
+#'
 #' \strong{CaptureDate}: No exact capture date is given. Adults were only ever
 #' captured with a nest, therefore, we use the laying date of the nest as a
 #' proxy for capture date. Chick were also only ever captured on the nest, we
@@ -17,6 +25,10 @@
 #'
 #' \strong{Age_calc}: All ringed chicks were assumed to be ringed at EURING code 1 (i.e. pre-fledging).
 #' For adults where no age was provided, we assumed that first observation was 6 (i.e. at least 2 years old)
+#'
+#' \strong{Indv_data}: There are cases where chicks from different nests are given the same ring number.
+#' Unsure if this is the rings being reused or a typo. Currently, I leave it as is and assume this is a typo that
+#' needs to be fixed.
 #' @param db Location of database file.
 #' @param Species A numeric vector. Which species should be included (EUring
 #'   codes)? If blank will return all major species (see details below).
@@ -60,7 +72,8 @@ format_SSQ <- function(db = NULL,
     dplyr::rename(SampleYear = Year, LayingDate = Ld, ClutchSize = Cs,
                   HatchDate = Hd, BroodSize = Hs, NumberFledged = Fs,
                   FemaleID = FId, MaleID = MId, LocationID = NestId,
-                  Plot = HabitatOfRinging) %>%
+                  Plot = HabitatOfRinging,
+                  Latitude = YCoord, Longitude = XCoord) %>%
     #Add species codes
     left_join(filter(Species_codes, SpeciesID %in% c("14640", "14620")) %>%
                 mutate(Species = c("Parus major", "Cyanistes caeruleus")) %>%
@@ -71,7 +84,7 @@ format_SSQ <- function(db = NULL,
     #- ClutchType_observed
     #- FledgeDate
     mutate(PopID = "SIC",
-           BroodID = paste(SampleYear, LocationID, sep = "_")) %>%
+           BroodID = paste(SampleYear, LocationID, LayingDate, sep = "_")) %>%
     left_join(tibble::tibble(ClutchType_observed = c("first", "second", "replacement"),
                              Class = c(1, 3, 2)), by = "Class") %>%
     dplyr::mutate(Species = Code, FledgeDate = NA, AvgMass = NA, AvgTarsus = NA)
@@ -83,9 +96,9 @@ format_SSQ <- function(db = NULL,
   message("Compiling brood information...")
 
   #Determine ClutchType_calc
-  clutchtype <- dplyr::progress_estimated(n = nrow(Brood_data))
+  clutchtype <- dplyr::progress_estimated(n = nrow(all_data))
 
-  Brood_data <- Brood_data %>%
+  Brood_data <- all_data %>%
     #Determine the 30 day cut-off for all species
     group_by(PopID, SampleYear, Species) %>%
     mutate(cutoff = tryCatch(expr = min(LayingDate, na.rm = T) + 30,
@@ -178,7 +191,7 @@ format_SSQ <- function(db = NULL,
   # CAPTURE DATA #
   ################
 
-  message("Compiling brood information...")
+  message("Compiling capture information...")
 
   Adult_captures <- all_data %>%
     dplyr::select(SampleYear, PopID, Plot, LocationID, Species, LayingDate, FemaleID, FAge, MaleID, MAge) %>%
@@ -281,5 +294,36 @@ format_SSQ <- function(db = NULL,
     dplyr::select(CaptureDate, CaptureTime, IndvID, Species,
                   CapturePopID, CapturePlot, ReleasePopID, ReleasePlot,
                   Mass, Tarsus, WingLength, Age_obsv, Age_calc, ChickAge)
+
+  ###################
+  # INDIVIDUAL DATA #
+  ###################
+
+  message("Compiling individual information...")
+
+  #Create a list of all chicks
+  Chick_IDs <- all_data %>%
+    dplyr::select(BroodID, Chick1Id:Chick13Id) %>%
+    reshape2::melt(id.vars = "BroodID", value.name = "IndvID") %>%
+    dplyr::filter(!is.na(IndvID)) %>%
+    dplyr::select(-variable, BroodIDLaid = BroodID)
+
+  Indv_data <- Capture_data %>%
+    dplyr::arrange(IndvID, CaptureDate) %>%
+    dplyr::group_by(IndvID) %>%
+    dplyr::summarise(Species = first(Species),
+                     RingYear = min(lubridate::year(CaptureDate)),
+                     RingAge = first(Age_obsv)) %>%
+    dplyr::rowwise() %>%
+    #For sex, we only know if an individual was a female...
+    #Adults were never caught as males and chicks were never sexed.
+    dplyr::mutate(Sex = ifelse(IndvID %in% Brood_data$FemaleID, "F", NA)) %>%
+    dplyr::ungroup() %>%
+    #Join in BroodID from the reshaped Chick_IDs table
+    dplyr::left_join(Chick_IDs, by = "IndvID") %>%
+    dplyr::mutate(BroodIDRinged = BroodIDLaid,
+                  PopID = "SSQ") %>%
+    select(IndvID, Species, PopID, BroodIDLaid,
+           BroodIDRinged, RingYear, RingAge, Sex)
 
 }
