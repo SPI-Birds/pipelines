@@ -128,7 +128,7 @@ format_NIOO <- function(db = NULL,
     #Add in the first capture location
     #This is needed to determine which population the bird belongs too.
     left_join(tbl(connection, "dbo_tbl_Capture") %>% arrange(Individual, CaptureDate, CaptureTime) %>% select(IndvID = Individual, CaptureLocation) %>% group_by(IndvID) %>%
-              collect() %>% slice(1), by = "IndvID") %>%
+                collect() %>% slice(1), by = "IndvID") %>%
     #Relate the capturelocation to the three letter PopID
     left_join(select(Locations, PopID, CaptureLocation = ID), by = "CaptureLocation") %T>%
     #Create a progress bar for converting speciesID to species letter codes.
@@ -190,8 +190,8 @@ format_NIOO <- function(db = NULL,
     # -Weight
     # -Tarsus
     # -Wing_Length
-    select(CaptureID, CaptureDate, CaptureTime, IndvID, SpeciesID, CaptureLocation,
-           ReleaseLocation, Weight, Tarsus, WingLength = Wing_Length) %>%
+  select(CaptureID, CaptureDate, CaptureTime, IndvID, SpeciesID, CaptureLocation,
+         ReleaseLocation, Weight, Tarsus, WingLength = Wing_Length) %>%
     collect() %>%
     #Join in information on when the individual was first ringed (left join from the IndvData)
     #This is used to determine the age of each individual (EUring) at the time of capture
@@ -201,33 +201,33 @@ format_NIOO <- function(db = NULL,
     #Adjust this value to account for the age of the bird when first ringed
     #Using EUring codes, so we account for certainty in the age.
     mutate(MinAge = toupper(as.hexmode(purrr::pmap_dbl(.l = list(.x = RingAge,
-                                                   .y = MinAge),
-                                         .f = function(.x, .y){
+                                                                 .y = MinAge),
+                                                       .f = function(.x, .y){
 
-                                           #If the age at ringing was unknown make no age estimate
-                                           if(is.na(.x) | .x == 0){
+                                                         #If the age at ringing was unknown make no age estimate
+                                                         if(is.na(.x) | .x == 0){
 
-                                             return(NA)
+                                                           return(NA)
 
-                                           } else {
+                                                         } else {
 
-                                             #If the individual was in it's first year when ringed
-                                             if(.x < 4){
+                                                           #If the individual was in it's first year when ringed
+                                                           if(.x < 4){
 
-                                               #Use categories where age is certain (5, 7, etc.)
-                                               return(3 + 2*(.y))
+                                                             #Use categories where age is certain (5, 7, etc.)
+                                                             return(3 + 2*(.y))
 
-                                             } else {
+                                                           } else {
 
-                                               #If it was not caught in first year, use categories where age is uncertain
-                                               #(6, 8)
-                                               return(.x + 2*(.y))
+                                                             #If it was not caught in first year, use categories where age is uncertain
+                                                             #(6, 8)
+                                                             return(.x + 2*(.y))
 
-                                             }
+                                                           }
 
-                                           }
+                                                         }
 
-                                         })))) %T>%
+                                                       })))) %T>%
     #Include species letter codes for all species
     {species_pb <<- dplyr::progress_estimated(n = nrow(.))} %>%
     mutate(Species = purrr::map_chr(.x = .$SpeciesID,
@@ -271,13 +271,13 @@ format_NIOO <- function(db = NULL,
     # - LayDate (calendar date)
     # - ClutchSize
     # - HatchDate
-    # - BroodSize
-    # - FledgeDate
-    # - NumberFledged
-    select(SampleYear = BroodYear, BroodID = ID, BroodSpecies, BroodLocation = BroodLocationID, Female_ring = RingNumberFemale, Male_ring = RingNumberMale,
-           ClutchType_observed = Description, LayingDate = LayDate, LayingDateError = LayDateDeviation,
-           ClutchSize, HatchDate, BroodSize = NumberHatched, BroodSizeError = NumberHatchedDeviation,
-           FledgeDate, NumberFledged, NumberFledgedError = NumberFledgedDeviation) %>%
+  # - BroodSize
+  # - FledgeDate
+  # - NumberFledged
+  select(SampleYear = BroodYear, BroodID = ID, BroodSpecies, BroodLocation = BroodLocationID, Female_ring = RingNumberFemale, Male_ring = RingNumberMale,
+         ClutchType_observed = Description, LayingDate = LayDate, LayingDateError = LayDateDeviation,
+         ClutchSize, HatchDate, BroodSize = NumberHatched, BroodSizeError = NumberHatchedDeviation,
+         FledgeDate, NumberFledged, NumberFledgedError = NumberFledgedDeviation) %>%
     collect() %>%
     #Account for error in brood size
     mutate(BroodSizeError = BroodSizeError/2, NumberFledgedError = NumberFledgedError/2, LayingDateError = LayingDateError/2,
@@ -341,7 +341,7 @@ format_NIOO <- function(db = NULL,
     ### LOOK AT THIS LATER
     group_by(PopID, SampleYear, Species) %>%
     mutate(cutoff = tryCatch(expr = min(LayingDate, na.rm = T) + 30,
-           warning = function(...) return(NA))) %>%
+                             warning = function(...) return(NA))) %>%
     # Determine brood type for each nest based on female ID
     arrange(SampleYear, Species, FemaleID) %>%
     group_by(SampleYear, Species, FemaleID) %>%
