@@ -64,7 +64,7 @@ format_SSQ <- function(db = NULL,
     dplyr::rename(SampleYear = Year, LayingDate = Ld, ClutchSize = Cs,
                   HatchDate = Hd, BroodSize = Hs, NumberFledged = Fs,
                   FemaleID = FId, MaleID = MId) %>%
-    dplyr::mutate(Species = Code, FledgeDate = NA)
+    dplyr::mutate(Species = Code, FledgeDate = NA, AvgMass = NA, AvgTarsus = NA)
 
   #Determine ClutchType_calc
   clutchtype <- dplyr::progress_estimated(n = nrow(Brood_data))
@@ -156,7 +156,8 @@ format_SSQ <- function(db = NULL,
     select(SampleYear, Species, PopID, Plot = HabitatOfRinging,
            LocationID = NestId, BroodID, FemaleID, MaleID,
            ClutchType_observed, ClutchType_calc,
-           LayingDate:NumberFledged)
+           LayingDate:NumberFledged, AvgMass, AvgTarsus)
+
 
 
 }
