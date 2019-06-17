@@ -2,7 +2,7 @@
 #'
 #' A pipeline to produce a standard output for the great and blue tit population
 #' in Santo Stefano Quisquina, Sicly, Italy, administered by Camillo Cusimano
-#' and Daniel Campobello.
+#' and Daniela Campobello.
 #'
 #' This section provides details on data management choices that are unique to
 #' this data. For a general description of the standard format please see XXXXX
@@ -185,7 +185,7 @@ format_SSQ <- function(db = NULL,
     select(SampleYear, Species, PopID, Plot,
            LocationID, BroodID, FemaleID, MaleID,
            ClutchType_observed, ClutchType_calc,
-           LayingDate:NumberFledged, AvgMass, AvgTarsus)
+           LayingDate:BroodSize, FledgeDate, NumberFledged, AvgMass, AvgTarsus)
 
   ################
   # CAPTURE DATA #
@@ -342,5 +342,27 @@ format_SSQ <- function(db = NULL,
     #It's not clear why these are ever different, need to ask.
     dplyr::left_join(all_data %>% group_by(LocationID) %>% slice(1) %>% select(LocationID, Latitude, Longitude), by = "LocationID") %>%
     dplyr::select(LocationID, NestboxID, NestBoxType, PopID, Latitude, Longitude, StartYear, EndYear)
+
+  if(debug){
+
+    message("Generating debug report...")
+
+    generate_debug_report(path = path, Pop = "SSQ", Brood_data = Brood_data, Capture_data = Capture_data, Indv_data = Indv_data)
+
+  }
+
+  message("Saving .csv files...")
+
+  write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_SSQ.csv"), row.names = F)
+
+  write.csv(x = Indv_data, file = paste0(path, "\\Indv_data_SSQ.csv"), row.names = F)
+
+  write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_SSQ.csv"), row.names = F)
+
+  write.csv(x = Nestbox_data, file = paste0(path, "\\Nestbox_data_SSQ.csv"), row.names = F)
+
+  time <- difftime(Sys.time(), start_time, units = "sec")
+
+  message(paste0("All tables generated in ", round(time, 2), " seconds"))
 
 }
