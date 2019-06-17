@@ -326,4 +326,21 @@ format_SSQ <- function(db = NULL,
     select(IndvID, Species, PopID, BroodIDLaid,
            BroodIDRinged, RingYear, RingAge, Sex)
 
+  ################
+  # NESTBOX DATA #
+  ################
+
+  message("Compiling nestbox information...")
+
+  Nestbox_data <- all_data %>%
+    dplyr::group_by(LocationID) %>%
+    dplyr::summarise(NestBoxType = NA,
+                     PopID = "SSQ",
+                     StartYear = NA, EndYear = NA) %>%
+    dplyr::mutate(NestboxID = LocationID) %>%
+    #Join in first latitude and longitude data recorded for this box.
+    #It's not clear why these are ever different, need to ask.
+    dplyr::left_join(all_data %>% group_by(LocationID) %>% slice(1) %>% select(LocationID, Latitude, Longitude), by = "LocationID") %>%
+    dplyr::select(LocationID, NestboxID, NestBoxType, PopID, Latitude, Longitude, StartYear, EndYear)
+
 }
