@@ -216,41 +216,6 @@ format_Portugal <- function(db = NULL,
     #Turn all characters back to numeric
     mutate_at(.vars = vars(Year, LayingDateJulian, InitialClutchSize, FinalClutchSize, NoChicksHatched, NoChicksOlder14D), as.numeric)
 
-  #Determine the cumulative number of fledglings produced up until the current
-  #clutch Use this to determine if a clutch is second/replacement We don't
-  #want cumsum because that includes the current row (e.g. 1, 2, 3 = 1, 3, 6)
-  #We want the first value to always be 0 because we're interested in the data
-  fledge_calc <- function(x, na.rm = TRUE){
-
-    if(na.rm){
-
-      #This func assumes that all NAs are just 0s.
-      #This is needed because otherwise cumsum returns all NAs
-      #However, all we need to know is if there was atleast 1 successful nest before the current nest
-      x[!complete.cases(x)] <- 0
-
-      nrs <- cumsum(x)
-
-    } else {
-
-      x <- is.na(x)
-
-      nrs <- cumsum(x)
-
-    }
-
-    if(length(x) == 1){
-
-      return(0)
-
-    } else {
-
-      return(c(0, nrs[1:(length(nrs) - 1)]))
-
-    }
-
-  }
-
   Brood_data <- Brood_data %>%
     # Determine cumulative fledgling information for each clutch
     # Arrange data chronologically for each female in each year
