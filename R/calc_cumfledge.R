@@ -48,15 +48,7 @@ calc_cumfledge <- function(x, na.rm = TRUE){
 
   } else {
 
-    if(na.rm){
-
       return(c(0, nrs[1:(length(nrs) - 1)]))
-
-    } else {
-
-      return(as.logical(c(0, nrs[1:(length(nrs) - 1)])))
-
-    }
 
   }
 

@@ -90,7 +90,7 @@ format_Portugal <- function(db = NULL,
            FirstYear = first(Year)) %>%
     ungroup() %>%
     #Calculate age at each capture using EUring codes
-    mutate(Age_calc = purrr::pmap_dbl(.l = list(Age = .$FirstAge,
+    dplyr::mutate(Age_calc = purrr::pmap_dbl(.l = list(Age = .$FirstAge,
                                               Year1 = .$FirstYear,
                                               YearN = .$Year),
                                     .f = function(Age, Year1, YearN){
@@ -221,8 +221,8 @@ format_Portugal <- function(db = NULL,
     # Arrange data chronologically for each female in each year
     arrange(Year, FemaleID, as.numeric(LayingDateJulian)) %>%
     group_by(Year, FemaleID) %>%
-    mutate(total_fledge_narm = fledge_calc(NoChicksOlder14D, na.rm = TRUE),
-           total_fledge_na = fledge_calc(NoChicksOlder14D, na.rm = FALSE),
+    mutate(total_fledge_narm = calc_cumfledge(NoChicksOlder14D, na.rm = TRUE),
+           total_fledge_na = calc_cumfledge(NoChicksOlder14D, na.rm = FALSE),
            row = 1:n()) %>%
     ungroup()
 
