@@ -9,14 +9,15 @@ format_SSQ(db = NULL, Species = NULL, path = ".", debug = FALSE)
 \arguments{
 \item{db}{Location of database file.}
 
-\item{Species}{A numeric vector. Which species should be included (EUring codes)? If blank will return all major species (see details below).}
+\item{Species}{A numeric vector. Which species should be included (EUring
+codes)? If blank will return all major species (see details below).}
 
 \item{path}{Location where output csv files will be saved.}
 
 \item{debug}{For internal use when editing pipelines. If TRUE, pipeline
-generates a summary of pipeline data. This
-includes: a) Histogram of continuous variables with mean/SD b) unique
-values of all categorical variables.}
+generates a summary of pipeline data. This includes: a) Histogram of
+continuous variables with mean/SD b) unique values of all categorical
+variables.}
 }
 \value{
 Generates 5 .csv files with data in a standard format.
@@ -27,6 +28,17 @@ in Santo Stefano Quisquina, Sicly, Italy, administered by Camillo Cusimano
 and Daniel Campobello.
 }
 \details{
-This section provides details on data management choices that are unique to this data.
-For a general description of the standard format please see XXXXX PLACE HOLDER!
+This section provides details on data management choices that are unique to
+this data. For a general description of the standard format please see XXXXX
+PLACE HOLDER!
+
+\strong{CaptureDate}: No exact capture date is given. Adults were only ever
+captured with a nest, therefore, we use the laying date of the nest as a
+proxy for capture date. Chick were also only ever captured on the nest, we
+used laying date + 34 days as a proxy for capture date. 34 days was used to
+include: egg laying phase (8 eggs on average), incubation phase (12 days??),
+14 days post hatching when chicks are often ringed.
+
+\strong{Age_calc}: All ringed chicks were assumed to be ringed at EURING code 1 (i.e. pre-fledging).
+For adults where no age was provided, we assumed that first observation was 6 (i.e. at least 2 years old)
 }

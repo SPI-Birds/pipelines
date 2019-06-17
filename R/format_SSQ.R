@@ -4,16 +4,27 @@
 #' in Santo Stefano Quisquina, Sicly, Italy, administered by Camillo Cusimano
 #' and Daniel Campobello.
 #'
-#' This section provides details on data management choices that are unique to this data.
-#' For a general description of the standard format please see XXXXX PLACE HOLDER!
+#' This section provides details on data management choices that are unique to
+#' this data. For a general description of the standard format please see XXXXX
+#' PLACE HOLDER!
 #'
+#' \strong{CaptureDate}: No exact capture date is given. Adults were only ever
+#' captured with a nest, therefore, we use the laying date of the nest as a
+#' proxy for capture date. Chick were also only ever captured on the nest, we
+#' used laying date + 34 days as a proxy for capture date. 34 days was used to
+#' include: egg laying phase (8 eggs on average), incubation phase (12 days??),
+#' 14 days post hatching when chicks are often ringed.
+#'
+#' \strong{Age_calc}: All ringed chicks were assumed to be ringed at EURING code 1 (i.e. pre-fledging).
+#' For adults where no age was provided, we assumed that first observation was 6 (i.e. at least 2 years old)
 #' @param db Location of database file.
-#' @param Species A numeric vector. Which species should be included (EUring codes)? If blank will return all major species (see details below).
+#' @param Species A numeric vector. Which species should be included (EUring
+#'   codes)? If blank will return all major species (see details below).
 #' @param path Location where output csv files will be saved.
 #' @param debug For internal use when editing pipelines. If TRUE, pipeline
-#'   generates a summary of pipeline data. This
-#'   includes: a) Histogram of continuous variables with mean/SD b) unique
-#'   values of all categorical variables.
+#'   generates a summary of pipeline data. This includes: a) Histogram of
+#'   continuous variables with mean/SD b) unique values of all categorical
+#'   variables.
 #'
 #' @return Generates 5 .csv files with data in a standard format.
 #' @export
@@ -44,27 +55,32 @@ format_SSQ <- function(db = NULL,
     janitor::clean_names(case = "upper_camel") %>%
     #Remove the column 'Row'. This is just the row number, we have this already.
     dplyr::select(-Row) %>%
-    janitor::remove_empty(which = "rows")
+    janitor::remove_empty(which = "rows") %>%
+    #Change column names to match consistent naming
+    dplyr::rename(SampleYear = Year, LayingDate = Ld, ClutchSize = Cs,
+                  HatchDate = Hd, BroodSize = Hs, NumberFledged = Fs,
+                  FemaleID = FId, MaleID = MId, LocationID = NestId,
+                  Plot = HabitatOfRinging) %>%
+    #Add species codes
+    left_join(filter(Species_codes, SpeciesID %in% c("14640", "14620")) %>%
+                mutate(Species = c("Parus major", "Cyanistes caeruleus")) %>%
+                select(Species, Code), by = "Species") %>%
+    #Add other missing data:
+    #- PopID
+    #- BroodID (Year_NestID)
+    #- ClutchType_observed
+    #- FledgeDate
+    mutate(PopID = "SIC",
+           BroodID = paste(SampleYear, LocationID, sep = "_")) %>%
+    left_join(tibble::tibble(ClutchType_observed = c("first", "second", "replacement"),
+                             Class = c(1, 3, 2)), by = "Class") %>%
+    dplyr::mutate(Species = Code, FledgeDate = NA, AvgMass = NA, AvgTarsus = NA)
 
   ##############
   # BROOD DATA #
   ##############
 
   message("Compiling brood information...")
-
-  Brood_data <- all_data %>%
-    left_join(filter(Species_codes, SpeciesID %in% c("14640", "14620")) %>%
-                mutate(Species = c("Parus major", "Cyanistes caeruleus")) %>%
-                select(Species, Code), by = "Species") %>%
-    mutate(PopID = "SIC",
-           BroodID = paste(Year, NestId, sep = "_")) %>%
-    left_join(tibble::tibble(ClutchType_observed = c("first", "second", "replacement"),
-                             Class = c(1, 3, 2)), by = "Class") %>%
-    #Change column names to match consistent naming
-    dplyr::rename(SampleYear = Year, LayingDate = Ld, ClutchSize = Cs,
-                  HatchDate = Hd, BroodSize = Hs, NumberFledged = Fs,
-                  FemaleID = FId, MaleID = MId) %>%
-    dplyr::mutate(Species = Code, FledgeDate = NA, AvgMass = NA, AvgTarsus = NA)
 
   #Determine ClutchType_calc
   clutchtype <- dplyr::progress_estimated(n = nrow(Brood_data))
@@ -153,11 +169,117 @@ format_SSQ <- function(db = NULL,
                                                }
 
                                              })) %>%
-    select(SampleYear, Species, PopID, Plot = HabitatOfRinging,
-           LocationID = NestId, BroodID, FemaleID, MaleID,
+    select(SampleYear, Species, PopID, Plot,
+           LocationID, BroodID, FemaleID, MaleID,
            ClutchType_observed, ClutchType_calc,
            LayingDate:NumberFledged, AvgMass, AvgTarsus)
 
+  ################
+  # CAPTURE DATA #
+  ################
 
+  message("Compiling brood information...")
+
+  Adult_captures <- all_data %>%
+    dplyr::select(SampleYear, PopID, Plot, LocationID, Species, LayingDate, FemaleID, FAge, MaleID, MAge) %>%
+    reshape2::melt(measure.vars = c("FemaleID", "MaleID"), value.name = "IndvID") %>%
+    #Remove all NAs, we're only interested in cases where parents were ID'd.
+    dplyr::filter(!is.na(IndvID)) %>%
+    #Make a single Age_obsv column. If variable == "FemaleID", then use FAge and visa versa
+    rowwise() %>%
+    dplyr::mutate(Age = ifelse(variable == "FemaleID", FAge, MAge)) %>%
+    ungroup() %>%
+    #Convert these age values to current EURING codes
+    #If NA, we know it's an adult but don't know it's age
+    #We don't want to assume anything here
+    dplyr::left_join(tibble::tibble(Age = c(1, 2),
+                                    Age_obsv = c(5, 6)), by = "Age") %>%
+    dplyr::rename(CapturePopID = PopID, CapturePlot = Plot) %>%
+    #Treat CaptureDate as Laying Date (currently in days since March 1st)
+    #Check with Camilo about this.
+    dplyr::mutate(ReleasePopID = CapturePopID, ReleasePlot = CapturePlot,
+                  CaptureDate = as.Date(paste(SampleYear, "03", "01", sep = "-"), format = "%Y-%m-%d") - 1 + LayingDate,
+                  CaptureTime = NA) %>%
+    dplyr::select(-variable, -LayingDate, -FAge, -MAge)
+
+  Chick_captures <- all_data %>%
+    dplyr::select(SampleYear, Species, PopID, Plot, LocationID, LayingDate, Chick1Id:Chick13Id) %>%
+    reshape2::melt(id.vars = c("SampleYear", "Species", "PopID", "Plot", "LocationID", "LayingDate"), value.name = "IndvID") %>%
+    #Remove NAs
+    dplyr::filter(!is.na(IndvID)) %>%
+    dplyr::rename(CapturePopID = PopID, CapturePlot = Plot) %>%
+    #For chicks, use LayingDate + 34 for capture date 34 because this is an
+    #estimate of laying date + laying time (~8 eggs on average) + incubation
+    #time (~12 days) + 14 days (normal age when chicks are ringed)
+    #Using LayingDate, rather than HatchDate, because LayingDate is recorded much more often.
+    #CHECK WITH CAMILLO
+    dplyr::mutate(ReleasePopID = CapturePopID, ReleasePlot = CapturePlot,
+                  CaptureDate = as.Date(paste(SampleYear, "03", "01", sep = "-"), format = "%Y-%m-%d") - 1 + LayingDate + 34,
+                  CaptureTime = NA, Age_obsv = 1, Age = 1) %>%
+    dplyr::select(-variable, -LayingDate)
+
+  #Combine Adult and chick data
+  Capture_data <- dplyr::bind_rows(Adult_captures, Chick_captures) %>%
+    dplyr::arrange(IndvID, CaptureDate) %>%
+    #Add NA for morphometric measures and chick age
+    #ChickAge is NA because we have no exact CaptureDate
+    dplyr::mutate(Mass = NA, Tarsus = NA, WingLength = NA,
+                  ChickAge = NA) %>%
+    #Also determine Age_calc
+    group_by(IndvID) %>%
+    mutate(FirstAge = first(Age),
+           FirstYear = first(SampleYear)) %>%
+    ungroup() %>%
+    #Calculate age at each capture using EUring codes
+    dplyr::mutate(Age_calc = purrr::pmap_dbl(.l = list(Age = .$FirstAge,
+                                                       Year1 = .$FirstYear,
+                                                       YearN = .$SampleYear),
+                                             .f = function(Age, Year1, YearN){
+
+                                               #Determine number of years since first capture...
+                                               diff_yr <- (YearN - Year1)
+
+                                               #If it was not caught as a chick...
+                                               if(Age != 1 | is.na(Age)){
+
+                                                 #If it's listed as 'first year' then we know it was EURING code 5 at first capture
+                                                 if(!is.na(Age) & Age == 5){
+
+                                                   return(5 + 2*diff_yr)
+
+                                                 #Otherwise, when it was first caught it was at least EURING code 6.
+                                                 #This also applies to birds with Age == NA, this is because the only birds
+                                                 #That have NA are adults (all chicks are listed as Age = 1)
+                                                 } else {
+
+                                                   #Use categories where age is uncertain
+                                                   #(6, 8)
+                                                   return(6 + 2*diff_yr)
+
+                                                 }
+
+                                               } else {
+
+                                                 #If it was caught as a chick
+                                                 if(diff_yr == 0){
+
+                                                   #Make the age at first capture 1 (nestling/unable to fly)
+                                                   #N.B. There is no distinction between chick and fledgling in the data
+                                                   return(1)
+
+                                                 } else {
+
+                                                   #Otherwise, use categories where age is certain (5, 7, etc.)
+                                                   return(3 + 2*diff_yr)
+
+                                                 }
+
+                                               }
+
+                                             })) %>%
+    #Order variables to match other data
+    dplyr::select(CaptureDate, CaptureTime, IndvID, Species,
+                  CapturePopID, CapturePlot, ReleasePopID, ReleasePlot,
+                  Mass, Tarsus, WingLength, Age_obsv, Age_calc, ChickAge)
 
 }
