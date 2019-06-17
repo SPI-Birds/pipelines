@@ -23,7 +23,7 @@
 #' #Return a vector of logicals showing whether an NA occurred before
 #' #the current record.
 #' fledge_calc(x = c(1, 3, NA, 4), na.rm = FALSE)
-fledge_calc <- function(x, na.rm = TRUE){
+calc_cumfledge <- function(x, na.rm = TRUE){
 
   if(na.rm){
 
