@@ -13,6 +13,10 @@
 #'
 #' \strong{ExperimentID}: Experimental codes are provided in their original
 #' format. These still need to be translated into our experimental groups.
+#'
+#' \strong{Tarsus}: Tarsus is measured using Svennson's Standard in early years and
+#' Svennson's Alternative in later years. When Svennson's Alternative is available this is used,
+#' otherwise we use converted Svensson's Standard, using \code{\link[HNBStandFormat]{convert_tarsus}}.
 #' @param db Directory where raw data files are stored.
 #' @param Species A numeric vector. Which species should be included (EUring codes)? If blank will return all major species (see details below).
 #' @param path Location where output csv files will be saved.
@@ -49,6 +53,8 @@ format_UAN <- function(db = choose.dir(),
 
   #Create a table with brood information.
   clutchtype <- dplyr::progress_estimated(n = nrow(BROOD_info))
+
+  browser()
 
   Brood_data <- BROOD_info %>%
     #Link the plot codes to the plot code (GB)
@@ -172,21 +178,35 @@ format_UAN <- function(db = choose.dir(),
   #residents) This means there will be multiple records for a single individual.
 
   Capture_data <- CAPTURE_info %>%
-    tibble::rownames_to_column() %>%
-    #Add tarsus measurements and specify the measurement method used (Svennson standard/short and Svennson alternative/long).
-    #When both measurments are available, Svennson's alternative is used.
-    left_join(pmap_df(.l = list(.$TA, .$TANEW, .$rowname), .f = function(old_tarsus, new_tarsus, rowname){
+    #Make tarsus length into standard method (Svensson Alt)
+    #Firstly, convert the Svennson's standard measures to Svennson's Alt.
+    dplyr::mutate(TA = convert_tarsus(TA, method = "Standard"),
+                  Tarsus = purrr::pmap_dbl(.l = list(SvenStd = .$TA,
+                                                     SvenAlt = .$TANEW),
+                                           .f = function(SvenStd, SvenAlt){
 
-      data_frame(rowname = rowname, Tarsus = ifelse(is.na(new_tarsus), old_tarsus, new_tarsus),
-                 Method = ifelse(!is.na(new_tarsus), "Svennson alternative", ifelse(!is.na(old_tarsus), "Svennson standard", NA)))
+                                             if(!is.na(SvenAlt)){
 
-    }), by = "rowname") %>%
+                                               return(SvenAlt)
+
+                                             } else if(!is.na(SvenStd)){
+
+                                               return(SvenStd)
+
+                                             } else {
+
+                                               return(NA)
+
+                                             }
+
+                                           })) %>%
     #There is no information on release location, so I assume it's the same as the capture location.
     transmute(CaptureDate = lubridate::dmy(VD),
-              Species = ifelse(SOORT == "pm", "GT", ifelse(SOORT == "pc", "BT", NA)),
+              CaptureTime = lubridate::hm(paste(UUR %/% 1, round(UUR %% 1)*60, sep = ":")),
+              IndvID = RN, Species = ifelse(SOORT == "pm", "GT", ifelse(SOORT == "pc", "BT", NA)),
               Type = ifelse(VW %in% c("P", "PP"), "Nestling", "Adult"),
-              IndvID = RN, CaptureLocation = SA, ReleaseLocation = SA,
-              Mass = GEW, Tarsus = Tarsus, TarsusMethod = Method,
+               CaptureLocation = SA, ReleaseLocation = SA,
+              Mass = GEW, Tarsus = Tarsus,
               WingLength = VLL)
 
   ###################
