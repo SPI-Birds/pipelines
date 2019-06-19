@@ -1,14 +1,22 @@
 #' Construct standard summary for University of Antwerp populations
 #'
-#' @param data_folder Folder location where raw .csv files are stored.
-#' @param path Location where output files will be saved.
+#' @param db Directory where raw data files are stored.
+#' @param Species A numeric vector. Which species should be included (EUring codes)? If blank will return all major species (see details below).
+#' @param path Location where output csv files will be saved.
+#' @param debug For internal use when editing pipelines. If TRUE, pipeline
+#'   generates a summary of pipeline data. This
+#'   includes: a) Histogram of continuous variables with mean/SD b) unique
+#'   values of all categorical variables.
 #'
 #' @return Generates 5 .csv files with data in a standard format.
 #' @export
 #' @import dplyr
 #' @import purrr
 
-format_UAN <- function(data_folder = choose.dir(), path = "."){
+format_UAN <- function(db = choose.dir(),
+                       Species = NULL,
+                       path = ".",
+                       debug = FALSE){
 
   start_time <- Sys.time()
 

@@ -83,19 +83,10 @@
 #'@export
 #'@import reticulate
 
-format_Harjavalta <- function(db = NULL,
+format_Harjavalta <- function(db = choose.dir(),
                               Species = NULL,
                               path = ".",
                               debug = FALSE){
-
-  #Find database path
-  if(is.null(db)){
-
-    message("Please select the directory where database files are located...")
-
-    db <- choose.dir()
-
-  }
 
   #Record start time to estimate processing time.
   start_time <- Sys.time()

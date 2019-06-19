@@ -4,7 +4,8 @@
 \alias{format_SSQ}
 \title{Construct standard summary for data from Santo Stefano Quisquina, Italy.}
 \usage{
-format_SSQ(db = NULL, Species = NULL, path = ".", debug = FALSE)
+format_SSQ(db = file.choose(), Species = NULL, path = ".",
+  debug = FALSE)
 }
 \arguments{
 \item{db}{Location of database file.}
@@ -25,12 +26,20 @@ Generates 5 .csv files with data in a standard format.
 \description{
 A pipeline to produce a standard output for the great and blue tit population
 in Santo Stefano Quisquina, Sicly, Italy, administered by Camillo Cusimano
-and Daniel Campobello.
+and Daniela Campobello.
 }
 \details{
 This section provides details on data management choices that are unique to
 this data. For a general description of the standard format please see XXXXX
 PLACE HOLDER!
+
+\strong{BroodID}: For now we make BroodID as a combination of: year of nest,
+nestID, layingdate. This is necessary because there are no other ways to distinguish
+a two broods laid in the same nest and same year.
+
+\strong{Species}: In the individual data, there are some cases where
+an IndvID is associated with >1 species. I assume these are just typos
+and I will just take the first species.
 
 \strong{CaptureDate}: No exact capture date is given. Adults were only ever
 captured with a nest, therefore, we use the laying date of the nest as a
@@ -41,4 +50,8 @@ include: egg laying phase (8 eggs on average), incubation phase (12 days??),
 
 \strong{Age_calc}: All ringed chicks were assumed to be ringed at EURING code 1 (i.e. pre-fledging).
 For adults where no age was provided, we assumed that first observation was 6 (i.e. at least 2 years old)
+
+\strong{Indv_data}: There are cases where chicks from different nests are given the same ring number.
+Unsure if this is the rings being reused or a typo. Currently, I leave it as is and assume this is a typo that
+needs to be fixed.
 }

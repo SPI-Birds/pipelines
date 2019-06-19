@@ -4,7 +4,7 @@
 \alias{format_NIOO}
 \title{Construct standard summary for NIOO data.}
 \usage{
-format_NIOO(db = NULL, Species = NULL, path = ".")
+format_NIOO(db = file.choose(), Species = NULL, path = ".")
 }
 \arguments{
 \item{db}{Location of database file.}

@@ -2,6 +2,7 @@
 
 export(calc_cumfledge)
 export(extract_paradox_db)
+export(extract_species)
 export(format_Harjavalta)
 export(format_NIOO)
 export(format_Portugal)

@@ -35,19 +35,10 @@
 #' @import reshape2
 #' @import magrittr
 
-format_Portugal <- function(db = NULL,
+format_Portugal <- function(db = file.choose(),
                             Species = NULL,
                             path = ".",
                             debug = FALSE){
-
-  #Find database path
-  if(is.null(db)){
-
-    message("Please select a database location...")
-
-    db <- file.choose()
-
-  }
 
   #Record start time to provide processing time to the user.
   start_time <- Sys.time()

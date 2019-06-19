@@ -44,7 +44,7 @@
 #' @import janitor
 #' @import reshape2
 
-format_SSQ <- function(db = NULL,
+format_SSQ <- function(db = file.choose(),
                        Species = NULL,
                        path = ".",
                        debug = FALSE){

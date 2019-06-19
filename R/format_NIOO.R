@@ -30,18 +30,9 @@
 #' @import DBI
 #' @import purrr
 
-format_NIOO <- function(db = NULL,
+format_NIOO <- function(db = file.choose(),
                         Species = NULL,
                         path = "."){
-
-  #Assign database location if none given.
-  if(is.null(db)){
-
-    print("Please choose a database file...")
-
-    db <- file.choose()
-
-  }
 
   #Record start time to estimate processing time.
   start_time <- Sys.time()

@@ -4,12 +4,20 @@
 \alias{format_UAN}
 \title{Construct standard summary for University of Antwerp populations}
 \usage{
-format_UAN(data_folder = choose.dir(), path = ".")
+format_UAN(db = choose.dir(), Species = NULL, path = ".",
+  debug = FALSE)
 }
 \arguments{
-\item{data_folder}{Folder location where raw .csv files are stored.}
+\item{db}{Directory where raw data files are stored.}
 
-\item{path}{Location where output files will be saved.}
+\item{Species}{A numeric vector. Which species should be included (EUring codes)? If blank will return all major species (see details below).}
+
+\item{path}{Location where output csv files will be saved.}
+
+\item{debug}{For internal use when editing pipelines. If TRUE, pipeline
+generates a summary of pipeline data. This
+includes: a) Histogram of continuous variables with mean/SD b) unique
+values of all categorical variables.}
 }
 \value{
 Generates 5 .csv files with data in a standard format.

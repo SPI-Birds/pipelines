@@ -4,7 +4,7 @@
 \alias{format_Harjavalta}
 \title{Construct standard summary for data from Harjavalta, Finland.}
 \usage{
-format_Harjavalta(db = NULL, Species = NULL, path = ".",
+format_Harjavalta(db = choose.dir(), Species = NULL, path = ".",
   debug = FALSE)
 }
 \arguments{

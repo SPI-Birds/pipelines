@@ -4,7 +4,7 @@
 \alias{format_Portugal}
 \title{Construct standard summary for data from Choupal, Portugal.}
 \usage{
-format_Portugal(db = NULL, Species = NULL, path = ".",
+format_Portugal(db = file.choose(), Species = NULL, path = ".",
   debug = FALSE)
 }
 \arguments{
