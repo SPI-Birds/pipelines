@@ -9,7 +9,7 @@
 #' @param method Character string. The measurement method of the original data.
 #'   Can be: "Standard" (Svennson's Standard) or "Oxford" (Oxford maximum).
 #'
-#' @return
+#' @return A numeric vector.
 #' @export
 #'
 #' @examples
