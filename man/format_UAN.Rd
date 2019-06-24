@@ -2,7 +2,7 @@
 % Please edit documentation in R/format_UAN.R
 \name{format_UAN}
 \alias{format_UAN}
-\title{Construct standard summary for University of Antwerp populations}
+\title{Construct standard summary for data from the Univeristy of Antwerp.}
 \usage{
 format_UAN(db = choose.dir(), Species = NULL, path = ".",
   debug = FALSE)
@@ -23,5 +23,22 @@ values of all categorical variables.}
 Generates 5 .csv files with data in a standard format.
 }
 \description{
-Construct standard summary for University of Antwerp populations
+A pipeline to produce a standard output for 2 hole-nesting bird study populations
+administered by the University of Amsterdam.
+Output follows the HNB standard breeding data format.
+}
+\details{
+This section provides details on data management choices that are unique to the NIOO database.
+For a general description of the standard format please see XXXXX PLACE HOLDER!
+
+\strong{ClutchType_observed}: The raw data distinguishes second and third
+nests and first second and third replacements. We group these all as 'second'
+and 'replacement'.
+
+\strong{ExperimentID}: Experimental codes are provided in their original
+format. These still need to be translated into our experimental groups.
+
+\strong{Tarsus}: Tarsus is measured using Svennson's Standard in early years and
+Svennson's Alternative in later years. When Svennson's Alternative is available this is used,
+otherwise we use converted Svensson's Standard, using \code{\link[HNBStandFormat]{convert_tarsus}}.
 }
