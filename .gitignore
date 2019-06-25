@@ -7,7 +7,5 @@ inst/doc
 *.laccdb
 *.csv
 *.xlsx
-*.docx
-*.doc
 *.jpg
 debug_report
