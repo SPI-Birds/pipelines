@@ -38,3 +38,37 @@ plot_popmap <- function(scale = 2, filename){
                   width = (5.18 * scale))
 
 }
+
+plot_indv_popmap <- function(scale = 2, pop_name, filename){
+
+  world_map <- map_data("world")
+
+  ggplot()+
+    geom_polygon(data = GT_dist_gg, aes(x = long, y = lat, group = group), fill = "light grey") +
+    geom_polygon(data = world_map, aes(x = long, y = lat, group = group), color = "black", fill = NA) +
+    coord_fixed(xlim = c(-17, 145), ylim = c(-5, 69.75)) +
+    geom_point(data = dplyr::filter(pop_locations, data == "No"), aes(x = longitude, y = latitude), fill = "#CCFFCC",
+               shape = 21, size = 2)+
+    geom_point(data = dplyr::filter(pop_locations, data == "Yes" & site_name != pop_name), aes(x = longitude, y = latitude), fill = "green",
+               shape = 21, size = 2)+
+    geom_point(data = dplyr::filter(pop_locations, site_name == pop_name), aes(x = longitude, y = latitude), fill = "green",
+               shape = 21, size = 4, stroke = 1.5)+
+    geom_curve(data = dplyr::filter(pop_locations, site_name == pop_name),
+               aes(x = longitude - 10, y = latitude + 10,
+                   xend = longitude - 1, yend = latitude),
+               arrow = arrow(length = unit(7, "pt")), size = 1)+
+    geom_label(data = dplyr::filter(pop_locations, site_name == pop_name),
+              aes(x = longitude - 10, y = latitude + 7, label = pop_name),
+              size = 7)+
+    theme_classic() +
+    theme(axis.line = element_blank(),
+          axis.text = element_blank(),
+          axis.title = element_blank(),
+          axis.ticks = element_blank(),
+          legend.position = "none")
+
+  ggplot2::ggsave(filename = ifelse(is.null(filename), "Population_map.jpeg", filename),
+                  height = (3.58 * scale),
+                  width = (5.18 * scale))
+
+}
