@@ -185,6 +185,7 @@ format_UAN <- function(db = choose.dir(),
   Capture_data <- CAPTURE_info %>%
     #Make tarsus length into standard method (Svensson Alt)
     #Firstly, convert the Svennson's standard measures to Svennson's Alt.
+    #Then only use this converted measure when actual Svennson's Alt is unavailable.
     dplyr::mutate(TA = convert_tarsus(TA, method = "Standard"),
                   Tarsus = purrr::pmap_dbl(.l = list(SvenStd = .$TA,
                                                      SvenAlt = .$TANEW),
@@ -205,10 +206,14 @@ format_UAN <- function(db = choose.dir(),
                                              }
 
                                            })) %>%
+    #Also join in Species
+    #Remove only great tit and blue tit (other species have < 100 nests)
+    dplyr::filter(SOORT %in% c("pc", "pm")) %>%
+    dplyr::left_join(Species_codes, by = "SOORT") %>%
     #There is no information on release location, so I assume it's the same as the capture location.
     transmute(CaptureDate = lubridate::dmy(VD),
               CaptureTime = lubridate::hm(paste(UUR %/% 1, round(UUR %% 1)*60, sep = ":")),
-              IndvID = RN, Species = ifelse(SOORT == "pm", "GT", ifelse(SOORT == "pc", "BT", NA)),
+              IndvID = RN, Species,
               Type = ifelse(VW %in% c("P", "PP"), "Nestling", "Adult"),
                CaptureLocation = SA, ReleaseLocation = SA,
               Mass = GEW, Tarsus = Tarsus,
