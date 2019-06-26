@@ -47,7 +47,7 @@
 #'but many of these chicks are missing in the 'Nestling' table (e.g. BroodID: 2007_1714_1).
 #'- In some cases, chicks were ringed with two different series and there are two different
 #'records of chick ringing.
-#'- In some cases, checks were recorded in 'Ringing' but have no matching
+#'- In some cases, chicks were recorded in 'Ringing' but have no matching
 #'BroodID in Brood_data (e.g. 2004_1012_0).
 #'- In some cases, one BroodID is used in the 'Ringing' table and another in the 'Nestling' table
 #'even though the ring numbers are the same (e.g. 2018_0323_1/2)
@@ -67,8 +67,10 @@
 #'\strong{Mass}: Mass of birds appears to be measured in mg. This is converted
 #'to grams to match other populations.
 #'
-#'\strong{Tarsus}: Tarsus length is measured for both left and right leg. Only
-#'left leg is reported.
+#'\strong{Tarsus}: Tarsus length is measured for both left and right leg. Generally,
+#'only left leg is reported. Tarsus is measures using both Svensson's Standard
+#'and (in later years) Svennson's Alternative. Where only Svensson's Standard
+#'is available, this is converted to Svennson's Alternative instead.
 #'
 #'@param db Location of database file.
 #'@param Species A numeric vector. Which species should be included (EUring
@@ -317,7 +319,7 @@ format_Harjavalta <- function(db = choose.dir(),
                                 "Month", "Day", "Time",
                                 "LocationID", "BroodID",
                                 "Observer", "LastRingNumber_Brood",
-                                "Species", "Sex",
+                                "Species", "Sex_FL",
                                 "Sex_method", "Age",
                                 "Age_method", "RingType",
                                 "Condition", "BirdStatus",
@@ -342,6 +344,16 @@ format_Harjavalta <- function(db = choose.dir(),
                                             ifelse(Species == "PARATE", Species_codes$Code[which(Species_codes$SpeciesID == 14610)], NA))))) %>%
       filter(!is.na(Species))
 
+    #Create table to change sex
+    sex_table <- tibble::tibble(Sex_FL = c("N", "K", "L", "O"),
+                                Sex = c("F", "M", "M", "F"))
+
+    Capture_data_output <- Capture_data_output %>%
+      dplyr::left_join(sex_table, by = "Sex_FL")
+
+    #Replace any NAs in Sex with "U"
+    Capture_data_output[which(is.na(Capture_data_output$Sex)), ]$Sex <- "U"
+
     #There are 4 nests where one of either RingNumber or LastRingNumber_Brood is wrong
     #Ask Tapio about these, currently, we just correct RingNumber to make them work.
     Capture_data_output[which(Capture_data_output$BroodID %in% c("2011_1604_1", "2013_2134_1", "2013_1341_1", "2006_1630_1") & Capture_data_output$FirstRing == "5"), ]$RingNumber <- c(403681, 464023, 417760, 956723)
@@ -352,7 +364,7 @@ format_Harjavalta <- function(db = choose.dir(),
       mutate(RingNumber = RingNumber, Capture_type = "Adult", Last2DigitsRingNr = NA,
              ChickAge = NA) %>%
       mutate(IndvID = paste(RingSeries, RingNumber, sep = "-")) %>%
-      select(IndvID, SampleYear:Time, BroodID, Species:Age, WingLength:Tarsus, Capture_type, Last2DigitsRingNr, ChickAge)
+      select(IndvID, SampleYear:Time, BroodID, Species:Age, WingLength:Tarsus, Capture_type, Last2DigitsRingNr, ChickAge, -Sex_FL)
 
     #Subset all info on chick captures
     #This is needed because it contains the full ring information
@@ -559,8 +571,6 @@ format_Harjavalta <- function(db = choose.dir(),
                 BroodIDRinged = NA,
                 RingYear = first(lubridate::year(CaptureDate)),
                 RingAge = first(Age_calc),
-                ####N.B. NEED TO DECIPHER THE SEX CODES FROM FINNISH
-                ### CURRENTLY THIS SEX DATA IS NOT USEFUL
                 Sex = first(Sex)) %>%
       rowwise() %>%
       #For each individual, if their ring age was 1 or 3 (caught in first breeding year)
