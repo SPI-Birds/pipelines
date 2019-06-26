@@ -37,13 +37,13 @@ format_UAN <- function(db = choose.dir(),
 
   start_time <- Sys.time()
 
-  all_files <- list.files(path = db, pattern = ".csv", full.names = TRUE)
+  all_files <- list.files(path = db, pattern = ".xlsx", full.names = TRUE)
 
-  BOX_info <- read.csv(all_files[grepl("BOX", all_files)], header = T, sep = ",", stringsAsFactors = FALSE)
-  BROOD_info <- read.csv(all_files[grepl("BR", all_files)], header = T, sep = ",", stringsAsFactors = FALSE)
-  INDV_info <- read.csv(all_files[grepl("IND", all_files)], header = T, sep = ",", stringsAsFactors = FALSE)
-  PLOT_info <- read.csv(all_files[grepl("PL", all_files)], header = T, sep = ",", stringsAsFactors = FALSE)
-  CAPTURE_info <- read.csv(all_files[grepl("VG", all_files)], header = T, sep = ",", stringsAsFactors = FALSE)
+  BOX_info <- readxl::read_excel(all_files[grepl("BOX", all_files)])
+  BROOD_info <- readxl::read_excel(all_files[grepl("BR", all_files)])
+  INDV_info <- readxl::read_excel(all_files[grepl("IND", all_files)])
+  PLOT_info <- readxl::read_excel(all_files[grepl("PL", all_files)])
+  CAPTURE_info <- readxl::read_excel(all_files[grepl("VG", all_files)])
 
   ##############
   # BROOD DATA #
@@ -54,14 +54,11 @@ format_UAN <- function(db = choose.dir(),
   #Create a table with brood information.
   clutchtype <- dplyr::progress_estimated(n = nrow(BROOD_info))
 
-  browser()
-
   Brood_data <- BROOD_info %>%
     #Link the plot codes to the plot code (GB)
     dplyr::left_join(select(PLOT_info, PopID = SA, GB = gb), by = "GB") %>%
     #Convert all other columns into standard format
     dplyr::mutate(SampleYear = year,
-           Species = ifelse(SOORT == "pm", "GT", ifelse(SOORT == "pc", "BT", NA)),
            PopID = PopID, Plot = GB,
            LocationID = PL, BroodID = NN,
            FemaleID = RW, MaleID = RM,
@@ -161,7 +158,12 @@ format_UAN <- function(db = choose.dir(),
 
                                                       }
 
-                                                    })) %>%
+                                                    }))
+
+  #Add in species names as well
+  Brood_data <- left_join()
+
+  %>%
     dplyr::select(SampleYear, Species, PopID, Plot, LocationID,
                   BroodID, FemaleID, MaleID, ClutchType_observed,
                   ClutchType_calc, LayingDate:ExperimentID)
