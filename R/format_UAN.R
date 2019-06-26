@@ -54,9 +54,17 @@ format_UAN <- function(db = choose.dir(),
   #Create a table with brood information.
   clutchtype <- dplyr::progress_estimated(n = nrow(BROOD_info))
 
+  #Create table with species names for left join
+  Species_codes <- Species_codes %>%
+    dplyr::mutate(SOORT = c("pm", "pc", NA, NA, NA, NA)) %>%
+    dplyr::select(SOORT, Species = Code)
+
   Brood_data <- BROOD_info %>%
     #Link the plot codes to the plot code (GB)
     dplyr::left_join(select(PLOT_info, PopID = SA, GB = gb), by = "GB") %>%
+    #Remove only great tit and blue tit (other species have < 100 nests)
+    dplyr::filter(SOORT %in% c("pc", "pm")) %>%
+    dplyr::left_join(Species_codes, by = "SOORT") %>%
     #Convert all other columns into standard format
     dplyr::mutate(SampleYear = year,
            PopID = PopID, Plot = GB,
@@ -158,12 +166,7 @@ format_UAN <- function(db = choose.dir(),
 
                                                       }
 
-                                                    }))
-
-  #Add in species names as well
-  Brood_data <- left_join()
-
-  %>%
+                                                    })) %>%
     dplyr::select(SampleYear, Species, PopID, Plot, LocationID,
                   BroodID, FemaleID, MaleID, ClutchType_observed,
                   ClutchType_calc, LayingDate:ExperimentID)
