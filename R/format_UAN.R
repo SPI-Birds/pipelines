@@ -336,7 +336,7 @@ format_UAN <- function(db = choose.dir(),
   #This is a summary of each individual and general lifetime information (e.g. sex, resident/immigrant)
 
   Sex_table <- data_frame(sex = c(1, 2, 3, 4, 5),
-                          Sex = c("male", "female", "male?", "female?", "sex unknown"))
+                          Sex = c("M", "F", "M", "F", "U"))
 
   #To determine which brood an individual is from, we subset the CAPTURE_info table to include only those records where an individual was caught as a nestling (P).
   #We then take the nest that this nestling was in when it was caught.
