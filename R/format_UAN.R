@@ -217,13 +217,115 @@ format_UAN <- function(db = choose.dir(),
     dplyr::filter(SOORT %in% c("pc", "pm")) %>%
     dplyr::left_join(Species_codes, by = "SOORT") %>%
     #There is no information on release location, so I assume it's the same as the capture location.
-    transmute(CaptureDate = lubridate::dmy(VD),
+    dplyr::mutate(CaptureDate = lubridate::ymd(VD),
+                  SampleYear = lubridate::year(CaptureDate),
               CaptureTime = lubridate::hm(paste(UUR %/% 1, round(UUR %% 1)*60, sep = ":")),
-              IndvID = RN, Species,
-              Type = ifelse(VW %in% c("P", "PP"), "Nestling", "Adult"),
-               CaptureLocation = SA, ReleaseLocation = SA,
+              IndvID = RN,
+              CapturePopID = PopID, CapturePlot = GB,
+              ReleasePopID = PopID, ReleasePlot = GB,
               Mass = GEW, Tarsus = Tarsus,
-              WingLength = VLL)
+              WingLength = VLL) %>%
+    #Calculate age at capture and chick age based on the LT column
+    dplyr::bind_cols(purrr::map2_dfr(.x = .$LT, .y = .$VW,
+                                    .f = ~{
+
+                                      # If Age (LT) was not recorded
+                                      # instead estimate age from the capture type:
+                                      if(is.na(.x) | .x == 0){
+
+                                        #Capture type P and PP are chicks in the nest
+                                        if(.y %in% c("P", "PP")){
+
+                                          return(tibble::tibble(Age_obsv = 1, ChickAge = NA))
+
+                                        #Captures in mist nets, observed rings, cage traps, roost checks
+                                        #must be able to fly. But these can be anything from fledglings
+                                        #in first calendar year +
+                                        } else if (.y %in% c("FU", "GE", "MN", "ON", "NO", "SK", "SL", "LS")){
+
+                                          return(tibble::tibble(Age_obsv = 2, ChickAge = NA))
+
+                                        } else {
+
+                                          #If no age or capture type is given, then age is unknown.
+                                          return(tibble::tibble(Age_obsv = NA, ChickAge = NA))
+
+                                        }
+
+                                      }
+
+                                      #If age is > 10 this is the chick age in days
+                                      if(.x > 5){
+
+                                        return(tibble::tibble(Age_obsv = 1, ChickAge = .x))
+
+                                      } else {
+
+                                        #If it's <10 then we translate into EURING codes for adults
+                                        if(.x %in% c(1, 2)){
+
+                                          return(tibble::tibble(Age_obsv = 1 + .x*2, ChickAge = NA))
+
+                                        } else {
+
+                                          return(tibble::tibble(Age_obsv = 3 + (.x - 3)*2, ChickAge = NA))
+
+                                        }
+
+                                      }
+
+                                    })) %>%
+  #Determine age at first capture for every individual
+  #First arrange the data chronologically within each individual
+  arrange(IndvID, CaptureDate) %>%
+    #Then, for each individual, determine the first age and year of capture
+    group_by(IndvID) %>%
+    mutate(FirstAge = first(Age_obsv),
+           FirstYear = first(SampleYear)) %>%
+    ungroup() %>%
+    #Calculate age at each capture using EUring codes
+    mutate(Age_calc = purrr::pmap_dbl(.l = list(IndvID = .$IndvID,
+                                                Age = .$FirstAge,
+                                                Year1 = .$FirstYear,
+                                                YearN = .$SampleYear),
+                                      .f = function(IndvID, Age, Year1, YearN){
+
+                                        # If age at first capture is unknown
+                                        # or the bird is unringed
+                                        # we cannot determine age at later captures
+                                        if(is.na(Age) | is.na(IndvID)){
+
+                                          return(NA)
+
+                                        }
+
+                                        #Determine number of years since first capture...
+                                        diff_yr <- (YearN - Year1)
+
+                                        #If it was not caught as a chick...
+                                        if(Age != 1){
+
+                                          #Use categories where age is uncertain
+                                          #(6, 8)
+                                          return(4 + 2*diff_yr)
+
+                                        } else {
+
+                                          #If it was caught as a chick
+                                          if(diff_yr == 0){
+
+                                              return(1)
+
+                                          } else {
+
+                                            #Otherwise, use categories where age is certain (5, 7, etc.)
+                                            return(3 + 2*diff_yr)
+
+                                          }
+
+                                        }
+
+                                      }))
 
   ###################
   # INDIVIDUAL DATA #
