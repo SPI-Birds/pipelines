@@ -49,15 +49,6 @@ format_SSQ <- function(db = file.choose(),
                        path = ".",
                        debug = FALSE){
 
-  #Find database path
-  if(is.null(db)){
-
-    message("Please select a database location...")
-
-    db <- file.choose()
-
-  }
-
   #Record start time to provide processing time to the user.
   start_time <- Sys.time()
 
@@ -107,7 +98,6 @@ format_SSQ <- function(db = file.choose(),
     arrange(SampleYear, Species, FemaleID) %>%
     group_by(SampleYear, Species, FemaleID) %>%
     #Assume NAs in Fledglings are 0s.
-    ### NEED TO CHECK WITH CAMILLO ABOUT THIS
     mutate(total_fledge = calc_cumfledge(x = NumberFledged, na.rm = T),
            row = 1:n()) %>%
     ungroup() %>%
