@@ -59,9 +59,13 @@ format_UAN <- function(db = choose.dir(),
     dplyr::mutate(SOORT = c("pm", "pc", NA, NA, NA, NA)) %>%
     dplyr::select(SOORT, Species = Code)
 
+  #Create table with PopID
+  Pop_codes <- tibble::tibble(SA = c("FR", "PB"),
+                              PopID = c("BOS", "PEE"))
+
   Brood_data <- BROOD_info %>%
-    #Link the plot codes to the plot code (GB)
-    dplyr::left_join(select(PLOT_info, PopID = SA, GB = gb), by = "GB") %>%
+    #Link in Pop_codes
+    dplyr::left_join(Pop_codes, by = "SA") %>%
     #Remove only great tit and blue tit (other species have < 100 nests)
     dplyr::filter(SOORT %in% c("pc", "pm")) %>%
     dplyr::left_join(Species_codes, by = "SOORT") %>%
@@ -183,6 +187,8 @@ format_UAN <- function(db = choose.dir(),
   #residents) This means there will be multiple records for a single individual.
 
   Capture_data <- CAPTURE_info %>%
+    #Add in PopID
+    dplyr::left_join(Pop_codes, by = "SA") %>%
     #Make tarsus length into standard method (Svensson Alt)
     #Firstly, convert the Svennson's standard measures to Svennson's Alt.
     #Then only use this converted measure when actual Svennson's Alt is unavailable.
