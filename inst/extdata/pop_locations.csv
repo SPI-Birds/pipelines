@@ -1,0 +1,83 @@
+site_name,country,latitude,longitude,coordinate_source,data
+Lac Tonga,Algeria,36.88333,8.5,https://www.tandfonline.com/doi/abs/10.1080/11956860.2001.11682659,No
+Vienna,Austria,48.06,15.91,Antica,No
+Peerdbos,Belgium,51.26666667,4.48333333,Data_owner,Yes
+Gent,Belgium,51,3.7,Data_owner,No
+Boshoek,Belgium,51.13333333,4.51666667,Data_owner,Yes
+Univeristy of Antwerp,Belgium,51.16021,4.407561,Data_owner,No
+Velky Kosir,Czechia,49.53333333,17.06666667,Data_owner,Yes
+Dlouha Loucka,Czechia,49.25,17.25,Data_owner,Yes
+Bagley,England,51.71,17.04,Antica,No
+Cambridge,England,52.24,-0.14,Antica,No
+Estonia,Estonia,58.11667,25.08333,Data_owner,No
+Helsinki,Finland,60,24,https://www.researchgate.net/profile/Tapio_Solonen/publication/258246233_Breeding_of_the_Great_Tit_and_Blue_Tit_in_urban_and_rural_habitats_in_Southern_Finland/links/0046352a9a01ce30b6000000/Breeding-of-the-Great-Tit-and-Blue-Tit-in-urban-and-rural-habitats-in-Southern-Finland.pdf,No
+Harjavalta,Finland,61.33333333,22.16666667,Data_owner,Yes
+Kevo,Finland,69.75,27.01667,Data_owner,No
+Oulu,Finland,65,25.5,Data_owner,No
+Rouvi?re,France,43.66667,3.666667,Data_owner,No
+Pirio,France,42.36667,8.752778,Data_owner,No
+Avignon,France,43.83333,4.9,Data_owner,No
+Montpellier city,France,43.37,3.52,Antica,No
+Puachabon,France,43.72,3.61,Antica,No
+Tuarelli (3 sites),France,42.39,8.75,Antica,No
+Ventoux,France,44.17,5.28,Antica,No
+Munich (Westerholz),Germany,48.14317,10.890577,Data_owner,Yes
+Radolfzell,Germany,47.762031,9.005178,Google_maps,No
+S_Bavaria,Germany,48.61666667,11.23333333,Data_owner,Yes
+Hochstadt,Germany,48.058824,11.255755,Data_owner,Yes
+Pilis-Visegrád Mountains,Hungary,47.71667,19.01667,Data_owner,Yes
+Bandon Valley,Ireland,51.74869,-8.723583,Data_owner,Yes
+Gash,Israel,32.23,34.83,Antica,No
+Sde Eliahu,Israel,32.43,35.51,Antica,No
+Sicily,Italy,37.59972222,13.55583333,Data_owner,Yes
+Monte Rufeno,Italy,42.8,11.9,Data_owner,No
+Hokkaido,Japan,42.4,141.36,Antica,No
+Mt. Aburayama ,Japan,33.31,130.23,Antica,No
+Upeglynis,Lithuania,55.03,23.06667,Data_owner,No
+Buunderkamp,Netherlands,52.01907,5.75744,Data_owner,Yes
+Hoge Veluwe,Netherlands,52.0407254,5.85573,Data_owner,Yes
+Lichtenbeek,Netherlands,52.003747,5.847859,Data_owner,No
+Liesbosch Breda,Netherlands,51.58225,4.70028,Data_owner,Yes
+Oosterhout,Netherlands,51.87366,5.84057,Data_owner,Yes
+Vlieland,Netherlands,53.27917,5.01198,Data_owner,Yes
+Warnsborn,Netherlands,52.01079,5.86816,Data_owner,Yes
+Westerheide/NUON/Boslust,Netherlands,52.016,5.86,Data_owner,Yes
+Groningen,Netherlands,53.21917,6.56667,Google_maps,No
+Oslo,Norway,59.93,10.55,Antica,No
+Warsaw,Poland,52.237049,21.017532,Google_maps,No
+Bialowieza Forest,Poland,52.73467,21.05215,Google_maps,No
+Grobla - Niepolomice Forest,Poland,50.1,20.41666667,Data_owner,Yes
+Sekocin,Poland,52.1,20.87,Antica,No
+Choupal,Portugal,40.222,-8.449638889,Data_owner,Yes
+Zvenigorod,Russia,55.73333,36.85,Data_owner,No
+Cantabrian mountains,Spain,42.71667,-5.016667,https://www.sciencedirect.com/science/article/pii/S0378112711000612,No
+Sagunto,Spain,39.7,-0.25,Data_owner,No
+"La Hirvela, Habitat 1",Spain,41.06666667,-3.45,Data_owner,No
+Barcelona,Spain,41.46667,2.133333,Data_owner,No
+Font Roja,Spain,38.39,-0.32,Antica,No
+Mariola,Spain,38.44,-0.33,Antica,No
+Pitarque,Spain,40.65,-0.59,Antica,No
+Tenerife,Spain,28.41667,-16.38333,https://doi.org/10.1111/j.1474-919X.2012.01241.x,No
+Stenbrohult,Sweden,56.63333,14.16667,https://doi.org/10.1111/j.1474-919X.1977.tb03542.x,No
+Transjo,Sweden,60.31667,16.93333,https://doi.org/10.1111/j.1474-919X.1977.tb03542.x,No
+Revinge,Sweden,55.69,13.34,Data_owner,No
+Gotland,Sweden,57.05,18.30833,Data_owner,No
+Askainen,Sweden,60.5,21.75,Data_owner,No
+South Skane,Sweden,55.65,13.55,Antica,No
+Uppsalla,Sweden,59.833333,17.666667,https://www.nature.com/articles/323152a0,No
+Bern,Switzerland,46.11667,7.133333,https://www.pnas.org/content/early/2016/10/24/1610062113,No
+Bern,Switzerland,46.9,7.283333,https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/j.1365-2656.2005.00963.x,No
+Birsfelder Hard (Basel),Switzerland,47.47,7.51,Antica,No
+Ankara,Turkey,39.925533,32.866287,Google_maps,No
+Whytham Woods,UK,51.76666667,-1.33333333,Data_owner,Yes
+East Dartmoor,UK,50.6,-3.716667,Data_owner,Yes
+Nagshead,UK,51.78333,-2.566667,Data_owner,No
+Lake Wood,UK,50.96667,0.08333333,Data_owner,No
+Cambridgeshire,UK,52.36667,-0.2166667,Data_owner,No
+Cardiff,UK,51.48333,-3.183333,Data_owner,No
+Lancaster,UK,54,-2.783333,Data_owner,No
+Dendles Wood,UK,50.432,-3.9585,Data_owner,No
+Teign Valley,UK,50.679,-3.7139,Data_owner,No
+Okehampton,UK,50.7287,-3.985,Data_owner,No
+Cambridge,UK,52.122665,0.169775,Google_maps,No
+Birmingham,UK,52.489471,-1.898575,Google_maps,No
