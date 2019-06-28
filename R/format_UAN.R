@@ -80,9 +80,9 @@ format_UAN <- function(db = choose.dir(),
            BroodSize = NP, BroodSizeError = NA,
            FledgeDate = NA, FledgeDateError = NA,
            NumberFledged = PU, NumberFledgedError = NA,
-           AvgEggMass = NA, NrEggs = NA,
-           AvgChickMass = GG, NrChicksMass = GN,
-           AvgTarsus = GT, NrChicksTarsus = GN,
+           AvgEggMass = NA, NumberEggs = NA,
+           AvgChickMass = GG, NumberChicksMass = GN,
+           AvgTarsus = GT, NumberChicksTarsus = GN,
            ExperimentID = exp) %>%
     #Include ClutchType info
     #Firstly, convert ClutchType_observed
