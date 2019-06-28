@@ -87,10 +87,10 @@ format_UAN <- function(db = choose.dir(),
     #Include ClutchType info
     #Firstly, convert ClutchType_observed
     dplyr::left_join(tibble::tibble(TY = 0:9,
-                                    ClutchType_observed = c(NA, "First", "Second", "Replacement",
-                                                            "Replacement", "Replacement",
-                                                            "Second", "Second", "Replacement",
-                                                            "First")), by = "TY") %>%
+                                    ClutchType_observed = c(NA, "first", "second", "replacement",
+                                                            "replacement", "replacement",
+                                                            "second", "second", "replacement",
+                                                            "first")), by = "TY") %>%
     #Create ClutchType_calc
     group_by(PopID, SampleYear, Species) %>%
     mutate(cutoff = tryCatch(expr = min(LayingDate, na.rm = T) + 30,
