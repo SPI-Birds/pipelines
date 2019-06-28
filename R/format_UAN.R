@@ -259,21 +259,21 @@ format_UAN <- function(db = choose.dir(),
 
                                       }
 
-                                      #If age is > 10 this is the chick age in days
+                                      #If age is > 5 this is the chick age in days
                                       if(.x > 5){
 
                                         return(tibble::tibble(Age_obsv = 1, ChickAge = .x))
 
                                       } else {
 
-                                        #If it's <10 then we translate into EURING codes for adults
+                                        #If it's 1-5 then we translate into EURING codes for adults
                                         if(.x %in% c(1, 2)){
 
                                           return(tibble::tibble(Age_obsv = 1 + .x*2, ChickAge = NA))
 
                                         } else {
 
-                                          return(tibble::tibble(Age_obsv = 3 + (.x - 3)*2, ChickAge = NA))
+                                          return(tibble::tibble(Age_obsv = 4 + (.x - 3)*2, ChickAge = NA))
 
                                         }
 
@@ -302,31 +302,16 @@ format_UAN <- function(db = choose.dir(),
 
                                           return(NA)
 
-                                        }
-
-                                        #Determine number of years since first capture...
-                                        diff_yr <- (YearN - Year1)
-
-                                        #If it was not caught as a chick...
-                                        if(Age != 1){
-
-                                          #Use categories where age is uncertain
-                                          #(6, 8)
-                                          return(4 + 2*diff_yr)
-
                                         } else {
 
-                                          #If it was caught as a chick
-                                          if(diff_yr == 0){
+                                          #Determine number of years since first capture...
+                                          diff_yr <- (YearN - Year1)
 
-                                              return(1)
-
-                                          } else {
-
-                                            #Otherwise, use categories where age is certain (5, 7, etc.)
-                                            return(3 + 2*diff_yr)
-
-                                          }
+                                          #Increase the age by 2*number of years.
+                                          #We don't need to determine whether it was
+                                          #first caught as check etc.
+                                          #the nuance in the age is already in Age_obsv
+                                          return(Age + 2*diff_yr)
 
                                         }
 
