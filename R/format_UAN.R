@@ -351,19 +351,29 @@ format_UAN <- function(db = choose.dir(),
   Indv_broods <- CAPTURE_info %>%
     group_by(RN) %>%
     filter(!is.na(NN) & VW == "P") %>%
-    summarise(BroodIDLaid = NN[1]) %>%
+    summarise(BroodIDLaid = first(NN)) %>%
     rename(rn = RN)
+
+  Indv_Pop <- Capture_data %>%
+    group_by(IndvID) %>%
+    summarise(PopID = first(CapturePopID)) %>%
+    rename(rn = IndvID)
 
   #I assume that the broodID laid and fledged are the same in this case.
   Indv_data <- INDV_info %>%
-    left_join(Sex_table, by = "sex") %>%
-    left_join(Indv_broods, by = "rn") %>%
-    mutate(BroodIDFledged = NA,
-           Species = ifelse(soort == "pm", "GT", ifelse(soort == "pc", "BT", NA)),
+    #Also join in Species
+    #Remove only great tit and blue tit (other species have < 100 nests)
+    dplyr::rename(SOORT = soort) %>%
+    dplyr::filter(SOORT %in% c("pc", "pm")) %>%
+    dplyr::left_join(Species_codes, by = "SOORT") %>%
+    dplyr::left_join(Sex_table, by = "sex") %>%
+    dplyr::left_join(Indv_broods, by = "rn") %>%
+    dplyr::left_join(Indv_Pop, by = "rn") %>%
+    mutate(BroodIDRinged = BroodIDLaid,
            IndvID = rn, RingDate = lubridate::dmy(klr1date), RingYear = lubridate::year(RingDate),
            RingAge = lubridate::year(RingDate) - gbj,
            Status = ifelse(mode == "P", "Resident", "Immigrant"), Sex = Sex) %>%
-    select(BroodIDLaid, BroodIDFledged, Species, IndvID, RingYear, RingAge, Status, Sex)
+    select(IndvID, Species, PopID, BroodIDLaid, BroodIDRinged, RingYear, RingAge, Sex)
 
   ################
   # NESTBOX DATA #
