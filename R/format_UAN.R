@@ -343,6 +343,7 @@ format_UAN <- function(db = choose.dir(),
     rename(rn = RN)
 
   Indv_Pop <- Capture_data %>%
+    dplyr::filter(!is.na(CapturePopID)) %>%
     group_by(IndvID) %>%
     summarise(PopID = first(CapturePopID)) %>%
     rename(rn = IndvID)
