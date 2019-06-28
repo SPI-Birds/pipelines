@@ -4,13 +4,18 @@
 #' One .jpeg showing the different species studied at that site.
 #' One .gif showing number of nests sampled for each species over time.
 #' @export
+#' @import extrafont
 #'
 #' @examples
 #' HOG_twitter()
 HOG_twitter <- function(){
 
-  #First run the pipeline to extract NIOO data
-  format_NIOO()
+  if(!"Brood_data_NIOO.csv" %in% list.files()){
+
+    #First run the pipeline to extract NIOO data
+    format_NIOO()
+
+  }
 
   #Then load the Brood_data table
   HOG_data <- read.csv("Brood_data_NIOO.csv", stringsAsFactors = FALSE) %>%
@@ -52,7 +57,7 @@ HOG_twitter <- function(){
                      .f = ~{
 
                        scale <- bird_locations$scale[grepl(pattern = substr(.x, 1, 6),
-                                                         relative_size$species)]
+                                                           bird_locations$species)]
 
                        grid::rasterGrob(png::readPNG(source = system.file("extdata", .x, package = "HNBStandFormat", mustWork = TRUE)),
                                         width = unit(4.5*scale, "cm"), height = unit(3*scale, "cm"))
@@ -87,7 +92,7 @@ HOG_twitter <- function(){
     geom_label(data = bird_locations,
                aes(x = mean(longitude), y = max(latitude) + 17, label = "Hoge Veluwe"),
                size = 14, colour = "black", label.padding = unit(0.4, "cm"),
-               label.size = 1)+
+               label.size = 1, family = "Ubuntu")+
     geom_rect(data = bird_locations, aes(xmin = min(longitude) - 15,
                                          xmax = max(longitude) + 17,
                                          ymin = min(latitude) - 15,
@@ -96,7 +101,7 @@ HOG_twitter <- function(){
     egg::geom_custom(data = bird_locations,
                      aes(x = longitude, y = latitude, data = grob), grob_fun = "identity") +
     geom_label(data = bird_locations, aes(x = longitude, y = latitude - 10, label = label),
-               size = 6) +
+               size = 6, family = "Ubuntu") +
     theme_classic() +
     theme(axis.line = element_blank(),
           axis.text = element_blank(),
@@ -109,32 +114,35 @@ HOG_twitter <- function(){
                   width = (5.18 * 2))
 
   timeline <- HOG_data %>%
-    group_by(Species, SampleYear) %>%
-    count()
+    dplyr::group_by(Species, SampleYear) %>%
+    dplyr::count() %>%
+    dplyr::filter(SampleYear < 2019)
 
-  ggplot(timeline) +
+  anim_plot <- ggplot(timeline) +
     geom_path(aes(x = SampleYear, y = n, colour = Species), size = 1)+
-    geom_point(aes(x = SampleYear, y = n, fill = Species), shape = 21, stroke = 1, size = 3) +
+    geom_point(aes(x = SampleYear, y = n, fill = Species), shape = 21, stroke = 1, size = 4) +
     theme_classic() +
     scale_fill_manual(values = bird_locations$base_colour,
                       labels = bird_locations$label) +
     scale_colour_manual(values = bird_locations$base_colour) +
-    # scale_x_continuous(breaks = seq(1990, 2020, 5), limits = c(1990, 2020))+
+    scale_x_continuous(breaks = seq(1960, 2020, 10), limits = c(1960, 2022))+
+    scale_y_continuous(breaks = seq(0, 300, 50)) +
     labs(x = "Year", y = "Number of broods") +
     guides(fill = guide_legend(override.aes = list(size = 5, stroke = 1)),
            color = "none") +
     theme(legend.position = "bottom",
-          axis.text = element_text(colour = "black", size = 12),
-          axis.title = element_text(colour = "black", size = 14),
-          legend.title = element_text(size = 15),
-          legend.text = element_text(size = 13)) +
+          axis.text = element_text(colour = "black", size = 14, family = "Ubuntu"),
+          axis.title = element_text(colour = "black", size = 16, family = "Ubuntu"),
+          legend.title = element_text(size = 16, family = "Ubuntu"),
+          legend.text = element_text(size = 14, family = "Ubuntu")) +
     #Start gganimate code
     gganimate::transition_reveal(SampleYear)+
     gganimate::shadow_mark(alpha = 0.25, wrap = FALSE, size = 2, exclude_layer = 2:3)+
     gganimate::ease_aes("linear")
 
-  gganimate::anim_save("HOG_twitter.gif")
+  options(gganimate.dev_args = list(width = 600, height = 520))
 
-
+  gganimate::anim_save("HOG_twitter.gif",
+                       animation = gganimate::animate(anim_plot, duration = 10, end_pause = 10))
 
 }
