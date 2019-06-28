@@ -371,29 +371,29 @@ format_UAN <- function(db = choose.dir(),
   print("Compiling nestbox information...")
 
   Nestbox_data <- BOX_info %>%
-    transmute(NestboxID = GBPL, PopID = SA, Latitude = Y_deg, Longitude = X_deg, StartYear = YEARFIRST, EndYear = YEARLAST)
+    transmute(LocationID = GBPL, PopID = SA, Latitude = Y_deg, Longitude = X_deg, StartYear = YEARFIRST, EndYear = YEARLAST)
 
   ###################
   # POPULATION DATA #
   ###################
 
-  print("Compiling population summary information...")
-
-  Plot_species <- Brood_data %>%
-    group_by(PopID) %>%
-    filter(!is.na(Species)) %>%
-    summarise(Species = paste(unique(Species), collapse = ","))
-
-  Pop_data <- PLOT_info %>%
-    filter(SA != "") %>%
-    rename(PopID = SA) %>%
-    group_by(PopID) %>%
-    summarise(StartYear = min(FIRSTY), EndYear = max(LASTY)) %>%
-    left_join(Plot_species, by = "PopID") %>%
-    left_join(Nestbox_data %>%
-                group_by(PopID) %>%
-                summarise(TotalNestbox = length(unique(NestboxID))), by = "PopID") %>%
-    mutate(PopName = c("Boshoek", "Peerdsbos"))
+  # print("Compiling population summary information...")
+  #
+  # Plot_species <- Brood_data %>%
+  #   group_by(PopID) %>%
+  #   filter(!is.na(Species)) %>%
+  #   summarise(Species = paste(unique(Species), collapse = ","))
+  #
+  # Pop_data <- PLOT_info %>%
+  #   filter(SA != "") %>%
+  #   rename(PopID = SA) %>%
+  #   group_by(PopID) %>%
+  #   summarise(StartYear = min(FIRSTY), EndYear = max(LASTY)) %>%
+  #   left_join(Plot_species, by = "PopID") %>%
+  #   left_join(Nestbox_data %>%
+  #               group_by(PopID) %>%
+  #               summarise(TotalNestbox = length(unique(NestboxID))), by = "PopID") %>%
+  #   mutate(PopName = c("Boshoek", "Peerdsbos"))
 
   print("Saving .csv files...")
 
@@ -405,7 +405,7 @@ format_UAN <- function(db = choose.dir(),
 
   write.csv(x = Nestbox_data, file = paste0(path, "\\Nestbox_data_UAN.csv"), row.names = F)
 
-  write.csv(x = Pop_data, file = paste0(path, "\\Summary_data_UAN.csv"), row.names = F)
+  # write.csv(x = Pop_data, file = paste0(path, "\\Summary_data_UAN.csv"), row.names = F)
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
