@@ -327,7 +327,13 @@ format_UAN <- function(db = choose.dir(),
 
                                         }
 
-                                      }))
+                                      })) %>%
+    #Select just the required cols
+    dplyr::select(IndvID, Species, CaptureDate, CaptureTime, CapturePopID, CapturePlot,
+                  ReleasePopID, ReleasePlot, Mass, Tarsus, WingLength,
+                  Age_obsv, Age_calc, ChickAge) %>%
+    #Arrange by individual and date/time
+    dplyr::arrange(IndvID, CaptureDate, CaptureTime)
 
   ###################
   # INDIVIDUAL DATA #
