@@ -221,12 +221,15 @@ format_UAN <- function(db = choose.dir(),
     #There is no information on release location, so I assume it's the same as the capture location.
     dplyr::mutate(CaptureDate = lubridate::ymd(VD),
                   SampleYear = lubridate::year(CaptureDate),
-              CaptureTime = lubridate::hm(paste(UUR %/% 1, round(UUR %% 1)*60, sep = ":")),
-              IndvID = RN,
-              CapturePopID = PopID, CapturePlot = GB,
-              ReleasePopID = PopID, ReleasePlot = GB,
-              Mass = GEW, Tarsus = Tarsus,
-              WingLength = VLL) %>%
+                  CaptureTime = na_if(paste(UUR %/% 1,
+                                            stringr::str_pad(string = round((UUR %% 1)*60),
+                                                             width = 2,
+                                                             pad = "0"), sep = ":"), "NA:NA"),
+                  IndvID = RN,
+                  CapturePopID = PopID, CapturePlot = GB,
+                  ReleasePopID = PopID, ReleasePlot = GB,
+                  Mass = GEW, Tarsus = Tarsus,
+                  WingLength = VLL) %>%
     #Calculate age at capture and chick age based on the LT column
     dplyr::bind_cols(purrr::map2_dfr(.x = .$LT, .y = .$VW,
                                     .f = ~{
