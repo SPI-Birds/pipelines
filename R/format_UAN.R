@@ -173,7 +173,7 @@ format_UAN <- function(db = choose.dir(),
                                                       }
 
                                                     })) %>%
-    dplyr::select(SampleYear, Species, PopID, Plot, LocationID,
+    dplyr::select(PopID, SampleYear, Species, Plot, LocationID,
                   BroodID, FemaleID, MaleID, ClutchType_observed,
                   ClutchType_calc, LayingDate:ExperimentID)
 
