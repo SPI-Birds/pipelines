@@ -363,7 +363,7 @@ format_NIOO <- function(db = file.choose(),
                                                #Therefore it can only be first or replacement (based on 30d rule)
                                                if(is.na(femID)){
 
-                                                 if(lubridate::ymd(LD) > lubridate::ymd(cutoff_date)){
+                                                 if(LD > cutoff_date){
 
                                                    return("replacement")
 
@@ -380,7 +380,7 @@ format_NIOO <- function(db = file.choose(),
                                                if(rows == 1){
 
                                                  #If it doesn't meet the 30 day rule, then name it as replacement
-                                                 if(lubridate::ymd(LD) > lubridate::ymd(cutoff_date)){
+                                                 if(LD > cutoff_date){
 
                                                    return("replacement")
 

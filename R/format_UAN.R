@@ -74,21 +74,23 @@ format_UAN <- function(db = choose.dir(),
            PopID = PopID, Plot = GB,
            LocationID = PL, BroodID = NN,
            FemaleID = RW, MaleID = RM,
-           LayingDate = lubridate::dmy(LD), LayingDateError = NA,
+           LayingDate = lubridate::ymd(LD), LayingDateError = NA,
            ClutchSize = AE, ClutchSizeError = NA,
            HatchDate = NA, HatchDateError = NA,
            BroodSize = NP, BroodSizeError = NA,
            FledgeDate = NA, FledgeDateError = NA,
            NumberFledged = PU, NumberFledgedError = NA,
-           AvgMass = GG, AvgTarsus = GT,
+           AvgEggMass = NA, NumberEggs = NA,
+           AvgChickMass = GG, NumberChicksMass = GN,
+           AvgTarsus = GT, NumberChicksTarsus = GN,
            ExperimentID = exp) %>%
     #Include ClutchType info
     #Firstly, convert ClutchType_observed
     dplyr::left_join(tibble::tibble(TY = 0:9,
-                                    ClutchType_observed = c(NA, "First", "Second", "Replacement",
-                                                            "Replacement", "Replacement",
-                                                            "Second", "Second", "Replacement",
-                                                            "First")), by = "TY") %>%
+                                    ClutchType_observed = c(NA, "first", "second", "replacement",
+                                                            "replacement", "replacement",
+                                                            "second", "second", "replacement",
+                                                            "first")), by = "TY") %>%
     #Create ClutchType_calc
     group_by(PopID, SampleYear, Species) %>%
     mutate(cutoff = tryCatch(expr = min(LayingDate, na.rm = T) + 30,
@@ -171,7 +173,7 @@ format_UAN <- function(db = choose.dir(),
                                                       }
 
                                                     })) %>%
-    dplyr::select(SampleYear, Species, PopID, Plot, LocationID,
+    dplyr::select(PopID, SampleYear, Species, Plot, LocationID,
                   BroodID, FemaleID, MaleID, ClutchType_observed,
                   ClutchType_calc, LayingDate:ExperimentID)
 
@@ -219,12 +221,15 @@ format_UAN <- function(db = choose.dir(),
     #There is no information on release location, so I assume it's the same as the capture location.
     dplyr::mutate(CaptureDate = lubridate::ymd(VD),
                   SampleYear = lubridate::year(CaptureDate),
-              CaptureTime = lubridate::hm(paste(UUR %/% 1, round(UUR %% 1)*60, sep = ":")),
-              IndvID = RN,
-              CapturePopID = PopID, CapturePlot = GB,
-              ReleasePopID = PopID, ReleasePlot = GB,
-              Mass = GEW, Tarsus = Tarsus,
-              WingLength = VLL) %>%
+                  CaptureTime = na_if(paste(UUR %/% 1,
+                                            stringr::str_pad(string = round((UUR %% 1)*60),
+                                                             width = 2,
+                                                             pad = "0"), sep = ":"), "NA:NA"),
+                  IndvID = RN,
+                  CapturePopID = PopID, CapturePlot = GB,
+                  ReleasePopID = PopID, ReleasePlot = GB,
+                  Mass = GEW, Tarsus = Tarsus,
+                  WingLength = VLL) %>%
     #Calculate age at capture and chick age based on the LT column
     dplyr::bind_cols(purrr::map2_dfr(.x = .$LT, .y = .$VW,
                                     .f = ~{
@@ -254,21 +259,21 @@ format_UAN <- function(db = choose.dir(),
 
                                       }
 
-                                      #If age is > 10 this is the chick age in days
+                                      #If age is > 5 this is the chick age in days
                                       if(.x > 5){
 
                                         return(tibble::tibble(Age_obsv = 1, ChickAge = .x))
 
                                       } else {
 
-                                        #If it's <10 then we translate into EURING codes for adults
+                                        #If it's 1-5 then we translate into EURING codes for adults
                                         if(.x %in% c(1, 2)){
 
                                           return(tibble::tibble(Age_obsv = 1 + .x*2, ChickAge = NA))
 
                                         } else {
 
-                                          return(tibble::tibble(Age_obsv = 3 + (.x - 3)*2, ChickAge = NA))
+                                          return(tibble::tibble(Age_obsv = 4 + (.x - 3)*2, ChickAge = NA))
 
                                         }
 
@@ -297,35 +302,26 @@ format_UAN <- function(db = choose.dir(),
 
                                           return(NA)
 
-                                        }
-
-                                        #Determine number of years since first capture...
-                                        diff_yr <- (YearN - Year1)
-
-                                        #If it was not caught as a chick...
-                                        if(Age != 1){
-
-                                          #Use categories where age is uncertain
-                                          #(6, 8)
-                                          return(4 + 2*diff_yr)
-
                                         } else {
 
-                                          #If it was caught as a chick
-                                          if(diff_yr == 0){
+                                          #Determine number of years since first capture...
+                                          diff_yr <- (YearN - Year1)
 
-                                              return(1)
-
-                                          } else {
-
-                                            #Otherwise, use categories where age is certain (5, 7, etc.)
-                                            return(3 + 2*diff_yr)
-
-                                          }
+                                          #Increase the age by 2*number of years.
+                                          #We don't need to determine whether it was
+                                          #first caught as check etc.
+                                          #the nuance in the age is already in Age_obsv
+                                          return(Age + 2*diff_yr)
 
                                         }
 
-                                      }))
+                                      })) %>%
+    #Select just the required cols
+    dplyr::select(IndvID, Species, CaptureDate, CaptureTime, CapturePopID, CapturePlot,
+                  ReleasePopID, ReleasePlot, Mass, Tarsus, WingLength,
+                  Age_obsv, Age_calc, ChickAge) %>%
+    #Arrange by individual and date/time
+    dplyr::arrange(IndvID, CaptureDate, CaptureTime)
 
   ###################
   # INDIVIDUAL DATA #
@@ -343,19 +339,30 @@ format_UAN <- function(db = choose.dir(),
   Indv_broods <- CAPTURE_info %>%
     group_by(RN) %>%
     filter(!is.na(NN) & VW == "P") %>%
-    summarise(BroodIDLaid = NN[1]) %>%
+    summarise(BroodIDLaid = first(NN)) %>%
     rename(rn = RN)
+
+  Indv_Pop <- Capture_data %>%
+    dplyr::filter(!is.na(CapturePopID)) %>%
+    group_by(IndvID) %>%
+    summarise(PopID = first(CapturePopID)) %>%
+    rename(rn = IndvID)
 
   #I assume that the broodID laid and fledged are the same in this case.
   Indv_data <- INDV_info %>%
-    left_join(Sex_table, by = "sex") %>%
-    left_join(Indv_broods, by = "rn") %>%
-    mutate(BroodIDFledged = NA,
-           Species = ifelse(soort == "pm", "GT", ifelse(soort == "pc", "BT", NA)),
+    #Also join in Species
+    #Remove only great tit and blue tit (other species have < 100 nests)
+    dplyr::rename(SOORT = soort) %>%
+    dplyr::filter(SOORT %in% c("pc", "pm")) %>%
+    dplyr::left_join(Species_codes, by = "SOORT") %>%
+    dplyr::left_join(Sex_table, by = "sex") %>%
+    dplyr::left_join(Indv_broods, by = "rn") %>%
+    dplyr::left_join(Indv_Pop, by = "rn") %>%
+    mutate(BroodIDRinged = BroodIDLaid,
            IndvID = rn, RingDate = lubridate::dmy(klr1date), RingYear = lubridate::year(RingDate),
            RingAge = lubridate::year(RingDate) - gbj,
            Status = ifelse(mode == "P", "Resident", "Immigrant"), Sex = Sex) %>%
-    select(BroodIDLaid, BroodIDFledged, Species, IndvID, RingYear, RingAge, Status, Sex)
+    select(IndvID, Species, PopID, BroodIDLaid, BroodIDRinged, RingYear, RingAge, Sex)
 
   ################
   # NESTBOX DATA #
@@ -364,29 +371,29 @@ format_UAN <- function(db = choose.dir(),
   print("Compiling nestbox information...")
 
   Nestbox_data <- BOX_info %>%
-    transmute(NestboxID = GBPL, PopID = SA, Latitude = Y_deg, Longitude = X_deg, StartYear = YEARFIRST, EndYear = YEARLAST)
+    transmute(LocationID = GBPL, PopID = SA, Latitude = Y_deg, Longitude = X_deg, StartYear = YEARFIRST, EndYear = YEARLAST)
 
   ###################
   # POPULATION DATA #
   ###################
 
-  print("Compiling population summary information...")
-
-  Plot_species <- Brood_data %>%
-    group_by(PopID) %>%
-    filter(!is.na(Species)) %>%
-    summarise(Species = paste(unique(Species), collapse = ","))
-
-  Pop_data <- PLOT_info %>%
-    filter(SA != "") %>%
-    rename(PopID = SA) %>%
-    group_by(PopID) %>%
-    summarise(StartYear = min(FIRSTY), EndYear = max(LASTY)) %>%
-    left_join(Plot_species, by = "PopID") %>%
-    left_join(Nestbox_data %>%
-                group_by(PopID) %>%
-                summarise(TotalNestbox = length(unique(NestboxID))), by = "PopID") %>%
-    mutate(PopName = c("Boshoek", "Peerdsbos"))
+  # print("Compiling population summary information...")
+  #
+  # Plot_species <- Brood_data %>%
+  #   group_by(PopID) %>%
+  #   filter(!is.na(Species)) %>%
+  #   summarise(Species = paste(unique(Species), collapse = ","))
+  #
+  # Pop_data <- PLOT_info %>%
+  #   filter(SA != "") %>%
+  #   rename(PopID = SA) %>%
+  #   group_by(PopID) %>%
+  #   summarise(StartYear = min(FIRSTY), EndYear = max(LASTY)) %>%
+  #   left_join(Plot_species, by = "PopID") %>%
+  #   left_join(Nestbox_data %>%
+  #               group_by(PopID) %>%
+  #               summarise(TotalNestbox = length(unique(NestboxID))), by = "PopID") %>%
+  #   mutate(PopName = c("Boshoek", "Peerdsbos"))
 
   print("Saving .csv files...")
 
@@ -398,7 +405,7 @@ format_UAN <- function(db = choose.dir(),
 
   write.csv(x = Nestbox_data, file = paste0(path, "\\Nestbox_data_UAN.csv"), row.names = F)
 
-  write.csv(x = Pop_data, file = paste0(path, "\\Summary_data_UAN.csv"), row.names = F)
+  # write.csv(x = Pop_data, file = paste0(path, "\\Summary_data_UAN.csv"), row.names = F)
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 

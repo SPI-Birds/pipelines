@@ -14,61 +14,38 @@
 #' @examples
 #' #Create jpeg map
 #' plot_popmap()
-plot_popmap <- function(scale = 2, filename){
+plot_popmap <- function(scale = 2, filename = NULL){
+
+  pop_locations <- read.csv(system.file("extdata", "pop_locations.csv", package = "HNBStandFormat", mustWork = TRUE))
 
   world_map <- map_data("world")
 
   ggplot()+
     geom_polygon(data = GT_dist_gg, aes(x = long, y = lat, group = group), fill = "light grey") +
     geom_polygon(data = world_map, aes(x = long, y = lat, group = group), color = "black", fill = NA) +
-    coord_fixed(xlim = c(-17, 145), ylim = c(-5, 69.75)) +
-    geom_point(data = dplyr::filter(pop_locations, data == "No"), aes(x = longitude, y = latitude), fill = "#CCFFCC",
-               shape = 21, size = 4)+
+    coord_cartesian(xlim = c(-20, 145), ylim = c(-10, 70)) +
+    geom_point(data = pop_locations, aes(x = longitude, y = latitude, fill = data), shape = 21, size = 4) +
+    #Add a second time to make sure that green points are always on top.
+    #These are the ones we want people to see.
     geom_point(data = dplyr::filter(pop_locations, data == "Yes"), aes(x = longitude, y = latitude), fill = "green",
-               shape = 21, size = 4)+
+               shape = 21, size = 4) +
+    scale_fill_manual(breaks = c("Yes", "No"),
+                      values = c("#CCFFCC", "green"),
+                      labels = c("Population meta-data provided", "Meta-data not yet provided")) +
     theme_classic() +
+    guides(fill = guide_legend(override.aes = list(size = 5, stroke = 1))) +
     theme(axis.line = element_blank(),
           axis.text = element_blank(),
           axis.title = element_blank(),
           axis.ticks = element_blank(),
-          legend.position = "none")
+          legend.position = c(0.275, 0.35),
+          legend.background = element_rect(colour = "black", fill = "white", size = 1),
+          legend.title = element_blank(),
+          legend.text = element_text(size = 14))
 
-  ggplot2::ggsave(filename = ifelse(is.null(filename), "Population_map.jpeg", filename),
+  ggplot2::ggsave(filename = ifelse(is.null(filename), "Population_map.jpg", filename),
                   height = (3.58 * scale),
                   width = (5.18 * scale))
 
 }
 
-plot_indv_popmap <- function(scale = 2, pop_name, filename){
-
-  world_map <- map_data("world")
-
-  ggplot()+
-    geom_polygon(data = GT_dist_gg, aes(x = long, y = lat, group = group), fill = "light grey") +
-    geom_polygon(data = world_map, aes(x = long, y = lat, group = group), color = "black", fill = NA) +
-    coord_fixed(xlim = c(-17, 145), ylim = c(-5, 69.75)) +
-    geom_point(data = dplyr::filter(pop_locations, data == "No"), aes(x = longitude, y = latitude), fill = "#CCFFCC",
-               shape = 21, size = 2)+
-    geom_point(data = dplyr::filter(pop_locations, data == "Yes" & site_name != pop_name), aes(x = longitude, y = latitude), fill = "green",
-               shape = 21, size = 2)+
-    geom_point(data = dplyr::filter(pop_locations, site_name == pop_name), aes(x = longitude, y = latitude), fill = "green",
-               shape = 21, size = 4, stroke = 1.5)+
-    geom_curve(data = dplyr::filter(pop_locations, site_name == pop_name),
-               aes(x = longitude - 10, y = latitude + 10,
-                   xend = longitude - 1, yend = latitude),
-               arrow = arrow(length = unit(7, "pt")), size = 1)+
-    geom_label(data = dplyr::filter(pop_locations, site_name == pop_name),
-              aes(x = longitude - 10, y = latitude + 7, label = pop_name),
-              size = 7)+
-    theme_classic() +
-    theme(axis.line = element_blank(),
-          axis.text = element_blank(),
-          axis.title = element_blank(),
-          axis.ticks = element_blank(),
-          legend.position = "none")
-
-  ggplot2::ggsave(filename = ifelse(is.null(filename), "Population_map.jpeg", filename),
-                  height = (3.58 * scale),
-                  width = (5.18 * scale))
-
-}
