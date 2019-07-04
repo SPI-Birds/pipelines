@@ -100,12 +100,14 @@ format_SSQ <- function(db = file.choose(),
     group_by(SampleYear, Species, FemaleID) %>%
     #Assume NAs in Fledglings are 0s.
     mutate(total_fledge = calc_cumfledge(x = NumberFledged, na.rm = T),
+           total_fledge_na = calc_cumfledge(x = NumberFledged, na.rm = F),
            row = 1:n()) %>%
     ungroup() %>%
     mutate(ClutchType_calc = purrr::pmap_chr(.l = list(rows = .$row,
                                                        femID = .$FemaleID,
                                                        cutoff_date = .$cutoff,
                                                        nr_fledge_before = .$total_fledge,
+                                                       na_fledge_before = .$total_fledge_na,
                                                        LD = .$LayingDate),
                                              .f = function(rows, femID, cutoff_date, nr_fledge_before, LD){
 
@@ -154,18 +156,35 @@ format_SSQ <- function(db = file.choose(),
 
                                                  }
 
-                                                 #If it's NOT the first nest of the season for this female
+                                               #If it's NOT the first nest of the season for this female
                                                } else {
 
                                                  #If there have been no fledglings before this point..
                                                  if(nr_fledge_before == 0){
 
-                                                   #Then it is a replacement
-                                                   return("replacement")
+                                                   #If there was atleast one NA record before this one
+                                                   #then we don't know if number of fledged before is
+                                                   #0 or >0. Therefore, we have to say NA.
+                                                   if(na_fledge_before > 0){
+
+                                                     return(NA)
+
+                                                   } else {
+
+                                                     #Otherwise, we can be confident that
+                                                     #number of fledge before is 0
+                                                     #and it must be a replacement
+                                                     return("replacement")
+
+                                                   }
 
                                                  } else {
 
-                                                   #Otherwise, it is a secondary clutch
+                                                   #If there has been atleast one clutch
+                                                   #that previously produced fledgligns
+                                                   #then this nest is 'second'
+                                                   #N.B. This is the case even if one of the previous nests
+                                                   #was an NA. We just need to know if it's >0, not the exact number
                                                    return("second")
 
                                                  }
