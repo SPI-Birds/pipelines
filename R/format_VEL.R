@@ -1,3 +1,41 @@
+#' Construct standard summary for data from Velky Kosir, Czechia.
+#'
+#' A pipeline to produce a standard output for the nest box population
+#' in Velky Kosir, Czechia, administered by Milos Krist.
+#'
+#' This section provides details on data management choices that are unique to
+#' this data. For a general description of the standard format please see XXXXX
+#' PLACE HOLDER!
+#'
+#' \strong{Species}: There are a small number of records for species other than
+#' great tit, blue tit and collared flycatcher. These are currently excluded.
+#' Blue tits have 93 recorded broods. This is less than our previous 100 broods
+#' cut-off, but they are still included.
+#'
+#' \strong{ClutchType_calc}: We assume that any NA records for number fledged
+#' are true unknowns (rather than 0s). In which case, we can't always
+#' estimate whether a clutch is a second clutch.
+#'
+#' \strong{ExperimentID}: Currently, we just copy the text directly
+#' from the tables. Need to go through an classify each experiment
+#' and check with Milos that these classifications are reasonable.
+#'
+#' \strong{BroodID}: BroodID is currently Year_nestbox_day_month.
+#' This accounts for multiple clutches laid in the same nest box.
+#'
+#' @param db Location of database file.
+#' @param Species A numeric vector. Which species should be included (EUring
+#'   codes)? If blank will return all major species (see details below).
+#' @param path Location where output csv files will be saved.
+#' @param debug For internal use when editing pipelines. If TRUE, pipeline
+#'   generates a summary of pipeline data. This includes: a) Histogram of
+#'   continuous variables with mean/SD b) unique values of all categorical
+#'   variables.
+#'
+#' @return Generates 5 .csv files with data in a standard format.
+#' @export
+#' @import readxl
+
 format_VEL <- function(db = choose.dir(),
                        Species = NULL,
                        path = ".",
