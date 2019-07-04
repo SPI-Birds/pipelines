@@ -69,24 +69,71 @@ format_VEL <- function(db = choose.dir(),
 }
 
 
-create_brood_VEL <- function(FICHYP_data, TIT_data) {
+create_brood_VEL <- function(FICALB_data, TIT_data) {
 
-  FICHYP_broods <- FICHYP_data %>%
+  FICALB_broods <- FICALB_data %>%
     dplyr::mutate(SampleYear = year,
-                  Species = Species_codes[which(Species_codes$SpeciesID == 13490), ]$Code,
+                  Species = Species_codes[which(Species_codes$SpeciesID == 13480), ]$Code,
                   PopID = "VEL",
                   Plot = plot,
-                  LocationID = NA,
-                  BroodID = paste(SampleYear, nest, sep = "_"),
+                  LocationID = nest,
+                  BroodID = paste(SampleYear, nest, lubridate::day(laying_date), lubridate::month(laying_date), sep = "_"),
                   FemaleID = female_ring, MaleID = male_ring,
                   ClutchType_observed = NA,
                   LayingDate = laying_date, LayingDateError = NA,
                   ClutchSize = clutch_size, ClutchSizeError = NA,
                   HatchDate = hatching_date, HatchDateError = NA,
                   BroodSize = number_hatched, BroodSizeError = NA,
-                  NumberFledged = number_fledged, NumberFledgedError = NA) %>%
+                  FledgeDate = NA, FledgeDateError = NA,
+                  NumberFledged = number_fledged, NumberFledgedError = NA,
+                  ##ADD MORPHO COLUMNS TO BIND WITH TIT DATA
+                  ##WILL ADD THIS INFO LATER WHEN WE HAVE CAPTURE DATA
+                  AvgEggMass = NA, NrEggs = NA,
+                  AvgChickMass = NA, NrChicksMass = NA,
+                  AvgTarsus = NA, NrChicksTarsus = NA,
+                  ExperimentID = treatment) %>%
     dplyr::arrange(SampleYear, Species, FemaleID) %>%
     #Calculate clutchtype
-    dplyr::mutate(ClutchType_calc = calc_clutchtype(data = ., na.rm = FALSE))
+    dplyr::mutate(ClutchType_calc = calc_clutchtype(data = ., na.rm = FALSE)) %>%
+    dplyr::select(SampleYear:ClutchType_observed, ClutchType_calc,
+                  LayingDate:ExperimentID)
+
+  TIT_broods <- TIT_data %>%
+    dplyr::mutate(SampleYear = year,
+                  Species = dplyr::case_when(.$species == "blue tit" ~ Species_codes[which(Species_codes$SpeciesID == 14620), ]$Code,
+                                             .$species == "great tit" ~ Species_codes[which(Species_codes$SpeciesID == 14640), ]$Code),
+                  PopID = "VEL",
+                  Plot = plot,
+                  LocationID = nest_box, BroodID = paste(year, nest_box, lubridate::day(laying_date), lubridate::month(laying_date), sep = "_"),
+                  FemaleID = female_ring, MaleID = NA,
+                  ClutchType_observed = NA,
+                  ## NEED TO ACCOUNT FOR CASES WHERE LAYINGDATE HAS ERROR.
+                  ## FOR NOW I DON'T DO THIS
+                  LayingDate = laying_date, LayingDateError = NA,
+                  ##FOR NOW, I'M JUST ASSUMING THAT 11+ CLUTCH SIZE
+                  ##MEANS CLUTCH 11 THAT WAS ARTIFIICALLY INCREASED
+                  ##THEREFORE, I JUST REMOVE THE + AND ADD THAT IT WAS AN EXPERIMENTAL NEST
+                  ##NEED TO CHECK WITH MILOS
+                  ClutchSize = as.numeric(gsub(pattern = "\\+|\\-", replacement = "", clutch_size)),
+                  ClutchSizeError = NA,
+                  ##DO THE SAME FOR BROOD SIZE AND NUMBER FLEDGED
+                  HatchDate = NA, HatchDateError = NA,
+                  BroodSize = as.numeric(gsub(pattern = "\\+|\\-", replacement = "", number_hatched)),
+                  BroodSizeError = NA,
+                  FledgeDate = NA, FledgeDateError = NA,
+                  NumberFledged = as.numeric(gsub(pattern = "\\+|\\-", replacement = "", number_fledged)),
+                  NumberFledgedError = NA,
+                  ##THERE IS NO MORPHOMETRICS FOR TITS
+                  AvgEggMass = NA, NrEggs = NA,
+                  AvgChickMass = NA, NrChicksMass = NA,
+                  AvgTarsus = NA, NrChicksTarsus = NA,
+                  ExperimentID = experiment) %>%
+    dplyr::arrange(SampleYear, Species, FemaleID) %>%
+    #Calculate clutchtype
+    dplyr::mutate(ClutchType_calc = calc_clutchtype(data = ., na.rm = FALSE)) %>%
+    dplyr::select(SampleYear:ClutchType_observed, ClutchType_calc,
+                  LayingDate:ExperimentID)
+
+  return(dplyr::bind_rows(FICALB_broods, TIT_broods))
 
 }
