@@ -79,7 +79,7 @@ format_SSQ <- function(db = file.choose(),
                   ClutchType_observed = dplyr::case_when(.$Class == 1 ~ "first",
                                                          .$Class == 3 ~ "second",
                                                          .$Class == 2 ~ "replacement")) %>%
-    dplyr::mutate(Species = Code, FledgeDate = NA, AvgMass = NA, AvgTarsus = NA)
+    dplyr::mutate(Species = Code, FledgeDate = NA, AvgEggMass = NA, NrEgg = NA, AvgChickMass = NA, NrChickMass = NA, AvgTarsus = NA, NrChickTarsus = NA)
 
   ##############
   # BROOD DATA #
@@ -195,7 +195,10 @@ format_SSQ <- function(db = file.choose(),
     select(SampleYear, Species, PopID, Plot,
            LocationID, BroodID, FemaleID, MaleID,
            ClutchType_observed, ClutchType_calc,
-           LayingDate:BroodSize, FledgeDate, NumberFledged, AvgMass, AvgTarsus)
+           LayingDate:BroodSize, FledgeDate, NumberFledged,
+           AvgEggMass, NrEgg,
+           AvgChickMass, NrChickMass,
+           AvgTarsus, NrChickTarsus)
 
   ################
   # CAPTURE DATA #
