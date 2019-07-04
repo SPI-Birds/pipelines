@@ -51,7 +51,7 @@ format_VEL <- function(db = choose.dir(),
   ## - Adult wing and forhead patch measures
   ## - Picture and geolocator info
   ## - Info on which eggs were transferred in cross foster
-  FICHYP_data <- readxl::read_excel(paste0(db, "/Velky_Kosir_flycatchers.xlsx"),
+  FICALB_data <- readxl::read_excel(paste0(db, "/Velky_Kosir_flycatchers.xlsx"),
                                     col_types = c("skip", "numeric", "text",
                                                   "text", "list",
                                                   "numeric", "text",
