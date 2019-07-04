@@ -109,7 +109,9 @@ format_SSQ <- function(db = file.choose(),
                                                        nr_fledge_before = .$total_fledge,
                                                        na_fledge_before = .$total_fledge_na,
                                                        LD = .$LayingDate),
-                                             .f = function(rows, femID, cutoff_date, nr_fledge_before, LD){
+                                             .f = function(rows, femID, cutoff_date,
+                                                           nr_fledge_before, na_fledge_before,
+                                                           LD){
 
                                                clutchtype$tick()$print()
 
