@@ -225,8 +225,8 @@ format_SSQ <- function(db = file.choose(),
     #Convert these age values to current EURING codes
     #If NA, we know it's an adult but don't know it's age
     #We don't want to assume anything here
-    dplyr::left_join(tibble::tibble(Age = c(1, 2),
-                                    Age_obsv = c(5, 6)), by = "Age") %>%
+    dplyr::mutate(Age_obsv = dplyr::case_when(.$Age == 1 ~ 5,
+                                              .$Age == 2 ~ 6)) %>%
     dplyr::rename(CapturePopID = PopID, CapturePlot = Plot) %>%
     #Treat CaptureDate as Laying Date (currently in days since March 1st)
     #Check with Camilo about this.
