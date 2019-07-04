@@ -228,34 +228,31 @@ format_SSQ <- function(db = file.choose(),
     dplyr::mutate(Age_obsv = dplyr::case_when(.$Age == 1 ~ 5,
                                               .$Age == 2 ~ 6)) %>%
     dplyr::rename(CapturePopID = PopID, CapturePlot = Plot) %>%
-    #Treat CaptureDate as Laying Date (currently in days since March 1st)
-    #Check with Camilo about this.
+    #Treat CaptureDate of adults as the Laying Date (currently in days since March 1st)
     dplyr::mutate(ReleasePopID = CapturePopID, ReleasePlot = CapturePlot,
                   CaptureDate = as.Date(paste(SampleYear, "03", "01", sep = "-"), format = "%Y-%m-%d") - 1 + LayingDate,
                   CaptureTime = NA) %>%
     dplyr::select(-variable, -LayingDate, -FAge, -MAge)
 
   Chick_captures <- all_data %>%
-    dplyr::select(SampleYear, Species, PopID, Plot, LocationID, LayingDate, Chick1Id:Chick13Id) %>%
-    reshape2::melt(id.vars = c("SampleYear", "Species", "PopID", "Plot", "LocationID", "LayingDate"), value.name = "IndvID") %>%
+    dplyr::select(SampleYear, Species, PopID, Plot, LocationID, LayingDate, ClutchSize, Chick1Id:Chick13Id) %>%
+    reshape2::melt(id.vars = c("SampleYear", "Species", "PopID", "Plot", "LocationID", "LayingDate", "ClutchSize"), value.name = "IndvID") %>%
     #Remove NAs
     dplyr::filter(!is.na(IndvID)) %>%
     dplyr::rename(CapturePopID = PopID, CapturePlot = Plot) %>%
-    #For chicks, use LayingDate + 34 for capture date 34 because this is an
-    #estimate of laying date + laying time (~8 eggs on average) + incubation
-    #time (~12 days) + 14 days (normal age when chicks are ringed)
-    #Using LayingDate, rather than HatchDate, because LayingDate is recorded much more often.
-    #CHECK WITH CAMILLO
+    #For chicks, we currently don't have the version of the individual level capture data.
+    #For now, we use LayingDate + ClutchSize + 15 (incubation days in SSQ) + 12.
+    #Chicks were captured and weighed at 12 days old at the latest
     dplyr::mutate(ReleasePopID = CapturePopID, ReleasePlot = CapturePlot,
-                  CaptureDate = as.Date(paste(SampleYear, "03", "01", sep = "-"), format = "%Y-%m-%d") - 1 + LayingDate + 34,
+                  CaptureDate = as.Date(paste(SampleYear, "03", "01", sep = "-"), format = "%Y-%m-%d") - 1 + LayingDate + ClutchSize + 27,
                   CaptureTime = NA, Age_obsv = 1, Age = 1) %>%
-    dplyr::select(-variable, -LayingDate)
+    dplyr::select(-variable, -LayingDate, -ClutchSize)
 
   #Combine Adult and chick data
   Capture_data <- dplyr::bind_rows(Adult_captures, Chick_captures) %>%
     dplyr::arrange(IndvID, CaptureDate) %>%
     #Add NA for morphometric measures and chick age
-    #ChickAge is NA because we have no exact CaptureDate
+    #ChickAge (in days) is NA because we have no exact CaptureDate
     dplyr::mutate(Mass = NA, Tarsus = NA, WingLength = NA,
                   ChickAge = NA) %>%
     #Also determine Age_calc
@@ -263,7 +260,7 @@ format_SSQ <- function(db = file.choose(),
     mutate(FirstAge = first(Age),
            FirstYear = first(SampleYear)) %>%
     ungroup() %>%
-    #Calculate age at each capture using EUring codes
+    #Calculate age at each capture using EURING codes
     dplyr::mutate(Age_calc = purrr::pmap_dbl(.l = list(Age = .$FirstAge,
                                                        Year1 = .$FirstYear,
                                                        YearN = .$SampleYear),
@@ -275,14 +272,15 @@ format_SSQ <- function(db = file.choose(),
                                                #If it was not caught as a chick...
                                                if(Age != 1 | is.na(Age)){
 
-                                                 #If it's listed as 'first year' then we know it was EURING code 5 at first capture
+                                                 #If it's listed as EURING 5,
+                                                 #then its age is known at first capture
                                                  if(!is.na(Age) & Age == 5){
 
                                                    return(5 + 2*diff_yr)
 
                                                  #Otherwise, when it was first caught it was at least EURING code 6.
-                                                 #This also applies to birds with Age == NA, this is because the only birds
-                                                 #That have NA are adults (all chicks are listed as Age = 1)
+                                                 #This also applies to birds with both Age == 6 (where they were recorded as being >2yo)
+                                                 #and Age == NA. We assume any bird that was a known 2nd year would be listed as such.
                                                  } else {
 
                                                    #Use categories where age is uncertain
