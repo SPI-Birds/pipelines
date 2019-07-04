@@ -332,11 +332,8 @@ format_SSQ <- function(db = file.choose(),
     dplyr::summarise(Species = first(Species),
                      RingYear = min(lubridate::year(CaptureDate)),
                      RingAge = first(Age_obsv)) %>%
-    dplyr::rowwise() %>%
-    #For sex, we only know if an individual was a female...
-    #Adults were never caught as males and chicks were never sexed.
-    dplyr::mutate(Sex = ifelse(IndvID %in% Brood_data$FemaleID, "F", NA)) %>%
-    dplyr::ungroup() %>%
+    dplyr::mutate(Sex = dplyr::case_when(.$IndvID %in% Brood_data$FemaleID ~ "F",
+                                         .$IndvID %in% Brood_data$MaleID ~ "M")) %>%
     #Join in BroodID from the reshaped Chick_IDs table
     dplyr::left_join(Chick_IDs, by = "IndvID") %>%
     dplyr::mutate(BroodIDRinged = BroodIDLaid,
