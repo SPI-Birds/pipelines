@@ -66,7 +66,7 @@ format_SSQ <- function(db = file.choose(),
                   Plot = HabitatOfRinging,
                   Latitude = YCoord, Longitude = XCoord) %>%
     #Add species codes
-    left_join(filter(Species_codes, SpeciesID %in% c("14640", "14620")) %>%
+    dplyr::left_join(filter(Species_codes, SpeciesID %in% c("14640", "14620")) %>%
                 mutate(Species = c("Parus major", "Cyanistes caeruleus")) %>%
                 select(Species, Code), by = "Species") %>%
     #Add other missing data:
@@ -74,10 +74,11 @@ format_SSQ <- function(db = file.choose(),
     #- BroodID (Year_NestID)
     #- ClutchType_observed
     #- FledgeDate
-    mutate(PopID = "SIC",
-           BroodID = paste(SampleYear, LocationID, LayingDate, sep = "_")) %>%
-    left_join(tibble::tibble(ClutchType_observed = c("first", "second", "replacement"),
-                             Class = c(1, 3, 2)), by = "Class") %>%
+    dplyr::mutate(PopID = "SIC",
+                  BroodID = paste(SampleYear, LocationID, LayingDate, sep = "_"),
+                  ClutchType_observed = dplyr::case_when(.$Class == 1 ~ "first",
+                                                         .$Class == 3 ~ "second",
+                                                         .$Class == 2 ~ "replacement")) %>%
     dplyr::mutate(Species = Code, FledgeDate = NA, AvgMass = NA, AvgTarsus = NA)
 
   ##############
