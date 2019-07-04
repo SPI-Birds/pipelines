@@ -95,14 +95,48 @@ format_VEL <- function(db = choose.dir(),
                      }) %>%
     tidyr::unnest()
 
-  TIT_data    <- readxl::read_excel(paste0(db, "/Velky_Kosir_tits.xls")) %>%
-    janitor::clean_names()
+  ## No columns are excluded except row number and final col.
+  ## Final col has some data, but no column name
+  ## Dates are dealt with the same way as flycatchers
+  ## We only use data on GT and BT. There is a small number of clutches
+  ## for other species, but all < 40.
+  TIT_data    <- readxl::read_excel(paste0(db, "/Velky_Kosir_tits.xls"),
+                                    col_types = c("skip", "numeric", "text", "text",
+                                                  "text", "text", "list",
+                                                  "list", "list", "text",
+                                                  "text", "text", "text",
+                                                  "text", "text", "text", "text",
+                                                  "skip")) %>%
+    janitor::clean_names() %>%
+    dplyr::filter(species %in% c("blue tit", "great tit")) %>%
+    dplyr::mutate_at(.vars = vars(contains("date")),
+                     .funs = function(date){
+
+                       purrr::map(.x = date,
+                                  .f = ~{
+
+                                    if(is.character(.x)){
+
+                                      return(as.Date(.x, format = "%d.%m.%Y"))
+
+                                    } else {
+
+                                      return(as.Date(.x))
+
+                                    }
+
+                                  })
+
+                     }) %>%
+    tidyr::unnest()
+
+
 
   ##############
   # BROOD DATA #
   ##############
 
-  Brood_data <- create_brood_VEL(FICHYP_data, TIT_data)
+  Brood_data <- create_brood_VEL(FICALB_data, TIT_data)
 
 }
 
