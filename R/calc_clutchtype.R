@@ -1,3 +1,27 @@
+#' Calculate clutch type (when laying date is in date format)
+#'
+#' Use info on laying date and fledge data to determine the clutch type of a
+#' given brood
+#' @param data Brood data to use for conversion
+#' @param na.rm Should NA's be treated as 0s or true unknowns?
+#'
+#' @return A character vector with either 'first', 'replacement', 'second', or
+#'   NA
+#' @export
+#'
+#' @examples
+#' #Create fake dataset
+#' set.seed(666)
+#' dat <- tibble::tibble(PopID = "TEST", Species = "PARMAJ",
+#' FemaleID = sample(LETTERS[1:7], size = 100, replace = TRUE),
+#' NumberFledged = rpois(n = 100, lambda = 1),
+#' #Create 100 fake broods
+#' SampleYear = sample(c(seq(2000, 2012, 1)), size = 100, replace = TRUE),
+#' LayingDate = as.Date(paste(SampleYear,
+#'                            sample(c(4, 5, 6), size = 100, replace = TRUE),
+#'                            sample(seq(1, 31, 1), size = 100, replace = TRUE), sep = "-"),
+#'                            format = "%Y-%m-%d"))
+#' calc_clutchtype(data = dat, na.rm = TRUE)
 calc_clutchtype <- function(data, na.rm = T) {
 
   cutoff_dat <- data %>%
