@@ -170,18 +170,37 @@ create_brood_VEL <- function(FICALB_data, TIT_data) {
     dplyr::select(SampleYear:ClutchType_observed, ClutchType_calc,
                   LayingDate:ExperimentID)
 
+  #Determine layign date for every nest, accounting for error in nests
+  TIT_LD_error <- purrr::pmap_dfr(.l = list(TIT_data$laying_date,
+                                            TIT_data$laying_date_maximum,
+                                            TIT_data$laying_date_minimum),
+                                  .f = ~{
+
+                                    if(!is.na(..1)){
+
+                                      return(tibble::tibble(LayingDate = ..1,
+                                                            LayingDateError = NA))
+
+                                    } else {
+
+                                      return(tibble::tibble(LayingDate = mean(c(..2, ..3)),
+                                                            LayingDateError = as.numeric((..2 - ..3)/2)))
+
+                                    }
+
+                                  })
+
   TIT_broods <- TIT_data %>%
     dplyr::mutate(SampleYear = year,
                   Species = dplyr::case_when(.$species == "blue tit" ~ Species_codes[which(Species_codes$SpeciesID == 14620), ]$Code,
                                              .$species == "great tit" ~ Species_codes[which(Species_codes$SpeciesID == 14640), ]$Code),
                   PopID = "VEL",
                   Plot = plot,
-                  LocationID = nest_box, BroodID = paste(year, nest_box, lubridate::day(laying_date), lubridate::month(laying_date), sep = "_"),
+                  LocationID = nest_box,
                   FemaleID = female_ring, MaleID = NA,
                   ClutchType_observed = NA,
-                  ## NEED TO ACCOUNT FOR CASES WHERE LAYINGDATE HAS ERROR.
-                  ## FOR NOW I DON'T DO THIS
-                  LayingDate = laying_date, LayingDateError = NA,
+                  LayingDate = TIT_LD_error$LayingDate,
+                  LayingDateError = TIT_LD_error$LayingDateError,
                   ##FOR NOW, I'M JUST ASSUMING THAT 11+ CLUTCH SIZE
                   ##MEANS CLUTCH 11 THAT WAS ARTIFIICALLY INCREASED
                   ##THEREFORE, I JUST REMOVE THE + AND ADD THAT IT WAS AN EXPERIMENTAL NEST
@@ -199,11 +218,14 @@ create_brood_VEL <- function(FICALB_data, TIT_data) {
                   AvgEggMass = NA, NrEggs = NA,
                   AvgChickMass = NA, NrChicksMass = NA,
                   AvgTarsus = NA, NrChicksTarsus = NA,
-                  ExperimentID = experiment) %>%
+                  ExperimentID = experiment,
+                  ## Estimate broodID last because it requires us to estimate LayingDate first
+                  BroodID = paste(year, nest_box, lubridate::day(LayingDate), lubridate::month(LayingDate), sep = "_")) %>%
     dplyr::arrange(SampleYear, Species, FemaleID) %>%
     #Calculate clutchtype
     dplyr::mutate(ClutchType_calc = calc_clutchtype(data = ., na.rm = FALSE)) %>%
-    dplyr::select(SampleYear:ClutchType_observed, ClutchType_calc,
+    dplyr::select(SampleYear:LocationID, BroodID,
+                  FemaleID:ClutchType_observed, ClutchType_calc,
                   LayingDate:ExperimentID)
 
   return(dplyr::bind_rows(FICALB_broods, TIT_broods))
