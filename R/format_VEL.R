@@ -200,7 +200,33 @@ format_VEL <- function(db = choose.dir(),
                   AvgTarsus = NA, NrChicksTarsus = NA,
                   ExperimentID = experiment,
                   ## Estimate broodID last because it requires us to estimate LayingDate first
-                  BroodID = paste(year, nest_box, lubridate::day(LayingDate), lubridate::month(LayingDate), sep = "_")) %>%
+                  BroodID = paste(year, nest_box, lubridate::day(LayingDate), lubridate::month(LayingDate), sep = "_"))
+
+  ##############
+  # BROOD DATA #
+  ##############
+
+  Brood_data <- create_brood_VEL(FICALB_data, TIT_data)
+
+  ################
+  # CAPTURE DATA #
+  ################
+
+  Capture_data <- create_capture_VEL(FICALB_data, TIT_data)
+
+}
+
+
+create_brood_VEL <- function(FICALB_data, TIT_data) {
+
+  FICALB_broods <- FICALB_data %>%
+    dplyr::arrange(SampleYear, Species, FemaleID) %>%
+    #Calculate clutchtype
+    dplyr::mutate(ClutchType_calc = calc_clutchtype(data = ., na.rm = FALSE)) %>%
+    dplyr::select(SampleYear:ClutchType_observed, ClutchType_calc,
+                  LayingDate:ExperimentID)
+
+  TIT_broods <- TIT_data %>%
     dplyr::arrange(SampleYear, Species, FemaleID) %>%
     #Calculate clutchtype
     dplyr::mutate(ClutchType_calc = calc_clutchtype(data = ., na.rm = FALSE)) %>%
@@ -209,5 +235,177 @@ format_VEL <- function(db = choose.dir(),
                   LayingDate:ExperimentID)
 
   return(dplyr::bind_rows(FICALB_broods, TIT_broods))
+
+}
+
+create_capture_VEL <- function(FICALB_data, TIT_data) {
+
+  ## First create a table for flycatcher chick captures on the nest
+  FICALB_chicks <- FICALB_data %>%
+    dplyr::select(SampleYear, Species, Plot, BroodID, LayingDate, ClutchSize, HatchDate, x1_young_ring:x8y_wing) %>%
+    reshape2::melt(measure.vars = c("x1_young_ring", "x2_young_ring",
+                                               "x3_young_ring", "x4_young_ring",
+                                               "x5_young_ring", "x6_young_ring",
+                                               "x7_young_ring", "x8_young_ring"),
+                              value.name = "IndvID", variable.name = "ChickNr") %>%
+    dplyr::filter(!is.na(IndvID)) %>%
+    dplyr::group_by(ChickNr) %>%
+    tidyr::nest() %>%
+    dplyr::mutate(ChickNr = substr(ChickNr, 1, 2)) %>%
+    dplyr::mutate(data = purrr::pmap(.l = list(ChickNr, data),
+                  .f = ~{
+
+                    output <- ..2 %>%
+                      dplyr::select(SampleYear:HatchDate, IndvID, contains(..1)) %>%
+                      reshape2::melt(id.vars = c(1:8, 10, 12), value.name = "Mass") %>%
+                      ## Rename tarsus and wing to remove name of chick
+                      dplyr::rename_at(.vars = vars(contains("tarsus")), .funs = ~{"Tarsus"}) %>%
+                      dplyr::rename_at(.vars = vars(contains("wing")), .funs = ~{"WingLength"}) %>%
+                      ## Add chick age based on the variable name
+                      dplyr::mutate(ChickAge = as.numeric(stringr::str_sub(variable, 9, -1)),
+                                    ## Capture date is hatchdate + chick age
+                                    ## If no hatch date is known then use laying date + clutch size + incubation + chick age
+                                    ## We assume incubation of 15 days, but need to check with Milos.
+                                    ## If there is no hatch date OR laying date then just use NA
+                                    CaptureDate = purrr::pmap(.l = list(LayingDate, ClutchSize, HatchDate, ChickAge),
+                                                              .f = ~{
+
+                                                                if(!is.na(..3)){
+
+                                                                  return(..3 + lubridate::days(..4))
+
+                                                                } else if(!is.na(..1)) {
+
+                                                                  return(..1 + lubridate::days(..2 + 15 + ..4))
+
+                                                                } else {
+
+                                                                  return(NA)
+
+                                                                }
+
+                                                              }),
+                                    CaptureTime = NA, CapturePopID = "VEL", CapturePlot = Plot,
+                                    ## All chick records were 6 or 13 days, so all are listed as EURING age 1
+                                    ReleasePopID = "VEL", ReleasePlot = Plot, Age_obsv = 1, Age_calc = NA) %>%
+                      tidyr::unnest(CaptureDate) %>%
+                      dplyr::select(SampleYear, IndvID, Species, CaptureDate, CaptureTime, CapturePopID, CapturePlot,
+                                    ReleasePopID, ReleasePlot, Mass, Tarsus, WingLength, Age_obsv,
+                                    Age_calc, ChickAge)
+
+                    ## When the chick is 6 days old, then tarsus and wing length are not used
+                    ## They were only collected at 13 days old
+                    output[output$ChickAge == 6, ]$Tarsus <- NA
+                    output[output$ChickAge == 6, ]$WingLength <- NA
+
+                    return(output)
+
+                  })) %>%
+    tidyr::unnest(data) %>%
+    dplyr::select(-ChickNr)
+
+  FICALB_adults <- FICALB_data %>%
+    dplyr::select(SampleYear, Species, Plot, LocationID, LayingDate, BroodID, LayingDate, FemaleID, date_of_capture_52, tarsus_53:wing_55,
+                  MaleID, date_of_capture_57, age:wing_61) %>%
+    reshape2::melt(measure.vars = c("FemaleID", "MaleID"), value.name = "IndvID", variable.name = "Sex") %>%
+    dplyr::filter(!is.na(IndvID)) %>%
+    ## Give individuals a sex, we will use this in our Individual_data table
+    dplyr::mutate(Sex = stringr::str_sub(Sex, 0, 1),
+                  Tarsus = purrr::pmap_dbl(.l = list(Sex, tarsus_53, tarsus_59),
+                                           .f = ~{if(..1 == "F") ..2 else ..3}),
+                  WingLength = purrr::pmap_dbl(.l = list(Sex, wing_55, wing_61),
+                                               .f = ~{if(..1 == "F") ..2 else ..3}),
+                  Mass = purrr::pmap_dbl(.l = list(Sex, mass_54, mass_60),
+                                         .f = ~{if(..1 == "F") ..2 else ..3}),
+                  ##Determine age of males based on 'age' column
+                  Age_obsv = purrr::pmap_dbl(.l = list(Sex, age),
+                                             .f = ~{
+
+                                               if(..1 == "M"){
+
+                                                 return(dplyr::case_when(..2 == "old" ~ 6,
+                                                                  ..2 == "young" ~ 5))
+
+                                               } else {
+
+                                                 return(NA)
+
+                                               }
+
+                                             }),
+                  CaptureDate = purrr::pmap(.l = list(Sex, date_of_capture_52, date_of_capture_57),
+                                                .f = ~{
+
+                                                  if(..1 == "F"){
+
+                                                    return(..2)
+
+                                                  } else {
+
+                                                    return(..3)
+
+                                                  }
+
+                                                }),
+                  CapturePopID = "VEL", ReleasePopID = "VEL",
+                  CapturePlot = Plot, ReleasePlot = Plot) %>%
+    tidyr::unnest() %>%
+    dplyr::select(Species, SampleYear, LocationID, BroodID,
+                  IndvID:CaptureDate, Sex)
+
+  FICALB_alldat <- dplyr::bind_rows(FICALB_chicks, FICALB_adults) %>%
+    dplyr::arrange(IndvID, CaptureDate) %>%
+    ## Calculate age at capture
+    dplyr::group_by(IndvID) %>%
+    dplyr::mutate(FirstAge = first(Age_obsv),
+                  FirstYear = first(SampleYear)) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(Age_calc = purrr::pmap_dbl(.l = list(Age = FirstAge,
+                                                       Year1 = FirstYear,
+                                                       YearN = SampleYear),
+                                             .f = function(Age, Year1, YearN){
+
+                                               #Determine number of years since first capture...
+                                               diff_yr <- (YearN - Year1)
+
+                                               #If it was not caught as a chick...
+                                               if(Age != 1 | is.na(Age)){
+
+                                                 #If it's listed as EURING 5,
+                                                 #then its age is known at first capture
+                                                 if(!is.na(Age) & Age == 5){
+
+                                                   return(5 + 2*diff_yr)
+
+                                                   #Otherwise, when it was first caught it was at least EURING code 6.
+                                                   #This also applies to birds with both Age == 6 (where they were recorded as being >2yo)
+                                                   #and Age == NA. We assume any bird that was a known 2nd year would be listed as such.
+                                                 } else {
+
+                                                   #Use categories where age is uncertain
+                                                   #(6, 8)
+                                                   return(6 + 2*diff_yr)
+
+                                                 }
+
+                                               } else {
+
+                                                 #If it was caught as a chick
+                                                 if(diff_yr == 0){
+
+                                                   #Make the age at first capture 1 (nestling/unable to fly)
+                                                   #N.B. There is no distinction between chick and fledgling in the data
+                                                   return(1)
+
+                                                 } else {
+
+                                                   #Otherwise, use categories where age is certain (5, 7, etc.)
+                                                   return(3 + 2*diff_yr)
+
+                                                 }
+
+                                               }
+
+                                             }))
 
 }
