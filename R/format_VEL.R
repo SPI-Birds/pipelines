@@ -93,14 +93,34 @@ format_VEL <- function(db = choose.dir(),
                                   })
 
                      }) %>%
-    tidyr::unnest()
+    tidyr::unnest() %>%
+    ## CHANGE COL NAMES TO MATCH STANDARD FORMAT
+    dplyr::mutate(SampleYear = year,
+                  Species = Species_codes[which(Species_codes$SpeciesID == 13480), ]$Code,
+                  PopID = "VEL",
+                  Plot = plot,
+                  LocationID = nest,
+                  BroodID = paste(SampleYear, nest, lubridate::day(laying_date), lubridate::month(laying_date), sep = "_"),
+                  FemaleID = female_ring, MaleID = male_ring,
+                  ClutchType_observed = NA,
+                  LayingDate = laying_date, LayingDateError = NA,
+                  ClutchSize = clutch_size, ClutchSizeError = NA,
+                  HatchDate = hatching_date, HatchDateError = NA,
+                  BroodSize = number_hatched, BroodSizeError = NA,
+                  FledgeDate = NA, FledgeDateError = NA,
+                  NumberFledged = number_fledged, NumberFledgedError = NA,
+                  ##ADD MORPHO COLUMNS LATER
+                  AvgEggMass = NA, NrEggs = NA,
+                  AvgChickMass = NA, NrChicksMass = NA,
+                  AvgTarsus = NA, NrChicksTarsus = NA,
+                  ExperimentID = treatment)
 
   ## No columns are excluded except row number and final col.
   ## Final col has some data, but no column name
   ## Dates are dealt with the same way as flycatchers
   ## We only use data on GT and BT. There is a small number of clutches
   ## for other species, but all < 40.
-  TIT_data    <- readxl::read_excel(paste0(db, "/Velky_Kosir_tits.xls"),
+  TIT_data <- readxl::read_excel(paste0(db, "/Velky_Kosir_tits.xls"),
                                     col_types = c("skip", "numeric", "text", "text",
                                                   "text", "text", "list",
                                                   "list", "list", "text",
@@ -130,47 +150,7 @@ format_VEL <- function(db = choose.dir(),
                      }) %>%
     tidyr::unnest()
 
-
-
-  ##############
-  # BROOD DATA #
-  ##############
-
-  Brood_data <- create_brood_VEL(FICALB_data, TIT_data)
-
-}
-
-
-create_brood_VEL <- function(FICALB_data, TIT_data) {
-
-  FICALB_broods <- FICALB_data %>%
-    dplyr::mutate(SampleYear = year,
-                  Species = Species_codes[which(Species_codes$SpeciesID == 13480), ]$Code,
-                  PopID = "VEL",
-                  Plot = plot,
-                  LocationID = nest,
-                  BroodID = paste(SampleYear, nest, lubridate::day(laying_date), lubridate::month(laying_date), sep = "_"),
-                  FemaleID = female_ring, MaleID = male_ring,
-                  ClutchType_observed = NA,
-                  LayingDate = laying_date, LayingDateError = NA,
-                  ClutchSize = clutch_size, ClutchSizeError = NA,
-                  HatchDate = hatching_date, HatchDateError = NA,
-                  BroodSize = number_hatched, BroodSizeError = NA,
-                  FledgeDate = NA, FledgeDateError = NA,
-                  NumberFledged = number_fledged, NumberFledgedError = NA,
-                  ##ADD MORPHO COLUMNS TO BIND WITH TIT DATA
-                  ##WILL ADD THIS INFO LATER WHEN WE HAVE CAPTURE DATA
-                  AvgEggMass = NA, NrEggs = NA,
-                  AvgChickMass = NA, NrChicksMass = NA,
-                  AvgTarsus = NA, NrChicksTarsus = NA,
-                  ExperimentID = treatment) %>%
-    dplyr::arrange(SampleYear, Species, FemaleID) %>%
-    #Calculate clutchtype
-    dplyr::mutate(ClutchType_calc = calc_clutchtype(data = ., na.rm = FALSE)) %>%
-    dplyr::select(SampleYear:ClutchType_observed, ClutchType_calc,
-                  LayingDate:ExperimentID)
-
-  #Determine layign date for every nest, accounting for error in nests
+  #Determine laying date for every nest, accounting for error in nests
   TIT_LD_error <- purrr::pmap_dfr(.l = list(TIT_data$laying_date,
                                             TIT_data$laying_date_maximum,
                                             TIT_data$laying_date_minimum),
@@ -190,7 +170,7 @@ create_brood_VEL <- function(FICALB_data, TIT_data) {
 
                                   })
 
-  TIT_broods <- TIT_data %>%
+  TIT_data <- TIT_data %>%
     dplyr::mutate(SampleYear = year,
                   Species = dplyr::case_when(.$species == "blue tit" ~ Species_codes[which(Species_codes$SpeciesID == 14620), ]$Code,
                                              .$species == "great tit" ~ Species_codes[which(Species_codes$SpeciesID == 14640), ]$Code),
