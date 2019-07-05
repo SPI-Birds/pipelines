@@ -12,6 +12,9 @@ convert_tarsus(x, method)
 \item{method}{Character string. The measurement method of the original data.
 Can be: "Standard" (Svennson's Standard) or "Oxford" (Oxford maximum).}
 }
+\value{
+A numeric vector.
+}
 \description{
 Convert tarsus lenght measurements in Svennson's Standard and Oxford Maximum
 to Svensson's Alternative.

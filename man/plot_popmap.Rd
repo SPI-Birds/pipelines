@@ -4,7 +4,7 @@
 \alias{plot_popmap}
 \title{Create a map of all known populations}
 \usage{
-plot_popmap(scale = 2, filename)
+plot_popmap(scale = 2, filename = NULL)
 }
 \arguments{
 \item{scale}{Scale of the saved jpeg image.}
@@ -18,4 +18,8 @@ A jpeg file in the working directory
 \description{
 Plot all known populations. Point colour represents whether data has been
 provided.
+}
+\examples{
+#Create jpeg map
+plot_popmap()
 }

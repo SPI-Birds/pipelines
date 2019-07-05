@@ -16,9 +16,9 @@ codes)? If blank will return all major species (see details below).}
 \item{path}{Location where output csv files will be saved.}
 
 \item{debug}{For internal use when editing pipelines. If TRUE, pipeline
-generates a summary of pipeline data. This
-includes: a) Histogram of continuous variables with mean/SD b) unique
-values of all categorical variables.}
+generates a summary of pipeline data. This includes: a) Histogram of
+continuous variables with mean/SD b) unique values of all categorical
+variables.}
 }
 \value{
 Generates 5 .csv files with data in a standard format.
@@ -44,54 +44,58 @@ Tapio). More conservative error is provided (i.e. 0-1 is recorded as 1). For
 now >3 is recorded as 4. N.B. Need to check this with Tapio!!
 
 \strong{Capture_data}: Combining capture data is fairly difficult with this
-dataset:
-- All data from adults when first ringed and recaptured are stored in the
-'Ringing' table (Rengas.db). This is regular capture data that we can use
-without adjustment.
-- All data from chick captures are stored in the 'Nestling' table (Pullit.db).
-HOWEVER, the 'Nestling' table does not include information on the ring number
-nor the species of each individual, only the BroodID and the last 2 digits of
-the ring number.
-- When chicks were ringed for the first time, the ringing of ALL the chicks is
-recorded as one entry in 'Ringing'. The first and last ring number of the
-chicks ringed in the nest is given. Therefore, to determine the individual ID of
-every chick capture from 'Nestling' we need to link it to the correct BroodID
-and determine its ring number by taking the first x-2 characters of the
-given ring numbers and adding the last 2 digits from the 'Nestling' table.
-- Some chicks in 'Nestling' were captured and measured, but have no last 2
-digits of ring number is provided, I assume these were not ringed (e.g. too
-young). These data can be associated with a Brood and species, but not with an
-individual.
-- HOWEVER, the 'Nestling' and 'Ringing' tables don't always match. In some
-cases (>5000), there is a record of chicks being ringed in the 'Ringing' table, but no record of
-these chicks in the 'Nestling' table (e.g. BroodID: 2005_1908_1 or 2018_1216_1).
-- In some cases (~50), there is information on chicks being captured and given
-a ring number in the 'Nestling' table, but no record of this capture in the
-'Ringing' table (e.g. BroodID: 2008_0222_1 or 2018_1378_2).
-- In some cases, there is a record of chicks being ringed in 'Ringing',
-but many of these chicks are missing in the 'Nestling' table (e.g. BroodID: 2007_1714_1).
-- In some cases, chicks were ringed with two different series and there are two different
-records of chick ringing.
-- In some cases, checks were recorded in 'Ringing' but have no matching
-BroodID in Brood_data (e.g. 2004_1012_0).
-- In some cases, one BroodID is used in the 'Ringing' table and another in the 'Nestling' table
-even though the ring numbers are the same (e.g. 2018_0323_1/2)
-- How do we deal with all these conflicts? For now, we assume that if a chick
-was listed as 'ringed' but has no record in the 'Nestlings' table, we assume
-it was ringed but not measurements were taken (e.g. tarsus) or the
-measurements were not found because the BroodID was entered incorrectly. If a
-chick was captured in 'Nestlings' but is not recorded in 'Ringing' for now
-these will be excluded because they won't join to the data in 'Ringing'. These
-cases are the most problematic because to give these chicks a true ring number
-we need to know the rest of the ring number (not just last 2 digits). If they
-have no record in ringing, it is impossible to include this information!
-For records where no ring number is given (e.g. A), we include only those where
-the BroodID is in either the 'Ringing' table or the 'Brood' table. This ensures
-that the unringed chick is of the right species.
+dataset: - All data from adults when first ringed and recaptured are stored in
+the 'Ringing' table (Rengas.db). This is regular capture data that we can use
+without adjustment. - All data from chick captures are stored in the
+'Nestling' table (Pullit.db). HOWEVER, the 'Nestling' table does not include
+information on the ring number nor the species of each individual, only the
+BroodID and the last 2 digits of the ring number. - When chicks were ringed
+for the first time, the ringing of ALL the chicks is recorded as one entry in
+'Ringing'. The first and last ring number of the chicks ringed in the nest is
+given. Therefore, to determine the individual ID of every chick capture from
+'Nestling' we need to link it to the correct BroodID and determine its ring
+number by taking the first x-2 characters of the given ring numbers and adding
+the last 2 digits from the 'Nestling' table. - Some chicks in 'Nestling' were
+captured and measured, but have no last 2 digits of ring number is provided, I
+assume these were not ringed (e.g. too young). These data can be associated
+with a Brood and species, but not with an individual. - HOWEVER, the
+'Nestling' and 'Ringing' tables don't always match. In some cases (>5000),
+there is a record of chicks being ringed in the 'Ringing' table, but no record
+of these chicks in the 'Nestling' table (e.g. BroodID: 2005_1908_1 or
+2018_1216_1). - In some cases (~50), there is information on chicks being
+captured and given a ring number in the 'Nestling' table, but no record of
+this capture in the 'Ringing' table (e.g. BroodID: 2008_0222_1 or
+2018_1378_2). - In some cases, there is a record of chicks being ringed in
+'Ringing', but many of these chicks are missing in the 'Nestling' table (e.g.
+BroodID: 2007_1714_1). - In some cases, chicks were ringed with two different
+series and there are two different records of chick ringing. - In some cases,
+chicks were recorded in 'Ringing' but have no matching BroodID in Brood_data
+(e.g. 2004_1012_0). - In some cases, one BroodID is used in the 'Ringing'
+table and another in the 'Nestling' table even though the ring numbers are the
+same (e.g. 2018_0323_1/2) - How do we deal with all these conflicts? For now,
+we assume that if a chick was listed as 'ringed' but has no record in the
+'Nestlings' table, we assume it was ringed but not measurements were taken
+(e.g. tarsus) or the measurements were not found because the BroodID was
+entered incorrectly. If a chick was captured in 'Nestlings' but is not
+recorded in 'Ringing' for now these will be excluded because they won't join
+to the data in 'Ringing'. These cases are the most problematic because to give
+these chicks a true ring number we need to know the rest of the ring number
+(not just last 2 digits). If they have no record in ringing, it is impossible
+to include this information! For records where no ring number is given (e.g.
+A), we include only those where the BroodID is in either the 'Ringing' table
+or the 'Brood' table. This ensures that the unringed chick is of the right
+species.
 
 \strong{Mass}: Mass of birds appears to be measured in mg. This is converted
 to grams to match other populations.
 
-\strong{Tarsus}: Tarsus length is measured for both left and right leg. Only
-left leg is reported.
+\strong{Tarsus}: Tarsus length is measured for both left and right leg.
+Generally, only left leg is reported and so is used here. Tarsus measurement
+in adults can be either left or right leg. Tarsus is measures using both
+Svensson's Standard and (in later years) Svennson's Alternative. Where only
+Svensson's Standard is available, this is converted to Svennson's Alternative
+instead.
+
+\strong{Sex}: Bird classified as 'likely male' or 'likely female' are simply
+given code 'M' and 'F' respectively.
 }
