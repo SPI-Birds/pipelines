@@ -35,6 +35,7 @@
 #' @return Generates 5 .csv files with data in a standard format.
 #' @export
 #' @import readxl
+#' @import stringr
 
 format_VEL <- function(db = choose.dir(),
                        Species = NULL,
@@ -150,7 +151,7 @@ format_VEL <- function(db = choose.dir(),
                      }) %>%
     tidyr::unnest()
 
-  #Determine laying date for every nest, accounting for error in nests
+  ## Determine laying date for every nest, accounting for error in nests
   TIT_LD_error <- purrr::pmap_dfr(.l = list(TIT_data$laying_date,
                                             TIT_data$laying_date_maximum,
                                             TIT_data$laying_date_minimum),
@@ -163,6 +164,8 @@ format_VEL <- function(db = choose.dir(),
 
                                     } else {
 
+                                      ## THERE ARE CASES WHERE THERE IS A MAXIMUM BUT NO MINIMUM
+                                      ## FOR NOW WE JUST LEAVE THESE AS NAs
                                       return(tibble::tibble(LayingDate = mean(c(..2, ..3)),
                                                             LayingDateError = as.numeric((..2 - ..3)/2)))
 
@@ -238,7 +241,13 @@ create_brood_VEL <- function(FICALB_data, TIT_data) {
 
 }
 
-create_capture_VEL <- function(FICALB_data, TIT_data) {
+create_capture_VEL_all <- function(FICALB_data, TIT_data) {
+
+
+
+}
+
+create_capture_VEL_FICALB <- function(FICALB_data) {
 
   ## First create a table for flycatcher chick captures on the nest
   FICALB_chicks <- FICALB_data %>%
@@ -304,6 +313,7 @@ create_capture_VEL <- function(FICALB_data, TIT_data) {
     tidyr::unnest(data) %>%
     dplyr::select(-ChickNr)
 
+  #Then create capture info for every adult.
   FICALB_adults <- FICALB_data %>%
     dplyr::select(SampleYear, Species, Plot, LocationID, LayingDate, BroodID, LayingDate, FemaleID, date_of_capture_52, tarsus_53:wing_55,
                   MaleID, date_of_capture_57, age:wing_61) %>%
@@ -354,58 +364,32 @@ create_capture_VEL <- function(FICALB_data, TIT_data) {
                   IndvID:CaptureDate, Sex)
 
   FICALB_alldat <- dplyr::bind_rows(FICALB_chicks, FICALB_adults) %>%
-    dplyr::arrange(IndvID, CaptureDate) %>%
-    ## Calculate age at capture
-    dplyr::group_by(IndvID) %>%
-    dplyr::mutate(FirstAge = first(Age_obsv),
-                  FirstYear = first(SampleYear)) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(Age_calc = purrr::pmap_dbl(.l = list(Age = FirstAge,
-                                                       Year1 = FirstYear,
-                                                       YearN = SampleYear),
-                                             .f = function(Age, Year1, YearN){
+    calc_age(ID = IndvID, Age = Age_obsv, Date = CaptureDate, Year = SampleYear)
 
-                                               #Determine number of years since first capture...
-                                               diff_yr <- (YearN - Year1)
+}
 
-                                               #If it was not caught as a chick...
-                                               if(Age != 1 | is.na(Age)){
+create_capture_VEL_TIT <- function(TIT_data) {
 
-                                                 #If it's listed as EURING 5,
-                                                 #then its age is known at first capture
-                                                 if(!is.na(Age) & Age == 5){
+  ## There is no chick info for tits
+  ## There is only data on females.
+  ## Assume that an individual was caught at the start of incubation.
+  TIT_capture <- TIT_data %>%
+    dplyr::filter(!is.na(FemaleID)) %>%
+    dplyr::mutate(Species = dplyr::case_when(.$species == "blue tit" ~ Species_codes[which(Species_codes$SpeciesID == 14620), ]$Code,
+                                             .$species == "great tit" ~ Species_codes[which(Species_codes$SpeciesID == 14640), ]$Code),
+                  ## Make the capture date the date that incubation would start (laying date + clutch size)
+                  CaptureDate = LayingDate + ClutchSize,
+                  IndvID = FemaleID,
+                  CapturePopID = PopID, CapturePlot = Plot,
+                  ReleasePopID = PopID, ReleasePlot = Plot,
+                  ## There is no explicit info about age.
+                  ## They must all be adults, so just give them all EURING 4
+                  ## "Hatched before this calendar year"
+                  Age_obsv = 4) %>%
+    calc_age(ID = IndvID, Age = Age_obsv, Date = CaptureDate, Year = SampleYear) %>%
+    dplyr::select(IndvID, Species, CaptureDate, CapturePopID:ReleasePlot,
+                  Age_obsv, Age_calc)
 
-                                                   return(5 + 2*diff_yr)
-
-                                                   #Otherwise, when it was first caught it was at least EURING code 6.
-                                                   #This also applies to birds with both Age == 6 (where they were recorded as being >2yo)
-                                                   #and Age == NA. We assume any bird that was a known 2nd year would be listed as such.
-                                                 } else {
-
-                                                   #Use categories where age is uncertain
-                                                   #(6, 8)
-                                                   return(6 + 2*diff_yr)
-
-                                                 }
-
-                                               } else {
-
-                                                 #If it was caught as a chick
-                                                 if(diff_yr == 0){
-
-                                                   #Make the age at first capture 1 (nestling/unable to fly)
-                                                   #N.B. There is no distinction between chick and fledgling in the data
-                                                   return(1)
-
-                                                 } else {
-
-                                                   #Otherwise, use categories where age is certain (5, 7, etc.)
-                                                   return(3 + 2*diff_yr)
-
-                                                 }
-
-                                               }
-
-                                             }))
+  return(TIT_capture)
 
 }
