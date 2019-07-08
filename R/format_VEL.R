@@ -230,7 +230,8 @@ format_VEL <- function(db = choose.dir(),
   message("Compiling capture information...")
 
   Capture_data <- dplyr::bind_rows(create_capture_VEL_FICALB(FICALB_data),
-                                   create_capture_VEL_TIT(TIT_data))
+                                   create_capture_VEL_TIT(TIT_data)) %>%
+    dplyr::ungroup()
 
   ###################
   # INDIVIDUAL DATA #
@@ -569,7 +570,8 @@ create_individual_VEL     <- function(Capture_data){
 
                                                }),
                      BroodIDRinged = BroodIDLaid) %>%
-    dplyr::select(IndvID, Species, PopID, BroodIDLaid, BroodIDRinged, RingSeason, RingAge, Sex)
+    dplyr::select(IndvID, Species, PopID, BroodIDLaid, BroodIDRinged, RingSeason, RingAge, Sex) %>%
+    dplyr::ungroup()
 
   return(Indvidual_data)
 
