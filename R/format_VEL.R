@@ -223,7 +223,8 @@ format_VEL <- function(db = choose.dir(),
   # CAPTURE DATA #
   ################
 
-  Capture_data <- create_capture_VEL_all(FICALB_data, TIT_data)
+  Capture_data <- dplyr::bind_rows(create_capture_VEL_FICALB(FICALB_data),
+                                   create_capture_VEL_TIT(TIT_data))
 
   ###################
   # INDIVIDUAL DATA #
@@ -231,16 +232,46 @@ format_VEL <- function(db = choose.dir(),
 
   Individual_data <- create_individual_VEL(Capture_data)
 
+  #################
+  # LOCATION DATA #
+  #################
+
+  Location_data <- create_location_VEL(Brood_data, TIT_data)
+
+  ###########################
+  # WRANGLE DATA FOR EXPORT #
+  ###########################
+
+  ## Combine capture data and brood data to determine avg chick mass and tarsus
+  ## Calculate AvgChickMass and AvgTarsus
+  avg_measures <- Capture_data %>%
+    ## Filter just 13 day old chicks
+    dplyr::filter(ChickAge == 13) %>%
+    dplyr::group_by(BroodID) %>%
+    dplyr::summarise(AvgChickMass       = mean(Mass, na.rm = TRUE),
+                     NumberChicksMass    = length(na.omit(Mass)),
+                     AvgTarsus          = mean(Tarsus, na.rm = TRUE),
+                     NumberChicksTarsus = length(na.omit(Tarsus)))
+
+  Brood_data <- Brood_data %>%
+    dplyr::left_join(avg_measures, by = "BroodID") %>%
+    dplyr::mutate(NumberChicksMass   = na_if(NumberChicksMass, 0),
+                  NumberChicksTarsus = na_if(NumberChicksTarsus, 0)) %>%
+    dplyr::select(PopID:NumberEggs, AvgChickMass:NumberChicksTarsus, ExperimentID)
+
+  Capture_data <- Capture_data %>%
+    dplyr::select(IndvID)
+
 }
 
 
-create_brood_VEL <- function(FICALB_data, TIT_data) {
+create_brood_VEL          <- function(FICALB_data, TIT_data) {
 
   FICALB_broods <- FICALB_data %>%
     dplyr::arrange(BreedingSeason, Species, FemaleID) %>%
     #Calculate clutchtype
     dplyr::mutate(ClutchType_calc = calc_clutchtype(data = ., na.rm = FALSE)) %>%
-    dplyr::select(BreedingSeason:ClutchType_observed, ClutchType_calc,
+    dplyr::select(PopID:ClutchType_observed, ClutchType_calc,
                   LayingDate:ExperimentID)
 
   TIT_broods <- TIT_data %>%
@@ -252,13 +283,6 @@ create_brood_VEL <- function(FICALB_data, TIT_data) {
                   LayingDate:ExperimentID)
 
   return(dplyr::bind_rows(FICALB_broods, TIT_broods))
-
-}
-
-create_capture_VEL_all <- function(FICALB_data, TIT_data) {
-
-  return(dplyr::bind_rows(create_capture_VEL_FICALB(FICALB_data),
-                          create_capture_VEL_TIT(TIT_data)))
 
 }
 
@@ -383,7 +407,7 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
 
 }
 
-create_capture_VEL_TIT <- function(TIT_data) {
+create_capture_VEL_TIT    <- function(TIT_data) {
 
   ## There is no chick info for tits
   ## There is only data on females.
@@ -402,14 +426,14 @@ create_capture_VEL_TIT <- function(TIT_data) {
                   ## "Hatched before this calendar year"
                   Age_obsv = 4) %>%
     calc_age(ID = IndvID, Age = Age_obsv, Date = CaptureDate, Year = BreedingSeason) %>%
-    dplyr::select(IndvID, Species, CaptureDate, CapturePopID:ReleasePlot,
+    dplyr::select(BreedingSeason, IndvID, Species, CaptureDate, CapturePopID:ReleasePlot,
                   Age_obsv, Age_calc)
 
   return(TIT_capture)
 
 }
 
-create_individual_VEL <- function(Capture_data){
+create_individual_VEL     <- function(Capture_data){
 
   Indv_data <- Capture_data %>%
     dplyr::group_by(IndvID) %>%
@@ -456,5 +480,23 @@ create_individual_VEL <- function(Capture_data){
                                                }),
                      BroodIDRinged = BroodIDLaid) %>%
     dplyr::select(IndvID, Species, PopID, BroodIDLaid, BroodIDRinged, RingSeason, RingAge, Sex)
+
+  return(Indv_data)
+
+}
+
+create_location_VEL       <- function(Brood_data, TIT_data){
+
+  ## Determine all used LocationIDs in Brood_data. These should be all locations.
+  ## Assume that nestboxes are the same for Tits and Flycatchers.
+  location_data <- tibble::tibble(LocationID = as.character(na.omit(unique(Brood_data$LocationID))),
+                                  NestboxID = LocationID,
+                                  LocationType = "NB",
+                                  PopID = "VEL",
+                                  Latitude = NA,
+                                  Longitude = NA,
+                                  StartSeason = 1997, EndSeason = NA) %>%
+    ## Join in habitat data from TIT_data table
+    dplyr::left_join(TIT_data %>% dplyr::group_by(LocationID) %>% dplyr::summarise(Habitat = first(Habitat)), by = "LocationID")
 
 }
