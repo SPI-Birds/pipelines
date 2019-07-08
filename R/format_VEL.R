@@ -260,9 +260,19 @@ format_VEL <- function(db = choose.dir(),
     dplyr::select(PopID:NumberEggs, AvgChickMass:NumberChicksTarsus, ExperimentID)
 
   Capture_data <- Capture_data %>%
-    dplyr::select(IndvID)
+    dplyr::select(BreedingSeason, IndvID, Species, LocationID:ChickAge)
 
-}
+  #######################
+  # CREATE DEBUG OPTION #
+  #######################
+
+  if(debug){
+
+    message("Generating debug report...")
+
+    generate_debug_report(path = path, Pop = "VEL", Brood_data = Brood_data, Capture_data = Capture_data, Indv_data = Indv_data)
+
+  }
 
 
 create_brood_VEL          <- function(FICALB_data, TIT_data) {
