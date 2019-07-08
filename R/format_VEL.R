@@ -274,6 +274,26 @@ format_VEL <- function(db = choose.dir(),
 
   }
 
+  ###############
+  # EXPORT DATA #
+  ###############
+
+  message("Saving .csv files...")
+
+  write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_VEL.csv"), row.names = F)
+
+  write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_VEL.csv"), row.names = F)
+
+  write.csv(x = Individual_data, file = paste0(path, "\\Indv_data_VEL.csv"), row.names = F)
+
+  write.csv(x = Location_data, file = paste0(path, "\\Location_data_VEL.csv"), row.names = F)
+
+  time <- difftime(Sys.time(), start_time, units = "sec")
+
+  message(paste0("All tables generated in ", round(time, 2), " seconds"))
+
+}
+
 
 create_brood_VEL          <- function(FICALB_data, TIT_data) {
 
