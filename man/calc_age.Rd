@@ -4,7 +4,7 @@
 \alias{calc_age}
 \title{Calculate age based on when an individual was first captured}
 \usage{
-calc_age(data, ID, Age, Date, Year)
+calc_age(data, ID, Age, Date, Year, showpb = TRUE)
 }
 \arguments{
 \item{data}{Data frame. Data frame with capture information.}
@@ -23,6 +23,8 @@ Name of column with CaptureDate information. Must be in format dd/mm/yyyy.}
 Name of column with year information. N.B. This could be different to
 CaptureDate if we are dealing with species that breed over two year (e.g.
 Southern Hemisphere species).}
+
+\item{showpb}{Logical. Should a progress bar be shown?}
 }
 \value{
 A data frame with calculated age.
