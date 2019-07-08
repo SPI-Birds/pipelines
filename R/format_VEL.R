@@ -217,6 +217,12 @@ format_VEL <- function(db = choose.dir(),
 
   Capture_data <- create_capture_VEL_all(FICALB_data, TIT_data)
 
+  ###################
+  # INDIVIDUAL DATA #
+  ###################
+
+  Individual_data <- create_individual_VEL(Capture_data)
+
 }
 
 
@@ -301,7 +307,7 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
                       tidyr::unnest(CaptureDate) %>%
                       dplyr::select(IndvID, Species, BreedingSeason, LocationID, CaptureDate, CaptureTime, CapturePopID, CapturePlot,
                                     ReleasePopID, ReleasePlot, Mass, Tarsus, WingLength, Age_obsv,
-                                    Age_calc, ChickAge)
+                                    Age_calc, ChickAge, BroodID)
 
                     ## When the chick is 6 days old, then tarsus and wing length are not used
                     ## They were only collected at 13 days old
@@ -392,5 +398,55 @@ create_capture_VEL_TIT <- function(TIT_data) {
                   Age_obsv, Age_calc)
 
   return(TIT_capture)
+
+}
+
+create_individual_VEL <- function(Capture_data){
+
+  Indv_data <- Capture_data %>%
+    dplyr::group_by(IndvID) %>%
+    dplyr::summarise(Species = unique(na.omit(Species)),
+                     PopID = "VEL",
+                     RingSeason = first(BreedingSeason),
+                     RingAge = first(Age_obsv),
+                     Sex = purrr::map_chr(.x = list(unique(Sex)),
+                                          .f = ~{
+
+                                            if(all(c("F", "M") %in% ..1)){
+
+                                              return("CONFLICTING SEX")
+
+                                            } else if("F" %in% ..1){
+
+                                              return("F")
+
+                                            } else if("M" %in% ..1){
+
+                                              return("M")
+
+                                            } else if(is.na(..1)){
+
+                                              return("U")
+
+                                            }
+
+                                          }),
+                     FirstBroodID = first(BroodID)) %>%
+    dplyr::mutate(BroodIDLaid = purrr::pmap_chr(.l = list(RingAge, FirstBroodID),
+                                               .f = ~{
+
+                                                 if(is.na(..1) | (..1 != 1)){
+
+                                                   return(NA)
+
+                                                 } else {
+
+                                                   return(..2)
+
+                                                 }
+
+                                               }),
+                     BroodIDRinged = BroodIDLaid) %>%
+    dplyr::select(IndvID, Species, PopID, BroodIDLaid, BroodIDRinged, RingSeason, RingAge, Sex)
 
 }
