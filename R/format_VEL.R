@@ -96,12 +96,17 @@ format_VEL <- function(db = choose.dir(),
                      }) %>%
     tidyr::unnest() %>%
     ## CHANGE COL NAMES TO MATCH STANDARD FORMAT
-    dplyr::mutate(BreedingSeason = year,
+    dplyr::mutate(PopID = "VEL",
+                  BreedingSeason = year,
                   Species = Species_codes[which(Species_codes$SpeciesID == 13480), ]$Code,
-                  PopID = "VEL",
                   Plot = plot,
                   LocationID = nest,
-                  BroodID = paste(BreedingSeason, nest, lubridate::day(laying_date), lubridate::month(laying_date), sep = "_"),
+                  BroodID = paste(BreedingSeason, nest, stringr::str_pad(string = lubridate::day(laying_date),
+                                                                         width = 2,
+                                                                         pad = "0"),
+                                  stringr::str_pad(string = lubridate::month(laying_date),
+                                                   width = 2,
+                                                   pad = "0"), sep = "_"),
                   FemaleID = female_ring, MaleID = male_ring,
                   ClutchType_observed = NA,
                   LayingDate = laying_date, LayingDateError = NA,
@@ -110,10 +115,8 @@ format_VEL <- function(db = choose.dir(),
                   BroodSize = number_hatched, BroodSizeError = NA,
                   FledgeDate = NA, FledgeDateError = NA,
                   NumberFledged = number_fledged, NumberFledgedError = NA,
-                  ##ADD MORPHO COLUMNS LATER
-                  AvgEggMass = NA, NrEggs = NA,
-                  AvgChickMass = NA, NrChicksMass = NA,
-                  AvgTarsus = NA, NrChicksTarsus = NA,
+                  ##ADD EMPTY EGG COLS. NO EGG DATA.
+                  AvgEggMass = NA, NumberEggs = NA,
                   ExperimentID = treatment)
 
   ## No columns are excluded except row number and final col.
@@ -179,7 +182,7 @@ format_VEL <- function(db = choose.dir(),
                                              .$species == "great tit" ~ Species_codes[which(Species_codes$SpeciesID == 14640), ]$Code),
                   PopID = "VEL",
                   Plot = plot,
-                  LocationID = nest_box,
+                  LocationID = stringr::str_pad(nest_box, 3, pad = "0"),
                   FemaleID = female_ring, MaleID = NA,
                   ClutchType_observed = NA,
                   LayingDate = TIT_LD_error$LayingDate,
@@ -197,13 +200,18 @@ format_VEL <- function(db = choose.dir(),
                   FledgeDate = NA, FledgeDateError = NA,
                   NumberFledged = as.numeric(gsub(pattern = "\\+|\\-", replacement = "", number_fledged)),
                   NumberFledgedError = NA,
-                  ##THERE IS NO MORPHOMETRICS FOR TITS
-                  AvgEggMass = NA, NrEggs = NA,
-                  AvgChickMass = NA, NrChicksMass = NA,
-                  AvgTarsus = NA, NrChicksTarsus = NA,
+                  ##ADD EMPTY EGG DATA COLS.
+                  AvgEggMass = NA, NumberEggs = NA,
                   ExperimentID = experiment,
                   ## Estimate broodID last because it requires us to estimate LayingDate first
-                  BroodID = paste(year, nest_box, lubridate::day(LayingDate), lubridate::month(LayingDate), sep = "_"))
+                  BroodID = paste(year, nest_box, stringr::str_pad(string = lubridate::day(LayingDate),
+                                                                   width = 2,
+                                                                   pad = "0"),
+                                  stringr::str_pad(string = lubridate::month(LayingDate),
+                                                   width = 2,
+                                                   pad = "0"), sep = "_"),
+                  Habitat = dplyr::case_when(.$habitat == "oak" ~ "deciduous",
+                                             .$habitat == "spruce" ~ "evergreen"))
 
   ##############
   # BROOD DATA #
