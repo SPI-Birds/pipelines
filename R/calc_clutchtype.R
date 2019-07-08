@@ -16,8 +16,8 @@
 #' FemaleID = sample(LETTERS[1:7], size = 100, replace = TRUE),
 #' NumberFledged = rpois(n = 100, lambda = 1),
 #' #Create 100 fake broods
-#' SampleYear = sample(c(seq(2000, 2012, 1)), size = 100, replace = TRUE),
-#' LayingDate = as.Date(paste(SampleYear,
+#' BreedingSeason = sample(c(seq(2000, 2012, 1)), size = 100, replace = TRUE),
+#' LayingDate = as.Date(paste(BreedingSeason,
 #'                            sample(c(4, 5, 6), size = 100, replace = TRUE),
 #'                            sample(seq(1, 31, 1), size = 100, replace = TRUE), sep = "-"),
 #'                            format = "%Y-%m-%d"))
@@ -25,11 +25,11 @@
 calc_clutchtype <- function(data, na.rm = T) {
 
   cutoff_dat <- data %>%
-    dplyr::group_by(PopID, SampleYear, Species) %>%
+    dplyr::group_by(PopID, BreedingSeason, Species) %>%
     dplyr::mutate(cutoff = tryCatch(expr = min(LayingDate, na.rm = T) + lubridate::days(30),
                                     warning = function(...) return(NA))) %>%
     # Determine brood type for each nest based on female ID
-    dplyr::group_by(SampleYear, Species, FemaleID)
+    dplyr::group_by(BreedingSeason, Species, FemaleID)
 
   #Depending on whether NAs should be treated as 0s or NAs we have different paths
   if(na.rm == TRUE){
