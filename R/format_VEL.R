@@ -44,6 +44,8 @@ format_VEL <- function(db = choose.dir(),
 
   start_time <- Sys.time()
 
+  message("Importing primary data...")
+
   ## Read in flycatcher data. There are some issues will coercion of col types
   ## so we specify column types manually. With this we can skip certain cols.
   ## we skip:
@@ -217,11 +219,15 @@ format_VEL <- function(db = choose.dir(),
   # BROOD DATA #
   ##############
 
+  message("Compiling brood information...")
+
   Brood_data <- create_brood_VEL(FICALB_data, TIT_data)
 
   ################
   # CAPTURE DATA #
   ################
+
+  message("Compiling capture information...")
 
   Capture_data <- dplyr::bind_rows(create_capture_VEL_FICALB(FICALB_data),
                                    create_capture_VEL_TIT(TIT_data))
@@ -230,11 +236,15 @@ format_VEL <- function(db = choose.dir(),
   # INDIVIDUAL DATA #
   ###################
 
+  message("Compiling individual information...")
+
   Individual_data <- create_individual_VEL(Capture_data)
 
   #################
   # LOCATION DATA #
   #################
+
+  message("Compiling location information...")
 
   Location_data <- create_location_VEL(Brood_data, TIT_data)
 
@@ -342,7 +352,13 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
                                                "x5_young_ring", "x6_young_ring",
                                                "x7_young_ring", "x8_young_ring"),
                               value.name = "IndvID", variable.name = "ChickNr") %>%
-    dplyr::filter(!is.na(IndvID)) %>%
+    dplyr::filter(!is.na(IndvID))
+
+  ## Make progress bar. Needs to be twice as long as rows because chicks are
+  ## captured at 6 and 13 days.
+  pb <- dplyr::progress_estimated(n = nrow(FICALB_chicks)*2)
+
+  FICALB_chicks <- FICALB_chicks %>%
     dplyr::group_by(ChickNr) %>%
     tidyr::nest() %>%
     dplyr::mutate(ChickNr = substr(ChickNr, 1, 2)) %>%
@@ -363,6 +379,8 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
                                     ## If there is no hatch date OR laying date then just use NA
                                     CaptureDate = purrr::pmap(.l = list(LayingDate, ClutchSize, HatchDate, ChickAge),
                                                               .f = ~{
+
+                                                                pb$print()$tick()
 
                                                                 if(!is.na(..3)){
 
@@ -403,7 +421,11 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
     dplyr::select(BreedingSeason, Species, Plot, LocationID, LayingDate, BroodID, LayingDate, FemaleID, date_of_capture_52, tarsus_53:wing_55,
                   MaleID, date_of_capture_57, age:wing_61) %>%
     reshape2::melt(measure.vars = c("FemaleID", "MaleID"), value.name = "IndvID", variable.name = "Sex") %>%
-    dplyr::filter(!is.na(IndvID)) %>%
+    dplyr::filter(!is.na(IndvID))
+
+  pb <- dplyr::progress_estimated(n = nrow(FICALB_adults)*2)
+
+  FICALB_adults <- FICALB_adults %>%
     ## Give individuals a sex, we will use this in our Individual_data table
     dplyr::mutate(Sex = stringr::str_sub(Sex, 0, 1),
                   Tarsus = purrr::pmap_dbl(.l = list(Sex, tarsus_53, tarsus_59),
@@ -415,6 +437,8 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
                   ##Determine age of males based on 'age' column
                   Age_obsv = purrr::pmap_dbl(.l = list(Sex, age),
                                              .f = ~{
+
+                                               pb$print()$tick()
 
                                                if(..1 == "M"){
 
@@ -429,19 +453,21 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
 
                                              }),
                   CaptureDate = purrr::pmap(.l = list(Sex, date_of_capture_52, date_of_capture_57),
-                                                .f = ~{
+                                            .f = ~{
 
-                                                  if(..1 == "F"){
+                                              pb$print()$tick()
 
-                                                    return(..2)
+                                              if(..1 == "F"){
 
-                                                  } else {
+                                                return(..2)
 
-                                                    return(..3)
+                                              } else {
 
-                                                  }
+                                                return(..3)
 
-                                                }),
+                                              }
+
+                                              }),
                   CapturePopID = "VEL", ReleasePopID = "VEL",
                   CapturePlot = Plot, ReleasePlot = Plot) %>%
     tidyr::unnest() %>%
@@ -499,6 +525,8 @@ create_capture_VEL_TIT    <- function(TIT_data) {
 #' @export
 create_individual_VEL     <- function(Capture_data){
 
+  pb <- dplyr::progress_estimated(n = nrow(Capture_data)*2)
+
   Indv_data <- Capture_data %>%
     dplyr::group_by(IndvID) %>%
     dplyr::summarise(Species = unique(na.omit(Species)),
@@ -507,6 +535,8 @@ create_individual_VEL     <- function(Capture_data){
                      RingAge = first(Age_obsv),
                      Sex = purrr::map_chr(.x = list(unique(Sex)),
                                           .f = ~{
+
+                                            pb$print()$tick()
 
                                             if(all(c("F", "M") %in% ..1)){
 
@@ -530,6 +560,8 @@ create_individual_VEL     <- function(Capture_data){
                      FirstBroodID = first(BroodID)) %>%
     dplyr::mutate(BroodIDLaid = purrr::pmap_chr(.l = list(RingAge, FirstBroodID),
                                                .f = ~{
+
+                                                 pb$print()$tick()
 
                                                  if(is.na(..1) | (..1 != 1)){
 
