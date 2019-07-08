@@ -96,12 +96,12 @@ format_VEL <- function(db = choose.dir(),
                      }) %>%
     tidyr::unnest() %>%
     ## CHANGE COL NAMES TO MATCH STANDARD FORMAT
-    dplyr::mutate(SampleYear = year,
+    dplyr::mutate(BreedingSeason = year,
                   Species = Species_codes[which(Species_codes$SpeciesID == 13480), ]$Code,
                   PopID = "VEL",
                   Plot = plot,
                   LocationID = nest,
-                  BroodID = paste(SampleYear, nest, lubridate::day(laying_date), lubridate::month(laying_date), sep = "_"),
+                  BroodID = paste(BreedingSeason, nest, lubridate::day(laying_date), lubridate::month(laying_date), sep = "_"),
                   FemaleID = female_ring, MaleID = male_ring,
                   ClutchType_observed = NA,
                   LayingDate = laying_date, LayingDateError = NA,
@@ -174,7 +174,7 @@ format_VEL <- function(db = choose.dir(),
                                   })
 
   TIT_data <- TIT_data %>%
-    dplyr::mutate(SampleYear = year,
+    dplyr::mutate(BreedingSeason = year,
                   Species = dplyr::case_when(.$species == "blue tit" ~ Species_codes[which(Species_codes$SpeciesID == 14620), ]$Code,
                                              .$species == "great tit" ~ Species_codes[which(Species_codes$SpeciesID == 14640), ]$Code),
                   PopID = "VEL",
@@ -215,7 +215,7 @@ format_VEL <- function(db = choose.dir(),
   # CAPTURE DATA #
   ################
 
-  Capture_data <- create_capture_VEL(FICALB_data, TIT_data)
+  Capture_data <- create_capture_VEL_all(FICALB_data, TIT_data)
 
 }
 
@@ -223,17 +223,17 @@ format_VEL <- function(db = choose.dir(),
 create_brood_VEL <- function(FICALB_data, TIT_data) {
 
   FICALB_broods <- FICALB_data %>%
-    dplyr::arrange(SampleYear, Species, FemaleID) %>%
+    dplyr::arrange(BreedingSeason, Species, FemaleID) %>%
     #Calculate clutchtype
     dplyr::mutate(ClutchType_calc = calc_clutchtype(data = ., na.rm = FALSE)) %>%
-    dplyr::select(SampleYear:ClutchType_observed, ClutchType_calc,
+    dplyr::select(BreedingSeason:ClutchType_observed, ClutchType_calc,
                   LayingDate:ExperimentID)
 
   TIT_broods <- TIT_data %>%
-    dplyr::arrange(SampleYear, Species, FemaleID) %>%
+    dplyr::arrange(BreedingSeason, Species, FemaleID) %>%
     #Calculate clutchtype
     dplyr::mutate(ClutchType_calc = calc_clutchtype(data = ., na.rm = FALSE)) %>%
-    dplyr::select(SampleYear:LocationID, BroodID,
+    dplyr::select(BreedingSeason:LocationID, BroodID,
                   FemaleID:ClutchType_observed, ClutchType_calc,
                   LayingDate:ExperimentID)
 
@@ -243,7 +243,8 @@ create_brood_VEL <- function(FICALB_data, TIT_data) {
 
 create_capture_VEL_all <- function(FICALB_data, TIT_data) {
 
-
+  return(dplyr::bind_rows(create_capture_VEL_FICALB(FICALB_data),
+                          create_capture_VEL_TIT(TIT_data)))
 
 }
 
@@ -251,7 +252,7 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
 
   ## First create a table for flycatcher chick captures on the nest
   FICALB_chicks <- FICALB_data %>%
-    dplyr::select(SampleYear, Species, Plot, BroodID, LayingDate, ClutchSize, HatchDate, x1_young_ring:x8y_wing) %>%
+    dplyr::select(BreedingSeason, Species, Plot, BroodID, LocationID, LayingDate, ClutchSize, HatchDate, x1_young_ring:x8y_wing) %>%
     reshape2::melt(measure.vars = c("x1_young_ring", "x2_young_ring",
                                                "x3_young_ring", "x4_young_ring",
                                                "x5_young_ring", "x6_young_ring",
@@ -265,8 +266,8 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
                   .f = ~{
 
                     output <- ..2 %>%
-                      dplyr::select(SampleYear:HatchDate, IndvID, contains(..1)) %>%
-                      reshape2::melt(id.vars = c(1:8, 10, 12), value.name = "Mass") %>%
+                      dplyr::select(BreedingSeason:HatchDate, IndvID, contains(..1)) %>%
+                      reshape2::melt(id.vars = c(1:9, 11, 13), value.name = "Mass") %>%
                       ## Rename tarsus and wing to remove name of chick
                       dplyr::rename_at(.vars = vars(contains("tarsus")), .funs = ~{"Tarsus"}) %>%
                       dplyr::rename_at(.vars = vars(contains("wing")), .funs = ~{"WingLength"}) %>%
@@ -298,7 +299,7 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
                                     ## All chick records were 6 or 13 days, so all are listed as EURING age 1
                                     ReleasePopID = "VEL", ReleasePlot = Plot, Age_obsv = 1, Age_calc = NA) %>%
                       tidyr::unnest(CaptureDate) %>%
-                      dplyr::select(SampleYear, IndvID, Species, CaptureDate, CaptureTime, CapturePopID, CapturePlot,
+                      dplyr::select(IndvID, Species, BreedingSeason, LocationID, CaptureDate, CaptureTime, CapturePopID, CapturePlot,
                                     ReleasePopID, ReleasePlot, Mass, Tarsus, WingLength, Age_obsv,
                                     Age_calc, ChickAge)
 
@@ -315,7 +316,7 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
 
   #Then create capture info for every adult.
   FICALB_adults <- FICALB_data %>%
-    dplyr::select(SampleYear, Species, Plot, LocationID, LayingDate, BroodID, LayingDate, FemaleID, date_of_capture_52, tarsus_53:wing_55,
+    dplyr::select(BreedingSeason, Species, Plot, LocationID, LayingDate, BroodID, LayingDate, FemaleID, date_of_capture_52, tarsus_53:wing_55,
                   MaleID, date_of_capture_57, age:wing_61) %>%
     reshape2::melt(measure.vars = c("FemaleID", "MaleID"), value.name = "IndvID", variable.name = "Sex") %>%
     dplyr::filter(!is.na(IndvID)) %>%
@@ -360,11 +361,11 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
                   CapturePopID = "VEL", ReleasePopID = "VEL",
                   CapturePlot = Plot, ReleasePlot = Plot) %>%
     tidyr::unnest() %>%
-    dplyr::select(Species, SampleYear, LocationID, BroodID,
+    dplyr::select(Species, BreedingSeason, LocationID, BroodID,
                   IndvID:CaptureDate, Sex)
 
   FICALB_alldat <- dplyr::bind_rows(FICALB_chicks, FICALB_adults) %>%
-    calc_age(ID = IndvID, Age = Age_obsv, Date = CaptureDate, Year = SampleYear)
+    calc_age(ID = IndvID, Age = Age_obsv, Date = CaptureDate, Year = BreedingSeason)
 
 }
 
@@ -386,7 +387,7 @@ create_capture_VEL_TIT <- function(TIT_data) {
                   ## They must all be adults, so just give them all EURING 4
                   ## "Hatched before this calendar year"
                   Age_obsv = 4) %>%
-    calc_age(ID = IndvID, Age = Age_obsv, Date = CaptureDate, Year = SampleYear) %>%
+    calc_age(ID = IndvID, Age = Age_obsv, Date = CaptureDate, Year = BreedingSeason) %>%
     dplyr::select(IndvID, Species, CaptureDate, CapturePopID:ReleasePlot,
                   Age_obsv, Age_calc)
 
