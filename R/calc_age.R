@@ -8,6 +8,9 @@
 #' EURING 4 or 5) This prevents any cases where an individual might be wrongly
 #' aged at first capture.
 #'
+#' When there is no observed age at first capture we assume it couldn't be a
+#' chick or this would've been recorded.
+#'
 #' @param data Data frame. Data frame with capture information.
 #' @param ID Unquoted expression (i.e. character without quotation marks). Name
 #'   of column with individual identity.
@@ -43,7 +46,11 @@ calc_age <- function(data, ID, Age, Date, Year){
                   Age_calc = purrr::pmap_dbl(.l = list(was_chick, yr_diff),
                                              .f = ~{
 
-                                               if(..1){
+                                               if(is.na(..1) | ..1 == FALSE) {
+
+                                                 return(4 + 2*..2)
+
+                                               } else {
 
                                                  if(..2 == 0){
 
@@ -54,10 +61,6 @@ calc_age <- function(data, ID, Age, Date, Year){
                                                    return(3 + 2*..2)
 
                                                  }
-
-                                               } else {
-
-                                                 return(4 + 2*..2)
 
                                                }
 
