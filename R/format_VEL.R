@@ -294,7 +294,15 @@ format_VEL <- function(db = choose.dir(),
 
 }
 
-
+#' Create brood data table for Velky Kosir
+#'
+#' Create brood data table in standard format for flycatcher and tit data from Velky
+#' Kosir.
+#' @param FICALB_data Data frame. Flycatcher data from Velky Kosir.
+#' @param TIT_data Data frame. Tit data from Velky Kosir.
+#'
+#' @return A data frame.
+#' @export
 create_brood_VEL          <- function(FICALB_data, TIT_data) {
 
   FICALB_broods <- FICALB_data %>%
@@ -316,6 +324,14 @@ create_brood_VEL          <- function(FICALB_data, TIT_data) {
 
 }
 
+#' Create capture data table for flycatchers in Velky Kosir.
+#'
+#' Create a capture data table in standard format for only flycatchers in Velky Kosir.
+#' Tit data is created with separate function \code{\link{create_capture_VEL_TIT}}.
+#' @param FICALB_data Data frame. Flycatcher data from Velky Kosir.
+#'
+#' @return A data frame.
+#' @export
 create_capture_VEL_FICALB <- function(FICALB_data) {
 
   ## First create a table for flycatcher chick captures on the nest
@@ -437,6 +453,14 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
 
 }
 
+#' Create capture data table for tits in Velky Kosir.
+#'
+#' Create a capture data table in standard format for great and blue tits in Velky Kosir.
+#' Tit data is created with separate function \code{\link{create_capture_VEL_FICALB}}.
+#' @param TIT_data Data frame. Tit data from Velky Kosir.
+#'
+#' @return A data frame.
+#' @export
 create_capture_VEL_TIT    <- function(TIT_data) {
 
   ## There is no chick info for tits
@@ -463,6 +487,16 @@ create_capture_VEL_TIT    <- function(TIT_data) {
 
 }
 
+#' Create individual data table for Velky Kosir.
+#'
+#' Create individual data table in standard format for both flycatcher and tit
+#' data from Velky Kosir.
+#' @param Capture_data Data frame. Combined data from
+#'   \code{\link{create_capture_VEL_FICALB}} and
+#'   \code{\link{create_capture_VEL_TIT}}.
+#'
+#' @return A data frame.
+#' @export
 create_individual_VEL     <- function(Capture_data){
 
   Indv_data <- Capture_data %>%
@@ -515,6 +549,15 @@ create_individual_VEL     <- function(Capture_data){
 
 }
 
+#' Create location data table for Velky Kosir.
+#'
+#' Create location data table in standard format for all nest boxes.
+#' @param Brood_data Data frame. Output of \code{\link{create_brood_VEL}}
+#' @param TIT_data Data frame. Data frame. Tit data from Velky Kosir. This is
+#'   needed to include habitat type information.
+#'
+#' @return A data frame.
+#' @export
 create_location_VEL       <- function(Brood_data, TIT_data){
 
   ## Determine all used LocationIDs in Brood_data. These should be all locations.

@@ -36,6 +36,9 @@ We only consider whether an individual was captured as a chick or not. We
 don't consider the adult age when an individual was first captured (e.g.
 EURING 4 or 5) This prevents any cases where an individual might be wrongly
 aged at first capture.
+
+When there is no observed age at first capture we assume it couldn't be a
+chick or this would've been recorded.
 }
 \examples{
 set.seed(666)

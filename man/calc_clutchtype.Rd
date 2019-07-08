@@ -26,8 +26,8 @@ dat <- tibble::tibble(PopID = "TEST", Species = "PARMAJ",
 FemaleID = sample(LETTERS[1:7], size = 100, replace = TRUE),
 NumberFledged = rpois(n = 100, lambda = 1),
 #Create 100 fake broods
-SampleYear = sample(c(seq(2000, 2012, 1)), size = 100, replace = TRUE),
-LayingDate = as.Date(paste(SampleYear,
+BreedingSeason = sample(c(seq(2000, 2012, 1)), size = 100, replace = TRUE),
+LayingDate = as.Date(paste(BreedingSeason,
                            sample(c(4, 5, 6), size = 100, replace = TRUE),
                            sample(seq(1, 31, 1), size = 100, replace = TRUE), sep = "-"),
                            format = "\%Y-\%m-\%d"))
