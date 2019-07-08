@@ -280,7 +280,7 @@ format_VEL <- function(db = choose.dir(),
 
     message("Generating debug report...")
 
-    generate_debug_report(path = path, Pop = "VEL", Brood_data = Brood_data, Capture_data = Capture_data, Indv_data = Indv_data)
+    generate_debug_report(path = path, Pop = "VEL", Brood_data = Brood_data, Capture_data = Capture_data, Indv_data = Individual_data)
 
   }
 
@@ -423,8 +423,6 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
     reshape2::melt(measure.vars = c("FemaleID", "MaleID"), value.name = "IndvID", variable.name = "Sex") %>%
     dplyr::filter(!is.na(IndvID))
 
-  pb <- dplyr::progress_estimated(n = nrow(FICALB_adults)*2)
-
   FICALB_adults <- FICALB_adults %>%
     ## Give individuals a sex, we will use this in our Individual_data table
     dplyr::mutate(Sex = stringr::str_sub(Sex, 0, 1),
@@ -437,8 +435,6 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
                   ##Determine age of males based on 'age' column
                   Age_obsv = purrr::pmap_dbl(.l = list(Sex, age),
                                              .f = ~{
-
-                                               pb$print()$tick()
 
                                                if(..1 == "M"){
 
@@ -454,8 +450,6 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
                                              }),
                   CaptureDate = purrr::pmap(.l = list(Sex, date_of_capture_52, date_of_capture_57),
                                             .f = ~{
-
-                                              pb$print()$tick()
 
                                               if(..1 == "F"){
 
@@ -525,9 +519,9 @@ create_capture_VEL_TIT    <- function(TIT_data) {
 #' @export
 create_individual_VEL     <- function(Capture_data){
 
-  pb <- dplyr::progress_estimated(n = nrow(Capture_data)*2)
+  pb <- dplyr::progress_estimated(n = length(unique(Capture_data$IndvID)) * 2)
 
-  Indv_data <- Capture_data %>%
+  Indvidual_data <- Capture_data %>%
     dplyr::group_by(IndvID) %>%
     dplyr::summarise(Species = unique(na.omit(Species)),
                      PopID = "VEL",
@@ -577,7 +571,7 @@ create_individual_VEL     <- function(Capture_data){
                      BroodIDRinged = BroodIDLaid) %>%
     dplyr::select(IndvID, Species, PopID, BroodIDLaid, BroodIDRinged, RingSeason, RingAge, Sex)
 
-  return(Indv_data)
+  return(Indvidual_data)
 
 }
 
