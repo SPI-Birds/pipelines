@@ -475,7 +475,7 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
                   IndvID:CaptureDate, Sex)
 
   FICALB_alldat <- dplyr::bind_rows(FICALB_chicks, FICALB_adults) %>%
-    calc_age(ID = IndvID, Age = Age_obsv, Date = CaptureDate, Year = BreedingSeason)
+    calc_age(ID = IndvID, Age = Age_obsv, Date = CaptureDate, Year = BreedingSeason, showpb = TRUE)
 
 }
 

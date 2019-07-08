@@ -23,7 +23,7 @@
 #'   Name of column with year information. N.B. This could be different to
 #'   CaptureDate if we are dealing with species that breed over two year (e.g.
 #'   Southern Hemisphere species).
-#'
+#' @param showpb Logical. Should a progress bar be shown?
 #' @return A data frame with calculated age.
 #' @export
 #'
@@ -34,7 +34,9 @@
 #' CaptureDate = as.Date(paste(SampleYear, 3, 31, sep = "-"), format = "%Y-%m-%d") + sample(1:30, 100, replace = TRUE),
 #' Age_obsv = sample(c(1, 4), 100, replace = TRUE)) %>%
 #' calc_age(ID = IndvID, Age = Age_obsv, Date = CaptureDate, Year = SampleYear)
-calc_age <- function(data, ID, Age, Date, Year){
+calc_age <- function(data, ID, Age, Date, Year, showpb = TRUE){
+
+  pb <- dplyr::progress_estimated(n = nrow(data))
 
   data %>%
     dplyr::arrange({{ID}}, {{Year}}, {{Date}}) %>%
@@ -45,6 +47,12 @@ calc_age <- function(data, ID, Age, Date, Year){
                   yr_diff   = {{Year}} - FirstYear,
                   Age_calc = purrr::pmap_dbl(.l = list(was_chick, yr_diff),
                                              .f = ~{
+
+                                               if(showpb){
+
+                                                 pb$print()$tick()
+
+                                               }
 
                                                if(is.na(..1) | ..1 == FALSE) {
 
