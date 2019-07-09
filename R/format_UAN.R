@@ -56,7 +56,7 @@ format_UAN <- function(db = choose.dir(),
 
   #Create table with species names for left join
   Species_codes <- Species_codes %>%
-    dplyr::mutate(SOORT = c("pm", "pc", NA, NA, NA, NA)) %>%
+    dplyr::mutate(SOORT = c("pm", "pc", NA, NA, NA, NA, NA)) %>%
     dplyr::select(SOORT, Species = Code)
 
   #Create table with PopID
