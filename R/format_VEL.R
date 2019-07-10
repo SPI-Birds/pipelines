@@ -1,7 +1,7 @@
 #' Construct standard summary for data from Velky Kosir, Czechia.
 #'
-#' A pipeline to produce a standard output for the nest box population
-#' in Velky Kosir, Czechia, administered by Milos Krist.
+#' A pipeline to produce a standard output for the nest box population in Velky
+#' Kosir, Czechia, administered by Milos Krist.
 #'
 #' This section provides details on data management choices that are unique to
 #' this data. For a general description of the standard format please see XXXXX
@@ -13,15 +13,19 @@
 #' cut-off, but they are still included.
 #'
 #' \strong{ClutchType_calc}: We assume that any NA records for number fledged
-#' are true unknowns (rather than 0s). In which case, we can't always
-#' estimate whether a clutch is a second clutch.
+#' are true unknowns (rather than 0s). In which case, we can't always estimate
+#' whether a clutch is a second clutch.
 #'
-#' \strong{ExperimentID}: Currently, we just copy the text directly
-#' from the tables. Need to go through an classify each experiment
-#' and check with Milos that these classifications are reasonable.
+#' \strong{ExperimentID}: Currently, we just copy the text directly from the
+#' tables. Need to go through an classify each experiment and check with Milos
+#' that these classifications are reasonable.
 #'
-#' \strong{BroodID}: BroodID is currently Year_nestbox_day_month.
-#' This accounts for multiple clutches laid in the same nest box.
+#' \strong{BroodID}: BroodID is currently Year_nestbox_day_month. This accounts
+#' for multiple clutches laid in the same nest box.
+#'
+#' \strong{Tarsus}: Tarsus length is originally measured using Oxford maximum
+#' method. We convert this to Svensson's Alternative method using formula
+#' described in the standard format.
 #'
 #' @param db Location of database file.
 #' @param Species A numeric vector. Which species should be included (EUring
@@ -400,7 +404,9 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
                                                               }),
                                     CaptureTime = NA, CapturePopID = "VEL", CapturePlot = Plot,
                                     ## All chick records were 6 or 13 days, so all are listed as EURING age 1
-                                    ReleasePopID = "VEL", ReleasePlot = Plot, Age_obsv = 1, Age_calc = NA) %>%
+                                    ReleasePopID = "VEL", ReleasePlot = Plot, Age_obsv = 1, Age_calc = NA,
+                                    #Convert tarsus to Svennson's alternative
+                                    Tarsus = convert_tarsus(Tarsus, method = "Oxford")) %>%
                       tidyr::unnest(CaptureDate) %>%
                       dplyr::select(IndvID, Species, BreedingSeason, LocationID, CaptureDate, CaptureTime, CapturePopID, CapturePlot,
                                     ReleasePopID, ReleasePlot, Mass, Tarsus, WingLength, Age_obsv,
