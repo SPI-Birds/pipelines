@@ -19,16 +19,22 @@
 #' number of cases where nest attempt number is uncertain (e.g. `2(MAYBE)`).
 #' This uncertainty is ignored.
 #'
-#' \strong{LayingDate, HatchDate}: There are some cases where values (March days) are given
-#' with uncertainty (e.g. 97+, 95?). We don't know how much uncertainty is
-#' involved here, it is ignored.
+#' \strong{LayingDate, HatchDate, NumberFledged}: There are some cases where
+#' values are given with uncertainty (e.g. 97+, 95?). We don't know how much
+#' uncertainty is involved here, it is ignored.
 #'
-#' \strong{ClutchSize}: Cases with uncertainty (e.g. due to predation) are ignored.
+#' \strong{ClutchSize}: Cases where nests were predated before completion are
+#' ignored (i.e. true clutch size is unknown).
 #'
 #' \strong{BroodID}: Unique BroodID is currently made with
 #' Year_Plot_LocationID_Day_Month.
 #'
 #' \strong{Age_obsv}: There is no recorded capture age. This is left as NA.
+#'
+#' \strong{AvgEggMass}: Currently we only include records where the day of egg
+#' weighing is <= LayingDate + ClutchSize. This should be an estimate of the
+#' date that incubation began. Once incubation starts, egg weight is not easily
+#' comparable because it changes with chick development.
 #'
 #' @param db Directory path. Location of primary data.
 #' @param path File path. Location where output csv files will be saved.
@@ -48,7 +54,7 @@ format_BAN <- function(db = choose.dir(), path = ".", debug = FALSE){
 
   message("Importing primary data...")
 
-  all_data <- readxl::read_excel(paste0(db, "/MasterBreedingDataAllYears password protected.xlsx")) %>%
+  all_data <- suppressWarnings(readxl::read_excel(paste0(db, "/MasterBreedingDataAllYears password protected.xlsx")) %>%
     janitor::clean_names() %>%
     #Convert column names to meet standard format
     dplyr::mutate(BreedingSeason = year,
@@ -68,8 +74,10 @@ format_BAN <- function(db = choose.dir(), path = ".", debug = FALSE){
                   BroodID = paste(BreedingSeason, LocationID,
                                   lubridate::day(LayingDate), lubridate::month(LayingDate), sep = "_"),
                   AvgEggMass = as.numeric(egg_weight), NumberEggs = as.numeric(number_eggs_weighed),
-                  EggWeighDate = (March1Date + as.numeric(weigh_date)) - LayingDate,
                   ClutchSize = as.numeric(final_clutch_size),
+                  StartIncubation = LayingDate + ClutchSize,
+                  EggWeighDate = (March1Date + as.numeric(weigh_date)),
+                  EggWasIncubated = (March1Date + as.numeric(weigh_date)) <= (LayingDate + ClutchSize),
                   HatchDate = March1Date + as.numeric(gsub(pattern = "\\?",
                                                            replacement = "",
                                                            x = actual_hatch_date)),
@@ -79,7 +87,7 @@ format_BAN <- function(db = choose.dir(), path = ".", debug = FALSE){
                   ChickCaptureDate = March1Date + as.numeric(actual_pullus_ringing_date),
                   NumberFledged = as.numeric(gsub(pattern = "\\?",
                                                   replacement = "",
-                                                  number_fledged)))
+                                                  number_fledged))))
 
   ##############
   # BROOD DATA #
@@ -125,6 +133,13 @@ format_BAN <- function(db = choose.dir(), path = ".", debug = FALSE){
 
   }
 
+  ###########################
+  # WRANGLE DATA FOR EXPORT #
+  ###########################
+
+  Capture_data <- Capture_data %>%
+    dplyr::select(-Sex)
+
   ###############
   # EXPORT DATA #
   ###############
@@ -145,6 +160,13 @@ format_BAN <- function(db = choose.dir(), path = ".", debug = FALSE){
 
 }
 
+#' Create brood data table for Bandon Valley.
+#'
+#' Create brood data table in standard format for data from Bandon Valley.
+#' @param data Data frame. Primary data from Bandon Valley.
+#'
+#' @return A data frame.
+#' @export
 create_brood_BAN   <- function(data) {
 
   Brood_data <- data %>%
@@ -160,8 +182,8 @@ create_brood_BAN   <- function(data) {
                   ExperimentID = NA) %>%
     ## Remove egg weights when the day of weighing is outside our given range
     ## FOR NOW WE INCLUDE ALL EGG MASS DATES
-    dplyr::mutate(AvgEggMass = purrr::map2_dbl(.x = AvgEggMass, .y = EggWeighDate,
-                                               .f = ~{ifelse(!between(..2, 0, 20), NA, as.numeric(..1))})) %>%
+    dplyr::mutate(AvgEggMass = purrr::map2_dbl(.x = AvgEggMass, .y = EggWasIncubated,
+                                               .f = ~{ifelse(!..2, NA, as.numeric(..1))})) %>%
     dplyr::select(PopID, BreedingSeason,
                   Species, Plot, LocationID,
                   BroodID, FemaleID, MaleID,
@@ -182,6 +204,13 @@ create_brood_BAN   <- function(data) {
 
 }
 
+#' Create capture data table for Bandon Valley.
+#'
+#' Create capture data table in standard format for data from Bandon Valley.
+#' @param data Data frame. Primary data from Bandon Valley.
+#'
+#' @return A data frame.
+#' @export
 create_capture_BAN <- function(data) {
 
   Capture_data <- data %>%
@@ -227,6 +256,13 @@ create_capture_BAN <- function(data) {
 
 }
 
+#' Create individual data table for Bandon Valley.
+#'
+#' Create individual data table in standard format for data from Bandon Valley.
+#' @param data Data frame. Primary data from Bandon Valley.
+#'
+#' @return A data frame.
+#' @export
 create_individual_BAN <- function(Capture_data) {
 
   Individual_data <- Capture_data %>%
@@ -262,6 +298,13 @@ create_individual_BAN <- function(Capture_data) {
 
 }
 
+#' Create location data table for Bandon Valley.
+#'
+#' Create location data table in standard format for data from Bandon Valley.
+#' @param data Data frame. Primary data from Bandon Valley.
+#'
+#' @return A data frame.
+#' @export
 create_location_BAN <- function(data) {
 
   Location_data <- tibble::tibble(LocationID = unique(data$LocationID),
