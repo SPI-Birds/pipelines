@@ -56,6 +56,8 @@ format_BAN <- function(db = choose.dir(), path = ".", debug = FALSE){
                   LayingDate = March1Date + as.numeric(gsub(pattern = "\\?|\\+",
                                                  replacement = "",
                                                  x = first_egg_lay_date)),
+                  BroodID = paste(BreedingSeason, LocationID,
+                                  lubridate::day(LayingDate), lubridate::month(LayingDate), sep = "_"),
                   AvgEggMass = egg_weight, NumberEggs = number_eggs_weighed,
                   EggWeighDate = (March1Date + as.numeric(weigh_date)) - LayingDate,
                   ClutchSize = as.numeric(final_clutch_size),
