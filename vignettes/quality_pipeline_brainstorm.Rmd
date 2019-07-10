@@ -21,12 +21,17 @@ These are checks to ensure that the provided data meet biological and data manag
 
 * Laying date < Hatch date < Fledge date
 
-* Check for impossible values in everything (have range for warnings and range for errors) (NOT NOW).
-  *EggMass/ChickMass/AdultMass/ChickTarsus/AdultTarsus/ChickWinglength/AdultWingLength:
-  *max Clutch/max Brood/max FledgeSize:
-  *Age:
+* Check for impossible values in everything (have range for warnings and range for errors) (NOT NOW):
+
+  *EggMass/ChickMass/AdultMass/ChickTarsus/AdultTarsus/ChickWinglength/AdultWingLength
+  
+  *max Clutch/max Brood/max FledgeSize
+  
+  *Age
+  
   *Laying date: THIS IS POPULATION SPECIFIC WE NEED TO THINK HOW TO DEAL WITH THIS.
-  *min Incubation time/min hatch - fledge time:
+  
+  *min Incubation time/min hatch - fledge time
   
 * Error in clutch size/laying date etc. is reasonable (NOT NOW).
 
