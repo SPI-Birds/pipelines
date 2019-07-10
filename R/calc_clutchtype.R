@@ -3,7 +3,7 @@
 #' Use info on laying date and fledge data to determine the clutch type of a
 #' given brood
 #' @param data Data frame. Brood data to use for conversion
-#' @param na.rm Logical. Should NA's be remvoed and treated as 0s. If FALSE, NAs
+#' @param na.rm Logical. Should NA's be removed and treated as 0s. If FALSE, NAs
 #'   are treated as true unknowns.
 #'
 #' @return A character vector with either 'first', 'replacement', 'second', or

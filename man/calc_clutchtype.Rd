@@ -7,9 +7,10 @@
 calc_clutchtype(data, na.rm = T)
 }
 \arguments{
-\item{data}{Brood data to use for conversion}
+\item{data}{Data frame. Brood data to use for conversion}
 
-\item{na.rm}{Should NA's be treated as 0s or true unknowns?}
+\item{na.rm}{Logical. Should NA's be removed and treated as 0s. If FALSE, NAs
+are treated as true unknowns.}
 }
 \value{
 A character vector with either 'first', 'replacement', 'second', or

@@ -14,10 +14,8 @@
 #'   called to identify the directory. If the data frame is stored as a csv,
 #'   `torun_path` must be a file path. If the data frame is stored in the global
 #'   environment, no value is needed for `torun_path`.
-#' @return
+#' @return Generate 4 .csv files.
 #' @export
-#'
-#' @examples
 create_multiple <- function(combined = FALSE, torun_path = NULL){
 
   if(!exists("torun")){
