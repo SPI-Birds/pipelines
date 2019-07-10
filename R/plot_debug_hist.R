@@ -25,15 +25,14 @@ plot_debug_hist <- function(table, variable){
   }
 
   #Make a number of bins the same as the number of unique values
-  bins <- table %>%
-    summarise(bins = ifelse(length(unique(!!variable)) < 10, length(unique(!!variable)), length(unique(!!variable))/2))
+  binwidth <- ifelse(grepl(pattern = "Tarsus|Mass|Length", x = quo_name(variable)), 0.5, 1)
 
   #Generate histogram of clutch size
   raw_dat <- table %>%
-    filter(!is.na(!!variable)) %>%
+    filter(!is.na(!!variable) & !is.na(Species)) %>%
     {ggplot(.)+
-        geom_histogram(aes(x = !!variable), bins = bins$bins, fill = "grey", colour = "black")+
-        labs(title = paste0("Histogram of ", tolower(var_name), " from ", pop_names[which(pop_names$code == table$PopID[1]), ]$name),
+        geom_histogram(aes(x = !!variable), binwidth = binwidth, fill = "grey", colour = "black")+
+        labs(title = paste0("Histogram of ", tolower(var_name), " from \n", pop_names[which(pop_names$code == table$PopID[1]), ]$name),
              y = "Number of observations", x = var_name)+
         theme_classic()+
         theme(plot.title = element_text(hjust = 0.5, size = 20),

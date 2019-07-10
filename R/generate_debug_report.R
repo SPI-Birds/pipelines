@@ -23,13 +23,14 @@ generate_debug_report <- function(path, Pop, Brood_data, Capture_data, Indv_data
 
   Brood_data_summary <- Brood_data %>%
     select(Species, ClutchType_observed, ClutchType_calc) %>%
-    summarise_all(~paste(unique(.x), collapse = "/"))
+    summarise_all(~paste(na.omit(unique(.x)), collapse = "/"))
 
   #Turn all dates into April days
   Brood_data <- Brood_data %>%
     mutate_if(.predicate = ~class(.x) == "Date", .funs = function(.x){
 
-      as.numeric(.x - lubridate::ymd(paste(lubridate::year(.x), "01", "04")))
+      tryCatch(expr = as.numeric(.x - lubridate::ymd(paste(lubridate::year(.x), "01", "04"))),
+               warning = function(...) return(NA))
 
     })
 
