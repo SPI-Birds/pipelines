@@ -15,9 +15,18 @@
 #' \strong{ClutchType_observed}: Clutch type is only listed as 'first' and
 #' 'second'. There is no distinction between 'second' and 'replacement'. We
 #' categorise all these as 'second'. Possible distinction between 'second' and
-#' 'replacement' could be made with \strong{ClutchType_calc}.
+#' 'replacement' could be made with \strong{ClutchType_calc}. There are a small
+#' number of cases where nest attempt number is uncertain (e.g. `2(MAYBE)`).
+#' This uncertainty is ignored.
 #'
-#' \strong{BroodID}: Unique BroodID is currently made with Year_Plot_LocationID_NestAttempt.
+#' \strong{LayingDate, HatchDate}: There are some cases where values (March days) are given
+#' with uncertainty (e.g. 97+, 95?). We don't know how much uncertainty is
+#' involved here, it is ignored.
+#'
+#' \strong{ClutchSize}: Cases with uncertainty (e.g. due to predation) are ignored.
+#'
+#' \strong{BroodID}: Unique BroodID is currently made with
+#' Year_Plot_LocationID_Day_Month.
 #'
 #' \strong{Age_obsv}: There is no recorded capture age. This is left as NA.
 #'
@@ -58,7 +67,7 @@ format_BAN <- function(db = choose.dir(), path = ".", debug = FALSE){
                                                  x = first_egg_lay_date)),
                   BroodID = paste(BreedingSeason, LocationID,
                                   lubridate::day(LayingDate), lubridate::month(LayingDate), sep = "_"),
-                  AvgEggMass = egg_weight, NumberEggs = number_eggs_weighed,
+                  AvgEggMass = as.numeric(egg_weight), NumberEggs = as.numeric(number_eggs_weighed),
                   EggWeighDate = (March1Date + as.numeric(weigh_date)) - LayingDate,
                   ClutchSize = as.numeric(final_clutch_size),
                   HatchDate = March1Date + as.numeric(gsub(pattern = "\\?",
