@@ -21,7 +21,7 @@ continuous variables with mean/SD b) unique values of all categorical
 variables.}
 }
 \value{
-Generates 5 .csv files with data in a standard format.
+Generates 4 .csv files with data in a standard format.
 }
 \description{
 A pipeline to produce a standard output for the nest box population in Velky
@@ -51,4 +51,8 @@ for multiple clutches laid in the same nest box.
 \strong{Tarsus}: Tarsus length is originally measured using Oxford maximum
 method. We convert this to Svensson's Alternative method using formula
 described in the standard format.
+
+\strong{ClutchSize, BroodSize, NumberFledged}: Some records have uncertainty
+(e.g. 11+). We're unsure how large this uncertainty is. It's currently
+ignored, but will talk with data owner to incorporate this.
 }

@@ -27,6 +27,10 @@
 #' method. We convert this to Svensson's Alternative method using formula
 #' described in the standard format.
 #'
+#' \strong{ClutchSize, BroodSize, NumberFledged}: Some records have uncertainty
+#' (e.g. 11+). We're unsure how large this uncertainty is. It's currently
+#' ignored, but will talk with data owner to incorporate this.
+#'
 #' @param db Location of database file.
 #' @param Species A numeric vector. Which species should be included (EUring
 #'   codes)? If blank will return all major species (see details below).
@@ -36,7 +40,7 @@
 #'   continuous variables with mean/SD b) unique values of all categorical
 #'   variables.
 #'
-#' @return Generates 5 .csv files with data in a standard format.
+#' @return Generates 4 .csv files with data in a standard format.
 #' @export
 #' @import readxl
 #' @import stringr
@@ -58,12 +62,12 @@ format_VEL <- function(db = choose.dir(),
   ## - Adult wing and forhead patch measures
   ## - Picture and geolocator info
   ## - Info on which eggs were transferred in cross foster
-  FICALB_data <- readxl::read_excel(paste0(db, "/Velky_Kosir_flycatchers.xlsx"),
+  FICALB_data <- suppressMessages(readxl::read_excel(paste0(db, "/Velky_Kosir_flycatchers.xlsx"),
                                     col_types = c("skip", "numeric", "text",
                                                   "text", "list",
-                                                  "numeric", "text",
-                                                  "text", "numeric",
-                                                  "list", "numeric",
+                                                  "text", "text",
+                                                  "text", "text",
+                                                  "list", "text",
                                                   rep("text", 8),
                                                   rep(c(rep("numeric", 4), "skip"), 8),
                                                   "text", "list", "numeric",
@@ -72,7 +76,7 @@ format_VEL <- function(db = choose.dir(),
                                                   "text", "list", "text",
                                                   "numeric", "numeric",
                                                   "numeric", rep("skip", 13),
-                                                  "text", rep("skip", 16))) %>%
+                                                  "text", rep("skip", 16)))) %>%
     janitor::clean_names() %>%
     ## Date info is sometimes recorded as dd/mm/yyyy and sometimes as dd.mm.yyyy.
     ## This causes some issues with date parsing. If we parse as text, it converts
@@ -116,11 +120,11 @@ format_VEL <- function(db = choose.dir(),
                   FemaleID = female_ring, MaleID = male_ring,
                   ClutchType_observed = NA,
                   LayingDate = laying_date, LayingDateError = NA,
-                  ClutchSize = clutch_size, ClutchSizeError = NA,
+                  ClutchSize = as.numeric(gsub(pattern = "\\+|\\-", replacement = "", clutch_size)), ClutchSizeError = NA,
                   HatchDate = hatching_date, HatchDateError = NA,
-                  BroodSize = number_hatched, BroodSizeError = NA,
+                  BroodSize = as.numeric(gsub(pattern = "\\+|\\-", replacement = "", number_hatched)), BroodSizeError = NA,
                   FledgeDate = NA, FledgeDateError = NA,
-                  NumberFledged = number_fledged, NumberFledgedError = NA,
+                  NumberFledged = as.numeric(gsub(pattern = "\\+|\\-", replacement = "", number_fledged)), NumberFledgedError = NA,
                   ##ADD EMPTY EGG COLS. NO EGG DATA.
                   AvgEggMass = NA, NumberEggs = NA,
                   ExperimentID = treatment)
@@ -197,14 +201,14 @@ format_VEL <- function(db = choose.dir(),
                   ##MEANS CLUTCH 11 THAT WAS ARTIFIICALLY INCREASED
                   ##THEREFORE, I JUST REMOVE THE + AND ADD THAT IT WAS AN EXPERIMENTAL NEST
                   ##NEED TO CHECK WITH MILOS
-                  ClutchSize = as.numeric(gsub(pattern = "\\+|\\-", replacement = "", clutch_size)),
+                  ClutchSize = as.numeric(gsub(pattern = "\\+|\\-|\\?", replacement = "", clutch_size)),
                   ClutchSizeError = NA,
                   ##DO THE SAME FOR BROOD SIZE AND NUMBER FLEDGED
                   HatchDate = NA, HatchDateError = NA,
-                  BroodSize = as.numeric(gsub(pattern = "\\+|\\-", replacement = "", number_hatched)),
+                  BroodSize = as.numeric(gsub(pattern = "\\+|\\-|\\?", replacement = "", number_hatched)),
                   BroodSizeError = NA,
                   FledgeDate = NA, FledgeDateError = NA,
-                  NumberFledged = as.numeric(gsub(pattern = "\\+|\\-", replacement = "", number_fledged)),
+                  NumberFledged = as.numeric(gsub(pattern = "\\+|\\-|\\?", replacement = "", number_fledged)),
                   NumberFledgedError = NA,
                   ##ADD EMPTY EGG DATA COLS.
                   AvgEggMass = NA, NumberEggs = NA,
