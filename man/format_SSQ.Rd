@@ -34,24 +34,29 @@ this data. For a general description of the standard format please see XXXXX
 PLACE HOLDER!
 
 \strong{BroodID}: For now we make BroodID as a combination of: year of nest,
-nestID, layingdate. This is necessary because there are no other ways to distinguish
-a two broods laid in the same nest and same year.
+nestID, layingdate. This is necessary because there are no other ways to
+distinguish a two broods laid in the same nest and same year.
 
-\strong{Species}: In the individual data, there are some cases where
-an IndvID is associated with >1 species. I assume these are just typos
-and I will just take the first species.
+\strong{Species}: In the individual data, there are some cases where an
+IndvID is associated with >1 species. I assume these are just typos and I
+will just take the first species.
 
-\strong{CaptureDate}: No exact capture date is given. Adults were only ever
-captured with a nest, therefore, we use the laying date of the nest as a
-proxy for capture date. Chick were also only ever captured on the nest, we
-used laying date + 34 days as a proxy for capture date. 34 days was used to
-include: egg laying phase (8 eggs on average), incubation phase (12 days??),
-14 days post hatching when chicks are often ringed.
+\strong{CaptureDate}: No exact capture date is currently given. For adults we
+use the laying date of the nest as a proxy for capture date. Chick were only
+ever captured on the nest, we used laying date + clutch size + 15 days
+incubation + 12 days. This is because chicks were ringed at 12 days old at
+the latest.
 
-\strong{Age_calc}: All ringed chicks were assumed to be ringed at EURING code 1 (i.e. pre-fledging).
-For adults where no age was provided, we assumed that first observation was 6 (i.e. at least 2 years old)
+\strong{Age_calc}: All ringed chicks were assumed to be ringed at EURING code
+1 (i.e. pre-fledging). For adults where no age was provided, we assumed that
+first observation was 6 (i.e. at least 2 years old)
 
-\strong{Indv_data}: There are cases where chicks from different nests are given the same ring number.
-Unsure if this is the rings being reused or a typo. Currently, I leave it as is and assume this is a typo that
-needs to be fixed.
+\strong{Indv_data}: There are cases where chicks from different nests are
+given the same ring number. Unsure if this is the rings being reused or a
+typo. Currently, I leave it as is and assume this is a typo that needs to be
+fixed in the primary data.
+
+\strong{Nestbox StartYear}: Some nest boxes were replaced over the course of
+the study; however, these replacements were not explicitly recorded.
+Therefore, we list all nestboxes as functioning for the full study period.
 }

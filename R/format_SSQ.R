@@ -9,26 +9,31 @@
 #' PLACE HOLDER!
 #'
 #' \strong{BroodID}: For now we make BroodID as a combination of: year of nest,
-#' nestID, layingdate. This is necessary because there are no other ways to distinguish
-#' a two broods laid in the same nest and same year.
+#' nestID, layingdate. This is necessary because there are no other ways to
+#' distinguish a two broods laid in the same nest and same year.
 #'
-#' \strong{Species}: In the individual data, there are some cases where
-#' an IndvID is associated with >1 species. I assume these are just typos
-#' and I will just take the first species.
+#' \strong{Species}: In the individual data, there are some cases where an
+#' IndvID is associated with >1 species. I assume these are just typos and I
+#' will just take the first species.
 #'
-#' \strong{CaptureDate}: No exact capture date is given. Adults were only ever
-#' captured with a nest, therefore, we use the laying date of the nest as a
-#' proxy for capture date. Chick were also only ever captured on the nest, we
-#' used laying date + 34 days as a proxy for capture date. 34 days was used to
-#' include: egg laying phase (8 eggs on average), incubation phase (12 days??),
-#' 14 days post hatching when chicks are often ringed.
+#' \strong{CaptureDate}: No exact capture date is currently given. For adults we
+#' use the laying date of the nest as a proxy for capture date. Chick were only
+#' ever captured on the nest, we used laying date + clutch size + 15 days
+#' incubation + 12 days. This is because chicks were ringed at 12 days old at
+#' the latest.
 #'
-#' \strong{Age_calc}: All ringed chicks were assumed to be ringed at EURING code 1 (i.e. pre-fledging).
-#' For adults where no age was provided, we assumed that first observation was 6 (i.e. at least 2 years old)
+#' \strong{Age_calc}: All ringed chicks were assumed to be ringed at EURING code
+#' 1 (i.e. pre-fledging). For adults where no age was provided, we assumed that
+#' first observation was 6 (i.e. at least 2 years old)
 #'
-#' \strong{Indv_data}: There are cases where chicks from different nests are given the same ring number.
-#' Unsure if this is the rings being reused or a typo. Currently, I leave it as is and assume this is a typo that
-#' needs to be fixed.
+#' \strong{Indv_data}: There are cases where chicks from different nests are
+#' given the same ring number. Unsure if this is the rings being reused or a
+#' typo. Currently, I leave it as is and assume this is a typo that needs to be
+#' fixed in the primary data.
+#'
+#' \strong{Nestbox StartYear}: Some nest boxes were replaced over the course of
+#' the study; however, these replacements were not explicitly recorded.
+#' Therefore, we list all nestboxes as functioning for the full study period.
 #' @param db Location of database file.
 #' @param Species A numeric vector. Which species should be included (EUring
 #'   codes)? If blank will return all major species (see details below).
@@ -66,7 +71,7 @@ format_SSQ <- function(db = file.choose(),
                   Plot = HabitatOfRinging,
                   Latitude = YCoord, Longitude = XCoord) %>%
     #Add species codes
-    left_join(filter(Species_codes, SpeciesID %in% c("14640", "14620")) %>%
+    dplyr::left_join(filter(Species_codes, SpeciesID %in% c("14640", "14620")) %>%
                 mutate(Species = c("Parus major", "Cyanistes caeruleus")) %>%
                 select(Species, Code), by = "Species") %>%
     #Add other missing data:
@@ -74,11 +79,14 @@ format_SSQ <- function(db = file.choose(),
     #- BroodID (Year_NestID)
     #- ClutchType_observed
     #- FledgeDate
-    mutate(PopID = "SIC",
-           BroodID = paste(SampleYear, LocationID, LayingDate, sep = "_")) %>%
-    left_join(tibble::tibble(ClutchType_observed = c("first", "second", "replacement"),
-                             Class = c(1, 3, 2)), by = "Class") %>%
-    dplyr::mutate(Species = Code, FledgeDate = NA, AvgMass = NA, AvgTarsus = NA)
+    dplyr::mutate(PopID = "SIC",
+                  BroodID = paste(SampleYear, LocationID, LayingDate, sep = "_"),
+                  ClutchType_observed = dplyr::case_when(.$Class == 1 ~ "first",
+                                                         .$Class == 3 ~ "second",
+                                                         .$Class == 2 ~ "replacement")) %>%
+    dplyr::mutate(Species = Code, FledgeDate = NA, AvgEggMass = NA, NrEgg = NA, AvgChickMass = NA, NrChickMass = NA, AvgTarsus = NA, NrChickTarsus = NA,
+                  LayingDateError = NA, ClutchSizeError = NA, HatchDateError = NA, BroodSizeError = NA,
+                  FledgeDateError = NA, NumberFledgedError = NA, ExperimentID = NA)
 
   ##############
   # BROOD DATA #
@@ -99,14 +107,18 @@ format_SSQ <- function(db = file.choose(),
     group_by(SampleYear, Species, FemaleID) %>%
     #Assume NAs in Fledglings are 0s.
     mutate(total_fledge = calc_cumfledge(x = NumberFledged, na.rm = T),
+           total_fledge_na = calc_cumfledge(x = NumberFledged, na.rm = F),
            row = 1:n()) %>%
     ungroup() %>%
     mutate(ClutchType_calc = purrr::pmap_chr(.l = list(rows = .$row,
                                                        femID = .$FemaleID,
                                                        cutoff_date = .$cutoff,
                                                        nr_fledge_before = .$total_fledge,
+                                                       na_fledge_before = .$total_fledge_na,
                                                        LD = .$LayingDate),
-                                             .f = function(rows, femID, cutoff_date, nr_fledge_before, LD){
+                                             .f = function(rows, femID, cutoff_date,
+                                                           nr_fledge_before, na_fledge_before,
+                                                           LD){
 
                                                clutchtype$tick()$print()
 
@@ -153,18 +165,35 @@ format_SSQ <- function(db = file.choose(),
 
                                                  }
 
-                                                 #If it's NOT the first nest of the season for this female
+                                               #If it's NOT the first nest of the season for this female
                                                } else {
 
                                                  #If there have been no fledglings before this point..
                                                  if(nr_fledge_before == 0){
 
-                                                   #Then it is a replacement
-                                                   return("replacement")
+                                                   #If there was atleast one NA record before this one
+                                                   #then we don't know if number of fledged before is
+                                                   #0 or >0. Therefore, we have to say NA.
+                                                   if(na_fledge_before > 0){
+
+                                                     return(NA)
+
+                                                   } else {
+
+                                                     #Otherwise, we can be confident that
+                                                     #number of fledge before is 0
+                                                     #and it must be a replacement
+                                                     return("replacement")
+
+                                                   }
 
                                                  } else {
 
-                                                   #Otherwise, it is a secondary clutch
+                                                   #If there has been atleast one clutch
+                                                   #that previously produced fledgligns
+                                                   #then this nest is 'second'
+                                                   #N.B. This is the case even if one of the previous nests
+                                                   #was an NA. We just need to know if it's >0, not the exact number
                                                    return("second")
 
                                                  }
@@ -175,7 +204,15 @@ format_SSQ <- function(db = file.choose(),
     select(SampleYear, Species, PopID, Plot,
            LocationID, BroodID, FemaleID, MaleID,
            ClutchType_observed, ClutchType_calc,
-           LayingDate:BroodSize, FledgeDate, NumberFledged, AvgMass, AvgTarsus)
+           LayingDate, LayingDateError,
+           ClutchSize, ClutchSizeError,
+           HatchDate, HatchDateError,
+           BroodSize, BroodSizeError,
+           FledgeDate, FledgeDateError,
+           NumberFledged, NumberFledgedError,
+           AvgEggMass, NrEgg,
+           AvgChickMass, NrChickMass,
+           AvgTarsus, NrChickTarsus, ExperimentID)
 
   ################
   # CAPTURE DATA #
@@ -195,37 +232,34 @@ format_SSQ <- function(db = file.choose(),
     #Convert these age values to current EURING codes
     #If NA, we know it's an adult but don't know it's age
     #We don't want to assume anything here
-    dplyr::left_join(tibble::tibble(Age = c(1, 2),
-                                    Age_obsv = c(5, 6)), by = "Age") %>%
+    dplyr::mutate(Age_obsv = dplyr::case_when(.$Age == 1 ~ 5,
+                                              .$Age == 2 ~ 6)) %>%
     dplyr::rename(CapturePopID = PopID, CapturePlot = Plot) %>%
-    #Treat CaptureDate as Laying Date (currently in days since March 1st)
-    #Check with Camilo about this.
+    #Treat CaptureDate of adults as the Laying Date (currently in days since March 1st)
     dplyr::mutate(ReleasePopID = CapturePopID, ReleasePlot = CapturePlot,
                   CaptureDate = as.Date(paste(SampleYear, "03", "01", sep = "-"), format = "%Y-%m-%d") - 1 + LayingDate,
                   CaptureTime = NA) %>%
     dplyr::select(-variable, -LayingDate, -FAge, -MAge)
 
   Chick_captures <- all_data %>%
-    dplyr::select(SampleYear, Species, PopID, Plot, LocationID, LayingDate, Chick1Id:Chick13Id) %>%
-    reshape2::melt(id.vars = c("SampleYear", "Species", "PopID", "Plot", "LocationID", "LayingDate"), value.name = "IndvID") %>%
+    dplyr::select(SampleYear, Species, PopID, Plot, LocationID, LayingDate, ClutchSize, Chick1Id:Chick13Id) %>%
+    reshape2::melt(id.vars = c("SampleYear", "Species", "PopID", "Plot", "LocationID", "LayingDate", "ClutchSize"), value.name = "IndvID") %>%
     #Remove NAs
     dplyr::filter(!is.na(IndvID)) %>%
     dplyr::rename(CapturePopID = PopID, CapturePlot = Plot) %>%
-    #For chicks, use LayingDate + 34 for capture date 34 because this is an
-    #estimate of laying date + laying time (~8 eggs on average) + incubation
-    #time (~12 days) + 14 days (normal age when chicks are ringed)
-    #Using LayingDate, rather than HatchDate, because LayingDate is recorded much more often.
-    #CHECK WITH CAMILLO
+    #For chicks, we currently don't have the version of the individual level capture data.
+    #For now, we use LayingDate + ClutchSize + 15 (incubation days in SSQ) + 12.
+    #Chicks were captured and weighed at 12 days old at the latest
     dplyr::mutate(ReleasePopID = CapturePopID, ReleasePlot = CapturePlot,
-                  CaptureDate = as.Date(paste(SampleYear, "03", "01", sep = "-"), format = "%Y-%m-%d") - 1 + LayingDate + 34,
+                  CaptureDate = as.Date(paste(SampleYear, "03", "01", sep = "-"), format = "%Y-%m-%d") - 1 + LayingDate + ClutchSize + 27,
                   CaptureTime = NA, Age_obsv = 1, Age = 1) %>%
-    dplyr::select(-variable, -LayingDate)
+    dplyr::select(-variable, -LayingDate, -ClutchSize)
 
   #Combine Adult and chick data
   Capture_data <- dplyr::bind_rows(Adult_captures, Chick_captures) %>%
     dplyr::arrange(IndvID, CaptureDate) %>%
     #Add NA for morphometric measures and chick age
-    #ChickAge is NA because we have no exact CaptureDate
+    #ChickAge (in days) is NA because we have no exact CaptureDate
     dplyr::mutate(Mass = NA, Tarsus = NA, WingLength = NA,
                   ChickAge = NA) %>%
     #Also determine Age_calc
@@ -233,7 +267,7 @@ format_SSQ <- function(db = file.choose(),
     mutate(FirstAge = first(Age),
            FirstYear = first(SampleYear)) %>%
     ungroup() %>%
-    #Calculate age at each capture using EUring codes
+    #Calculate age at each capture using EURING codes
     dplyr::mutate(Age_calc = purrr::pmap_dbl(.l = list(Age = .$FirstAge,
                                                        Year1 = .$FirstYear,
                                                        YearN = .$SampleYear),
@@ -245,14 +279,15 @@ format_SSQ <- function(db = file.choose(),
                                                #If it was not caught as a chick...
                                                if(Age != 1 | is.na(Age)){
 
-                                                 #If it's listed as 'first year' then we know it was EURING code 5 at first capture
+                                                 #If it's listed as EURING 5,
+                                                 #then its age is known at first capture
                                                  if(!is.na(Age) & Age == 5){
 
                                                    return(5 + 2*diff_yr)
 
                                                  #Otherwise, when it was first caught it was at least EURING code 6.
-                                                 #This also applies to birds with Age == NA, this is because the only birds
-                                                 #That have NA are adults (all chicks are listed as Age = 1)
+                                                 #This also applies to birds with both Age == 6 (where they were recorded as being >2yo)
+                                                 #and Age == NA. We assume any bird that was a known 2nd year would be listed as such.
                                                  } else {
 
                                                    #Use categories where age is uncertain
@@ -304,11 +339,8 @@ format_SSQ <- function(db = file.choose(),
     dplyr::summarise(Species = first(Species),
                      RingYear = min(lubridate::year(CaptureDate)),
                      RingAge = first(Age_obsv)) %>%
-    dplyr::rowwise() %>%
-    #For sex, we only know if an individual was a female...
-    #Adults were never caught as males and chicks were never sexed.
-    dplyr::mutate(Sex = ifelse(IndvID %in% Brood_data$FemaleID, "F", NA)) %>%
-    dplyr::ungroup() %>%
+    dplyr::mutate(Sex = dplyr::case_when(.$IndvID %in% Brood_data$FemaleID ~ "F",
+                                         .$IndvID %in% Brood_data$MaleID ~ "M")) %>%
     #Join in BroodID from the reshaped Chick_IDs table
     dplyr::left_join(Chick_IDs, by = "IndvID") %>%
     dplyr::mutate(BroodIDRinged = BroodIDLaid,
@@ -326,7 +358,7 @@ format_SSQ <- function(db = file.choose(),
     dplyr::group_by(LocationID) %>%
     dplyr::summarise(NestBoxType = NA,
                      PopID = "SSQ",
-                     StartYear = NA, EndYear = NA) %>%
+                     StartYear = 1993, EndYear = NA) %>%
     dplyr::mutate(NestboxID = LocationID) %>%
     #Join in first latitude and longitude data recorded for this box.
     #It's not clear why these are ever different, need to ask.

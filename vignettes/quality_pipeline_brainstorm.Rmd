@@ -15,30 +15,56 @@ Checks can be split into two separate groups: data quality checks and pipeline o
 
 These are checks to ensure that the provided data meet biological and data management expectations. Checks will include:
 
-* Clutch size <= brood size <= number of fledglings
+* Clutch size <= brood size <= number of fledglings (N.B. May actually differ because of clutch manipulation). Error: If no evidence of experimentation and this assumption is violated. Warning: If there is evidence of cohort manipulation and this assumption is violated.
 
-* Mass/Tarsus/WingLength should fit a normal distribution with expected mean and sd (values TBD)
+* Clutch/Brood/Fledglings should be integers
 
-* Mass/Tarsus/WingLength should not have values more than SD from the mean (values TBD)
+* Laying date < Hatch date < Fledge date
 
-* When new data are added, mean and SD of the data should not change substantially (values TBD)
+* Check for impossible values in everything (have range for warnings and range for errors) (NOT NOW):
 
-* SampleYear cannot be later than the current year (we can't get data from the future...yet)
+  *EggMass/ChickMass/AdultMass/ChickTarsus/AdultTarsus/ChickWinglength/AdultWingLength
+  
+  *max Clutch/max Brood/max FledgeSize
+  
+  *Age
+  
+  *Laying date: THIS IS POPULATION SPECIFIC WE NEED TO THINK HOW TO DEAL WITH THIS.
+  
+  *min Incubation time/min hatch - fledge time
+  
+* Error in clutch size/laying date etc. is reasonable (NOT NOW).
+
+* Test for normality/Poisson (return a warning if fail) (NOT NOW).
+
+* Plot histogram to show distribution of traits (and show warning and error ranges) (NOT NOW).
+
+* When new data are added, mean and SD of the data should not change substantially (only test this locally so that we don't store mean and SD data) (NOT NOW!)
+
+* SampleYear cannot be later than the current year (we can't get data from the future...yet), or earlier than the year the study started.
 
 * BroodID/IndividualID/NestBoxID are unique.
 
-* Referential integrity (N.B. We already know that this isn't the case for some datasets!!):
-  * Every femaleID or maleID associated with a brood must have a record in the individual_data table
-  * Every captured bird with an individual ID must have a record in the individual table (N.B. There may be captures where the bird was not ringed/ID'd. This data is still useful even if it is not associated with an individual.)
-  * Every BroodID given to an individual should also be in the brood_data table (i.e. a chick can't come from a nest that doesn't exist)
+* No conflicting sex.
+
+* Number of ringed chicks associated (i.e. records in capture data) should match brood size.
+Might be fairly common. Could make it >2 chick difference?
+
+* Every individual that is a parent of a brood must have a capture record.
+
+* Every individual with a capture record must have an individual record.
+
+* Every BroodID of an individual has to be in the brood data table.
+
+* Return a list of columns that are not filled (warnings) (NOT NOW).
+
+* Individual cannot be captured before it was a chick.
   
 # Pipeline output checks
 
 These are checks that checks for bugs in the output of the pipeline.
 
-* ClutchType (obsverved and calc) should only ever be: first, second, replacment, NA
-* All dates (LayDate, HatchDate, FledgeDate, CaptureDate) should be in dd/mm/yyyy format (N.B. This may change because we may need to make it April days etc.)
-* Sex should only ever be: M, F, U
+* *Do the data formats match the standard protocol?*
 
   
   

@@ -56,7 +56,7 @@ format_UAN <- function(db = choose.dir(),
 
   #Create table with species names for left join
   Species_codes <- Species_codes %>%
-    dplyr::mutate(SOORT = c("pm", "pc", NA, NA, NA, NA)) %>%
+    dplyr::mutate(SOORT = c("pm", "pc", NA, NA, NA, NA, NA)) %>%
     dplyr::select(SOORT, Species = Code)
 
   #Create table with PopID
@@ -361,7 +361,7 @@ format_UAN <- function(db = choose.dir(),
     mutate(BroodIDRinged = BroodIDLaid,
            IndvID = rn, RingDate = lubridate::dmy(klr1date), RingYear = lubridate::year(RingDate),
            RingAge = lubridate::year(RingDate) - gbj,
-           Status = ifelse(mode == "P", "Resident", "Immigrant"), Sex = Sex) %>%
+           Sex = Sex) %>%
     select(IndvID, Species, PopID, BroodIDLaid, BroodIDRinged, RingYear, RingAge, Sex)
 
   ################
@@ -371,6 +371,7 @@ format_UAN <- function(db = choose.dir(),
   print("Compiling nestbox information...")
 
   Nestbox_data <- BOX_info %>%
+    ## NEED TO CONVERT COORDINATES TO LAT/LONG IN WGS84
     transmute(LocationID = GBPL, PopID = SA, Latitude = Y_deg, Longitude = X_deg, StartYear = YEARFIRST, EndYear = YEARLAST)
 
   ###################

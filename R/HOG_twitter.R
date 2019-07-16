@@ -1,6 +1,6 @@
 #' Create plots to introduce the Hoge Veluwe population on twitter
 #'
-#' @return Generate two plots. One .jpeg showing the population on the global map and the study species.
+#' @return Generate two plots. One .jpeg showing the population on the global map and study species.
 #' One .gif showing number of nests sampled for each species over time.
 #' @export
 #' @import extrafont

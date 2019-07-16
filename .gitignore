@@ -5,6 +5,5 @@ inst/doc
 .Ruserdata
 *.accdb
 *.laccdb
-*.xlsx
 *.jpg
 debug_report
