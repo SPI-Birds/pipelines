@@ -20,8 +20,8 @@ quality_check <- function(db = choose.dir(),
   ## Each pipeline produces 4 .csv outputs in standard format
 
   ## DECISION TO BE MADE:
-  ## -- Read in .csv files (names are population-specific)
-  ## -- or Load in R objects with generic names?
+  ## - Read in .csv files (names are population-specific)
+  ## - or Load in R objects with generic names?
 
   Individual_data <- read.csv(paste0(db, "/Indv_data_VEL.csv"))
   Brood_data <- read.csv(paste0(db, "/Brood_data_VEL.csv"))
@@ -30,41 +30,58 @@ quality_check <- function(db = choose.dir(),
 
   ## Create check list with - a summary of warnings and errors per test.
   check_list <- tibble::tibble(Check = c("Individual data format", "Brood data format",
-                                         "Capture data format", "Location data format"),
+                                         "Capture data format", "Location data format",
+                                         "Clutch and brood sizes", "Brood sizes and fledgling numbers"),
                                Warning = NA,
                                Error = NA)
 
   ## Create user-friendly report
-  ## -- how to structure this differently from warnings.txt and errors.txt
+  ## - how to structure this differently from warnings.txt and errors.txt
 
-  ## Check formats
+  ## Checks
+  ## - Check formats
   ## -- Individual data
-  message("Checking format of individual data...")
+  message("Check 1: Checking format of individual data...")
 
   check_format_individual_output <- check_format_individual(Individual_data, check_list)
 
   check_list <- check_format_individual_output$check_list
 
   ## -- Brood data
-  message("Checking format of brood data...")
+  message("Check 2: Checking format of brood data...")
 
   check_format_brood_output <- check_format_brood(Brood_data, check_list)
 
   check_list <- check_format_brood_output$check_list
 
   ## -- Capture data
-  message("Checking format of capture data...")
+  message("Check 3: Checking format of capture data...")
 
   check_format_capture_output <- check_format_capture(Capture_data, check_list)
 
   check_list <- check_format_capture_output$check_list
 
   ## -- Location data
-  message("Checking format of location data...")
+  message("Check 4: Checking format of location data...")
 
   check_format_location_output <- check_format_location(Location_data, check_list)
 
   check_list <- check_format_location_output$check_list
+
+
+  ## - Compare clutch and brood sizes
+  message("Check 5: Comparing clutch and brood sizes...")
+
+  compare_clutch_brood_output <- compare_clutch_brood(Brood_data, check_list)
+
+  check_list <- compare_clutch_brood_output$check_list
+
+  ## - Compare brood sizes and fledglings numbers
+  message("Check 6: Comparing brood sizes and fledgling numbers...")
+
+  compare_brood_fledglings_output <- compare_brood_fledglings(Brood_data, check_list)
+
+  check_list <- compare_brood_fledglings_output$check_list
 
 
   ## Create text file of warnings
@@ -83,6 +100,12 @@ quality_check <- function(db = choose.dir(),
 
   cat("Check 4: Location data format\n\n")
   cat(unlist(check_format_location_output$warning_output), sep="\n", "\n")
+
+  cat("Check 5: Clutch and brood sizes\n\n")
+  cat(unlist(compare_clutch_brood_output$warning_output), sep="\n", "\n")
+
+  cat("Check 6: Brood sizes and fledgling numbers\n\n")
+  cat(unlist(compare_brood_fledglings_output$warning_output), sep="\n", "\n")
 
   sink()
 
@@ -103,6 +126,12 @@ quality_check <- function(db = choose.dir(),
   cat("Check 4: Location data format\n\n")
   cat(unlist(check_format_location_output$error_output), sep="\n", "\n")
 
+  cat("Check 5: Clutch and brood sizes\n\n")
+  cat(unlist(compare_clutch_brood_output$error_output), sep="\n", "\n")
+
+  cat("Check 6: Brood sizes and fledgling numbers\n\n")
+  cat(unlist(compare_brood_fledglings_output$error_output), sep="\n", "\n")
+
   sink()
 
 
@@ -115,9 +144,9 @@ quality_check <- function(db = choose.dir(),
 
   checks_errors <- sum(check_list$Error == TRUE, na.rm=TRUE)
 
-  cat(yellow(paste0("\n", checks_warnings, " out of ", nrow(check_list), " tests have warnings.")))
+  cat(yellow(paste0("\n", checks_warnings, " out of ", nrow(check_list), " checks result in warnings.")))
 
-  cat(red(paste0("\n", checks_errors, " out of ", nrow(check_list), " tests have errors.")))
+  cat(red(paste0("\n", checks_errors, " out of ", nrow(check_list), " checks result in errors.")))
 
 }
 
@@ -402,3 +431,127 @@ check_format_location <- function(Location_data, check_list){
               error_output = error_output))
 }
 
+#' Compare clutch and brood sizes
+#'
+#' Compare clutch size and brood size per brood. In non-manipulated broods, clutch size should be larger or equal to brood size. If not, the record will result in an error. In broods with clutch manipulation, clutch size might be smaller than brood size. If so, the record will result in a warning.
+#'
+#' @param Brood_data Data frame. Brood data output from pipeline.
+#' @param check_list Data frame. A summary list of test warnings and errors.
+#'
+#' @return Check list, warning output, error output.
+#' @export
+
+compare_clutch_brood <- function(Brood_data, check_list){
+
+  # Non-manipulated broods
+  Brood_data_non <- Brood_data %>%
+    filter(is.na(ExperimentID) & ClutchSize < BroodSize)
+
+  # Manipulated broods
+  Brood_data_man <- Brood_data %>%
+    filter(ClutchSize < BroodSize)
+
+  err <- FALSE
+  error_output <- NULL
+
+  if(nrow(Brood_data_non) > 0) {
+    err <- TRUE
+
+    error_output <- purrr::pmap(.l = list(Brood_data_non$BroodID,
+                                          Brood_data_non$ClutchSize,
+                                          Brood_data_non$BroodSize),
+                                .f = ~{
+                                  paste0("Record with BroodID ", ..1,
+                                         " has a larger brood size (", ..3,
+                                         ") than clutch size (", ..2,
+                                         "), but was not experimentally manipulated.")
+                                })
+  }
+
+  war <- FALSE
+  warning_output <- NULL
+
+  if(nrow(Brood_data_man) > 0) {
+    war <- TRUE
+
+    warning_output <- purrr::pmap(.l = list(Brood_data_man$BroodID,
+                                            Brood_data_man$ClutchSize,
+                                            Brood_data_man$BroodSize),
+                                  .f = ~{
+                                    paste0("Record with BroodID ", ..1,
+                                           " has a larger brood size (", ..3,
+                                           ") than clutch size (", ..2,
+                                           "), and was experimentally manipulated.")
+                                 })
+  }
+
+  check_list[5, "Warning"] <- war
+  check_list[5, "Error"] <- err
+
+  return(list(check_list = check_list,
+              warning_output = warning_output,
+              error_output = error_output))
+}
+
+
+#' Compare brood sizes and fledglings numbers
+#'
+#' Compare brood size and fledgling number per brood. In non-manipulated broods, brood size should be larger or equal to fledgling number. If not, the record will result in an error. In broods with clutch manipulation, brood size might be smaller than fledgling number. If so, the record will result in a warning.
+#'
+#' @param Brood_data Data frame. Brood data output from pipeline.
+#' @param check_list Data frame. A summary list of test warnings and errors.
+#'
+#' @return Check list, warning output, error output.
+#' @export
+
+compare_brood_fledglings <- function(Brood_data, check_list){
+
+  # Non-manipulated broods
+  Brood_data_non <- Brood_data %>%
+    filter(is.na(ExperimentID) & BroodSize < NumberFledged)
+
+  # Manipulated broods
+  Brood_data_man <- Brood_data %>%
+    filter(BroodSize < NumberFledged)
+
+  err <- FALSE
+  error_output <- NULL
+
+  if(nrow(Brood_data_non) > 0) {
+    err <- TRUE
+
+    error_output <- purrr::pmap(.l = list(Brood_data_non$BroodID,
+                                          Brood_data_non$BroodSize,
+                                          Brood_data_non$NumberFledged),
+                                .f = ~{
+                                  paste0("Record with BroodID ", ..1,
+                                         " has a larger fledgling number (", ..3,
+                                         ") than brood size (", ..2,
+                                         "), but was not experimentally manipulated.")
+                                })
+  }
+
+  war <- FALSE
+  warning_output <- NULL
+
+  if(nrow(Brood_data_man) > 0) {
+    war <- TRUE
+
+    warning_output <- purrr::pmap(.l = list(Brood_data_man$BroodID,
+                                            Brood_data_man$BroodSize,
+                                            Brood_data_man$NumberFledged),
+                                  .f = ~{
+                                    paste0("Record with BroodID ", ..1,
+                                           " has a larger fledgling number (", ..3,
+                                           ") than brood size (", ..2,
+                                           "), and was experimentally manipulated.")
+                                  })
+  }
+
+  check_list[6, "Warning"] <- war
+  check_list[6, "Error"] <- err
+
+  return(list(check_list = check_list,
+              warning_output = warning_output,
+              error_output = error_output))
+}
