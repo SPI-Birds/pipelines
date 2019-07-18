@@ -34,8 +34,8 @@ quality_check <- function(db = choose.dir(),
                                Warning = NA,
                                Error = NA)
 
-  ## Create line-by-line warning and error dataframe
-  ## -- HOW TO STRUCTURE THIS?
+  ## Create user-friendly report
+  ## -- how to structure this differently from warnings.txt and errors.txt
 
   ## Check formats
   ## -- Individual data
@@ -394,8 +394,8 @@ check_format_location <- function(Location_data, check_list){
                                  })
   }
 
-  check_list[3, "Warning"] <- war
-  check_list[3, "Error"] <- err
+  check_list[4, "Warning"] <- war
+  check_list[4, "Error"] <- err
 
   return(list(check_list = check_list,
               warning_output = warning_output,
