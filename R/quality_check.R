@@ -43,45 +43,45 @@ quality_check <- function(db = choose.dir(),
   ## -- Individual data
   message("Check 1: Checking format of individual data...")
 
-  check_format_individual_output <- check_format_individual(Individual_data, check_list)
+  check_format_individual_output <- check_format_individual(Individual_data)
 
-  check_list <- check_format_individual_output$check_list
+  check_list[1,2:3] <- check_format_individual_output$check_list
 
   ## -- Brood data
   message("Check 2: Checking format of brood data...")
 
-  check_format_brood_output <- check_format_brood(Brood_data, check_list)
+  check_format_brood_output <- check_format_brood(Brood_data)
 
-  check_list <- check_format_brood_output$check_list
+  check_list[2,2:3] <- check_format_brood_output$check_list
 
   ## -- Capture data
   message("Check 3: Checking format of capture data...")
 
-  check_format_capture_output <- check_format_capture(Capture_data, check_list)
+  check_format_capture_output <- check_format_capture(Capture_data)
 
-  check_list <- check_format_capture_output$check_list
+  check_list[3,2:3] <- check_format_capture_output$check_list
 
   ## -- Location data
   message("Check 4: Checking format of location data...")
 
-  check_format_location_output <- check_format_location(Location_data, check_list)
+  check_format_location_output <- check_format_location(Location_data)
 
-  check_list <- check_format_location_output$check_list
+  check_list[4,2:3] <- check_format_location_output$check_list
 
 
   ## - Compare clutch and brood sizes
   message("Check 5: Comparing clutch and brood sizes...")
 
-  compare_clutch_brood_output <- compare_clutch_brood(Brood_data, check_list)
+  compare_clutch_brood_output <- compare_clutch_brood(Brood_data)
 
-  check_list <- compare_clutch_brood_output$check_list
+  check_list[5,2:3] <- compare_clutch_brood_output$check_list
 
   ## - Compare brood sizes and fledglings numbers
   message("Check 6: Comparing brood sizes and fledgling numbers...")
 
-  compare_brood_fledglings_output <- compare_brood_fledglings(Brood_data, check_list)
+  compare_brood_fledglings_output <- compare_brood_fledglings(Brood_data)
 
-  check_list <- compare_brood_fledglings_output$check_list
+  check_list[6,2:3] <- compare_brood_fledglings_output$check_list
 
 
   ## Create text file of warnings
@@ -155,12 +155,11 @@ quality_check <- function(db = choose.dir(),
 #'
 #' Check if the formats of each column in the individual data match with the standard format
 #' @param Individual_data Data frame. Individual data output from pipeline.
-#' @param check_list Data frame. A summary list of test warnings and errors.
 #'
 #' @return Check list, warning output, error output.
 #' @export
 
-check_format_individual <- function(Individual_data, check_list){
+check_format_individual <- function(Individual_data){
 
   ## Data frame with column names and formats according to the standard protocol
   Individual_data_standard <- tibble::tibble(Variable = c("IndvID", "Species", "PopID",
@@ -208,8 +207,8 @@ check_format_individual <- function(Individual_data, check_list){
                                  })
   }
 
-  check_list[1, "Warning"] <- war
-  check_list[1, "Error"] <- err
+  check_list <- tibble::tibble(Warning = war,
+                               Error = err)
 
   return(list(check_list = check_list,
               warning_output = warning_output,
@@ -221,12 +220,11 @@ check_format_individual <- function(Individual_data, check_list){
 #'
 #' Check if the formats of each column in the brood data match with the standard format
 #' @param Brood_data Data frame. Brood data output from pipeline.
-#' @param check_list Data frame. A summary list of test warnings and errors.
 #'
 #' @return Check list, warning output, error output.
 #' @export
 
-check_format_brood <- function(Brood_data, check_list){
+check_format_brood <- function(Brood_data){
 
   ## Data frame with column names and formats according to the standard protocol
   Brood_data_standard <- tibble::tibble(Variable = c("PopID", "BreedingSeason", "Species", "Plot",
@@ -288,8 +286,8 @@ check_format_brood <- function(Brood_data, check_list){
                                  })
   }
 
-  check_list[2, "Warning"] <- war
-  check_list[2, "Error"] <- err
+  check_list <- tibble::tibble(Warning = war,
+                               Error = err)
 
   return(list(check_list = check_list,
               warning_output = warning_output,
@@ -301,12 +299,11 @@ check_format_brood <- function(Brood_data, check_list){
 #'
 #' Check if the formats of each column in the capture data match with the standard format
 #' @param Capture_data Data frame. Capture data output from pipeline.
-#' @param check_list Data frame. A summary list of test warnings and errors.
 #'
 #' @return Check list, warning output, error output.
 #' @export
 
-check_format_capture <- function(Capture_data, check_list){
+check_format_capture <- function(Capture_data){
 
   ## Data frame with column names and formats according to the standard protocol
   Capture_data_standard <- tibble::tibble(Variable = c("IndvID", "Species", "BreedingSeason",
@@ -358,8 +355,8 @@ check_format_capture <- function(Capture_data, check_list){
                                  })
   }
 
-  check_list[3, "Warning"] <- war
-  check_list[3, "Error"] <- err
+  check_list <- tibble::tibble(Warning = war,
+                               Error = err)
 
   return(list(check_list = check_list,
               warning_output = warning_output,
@@ -370,12 +367,11 @@ check_format_capture <- function(Capture_data, check_list){
 #'
 #' Check if the formats of each column in the location data match with the standard format
 #' @param Location_data Data frame. Location data output from pipeline.
-#' @param check_list Data frame. A summary list of test warnings and errors.
 #'
 #' @return Check list, warning output, error output.
 #' @export
 
-check_format_location <- function(Location_data, check_list){
+check_format_location <- function(Location_data){
 
   ## Data frame with column names and formats according to the standard protocol
   Location_data_standard <- tibble::tibble(Variable = c("LocationID", "NestboxID", "LocationType",
@@ -423,8 +419,8 @@ check_format_location <- function(Location_data, check_list){
                                  })
   }
 
-  check_list[4, "Warning"] <- war
-  check_list[4, "Error"] <- err
+  check_list <- tibble::tibble(Warning = war,
+                               Error = err)
 
   return(list(check_list = check_list,
               warning_output = warning_output,
@@ -436,12 +432,11 @@ check_format_location <- function(Location_data, check_list){
 #' Compare clutch size and brood size per brood. In non-manipulated broods, clutch size should be larger or equal to brood size. If not, the record will result in an error. In broods with clutch manipulation, clutch size might be smaller than brood size. If so, the record will result in a warning.
 #'
 #' @param Brood_data Data frame. Brood data output from pipeline.
-#' @param check_list Data frame. A summary list of test warnings and errors.
 #'
 #' @return Check list, warning output, error output.
 #' @export
 
-compare_clutch_brood <- function(Brood_data, check_list){
+compare_clutch_brood <- function(Brood_data){
 
   # Non-manipulated broods
   Brood_data_non <- Brood_data %>%
@@ -485,8 +480,8 @@ compare_clutch_brood <- function(Brood_data, check_list){
                                  })
   }
 
-  check_list[5, "Warning"] <- war
-  check_list[5, "Error"] <- err
+  check_list <- tibble::tibble(Warning = war,
+                               Error = err)
 
   return(list(check_list = check_list,
               warning_output = warning_output,
@@ -499,12 +494,11 @@ compare_clutch_brood <- function(Brood_data, check_list){
 #' Compare brood size and fledgling number per brood. In non-manipulated broods, brood size should be larger or equal to fledgling number. If not, the record will result in an error. In broods with clutch manipulation, brood size might be smaller than fledgling number. If so, the record will result in a warning.
 #'
 #' @param Brood_data Data frame. Brood data output from pipeline.
-#' @param check_list Data frame. A summary list of test warnings and errors.
 #'
 #' @return Check list, warning output, error output.
 #' @export
 
-compare_brood_fledglings <- function(Brood_data, check_list){
+compare_brood_fledglings <- function(Brood_data){
 
   # Non-manipulated broods
   Brood_data_non <- Brood_data %>%
@@ -548,8 +542,8 @@ compare_brood_fledglings <- function(Brood_data, check_list){
                                   })
   }
 
-  check_list[6, "Warning"] <- war
-  check_list[6, "Error"] <- err
+  check_list <- tibble::tibble(Warning = war,
+                               Error = err)
 
   return(list(check_list = check_list,
               warning_output = warning_output,
