@@ -3,7 +3,8 @@
 #' @param db Location of standard .csv outputs of the pipeline.
 #' @param report Produce report (pdf) for user.
 #'
-#' @return A dataframe of line-by-line warnings and errors,
+#' @return A text file of line-by-line warnings,
+#'   a text file of line-by-line errors,
 #'   a summary dataframe of test warnings and errors for use in testthat,
 #'   and a user-friendly report of the line-by-line list of warnings and errors.
 #'
@@ -65,6 +66,44 @@ quality_check <- function(db = choose.dir(),
 
   check_list <- check_format_location_output$check_list
 
+
+  ## Create text file of warnings
+  sink('warnings.txt')
+
+  cat("Warnings\n\n") ## MAKE POP-SPECIFIC
+
+  cat("Check 1: Individual data format\n\n")
+  cat(unlist(check_format_individual_output$warning_output), sep="\n", "\n")
+
+  cat("Check 2: Brood data format\n\n")
+  cat(unlist(check_format_brood_output$warning_output), sep="\n", "\n")
+
+  cat("Check 3: Capture data format\n\n")
+  cat(unlist(check_format_capture_output$warning_output), sep="\n", "\n")
+
+  cat("Check 4: Location data format\n\n")
+  cat(unlist(check_format_location_output$warning_output), sep="\n", "\n")
+
+  sink()
+
+  ## Create text file of errors
+  sink('errors.txt')
+
+  cat("Errors\n\n") ## MAKE POP-SPECIFIC
+
+  cat("Check 1: Individual data format\n\n")
+  cat(unlist(check_format_individual_output$error_output), sep="\n", "\n")
+
+  cat("Check 2: Brood data format\n\n")
+  cat(unlist(check_format_brood_output$error_output), sep="\n", "\n")
+
+  cat("Check 3: Capture data format\n\n")
+  cat(unlist(check_format_capture_output$error_output), sep="\n", "\n")
+
+  cat("Check 4: Location data format\n\n")
+  cat(unlist(check_format_location_output$error_output), sep="\n", "\n")
+
+  sink()
 
 
   time <- difftime(Sys.time(), start_time, units = "sec")
