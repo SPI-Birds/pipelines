@@ -529,7 +529,7 @@ create_brood_HAR <- function(){
                             "EggShells", "TempCode1",
                             "TempCode2")
 
-  Brood_data_output <- Brood_data %>%
+  Brood_data <- Brood_data %>%
     #Remove unwanted columns
     select(-ReasonFailed:-MalePresent, -ExpData1:-TempCode2) %>%
     #Create unique BroodID with year_locationID_BroodID
@@ -552,16 +552,17 @@ create_brood_HAR <- function(){
     #Treat all NAs as true unknowns (check with Tapio that these are NAs and not 0s)
     dplyr::arrange(BreedingSeason, Species, FemaleID) %>%
     #Calculate clutchtype
-    dplyr::mutate(ClutchType_calc = calc_clutchtype(data = ., na.rm = FALSE)) %>%
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
     #Add Fledge date (it is NA, this isn't recorded)
     mutate(FledgeDate = NA, ClutchSizeError = NA, BroodSizeError = NA,
-           FledgeDateError = NA) %>%
+           FledgeDateError = NA, NumberFledgedError = NA) %>%
     #Arrange columns correctly
-    select(SampleYear, Species, PopID, Plot, LocationID, BroodID, FemaleID, MaleID,
-           ClutchType_observed, ClutchType_calc, LayingDate, LayingDateError,
+    select(BroodID, PopID, BreedingSeason, Species, Plot, LocationID, FemaleID, MaleID,
+           ClutchType_observed, ClutchType_calculated, LayingDate, LayingDateError,
            ClutchSize, ClutchSizeError, HatchDate, HatchDateError,
-           BroodSize, BroodSizeError, FledgeDate, FledgeDateError,NumberFledged, ExperimentID)
+           BroodSize, BroodSizeError, FledgeDate, FledgeDateError, NumberFledged, NumberFledged,
+           ExperimentID)
 
-  return(Brood_data_output)
+  return(Brood_data)
 
 }
