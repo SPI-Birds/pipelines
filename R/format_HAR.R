@@ -363,22 +363,13 @@ create_capture_HAR    <- function(){
     #Remove cols that are not needed
     select(RingSeries:BroodID, LastRingNumber_Brood:Sex, Age, NrNestlings:Mass, Tarsus) %>%
     #Convert species codes to EUring codes and then remove only the major species
-    rowwise() %>%
-    mutate(Species = ifelse(Species == "FICHYP", Species_codes$Code[which(Species_codes$SpeciesID == 13490)],
-                            ifelse(Species == "PARCAE", Species_codes$Code[which(Species_codes$SpeciesID == 14620)],
-                                   ifelse(Species == "PARMAJ", Species_codes$Code[which(Species_codes$SpeciesID == 14640)],
-                                          ifelse(Species == "PARATE", Species_codes$Code[which(Species_codes$SpeciesID == 14610)], NA))))) %>%
-    filter(!is.na(Species))
-
-  #Create table to change sex
-  sex_table <- tibble::tibble(Sex_FL = c("N", "K", "L", "O"),
-                              Sex = c("F", "M", "M", "F"))
-
-  Capture_data_output <- Capture_data_output %>%
-    dplyr::left_join(sex_table, by = "Sex_FL")
-
-  #Replace any NAs in Sex with "U"
-  Capture_data_output[which(is.na(Capture_data_output$Sex)), ]$Sex <- "U"
+    mutate(Species = dplyr::case_when(Species == "FICHYP" ~ Species_codes$Code[which(Species_codes$SpeciesID == 13490)],
+                                      Species == "PARCAE" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14620)],
+                                      Species == "PARMAJ" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14640)],
+                                      Species == "PARATE" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14610)])) %>%
+    filter(!is.na(Species)) %>%
+    mutate(Sex = dplyr::case_when(Sex %in% c("N", "O") ~ "F",
+                                  Sex %in% c("K", "L") ~ "M"))
 
   #There are 4 nests where one of either RingNumber or LastRingNumber_Brood is wrong
   #Ask Tapio about these, currently, we just correct RingNumber to make them work.
