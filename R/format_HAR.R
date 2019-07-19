@@ -549,96 +549,10 @@ create_brood_HAR <- function(){
     #Create calendar date for laying date and hatch date
     mutate(LayingDate = as.Date(paste(LayingDate_day, LayingDate_month, BreedingSeason, sep = "/"), format = "%d/%m/%Y"),
            HatchDate  = as.Date(paste(HatchDate_day, HatchDate_month, BreedingSeason, sep = "/"), format = "%d/%m/%Y")) %>%
-    #Go through and change all NA fledge numbers to 0s
-    ### NEED TO CHECK THIS IS OK
-    rowwise() %>%
-    mutate(NumberFledged = ifelse(is.na(NumberFledged), 0, NumberFledged)) %>%
-    ungroup() %>%
-    group_by(SampleYear, Species) %>%
-    mutate(cutoff = tryCatch(expr = min(LayingDate, na.rm = T) + 30,
-                             warning = function(...) return(NA))) %>%
-    # Determine brood type for each nest based on female ID
-    arrange(SampleYear, Species, FemaleID) %>%
-    group_by(SampleYear, Species, FemaleID) %>%
-    mutate(total_fledge = cumsum(NumberFledged), row = 1:n()) %>%
-    ungroup()
-
-  clutchtype <- dplyr::progress_estimated(n = nrow(Brood_data_output))
-
-  #Calculate clutch type with decision rules
-  Brood_data_output <- Brood_data_output %>%
-    mutate(ClutchType_calc = purrr::pmap_chr(.l = list(rows = .$row,
-                                                       femID = .$FemaleID,
-                                                       cutoff_date = .$cutoff,
-                                                       nr_fledge_before = .$total_fledge,
-                                                       nr_fledge_now = .$NumberFledged,
-                                                       LD = .$LayingDate),
-                                             .f = function(rows, femID, cutoff_date, nr_fledge_before, nr_fledge_now, LD){
-
-                                               clutchtype$tick()$print()
-
-                                               #Firstly, check if the nest has a LD
-                                               #If not, we cannot calculate BroodType
-
-                                               if(is.na(LD)){
-
-                                                 return(NA)
-
-                                               }
-
-                                               #Next, check if the female is banded
-                                               #If a female is unbanded we assume the nest can NEVER be secondary
-                                               #If she had had a successful clutch before she would have been caught and banded
-                                               #Therefore it can only be first or replacement (based on 30d rule)
-                                               if(is.na(femID)){
-
-                                                 if(lubridate::ymd(LD) > lubridate::ymd(cutoff_date)){
-
-                                                   return("replacement")
-
-                                                 } else {
-
-                                                   return("first")
-
-                                                 }
-
-                                               }
-
-                                               #If she is banded, then we need to apply all rules
-                                               #If it's the first nest recorded for this female in this year...
-                                               if(rows == 1){
-
-                                                 #If it doesn't meet the 30 day rule, then name it as replacement
-                                                 if(lubridate::ymd(LD) > lubridate::ymd(cutoff_date)){
-
-                                                   return("replacement")
-
-                                                 } else {
-
-                                                   #Otherwise, we assume it was the first clutch
-                                                   return("first")
-
-                                                 }
-
-                                                 #If it's NOT the first nest of the season for this female
-                                               } else {
-
-                                                 #If there have been no fledglings before this point..
-                                                 if(nr_fledge_before - nr_fledge_now == 0){
-
-                                                   #Then it is a replacement
-                                                   return("replacement")
-
-                                                 } else {
-
-                                                   #Otherwise, it is a secondary clutch
-                                                   return("second")
-
-                                                 }
-
-                                               }
-
-                                             })) %>%
+    #Treat all NAs as true unknowns (check with Tapio that these are NAs and not 0s)
+    dplyr::arrange(BreedingSeason, Species, FemaleID) %>%
+    #Calculate clutchtype
+    dplyr::mutate(ClutchType_calc = calc_clutchtype(data = ., na.rm = FALSE)) %>%
     #Add Fledge date (it is NA, this isn't recorded)
     mutate(FledgeDate = NA, ClutchSizeError = NA, BroodSizeError = NA,
            FledgeDateError = NA) %>%
