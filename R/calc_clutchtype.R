@@ -35,11 +35,11 @@ calc_clutchtype <- function(data, na.rm = T) {
   #Depending on whether NAs should be treated as 0s or NAs we have different paths
   if(na.rm == TRUE){
 
-    clutchtype_calc <- cutoff_dat %>%
+    clutchtype_calculated <- cutoff_dat %>%
       dplyr::mutate(total_fledge = calc_cumfledge(x = NumberFledged, na.rm = T),
                     row = 1:n()) %>%
       dplyr::ungroup() %>%
-      dplyr::mutate(ClutchType_calc = purrr::pmap_chr(.l = list(rows = .$row,
+      dplyr::mutate(ClutchType_calculated = purrr::pmap_chr(.l = list(rows = .$row,
                                                                 femID = .$FemaleID,
                                                                 cutoff_date = .$cutoff,
                                                                 nr_fledge_before = .$total_fledge,
@@ -115,16 +115,16 @@ calc_clutchtype <- function(data, na.rm = T) {
                                                         }
 
                                                       })) %>%
-      pull(ClutchType_calc)
+      pull(ClutchType_calculated)
 
   } else {
 
-    clutchtype_calc <- cutoff_dat %>%
+    clutchtype_calculated <- cutoff_dat %>%
       mutate(total_fledge = calc_cumfledge(x = NumberFledged, na.rm = T),
              total_fledge_na = calc_cumfledge(x = NumberFledged, na.rm = F),
              row = 1:n()) %>%
       ungroup() %>%
-      mutate(ClutchType_calc = purrr::pmap_chr(.l = list(rows = .$row,
+      mutate(ClutchType_calculated = purrr::pmap_chr(.l = list(rows = .$row,
                                                          femID = .$FemaleID,
                                                          cutoff_date = .$cutoff,
                                                          nr_fledge_before = .$total_fledge,
@@ -215,10 +215,10 @@ calc_clutchtype <- function(data, na.rm = T) {
                                                  }
 
                                                })) %>%
-      pull(ClutchType_calc)
+      pull(ClutchType_calculated)
 
   }
 
-  return(clutchtype_calc)
+  return(clutchtype_calculated)
 
 }
