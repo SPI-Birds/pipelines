@@ -83,11 +83,11 @@
 #'  continuous variables with mean/SD b) unique values of all categorical
 #'  variables.
 #'
-#'@return Generates 5 .csv files with data in a standard format.
+#'@return Generates 4 .csv files with data in a standard format.
 #'@export
 #'@import reticulate
 
-format_Harjavalta <- function(db = choose.dir(),
+format_HAR <- function(db = choose.dir(),
                               Species = NULL,
                               path = ".",
                               debug = FALSE){
