@@ -23,20 +23,21 @@ quality_check <- function(db = choose.dir(),
   ## - Read in .csv files (names are population-specific)
   ## - or Load in R objects with generic names?
 
-  Individual_data <- read.csv(paste0(db, "/Indv_data_VEL.csv"))
-  Brood_data <- read.csv(paste0(db, "/Brood_data_VEL.csv"))
-  Capture_data <- read.csv(paste0(db, "/Capture_data_VEL.csv"))
-  Location_data <- read.csv(paste0(db, "/Location_data_VEL.csv"))
+  Individual_data <- read.csv(paste0(db, "/Indv_data_VEL.csv"), stringsAsFactors = FALSE)
+  Brood_data <- read.csv(paste0(db, "/Brood_data_VEL.csv"), stringsAsFactors = FALSE)
+  Capture_data <- read.csv(paste0(db, "/Capture_data_VEL.csv"), stringsAsFactors = FALSE)
+  Location_data <- read.csv(paste0(db, "/Location_data_VEL.csv"), stringsAsFactors = FALSE)
 
   ## Create check list with - a summary of warnings and errors per test.
   check_list <- tibble::tibble(Check = c("Individual data format", "Brood data format",
                                          "Capture data format", "Location data format",
-                                         "Clutch and brood sizes", "Brood sizes and fledgling numbers"),
+                                         "Clutch and brood sizes", "Brood sizes and fledgling numbers",
+                                         "Laying and hatching dates", "Hatching and fledging dates"),
                                Warning = NA,
                                Error = NA)
 
   ## Create user-friendly report
-  ## - how to structure this differently from warnings.txt and errors.txt
+  ## - how to structure this differently from warnings.txt and errors.txt?
 
   ## Checks
   ## - Check formats
@@ -83,6 +84,20 @@ quality_check <- function(db = choose.dir(),
 
   check_list[6,2:3] <- compare_brood_fledglings_output$check_list
 
+  ## - Compare laying and hatching dates
+  message("Check 7: Comparing laying and hatching dates...")
+
+  compare_laying_hatching_output <- compare_laying_hatching(Brood_data)
+
+  check_list[7,2:3] <- compare_laying_hatching_output$check_list
+
+  ## - Compare hatching and fledging dates
+  message("Check 8: Comparing hatching and fledging dates...")
+
+  compare_hatching_fledging_output <- compare_hatching_fledging(Brood_data)
+
+  check_list[8,2:3] <- compare_hatching_fledging_output$check_list
+
 
   ## Create text file of warnings
   sink('warnings.txt')
@@ -106,6 +121,12 @@ quality_check <- function(db = choose.dir(),
 
   cat("Check 6: Brood sizes and fledgling numbers\n\n")
   cat(unlist(compare_brood_fledglings_output$warning_output), sep="\n", "\n")
+
+  cat("Check 7: Laying and hatching dates\n\n")
+  cat(unlist(compare_laying_hatching_output$warning_output), sep="\n", "\n")
+
+  cat("Check 8: Hatching and fledging dates\n\n")
+  cat(unlist(compare_hatching_fledging_output$warning_output), sep="\n", "\n")
 
   sink()
 
@@ -131,6 +152,12 @@ quality_check <- function(db = choose.dir(),
 
   cat("Check 6: Brood sizes and fledgling numbers\n\n")
   cat(unlist(compare_brood_fledglings_output$error_output), sep="\n", "\n")
+
+  cat("Check 7: Laying and hatching dates\n\n")
+  cat(unlist(compare_laying_hatching_output$error_output), sep="\n", "\n")
+
+  cat("Check 8: Hatching and fledging dates\n\n")
+  cat(unlist(compare_hatching_fledging_output$error_output), sep="\n", "\n")
 
   sink()
 
@@ -541,6 +568,135 @@ compare_brood_fledglings <- function(Brood_data){
                                            "), and was experimentally manipulated.")
                                   })
   }
+
+  check_list <- tibble::tibble(Warning = war,
+                               Error = err)
+
+  return(list(check_list = check_list,
+              warning_output = warning_output,
+              error_output = error_output))
+}
+
+
+
+#' Compare laying and hatching dates
+#'
+#' Compare laying and hatching date per brood. Broods with laying date later than hatching date will result in an error. Broods with laying date earlier than hatching date but the difference in number of days is smaller than incubation time will result in a warning.
+#'
+#' @param Brood_data Data frame. Brood data output from pipeline.
+#'
+#' @return Check list, warning output, error output.
+#' @export
+
+compare_laying_hatching <- function(Brood_data){
+
+  # Broods with laying date later than hatching date
+  Brood_data_late <- Brood_data %>%
+    filter(LayingDate >= HatchDate)
+
+  # Broods with laying date earlier than hatching date but the difference
+  # in number of days is smaller than incubation time
+  ## INCUBATION TIME IS SPECIES-SPECIFIC (& POPULATION-SPECIFIC?)
+  ## PERHAPS THIS WILL BE DETERMINED AND CHECKED IN ANOTHER CHECK (NOT NOW)
+
+  # Brood_data_late <- Brood_data %>%
+  #   filter(LayingDate < HatchDate & (HatchDate-LayingDate) >= )
+
+  err <- FALSE
+  error_output <- NULL
+
+  if(nrow(Brood_data_late) > 0) {
+    err <- TRUE
+
+    error_output <- purrr::pmap(.l = list(Brood_data_late$BroodID,
+                                          Brood_data_late$LayingDate,
+                                          Brood_data_late$HatchDate),
+                                .f = ~{
+                                  paste0("Record with BroodID ", ..1,
+                                         " has a later laying date (", ..2,
+                                         ") than hatching date (", ..3, ").")
+                                })
+  }
+
+  war <- FALSE
+  warning_output <- NULL
+
+  # if(nrow(Brood_data_man) > 0) {
+  #   war <- TRUE
+  #
+  #   warning_output <- purrr::pmap(.l = list(Brood_data_man$BroodID,
+  #                                           Brood_data_man$BroodSize,
+  #                                           Brood_data_man$NumberFledged),
+  #                                 .f = ~{
+  #                                   paste0("Record with BroodID ", ..1,
+  #                                          " has a larger fledgling number (", ..3,
+  #                                          ") than brood size (", ..2, ").")
+  #                                 })
+  # }
+
+  check_list <- tibble::tibble(Warning = war,
+                               Error = err)
+
+  return(list(check_list = check_list,
+              warning_output = warning_output,
+              error_output = error_output))
+}
+
+
+#' Compare hatching and fledging dates
+#'
+#' Compare hatching and fledging date per brood. Broods with hatching date later than fledging date will result in an error. Broods with hatching date earlier than fledging date but the difference in number of days is smaller than breeding time will result in a warning.
+#'
+#' @param Brood_data Data frame. Brood data output from pipeline.
+#'
+#' @return Check list, warning output, error output.
+#' @export
+
+compare_hatching_fledging <- function(Brood_data){
+
+  # Broods with laying date later than hatching date
+  Brood_data_late <- Brood_data %>%
+    filter(HatchDate >= FledgeDate)
+
+  # Broods with hatching date earlier than fledging date but the difference
+  # in number of days is smaller than breeding time
+  ## BREEDING TIME IS SPECIES-SPECIFIC (& POPULATION-SPECIFIC?)
+  ## PERHAPS THIS WILL BE DETERMINED AND CHECKED IN ANOTHER CHECK (NOT NOW)
+
+  # Brood_data_late <- Brood_data %>%
+  #   filter(HatchDate < FledgeDate & (FledgeDate-HatchDate) >= )
+
+  err <- FALSE
+  error_output <- NULL
+
+  if(nrow(Brood_data_late) > 0) {
+    err <- TRUE
+
+    error_output <- purrr::pmap(.l = list(Brood_data_late$BroodID,
+                                          Brood_data_late$HatchDate,
+                                          Brood_data_late$FledgeDate),
+                                .f = ~{
+                                  paste0("Record with BroodID ", ..1,
+                                         " has a later hatching date (", ..2,
+                                         ") than fledging date (", ..3, ").")
+                                })
+  }
+
+  war <- FALSE
+  warning_output <- NULL
+
+  # if(nrow(Brood_data_man) > 0) {
+  #   war <- TRUE
+  #
+  #   warning_output <- purrr::pmap(.l = list(Brood_data_man$BroodID,
+  #                                           Brood_data_man$BroodSize,
+  #                                           Brood_data_man$NumberFledged),
+  #                                 .f = ~{
+  #                                   paste0("Record with BroodID ", ..1,
+  #                                          " has a larger fledgling number (", ..3,
+  #                                          ") than brood size (", ..2, ").")
+  #                                 })
+  # }
 
   check_list <- tibble::tibble(Warning = war,
                                Error = err)
