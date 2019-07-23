@@ -2,19 +2,21 @@
 % Please edit documentation in R/quality_check.R
 \name{quality_check}
 \alias{quality_check}
-\title{A function to perform a quality check on the pipeline outputs}
+\title{A function to perform a quality check on pipeline outputs}
 \usage{
 quality_check(db = choose.dir(), report = NULL)
 }
 \arguments{
-\item{db}{Location of standard .csv outputs of pipeline.}
+\item{db}{Location of standard .csv outputs of the pipeline.}
 
 \item{report}{Produce report (pdf) for user.}
 }
 \value{
-dataframe with row-by-row warnings and errors,
-  dataframe with successful/failed checks/tests for use in testthat, user report.
+A text file of line-by-line warnings,
+  a text file of line-by-line errors,
+  a summary dataframe of test warnings and errors for use in testthat,
+  and a user-friendly report of the line-by-line list of warnings and errors.
 }
 \description{
-A function to perform a quality check on the pipeline outputs
+A function to perform a quality check on pipeline outputs
 }
