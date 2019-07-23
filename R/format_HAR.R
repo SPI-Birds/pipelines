@@ -68,16 +68,16 @@
 #'
 #'How do we deal with all these conflicts? For now, we assume that if a chick
 #'was listed as 'ringed' but has no record in the 'Nestlings' table, we assume
-#'it was ringed but no measurements were taken (e.g. tarsus) or the
-#'measurements were not found because the BroodID was entered incorrectly. If a
-#'chick was captured in 'Nestlings' but is not recorded in 'Ringing' for now
-#'these will be excluded because they won't join to the data in 'Ringing'. These
-#'cases are the most problematic because to give these chicks a true ring number
-#'we need to know the rest of the ring number (not just last 2 digits). If they
-#'have no record in ringing, it is impossible to include this information! For
-#'records where no ring number is given (e.g. A), we include only those where
-#'the BroodID is in either the 'Ringing' table or the 'Brood' table. This
-#'ensures that the unringed chick is of the right species.
+#'it was ringed but no measurements were taken (e.g. tarsus) or the measurements
+#'were not found because the BroodID was entered incorrectly. If a chick was
+#'captured in 'Nestlings' but is not recorded in 'Ringing' for now these will be
+#'excluded because they won't join to the data in 'Ringing'. These cases are the
+#'most problematic because to give these chicks a true ring number we need to
+#'know the rest of the ring number (not just last 2 digits). If they have no
+#'record in ringing, it is impossible to include this information! For records
+#'where no ring number is given (e.g. A), we include only those where the
+#'BroodID is in either the 'Ringing' table or the 'Brood' table. This ensures
+#'that the unringed chick is of the right species.
 #'
 #'\strong{Mass}: Mass of birds appears to be measured in mg. This is converted
 #'to grams to match other populations.
@@ -90,8 +90,10 @@
 #'given code 'M' and 'F' respectively (i.e. this uncertainty is ignored).
 #'
 #'@param db Location of database file.
-#'@param Species A numeric vector. Which species should be included (EUring
-#'  codes)? If blank will return all major species (see details below).
+#'@param species Species of interest. The 6 letter codes of all the species of
+#'  interest as listed in the
+#'  \href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{standard
+#'  protocol}. If blank will return all major species.
 #'@param path Location where output csv files will be saved.
 #'@param debug For internal use when editing pipelines. If TRUE, pipeline
 #'  generates a summary of pipeline data. This includes: a) Histogram of
@@ -101,14 +103,31 @@
 #'@return Generates 4 .csv files with data in a standard format.
 #'@export
 #'@import reticulate
+#'@examples
+#'\dontrun{
+#'#Just get data about great tits
+#'format_HAR(Species = "PARMAJ")
+#'
+#'#Get data on great and blue tits
+#'format_HAR(Species = c("PARMAJ", "CYACAE"))
+#'
+#'}
 
 format_HAR <- function(db = choose.dir(),
-                              Species = NULL,
-                              path = ".",
-                              debug = FALSE){
+                       species = NULL,
+                       path = ".",
+                       debug = FALSE){
 
   #Force user to select directory
   force(db)
+
+  #Determine species codes for filtering
+  if(is.null(species)){
+
+    species <- Species_codes$Code
+
+  }
+
 
   #Record start time to estimate processing time.
   start_time <- Sys.time()
@@ -119,7 +138,7 @@ format_HAR <- function(db = choose.dir(),
 
   message("Compiling brood data....")
 
-  Brood_data <- create_brood_HAR(db)
+  Brood_data <- create_brood_HAR(db = db, species_filter = species)
 
   ################
   # CAPTURE DATA #
@@ -130,7 +149,7 @@ format_HAR <- function(db = choose.dir(),
 
   message("Compiling capture data....")
 
-  Capture_data <- create_capture_HAR(Brood_data, db)
+  Capture_data <- create_capture_HAR(db = db, Brood_data = Brood_data, species_filter = species)
 
   ###################
   # INDIVIDUAL DATA #
@@ -138,7 +157,7 @@ format_HAR <- function(db = choose.dir(),
 
   message("Compiling individual data...")
 
-  Individual_data <- create_individual_HAR(Capture_data)
+  Individual_data <- create_individual_HAR(Capture_data = Capture_data)
 
   #################
   # LOCATION DATA #
@@ -146,7 +165,7 @@ format_HAR <- function(db = choose.dir(),
 
   message("Compiling location data...")
 
-  Location_data <- create_location_HAR(db)
+  Location_data <- create_location_HAR(db = db)
 
   ###CURRENTLY ASSUMING THAT EACH LOCATION AND NEST BOX ARE IDENTICAL
   ###GO THROUGH AND CHECK MORE THOROUGHLY
@@ -209,7 +228,22 @@ format_HAR <- function(db = choose.dir(),
 
 }
 
-create_brood_HAR <- function(db = db){
+################################################################################################################
+
+#' Create brood data table for Harjavalta.
+#'
+#' Create brood data table in standard format for data from Harjavalta, Finland.
+#'
+#' @param db Location of primary data from Harjavalta.
+#' @param species_filter Species of interest. The 6 letter codes of all the species of
+#'  interest as listed in the
+#'  \href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{standard
+#'  protocol}.
+#'
+#' @return A data frame.
+#' @export
+
+create_brood_HAR <- function(db, species_filter){
 
   message("Extracting brood data from paradox database")
 
@@ -242,7 +276,7 @@ create_brood_HAR <- function(db = db){
                                       Species == "PARCAE" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14620)],
                                       Species == "PARMAJ" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14640)],
                                       Species == "PARATE" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14610)])) %>%
-    filter(!is.na(Species)) %>%
+    filter(!is.na(Species) & Species %in% species_filter) %>%
     #Add pop and plot id
     mutate(PopID = "HAR", Plot = NA) %>%
     #Adjust clutch type observed to meet our wording
@@ -270,7 +304,20 @@ create_brood_HAR <- function(db = db){
 
 }
 
-create_nestling_HAR <- function(Brood_data, db = db){
+################################################################################################################
+
+#' Create nestling data capture table for Harjavalta.
+#'
+#' Create nestling data capture table for data from Harjavalta, Finland. This is
+#' used inside \code{\link{create_capture_HAR}}.
+#'
+#' @param Brood_data Output of \code{\link{create_brood_HAR}}.
+#' @param db Location of primary data from Harjavalta.
+#'
+#' @return A data frame.
+#' @export
+
+create_nestling_HAR <- function(db, Brood_data){
 
   message("Extracting nestling ringing data from paradox database")
 
@@ -310,9 +357,25 @@ create_nestling_HAR <- function(Brood_data, db = db){
 
 }
 
-create_capture_HAR    <- function(Brood_data, db = db){
+################################################################################################################
 
-  Nestling_data <- create_nestling_HAR(Brood_data, db)
+#' Create capture table for Harjavalta.
+#'
+#' Create full capture data table in standard format for data from Harjavalta, Finland.
+#'
+#' @param Brood_data Output of \code{\link{create_brood_HAR}}.
+#' @param db Location of primary data from Harjavalta.
+#' @param species_filter Species of interest. The 6 letter codes of all the species of
+#'  interest as listed in the
+#'  \href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{standard
+#'  protocol}.
+#'
+#' @return A data frame.
+#' @export
+
+create_capture_HAR    <- function(db, Brood_data, species_filter){
+
+  Nestling_data <- create_nestling_HAR(db = db, Brood_data = Brood_data)
 
   message("Extracting capture data from paradox database")
 
@@ -351,13 +414,16 @@ create_capture_HAR    <- function(Brood_data, db = db){
                                       Species == "PARCAE" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14620)],
                                       Species == "PARMAJ" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14640)],
                                       Species == "PARATE" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14610)])) %>%
-    filter(!is.na(Species)) %>%
+    filter(!is.na(Species) & Species %in% species_filter) %>%
     mutate(Sex = dplyr::case_when(Sex %in% c("N", "O") ~ "F",
                                   Sex %in% c("K", "L") ~ "M"))
 
   #There are 4 nests where one of either RingNumber or LastRingNumber_Brood is wrong
-  #Ask Tapio about these, currently, we just correct RingNumber to make them work.
-  Capture_data[which(Capture_data$BroodID %in% c("2011_1604_1", "2013_2134_1", "2013_1341_1", "2006_1630_1") & Capture_data$FirstRing == "5"), ]$RingNumber <- c(403681, 464023, 417760, 956723)
+  #Ask Tapio about these, currently we just remove them to make things work.
+  Capture_data <- Capture_data %>%
+    filter(!BroodID %in% c("2011_1604_1", "2013_2134_1", "2013_1341_1", "2006_1630_1"))
+  # Capture_data[which(Capture_data$BroodID %in% c("2011_1604_1", "2013_2134_1", "2013_1341_1", "2006_1630_1") &
+  #                      Capture_data$FirstRing == "5"), ]$RingNumber <- c(403681, 464023, 417760, 956723)
 
   #We are only interested in the adult ringing data from this database. The
   #chick data is all in nestlings. Chick ringing has age == "PP", all others are assumed to be adults (even Age = NA).
@@ -553,6 +619,17 @@ create_capture_HAR    <- function(Brood_data, db = db){
 
 }
 
+################################################################################################################
+
+#' Create individual table for Harjavalta.
+#'
+#' Create full individual data table in standard format for data from Harjavalta, Finland.
+#'
+#' @param Capture_data Output of \code{\link{create_capture_HAR}}.
+#'
+#' @return A data frame.
+#' @export
+
 create_individual_HAR <- function(Capture_data){
 
   #Take capture data and determine general data for each individual
@@ -577,7 +654,18 @@ create_individual_HAR <- function(Capture_data){
 
 }
 
-create_location_HAR <- function(db = db){
+################################################################################################################
+
+#' Create location table for Harjavalta.
+#'
+#' Create full location data table in standard format for data from Harjavalta, Finland.
+#'
+#' @param db Location of primary data from Harjavalta.
+#'
+#' @return A data frame.
+#' @export
+
+create_location_HAR <- function(db){
 
   message("Extracting location data from paradox database")
 

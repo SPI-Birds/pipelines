@@ -4,14 +4,16 @@
 \alias{format_HAR}
 \title{Construct standard summary for data from Harjavalta, Finland.}
 \usage{
-format_HAR(db = choose.dir(), Species = NULL, path = ".",
+format_HAR(db = choose.dir(), species = NULL, path = ".",
   debug = FALSE)
 }
 \arguments{
 \item{db}{Location of database file.}
 
-\item{Species}{A numeric vector. Which species should be included (EUring
-codes)? If blank will return all major species (see details below).}
+\item{species}{Species of interest. The 6 letter codes of all the species of
+interest as listed in the
+\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{standard
+protocol}. If blank will return all major species.}
 
 \item{path}{Location where output csv files will be saved.}
 
@@ -61,7 +63,7 @@ correct BroodID and determine its ring number by taking the first x-2
 characters of the given ring numbers and adding the last 2 digits from the
 'Nestling' table.
 
-\item Some chicks in 'Nestling' were captured and measured, but have no last 2
+\item Some chicks in 'Nestling' were captured and measured, but no last 2
 digits of ring number is provided, I assume these were not ringed (e.g. too
 young). These data can be associated with a Brood and species, but not with an
 individual.
@@ -80,9 +82,10 @@ but many of these chicks are missing in the 'Nestling' table (e.g. BroodID:
 2007_1714_1).
 
 \item In some cases, chicks were ringed with two different series and there
-are two different records of chick ringing. - In some cases, chicks were
-recorded in 'Ringing' but have no matching BroodID in Brood_data (e.g.
-2004_1012_0).
+are two different records of chick ringing.
+
+\item In some cases, chicks were recorded in 'Ringing' but have no matching
+BroodID in Brood_data (e.g. 2004_1012_0).
 
 \item In some cases, one BroodID is used in the 'Ringing' table and another in
 the 'Nestling' table even though the ring numbers are the same (e.g.
@@ -92,27 +95,34 @@ the 'Nestling' table even though the ring numbers are the same (e.g.
 
 How do we deal with all these conflicts? For now, we assume that if a chick
 was listed as 'ringed' but has no record in the 'Nestlings' table, we assume
-it was ringed but not measurements were taken (e.g. tarsus) or the
-measurements were not found because the BroodID was entered incorrectly. If a
-chick was captured in 'Nestlings' but is not recorded in 'Ringing' for now
-these will be excluded because they won't join to the data in 'Ringing'. These
-cases are the most problematic because to give these chicks a true ring number
-we need to know the rest of the ring number (not just last 2 digits). If they
-have no record in ringing, it is impossible to include this information! For
-records where no ring number is given (e.g. A), we include only those where
-the BroodID is in either the 'Ringing' table or the 'Brood' table. This
-ensures that the unringed chick is of the right species.
+it was ringed but no measurements were taken (e.g. tarsus) or the measurements
+were not found because the BroodID was entered incorrectly. If a chick was
+captured in 'Nestlings' but is not recorded in 'Ringing' for now these will be
+excluded because they won't join to the data in 'Ringing'. These cases are the
+most problematic because to give these chicks a true ring number we need to
+know the rest of the ring number (not just last 2 digits). If they have no
+record in ringing, it is impossible to include this information! For records
+where no ring number is given (e.g. A), we include only those where the
+BroodID is in either the 'Ringing' table or the 'Brood' table. This ensures
+that the unringed chick is of the right species.
 
 \strong{Mass}: Mass of birds appears to be measured in mg. This is converted
 to grams to match other populations.
 
 \strong{Tarsus}: Tarsus length is measured for both left and right leg.
 Generally, only left leg is reported and so is used here. Tarsus measurement
-in adults can be either left or right leg. Tarsus is measures using both
-Svensson's Standard and (in later years) Svennson's Alternative. Where only
-Svensson's Standard is available, this is converted to Svennson's Alternative
-instead.
+in adults can be either left or right leg.
 
 \strong{Sex}: Bird classified as 'likely male' or 'likely female' are simply
-given code 'M' and 'F' respectively.
+given code 'M' and 'F' respectively (i.e. this uncertainty is ignored).
+}
+\examples{
+\dontrun{
+#Just get data about great tits
+format_HAR(Species = "PARMAJ")
+
+#Get data on great and blue tits
+format_HAR(Species = c("PARMAJ", "CYACAE"))
+
+}
 }
