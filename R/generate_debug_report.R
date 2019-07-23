@@ -22,7 +22,7 @@ generate_debug_report <- function(path, Pop, Brood_data, Capture_data, Indv_data
   ### DEBUG BROOD DATA ###
 
   Brood_data_summary <- Brood_data %>%
-    select(Species, ClutchType_observed, ClutchType_calc) %>%
+    select(Species, ClutchType_observed, ClutchType_calculated) %>%
     summarise_all(~paste(na.omit(unique(.x)), collapse = "/"))
 
   #Turn all dates into April days

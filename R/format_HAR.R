@@ -84,10 +84,7 @@
 #'
 #'\strong{Tarsus}: Tarsus length is measured for both left and right leg.
 #'Generally, only left leg is reported and so is used here. Tarsus measurement
-#'in adults can be either left or right leg. Tarsus is measures using both
-#'Svensson's Standard and (in later years) Svennson's Alternative. Where only
-#'Svensson's Standard is available, this is converted to Svennson's Alternative
-#'instead.
+#'in adults can be either left or right leg.
 #'
 #'\strong{Sex}: Bird classified as 'likely male' or 'likely female' are simply
 #'given code 'M' and 'F' respectively (i.e. this uncertainty is ignored).
@@ -164,17 +161,19 @@ format_HAR <- function(db = choose.dir(),
     dplyr::filter(dplyr::between(ChickAge, 14, 16)) %>%
     #Remove cases where tarsus or weight are 0 (make them NA)
     dplyr::mutate(Mass = dplyr::na_if(Mass, 0),
-                  LeftTarsusLength = dplyr::na_if(LeftTarsusLength, 0)) %>%
+                  Tarsus = dplyr::na_if(Tarsus, 0)) %>%
     dplyr::group_by(BroodID) %>%
     dplyr::summarise(AvgEggMass = NA, NumberEggs = NA,
                      AvgChickMass = mean(Mass, na.rm = T)/10,
                      NumberChicksMass = n(),
-                     AvgTarsus = mean(LeftTarsusLength, na.rm = T),
-                     AvgChicksTarsus = n())
+                     AvgTarsus = mean(Tarsus, na.rm = T),
+                     NumberChicksTarsus = n(),
+                     OriginalTarsusMethod = "Alternative")
 
   #Join these into Brood_data
   #Only existing broods will be used.
-  Brood_data <- left_join(Brood_data, Chick_avg, by = "BroodID")
+  Brood_data <- left_join(Brood_data, Chick_avg, by = "BroodID") %>%
+    dplyr::select(BroodID:NumberFledgedError, AvgEggMass:OriginalTarsusMethod, ExperimentID)
 
   #########
   # DEBUG #
@@ -196,11 +195,11 @@ format_HAR <- function(db = choose.dir(),
 
   message("Saving .csv files...")
 
-  write.csv(x = Brood_data_output, file = paste0(path, "\\Brood_data_HAR.csv"), row.names = F)
+  write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_HAR.csv"), row.names = F)
 
   write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_HAR.csv"), row.names = F)
 
-  write.csv(x = Capture_data_expand %>% select(-Sex, -BroodID), file = paste0(path, "\\Capture_data_HAR.csv"), row.names = F)
+  write.csv(x = Capture_data %>% select(-Sex, -BroodID), file = paste0(path, "\\Capture_data_HAR.csv"), row.names = F)
 
   write.csv(x = Location_data, file = paste0(path, "\\Location_data_HAR.csv"), row.names = F)
 
@@ -264,7 +263,7 @@ create_brood_HAR <- function(db = db){
     select(BroodID, PopID, BreedingSeason, Species, Plot, LocationID, FemaleID, MaleID,
            ClutchType_observed, ClutchType_calculated, LayingDate, LayingDateError,
            ClutchSize, ClutchSizeError, HatchDate, HatchDateError,
-           BroodSize, BroodSizeError, FledgeDate, FledgeDateError, NumberFledged, NumberFledged,
+           BroodSize, BroodSizeError, FledgeDate, FledgeDateError, NumberFledged, NumberFledgedError,
            ExperimentID)
 
   return(Brood_data)
@@ -329,7 +328,7 @@ create_capture_HAR    <- function(Brood_data, db = db){
                               "FirstRing", "BreedingSeason",
                               "Month", "Day", "Time",
                               "LocationID", "BroodID",
-                              "Observer", "LastRingNumber_Brood",
+                              "ObserverID", "LastRingNumber_Brood",
                               "Species", "Sex",
                               "Sex_method", "Age",
                               "Age_method", "RingType",
@@ -346,7 +345,7 @@ create_capture_HAR    <- function(Brood_data, db = db){
     #Create unique broodID
     mutate(BroodID = paste(BreedingSeason, LocationID, BroodID, sep = "_")) %>%
     #Remove cols that are not needed
-    select(RingSeries:BroodID, LastRingNumber_Brood:Sex, Age, NrNestlings:Mass, Tarsus) %>%
+    select(RingSeries:BroodID, LastRingNumber_Brood:Sex, Age, NrNestlings:Mass, Tarsus, ObserverID) %>%
     #Convert species codes to EUring codes and then remove only the major species
     mutate(Species = dplyr::case_when(Species == "FICHYP" ~ Species_codes$Code[which(Species_codes$SpeciesID == 13490)],
                                       Species == "PARCAE" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14620)],
@@ -366,7 +365,7 @@ create_capture_HAR    <- function(Brood_data, db = db){
     dplyr::filter(Age != "PP" | is.na(Age)) %>%
     dplyr::mutate(Capture_type = "Adult", Last2DigitsRingNr = NA, ChickAge = NA) %>%
     dplyr::mutate(IndvID = paste(RingSeries, RingNumber, sep = "-")) %>%
-    dplyr::select(IndvID, BreedingSeason:Time, BroodID, Species:Age, WingLength:Tarsus, Capture_type, Last2DigitsRingNr, ChickAge)
+    dplyr::select(IndvID, BreedingSeason:Time, ObserverID, LocationID, BroodID, Species:Age, WingLength:Tarsus, Capture_type, Last2DigitsRingNr, ChickAge)
 
   message("Determining chick ring numbers...")
 
@@ -542,14 +541,15 @@ create_capture_HAR    <- function(Brood_data, db = db){
     #Assume that PP = 1, PM/FL = 3 (known to hatch this year), 1 = 5 (known to hatch last year),
     #1+ = 4 (hatched atleast 1 year ago), 2 = 7 (known to hatch 2 years ago),
     #2+ = 6 (hatched at least 2 years ago)
-    dplyr::mutate(Age_obsv = dplyr::case_when(Age %in% c("PM", "FL") ~ 3,
+    dplyr::mutate(Age_observed = dplyr::case_when(Age %in% c("PM", "FL") ~ 3,
                                               Age == "PP" ~ 1,
                                               Age == "1" ~ 5,
                                               Age == "1+" ~ 4,
                                               Age == "2" ~ 7,
-                                              Age == "2+" ~ 6)) %>%
-    select(CaptureDate, CaptureTime, IndvID, Species, CapturePopID, CapturePlot,
-           ReleasePopID, ReleasePlot, Mass, Tarsus, WingLength, Age_obsv, Age_calc, ChickAge, Sex, BroodID)
+                                              Age == "2+" ~ 6),
+                  OriginalTarsusMethod = "Alternative") %>%
+    select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, CapturePopID, CapturePlot,
+           ReleasePopID, ReleasePlot, Mass, Tarsus, OriginalTarsusMethod, WingLength, Age_observed, Age_calculated, ChickAge, Sex, BroodID)
 
 }
 
@@ -562,16 +562,16 @@ create_individual_HAR <- function(Capture_data){
     group_by(IndvID) %>%
     summarise(Species = first(Species), PopID = "HAR",
               BroodIDLaid = first(BroodID),
-              BroodIDRinged = NA,
-              RingYear = first(lubridate::year(CaptureDate)),
-              RingAge = first(Age_calc),
+              BroodIDFledged = BroodIDLaid,
+              RingSeason = first(lubridate::year(CaptureDate)),
+              RingAge = first(Age_calculated),
               Sex = first(Sex)) %>%
     rowwise() %>%
     #For each individual, if their ring age was 1 or 3 (caught in first breeding year)
     #Then we take their first BroodID, otherwise it is NA
     mutate(BroodIDLaid = ifelse(RingAge %in% c(1, 3), BroodIDLaid, NA),
            BroodIDRinged = BroodIDLaid) %>%
-    arrange(RingYear, IndvID)
+    arrange(RingSeason, IndvID)
 
   return(Indv_data)
 
@@ -605,8 +605,8 @@ create_location_HAR <- function(db = db){
 
   Location_data <- Location_data %>%
     mutate(NestboxID = LocationID, PopID = "HAR",
-           NestBoxType = NA, StartYear = NA, EndYear = NA) %>%
-    select(LocationID, NestboxID, NestBoxType, PopID, Latitude, Longitude, StartYear, EndYear)
+           LocationType = NA, StartSeason = NA, EndSeason = NA, Habitat = "Evergreen") %>%
+    select(LocationID, NestboxID, LocationType, PopID, Latitude, Longitude, StartSeason, EndSeason, Habitat)
 
   return(Location_data)
 

@@ -45,7 +45,7 @@ calc_age <- function(data, ID, Age, Date, Year, showpb = TRUE){
                   FirstYear = first({{Year}})) %>%
     dplyr::mutate(was_chick = FirstAge == 1,
                   yr_diff   = {{Year}} - FirstYear,
-                  Age_calc = purrr::pmap_dbl(.l = list(was_chick, yr_diff),
+                  Age_calculated = purrr::pmap_dbl(.l = list(was_chick, yr_diff),
                                              .f = ~{
 
                                                if(showpb){
