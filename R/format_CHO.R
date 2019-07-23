@@ -35,7 +35,7 @@
 #' @import reshape2
 #' @import magrittr
 
-format_Portugal <- function(db = file.choose(),
+format_CHO <- function(db = file.choose(),
                             Species = NULL,
                             path = ".",
                             debug = FALSE){
