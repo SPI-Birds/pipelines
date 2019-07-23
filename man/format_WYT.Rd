@@ -16,6 +16,9 @@ generates a summary of pipeline data. This includes: a) Histogram of
 continuous variables with mean/SD b) unique values of all categorical
 variables.}
 }
+\value{
+Generates 4 .csv files with data in a standard format.
+}
 \description{
 A pipeline to produce a standard output for the nest box population in Wytham
 Woods, UK, administered by Edward Grey Institute Oxford (Ben Sheldon).
