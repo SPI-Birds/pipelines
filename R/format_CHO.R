@@ -77,86 +77,7 @@ format_CHO <- function(db = choose.dir(),
 
   message("Compiling capture information...")
 
-  #Take all data and add population/plot info
-  #There is only one population/plot
-  Capture_data <- all_data %>%
-    mutate(CapturePopID = PopID, ReleasePopID = PopID,
-           CapturePlot = Plot, ReleasePlot = Plot) %>%
-    #Determine age at first capture for every individual
-    #First arrange the data chronologically within each individual
-    arrange(Ring, CaptureDate) %>%
-    #Then, for each individual, determine the first age and year of capture
-    group_by(Ring) %>%
-    mutate(FirstAge = first(Age),
-           FirstYear = first(Year)) %>%
-    ungroup() %>%
-    #Calculate age at each capture using EUring codes
-    dplyr::mutate(Age_calculated = purrr::pmap_dbl(.l = list(Age = .$FirstAge,
-                                              Year1 = .$FirstYear,
-                                              YearN = .$Year),
-                                    .f = function(Age, Year1, YearN){
-
-                                      # If age at first capture is unknown
-                                      # we cannot determine age at later captures
-                                      if(is.na(Age)){
-
-                                        return(NA)
-
-                                      }
-
-                                      #Determine number of years since first capture...
-                                      diff_yr <- (YearN - Year1)
-
-                                      #If it was not caught as a chick...
-                                      if(Age != "C"){
-
-                                        #If it's listed as 'first year' then we know it was EURING code 5 at first capture
-                                        if(Age == "first year"){
-
-                                          return(5 + 2*diff_yr)
-
-                                        #Otherwise, when it was first caught it was at least EURING code 6.
-                                        } else if(Age == "adult"){
-
-                                          #Use categories where age is uncertain
-                                          #(6, 8)
-                                          return(6 + 2*diff_yr)
-
-                                        }
-
-                                      } else {
-
-                                        #If it was caught as a chick
-                                        if(diff_yr == 0){
-
-                                          #Make the age at first capture 1 (nestling/unable to fly)
-                                          #N.B. There is no distinction between chick and fledgling in the data
-                                          return(1)
-
-                                        } else {
-
-
-                                          #Otherwise, use categories where age is certain (5, 7, etc.)
-                                          return(3 + 2*diff_yr)
-
-                                        }
-
-                                      }
-
-                                    })) %>%
-    #Also include observed age (not calculated)
-    rowwise() %>%
-    mutate(Age_observed = ifelse(Age == "C", 1, ifelse(Age == "first year", 5, ifelse(Age == "adult", 6, NA))),
-           ObserverID = NA, OriginalTarsusMethod = "Alternative") %>%
-    ungroup() %>%
-    #Select out only those columns we need.
-    dplyr::select(IndvID = Ring, Species, BreedingSeason,
-                  CaptureDate, CaptureTime = Time,
-                  ObserverID, ObserverID,
-                  CapturePopID, CapturePlot,
-                  ReleasePopID, ReleasePlot,
-                  Mass = Weight, Tarsus, OriginalTarsusMethod,
-                  WingLength = Wing, Age_observed, Age_calculated, ChickAge)
+  Capture_data <- create_capture_CHO(all_data)
 
   ##############
   # BROOD DATA #
@@ -425,7 +346,7 @@ format_CHO <- function(db = choose.dir(),
   #Nestbox data is therefore just
   Location_data <- tibble(LocationID = unique(all_data$Box),
            NestboxID = unique(all_data$Box),
-           LocationType = NA, PopID = "CHO",
+           LocationType = "NB", PopID = "CHO",
            Latitude = NA, Longitude = NA,
            StartSeason = NA, EndSeason = NA,
            Habitat = "Deciduous") %>%
@@ -452,5 +373,35 @@ format_CHO <- function(db = choose.dir(),
   time <- difftime(Sys.time(), start_time, units = "sec")
 
   message(paste0("All tables generated in ", round(time, 2), " seconds"))
+
+}
+
+####################################################################################################
+
+create_capture_CHO <- function(data){
+
+  browser()
+
+  #Take all data and add population/plot info
+  #There is only one population/plot
+  Capture_data <- data %>%
+    dplyr::mutate(IndvID = Ring, CapturePopID = PopID, ReleasePopID = PopID,
+           CapturePlot = Plot, ReleasePlot = Plot,
+           ischick = dplyr::case_when(.$Age == "C" ~ 1,
+                                      .$Age != "C" ~ 4)) %>%
+    calc_age(ID = IndvID, Age = ischick, Date = CaptureDate, Year = BreedingSeason) %>%
+    #Also include observed age (not calculated)
+    rowwise() %>%
+    mutate(Age_observed = ifelse(Age == "C", 1, ifelse(Age == "first year", 5, ifelse(Age == "adult", 6, NA))),
+           ObserverID = NA, OriginalTarsusMethod = "Alternative") %>%
+    ungroup() %>%
+    #Select out only those columns we need.
+    dplyr::select(IndvID = Ring, Species, BreedingSeason,
+                  CaptureDate, CaptureTime = Time,
+                  ObserverID, ObserverID,
+                  CapturePopID, CapturePlot,
+                  ReleasePopID, ReleasePlot,
+                  Mass = Weight, Tarsus, OriginalTarsusMethod,
+                  WingLength = Wing, Age_observed, Age_calculated, ChickAge)
 
 }
