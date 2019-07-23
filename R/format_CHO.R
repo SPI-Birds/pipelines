@@ -20,37 +20,46 @@
 #' Any clutch recorded as '2nd' is assumed to be a 'second' clutch under our definitions.
 #' 'ClutchType_calc' may give a more appropriate estimate of clutch type for this data.
 #'
-#' @param db Location of database file.
-#' @param Species A numeric vector. Which species should be included (EUring codes)? If blank will return all major species (see details below).
-#' @param path Location where output csv files will be saved.
-#' @param debug For internal use when editing pipelines. If TRUE, pipeline
-#'   generates a summary of pipeline data. This
-#'   includes: a) Histogram of continuous variables with mean/SD b) unique
-#'   values of all categorical variables.
+#' @inheritParams pipeline_params
 #'
-#' @return Generates 5 .csv files with data in a standard format.
+#' @return Generates 4 .csv files with data in a standard format.
 #' @export
 #' @import readxl
 #' @import janitor
 #' @import reshape2
 #' @import magrittr
 
-format_CHO <- function(db = file.choose(),
-                            Species = NULL,
-                            path = ".",
-                            debug = FALSE){
+format_CHO <- function(db = choose.dir(),
+                       species = NULL,
+                       path = ".",
+                       debug = FALSE){
+
+  #Force choose.dir() if used
+  force(db)
+
+  #Assign species for filtering
+  if(is.null(species)){
+
+    species <- Species_codes$Code
+
+  } else {
+
+
+
+  }
 
   #Record start time to provide processing time to the user.
   start_time <- Sys.time()
 
   #Read in data with readxl
-  all_data <- read_excel(db) %>%
+  all_data <- read_excel(paste(db, "database Choupal.xlsx", sep = "\\")) %>%
     #Clean all names with janitor
     janitor::clean_names(case = "upper_camel") %>%
-    #Change species to "GT" because it's only GT in Choupal
+    #Change species to "PARMARJ" because it's only PARMAJ in Choupal
     #Add PopID and plot
-    mutate(Species = "GT",
+    mutate(Species = "PARMAJ",
            PopID = "CHO", Plot = NA) %>%
+    dplyr::filter(Species %in% species) %>%
     #BroodIDs are not unique (they are repeated each year)
     #We need to create unique IDs for each year
     #Convert capture date into a date object (not Julian days)
@@ -59,7 +68,8 @@ format_CHO <- function(db = file.choose(),
     mutate(BroodID = paste(Year, BroodId, sep = "_"),
            CaptureDate = lubridate::ymd(paste0(Year, "-01-01")) + JulianDate,
            Time = format.POSIXct(Time, format = "%H:%M:%S"),
-           ChickAge = as.numeric(na_if(ChickAge, "na")))
+           ChickAge = as.numeric(na_if(ChickAge, "na")),
+           BreedingSeason = Year, LocationID = Box)
 
   ################
   # CAPTURE DATA #
@@ -81,7 +91,7 @@ format_CHO <- function(db = file.choose(),
            FirstYear = first(Year)) %>%
     ungroup() %>%
     #Calculate age at each capture using EUring codes
-    dplyr::mutate(Age_calc = purrr::pmap_dbl(.l = list(Age = .$FirstAge,
+    dplyr::mutate(Age_calculated = purrr::pmap_dbl(.l = list(Age = .$FirstAge,
                                               Year1 = .$FirstYear,
                                               YearN = .$Year),
                                     .f = function(Age, Year1, YearN){
@@ -136,15 +146,17 @@ format_CHO <- function(db = file.choose(),
                                     })) %>%
     #Also include observed age (not calculated)
     rowwise() %>%
-    mutate(Age_obsv = ifelse(Age == "C", 1, ifelse(Age == "first year", 5, ifelse(Age == "adult", 6, NA)))) %>%
+    mutate(Age_observed = ifelse(Age == "C", 1, ifelse(Age == "first year", 5, ifelse(Age == "adult", 6, NA))),
+           ObserverID = NA, OriginalTarsusMethod = "Alternative") %>%
     ungroup() %>%
     #Select out only those columns we need.
-    select(CaptureDate, CaptureTime = Time,
-           IndvID = Ring, Species,
-           CapturePopID, CapturePlot,
-           ReleasePopID, ReleasePlot,
-           Mass = Weight, Tarsus, WingLength = Wing,
-           Age_obsv, Age_calc, ChickAge)
+    dplyr::select(IndvID = Ring, Species, BreedingSeason,
+                  CaptureDate, CaptureTime = Time,
+                  ObserverID, ObserverID,
+                  CapturePopID, CapturePlot,
+                  ReleasePopID, ReleasePlot,
+                  Mass = Weight, Tarsus, OriginalTarsusMethod,
+                  WingLength = Wing, Age_observed, Age_calculated, ChickAge)
 
   ##############
   # BROOD DATA #
@@ -222,7 +234,7 @@ format_CHO <- function(db = file.choose(),
 
   Brood_data <- Brood_data %>%
     #For every clutch, go through and calculate the clutch type.
-    mutate(ClutchType_calc = purrr::pmap_chr(.l = list(rows = .$row,
+    mutate(ClutchType_calculated = purrr::pmap_chr(.l = list(rows = .$row,
                                                        femID = .$FemaleID,
                                                        cutoff_date = .$cutoff,
                                                        nr_fledge_before = .$total_fledge_narm,
@@ -310,16 +322,21 @@ format_CHO <- function(db = file.choose(),
     #Convert LayingDate and HatchDate to date objects
     mutate(FledgeDate = NA,
            HatchDate = lubridate::ymd(paste0(Year, "-01-01")) + as.numeric(HatchingDateJulian),
-           LayingDate = lubridate::ymd(paste0(Year, "-01-01")) + as.numeric(LayingDateJulian)) %>%
+           LayingDate = lubridate::ymd(paste0(Year, "-01-01")) + as.numeric(LayingDateJulian),
+           LayingDateError = NA, ClutchSizeError = NA, HatchDateError = NA,
+           BroodSizeError = NA, FledgeDateError = NA, NumberFledgedError = NA,
+           AvgEggMass = NA, NumberEggs = NA) %>%
     #Select relevant columns and rename
-    select(SampleYear = Year, Species, PopID, Plot,
-           LocationID = Box, BroodID, FemaleID, MaleID,
-           ClutchType_observed,
-           ClutchType_calc, LayingDate,
-           ClutchSize = FinalClutchSize,
-           HatchDate, BroodSize = NoChicksHatched,
-           FledgeDate,
-           NumberFledged = NoChicksOlder14D)
+    select(BroodID, PopID, BreedingSeason, Species, Plot,
+           LocationID, FemaleID, MaleID,
+           ClutchType_observed, ClutchType_calculated,
+           LayingDate, LayingDateError,
+           ClutchSize = FinalClutchSize, ClutchSizeError,
+           HatchDate, HatchDateError,
+           BroodSize = NoChicksHatched, BroodSizeError,
+           FledgeDate, FledgeDateError,
+           NumberFledged = NoChicksOlder14D, NumberFledgedError,
+           AvgEggMass, NumberEggs)
 
   #Finally, we add in average mass and tarsus measured for all chicks at 14d
   #From Capture_data, subset only those chicks that were 14 - 16 days when captured.
@@ -327,10 +344,15 @@ format_CHO <- function(db = file.choose(),
     filter(!is.na(ChickAge) & between(ChickAge, 14, 16)) %>%
     #For every brood, determine the average mass and tarsus length
     group_by(BroodID) %>%
-    summarise(AvgMass = mean(Weight, na.rm = T), AvgTarsus = mean(Tarsus, na.rm = T))
+    summarise(AvgChickMass = mean(Weight, na.rm = T),
+              NumberChicksMass = n(),
+              AvgTarsus = mean(Tarsus, na.rm = T),
+              NumberChicksTarsus = NumberChicksMass,
+              OriginalTarsusMethod = "Alternative")
 
   #Add AvgMass and AvgTarsus to the Brood_data tibble
-  Brood_data <- left_join(Brood_data, avg_measure, by = "BroodID")
+  Brood_data <- left_join(Brood_data, avg_measure, by = "BroodID") %>%
+    dplyr::mutate(ExperimentID = NA)
 
   ###################
   # INDIVIDUAL DATA #
@@ -339,7 +361,7 @@ format_CHO <- function(db = file.choose(),
   message("Compiling individual information...")
 
   #Determine first age, brood, and ring year of each individual
-  Indv_data <- all_data %>%
+  Individual_data <- all_data %>%
     #Arrange data for each individual chronologically
     arrange(Ring, CaptureDate) %>%
     #Replace 'na' with NA in Sex
@@ -351,7 +373,7 @@ format_CHO <- function(db = file.choose(),
     summarise(FirstBrood = first(BroodID),
               FirstYr = first(Year),
               FirstAge = first(Age),
-              Species = "GT",
+              Species = "PARMAJ",
               Sex = ifelse(all(is.na(Sex)), "U",
                            ifelse(any(Sex %in% "M"), "M",
                                   ifelse(any(Sex %in% "F"), "F", NA)))) %>%
@@ -373,7 +395,7 @@ format_CHO <- function(db = file.choose(),
 
                                                          }),
            #We have no information on cross-fostering, so we assume the brood laid and ringed are the same
-           BroodIDRinged = BroodIDLaid,
+           BroodIDFledged = BroodIDLaid,
            #Determine age at ringing with EUring code.
            #If caught as a chick assign 1: Pallus.
            #If caught as adult assign 4: >1yo, exact age unknown.
@@ -391,7 +413,7 @@ format_CHO <- function(db = file.choose(),
                                       }
 
                                     })) %>%
-    select(Ring, Species, PopID, BroodIDLaid, BroodIDRinged, RingYear = FirstYr, RingAge, Sex)
+    select(IndvID = Ring, Species, PopID, BroodIDLaid, BroodIDFledged, RingSeason = FirstYr, RingAge, Sex)
 
   ################
   # NESTBOX DATA #
@@ -401,11 +423,12 @@ format_CHO <- function(db = file.choose(),
 
   #There are no coordinates or box type information
   #Nestbox data is therefore just
-  Nestbox_data <- tibble(LocationID = unique(all_data$Box),
+  Location_data <- tibble(LocationID = unique(all_data$Box),
            NestboxID = unique(all_data$Box),
-           NestBoxType = NA, PopID = "CHO",
+           LocationType = NA, PopID = "CHO",
            Latitude = NA, Longitude = NA,
-           StartYear = NA, EndYear = NA) %>%
+           StartSeason = NA, EndSeason = NA,
+           Habitat = "Deciduous") %>%
     filter(!is.na(LocationID))
 
   if(debug){
@@ -420,11 +443,11 @@ format_CHO <- function(db = file.choose(),
 
   write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_CHO.csv"), row.names = F)
 
-  write.csv(x = Indv_data, file = paste0(path, "\\Indv_data_CHO.csv"), row.names = F)
+  write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_CHO.csv"), row.names = F)
 
   write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_CHO.csv"), row.names = F)
 
-  write.csv(x = Nestbox_data, file = paste0(path, "\\Nestbox_data_CHO.csv"), row.names = F)
+  write.csv(x = Location_data, file = paste0(path, "\\Location_data_CHO.csv"), row.names = F)
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
