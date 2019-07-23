@@ -89,16 +89,7 @@
 #'\strong{Sex}: Bird classified as 'likely male' or 'likely female' are simply
 #'given code 'M' and 'F' respectively (i.e. this uncertainty is ignored).
 #'
-#'@param db Location of database file.
-#'@param species Species of interest. The 6 letter codes of all the species of
-#'  interest as listed in the
-#'  \href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{standard
-#'  protocol}. If blank will return all major species.
-#'@param path Location where output csv files will be saved.
-#'@param debug For internal use when editing pipelines. If TRUE, pipeline
-#'  generates a summary of pipeline data. This includes: a) Histogram of
-#'  continuous variables with mean/SD b) unique values of all categorical
-#'  variables.
+#'@inheritParams pipeline_params
 #'
 #'@return Generates 4 .csv files with data in a standard format.
 #'@export
