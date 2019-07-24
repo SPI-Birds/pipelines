@@ -32,7 +32,8 @@ quality_check <- function(db = choose.dir(),
   check_list <- tibble::tibble(Check = c("Individual data format", "Brood data format",
                                          "Capture data format", "Location data format",
                                          "Clutch and brood sizes", "Brood sizes and fledgling numbers",
-                                         "Laying and hatching dates", "Hatching and fledging dates"),
+                                         "Laying and hatching dates", "Hatching and fledging dates",
+                                         "Improbable and impossible values brood data"),
                                Warning = NA,
                                Error = NA)
 
@@ -98,6 +99,13 @@ quality_check <- function(db = choose.dir(),
 
   check_list[8,2:3] <- compare_hatching_fledging_output$check_list
 
+  ## - Check brood variable values against reference values
+  message("Check 9: Checking brood variable values against reference values...")
+
+  check_values_brood_output <- check_values_brood(Brood_data, "PARMAJ")
+
+  check_list[9,2:3] <- check_values_brood_output$check_list
+
 
   ## Create text file of warnings
   sink('warnings.txt')
@@ -127,6 +135,9 @@ quality_check <- function(db = choose.dir(),
 
   cat("Check 8: Hatching and fledging dates\n\n")
   cat(unlist(compare_hatching_fledging_output$warning_output), sep="\n", "\n")
+
+  cat("Check 9: Improbable and impossible values in brood data\n\n")
+  cat(unlist(check_values_brood_output$warning_output), sep="\n", "\n")
 
   sink()
 
@@ -159,6 +170,9 @@ quality_check <- function(db = choose.dir(),
   cat("Check 8: Hatching and fledging dates\n\n")
   cat(unlist(compare_hatching_fledging_output$error_output), sep="\n", "\n")
 
+  cat("Check 9: Improbable and impossible values in brood data\n\n")
+  cat(unlist(check_values_brood_output$error_output), sep="\n", "\n")
+
   sink()
 
 
@@ -171,9 +185,9 @@ quality_check <- function(db = choose.dir(),
 
   checks_errors <- sum(check_list$Error == TRUE, na.rm=TRUE)
 
-  cat(yellow(paste0("\n", checks_warnings, " out of ", nrow(check_list), " checks result in warnings.")))
+  cat(crayon::yellow(paste0("\n", checks_warnings, " out of ", nrow(check_list), " checks resulted in warnings.")))
 
-  cat(red(paste0("\n", checks_errors, " out of ", nrow(check_list), " checks result in errors.")))
+  cat(crayon::red(paste0("\n", checks_errors, " out of ", nrow(check_list), " checks resulted in errors.")))
 
 }
 
@@ -230,7 +244,7 @@ check_format_individual <- function(Individual_data){
 
     warning_output <- purrr::map(.x = Individual_data_missing$Variable,
                                  .f = ~{
-                                   paste0(.x, " in Individual_data is missing, unmeasured or undetermined.")
+                                   paste0(.x, " in Individual_data is missing, unmeasured or undetermined (NA).")
                                  })
   }
 
@@ -309,7 +323,7 @@ check_format_brood <- function(Brood_data){
 
     warning_output <- purrr::map(.x = Brood_data_missing$Variable,
                                  .f = ~{
-                                   paste0(.x, " in Brood_data is missing, unmeasured or undetermined.")
+                                   paste0(.x, " in Brood_data is missing, unmeasured or undetermined (NA).")
                                  })
   }
 
@@ -378,7 +392,7 @@ check_format_capture <- function(Capture_data){
 
     warning_output <- purrr::map(.x = Capture_data_missing$Variable,
                                  .f = ~{
-                                   paste0(.x, " in Capture_data is missing, unmeasured or undetermined.")
+                                   paste0(.x, " in Capture_data is missing, unmeasured or undetermined (NA).")
                                  })
   }
 
@@ -442,7 +456,7 @@ check_format_location <- function(Location_data){
 
     warning_output <- purrr::map(.x = Location_data_missing$Variable,
                                  .f = ~{
-                                   paste0(.x, " in Location_data is missing, unmeasured or undetermined.")
+                                   paste0(.x, " in Location_data is missing, unmeasured or undetermined (NA).")
                                  })
   }
 
@@ -676,7 +690,7 @@ compare_hatching_fledging <- function(Brood_data){
                                           Brood_data_late$HatchDate,
                                           Brood_data_late$FledgeDate),
                                 .f = ~{
-                                  paste0("Record with BroodID ", ..1,
+                                  paste0("Brood_data record with BroodID ", ..1,
                                          " has a later hatching date (", ..2,
                                          ") than fledging date (", ..3, ").")
                                 })
@@ -704,4 +718,96 @@ compare_hatching_fledging <- function(Brood_data){
   return(list(check_list = check_list,
               warning_output = warning_output,
               error_output = error_output))
+}
+
+
+#' Check brood variable values against reference values
+#'
+#' Check variable values against species-specific reference values in brood data. Implausible values will result in a warning. Impossible values will result in an error. Variables that are checked: LayingDate, ClutchSize, HatchDate, BroodSize, FledgeDate, NumberFledged, AvgEggMass, AvgChickMass, AvgTarsus.
+#'
+#' @param Brood_data Data frame. Brood data output from pipeline.
+#' @param Species Six-letter character string to select species-specific reference values.
+#'
+#' @return Check list, warning output, error output.
+#' @export
+
+check_values_brood <- function(Brood_data, Species) {
+
+  # Select species-specific reference values
+  ref <- brood_ref_values_list[[Species]]
+
+  # Select species in data
+  Brood_data <- Brood_data %>%
+    dplyr::filter(Species == Species)
+
+  # Create list of variable-specific dataframes
+  Brood_list <- purrr::map2(.x = Brood_data[, c("ClutchSize", "BroodSize", "NumberFledged")],
+                               .y = ref,
+                               .f = ~{
+                                 tibble::tibble(BroodID = Brood_data$BroodID,
+                                                Variable = names(.y)[3],
+                                                .x) %>%
+                                   dplyr::filter(!is.na(.x)) %>% # Only non-NA's
+                                   dplyr::mutate(Warning = ifelse(.x < as.numeric(.y[1,3]) | .x > as.numeric(.y[2,3]),
+                                                                  TRUE, FALSE),
+                                                 Error = ifelse(.x < as.numeric(.y[3,3]) | .x > as.numeric(.y[4,3]),
+                                                                TRUE, FALSE))
+                               })
+
+  # Select records with errors (impossible values) from list
+  Brood_err <- purrr::map(.x = Brood_list,
+                          .f = ~{
+                            .x %>%
+                              dplyr::filter(Error == TRUE)
+                          }) %>%
+    dplyr::bind_rows()
+
+  err <- FALSE
+  error_output <- NULL
+
+  if(nrow(Brood_err) > 0) {
+    err <- TRUE
+
+    error_output <- purrr::pmap(.l = list(Brood_err$BroodID,
+                                          Brood_err$Variable,
+                                          Brood_err$.x),
+                                .f = ~{
+                                  paste0("Brood_data record with BroodID ", ..1,
+                                         " has an impossible value in ", ..2,
+                                         " (", ..3, ").")
+                                })
+  }
+
+  # Select records with warnings (improbable values) from list
+  Brood_war <- purrr::map(.x = Brood_list,
+                          .f = ~{
+                            .x %>%
+                              dplyr::filter(Warning == TRUE)
+                          }) %>%
+    dplyr::bind_rows()
+
+  war <- FALSE
+  warning_output <- NULL
+
+  if(nrow(Brood_war) > 0) {
+    war <- TRUE
+
+    warning_output <- purrr::pmap(.l = list(Brood_war$BroodID,
+                                            Brood_war$Variable,
+                                            Brood_war$.x),
+                                  .f = ~{
+                                    paste0("Brood_data record with BroodID ", ..1,
+                                           " has an improbable value in ", ..2,
+                                           " (", ..3, ").")
+                                  })
+  }
+
+  check_list <- tibble::tibble(Warning = war,
+                               Error = err)
+
+  return(list(check_list = check_list,
+              warning_output = warning_output,
+              error_output = error_output))
+
+
 }

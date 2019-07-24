@@ -15,11 +15,11 @@ Checks can be split into two separate groups: data quality checks and pipeline o
 
 These are checks to ensure that the provided data meet biological and data management expectations. Checks will include:
 
-* Clutch size <= brood size <= number of fledglings (N.B. May actually differ because of clutch manipulation). Error: If no evidence of experimentation and this assumption is violated. Warning: If there is evidence of cohort manipulation and this assumption is violated.
+* ~~Clutch size >= brood size >= number of fledglings (N.B. May actually differ because of clutch manipulation). Error: If no evidence of experimentation and this assumption is violated. Warning: If there is evidence of cohort manipulation and this assumption is violated.~~
 
 * Clutch/Brood/Fledglings should be integers
 
-* Laying date < Hatch date < Fledge date
+* ~~Laying date < Hatch date < Fledge date~~
 
 * Check for impossible values in everything (have range for warnings and range for errors) (NOT NOW):
 
@@ -64,7 +64,7 @@ Might be fairly common. Could make it >2 chick difference?
 
 These are checks that checks for bugs in the output of the pipeline.
 
-* *Do the data formats match the standard protocol?*
+* ~~Do the data formats match the standard protocol?~~
 
   
   
