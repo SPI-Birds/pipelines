@@ -1,26 +1,38 @@
-#' Construct standard summary for data from Choupal, Portugal.
+#'Construct standard summary for data from Choupal, Portugal.
 #'
-#' A pipeline to produce a standard output for the great tit population
-#' in Choupal, Portugal, administered by the University of Coimbra.
-#' Output follows the HNB standard breeding data format.
+#'A pipeline to produce a standard output for the great tit population in
+#'Choupal, Portugal, administered by the University of Coimbra. Output follows
+#'the HNB standard breeding data format.
 #'
-#' This section provides details on data management choices that are unique to this data.
-#' For a general description of the standard format please see XXXXX PLACE HOLDER!
+#'This section provides details on data management choices that are unique to
+#'this data. For a general description of the standard format please see
+#'\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
 #'
-#' \strong{NumberFledged}: This population has no estimation of actual fledgling numbers.
-#' The last time nests are counted is 14 days post hatching. We use this as an estimation of fledling numbers.
-#' This also affects \emph{ClutchType_calc} as \emph{NumberFledged} is used to estimated second clutches.
+#'\strong{NumberFledged}: This population has no estimation of actual fledgling
+#'numbers. The last time nests are counted is 14 days post hatching. We use this
+#'as an estimation of fledgling numbers. This also affects
+#'\emph{ClutchType_calculated} as \emph{NumberFledged} is used to estimated
+#'second clutches.
 #'
-#' \strong{MinAge, RingAge}: Any individual caught as a chick was assumed to
-#' have a EUring code of 1: 'Pullus: nestling or chick, unable to fly freely, still able to be caught by hand.'
-#' Any individual not caught as a chick was assumed to have a EUring code of 4:
-#' 'After first full year: year of hatching unknown'.
+#'\strong{Age_observed}: Translation of age records \itemize{ \item Any
+#'individual caught as a chick was assumed to have a EURING code of 1: 'Pullus:
+#'nestling or chick, unable to fly freely, still able to be caught by hand.'}
+#'\item Any individual listed as 'first year' was given a EURING code of 5: a
+#'bird hatched last calendar year and now in its second calendar year. \item Any
+#'individual listed as 'adult' was given a EURING code of 6: full-grown bird
+#'hatched before last calendar year; year of hatching otherwise unknown.
 #'
-#' \strong{ClutchType_observed}: In the raw data, there is no distinction between 'second' and 'replacement' clutches.
-#' Any clutch recorded as '2nd' is assumed to be a 'second' clutch under our definitions.
-#' 'ClutchType_calc' may give a more appropriate estimate of clutch type for this data.
+#'\strong{ClutchType_observed}: In the raw data, there is no distinction between
+#''second' and 'replacement' clutches. Any clutch recorded as '2nd' is assumed
+#'to be a 'second' clutch under our definitions. 'ClutchType_calculated' may
+#'give a more appropriate estimate of clutch type for this data.
 #'
-#' @inheritParams pipeline_params
+#'\strong{ClutchSize, BroodSize, NumberFledged}: We currently only use records
+#'of clutch, brood, and fledgling numbers that are recorded explicitly in the
+#'data. This means that there are some nests where chicks have capture records,
+#'but the \emph{Brood data} table will not give any value of NumberFledged.
+#'(e.g. see BroodID 2004_NA). These capture records should be included, but we need
+#'to determine the amount of potential uncertainty around these records.
 #'
 #'@inheritParams pipeline_params
 #'
@@ -40,22 +52,18 @@ format_CHO <- function(db = choose.dir(),
 
     species <- Species_codes$Code
 
-  } else {
-
-
-
   }
 
   #Record start time to provide processing time to the user.
   start_time <- Sys.time()
 
   #Read in data with readxl
-  all_data <- read_excel(paste(db, "database Choupal.xlsx", sep = "\\")) %>%
+  all_data <- readxl::read_excel(paste(db, "database Choupal.xlsx", sep = "\\")) %>%
     #Clean all names with janitor
     janitor::clean_names(case = "upper_camel") %>%
     #Change species to "PARMARJ" because it's only PARMAJ in Choupal
     #Add PopID and plot
-    mutate(Species = "PARMAJ",
+    dplyr::mutate(Species = "PARMAJ",
            PopID = "CHO", Plot = NA) %>%
     dplyr::filter(Species %in% species) %>%
     #BroodIDs are not unique (they are repeated each year)
@@ -63,7 +71,8 @@ format_CHO <- function(db = choose.dir(),
     #Convert capture date into a date object (not Julian days)
     #Need this to order captures chronologically
     #Fix time format (it's currently trying to estimate date)
-    mutate(BroodID = paste(Year, BroodId, sep = "_"),
+    dplyr::mutate(BroodID = paste(Year, BroodId, sep = "_"),
+           IndvID = Ring,
            CaptureDate = lubridate::ymd(paste0(Year, "-01-01")) + JulianDate,
            Time = format.POSIXct(Time, format = "%H:%M:%S"),
            ChickAge = as.numeric(na_if(ChickAge, "na")),
@@ -111,13 +120,13 @@ format_CHO <- function(db = choose.dir(),
 
   message("Saving .csv files...")
 
-  write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_CHO.csv"), row.names = F)
+  utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_CHO.csv"), row.names = F)
 
-  write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_CHO.csv"), row.names = F)
+  utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_CHO.csv"), row.names = F)
 
-  write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_CHO.csv"), row.names = F)
+  utils::write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_CHO.csv"), row.names = F)
 
-  write.csv(x = Location_data, file = paste0(path, "\\Location_data_CHO.csv"), row.names = F)
+  utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_CHO.csv"), row.names = F)
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
@@ -132,7 +141,7 @@ create_capture_CHO <- function(data){
   #Take all data and add population/plot info
   #There is only one population/plot
   Capture_data <- data %>%
-    dplyr::mutate(IndvID = Ring, CapturePopID = PopID, ReleasePopID = PopID,
+    dplyr::mutate(CapturePopID = PopID, ReleasePopID = PopID,
            CapturePlot = Plot, ReleasePlot = Plot,
            ischick = dplyr::case_when(.$Age == "C" ~ 1,
                                       .$Age != "C" ~ 4)) %>%
@@ -142,11 +151,12 @@ create_capture_CHO <- function(data){
     dplyr::mutate(Age_observed = dplyr::case_when(.$Age == "C" ~ 1,
                                                   .$Age == "first year" ~ 5,
                                                   .$Age == "adult" ~ 6),
-                  ObserverID = NA, OriginalTarsusMethod = "Alternative") %>%
+                  ObserverID = NA, OriginalTarsusMethod = "Alternative",
+                  LocationID = Box) %>%
     #Select out only those columns we need.
     dplyr::select(IndvID, Species, BreedingSeason,
                   CaptureDate, CaptureTime = Time,
-                  ObserverID, ObserverID,
+                  ObserverID, ObserverID, LocationID,
                   CapturePopID, CapturePlot,
                   ReleasePopID, ReleasePlot,
                   Mass = Weight, Tarsus, OriginalTarsusMethod,
@@ -163,21 +173,19 @@ create_brood_CHO <- function(data){
   #The data is currently stored as capture data (i.e. each row is a capture)
   #This means there are multiple records for each brood, which we don't want.
 
-  #Subset only those records with a brood ID.
-  ##THERE IS ONE RECORD THAT WAS MEANT TO BE CAUGHT AT A BOX BUT NO ID RECORDED
-  ##NEED TO WORK OUT HOW TO DEAL WITH THIS!!
-  Brood_data_temp <- data %>%
-    filter(!is.na(BroodId))
+  #Remove all mist-net captures
+  data <- data %>%
+    dplyr::filter(TrapingMethod != "mist net")
 
   #Identify any adults caught on the brood
   #Reshape data so that sex is a column not a row (i.e. MaleID, FemaleID)
-  Parents <- Brood_data_temp %>%
+  Parents <- data %>%
     #Remove all records with chicks
     dplyr::filter(Age != "C") %>%
     #Select only the Brood, Individual Id and their sex
-    dplyr::select(BroodID, Ring, Sex) %>%
+    dplyr::select(BroodID, IndvID, Sex) %>%
     # "No ringed/no ring" becomes NA
-    dplyr::mutate(Ring = map_chr(.x = Ring, .f = ~ifelse(grepl(pattern = "ring", .x), NA, .x))) %>%
+    dplyr::mutate(IndvID = purrr::map_chr(.x = IndvID, .f = ~ifelse(grepl(pattern = "ring", .x), NA, .x))) %>%
     #Reshape data so that we have a MaleID and FemaleID column
     #Rather than an individual row for each parent
     reshape2::melt(id = c("BroodID", "Sex")) %>%
@@ -185,20 +193,32 @@ create_brood_CHO <- function(data){
     dplyr::rename(FemaleID = `F`, MaleID = `M`)
 
   #Determine whether clutches are 2nd clutch
-  ClutchType_obsv <- Brood_data_temp %>%
+  ClutchType_obsv <- data %>%
     #For each brood, if a clutch is listed as '2nd' make it 'second' otherwise 'first'.
     #For ClutchType_observed we are excluding 'replacement' as we don't have enough info.
-    group_by(BroodID) %>%
-    summarise(ClutchType_observed = ifelse("2nd" %in% SecondClutch, "second", "first"))
+    dplyr::group_by(BroodID) %>%
+    dplyr::summarise(ClutchType_observed = ifelse("2nd" %in% SecondClutch, "second", "first"))
 
-  Brood_data <- Brood_data_temp %>%
+  #Finally, we add in average mass and tarsus measured for all chicks at 14d
+  #From Capture_data, subset only those chicks that were 14 - 16 days when captured.
+  avg_measure <- data %>%
+    dplyr::filter(!is.na(ChickAge) & between(ChickAge, 14, 16)) %>%
+    #For every brood, determine the average mass and tarsus length
+    dplyr::group_by(BroodID) %>%
+    dplyr::summarise(AvgChickMass = mean(Weight, na.rm = T),
+                     NumberChicksMass = length(na.omit(Weight)),
+                     AvgTarsus = mean(Tarsus, na.rm = T),
+                     NumberChicksTarsus = length(na.omit(Tarsus)),
+                     OriginalTarsusMethod = "Alternative")
+
+  Brood_data <- data %>%
     #Join in information on parents and clutch type
     dplyr::left_join(Parents, by = "BroodID") %>%
     dplyr::left_join(ClutchType_obsv, by = "BroodID") %>%
     #Now we can melt and reshape our data
     #Remove columns that do not contain relevant brood info
     dplyr::select(-CodeLine:-Ring, -JulianDate:-StanderdisedTime, -TrapingMethod,
-                  -BroodId:-Smear, -MeanEggWeight:-NºEggsWeighted) %>%
+                  -BroodId:-Smear, -MeanEggWeight:-NºEggsWeighted, -IndvID) %>%
     #Turn all remaining columns to characters
     #melt/cast requires all values to be of the same type
     dplyr::mutate_all(as.character) %>%
@@ -226,22 +246,8 @@ create_brood_CHO <- function(data){
            BroodSize = NoChicksHatched, BroodSizeError,
            FledgeDate, FledgeDateError,
            NumberFledged, NumberFledgedError,
-           AvgEggMass, NumberEggs)
-
-  #Finally, we add in average mass and tarsus measured for all chicks at 14d
-  #From Capture_data, subset only those chicks that were 14 - 16 days when captured.
-  avg_measure <- data %>%
-    dplyr::filter(!is.na(ChickAge) & between(ChickAge, 14, 16)) %>%
-    #For every brood, determine the average mass and tarsus length
-    dplyr::group_by(BroodID) %>%
-    dplyr::summarise(AvgChickMass = mean(Weight, na.rm = T),
-              NumberChicksMass = n(),
-              AvgTarsus = mean(Tarsus, na.rm = T),
-              NumberChicksTarsus = NumberChicksMass,
-              OriginalTarsusMethod = "Alternative")
-
-  #Add AvgMass and AvgTarsus to the Brood_data tibble
-  Brood_data <- left_join(Brood_data, avg_measure, by = "BroodID") %>%
+           AvgEggMass, NumberEggs) %>%
+    left_join(avg_measure, by = "BroodID") %>%
     dplyr::mutate(ExperimentID = NA)
 
   return(Brood_data)
@@ -255,20 +261,21 @@ create_individual_CHO <- function(data){
   #Determine first age, brood, and ring year of each individual
   Individual_data <- data %>%
     #Arrange data for each individual chronologically
-    dplyr::arrange(Ring, CaptureDate) %>%
+    dplyr::arrange(IndvID, CaptureDate) %>%
     #Replace 'na' with NA in Sex
     dplyr::mutate(Sex = na_if(x = Sex, y = "na")) %>%
     #For every individual
-    dplyr::group_by(PopID, Ring) %>%
+    dplyr::group_by(PopID, IndvID) %>%
     #Determine the first recorded broodID, year and age.
     #Determine if there were any records where sex was identified.
     dplyr::summarise(FirstBrood = first(BroodID),
               FirstYr = first(Year),
               FirstAge = first(Age),
               Species = "PARMAJ",
-              Sex = ifelse(all(is.na(Sex)), "U",
-                           ifelse(any(Sex %in% "M"), "M",
-                                  ifelse(any(Sex %in% "F"), "F", NA)))) %>%
+              Sex = ifelse(all(is.na(Sex)), NA_character_,
+                           ifelse(all(na.omit(Sex) %in% "M"), "M",
+                                  ifelse(all(na.omit(Sex) %in% "F"), "F",
+                                         ifelse(all(c("F", "M") %in% Sex), "C", NA_character_))))) %>%
     dplyr::mutate(#Only assign a brood ID if they were first caught as a chick
       #Otherwise, the broodID will be their first clutch as a parent
       BroodIDLaid = purrr::pmap_chr(.l = list(FirstBrood = .$FirstBrood,
@@ -288,24 +295,10 @@ create_individual_CHO <- function(data){
                                     }),
       #We have no information on cross-fostering, so we assume the brood laid and ringed are the same
       BroodIDFledged = BroodIDLaid,
-      #Determine age at ringing with EUring code.
-      #If caught as a chick assign 1: Pallus.
-      #If caught as adult assign 4: >1yo, exact age unknown.
-      RingAge = purrr::map_dbl(.x = .$FirstAge,
-                               .f = function(.x){
-
-                                 if(is.na(.x) || .x != "C"){
-
-                                   return(4)
-
-                                 } else {
-
-                                   return(1)
-
-                                 }
-
-                               })) %>%
-    select(IndvID = Ring, Species, PopID, BroodIDLaid, BroodIDFledged, RingSeason = FirstYr, RingAge, Sex)
+      #Determine age at ringing as either chick or adult.
+      RingAge = dplyr::case_when(.$FirstAge == "C" ~ "chick",
+                                 is.na(.$FirstAge) || .$FirstAge != "C" ~ "adult")) %>%
+    select(IndvID, Species, PopID, BroodIDLaid, BroodIDFledged, RingSeason = FirstYr, RingAge, Sex)
 
   return(Individual_data)
 
@@ -317,13 +310,13 @@ create_location_CHO <- function(data){
 
   #There are no coordinates or box type information
   #Nestbox data is therefore just
-  Location_data <- tibble(LocationID = unique(data$Box),
+  Location_data <- dplyr::tibble(LocationID = unique(data$Box),
                           NestboxID = unique(data$Box),
                           LocationType = "NB", PopID = "CHO",
                           Latitude = NA, Longitude = NA,
                           StartSeason = NA, EndSeason = NA,
                           Habitat = "Deciduous") %>%
-    filter(!is.na(LocationID))
+    dplyr::filter(!is.na(LocationID))
 
   return(Location_data)
 
