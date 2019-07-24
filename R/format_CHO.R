@@ -76,7 +76,21 @@ format_CHO <- function(db = choose.dir(),
            CaptureDate = lubridate::ymd(paste0(Year, "-01-01")) + JulianDate,
            Time = format.POSIXct(Time, format = "%H:%M:%S"),
            ChickAge = as.numeric(na_if(ChickAge, "na")),
-           BreedingSeason = Year, LocationID = Box)
+           BreedingSeason = Year,
+           LocationID = purrr::pmap_chr(.l = list(TrapingMethod, as.character(Box)),
+                                        .f = ~{
+
+                                          if(..1 == "mist net"){
+
+                                            return("MN1")
+
+                                          } else {
+
+                                            return(..2)
+
+                                          }
+
+                                        }))
 
   ################
   # CAPTURE DATA #
@@ -151,8 +165,7 @@ create_capture_CHO <- function(data){
     dplyr::mutate(Age_observed = dplyr::case_when(.$Age == "C" ~ 1,
                                                   .$Age == "first year" ~ 5,
                                                   .$Age == "adult" ~ 6),
-                  ObserverID = NA, OriginalTarsusMethod = "Alternative",
-                  LocationID = Box) %>%
+                  ObserverID = NA, OriginalTarsusMethod = "Alternative") %>%
     #Select out only those columns we need.
     dplyr::select(IndvID, Species, BreedingSeason,
                   CaptureDate, CaptureTime = Time,
@@ -310,13 +323,22 @@ create_location_CHO <- function(data){
 
   #There are no coordinates or box type information
   #Nestbox data is therefore just
-  Location_data <- dplyr::tibble(LocationID = unique(data$Box),
-                          NestboxID = unique(data$Box),
-                          LocationType = "NB", PopID = "CHO",
+  Location_data <- dplyr::tibble(LocationID = c(na.omit(unique(data$Box)), "MN1"),
+                          NestboxID = c(na.omit(unique(data$Box)), "MN1")) %>%
+    dplyr::mutate(LocationType = purrr::pmap_chr(.l = list(LocationID),
+                                             .f = ~{
+                                               if(..1 == "MN1"){
+
+                                                 return("MN")
+
+                                               } else {
+
+                                                 return("NB")
+
+                                               }}), PopID = "CHO",
                           Latitude = NA, Longitude = NA,
                           StartSeason = NA, EndSeason = NA,
-                          Habitat = "Deciduous") %>%
-    dplyr::filter(!is.na(LocationID))
+                          Habitat = "Deciduous")
 
   return(Location_data)
 
