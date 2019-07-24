@@ -22,12 +22,10 @@
 #'
 #' @inheritParams pipeline_params
 #'
-#' @return Generates 4 .csv files with data in a standard format.
-#' @export
-#' @import readxl
-#' @import janitor
-#' @import reshape2
-#' @import magrittr
+#'@inheritParams pipeline_params
+#'
+#'@return Generates 4 .csv files with data in a standard format.
+#'@export
 
 format_CHO <- function(db = choose.dir(),
                        species = NULL,

@@ -16,5 +16,11 @@ RoxygenNote: 6.1.1
 Suggests: 
     knitr,
     rmarkdown,
-    testthat
+    testthat,
+    readxl,
+    janitor,
+    reshape2,
+    dplyr,
+    utils,
+    purrr
 VignetteBuilder: knitr
