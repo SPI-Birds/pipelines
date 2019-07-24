@@ -627,17 +627,17 @@ create_individual_HAR <- function(Capture_data){
   Indv_data <- Capture_data %>%
     dplyr::filter(!is.na(IndvID)) %>%
     dplyr::arrange(IndvID, CaptureDate, CaptureTime) %>%
-    group_by(IndvID) %>%
-    summarise(Species = first(Species), PopID = "HAR",
+    dplyr::group_by(IndvID) %>%
+    dplyr::summarise(Species = first(Species), PopID = "HAR",
               BroodIDLaid = first(BroodID),
               BroodIDFledged = BroodIDLaid,
               RingSeason = first(lubridate::year(CaptureDate)),
-              RingAge = first(Age_calculated),
+              RingAge = ifelse(any(Age_calculated %in% c(1, 3)), "chick", "adult"),
               Sex = first(Sex)) %>%
     rowwise() %>%
     #For each individual, if their ring age was 1 or 3 (caught in first breeding year)
     #Then we take their first BroodID, otherwise it is NA
-    mutate(BroodIDLaid = ifelse(RingAge %in% c(1, 3), BroodIDLaid, NA),
+    mutate(BroodIDLaid = ifelse(RingAge == "chick", BroodIDLaid, NA),
            BroodIDRinged = BroodIDLaid) %>%
     arrange(RingSeason, IndvID)
 
