@@ -13,6 +13,15 @@
 #'pied flycatcher) have >100 nest records. Only data from these 4 species is
 #'considered.
 #'
+#'\strong{Age}: Chick age is listed as: PP (nestling), PM (fledgling), 1, 1+, 2, 2+.
+#'The numbers are said to follow the EURING system. I'm not sure which
+#'version of the EURING code this would be. I think that 1 = first year bird,
+#'1+ = >first year bird, 2 = second year bird, 2+ = >second year bird.
+#'It's not clear to me the distinction between PP, PM, and 1. For now, only PP and PM
+#'are counted as being caught as chicks (i.e. with exact hatching year known),
+#'everything else is assumed to be an estimate. This does mean that we have some
+#'cases where the Age_calculated is 1 and the Age_observed is >= 5.
+#'
 #'\strong{LayingDateError & HatchDateError}: Accuracy of laying and hatch date
 #'are given as categories: 0-1; 1-2; 2-3; >3 (N.B. Need to check this with
 #'Tapio). More conservative error is provided (i.e. 0-1 is recorded as 1). For
@@ -419,14 +428,14 @@ create_capture_HAR    <- function(db, Brood_data, species_filter){
   #We are only interested in the adult ringing data from this database. The
   #chick data is all in nestlings. Chick ringing has age == "PP", all others are assumed to be adults (even Age = NA).
   Adult_capture    <- Capture_data %>%
-    dplyr::filter(Age != "PP" | is.na(Age)) %>%
+    dplyr::filter(!Age %in% c("PP", "PM") | is.na(Age)) %>%
     dplyr::mutate(Capture_type = "Adult", Last2DigitsRingNr = NA, ChickAge = NA) %>%
     dplyr::mutate(IndvID = paste(RingSeries, RingNumber, sep = "-")) %>%
     dplyr::select(IndvID, BreedingSeason:Time, ObserverID, LocationID, BroodID, Species:Age, WingLength:Tarsus, Capture_type, Last2DigitsRingNr, ChickAge)
 
   message("Determining chick ring numbers...")
 
-  chick_data <- filter(Capture_data, Age == "PP")
+  chick_data <- filter(Capture_data, Age %in% c("PP", "PM"))
 
   ring_pb <- dplyr::progress_estimated(n = nrow(chick_data))
 
@@ -588,12 +597,13 @@ create_capture_HAR    <- function(db, Brood_data, species_filter){
     dplyr::mutate(CaptureTime = na_if(paste(Time, "00", sep = ":"), "NA:00"),
            CapturePopID = "HAR", CapturePlot = NA,
            ReleasePopID = "HAR", ReleasePlot = NA,
-           Age = dplyr::case_when(Age %in% c("PP", "PM", "FL") ~ 1)) %>%
+           ischick = dplyr::case_when(Age == "PP" ~ 1,
+                                      Age %in% c("PM", "FL") ~ 3)) %>%
     #Determine age at first capture for every individual
     #First arrange the data chronologically within each individual
     dplyr::arrange(IndvID, CaptureDate) %>%
     #Calculate age at each capture based on first capture
-    calc_age(ID = IndvID, Age = Age, Date = CaptureDate, Year = BreedingSeason) %>%
+    calc_age(ID = IndvID, Age = ischick, Date = CaptureDate, Year = BreedingSeason) %>%
     #Make AgeObsv, that doesn't require any calculation, just uses observations at the time of capture
     #Assume that PP = 1, PM/FL = 3 (known to hatch this year), 1 = 5 (known to hatch last year),
     #1+ = 4 (hatched atleast 1 year ago), 2 = 7 (known to hatch 2 years ago),
@@ -607,6 +617,8 @@ create_capture_HAR    <- function(db, Brood_data, species_filter){
                   OriginalTarsusMethod = "Alternative") %>%
     select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, CapturePopID, CapturePlot,
            ReleasePopID, ReleasePlot, Mass, Tarsus, OriginalTarsusMethod, WingLength, Age_observed, Age_calculated, ChickAge, Sex, BroodID)
+
+  return(Capture_data_expand)
 
 }
 
