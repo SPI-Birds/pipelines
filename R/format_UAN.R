@@ -1,33 +1,62 @@
-#' Construct standard summary for data from the Univeristy of Antwerp.
+#'Construct standard summary for data from the Univeristy of Antwerp.
 #'
-#' A pipeline to produce a standard output for 2 hole-nesting bird study populations
-#' administered by the University of Antwerp.
-#' Output follows the HNB standard breeding data format.
+#'A pipeline to produce a standard output for 2 hole-nesting bird study
+#'populations administered by the University of Antwerp. Output follows the HNB
+#'standard breeding data format.
 #'
-#' This section provides details on data management choices that are unique to this data.
-#' For a general description of the standard format please see
+#'This section provides details on data management choices that are unique to
+#'this data. For a general description of the standard format please see
 #'\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
 #'
-#' \strong{ClutchType_observed}: The raw data distinguishes second and third
-#' nests and first second and third replacements. We group these all as 'second'
-#' and 'replacement'.
+#'\strong{ClutchType_observed}: The raw data distinguishes second and third
+#'nests and first second and third replacements. We group these all as 'second'
+#'and 'replacement'.
 #'
-#' \strong{ClutchSizeError}: The raw data includes a column to determine whether clutch size
-#' was counted with or without a brooding female. The presence of a brooding female
-#' can effect the uncertainty in the count. After discussions with the data owner
-#' clutch size counted with a brooding female have an error of 2.
+#'\strong{ClutchSizeError}: The raw data includes a column to determine whether
+#'clutch size was counted with or without a brooding female. The presence of a
+#'brooding female can effect the uncertainty in the count. After discussions
+#'with the data owner clutch size counted with a brooding female have an error
+#'of 2.
 #'
-#' \strong{ExperimentID}: Experimental codes are provided in their original
-#' format. These still need to be translated into our experimental groups.
+#'\strong{ExperimentID}: Experimental codes are provided in their original
+#'format. These still need to be translated into our experimental groups.
 #'
-#' \strong{Tarsus}: Tarsus is measured using Svennson's Standard in early years and
-#' Svennson's Alternative in later years. When Svennson's Alternative is available this is used,
-#' otherwise we use converted Svensson's Standard, using \code{\link[HNBStandFormat]{convert_tarsus}}.
+#'\strong{Tarsus}: Tarsus is measured using Svennson's Standard in early years
+#'and Svennson's Alternative in later years. When Svennson's Alternative is
+#'available this is used, otherwise we use converted Svensson's Standard, using
+#'\code{\link[HNBStandFormat]{convert_tarsus}}.
+#'
+#'\strong{Age}: For Age_observed: \itemize{
+#'\item If a capture has a recorded
+#'ChickAge or the Capture Type is listed as 'chick' it is given a EURING code 1:
+#'nestling or chick, unable to fly freely, still able to be caught by hand.
+#'\item Recorded value 1 (first calendar year) is given a EURING code 3:
+#'full-grown bird hatched in the breeding season of this calendar year.
+#'\item Recorded value 2 (second calendar year) is given a EURING code 5:
+#'a bird hatched last calendar year and now in its second calendar year.
+#'\item Recorded value 3 (>first calendar year) is given a EURING code 4:
+#'full-grown bird hatched before this calendar year;
+#'year of hatching otherwise unknown.
+#'\item Recorded value 4 (>second calendar year) is given a EURING code 6:
+#'full-grown bird hatched before last calendar year; year of hatching otherwise
+#'unknown.
+#'\item After discussing with data owners, recorded value 5 (full grown age unknown)
+#'is given NA.
+#'
+#'For Age_calculated \itemize{
+#'\item Any capture record with EURING <= 3 is considered to have a known age
+#'(i.e. EURING codes 5, 7, 9, etc.). We consider identification in the nest
+#'or as fledglings to be reliable indicators of year of hatching.
+#'\item Any capture record with EURING >3 is considered to have an uncertain age
+#'(i.e. EURING codes 4, 6, 8, etc.). We consider aging of adults to be too
+#'uncertain.
+#'}
+#'}
 #'
 #'@inheritParams pipeline_params
 #'
-#' @return Generates 4 .csv files with data in a standard format.
-#' @export
+#'@return Generates 4 .csv files with data in a standard format.
+#'@export
 
 format_UAN <- function(db = choose.dir(),
                        species = NULL,
@@ -68,144 +97,7 @@ format_UAN <- function(db = choose.dir(),
 
   print("Compiling capture information...")
 
-  #Capture data includes all times an individual was captured (with measurements
-  #like mass, tarsus etc.). This will include first capture as nestling (for
-  #residents) This means there will be multiple records for a single individual.
-
-  Capture_data <- CAPTURE_info %>%
-    #Add in PopID
-    dplyr::left_join(Pop_codes, by = "SA") %>%
-    #Make tarsus length into standard method (Svensson Alt)
-    #Firstly, convert the Svennson's standard measures to Svennson's Alt.
-    #Then only use this converted measure when actual Svennson's Alt is unavailable.
-    dplyr::mutate(TA = convert_tarsus(TA, method = "Standard"),
-                  Tarsus = purrr::pmap_dbl(.l = list(SvenStd = .$TA,
-                                                     SvenAlt = .$TANEW),
-                                           .f = function(SvenStd, SvenAlt){
-
-                                             if(!is.na(SvenAlt)){
-
-                                               return(SvenAlt)
-
-                                             } else if(!is.na(SvenStd)){
-
-                                               return(SvenStd)
-
-                                             } else {
-
-                                               return(NA)
-
-                                             }
-
-                                           })) %>%
-    #Also join in Species
-    #Remove only great tit and blue tit (other species have < 100 nests)
-    dplyr::filter(SOORT %in% c("pc", "pm")) %>%
-    dplyr::left_join(Species_codes, by = "SOORT") %>%
-    #There is no information on release location, so I assume it's the same as the capture location.
-    dplyr::mutate(CaptureDate = lubridate::ymd(VD),
-                  SampleYear = lubridate::year(CaptureDate),
-                  CaptureTime = na_if(paste(UUR %/% 1,
-                                            stringr::str_pad(string = round((UUR %% 1)*60),
-                                                             width = 2,
-                                                             pad = "0"), sep = ":"), "NA:NA"),
-                  IndvID = RN,
-                  CapturePopID = PopID, CapturePlot = GB,
-                  ReleasePopID = PopID, ReleasePlot = GB,
-                  Mass = GEW, Tarsus = Tarsus,
-                  WingLength = VLL) %>%
-    #Calculate age at capture and chick age based on the LT column
-    dplyr::bind_cols(purrr::map2_dfr(.x = .$LT, .y = .$VW,
-                                    .f = ~{
-
-                                      # If Age (LT) was not recorded
-                                      # instead estimate age from the capture type:
-                                      if(is.na(.x) | .x == 0){
-
-                                        #Capture type P and PP are chicks in the nest
-                                        if(.y %in% c("P", "PP")){
-
-                                          return(tibble::tibble(Age_obsv = 1, ChickAge = NA))
-
-                                        #Captures in mist nets, observed rings, cage traps, roost checks
-                                        #must be able to fly. But these can be anything from fledglings
-                                        #in first calendar year +
-                                        } else if (.y %in% c("FU", "GE", "MN", "ON", "NO", "SK", "SL", "LS")){
-
-                                          return(tibble::tibble(Age_obsv = 2, ChickAge = NA))
-
-                                        } else {
-
-                                          #If no age or capture type is given, then age is unknown.
-                                          return(tibble::tibble(Age_obsv = NA, ChickAge = NA))
-
-                                        }
-
-                                      }
-
-                                      #If age is > 5 this is the chick age in days
-                                      if(.x > 5){
-
-                                        return(tibble::tibble(Age_obsv = 1, ChickAge = .x))
-
-                                      } else {
-
-                                        #If it's 1-5 then we translate into EURING codes for adults
-                                        if(.x %in% c(1, 2)){
-
-                                          return(tibble::tibble(Age_obsv = 1 + .x*2, ChickAge = NA))
-
-                                        } else {
-
-                                          return(tibble::tibble(Age_obsv = 4 + (.x - 3)*2, ChickAge = NA))
-
-                                        }
-
-                                      }
-
-                                    })) %>%
-  #Determine age at first capture for every individual
-  #First arrange the data chronologically within each individual
-  arrange(IndvID, CaptureDate) %>%
-    #Then, for each individual, determine the first age and year of capture
-    group_by(IndvID) %>%
-    mutate(FirstAge = first(Age_obsv),
-           FirstYear = first(SampleYear)) %>%
-    ungroup() %>%
-    #Calculate age at each capture using EUring codes
-    mutate(Age_calc = purrr::pmap_dbl(.l = list(IndvID = .$IndvID,
-                                                Age = .$FirstAge,
-                                                Year1 = .$FirstYear,
-                                                YearN = .$SampleYear),
-                                      .f = function(IndvID, Age, Year1, YearN){
-
-                                        # If age at first capture is unknown
-                                        # or the bird is unringed
-                                        # we cannot determine age at later captures
-                                        if(is.na(Age) | is.na(IndvID)){
-
-                                          return(NA)
-
-                                        } else {
-
-                                          #Determine number of years since first capture...
-                                          diff_yr <- (YearN - Year1)
-
-                                          #Increase the age by 2*number of years.
-                                          #We don't need to determine whether it was
-                                          #first caught as check etc.
-                                          #the nuance in the age is already in Age_obsv
-                                          return(Age + 2*diff_yr)
-
-                                        }
-
-                                      })) %>%
-    #Select just the required cols
-    dplyr::select(IndvID, Species, CaptureDate, CaptureTime, CapturePopID, CapturePlot,
-                  ReleasePopID, ReleasePlot, Mass, Tarsus, WingLength,
-                  Age_obsv, Age_calc, ChickAge) %>%
-    #Arrange by individual and date/time
-    dplyr::arrange(IndvID, CaptureDate, CaptureTime)
+  Capture_data <- create_capture_UAN(CAPTURE_info, species)
 
   ###################
   # INDIVIDUAL DATA #
@@ -368,5 +260,146 @@ create_brood_UAN <- function(data, species_filter){
 
   ## NEED TO ADD ORIGINAL TARSUS METHOD BASED ON CAPTURE DATA LATER
   return(Brood_data)
+
+}
+
+###################################################################################################
+
+create_capture_UAN <- function(data, species_filter){
+
+  #Rename columns to make it easier to understand
+  data <- dplyr::rename(data, Species = SOORT,
+                        IndvID = RN, MetalRingStatus = NRN,
+                        ColourRing = KLR, ColourRingStatus = NKLR,
+                        TagType = TAGTY, TagID = TAG,
+                        TagStatus = NTAG, BroodID = NN,
+                        Sex = GS, CaptureDate = VD,
+                        Age_observed = LT,
+                        CapturePlot = GB, LocationID = PL,
+                        CaptureMethod = VW,
+                        ObserverID = ME, WingLength = VLL,
+                        Mass = GEW, CaptureTime = UUR,
+                        TarsusStandard = TA,
+                        BeakLength = BL, BeakHeight = BH,
+                        MoultStatus = DMVL,
+                        DNASample = BLOED,
+                        MoultScore = RUI, Comments = COMM,
+                        PrimaryKey = RECNUM, SplitRing = SPLIT,
+                        TarsusAlt = TANEW, Longitude = COORX,
+                        Latitude = COORY, CapturePopID = SA,
+                        Ticks = TEEK, ExperimentID = exp,
+                        OldColourRing = klr_old,
+                        UniqueLocationCode = gbpl)
+
+  #Capture data includes all times an individual was captured (with measurements
+  #like mass, tarsus etc.). This will include first capture as nestling (for
+  #residents) This means there will be multiple records for a single individual.
+
+  pb <- dplyr::progress_estimated(n = nrow(data))
+
+  Capture_data <- data %>%
+    #Adjust species and PopID
+    dplyr::mutate(CapturePopID = dplyr::case_when(.$CapturePopID == "FR" ~ "BOS",
+                                           .$CapturePopID == "PB" ~ "PEE"),
+                  Species = dplyr::case_when(.$Species == "pm" ~ Species_codes[which(Species_codes$SpeciesID == 14640), ]$Code,
+                                             .$Species == "pc" ~ Species_codes[which(Species_codes$SpeciesID == 14620), ]$Code)) %>%
+    #Filter by species
+    dplyr::filter(Species %in% species_filter) %>%
+    #Make tarsus length into standard method (Svensson Alt)
+    #Firstly, convert the Svennson's standard measures to Svennson's Alt.
+    #Then only use this converted measure when actual Svennson's Alt is unavailable.
+    dplyr::mutate(TarsusStandard = convert_tarsus(TarsusStandard, method = "Standard")) %>%
+    #Add tarsus and original tarsus method with bind_cols
+    dplyr::bind_cols(purrr::pmap_dfr(.l = list(SvenStd = .$TarsusStandard, SvenAlt = .$TarsusAlt),
+                                     .f = function(SvenStd, SvenAlt){
+
+                                       if(!is.na(SvenAlt)){
+
+                                         return(tibble::tibble(Tarsus = SvenAlt, OriginalTarsusMethod = "Alternative"))
+
+                                       } else if(!is.na(SvenStd)){
+
+                                         return(tibble::tibble(Tarsus = SvenStd, OriginalTarsusMethod = "Standard"))
+
+                                       } else {
+
+                                         return(tibble::tibble(Tarsus = NA, OriginalTarsusMethod = NA))
+
+                                       }})) %>%
+    #Create NAs and convert date/time
+    dplyr::mutate(CaptureDate = lubridate::ymd(CaptureDate),
+                  BreedingSeason = lubridate::year(CaptureDate),
+                  CaptureTime = na_if(paste(CaptureTime %/% 1,
+                                            stringr::str_pad(string = round((CaptureTime %% 1)*60),
+                                                             width = 2,
+                                                             pad = "0"), sep = ":"), "NA:NA"),
+                  ReleasePopID = CapturePopID, ReleasePlot = CapturePlot) %>%
+    #Calculate age at capture and chick age based on the LT column
+    dplyr::bind_cols(purrr::pmap_dfr(.l = list(.$Age_observed, .$CaptureMethod),
+                                     .f = ~{
+
+                                       pb$print()$tick()
+
+                                       # If Age (LT) was not recorded
+                                       # instead estimate age from the capture type:
+                                       if(is.na(..1) | ..1 == 0){
+
+                                         #Capture type P and PP are chicks in the nest
+                                         if(..2 %in% c("P", "PP")){
+
+                                           return(tibble::tibble(Age_observed = 1, ChickAge = NA))
+
+                                           #Captures in mist nets, observed rings, cage traps, roost checks
+                                           #must be able to fly. But these can be anything from fledglings
+                                           #in first calendar year +
+                                           #Comment this out because it's really age calculated rather than observed
+                                         # } else if (.y %in% c("FU", "GE", "MN", "ON", "NO", "SK", "SL", "LS")){
+                                         #
+                                         #   return(tibble::tibble(Age_observed = 2, ChickAge = NA))
+
+                                         } else {
+
+                                           #If no age and no chick capture type is given, then observed age is unknown.
+                                           return(tibble::tibble(Age_observed = NA, ChickAge = NA))
+
+                                         }
+
+                                       }
+
+                                       #If age is > 5 this is the chick age in days
+                                       if(..1 > 5){
+
+                                         return(tibble::tibble(Age_observed = 1, ChickAge = ..1))
+
+                                       } else {
+
+                                         #If it's 1-5 then we translate into EURING codes for adults
+                                         if(..1 %in% c(1, 2)){
+
+                                           return(tibble::tibble(Age_observed = 1 + ..1*2, ChickAge = NA))
+
+                                         } else if (..1 %in% c(3, 4)) {
+
+                                           return(tibble::tibble(Age_observed = 4 + (..1 - 3)*2, ChickAge = NA))
+
+                                         } else {
+
+                                           return(tibble::tibble(Age_observed = NA, ChickAge = NA))
+
+                                         }
+
+                                       }
+
+                                     })) %>%
+    #Determine age at first capture for every individual
+    dplyr::mutate(ischick = dplyr::case_when(.$Age_observed <= 3 ~ 1)) %>%
+    calc_age(ID = IndvID, Age = ischick, Date = CaptureDate, Year = BreedingSeason) %>%
+    #Arrange columns
+    dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime,
+                  ObserverID, LocationID, CapturePopID, CapturePlot,
+                  ReleasePopID, ReleasePlot, Mass, Tarsus, OriginalTarsusMethod,
+                  WingLength, Age_observed, Age_calculated, ChickAge)
+
+  return(Capture_data)
 
 }
