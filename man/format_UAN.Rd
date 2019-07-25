@@ -4,32 +4,36 @@
 \alias{format_UAN}
 \title{Construct standard summary for data from the Univeristy of Antwerp.}
 \usage{
-format_UAN(db = choose.dir(), Species = NULL, path = ".",
+format_UAN(db = choose.dir(), species = NULL, path = ".",
   debug = FALSE)
 }
 \arguments{
-\item{db}{Directory where raw data files are stored.}
+\item{db}{Location of database file.}
 
-\item{Species}{A numeric vector. Which species should be included (EUring codes)? If blank will return all major species (see details below).}
+\item{species}{Species of interest. The 6 letter codes of all the species of
+interest as listed in the
+\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{standard
+protocol}. If blank will return all major species.}
 
 \item{path}{Location where output csv files will be saved.}
 
 \item{debug}{For internal use when editing pipelines. If TRUE, pipeline
-generates a summary of pipeline data. This
-includes: a) Histogram of continuous variables with mean/SD b) unique
-values of all categorical variables.}
+generates a summary of pipeline data. This includes: a) Histogram of
+continuous variables with mean/SD b) unique values of all categorical
+variables.}
 }
 \value{
-Generates 5 .csv files with data in a standard format.
+Generates 4 .csv files with data in a standard format.
 }
 \description{
 A pipeline to produce a standard output for 2 hole-nesting bird study populations
-administered by the University of Amsterdam.
+administered by the University of Antwerp.
 Output follows the HNB standard breeding data format.
 }
 \details{
-This section provides details on data management choices that are unique to the NIOO database.
-For a general description of the standard format please see XXXXX PLACE HOLDER!
+This section provides details on data management choices that are unique to this data.
+For a general description of the standard format please see
+\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
 
 \strong{ClutchType_observed}: The raw data distinguishes second and third
 nests and first second and third replacements. We group these all as 'second'

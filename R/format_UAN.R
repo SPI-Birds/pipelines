@@ -1,11 +1,12 @@
 #' Construct standard summary for data from the Univeristy of Antwerp.
 #'
 #' A pipeline to produce a standard output for 2 hole-nesting bird study populations
-#' administered by the University of Amsterdam.
+#' administered by the University of Antwerp.
 #' Output follows the HNB standard breeding data format.
 #'
-#' This section provides details on data management choices that are unique to the NIOO database.
-#' For a general description of the standard format please see XXXXX PLACE HOLDER!
+#' This section provides details on data management choices that are unique to this data.
+#' For a general description of the standard format please see
+#'\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
 #'
 #' \strong{ClutchType_observed}: The raw data distinguishes second and third
 #' nests and first second and third replacements. We group these all as 'second'
@@ -17,23 +18,26 @@
 #' \strong{Tarsus}: Tarsus is measured using Svennson's Standard in early years and
 #' Svennson's Alternative in later years. When Svennson's Alternative is available this is used,
 #' otherwise we use converted Svensson's Standard, using \code{\link[HNBStandFormat]{convert_tarsus}}.
-#' @param db Directory where raw data files are stored.
-#' @param Species A numeric vector. Which species should be included (EUring codes)? If blank will return all major species (see details below).
-#' @param path Location where output csv files will be saved.
-#' @param debug For internal use when editing pipelines. If TRUE, pipeline
-#'   generates a summary of pipeline data. This
-#'   includes: a) Histogram of continuous variables with mean/SD b) unique
-#'   values of all categorical variables.
 #'
-#' @return Generates 5 .csv files with data in a standard format.
+#'@inheritParams pipeline_params
+#'
+#' @return Generates 4 .csv files with data in a standard format.
 #' @export
-#' @import dplyr
-#' @import purrr
 
 format_UAN <- function(db = choose.dir(),
-                       Species = NULL,
+                       species = NULL,
                        path = ".",
                        debug = FALSE){
+
+  #Force choose.dir() if used
+  force(db)
+
+  #Assign species for filtering
+  if(is.null(species)){
+
+    species <- Species_codes$Code
+
+  }
 
   start_time <- Sys.time()
 

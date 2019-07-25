@@ -40,6 +40,15 @@ hole nesting species; however, only 4 of these (great tit, blue tit, coal tit,
 pied flycatcher) have >100 nest records. Only data from these 4 species is
 considered.
 
+\strong{Age}: Chick age is listed as: PP (nestling), PM (fledgling), 1, 1+, 2, 2+.
+The numbers are said to follow the EURING system. I'm not sure which
+version of the EURING code this would be. I think that 1 = first year bird,
+1+ = >first year bird, 2 = second year bird, 2+ = >second year bird.
+It's not clear to me the distinction between PP, PM, and 1. For now, only PP and PM
+are counted as being caught as chicks (i.e. with exact hatching year known),
+everything else is assumed to be an estimate. This does mean that we have some
+cases where the Age_calculated is 1 and the Age_observed is >= 5.
+
 \strong{LayingDateError & HatchDateError}: Accuracy of laying and hatch date
 are given as categories: 0-1; 1-2; 2-3; >3 (N.B. Need to check this with
 Tapio). More conservative error is provided (i.e. 0-1 is recorded as 1). For
