@@ -78,6 +78,8 @@ format_UAN <- function(db = choose.dir(),
 
   start_time <- Sys.time()
 
+  message("\n Loading all files")
+
   all_files <- list.files(path = db, pattern = ".xlsx", full.names = TRUE)
 
   BOX_info <- readxl::read_excel(all_files[grepl("BOX", all_files)])
@@ -90,7 +92,7 @@ format_UAN <- function(db = choose.dir(),
   BROOD_info <- dplyr::rename(BROOD_info, BroodID = NN, Species = SOORT, Plot = GB, NestboxNumber = PL,
                               LayingDate = LD, ClutchSizeError = JAE,
                               ClutchSize = AE, NrUnhatchedChicks = AEN,
-                              TotalHatchedChicks = NP, NrDeadChicks = PD,
+                              BroodSize = NP, NrDeadChicks = PD,
                               NumberFledged = PU, LDInterruption = LO,
                               ClutchType_observed = TY, MaleID = RM, FemaleID = RW,
                               Unknown = AW, ChickWeighAge = WD, ChickWeighTime = WU,
@@ -158,7 +160,7 @@ format_UAN <- function(db = choose.dir(),
   # BROOD DATA #
   ##############
 
-  print("Compiling brood information...")
+  message("\n Compiling brood information...")
 
   Brood_data <- create_brood_UAN(BROOD_info, CAPTURE_info, species)
 
@@ -166,7 +168,7 @@ format_UAN <- function(db = choose.dir(),
   # CAPTURE DATA #
   ################
 
-  print("Compiling capture information...")
+  message("\n Compiling capture information...")
 
   Capture_data <- create_capture_UAN(CAPTURE_info, species)
 
@@ -174,19 +176,31 @@ format_UAN <- function(db = choose.dir(),
   # INDIVIDUAL DATA #
   ###################
 
-  print("Compiling individual information...")
+  message("\n Compiling individual information...")
 
-  Individual_data <- create_individual_UAN(INDV_info, Capture_info, species)
+  Individual_data <- create_individual_UAN(INDV_info, CAPTURE_info, species)
 
   #################
   # LOCATION DATA #
   #################
 
-  print("Compiling location information...")
+  message("\n Compiling location information...")
 
   Location_data <- create_location_UAN(BOX_info)
 
-  print("Saving .csv files...")
+  #########
+  # DEBUG #
+  #########
+
+  if(debug){
+
+    message("\n Generating debug report...")
+
+    generate_debug_report(path = path, Pop = "UAN", Brood_data = Brood_data, Capture_data = Capture_data, Indv_data = Individual_data)
+
+  }
+
+  message("\n Saving .csv files...")
 
   write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_UAN.csv"), row.names = F)
 
@@ -218,7 +232,7 @@ create_brood_UAN <- function(data, CAPTURE_info, species_filter){
     dplyr::select(-TarsusAlt, -TarsusStd)
 
   #Create a table with brood information.
-  clutchtype <- dplyr::progress_estimated(n = nrow(BROOD_info))
+  clutchtype <- dplyr::progress_estimated(n = nrow(data))
 
   Brood_data <- data %>%
     #Convert columns to expected values
@@ -272,7 +286,7 @@ create_capture_UAN <- function(data, species_filter){
   #like mass, tarsus etc.). This will include first capture as nestling (for
   #residents) This means there will be multiple records for a single individual.
 
-  pb <- dplyr::progress_estimated(n = nrow(data))
+  pb <- dplyr::progress_estimated(n = nrow(data) * 2)
 
   Capture_data <- data %>%
     #Adjust species and PopID
@@ -289,6 +303,8 @@ create_capture_UAN <- function(data, species_filter){
     #Add tarsus and original tarsus method with bind_cols
     dplyr::bind_cols(purrr::pmap_dfr(.l = list(SvenStd = .$TarsusStandard, SvenAlt = .$TarsusAlt),
                                      .f = function(SvenStd, SvenAlt){
+
+                                       pb$print()$tick()
 
                                        if(!is.na(SvenAlt)){
 
@@ -416,7 +432,7 @@ create_individual_UAN <- function(data, CAPTURE_info, species_filter){
                   Sex = dplyr::case_when(.$Sex %in% c(1, 3) ~ "M",
                                          .$Sex %in% c(2, 4) ~ "F")) %>%
     dplyr::filter(!is.na(Species) & Species %in% species_filter) %>%
-    dplyr::mutate(BroodIDRinged = BroodIDLaid,
+    dplyr::mutate(BroodIDFledged = BroodIDLaid,
            RingSeason = FirstYear,
            RingAge = dplyr::case_when(.$FirstAge > 5 | .$FirstAge == 1 ~ "chick",
                                       is.infinite(.$FirstAge) | .$FirstAge <= 5 ~ "adult")) %>%
@@ -430,7 +446,7 @@ create_individual_UAN <- function(data, CAPTURE_info, species_filter){
 
 create_location_UAN <- function(data){
 
-  Location_data <- BOX_info %>%
+  Location_data <- data %>%
     dplyr::transmute(LocationID = GBPL, NestboxID = GBPL,
                      PopID = dplyr::case_when(.$SA == "FR" ~ "BOS",
                                               .$SA == "PB" ~ "PEE"),

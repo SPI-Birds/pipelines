@@ -4,13 +4,13 @@
 \alias{calc_clutchtype}
 \title{Calculate clutch type (when laying date is in date format)}
 \usage{
-calc_clutchtype(data, na.rm = T)
+calc_clutchtype(data, na.rm = FALSE)
 }
 \arguments{
 \item{data}{Data frame. Brood data to use for conversion}
 
 \item{na.rm}{Logical. Should NA's be removed and treated as 0s. If FALSE, NAs
-are treated as true unknowns.}
+are treated as true unknowns. If TRUE, NAs are treated as 0s.}
 }
 \value{
 A character vector with either 'first', 'replacement', 'second', or
@@ -32,5 +32,5 @@ LayingDate = as.Date(paste(BreedingSeason,
                            sample(c(4, 5, 6), size = 100, replace = TRUE),
                            sample(seq(1, 31, 1), size = 100, replace = TRUE), sep = "-"),
                            format = "\%Y-\%m-\%d"))
-calc_clutchtype(data = dat, na.rm = TRUE)
+calc_clutchtype(data = dat, na.rm = FALSE)
 }

@@ -26,23 +26,60 @@ variables.}
 Generates 4 .csv files with data in a standard format.
 }
 \description{
-A pipeline to produce a standard output for 2 hole-nesting bird study populations
-administered by the University of Antwerp.
-Output follows the HNB standard breeding data format.
+A pipeline to produce a standard output for 2 hole-nesting bird study
+populations administered by the University of Antwerp. Output follows the HNB
+standard breeding data format.
 }
 \details{
-This section provides details on data management choices that are unique to this data.
-For a general description of the standard format please see
+This section provides details on data management choices that are unique to
+this data. For a general description of the standard format please see
 \href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
 
 \strong{ClutchType_observed}: The raw data distinguishes second and third
 nests and first second and third replacements. We group these all as 'second'
 and 'replacement'.
 
+\strong{ClutchSizeError}: The raw data includes a column to determine whether
+clutch size was counted with or without a brooding female. The presence of a
+brooding female can effect the uncertainty in the count. After discussions
+with the data owner clutch size counted with a brooding female have an error
+of 2.
+
 \strong{ExperimentID}: Experimental codes are provided in their original
 format. These still need to be translated into our experimental groups.
 
-\strong{Tarsus}: Tarsus is measured using Svennson's Standard in early years and
-Svennson's Alternative in later years. When Svennson's Alternative is available this is used,
-otherwise we use converted Svensson's Standard, using \code{\link[HNBStandFormat]{convert_tarsus}}.
+\strong{Tarsus}: Tarsus is measured using Svennson's Standard in early years
+and Svennson's Alternative in later years. When Svennson's Alternative is
+available this is used, otherwise we use converted Svensson's Standard, using
+\code{\link[HNBStandFormat]{convert_tarsus}}.
+
+\strong{Age}: For Age_observed: \itemize{
+\item If a capture has a recorded
+ChickAge or the Capture Type is listed as 'chick' it is given a EURING code 1:
+nestling or chick, unable to fly freely, still able to be caught by hand.
+\item Recorded value 1 (first calendar year) is given a EURING code 3:
+full-grown bird hatched in the breeding season of this calendar year.
+\item Recorded value 2 (second calendar year) is given a EURING code 5:
+a bird hatched last calendar year and now in its second calendar year.
+\item Recorded value 3 (>first calendar year) is given a EURING code 4:
+full-grown bird hatched before this calendar year;
+year of hatching otherwise unknown.
+\item Recorded value 4 (>second calendar year) is given a EURING code 6:
+full-grown bird hatched before last calendar year; year of hatching otherwise
+unknown.
+\item After discussing with data owners, recorded value 5 (full grown age unknown)
+is given NA.
+
+For Age_calculated \itemize{
+\item Any capture record with EURING <= 3 is considered to have a known age
+(i.e. EURING codes 5, 7, 9, etc.). We consider identification in the nest
+or as fledglings to be reliable indicators of year of hatching.
+\item Any capture record with EURING >3 is considered to have an uncertain age
+(i.e. EURING codes 4, 6, 8, etc.). We consider aging of adults to be too
+uncertain.
+}
+}
+
+\strong{Latitude and Longitude}: Location data is stored in Lambert72 CRS.
+This has been converted to WGS84 to be standard with other systems.
 }
