@@ -160,7 +160,7 @@ format_UAN <- function(db = choose.dir(),
 
   print("Compiling brood information...")
 
-  Brood_data <- create_brood_UAN(BROOD_info, species)
+  Brood_data <- create_brood_UAN(BROOD_info, CAPTURE_info, species)
 
   ################
   # CAPTURE DATA #
@@ -186,12 +186,6 @@ format_UAN <- function(db = choose.dir(),
 
   Location_data <- create_location_UAN(BOX_info)
 
-  ################################
-  # DATA WRANGLING BEFORE SAVING #
-  ################################
-
-
-
   print("Saving .csv files...")
 
   write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_UAN.csv"), row.names = F)
@@ -202,8 +196,6 @@ format_UAN <- function(db = choose.dir(),
 
   write.csv(x = Location_data, file = paste0(path, "\\Location_data_UAN.csv"), row.names = F)
 
-  # write.csv(x = Pop_data, file = paste0(path, "\\Summary_data_UAN.csv"), row.names = F)
-
   time <- difftime(Sys.time(), start_time, units = "sec")
 
   print(paste0("All tables generated in ", round(time, 2), " seconds"))
@@ -212,7 +204,18 @@ format_UAN <- function(db = choose.dir(),
 
 #############################################################################################
 
-create_brood_UAN <- function(data, species_filter){
+create_brood_UAN <- function(data, CAPTURE_info, species_filter){
+
+  #For every brood in the capture data table, determine whether measurements were
+  #taken with Svensson's standard or alternative
+  Tarsus_method <- CAPTURE_info %>%
+    dplyr::group_by(BroodID) %>%
+    dplyr::summarise(TarsusAlt = length(na.omit(TarsusAlt)) > 0,
+                     TarsusStd = length(na.omit(TarsusStandard)) > 0) %>%
+    dplyr::mutate(OriginalTarsusMethod = dplyr::case_when(TarsusAlt == "TRUE" ~ "Alternative",
+                                                          TarsusAlt != "TRUE" & TarsusStd == "TRUE" ~ "Standard",
+                                                          TarsusAlt != "TRUE" & TarsusStd != "TRUE" ~ NA_character_)) %>%
+    dplyr::select(-TarsusAlt, -TarsusStd)
 
   #Create a table with brood information.
   clutchtype <- dplyr::progress_estimated(n = nrow(BROOD_info))
@@ -241,6 +244,7 @@ create_brood_UAN <- function(data, species_filter){
                   NumberChicksTarsus = NumberChicksMass) %>%
     #Calculate clutchtype, assuming NAs are true unknowns
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(., na.rm = FALSE)) %>%
+    dplyr::left_join(Tarsus_method, by = "BroodID") %>%
     #Order columns
     dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot,
                   LocationID, FemaleID, MaleID, ClutchType_observed,
@@ -254,9 +258,8 @@ create_brood_UAN <- function(data, species_filter){
                   AvgEggMass, NumberEggs,
                   AvgChickMass, NumberChicksMass,
                   AvgTarsus, NumberChicksTarsus,
-                  ExperimentID)
+                  OriginalTarsusMethod, ExperimentID)
 
-  ## NEED TO ADD ORIGINAL TARSUS METHOD BASED ON CAPTURE DATA LATER
   return(Brood_data)
 
 }
