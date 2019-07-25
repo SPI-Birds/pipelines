@@ -12,6 +12,11 @@
 #' nests and first second and third replacements. We group these all as 'second'
 #' and 'replacement'.
 #'
+#' \strong{ClutchSizeError}: The raw data includes a column to determine whether clutch size
+#' was counted with or without a brooding female. The presence of a brooding female
+#' can effect the uncertainty in the count. After discussions with the data owner
+#' clutch size counted with a brooding female have an error of 2.
+#'
 #' \strong{ExperimentID}: Experimental codes are provided in their original
 #' format. These still need to be translated into our experimental groups.
 #'
