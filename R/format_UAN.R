@@ -176,82 +176,31 @@ format_UAN <- function(db = choose.dir(),
 
   print("Compiling individual information...")
 
-  #This is a summary of each individual and general lifetime information (e.g. sex, resident/immigrant)
+  Individual_data <- create_individual_UAN(INDV_info, Capture_info, species)
 
-  Sex_table <- data_frame(sex = c(1, 2, 3, 4, 5),
-                          Sex = c("M", "F", "M", "F", "U"))
+  #################
+  # LOCATION DATA #
+  #################
 
-  #To determine which brood an individual is from, we subset the CAPTURE_info table to include only those records where an individual was caught as a nestling (P).
-  #We then take the nest that this nestling was in when it was caught.
-  Indv_broods <- CAPTURE_info %>%
-    group_by(RN) %>%
-    filter(!is.na(NN) & VW == "P") %>%
-    summarise(BroodIDLaid = first(NN)) %>%
-    rename(rn = RN)
+  print("Compiling location information...")
 
-  Indv_Pop <- Capture_data %>%
-    dplyr::filter(!is.na(CapturePopID)) %>%
-    group_by(IndvID) %>%
-    summarise(PopID = first(CapturePopID)) %>%
-    rename(rn = IndvID)
+  Location_data <- create_location_UAN(BOX_info)
 
-  #I assume that the broodID laid and fledged are the same in this case.
-  Indv_data <- INDV_info %>%
-    #Also join in Species
-    #Remove only great tit and blue tit (other species have < 100 nests)
-    dplyr::rename(SOORT = soort) %>%
-    dplyr::filter(SOORT %in% c("pc", "pm")) %>%
-    dplyr::left_join(Species_codes, by = "SOORT") %>%
-    dplyr::left_join(Sex_table, by = "sex") %>%
-    dplyr::left_join(Indv_broods, by = "rn") %>%
-    dplyr::left_join(Indv_Pop, by = "rn") %>%
-    mutate(BroodIDRinged = BroodIDLaid,
-           IndvID = rn, RingDate = lubridate::dmy(klr1date), RingYear = lubridate::year(RingDate),
-           RingAge = lubridate::year(RingDate) - gbj,
-           Sex = Sex) %>%
-    select(IndvID, Species, PopID, BroodIDLaid, BroodIDRinged, RingYear, RingAge, Sex)
+  ################################
+  # DATA WRANGLING BEFORE SAVING #
+  ################################
 
-  ################
-  # NESTBOX DATA #
-  ################
 
-  print("Compiling nestbox information...")
-
-  Nestbox_data <- BOX_info %>%
-    ## NEED TO CONVERT COORDINATES TO LAT/LONG IN WGS84
-    transmute(LocationID = GBPL, PopID = SA, Latitude = Y_deg, Longitude = X_deg, StartYear = YEARFIRST, EndYear = YEARLAST)
-
-  ###################
-  # POPULATION DATA #
-  ###################
-
-  # print("Compiling population summary information...")
-  #
-  # Plot_species <- Brood_data %>%
-  #   group_by(PopID) %>%
-  #   filter(!is.na(Species)) %>%
-  #   summarise(Species = paste(unique(Species), collapse = ","))
-  #
-  # Pop_data <- PLOT_info %>%
-  #   filter(SA != "") %>%
-  #   rename(PopID = SA) %>%
-  #   group_by(PopID) %>%
-  #   summarise(StartYear = min(FIRSTY), EndYear = max(LASTY)) %>%
-  #   left_join(Plot_species, by = "PopID") %>%
-  #   left_join(Nestbox_data %>%
-  #               group_by(PopID) %>%
-  #               summarise(TotalNestbox = length(unique(NestboxID))), by = "PopID") %>%
-  #   mutate(PopName = c("Boshoek", "Peerdsbos"))
 
   print("Saving .csv files...")
 
   write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_UAN.csv"), row.names = F)
 
-  write.csv(x = Indv_data, file = paste0(path, "\\Indv_data_UAN.csv"), row.names = F)
+  write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_UAN.csv"), row.names = F)
 
   write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_UAN.csv"), row.names = F)
 
-  write.csv(x = Nestbox_data, file = paste0(path, "\\Nestbox_data_UAN.csv"), row.names = F)
+  write.csv(x = Location_data, file = paste0(path, "\\Location_data_UAN.csv"), row.names = F)
 
   # write.csv(x = Pop_data, file = paste0(path, "\\Summary_data_UAN.csv"), row.names = F)
 
@@ -264,28 +213,6 @@ format_UAN <- function(db = choose.dir(),
 #############################################################################################
 
 create_brood_UAN <- function(data, species_filter){
-
-  #Convert column names to make it easier to understand what is being done
-  data <- dplyr::rename(data, BroodID = NN, Species = SOORT, Plot = GB, LocationID = PL,
-                        LayingDate = LD, ClutchSizeError = JAE,
-                        ClutchSize = AE, NrUnhatchedChicks = AEN,
-                        TotalHatchedChicks = NP, NrDeadChicks = PD,
-                        NumberFledged = PU, LDInterruption = LO,
-                        ClutchType_observed = TY, MaleID = RM, FemaleID = RW,
-                        Unknown = AW, ChickWeighAge = WD, ChickWeighTime = WU,
-                        ObserverID = ME, NumberChicksMass = GN,
-                        AvgTarsus = GT, AvgChickMass = GG,
-                        AvgChickBodyCondition = CON, PopID = SA,
-                        NestNumberFirstBrood = NNN1,
-                        NestNumberSecondBrood = NNN2,
-                        NestNumberThirdBrood = NNN3,
-                        NestNumberBigamousMale = NNBI,
-                        NestNumberTrigamousMale = NNTRI,
-                        StageAbandoned = VERL,
-                        ExperimentID = exp,
-                        Longitude = coorx, Latitude = coory,
-                        Comments = comm, BreedingSeason = year,
-                        UniqueLocationCode = gbpl)
 
   #Create a table with brood information.
   clutchtype <- dplyr::progress_estimated(n = nrow(BROOD_info))
@@ -334,33 +261,9 @@ create_brood_UAN <- function(data, species_filter){
 
 }
 
-###################################################################################################
+#############################################################################################
 
 create_capture_UAN <- function(data, species_filter){
-
-  #Rename columns to make it easier to understand
-  data <- dplyr::rename(data, Species = SOORT,
-                        IndvID = RN, MetalRingStatus = NRN,
-                        ColourRing = KLR, ColourRingStatus = NKLR,
-                        TagType = TAGTY, TagID = TAG,
-                        TagStatus = NTAG, BroodID = NN,
-                        Sex = GS, CaptureDate = VD,
-                        Age_observed = LT,
-                        CapturePlot = GB, LocationID = PL,
-                        CaptureMethod = VW,
-                        ObserverID = ME, WingLength = VLL,
-                        Mass = GEW, CaptureTime = UUR,
-                        TarsusStandard = TA,
-                        BeakLength = BL, BeakHeight = BH,
-                        MoultStatus = DMVL,
-                        DNASample = BLOED,
-                        MoultScore = RUI, Comments = COMM,
-                        PrimaryKey = RECNUM, SplitRing = SPLIT,
-                        TarsusAlt = TANEW, Longitude = COORX,
-                        Latitude = COORY, CapturePopID = SA,
-                        Ticks = TEEK, ExperimentID = exp,
-                        OldColourRing = klr_old,
-                        UniqueLocationCode = gbpl)
 
   #Capture data includes all times an individual was captured (with measurements
   #like mass, tarsus etc.). This will include first capture as nestling (for
@@ -476,6 +379,52 @@ create_capture_UAN <- function(data, species_filter){
 }
 
 #############################################################################################
+
+create_individual_UAN <- function(data, CAPTURE_info, species_filter){
+
+  #This is a summary of each individual and general lifetime information (e.g. sex, resident/immigrant)
+
+  #To determine which brood an individual is from, we subset the CAPTURE_info table
+  #and include only those records where an individual was caught as a nestling (i.e. Age_observed == 1).
+  #We then take the nest that this nestling was in when it was caught.
+  Indv_broods <- CAPTURE_info %>%
+    dplyr::arrange(IndvID, CaptureDate, CaptureTime) %>%
+    dplyr::group_by(IndvID) %>%
+    dplyr::filter(!is.na(BroodID) & Age_observed == 1) %>%
+    dplyr::summarise(BroodIDLaid = first(BroodID))
+
+  #Do this PopID, capture age and first year as well
+  Indv_Pop <- CAPTURE_info %>%
+    dplyr::filter(!is.na(CapturePopID)) %>%
+    dplyr::group_by(IndvID) %>%
+    dplyr::summarise(PopID = first(CapturePopID),
+                     FirstAge = min(Age_observed, na.rm = T),
+                     FirstYear = min(lubridate::year(CaptureDate)))
+
+  #There were no translocations, so BroodIDLaid/Fledged are the same
+  Indv_data <- data %>%
+    dplyr::left_join(Indv_broods, by = "IndvID") %>%
+    dplyr::left_join(Indv_Pop, by = "IndvID") %>%
+    #Add and filter by species
+    dplyr::mutate(PopID = dplyr::case_when(.$PopID == "FR" ~ "BOS",
+                                           .$PopID == "PB" ~ "PEE"),
+                  Species = dplyr::case_when(.$Species == "pm" ~ Species_codes[which(Species_codes$SpeciesID == 14640), ]$Code,
+                                             .$Species == "pc" ~ Species_codes[which(Species_codes$SpeciesID == 14620), ]$Code),
+                  Sex = dplyr::case_when(.$Sex %in% c(1, 3) ~ "M",
+                                         .$Sex %in% c(2, 4) ~ "F")) %>%
+    dplyr::filter(!is.na(Species) & Species %in% species_filter) %>%
+    dplyr::mutate(BroodIDRinged = BroodIDLaid,
+           RingSeason = FirstYear,
+           RingAge = dplyr::case_when(.$FirstAge > 5 | .$FirstAge == 1 ~ "chick",
+                                      is.infinite(.$FirstAge) | .$FirstAge <= 5 ~ "adult")) %>%
+    select(IndvID, Species, PopID, BroodIDLaid, BroodIDFledged, RingSeason, RingAge, Sex)
+
+  return(Indv_data)
+
+}
+
+#############################################################################################
+
 create_location_UAN <- function(data){
 
   Location_data <- BOX_info %>%
