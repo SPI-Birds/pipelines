@@ -53,6 +53,9 @@
 #'}
 #'}
 #'
+#'\strong{Latitude and Longitude}: Location data is stored in Lambert72 CRS.
+#'This has been converted to WGS84 to be standard with other systems.
+#'
 #'@inheritParams pipeline_params
 #'
 #'@return Generates 4 .csv files with data in a standard format.
@@ -401,5 +404,37 @@ create_capture_UAN <- function(data, species_filter){
                   WingLength, Age_observed, Age_calculated, ChickAge)
 
   return(Capture_data)
+
+}
+
+#############################################################################################
+create_location_UAN <- function(data){
+
+  Location_data <- BOX_info %>%
+    dplyr::transmute(LocationID = GBPL, NestboxID = GBPL,
+                     PopID = dplyr::case_when(.$SA == "FR" ~ "BOS",
+                                              .$SA == "PB" ~ "PEE"),
+                     Latitude = Y_deg, Longitude = X_deg,
+                     StartSeason = YEARFIRST, EndSeason = YEARLAST,
+                     Habitat = "deciduous",
+                     HasCoords = as.factor(!is.na(Latitude))) %>%
+    #Split into two groups whether they have coordinates or not
+    split(f = .$HasCoords)
+
+  #For the group with coordinates, turn it into an sf object
+  #and change the CRS to be WGS84
+  true_coords <- sf::st_as_sf(Location_data$'TRUE',
+                              coords = c("Longitude", "Latitude"),
+                              crs = 31370) %>%
+    sf::st_transform(crs = 4326) %>%
+    sf::st_coordinates()
+
+  Location_data$'TRUE'$Longitude <- true_coords[, 1]
+  Location_data$'TRUE'$Latitude <- true_coords[, 2]
+
+  Location_data <- dplyr::bind_rows(Location_data) %>%
+    dplyr::select(-HasCoords)
+
+  return(Location_data)
 
 }
