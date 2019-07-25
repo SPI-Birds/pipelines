@@ -60,132 +60,7 @@ format_UAN <- function(db = choose.dir(),
 
   print("Compiling brood information...")
 
-  #Create a table with brood information.
-  clutchtype <- dplyr::progress_estimated(n = nrow(BROOD_info))
-
-  #Create table with species names for left join
-  Species_codes <- Species_codes %>%
-    dplyr::mutate(SOORT = c("pm", "pc", NA, NA, NA, NA, NA)) %>%
-    dplyr::select(SOORT, Species = Code)
-
-  #Create table with PopID
-  Pop_codes <- tibble::tibble(SA = c("FR", "PB"),
-                              PopID = c("BOS", "PEE"))
-
-  Brood_data <- BROOD_info %>%
-    #Link in Pop_codes
-    dplyr::left_join(Pop_codes, by = "SA") %>%
-    #Remove only great tit and blue tit (other species have < 100 nests)
-    dplyr::filter(SOORT %in% c("pc", "pm")) %>%
-    dplyr::left_join(Species_codes, by = "SOORT") %>%
-    #Convert all other columns into standard format
-    dplyr::mutate(SampleYear = year,
-           PopID = PopID, Plot = GB,
-           LocationID = PL, BroodID = NN,
-           FemaleID = RW, MaleID = RM,
-           LayingDate = lubridate::ymd(LD), LayingDateError = NA,
-           ClutchSize = AE, ClutchSizeError = NA,
-           HatchDate = NA, HatchDateError = NA,
-           BroodSize = NP, BroodSizeError = NA,
-           FledgeDate = NA, FledgeDateError = NA,
-           NumberFledged = PU, NumberFledgedError = NA,
-           AvgEggMass = NA, NumberEggs = NA,
-           AvgChickMass = GG, NumberChicksMass = GN,
-           AvgTarsus = GT, NumberChicksTarsus = GN,
-           ExperimentID = exp) %>%
-    #Include ClutchType info
-    #Firstly, convert ClutchType_observed
-    dplyr::left_join(tibble::tibble(TY = 0:9,
-                                    ClutchType_observed = c(NA, "first", "second", "replacement",
-                                                            "replacement", "replacement",
-                                                            "second", "second", "replacement",
-                                                            "first")), by = "TY") %>%
-    #Create ClutchType_calc
-    group_by(PopID, SampleYear, Species) %>%
-    mutate(cutoff = tryCatch(expr = min(LayingDate, na.rm = T) + 30,
-                             warning = function(...) return(NA))) %>%
-    # Determine brood type for each nest based on female ID
-    arrange(SampleYear, Species, FemaleID) %>%
-    group_by(SampleYear, Species, FemaleID) %>%
-    #Assume that any NAs in the Number of fledglings should be 0s.
-    mutate(total_fledge_narm = calc_cumfledge(NumberFledged, na.rm = TRUE),
-           row = 1:n()) %>%
-    ungroup() %>%
-    dplyr::mutate(ClutchType_calc = purrr::pmap_chr(.l = list(rows = .$row,
-                                                              femID = .$FemaleID,
-                                                              cutoff_date = .$cutoff,
-                                                              nr_fledge_before = .$total_fledge_narm,
-                                                              LD = .$LayingDate),
-                                                    .f = function(rows, femID, cutoff_date, nr_fledge_before, LD){
-
-                                                      clutchtype$tick()$print()
-
-                                                      #Firstly, check if the nest has a LD
-                                                      #If not, we cannot calculate BroodType
-
-                                                      if(is.na(LD)){
-
-                                                        return(NA)
-
-                                                      }
-
-                                                      #Next, check if the female is banded
-                                                      #If a female is unbanded we assume the nest can NEVER be secondary
-                                                      #If she had had a successful clutch before she would have been caught and banded
-                                                      #Therefore it can only be first or replacement (based on 30d rule)
-                                                      if(is.na(femID)){
-
-                                                        if(lubridate::ymd(LD) > lubridate::ymd(cutoff_date)){
-
-                                                          return("replacement")
-
-                                                        } else {
-
-                                                          return("first")
-
-                                                        }
-
-                                                      }
-
-                                                      #If she is banded, then we need to apply all rules
-                                                      #If it's the first nest recorded for this female in this year...
-                                                      if(rows == 1){
-
-                                                        #If it doesn't meet the 30 day rule, then name it as replacement
-                                                        if(lubridate::ymd(LD) > lubridate::ymd(cutoff_date)){
-
-                                                          return("replacement")
-
-                                                        } else {
-
-                                                          #Otherwise, we assume it was the first clutch
-                                                          return("first")
-
-                                                        }
-
-                                                        #If it's NOT the first nest of the season for this female
-                                                      } else {
-
-                                                        #If there have been no fledglings before this point..
-                                                        if(nr_fledge_before == 0){
-
-                                                          #Then it is a replacement
-                                                          return("replacement")
-
-                                                        } else {
-
-                                                          #Otherwise, it is a secondary clutch
-                                                          return("second")
-
-                                                        }
-
-                                                      }
-
-                                                    })) %>%
-    dplyr::select(PopID, SampleYear, Species, Plot, LocationID,
-                  BroodID, FemaleID, MaleID, ClutchType_observed,
-                  ClutchType_calc, LayingDate:ExperimentID)
-
+  Brood_data <- create_brood_UAN(BROOD_info, species)
 
   ################
   # CAPTURE DATA #
@@ -420,5 +295,78 @@ format_UAN <- function(db = choose.dir(),
   time <- difftime(Sys.time(), start_time, units = "sec")
 
   print(paste0("All tables generated in ", round(time, 2), " seconds"))
+
+}
+
+#############################################################################################
+
+create_brood_UAN <- function(data, species_filter){
+
+  #Convert column names to make it easier to understand what is being done
+  data <- dplyr::rename(data, BroodID = NN, Species = SOORT, Plot = GB, LocationID = PL,
+                        LayingDate = LD, ClutchSizeError = JAE,
+                        ClutchSize = AE, NrUnhatchedChicks = AEN,
+                        TotalHatchedChicks = NP, NrDeadChicks = PD,
+                        NumberFledged = PU, LDInterruption = LO,
+                        ClutchType_observed = TY, MaleID = RM, FemaleID = RW,
+                        Unknown = AW, ChickWeighAge = WD, ChickWeighTime = WU,
+                        ObserverID = ME, NumberChicksMass = GN,
+                        AvgTarsus = GT, AvgChickMass = GG,
+                        AvgChickBodyCondition = CON, PopID = SA,
+                        NestNumberFirstBrood = NNN1,
+                        NestNumberSecondBrood = NNN2,
+                        NestNumberThirdBrood = NNN3,
+                        NestNumberBigamousMale = NNBI,
+                        NestNumberTrigamousMale = NNTRI,
+                        StageAbandoned = VERL,
+                        ExperimentID = exp,
+                        Longitude = coorx, Latitude = coory,
+                        Comments = comm, BreedingSeason = year,
+                        UniqueLocationCode = gbpl)
+
+  #Create a table with brood information.
+  clutchtype <- dplyr::progress_estimated(n = nrow(BROOD_info))
+
+  Brood_data <- data %>%
+    #Convert columns to expected values
+    dplyr::mutate(PopID = dplyr::case_when(.$PopID == "FR" ~ "BOS",
+                                           .$PopID == "PB" ~ "PEE"),
+                  Species = dplyr::case_when(.$Species == "pm" ~ Species_codes[which(Species_codes$SpeciesID == 14640), ]$Code,
+                                             .$Species == "pc" ~ Species_codes[which(Species_codes$SpeciesID == 14620), ]$Code),
+                  ClutchType_observed = dplyr::case_when(.$ClutchType_observed %in% c(1, 9) ~ "first",
+                                                         .$ClutchType_observed %in% c(2, 6, 7) ~ "second",
+                                                         .$ClutchType_observed %in% c(3, 4, 5, 8) ~ "replacement"),
+                  ClutchSizeError = dplyr::case_when(.$ClutchSizeError == "J" ~ 0,
+                                                     .$ClutchSizeError == "N" ~ 2)) %>%
+    #Remove only species chosen.
+    dplyr::filter(Species %in% species_filter) %>%
+    #Add NA columns and convert dates
+    dplyr::mutate(LayingDate = lubridate::ymd(LayingDate),
+                  LayingDateError = NA,
+                  HatchDate = NA, HatchDateError = NA,
+                  BroodSizeError = NA,
+                  FledgeDate = NA, FledgeDateError = NA,
+                  NumberFledgedError = NA,
+                  AvgEggMass = NA, NumberEggs = NA,
+                  NumberChicksTarsus = NumberChicksMass) %>%
+    #Calculate clutchtype, assuming NAs are true unknowns
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(., na.rm = FALSE)) %>%
+    #Order columns
+    dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot,
+                  LocationID, FemaleID, MaleID, ClutchType_observed,
+                  ClutchType_calculated,
+                  LayingDate, LayingDateError,
+                  ClutchSize, ClutchSizeError,
+                  HatchDate, HatchDateError,
+                  BroodSize, BroodSizeError,
+                  FledgeDate, FledgeDateError,
+                  NumberFledged, NumberFledgedError,
+                  AvgEggMass, NumberEggs,
+                  AvgChickMass, NumberChicksMass,
+                  AvgTarsus, NumberChicksTarsus,
+                  ExperimentID)
+
+  ## NEED TO ADD ORIGINAL TARSUS METHOD BASED ON CAPTURE DATA LATER
+  return(Brood_data)
 
 }
