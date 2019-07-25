@@ -1,8 +1,8 @@
 #' A function to perform a quality check on pipeline outputs
 #'
 #' @param db Location of standard .csv outputs of the pipeline.
-#' @param pop Population ID.
-#' @param species Species ID.
+#' @param pop Three-letter population ID.
+#' @param species Six-letter species ID.
 #' @param output_format Format of report: "html", "pdf", or "both" (default).
 #'
 #' @return A summary dataframe of test warnings and errors for use in testthat,
@@ -162,7 +162,7 @@ quality_check <- function(db = choose.dir(),
       crayon::red(paste0("\n", checks_errors, " out of ", nrow(check_list), " checks resulted in errors.\n\n")))
 
   ## Create output file
-  title <- paste0("Quality check report for ", species, " in ", pop)
+  title <- paste0("Quality check report for ", species, " in ", pop_names[pop_names$code == pop, "name"])
 
   mark_output <- c('---',
                    'title: "`r title`"',
@@ -176,7 +176,7 @@ quality_check <- function(db = choose.dir(),
                    '---',
                    '',
                    '\\newpage',
-                   '# Check summary',
+                   '# Summary',
                    '',
                    'All checks performed in `r round(time, 2)` seconds.',
                    '',
@@ -833,7 +833,7 @@ compare_hatching_fledging <- function(Brood_data){
 #' Check variable values against species-specific reference values in brood data. Implausible values will result in a warning. Impossible values will result in an error. Variables that are checked: LayingDate, ClutchSize, HatchDate, BroodSize, FledgeDate, NumberFledged, AvgEggMass, AvgChickMass, AvgTarsus.
 #'
 #' @param Brood_data Data frame. Brood data output from pipeline.
-#' @param species Six-letter character string to select species-specific reference values.
+#' @param species Six-letter species ID to select species-specific reference values.
 #'
 #' @return Check list, warning output, error output.
 #' @export
@@ -925,7 +925,7 @@ check_values_brood <- function(Brood_data, species) {
 #' Check variable values against species-specific reference values in capture data. Implausible values will result in a warning. Impossible values will result in an error. Variables that are checked: Mass, Tarsus, WingLength, Age_obsv, Age_calc, Chick_age.
 #'
 #' @param capture_data Data frame. Capture data output from pipeline.
-#' @param species Six-letter character string to select species-specific reference values.
+#' @param species Six-letter species ID to select species-specific reference values.
 #'
 #' @return Check list, warning output, error output.
 #' @export
