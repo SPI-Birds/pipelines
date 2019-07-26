@@ -162,7 +162,8 @@ quality_check <- function(db = choose.dir(),
       crayon::red(paste0("\n", checks_errors, " out of ", nrow(check_list), " checks resulted in errors.\n\n")))
 
   ## Create output file
-  title <- paste0("Quality check report for ", species, " in ", pop_names[pop_names$code == pop, "name"])
+  title <- paste0("Quality check report for ", Species_codes[Species_codes$Code == species, "CommonName"],
+                  " in ", pop_names[pop_names$code == pop, "name"])
 
   mark_output <- c('---',
                    'title: "`r title`"',
@@ -933,19 +934,32 @@ check_values_brood <- function(Brood_data, species) {
 check_values_capture <- function(Capture_data, species) {
 
   # Select species-specific reference values
-  ref <- capture_ref_values_list[[species]]
+  ref_adult <- cap_adult_ref_values_list[[species]]
+  ref_chick <- cap_chick_ref_values_list[[species]]
 
-  # Select species in data
+  # Add unique row identifier to capture data
+  Capture_data <- Capture_data %>%
+    tibble::rownames_to_column(var = "RowID")
+
+  # Select species in capture data
   Capture_data <- Capture_data %>%
     dplyr::filter(Species == species)
 
-  # Create list of variable-specific dataframes
-  Capture_list <- purrr::map2(.x = Capture_data[, c("Mass", "Tarsus")],
-                            .y = ref,
+  # Separate adults from chicks, as they have different reference values
+  Adult_data <- Capture_data %>%
+    dplyr::filter(Age_calc > 3)
+
+  Chick_data <- Capture_data %>%
+    dplyr::filter(Age_calc <= 3)
+
+  # Create warning & error list of variable-specific dataframes for
+  # - adults
+  Adult_list <- purrr::map2(.x = Adult_data[, c("Mass", "Tarsus")],
+                            .y = ref_adult,
                             .f = ~{
-                              tibble::tibble(IndvID = Capture_data$IndvID,
-                                             CaptureDate = Capture_data$CaptureDate,
-                                             LocationID = Capture_data$LocationID,
+                              tibble::tibble(IndvID = Adult_data$IndvID,
+                                             RowID = Adult_data$RowID,
+                                             Age = "Adult",
                                              Variable = names(.y)[3],
                                              .x) %>%
                                 dplyr::filter(!is.na(.x)) %>% # Only non-NA's
@@ -954,6 +968,29 @@ check_values_capture <- function(Capture_data, species) {
                                               Error = ifelse(.x < as.numeric(.y[3,3]) | .x > as.numeric(.y[4,3]),
                                                              TRUE, FALSE))
                             })
+  # - and chicks
+  Chick_list <- purrr::map2(.x = Chick_data[, c("Mass", "Tarsus")],
+                            .y = ref_chick,
+                            .f = ~{
+                              tibble::tibble(IndvID = Chick_data$IndvID,
+                                             RowID = Chick_data$RowID,
+                                             Age = "Chick",
+                                             Variable = names(.y)[3],
+                                             .x) %>%
+                                dplyr::filter(!is.na(.x)) %>% # Only non-NA's
+                                dplyr::mutate(Warning = ifelse(.x > as.numeric(.y[2,3]),
+                                                               TRUE, FALSE),
+                                              Error = ifelse(.x < as.numeric(.y[3,3]) | .x > as.numeric(.y[4,3]),
+                                                             TRUE, FALSE))
+                            })
+
+  # Combine adults and chicks
+  Capture_list <- purrr::map2(.x = Adult_list,
+                              .y = Chick_list,
+                              .f = ~{
+                                dplyr::bind_rows(.x, .y)
+                              })
+
 
   # Select records with errors (impossible values) from list
   Capture_err <- purrr::map(.x = Capture_list,
@@ -969,17 +1006,13 @@ check_values_capture <- function(Capture_data, species) {
   if(nrow(Capture_err) > 0) {
     err <- TRUE
 
-    error_output <- purrr::pmap(.l = list(Capture_err$IndvID,
-                                          Capture_err$CaptureDate,
-                                          Capture_err$LocationID,
+    error_output <- purrr::pmap(.l = list(Capture_err$RowID,
                                           Capture_err$Variable,
                                           Capture_err$.x),
                                 .f = ~{
-                                  paste0("Capture_data record with IndvID ", ..1,
-                                         ", caught at LocationID ", ..3,
-                                         " on ", ..2,
-                                         " has an impossible value in ", ..4,
-                                         " (", ..5, ").")
+                                  paste0("Capture_data record with RowID ", ..1,
+                                         " has an impossible value in ", ..2,
+                                         " (", ..3, ").")
                                 })
   }
 
@@ -997,17 +1030,13 @@ check_values_capture <- function(Capture_data, species) {
   if(nrow(Capture_war) > 0) {
     war <- TRUE
 
-    error_output <- purrr::pmap(.l = list(Capture_war$IndvID,
-                                          Capture_war$CaptureDate,
-                                          Capture_war$LocationID,
+    error_output <- purrr::pmap(.l = list(Capture_war$RowID,
                                           Capture_war$Variable,
                                           Capture_war$.x),
                                 .f = ~{
-                                  paste0("Capture_data record with IndvID ", ..1,
-                                         ", caught at LocationID ", ..3,
-                                         " on ", ..2,
-                                         " has an improbable value in ", ..4,
-                                         " (", ..5, ").")
+                                  paste0("Capture_data record with RowID ", ..1,
+                                         " has an improbable value in ", ..2,
+                                         " (", ..3, ").")
                                 })
   }
 
