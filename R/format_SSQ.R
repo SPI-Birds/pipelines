@@ -43,11 +43,16 @@
 #' @import janitor
 #' @import reshape2
 
-format_SSQ <- function(db = file.choose(),
+format_SSQ <- function(db = choose.dir(),
                        species = NULL,
                        pop = NULL,
                        path = ".",
                        debug = FALSE){
+
+  #Force user to select directory
+  force(db)
+
+  db <- paste0(db, "\\Data Sicily CusimanoC_MassaB.xlsx")
 
   #Record start time to provide processing time to the user.
   start_time <- Sys.time()
@@ -376,7 +381,7 @@ format_SSQ <- function(db = file.choose(),
 
   write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_SSQ.csv"), row.names = F)
 
-  write.csv(x = Nestbox_data, file = paste0(path, "\\Nestbox_data_SSQ.csv"), row.names = F)
+  write.csv(x = Nestbox_data, file = paste0(path, "\\Location_data_SSQ.csv"), row.names = F)
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
