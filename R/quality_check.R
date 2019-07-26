@@ -322,7 +322,7 @@ check_format_individual <- function(Individual_data){
 
   ## Data frame with column names and formats from Individual data
   Individual_data_col <- tibble::tibble(Variable = names(Individual_data),
-                                        Format = unlist(purrr::pmap(list(Individual_data), class)))
+                                        Format = purrr::pmap_chr(.l = list(Individual_data), .f = class))
 
   ## Mismatches between Individual data and standard protocol
   ## Column format "logical" refers to unmeasured/undetermined variables (NA)
