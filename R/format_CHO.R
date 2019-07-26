@@ -14,11 +14,13 @@
 #'\emph{ClutchType_calculated} as \emph{NumberFledged} is used to estimated
 #'second clutches.
 #'
-#'\strong{Age_observed}: Translation of age records \itemize{ \item Any
+#'\strong{Age_observed}: Translation of age records \itemize{
+#'\item Any
 #'individual caught as a chick was assumed to have a EURING code of 1: 'Pullus:
 #'nestling or chick, unable to fly freely, still able to be caught by hand.'}
 #'\item Any individual listed as 'first year' was given a EURING code of 5: a
-#'bird hatched last calendar year and now in its second calendar year. \item Any
+#'bird hatched last calendar year and now in its second calendar year.
+#'\item Any
 #'individual listed as 'adult' was given a EURING code of 6: full-grown bird
 #'hatched before last calendar year; year of hatching otherwise unknown.
 #'
