@@ -36,19 +36,21 @@
 #' date that incubation began. Once incubation starts, egg weight is not easily
 #' comparable because it changes with chick development.
 #'
-#' @param db Directory path. Location of primary data.
-#' @param path File path. Location where output csv files will be saved.
-#' @param debug For internal use when editing pipelines. If TRUE, pipeline
-#'   generates a summary of pipeline data. This includes: a) Histogram of
-#'   continuous variables with mean/SD b) unique values of all categorical
-#'   variables.
+#'@inheritParams pipeline_params
 #'
 #' @return Generates 4 .csv files with data in a standard format.
 #' @export
 #'
 #' @examples
 #' format_BAN()
-format_BAN <- function(db = choose.dir(), path = ".", debug = FALSE){
+format_BAN <- function(db = choose.dir(),
+                       path = ".",
+                       species = NULL,
+                       pop = NULL,
+                       debug = FALSE){
+
+  #Force choose.dir() if used
+  force(db)
 
   start_time <- Sys.time()
 
@@ -248,7 +250,7 @@ create_capture_BAN <- function(data) {
                   LocationID, CaptureDate, CaptureTime,
                   CapturePopID, CapturePlot = Plot,
                   ReleasePopID, ReleasePlot = Plot,
-                  Mass, Tarsus, WingLength, Age_obsv, Age_calc,
+                  Mass, Tarsus, WingLength, Age_obsv, Age_calculated,
                   ChickAge, Sex) %>%
     ungroup()
 
