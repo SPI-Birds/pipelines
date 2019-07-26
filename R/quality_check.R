@@ -27,7 +27,7 @@ quality_check <- function(db = choose.dir(),
   ## - Read in .csv files (names are population-specific)
   ## - or Load in R objects with generic names?
 
-  Individual_data <- read.csv(paste0(db, "/Indv_data_VEL.csv"), stringsAsFactors = FALSE)
+  Individual_data <- read.csv(paste0(db, "/Individual_data_VEL.csv"), stringsAsFactors = FALSE)
   Brood_data <- read.csv(paste0(db, "/Brood_data_VEL.csv"), stringsAsFactors = FALSE)
   Capture_data <- read.csv(paste0(db, "/Capture_data_VEL.csv"), stringsAsFactors = FALSE)
   Location_data <- read.csv(paste0(db, "/Location_data_VEL.csv"), stringsAsFactors = FALSE)
