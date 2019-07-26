@@ -32,126 +32,128 @@
 #' \strong{HatchDate}: As with AvgEggMass, there is also a 'legacy' column for
 #' hatch date. This is only used if the regular column is empty.
 #'
-#' @param db Directory path. Location of primary data.
-#' @param path File path. Location where output csv files will be saved.
-#' @param debug For internal use when editing pipelines. If TRUE, pipeline
-#'   generates a summary of pipeline data. This includes: a) Histogram of
-#'   continuous variables with mean/SD b) unique values of all categorical
-#'   variables.
+#'@inheritParams pipeline_params
 #'
 #' @return Generates 4 .csv files with data in a standard format.
 #' @export
 
 format_WYT <- function(db = choose.dir(),
                        path = ".",
+                       species = NULL,
+                       pop = NULL,
                        debug = FALSE){
 
-start <- Sys.time()
+  #Force user to select directory
+  force(db)
 
-message("Importing primary data...")
+  start <- Sys.time()
 
-pb <- dplyr::progress_estimated(n = nrow(WYT_data)*3)
+  message("Importing primary data...")
 
-WYT_data <- read.csv(paste0(db, "/Wytham breeding data.csv"), header = T, sep = ",", stringsAsFactors = FALSE) %>%
-  janitor::clean_names() %>%
-  #Rename columns to meet our standard format
-  dplyr::mutate(BreedingSeason = year, LocationID = nestbox,
-                PopID = "WYT", Plot = toupper(section),
-                Species = dplyr::case_when(.$species == "b" ~ Species_codes[Species_codes$SpeciesID == 14620, ]$Code,
-                                           .$species == "g" ~ Species_codes[Species_codes$SpeciesID == 14640, ]$Code,
-                                           .$species == "c" ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code,
-                                           .$species == "n" ~ Species_codes[Species_codes$SpeciesID == 14790, ]$Code,
-                                           .$species == "m" ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code),
-                LayingDate = as.Date(lay_date, format = "%d/%m/%Y"),
-                HatchDate = purrr::pmap_chr(.l = list(hatch_date, legacy_april_hatch_date),
-                                            .f = ~{
+  WYT_data <- read.csv(paste0(db, "/Wytham breeding data.csv"), header = T, sep = ",", stringsAsFactors = FALSE) %>%
+    janitor::clean_names()
 
-                                              pb$print()$tick()
+  pb <- dplyr::progress_estimated(n = nrow(WYT_data)*3)
 
-                                              if(!is.na(..1)){
+  WYT_data <- WYT_data %>%
+    #Rename columns to meet our standard format
+    dplyr::mutate(BreedingSeason = year, LocationID = nestbox,
+                  PopID = "WYT", Plot = toupper(section),
+                  Species = dplyr::case_when(.$species == "b" ~ Species_codes[Species_codes$SpeciesID == 14620, ]$Code,
+                                             .$species == "g" ~ Species_codes[Species_codes$SpeciesID == 14640, ]$Code,
+                                             .$species == "c" ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code,
+                                             .$species == "n" ~ Species_codes[Species_codes$SpeciesID == 14790, ]$Code,
+                                             .$species == "m" ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code),
+                  LayingDate = as.Date(lay_date, format = "%d/%m/%Y"),
+                  HatchDate = purrr::pmap_chr(.l = list(hatch_date, legacy_april_hatch_date),
+                                              .f = ~{
 
-                                                return(as.character(..1))
+                                                pb$print()$tick()
 
-                                              } else {
+                                                if(!is.na(..1)){
 
-                                                return(as.character(..2))
+                                                  return(as.character(..1))
 
-                                              }
+                                                } else {
+
+                                                  return(as.character(..2))
+
+                                                }
 
                                               }),
-                NumberEggs = num_eggs_weighed,
-                AvgEggMass = purrr::pmap_dbl(.l = list(total_egg_weight, num_eggs_weighed, legacy_average_egg_weight),
-                                          .f = ~{
-
-                                            pb$print()$tick()
-
-                                            if(!is.na(..1) & !is.na(..2)){
-
-                                              return(..1/..2)
-
-                                            } else {
-
-                                              return(..3)
-
-                                            }
-
-                                          }),
-                ClutchSize = clutch_size,
-                BroodSize = num_chicks,
-                NumberFledged = num_fledglings,
-                AvgChickMass = purrr::pmap_dbl(.l = list(mean_chick_weight, legacy_mean_fledge_weight),
+                  NumberEggs = num_eggs_weighed,
+                  AvgEggMass = purrr::pmap_dbl(.l = list(total_egg_weight, num_eggs_weighed, legacy_average_egg_weight),
                                                .f = ~{
 
                                                  pb$print()$tick()
 
-                                                 if(!is.na(..1)){
+                                                 if(!is.na(..1) & !is.na(..2)){
 
-                                                   return(..1)
+                                                   return(..1/..2)
 
                                                  } else {
 
-                                                   return(..2)
+                                                   return(..3)
 
                                                  }
 
                                                }),
-                NumberChicksMass = num_chicks_ringed,
-                FemaleID = mother,
-                MaleID = father,
-                ExperimentID = dplyr::case_when(.$experiment_codes == "1" ~ "UNKOWN",
-                                                .$experiment_codes == "2" ~ "COHORT",
-                                                .$experiment_codes == "3" ~ "PARENTAGE",
-                                                .$experiment_codes == "7" ~ "PHENOLOGY",
-                                                .$experiment_codes == "8" ~ "PHENOLOGY",
-                                                .$experiment_codes == "9" ~ "SURVIVAL",
-                                                .$experiment_codes == "11" ~ "SURVIVAL",
-                                                .$experiment_codes == "12" ~ "SURVIVAL",
-                                                .$experiment_codes == "13" ~ "SURVIVAL"),
-                BroodID = paste(BreedingSeason, LocationID)) %>%
-  #Separate out chick ids into different columns. N.B. Currently, there is only
-  #the chick id column and no actual info. Therefore, it's hard to know what the
-  #max possible number of columns we should include are. I just go with 22 (max
-  #number of fledglings ever recorded), although this seems excessive!!
-  #I'm basing all this code (e.g. sep used) on the dead chick ids columns.
-  #I assume when chick numbers are provided, it will be in the same format.
-  tidyr::separate(chick_ids, into = paste0("chick_", seq(1:22)), sep = " ,") %>%
-  as_tibble()
+                  ClutchSize = clutch_size,
+                  BroodSize = num_chicks,
+                  NumberFledged = num_fledglings,
+                  AvgChickMass = purrr::pmap_dbl(.l = list(mean_chick_weight, legacy_mean_fledge_weight),
+                                                 .f = ~{
 
-##############
-# BROOD DATA #
-##############
+                                                   pb$print()$tick()
 
-message("Compiling brood information...")
+                                                   if(!is.na(..1)){
 
-Brood_data <- create_brood_WYT(data = WYT_data)
+                                                     return(..1)
 
-################
-# CAPTURE DATA #
-################
+                                                   } else {
 
-message("Compiling capture information...")
+                                                     return(..2)
 
-Capture_data <- create_capture_WYT(WYT_data)
+                                                   }
+
+                                                 }),
+                  NumberChicksMass = num_chicks_ringed,
+                  FemaleID = mother,
+                  MaleID = father,
+                  ExperimentID = dplyr::case_when(.$experiment_codes == "1" ~ "UNKOWN",
+                                                  .$experiment_codes == "2" ~ "COHORT",
+                                                  .$experiment_codes == "3" ~ "PARENTAGE",
+                                                  .$experiment_codes == "7" ~ "PHENOLOGY",
+                                                  .$experiment_codes == "8" ~ "PHENOLOGY",
+                                                  .$experiment_codes == "9" ~ "SURVIVAL",
+                                                  .$experiment_codes == "11" ~ "SURVIVAL",
+                                                  .$experiment_codes == "12" ~ "SURVIVAL",
+                                                  .$experiment_codes == "13" ~ "SURVIVAL"),
+                  BroodID = paste(BreedingSeason, LocationID)) %>%
+    #Separate out chick ids into different columns. N.B. Currently, there is only
+    #the chick id column and no actual info. Therefore, it's hard to know what the
+    #max possible number of columns we should include are. I just go with 22 (max
+    #number of fledglings ever recorded), although this seems excessive!!
+    #I'm basing all this code (e.g. sep used) on the dead chick ids columns.
+    #I assume when chick numbers are provided, it will be in the same format.
+    tidyr::separate(chick_ids, into = paste0("chick_", seq(1:22)), sep = " ,") %>%
+    as_tibble()
+
+  ##############
+  # BROOD DATA #
+  ##############
+
+  message("Compiling brood information...")
+
+  Brood_data <- create_brood_WYT(data = WYT_data)
+
+  ################
+  # CAPTURE DATA #
+  ################
+
+  message("Compiling capture information...")
+
+  Capture_data <- create_capture_WYT(WYT_data)
 
 
 }
@@ -235,12 +237,12 @@ create_capture_WYT <- function(data){
                                          }
 
                                        })) %>%
-    tidyr::unnest() %>%
+    tidyr::unnest(cols = "Sex_Age") %>%
     calc_age(ID = IndvID, Age = Age_obsv, Date = CaptureDate,
              Year = BreedingSeason, showpb = TRUE) %>%
     dplyr::select(IndvID, Species, BreedingSeason, LocationID,
                   CaptureDate:WingLength, Age_obsv,
-                  Age_calc, ChickAge)
+                  Age_calculated, ChickAge)
 
   return(Capture_data)
 
