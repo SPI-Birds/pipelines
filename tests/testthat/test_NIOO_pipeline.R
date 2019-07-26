@@ -2,7 +2,8 @@ context("Run data quality check on NIOO pipeline output")
 
 test_that("NIOO pipeline works...", {
 
-  suppressWarnings(run_pipelines(path = path, PopID = "HOG"))
+  suppressWarnings(run_pipelines(path = path,
+                                 PopID = c("HOG", "OOS", "VLI", "BUU", "LIE", "WAR", "WES")))
 
 })
 
