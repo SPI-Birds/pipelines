@@ -37,8 +37,8 @@ Valley, Ireland, administered by John Quinn.
 }
 \details{
 This section provides details on data management choices that are unique to
-this data. For a general description of the standard format please see XXXXX
-PLACE HOLDER!
+this data. For a general description of the standard format please see
+\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
 
 \strong{Species}: There are records where species is uncertain (e.g. listed
 as 'GRETI?'). This uncertainty is ignored. We assume that the suggested
@@ -48,7 +48,7 @@ species are recorded.
 \strong{ClutchType_observed}: Clutch type is only listed as 'first' and
 'second'. There is no distinction between 'second' and 'replacement'. We
 categorise all these as 'second'. Possible distinction between 'second' and
-'replacement' could be made with \strong{ClutchType_calc}. There are a small
+'replacement' could be made with \strong{ClutchType_calculated}. There are a small
 number of cases where nest attempt number is uncertain (e.g. `2(MAYBE)`).
 This uncertainty is ignored.
 
@@ -62,7 +62,7 @@ ignored (i.e. true clutch size is unknown).
 \strong{BroodID}: Unique BroodID is currently made with
 Year_Plot_LocationID_Day_Month.
 
-\strong{Age_obsv}: There is no recorded capture age. This is left as NA.
+\strong{Age_observed}: There is no recorded capture age. This is left as NA.
 
 \strong{AvgEggMass}: Currently we only include records where the day of egg
 weighing is <= LayingDate + ClutchSize. This should be an estimate of the

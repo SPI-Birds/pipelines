@@ -15,7 +15,7 @@
 #' \strong{ClutchType_observed}: Clutch type is only listed as 'first' and
 #' 'second'. There is no distinction between 'second' and 'replacement'. We
 #' categorise all these as 'second'. Possible distinction between 'second' and
-#' 'replacement' could be made with \strong{ClutchType_calc}. There are a small
+#' 'replacement' could be made with \strong{ClutchType_calculated}. There are a small
 #' number of cases where nest attempt number is uncertain (e.g. `2(MAYBE)`).
 #' This uncertainty is ignored.
 #'
@@ -172,7 +172,7 @@ format_BAN <- function(db = choose.dir(),
 create_brood_BAN   <- function(data) {
 
   Brood_data <- data %>%
-    dplyr::mutate(ClutchType_calc = calc_clutchtype(., na.rm = FALSE),
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(., na.rm = FALSE),
                   LayingDateError = NA,
                   ClutchSizeError = NA,
                   HatchDateError = NA,
@@ -181,16 +181,17 @@ create_brood_BAN   <- function(data) {
                   NumberFledgedError = NA,
                   AvgChickMass = NA, NumberChicksMass = NA,
                   AvgTarsus = NA, NumberChicksTarsus = NA,
+                  OriginalTarsusMethod = "Alternative",
                   ExperimentID = NA) %>%
     ## Remove egg weights when the day of weighing is outside our given range
     ## FOR NOW WE INCLUDE ALL EGG MASS DATES
     dplyr::mutate(AvgEggMass = purrr::map2_dbl(.x = AvgEggMass, .y = EggWasIncubated,
                                                .f = ~{ifelse(!..2, NA, as.numeric(..1))})) %>%
-    dplyr::select(PopID, BreedingSeason,
+    dplyr::select(BroodID, PopID, BreedingSeason,
                   Species, Plot, LocationID,
-                  BroodID, FemaleID, MaleID,
+                  FemaleID, MaleID,
                   ClutchType_observed,
-                  ClutchType_calc,
+                  ClutchType_calculated,
                   LayingDate, LayingDateError,
                   ClutchSize, ClutchSizeError,
                   HatchDate, HatchDateError,
@@ -200,6 +201,7 @@ create_brood_BAN   <- function(data) {
                   AvgEggMass, NumberEggs,
                   AvgChickMass, NumberChicksMass,
                   AvgTarsus, NumberChicksTarsus,
+                  OriginalTarsusMethod,
                   ExperimentID)
 
   return(Brood_data)
@@ -242,15 +244,17 @@ create_capture_BAN <- function(data) {
                                             }),
                   Age_observed = NA, CaptureTime = NA, Mass = NA, Tarsus = NA,
                   WingLength = NA, ChickAge = NA, CapturePopID = "BAN",
-                  ReleasePopID = "BAN") %>%
+                  ReleasePopID = "BAN", ObserverID = NA, OriginalTarsusMethod = "Alternative") %>%
     calc_age(ID = IndvID, Age = Age_observed,
              Date = CaptureDate, Year = BreedingSeason,
              showpb = TRUE) %>%
     dplyr::select(IndvID, Species, BreedingSeason,
-                  LocationID, CaptureDate, CaptureTime,
+                  CaptureDate, CaptureTime,
+                  ObserverID, LocationID,
                   CapturePopID, CapturePlot = Plot,
                   ReleasePopID, ReleasePlot = Plot,
-                  Mass, Tarsus, WingLength, Age_observed, Age_calculated,
+                  Mass, Tarsus, OriginalTarsusMethod,
+                  WingLength, Age_observed, Age_calculated,
                   ChickAge, Sex) %>%
     ungroup()
 
@@ -278,7 +282,7 @@ create_individual_BAN <- function(Capture_data) {
 
                                             if(all(c("F", "M") %in% ..1)){
 
-                                              return("CONFLICTING SEX")
+                                              return("C")
 
                                             } else if("F" %in% ..1){
 
@@ -290,11 +294,14 @@ create_individual_BAN <- function(Capture_data) {
 
                                             } else if(is.na(..1)){
 
-                                              return("U")
+                                              return(NA_character_)
 
                                             }
 
-                                          }))
+                                          })) %>%
+    #Change RingAge to chick/adult
+    dplyr::mutate(RingAge = dplyr::case_when(is.na(.$RingAge) || .$RingAge > 3 ~ "adult",
+                                             .$RingAge <= 3 ~ "chick"))
 
   return(Individual_data)
 
