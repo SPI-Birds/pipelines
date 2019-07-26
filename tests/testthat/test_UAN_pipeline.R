@@ -1,10 +1,16 @@
 context("Run data quality check on University of Antwerp pipeline output")
 
-test_that("Format of output data is as expected...", {
+test_that("UAN pipeline works...", {
 
-  all_csvs <- list.files(path = ".", pattern = "UAN.csv")
+  suppressWarnings(run_pipelines(path = path, PopID = c("BOS", "PEE")))
 
-  skip_if(length(all_csvs) == 0)
+})
 
+test_that("UAN outputs all files...", {
+
+  expect_true(file.exists("Brood_data_UAN.csv"))
+  expect_true(file.exists("Capture_data_UAN.csv"))
+  expect_true(file.exists("Individual_data_UAN.csv"))
+  expect_true(file.exists("Location_data_UAN.csv"))
 
 })

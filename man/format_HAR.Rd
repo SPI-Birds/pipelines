@@ -4,8 +4,8 @@
 \alias{format_HAR}
 \title{Construct standard summary for data from Harjavalta, Finland.}
 \usage{
-format_HAR(db = choose.dir(), species = NULL, path = ".",
-  debug = FALSE)
+format_HAR(db = choose.dir(), species = NULL, pop = NULL,
+  path = ".", debug = FALSE)
 }
 \arguments{
 \item{db}{Location of database file.}
@@ -14,6 +14,12 @@ format_HAR(db = choose.dir(), species = NULL, path = ".",
 interest as listed in the
 \href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{standard
 protocol}. If blank will return all major species.}
+
+\item{pop}{The three-letter code of population as listed in the \href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{standard
+protocol}. For data owners with multiple populations (e.g. NIOO, UAN) where a single
+pipeline is used for many populations this argument is used to extract data from
+individual populations. For other pipelines that contain only one population
+this argument can be ignored.}
 
 \item{path}{Location where output csv files will be saved.}
 
@@ -39,6 +45,15 @@ this data. For a general description of the standard protocl please see
 hole nesting species; however, only 4 of these (great tit, blue tit, coal tit,
 pied flycatcher) have >100 nest records. Only data from these 4 species is
 considered.
+
+\strong{Age}: Chick age is listed as: PP (nestling), PM (fledgling), 1, 1+, 2, 2+.
+The numbers are said to follow the EURING system. I'm not sure which
+version of the EURING code this would be. I think that 1 = first year bird,
+1+ = >first year bird, 2 = second year bird, 2+ = >second year bird.
+It's not clear to me the distinction between PP, PM, and 1. For now, only PP and PM
+are counted as being caught as chicks (i.e. with exact hatching year known),
+everything else is assumed to be an estimate. This does mean that we have some
+cases where the Age_calculated is 1 and the Age_observed is >= 5.
 
 \strong{LayingDateError & HatchDateError}: Accuracy of laying and hatch date
 are given as categories: 0-1; 1-2; 2-3; >3 (N.B. Need to check this with

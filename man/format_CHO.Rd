@@ -4,11 +4,22 @@
 \alias{format_CHO}
 \title{Construct standard summary for data from Choupal, Portugal.}
 \usage{
-format_CHO(db = file.choose(), Species = NULL, path = ".",
-  debug = FALSE)
+format_CHO(db = choose.dir(), species = NULL, pop = NULL,
+  path = ".", debug = FALSE)
 }
 \arguments{
 \item{db}{Location of database file.}
+
+\item{species}{Species of interest. The 6 letter codes of all the species of
+interest as listed in the
+\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{standard
+protocol}. If blank will return all major species.}
+
+\item{pop}{The three-letter code of population as listed in the \href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{standard
+protocol}. For data owners with multiple populations (e.g. NIOO, UAN) where a single
+pipeline is used for many populations this argument is used to extract data from
+individual populations. For other pipelines that contain only one population
+this argument can be ignored.}
 
 \item{path}{Location where output csv files will be saved.}
 
@@ -21,24 +32,40 @@ variables.}
 Generates 4 .csv files with data in a standard format.
 }
 \description{
-A pipeline to produce a standard output for the great tit population
-in Choupal, Portugal, administered by the University of Coimbra.
-Output follows the HNB standard breeding data format.
+A pipeline to produce a standard output for the great tit population in
+Choupal, Portugal, administered by the University of Coimbra. Output follows
+the HNB standard breeding data format.
 }
 \details{
-This section provides details on data management choices that are unique to this data.
-For a general description of the standard format please see XXXXX PLACE HOLDER!
+This section provides details on data management choices that are unique to
+this data. For a general description of the standard format please see
+\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
 
-\strong{NumberFledged}: This population has no estimation of actual fledgling numbers.
-The last time nests are counted is 14 days post hatching. We use this as an estimation of fledling numbers.
-This also affects \emph{ClutchType_calc} as \emph{NumberFledged} is used to estimated second clutches.
+\strong{NumberFledged}: This population has no estimation of actual fledgling
+numbers. The last time nests are counted is 14 days post hatching. We use this
+as an estimation of fledgling numbers. This also affects
+\emph{ClutchType_calculated} as \emph{NumberFledged} is used to estimated
+second clutches.
 
-\strong{MinAge, RingAge}: Any individual caught as a chick was assumed to
-have a EUring code of 1: 'Pullus: nestling or chick, unable to fly freely, still able to be caught by hand.'
-Any individual not caught as a chick was assumed to have a EUring code of 4:
-'After first full year: year of hatching unknown'.
+\strong{Age_observed}: Translation of age records \itemize{
+\item Any
+individual caught as a chick was assumed to have a EURING code of 1: 'Pullus:
+nestling or chick, unable to fly freely, still able to be caught by hand.'}
+\item Any individual listed as 'first year' was given a EURING code of 5: a
+bird hatched last calendar year and now in its second calendar year.
+\item Any
+individual listed as 'adult' was given a EURING code of 6: full-grown bird
+hatched before last calendar year; year of hatching otherwise unknown.
 
-\strong{ClutchType_observed}: In the raw data, there is no distinction between 'second' and 'replacement' clutches.
-Any clutch recorded as '2nd' is assumed to be a 'second' clutch under our definitions.
-'ClutchType_calc' may give a more appropriate estimate of clutch type for this data.
+\strong{ClutchType_observed}: In the raw data, there is no distinction between
+'second' and 'replacement' clutches. Any clutch recorded as '2nd' is assumed
+to be a 'second' clutch under our definitions. 'ClutchType_calculated' may
+give a more appropriate estimate of clutch type for this data.
+
+\strong{ClutchSize, BroodSize, NumberFledged}: We currently only use records
+of clutch, brood, and fledgling numbers that are recorded explicitly in the
+data. This means that there are some nests where chicks have capture records,
+but the \emph{Brood data} table will not give any value of NumberFledged.
+(e.g. see BroodID 2004_NA). These capture records should be included, but we need
+to determine the amount of potential uncertainty around these records.
 }

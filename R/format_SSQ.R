@@ -34,14 +34,8 @@
 #' \strong{Nestbox StartYear}: Some nest boxes were replaced over the course of
 #' the study; however, these replacements were not explicitly recorded.
 #' Therefore, we list all nestboxes as functioning for the full study period.
-#' @param db Location of database file.
-#' @param Species A numeric vector. Which species should be included (EUring
-#'   codes)? If blank will return all major species (see details below).
-#' @param path Location where output csv files will be saved.
-#' @param debug For internal use when editing pipelines. If TRUE, pipeline
-#'   generates a summary of pipeline data. This includes: a) Histogram of
-#'   continuous variables with mean/SD b) unique values of all categorical
-#'   variables.
+#'
+#' @inheritParams pipeline_params
 #'
 #' @return Generates 5 .csv files with data in a standard format.
 #' @export
@@ -49,10 +43,16 @@
 #' @import janitor
 #' @import reshape2
 
-format_SSQ <- function(db = file.choose(),
-                       Species = NULL,
+format_SSQ <- function(db = choose.dir(),
+                       species = NULL,
+                       pop = NULL,
                        path = ".",
                        debug = FALSE){
+
+  #Force user to select directory
+  force(db)
+
+  db <- paste0(db, "\\Data Sicily CusimanoC_MassaB.xlsx")
 
   #Record start time to provide processing time to the user.
   start_time <- Sys.time()
@@ -377,11 +377,11 @@ format_SSQ <- function(db = file.choose(),
 
   write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_SSQ.csv"), row.names = F)
 
-  write.csv(x = Indv_data, file = paste0(path, "\\Indv_data_SSQ.csv"), row.names = F)
+  write.csv(x = Indv_data, file = paste0(path, "\\Individual_data_SSQ.csv"), row.names = F)
 
   write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_SSQ.csv"), row.names = F)
 
-  write.csv(x = Nestbox_data, file = paste0(path, "\\Nestbox_data_SSQ.csv"), row.names = F)
+  write.csv(x = Nestbox_data, file = paste0(path, "\\Location_data_SSQ.csv"), row.names = F)
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 

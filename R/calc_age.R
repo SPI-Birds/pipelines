@@ -43,9 +43,8 @@ calc_age <- function(data, ID, Age, Date, Year, showpb = TRUE){
     dplyr::group_by({{ID}}) %>%
     dplyr::mutate(FirstAge  = first({{Age}}),
                   FirstYear = first({{Year}})) %>%
-    dplyr::mutate(was_chick = FirstAge == 1,
-                  yr_diff   = {{Year}} - FirstYear,
-                  Age_calculated = purrr::pmap_dbl(.l = list(was_chick, yr_diff),
+    dplyr::mutate(yr_diff   = {{Year}} - FirstYear,
+                  Age_calculated = purrr::pmap_dbl(.l = list(FirstAge, yr_diff, {{Age}}),
                                              .f = ~{
 
                                                if(showpb){
@@ -54,18 +53,29 @@ calc_age <- function(data, ID, Age, Date, Year, showpb = TRUE){
 
                                                }
 
-                                               if(is.na(..1) | ..1 == FALSE) {
+                                               #If the capture has no age or the age is greater than 3
+                                               #where 3 is within first year...
+                                               if(is.na(..1) | ..1 > 3) {
 
+                                                 #Give an age which is at least >1yo
                                                  return(4 + 2*..2)
 
                                                } else {
 
+                                                 #Otherwise, if it was first caught as a chick
+                                                 #and it's the same year of chick capture.
                                                  if(..2 == 0){
 
-                                                   return(1)
+                                                   #Return the recorded age
+                                                   #This is important because it could also have been
+                                                   #captured as a fledgling that year, in which
+                                                   #case we don't want to give it a value of 1 (pullus)
+                                                   return(..3)
 
                                                  } else {
 
+                                                   #If it's later than the year of birth,
+                                                   #give it a known age.
                                                    return(3 + 2*..2)
 
                                                  }

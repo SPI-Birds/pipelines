@@ -4,8 +4,8 @@
 #' Valley, Ireland, administered by John Quinn.
 #'
 #' This section provides details on data management choices that are unique to
-#' this data. For a general description of the standard format please see XXXXX
-#' PLACE HOLDER!
+#' this data. For a general description of the standard format please see
+#'\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
 #'
 #' \strong{Species}: There are records where species is uncertain (e.g. listed
 #' as 'GRETI?'). This uncertainty is ignored. We assume that the suggested
@@ -15,7 +15,7 @@
 #' \strong{ClutchType_observed}: Clutch type is only listed as 'first' and
 #' 'second'. There is no distinction between 'second' and 'replacement'. We
 #' categorise all these as 'second'. Possible distinction between 'second' and
-#' 'replacement' could be made with \strong{ClutchType_calc}. There are a small
+#' 'replacement' could be made with \strong{ClutchType_calculated}. There are a small
 #' number of cases where nest attempt number is uncertain (e.g. `2(MAYBE)`).
 #' This uncertainty is ignored.
 #'
@@ -29,26 +29,28 @@
 #' \strong{BroodID}: Unique BroodID is currently made with
 #' Year_Plot_LocationID_Day_Month.
 #'
-#' \strong{Age_obsv}: There is no recorded capture age. This is left as NA.
+#' \strong{Age_observed}: There is no recorded capture age. This is left as NA.
 #'
 #' \strong{AvgEggMass}: Currently we only include records where the day of egg
 #' weighing is <= LayingDate + ClutchSize. This should be an estimate of the
 #' date that incubation began. Once incubation starts, egg weight is not easily
 #' comparable because it changes with chick development.
 #'
-#' @param db Directory path. Location of primary data.
-#' @param path File path. Location where output csv files will be saved.
-#' @param debug For internal use when editing pipelines. If TRUE, pipeline
-#'   generates a summary of pipeline data. This includes: a) Histogram of
-#'   continuous variables with mean/SD b) unique values of all categorical
-#'   variables.
+#'@inheritParams pipeline_params
 #'
 #' @return Generates 4 .csv files with data in a standard format.
 #' @export
 #'
 #' @examples
 #' format_BAN()
-format_BAN <- function(db = choose.dir(), path = ".", debug = FALSE){
+format_BAN <- function(db = choose.dir(),
+                       path = ".",
+                       species = NULL,
+                       pop = NULL,
+                       debug = FALSE){
+
+  #Force choose.dir() if used
+  force(db)
 
   start_time <- Sys.time()
 
@@ -150,7 +152,7 @@ format_BAN <- function(db = choose.dir(), path = ".", debug = FALSE){
 
   write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_BAN.csv"), row.names = F)
 
-  write.csv(x = Individual_data, file = paste0(path, "\\Indv_data_BAN.csv"), row.names = F)
+  write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_BAN.csv"), row.names = F)
 
   write.csv(x = Location_data, file = paste0(path, "\\Location_data_BAN.csv"), row.names = F)
 
@@ -170,7 +172,7 @@ format_BAN <- function(db = choose.dir(), path = ".", debug = FALSE){
 create_brood_BAN   <- function(data) {
 
   Brood_data <- data %>%
-    dplyr::mutate(ClutchType_calc = calc_clutchtype(., na.rm = FALSE),
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(., na.rm = FALSE),
                   LayingDateError = NA,
                   ClutchSizeError = NA,
                   HatchDateError = NA,
@@ -179,16 +181,17 @@ create_brood_BAN   <- function(data) {
                   NumberFledgedError = NA,
                   AvgChickMass = NA, NumberChicksMass = NA,
                   AvgTarsus = NA, NumberChicksTarsus = NA,
+                  OriginalTarsusMethod = "Alternative",
                   ExperimentID = NA) %>%
     ## Remove egg weights when the day of weighing is outside our given range
     ## FOR NOW WE INCLUDE ALL EGG MASS DATES
     dplyr::mutate(AvgEggMass = purrr::map2_dbl(.x = AvgEggMass, .y = EggWasIncubated,
                                                .f = ~{ifelse(!..2, NA, as.numeric(..1))})) %>%
-    dplyr::select(PopID, BreedingSeason,
+    dplyr::select(BroodID, PopID, BreedingSeason,
                   Species, Plot, LocationID,
-                  BroodID, FemaleID, MaleID,
+                  FemaleID, MaleID,
                   ClutchType_observed,
-                  ClutchType_calc,
+                  ClutchType_calculated,
                   LayingDate, LayingDateError,
                   ClutchSize, ClutchSizeError,
                   HatchDate, HatchDateError,
@@ -198,6 +201,7 @@ create_brood_BAN   <- function(data) {
                   AvgEggMass, NumberEggs,
                   AvgChickMass, NumberChicksMass,
                   AvgTarsus, NumberChicksTarsus,
+                  OriginalTarsusMethod,
                   ExperimentID)
 
   return(Brood_data)
@@ -238,17 +242,19 @@ create_capture_BAN <- function(data) {
                                               }
 
                                             }),
-                  Age_obsv = NA, CaptureTime = NA, Mass = NA, Tarsus = NA,
+                  Age_observed = NA, CaptureTime = NA, Mass = NA, Tarsus = NA,
                   WingLength = NA, ChickAge = NA, CapturePopID = "BAN",
-                  ReleasePopID = "BAN") %>%
-    calc_age(ID = IndvID, Age = Age_obsv,
+                  ReleasePopID = "BAN", ObserverID = NA, OriginalTarsusMethod = "Alternative") %>%
+    calc_age(ID = IndvID, Age = Age_observed,
              Date = CaptureDate, Year = BreedingSeason,
              showpb = TRUE) %>%
     dplyr::select(IndvID, Species, BreedingSeason,
-                  LocationID, CaptureDate, CaptureTime,
+                  CaptureDate, CaptureTime,
+                  ObserverID, LocationID,
                   CapturePopID, CapturePlot = Plot,
                   ReleasePopID, ReleasePlot = Plot,
-                  Mass, Tarsus, WingLength, Age_obsv, Age_calc,
+                  Mass, Tarsus, OriginalTarsusMethod,
+                  WingLength, Age_observed, Age_calculated,
                   ChickAge, Sex) %>%
     ungroup()
 
@@ -270,13 +276,13 @@ create_individual_BAN <- function(Capture_data) {
     dplyr::summarise(Species = unique(na.omit(Species)),
                      PopID = "BAN",
                      RingSeason = first(BreedingSeason),
-                     RingAge = first(Age_obsv),
+                     RingAge = first(Age_observed),
                      Sex = purrr::map_chr(.x = list(unique(Sex)),
                                           .f = ~{
 
                                             if(all(c("F", "M") %in% ..1)){
 
-                                              return("CONFLICTING SEX")
+                                              return("C")
 
                                             } else if("F" %in% ..1){
 
@@ -288,11 +294,14 @@ create_individual_BAN <- function(Capture_data) {
 
                                             } else if(is.na(..1)){
 
-                                              return("U")
+                                              return(NA_character_)
 
                                             }
 
-                                          }))
+                                          })) %>%
+    #Change RingAge to chick/adult
+    dplyr::mutate(RingAge = dplyr::case_when(is.na(.$RingAge) || .$RingAge > 3 ~ "adult",
+                                             .$RingAge <= 3 ~ "chick"))
 
   return(Individual_data)
 

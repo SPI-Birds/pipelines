@@ -4,12 +4,24 @@
 \alias{format_BAN}
 \title{Construct standard summary for data from Bandon Valley, Ireland.}
 \usage{
-format_BAN(db = choose.dir(), path = ".", debug = FALSE)
+format_BAN(db = choose.dir(), path = ".", species = NULL,
+  pop = NULL, debug = FALSE)
 }
 \arguments{
-\item{db}{Directory path. Location of primary data.}
+\item{db}{Location of database file.}
 
-\item{path}{File path. Location where output csv files will be saved.}
+\item{path}{Location where output csv files will be saved.}
+
+\item{species}{Species of interest. The 6 letter codes of all the species of
+interest as listed in the
+\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{standard
+protocol}. If blank will return all major species.}
+
+\item{pop}{The three-letter code of population as listed in the \href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{standard
+protocol}. For data owners with multiple populations (e.g. NIOO, UAN) where a single
+pipeline is used for many populations this argument is used to extract data from
+individual populations. For other pipelines that contain only one population
+this argument can be ignored.}
 
 \item{debug}{For internal use when editing pipelines. If TRUE, pipeline
 generates a summary of pipeline data. This includes: a) Histogram of
@@ -25,8 +37,8 @@ Valley, Ireland, administered by John Quinn.
 }
 \details{
 This section provides details on data management choices that are unique to
-this data. For a general description of the standard format please see XXXXX
-PLACE HOLDER!
+this data. For a general description of the standard format please see
+\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
 
 \strong{Species}: There are records where species is uncertain (e.g. listed
 as 'GRETI?'). This uncertainty is ignored. We assume that the suggested
@@ -36,7 +48,7 @@ species are recorded.
 \strong{ClutchType_observed}: Clutch type is only listed as 'first' and
 'second'. There is no distinction between 'second' and 'replacement'. We
 categorise all these as 'second'. Possible distinction between 'second' and
-'replacement' could be made with \strong{ClutchType_calc}. There are a small
+'replacement' could be made with \strong{ClutchType_calculated}. There are a small
 number of cases where nest attempt number is uncertain (e.g. `2(MAYBE)`).
 This uncertainty is ignored.
 
@@ -50,7 +62,7 @@ ignored (i.e. true clutch size is unknown).
 \strong{BroodID}: Unique BroodID is currently made with
 Year_Plot_LocationID_Day_Month.
 
-\strong{Age_obsv}: There is no recorded capture age. This is left as NA.
+\strong{Age_observed}: There is no recorded capture age. This is left as NA.
 
 \strong{AvgEggMass}: Currently we only include records where the day of egg
 weighing is <= LayingDate + ClutchSize. This should be an estimate of the

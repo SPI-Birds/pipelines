@@ -31,14 +31,7 @@
 #' (e.g. 11+). We're unsure how large this uncertainty is. It's currently
 #' ignored, but will talk with data owner to incorporate this.
 #'
-#' @param db Location of database file.
-#' @param Species A numeric vector. Which species should be included (EUring
-#'   codes)? If blank will return all major species (see details below).
-#' @param path Location where output csv files will be saved.
-#' @param debug For internal use when editing pipelines. If TRUE, pipeline
-#'   generates a summary of pipeline data. This includes: a) Histogram of
-#'   continuous variables with mean/SD b) unique values of all categorical
-#'   variables.
+#' @inheritParams pipeline_params
 #'
 #' @return Generates 4 .csv files with data in a standard format.
 #' @export
@@ -46,9 +39,13 @@
 #' @import stringr
 
 format_VEL <- function(db = choose.dir(),
-                       Species = NULL,
+                       species = NULL,
+                       pop = NULL,
                        path = ".",
                        debug = FALSE) {
+
+  #Force user to select directory
+  force(db)
 
   start_time <- Sys.time()
 
@@ -303,7 +300,7 @@ format_VEL <- function(db = choose.dir(),
 
   write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_VEL.csv"), row.names = F)
 
-  write.csv(x = Individual_data, file = paste0(path, "\\Indv_data_VEL.csv"), row.names = F)
+  write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_VEL.csv"), row.names = F)
 
   write.csv(x = Location_data, file = paste0(path, "\\Location_data_VEL.csv"), row.names = F)
 
@@ -408,13 +405,13 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
                                                               }),
                                     CaptureTime = NA, CapturePopID = "VEL", CapturePlot = Plot,
                                     ## All chick records were 6 or 13 days, so all are listed as EURING age 1
-                                    ReleasePopID = "VEL", ReleasePlot = Plot, Age_obsv = 1, Age_calc = NA,
+                                    ReleasePopID = "VEL", ReleasePlot = Plot, Age_obsv = 1, Age_calculated = NA,
                                     #Convert tarsus to Svennson's alternative
                                     Tarsus = convert_tarsus(Tarsus, method = "Oxford")) %>%
                       tidyr::unnest(CaptureDate) %>%
                       dplyr::select(IndvID, Species, BreedingSeason, LocationID, CaptureDate, CaptureTime, CapturePopID, CapturePlot,
                                     ReleasePopID, ReleasePlot, Mass, Tarsus, WingLength, Age_obsv,
-                                    Age_calc, ChickAge, BroodID)
+                                    Age_calculated, ChickAge, BroodID)
 
                     ## When the chick is 6 days old, then tarsus and wing length are not used
                     ## They were only collected at 13 days old
@@ -512,7 +509,7 @@ create_capture_VEL_TIT    <- function(TIT_data) {
                   Age_obsv = 4) %>%
     calc_age(ID = IndvID, Age = Age_obsv, Date = CaptureDate, Year = BreedingSeason) %>%
     dplyr::select(BreedingSeason, IndvID, Species, CaptureDate, CapturePopID:ReleasePlot,
-                  Age_obsv, Age_calc)
+                  Age_obsv, Age_calculated)
 
   return(TIT_capture)
 

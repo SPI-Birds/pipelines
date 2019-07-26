@@ -20,9 +20,8 @@
 #' \strong{Measurement error}: For BroodSize, NumberFledged XXXX FILL IN a best estimate is provided.
 #' Best estimate is halfway between the minimum and maximum possible value. \emph{N.B.:} This means that the best estimate will not necessarily be an integer.
 #' Error is provided in BroodSizeError, NumberFledgedError etc. this is the absolute error (+/-) around the best estimate.
-#' @param db Location of database file.
-#' @param Species A numeric vector. Which species should be included (EUring codes)? If blank will return all major species (see details below).
-#' @param path Location where output csv files will be saved.
+#'
+#' @inheritParams pipeline_params
 #'
 #' @return Generates 5 .csv files with data in a standard format.
 #' @export
@@ -30,9 +29,15 @@
 #' @import DBI
 #' @import purrr
 
-format_NIOO <- function(db = file.choose(),
-                        Species = NULL,
+format_NIOO <- function(db = choose.dir(),
+                        species = NULL,
+                        pop = NULL,
                         path = "."){
+
+  #Force user to select directory
+  force(db)
+
+  db <- paste0(db, "\\NIOO_database.accdb")
 
   #Record start time to estimate processing time.
   start_time <- Sys.time()
@@ -77,13 +82,13 @@ format_NIOO <- function(db = file.choose(),
 
   #Create a subset of the chosen species
   #Where argument 'species' is unused, include all species in the table (listed in description)
-  if(is.null(Species)){
+  if(is.null(species)){
 
-    Species <- Species_codes$SpeciesID
+    species <- Species_codes$SpeciesID
 
   }
 
-  Species_codes <- filter(Species_codes, SpeciesID %in% Species)
+  Species_codes <- filter(Species_codes, SpeciesID %in% species)
 
   ###################
   # INDIVIDUAL DATA #
@@ -100,7 +105,7 @@ format_NIOO <- function(db = file.choose(),
 
   Indv_data   <- tbl(connection, "dbo_tbl_Individual") %>%
     #Subset only chosen species
-    filter(SpeciesID %in% Species) %>%
+    filter(SpeciesID %in% species) %>%
     #Select only the basic info that we want:
     # - Individual ID
     # - GeneticBroodID
@@ -166,7 +171,7 @@ format_NIOO <- function(db = file.choose(),
     left_join(tbl(connection, "dbo_vw_MI_CaptureCaptureData") %>%
                 select(CaptureID, SpeciesID, Weight, Tarsus, Wing_Length), by = "CaptureID") %>%
     #Filter target species
-    filter(SpeciesID %in% Species) %>%
+    filter(SpeciesID %in% species) %>%
     #Remove cases of egg measurement
     #We are only interested in captures of chicks and adults.
     filter(CaptureType %in% c(1, 2)) %>%
@@ -248,7 +253,7 @@ format_NIOO <- function(db = file.choose(),
 
   Brood_data  <- tbl(connection, "dbo_tbl_Brood") %>%
     #Subset only broods of designated species in main areas
-    filter(BroodSpecies %in% Species & BroodLocationID %in% Locations$ID) %>%
+    filter(BroodSpecies %in% species & BroodLocationID %in% !!Locations$ID) %>%
     #Link the ClutchType description (e.g. first, second, replacement)
     left_join(tbl(connection, "dbo_tl_BroodType") %>% select(BroodType = ID, Description), by = "BroodType") %>%
     #Extract basic info that we want:
@@ -452,11 +457,11 @@ format_NIOO <- function(db = file.choose(),
 
   write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_NIOO.csv"), row.names = F)
 
-  write.csv(x = Indv_data %>% select(-RingNumber), file = paste0(path, "\\Indv_data_NIOO.csv"), row.names = F)
+  write.csv(x = Indv_data %>% select(-RingNumber), file = paste0(path, "\\Individual_data_NIOO.csv"), row.names = F)
 
   write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_NIOO.csv"), row.names = F)
 
-  write.csv(x = Nestbox_data, file = paste0(path, "\\Nestbox_data_NIOO.csv"), row.names = F)
+  write.csv(x = Nestbox_data, file = paste0(path, "\\Location_data_NIOO.csv"), row.names = F)
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 

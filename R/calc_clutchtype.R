@@ -4,7 +4,7 @@
 #' given brood
 #' @param data Data frame. Brood data to use for conversion
 #' @param na.rm Logical. Should NA's be removed and treated as 0s. If FALSE, NAs
-#'   are treated as true unknowns.
+#'   are treated as true unknowns. If TRUE, NAs are treated as 0s.
 #'
 #' @return A character vector with either 'first', 'replacement', 'second', or
 #'   NA
@@ -22,12 +22,12 @@
 #'                            sample(c(4, 5, 6), size = 100, replace = TRUE),
 #'                            sample(seq(1, 31, 1), size = 100, replace = TRUE), sep = "-"),
 #'                            format = "%Y-%m-%d"))
-#' calc_clutchtype(data = dat, na.rm = TRUE)
-calc_clutchtype <- function(data, na.rm = T) {
+#' calc_clutchtype(data = dat, na.rm = FALSE)
+calc_clutchtype <- function(data, na.rm = FALSE) {
 
   cutoff_dat <- data %>%
     dplyr::group_by(PopID, BreedingSeason, Species) %>%
-    dplyr::mutate(cutoff = tryCatch(expr = min(LayingDate, na.rm = T) + lubridate::days(30),
+    dplyr::mutate(cutoff = tryCatch(expr = min(LayingDate, na.rm = TRUE) + lubridate::days(30),
                                     warning = function(...) return(NA))) %>%
     # Determine brood type for each nest based on female ID
     dplyr::group_by(BreedingSeason, Species, FemaleID)
@@ -36,7 +36,7 @@ calc_clutchtype <- function(data, na.rm = T) {
   if(na.rm == TRUE){
 
     clutchtype_calculated <- cutoff_dat %>%
-      dplyr::mutate(total_fledge = calc_cumfledge(x = NumberFledged, na.rm = T),
+      dplyr::mutate(total_fledge = calc_cumfledge(x = NumberFledged, na.rm = TRUE),
                     row = 1:n()) %>%
       dplyr::ungroup() %>%
       dplyr::mutate(ClutchType_calculated = purrr::pmap_chr(.l = list(rows = .$row,
@@ -120,8 +120,8 @@ calc_clutchtype <- function(data, na.rm = T) {
   } else {
 
     clutchtype_calculated <- cutoff_dat %>%
-      mutate(total_fledge = calc_cumfledge(x = NumberFledged, na.rm = T),
-             total_fledge_na = calc_cumfledge(x = NumberFledged, na.rm = F),
+      mutate(total_fledge = calc_cumfledge(x = NumberFledged, na.rm = TRUE),
+             total_fledge_na = calc_cumfledge(x = NumberFledged, na.rm = FALSE),
              row = 1:n()) %>%
       ungroup() %>%
       mutate(ClutchType_calculated = purrr::pmap_chr(.l = list(rows = .$row,
@@ -133,8 +133,6 @@ calc_clutchtype <- function(data, na.rm = T) {
                                                .f = function(rows, femID, cutoff_date,
                                                              nr_fledge_before, na_fledge_before,
                                                              LD){
-
-                                                 # clutchtype$tick()$print()
 
                                                  #Firstly, check if the nest has a LD
                                                  #If not, we cannot calculate BroodType
