@@ -11,6 +11,12 @@ interest as listed in the
 \href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{standard
 protocol}. If blank will return all major species.}
 
+\item{pop}{The three-letter code of population as listed in the \href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{standard
+protocol}. For data owners with multiple populations (e.g. NIOO, UAN) where a single
+pipeline is used for many populations this argument is used to extract data from
+individual populations. For other pipelines that contain only one population
+this argument can be ignored.}
+
 \item{path}{Location where output csv files will be saved.}
 
 \item{debug}{For internal use when editing pipelines. If TRUE, pipeline

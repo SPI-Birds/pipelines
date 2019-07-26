@@ -115,6 +115,7 @@
 
 format_HAR <- function(db = choose.dir(),
                        species = NULL,
+                       pop = NULL,
                        path = ".",
                        debug = FALSE){
 

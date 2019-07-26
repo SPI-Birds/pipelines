@@ -34,14 +34,8 @@
 #' \strong{Nestbox StartYear}: Some nest boxes were replaced over the course of
 #' the study; however, these replacements were not explicitly recorded.
 #' Therefore, we list all nestboxes as functioning for the full study period.
-#' @param db Location of database file.
-#' @param Species A numeric vector. Which species should be included (EUring
-#'   codes)? If blank will return all major species (see details below).
-#' @param path Location where output csv files will be saved.
-#' @param debug For internal use when editing pipelines. If TRUE, pipeline
-#'   generates a summary of pipeline data. This includes: a) Histogram of
-#'   continuous variables with mean/SD b) unique values of all categorical
-#'   variables.
+#'
+#' @inheritParams pipeline_params
 #'
 #' @return Generates 5 .csv files with data in a standard format.
 #' @export
@@ -50,7 +44,8 @@
 #' @import reshape2
 
 format_SSQ <- function(db = file.choose(),
-                       Species = NULL,
+                       species = NULL,
+                       pop = NULL,
                        path = ".",
                        debug = FALSE){
 

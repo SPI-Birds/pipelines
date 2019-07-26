@@ -41,6 +41,7 @@
 
 format_CHO <- function(db = choose.dir(),
                        species = NULL,
+                       pop = NULL,
                        path = ".",
                        debug = FALSE){
 
