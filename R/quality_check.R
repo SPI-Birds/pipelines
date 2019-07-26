@@ -1,17 +1,21 @@
 #' A function to perform a quality check on pipeline outputs
 #'
 #' @param db Location of standard .csv outputs of the pipeline.
-#' @param report Produce report (pdf) for user.
+#' @param pop Three-letter population ID.
+#' @param species Six-letter species ID.
+#' @param output_format Format of report: "html", "pdf", or "both" (default).
 #'
-#' @return A text file of line-by-line warnings,
-#'   a text file of line-by-line errors,
-#'   a summary dataframe of test warnings and errors for use in testthat,
-#'   and a user-friendly report of the line-by-line list of warnings and errors.
+#' @return A summary dataframe of test warnings and errors for use in testthat,
+#'   and a report of the line-by-line list of warnings and errors.
+#'
+#' @import crayon
 #'
 #' @export
 
 quality_check <- function(db = choose.dir(),
-                          report = NULL) {
+                          pop,
+                          species,
+                          output_format = "both"){
 
   start_time <- Sys.time()
 
@@ -28,17 +32,15 @@ quality_check <- function(db = choose.dir(),
   Capture_data <- read.csv(paste0(db, "/Capture_data_VEL.csv"), stringsAsFactors = FALSE)
   Location_data <- read.csv(paste0(db, "/Location_data_VEL.csv"), stringsAsFactors = FALSE)
 
-  ## Create check list with - a summary of warnings and errors per test.
+  ## Create check list with - a summary of warnings and errors per test
   check_list <- tibble::tibble(Check = c("Individual data format", "Brood data format",
                                          "Capture data format", "Location data format",
                                          "Clutch and brood sizes", "Brood sizes and fledgling numbers",
                                          "Laying and hatching dates", "Hatching and fledging dates",
-                                         "Improbable and impossible values brood data"),
+                                         "Improbable and impossible values brood data",
+                                         "Improbable and impossible values capture data"),
                                Warning = NA,
                                Error = NA)
-
-  ## Create user-friendly report
-  ## - how to structure this differently from warnings.txt and errors.txt?
 
   ## Checks
   ## - Check formats
@@ -102,92 +104,197 @@ quality_check <- function(db = choose.dir(),
   ## - Check brood variable values against reference values
   message("Check 9: Checking brood variable values against reference values...")
 
-  check_values_brood_output <- check_values_brood(Brood_data, "PARMAJ")
+  check_values_brood_output <- check_values_brood(Brood_data, species)
 
   check_list[9,2:3] <- check_values_brood_output$check_list
 
+  ## - Check capture variable values against reference values
+  message("Check 10: Checking capture variable values against reference values...")
 
-  ## Create text file of warnings
-  sink('warnings.txt')
+  check_values_capture_output <- check_values_capture(Capture_data, species)
 
-  cat("Warnings\n\n") ## MAKE POP-SPECIFIC
+  check_list[10,2:3] <- check_values_capture_output$check_list
 
-  cat("Check 1: Individual data format\n\n")
-  cat(unlist(check_format_individual_output$warning_output), sep="\n", "\n")
 
-  cat("Check 2: Brood data format\n\n")
-  cat(unlist(check_format_brood_output$warning_output), sep="\n", "\n")
 
-  cat("Check 3: Capture data format\n\n")
-  cat(unlist(check_format_capture_output$warning_output), sep="\n", "\n")
 
-  cat("Check 4: Location data format\n\n")
-  cat(unlist(check_format_location_output$warning_output), sep="\n", "\n")
-
-  cat("Check 5: Clutch and brood sizes\n\n")
-  cat(unlist(compare_clutch_brood_output$warning_output), sep="\n", "\n")
-
-  cat("Check 6: Brood sizes and fledgling numbers\n\n")
-  cat(unlist(compare_brood_fledglings_output$warning_output), sep="\n", "\n")
-
-  cat("Check 7: Laying and hatching dates\n\n")
-  cat(unlist(compare_laying_hatching_output$warning_output), sep="\n", "\n")
-
-  cat("Check 8: Hatching and fledging dates\n\n")
-  cat(unlist(compare_hatching_fledging_output$warning_output), sep="\n", "\n")
-
-  cat("Check 9: Improbable and impossible values in brood data\n\n")
-  cat(unlist(check_values_brood_output$warning_output), sep="\n", "\n")
-
-  sink()
-
-  ## Create text file of errors
-  sink('errors.txt')
-
-  cat("Errors\n\n") ## MAKE POP-SPECIFIC
-
-  cat("Check 1: Individual data format\n\n")
-  cat(unlist(check_format_individual_output$error_output), sep="\n", "\n")
-
-  cat("Check 2: Brood data format\n\n")
-  cat(unlist(check_format_brood_output$error_output), sep="\n", "\n")
-
-  cat("Check 3: Capture data format\n\n")
-  cat(unlist(check_format_capture_output$error_output), sep="\n", "\n")
-
-  cat("Check 4: Location data format\n\n")
-  cat(unlist(check_format_location_output$error_output), sep="\n", "\n")
-
-  cat("Check 5: Clutch and brood sizes\n\n")
-  cat(unlist(compare_clutch_brood_output$error_output), sep="\n", "\n")
-
-  cat("Check 6: Brood sizes and fledgling numbers\n\n")
-  cat(unlist(compare_brood_fledglings_output$error_output), sep="\n", "\n")
-
-  cat("Check 7: Laying and hatching dates\n\n")
-  cat(unlist(compare_laying_hatching_output$error_output), sep="\n", "\n")
-
-  cat("Check 8: Hatching and fledging dates\n\n")
-  cat(unlist(compare_hatching_fledging_output$error_output), sep="\n", "\n")
-
-  cat("Check 9: Improbable and impossible values in brood data\n\n")
-  cat(unlist(check_values_brood_output$error_output), sep="\n", "\n")
-
-  sink()
-
+  # cat("Check 1: Individual data format\n\n")
+  # cat(unlist(check_format_individual_output$warning_output), sep="\n", "\n")
+  #
+  # cat("Check 2: Brood data format\n\n")
+  # cat(unlist(check_format_brood_output$warning_output), sep="\n", "\n")
+  #
+  # cat("Check 3: Capture data format\n\n")
+  # cat(unlist(check_format_capture_output$warning_output), sep="\n", "\n")
+  #
+  # cat("Check 4: Location data format\n\n")
+  # cat(unlist(check_format_location_output$warning_output), sep="\n", "\n")
+  #
+  # cat("Check 5: Clutch and brood sizes\n\n")
+  # cat(unlist(compare_clutch_brood_output$warning_output), sep="\n", "\n")
+  #
+  # cat("Check 6: Brood sizes and fledgling numbers\n\n")
+  # cat(unlist(compare_brood_fledglings_output$warning_output), sep="\n", "\n")
+  #
+  # cat("Check 7: Laying and hatching dates\n\n")
+  # cat(unlist(compare_laying_hatching_output$warning_output), sep="\n", "\n")
+  #
+  # cat("Check 8: Hatching and fledging dates\n\n")
+  # cat(unlist(compare_hatching_fledging_output$warning_output), sep="\n", "\n")
+  #
+  # cat("Check 9: Improbable and impossible values in brood data\n\n")
+  # cat(unlist(check_values_brood_output$warning_output), sep="\n", "\n")
+  #
+  # cat("Check 10: Improbable and impossible values in capture data\n\n")
+  # cat(unlist(check_values_capture_output$warning_output), sep="\n", "\n")
+  #
+  # sink()
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
-  message(paste0("\nAll checks performed in ", round(time, 2), " seconds"))
-
+  cat(paste0("\nAll checks performed in ", round(time, 2), " seconds"))
 
   checks_warnings <- sum(check_list$Warning == TRUE, na.rm=TRUE)
 
   checks_errors <- sum(check_list$Error == TRUE, na.rm=TRUE)
 
-  cat(crayon::yellow(paste0("\n", checks_warnings, " out of ", nrow(check_list), " checks resulted in warnings.")))
+  cat(crayon::yellow(paste0("\n", checks_warnings, " out of ", nrow(check_list), " checks resulted in warnings.")),
+      crayon::red(paste0("\n", checks_errors, " out of ", nrow(check_list), " checks resulted in errors.\n\n")))
 
-  cat(crayon::red(paste0("\n", checks_errors, " out of ", nrow(check_list), " checks resulted in errors.")))
+  ## Create output file
+  title <- paste0("Quality check report for ", species, " in ", pop_names[pop_names$code == pop, "name"])
+
+  mark_output <- c('---',
+                   'title: "`r title`"',
+                   'date: "`r Sys.Date()`"',
+                   'geometry: margin=0.5in',
+                   'output:
+                      pdf_document:
+                        toc: true
+                      html_document:
+                        toc: true',
+                   '---',
+                   '',
+                   '\\newpage',
+                   '# Summary',
+                   '',
+                   'All checks performed in `r round(time, 2)` seconds.',
+                   '',
+                   '`r checks_warnings` out of `r nrow(check_list)` checks resulted in warnings.',
+                   '',
+                   '`r checks_errors` out of `r nrow(check_list)` checks resulted in errors.',
+                   '',
+                   '# Warnings',
+                   '',
+                   'Check 1: Individual data format',
+                   '```{r echo=FALSE}',
+                   'cat(unlist(check_format_individual_output$warning_output), sep="\n", "\n")',
+                   '```',
+                   '',
+                   'Check 2: Brood data format',
+                   '```{r echo=FALSE}',
+                   'cat(unlist(check_format_brood_output$warning_output), sep="\n", "\n")',
+                   '```',
+                   '',
+                   'Check 3: Capture data format',
+                   '```{r echo=FALSE}',
+                   'cat(unlist(check_format_capture_output$warning_output), sep="\n", "\n")',
+                   '```',
+                   '',
+                   'Check 4: Location data format',
+                   '```{r echo=FALSE}',
+                   'cat(unlist(check_format_location_output$warning_output), sep="\n", "\n")',
+                   '```',
+                   '',
+                   'Check 5: Clutch and brood sizes',
+                   '```{r echo=FALSE}',
+                   'cat(unlist(compare_clutch_brood_output$warning_output), sep="\n", "\n")',
+                   '```',
+                   '',
+                   'Check 6: Brood sizes and fledgling numbers',
+                   '```{r echo=FALSE}',
+                   'cat(unlist(compare_brood_fledglings_output$warning_output), sep="\n", "\n")',
+                   '```',
+                   '',
+                   'Check 7: Laying and hatching dates',
+                   '```{r echo=FALSE}',
+                   'cat(unlist(compare_laying_hatching_output$warning_output), sep="\n", "\n")',
+                   '```',
+                   '',
+                   'Check 8: Hatching and fledging dates',
+                   '```{r echo=FALSE}',
+                   'cat(unlist(compare_hatching_fledging_output$warning_output), sep="\n", "\n")',
+                   '```',
+                   '',
+                   'Check 9: Improbable and impossible values in brood data',
+                   '```{r echo=FALSE}',
+                   'cat(unlist(check_values_brood_output$warning_output), sep="\n", "\n")',
+                   '```',
+                   '',
+                   'Check 10: Improbable and impossible values in capture data',
+                   '```{r echo=FALSE}',
+                   'cat(unlist(check_values_capture_output$warning_output), sep="\n", "\n")',
+                   '```',
+                   '',
+                   '\\newpage',
+                   '# Errors',
+                   '',
+                   'Check 1: Individual data format',
+                   '```{r echo=FALSE}',
+                   'cat(unlist(check_format_individual_output$error_output), sep="\n", "\n")',
+                   '```',
+                   '',
+                   'Check 2: Brood data format',
+                   '```{r echo=FALSE}',
+                   'cat(unlist(check_format_brood_output$error_output), sep="\n", "\n")',
+                   '```',
+                   '',
+                   'Check 3: Capture data format',
+                   '```{r echo=FALSE}',
+                   'cat(unlist(check_format_capture_output$error_output), sep="\n", "\n")',
+                   '```',
+                   '',
+                   'Check 4: Location data format',
+                   '```{r echo=FALSE}',
+                   'cat(unlist(check_format_location_output$error_output), sep="\n", "\n")',
+                   '```',
+                   '',
+                   'Check 5: Clutch and brood sizes',
+                   '```{r echo=FALSE}',
+                   'cat(unlist(compare_clutch_brood_output$error_output), sep="\n", "\n")',
+                   '```',
+                   '',
+                   'Check 6: Brood sizes and fledgling numbers',
+                   '```{r echo=FALSE}',
+                   'cat(unlist(compare_brood_fledglings_output$error_output), sep="\n", "\n")',
+                   '```',
+                   '',
+                   'Check 7: Laying and hatching dates',
+                   '```{r echo=FALSE}',
+                   'cat(unlist(compare_laying_hatching_output$error_output), sep="\n", "\n")',
+                   '```',
+                   '',
+                   'Check 8: Hatching and fledging dates',
+                   '```{r echo=FALSE}',
+                   'cat(unlist(compare_hatching_fledging_output$error_output), sep="\n", "\n")',
+                   '```',
+                   '',
+                   'Check 9: Improbable and impossible values in brood data',
+                   '```{r echo=FALSE}',
+                   'cat(unlist(check_values_brood_output$error_output), sep="\n", "\n")',
+                   '```',
+                   '',
+                   'Check 10: Improbable and impossible values in capture data',
+                   '```{r echo=FALSE}',
+                   'cat(unlist(check_values_capture_output$error_output), sep="\n", "\n")',
+                   '```')
+
+  knitr::knit(text = mark_output, output = "output-report.md")
+  #txt <- markdown::renderMarkdown(text = knitr::knit(text = mark_output))
+  #markdown::markdownToHTML(text = knitr::knit(text = mark_output), output = "report.html")
+  if(output_format == "html") rmarkdown::render("output-report.md", output_format = "html_document")
+  if(output_format == "pdf") rmarkdown::render("output-report.md", output_format = "pdf_document")
+  if(output_format == "both") rmarkdown::render("output-report.md", output_format = "all")
 
 }
 
@@ -726,19 +833,19 @@ compare_hatching_fledging <- function(Brood_data){
 #' Check variable values against species-specific reference values in brood data. Implausible values will result in a warning. Impossible values will result in an error. Variables that are checked: LayingDate, ClutchSize, HatchDate, BroodSize, FledgeDate, NumberFledged, AvgEggMass, AvgChickMass, AvgTarsus.
 #'
 #' @param Brood_data Data frame. Brood data output from pipeline.
-#' @param Species Six-letter character string to select species-specific reference values.
+#' @param species Six-letter species ID to select species-specific reference values.
 #'
 #' @return Check list, warning output, error output.
 #' @export
 
-check_values_brood <- function(Brood_data, Species) {
+check_values_brood <- function(Brood_data, species) {
 
   # Select species-specific reference values
-  ref <- brood_ref_values_list[[Species]]
+  ref <- brood_ref_values_list[[species]]
 
   # Select species in data
   Brood_data <- Brood_data %>%
-    dplyr::filter(Species == Species)
+    dplyr::filter(Species == species)
 
   # Create list of variable-specific dataframes
   Brood_list <- purrr::map2(.x = Brood_data[, c("ClutchSize", "BroodSize", "NumberFledged")],
@@ -748,7 +855,7 @@ check_values_brood <- function(Brood_data, Species) {
                                                 Variable = names(.y)[3],
                                                 .x) %>%
                                    dplyr::filter(!is.na(.x)) %>% # Only non-NA's
-                                   dplyr::mutate(Warning = ifelse(.x < as.numeric(.y[1,3]) | .x > as.numeric(.y[2,3]),
+                                   dplyr::mutate(Warning = ifelse(.x > as.numeric(.y[2,3]),
                                                                   TRUE, FALSE),
                                                  Error = ifelse(.x < as.numeric(.y[3,3]) | .x > as.numeric(.y[4,3]),
                                                                 TRUE, FALSE))
@@ -800,6 +907,108 @@ check_values_brood <- function(Brood_data, Species) {
                                            " has an improbable value in ", ..2,
                                            " (", ..3, ").")
                                   })
+  }
+
+  check_list <- tibble::tibble(Warning = war,
+                               Error = err)
+
+  return(list(check_list = check_list,
+              warning_output = warning_output,
+              error_output = error_output))
+
+
+}
+
+
+#' Check capture variable values against reference values
+#'
+#' Check variable values against species-specific reference values in capture data. Implausible values will result in a warning. Impossible values will result in an error. Variables that are checked: Mass, Tarsus, WingLength, Age_obsv, Age_calc, Chick_age.
+#'
+#' @param capture_data Data frame. Capture data output from pipeline.
+#' @param species Six-letter species ID to select species-specific reference values.
+#'
+#' @return Check list, warning output, error output.
+#' @export
+
+check_values_capture <- function(Capture_data, species) {
+
+  # Select species-specific reference values
+  ref <- capture_ref_values_list[[species]]
+
+  # Select species in data
+  Capture_data <- Capture_data %>%
+    dplyr::filter(Species == species)
+
+  # Create list of variable-specific dataframes
+  Capture_list <- purrr::map2(.x = Capture_data[, c("Mass", "Tarsus")],
+                            .y = ref,
+                            .f = ~{
+                              tibble::tibble(IndvID = Capture_data$IndvID,
+                                             CaptureDate = Capture_data$CaptureDate,
+                                             LocationID = Capture_data$LocationID,
+                                             Variable = names(.y)[3],
+                                             .x) %>%
+                                dplyr::filter(!is.na(.x)) %>% # Only non-NA's
+                                dplyr::mutate(Warning = ifelse(.x > as.numeric(.y[2,3]),
+                                                               TRUE, FALSE),
+                                              Error = ifelse(.x < as.numeric(.y[3,3]) | .x > as.numeric(.y[4,3]),
+                                                             TRUE, FALSE))
+                            })
+
+  # Select records with errors (impossible values) from list
+  Capture_err <- purrr::map(.x = Capture_list,
+                            .f = ~{
+                              .x %>%
+                                dplyr::filter(Error == TRUE)
+                            }) %>%
+    dplyr::bind_rows()
+
+  err <- FALSE
+  error_output <- NULL
+
+  if(nrow(Capture_err) > 0) {
+    err <- TRUE
+
+    error_output <- purrr::pmap(.l = list(Capture_err$IndvID,
+                                          Capture_err$CaptureDate,
+                                          Capture_err$LocationID,
+                                          Capture_err$Variable,
+                                          Capture_err$.x),
+                                .f = ~{
+                                  paste0("Capture_data record with IndvID ", ..1,
+                                         ", caught at LocationID ", ..3,
+                                         " on ", ..2,
+                                         " has an impossible value in ", ..4,
+                                         " (", ..5, ").")
+                                })
+  }
+
+  # Select records with warnings (improbable values) from list
+  Capture_war <- purrr::map(.x = Capture_list,
+                            .f = ~{
+                              .x %>%
+                                dplyr::filter(Warning == TRUE)
+                            }) %>%
+    dplyr::bind_rows()
+
+  war <- FALSE
+  warning_output <- NULL
+
+  if(nrow(Capture_war) > 0) {
+    war <- TRUE
+
+    error_output <- purrr::pmap(.l = list(Capture_war$IndvID,
+                                          Capture_war$CaptureDate,
+                                          Capture_war$LocationID,
+                                          Capture_war$Variable,
+                                          Capture_war$.x),
+                                .f = ~{
+                                  paste0("Capture_data record with IndvID ", ..1,
+                                         ", caught at LocationID ", ..3,
+                                         " on ", ..2,
+                                         " has an improbable value in ", ..4,
+                                         " (", ..5, ").")
+                                })
   }
 
   check_list <- tibble::tibble(Warning = war,
