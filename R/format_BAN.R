@@ -4,8 +4,8 @@
 #' Valley, Ireland, administered by John Quinn.
 #'
 #' This section provides details on data management choices that are unique to
-#' this data. For a general description of the standard format please see XXXXX
-#' PLACE HOLDER!
+#' this data. For a general description of the standard format please see
+#'\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
 #'
 #' \strong{Species}: There are records where species is uncertain (e.g. listed
 #' as 'GRETI?'). This uncertainty is ignored. We assume that the suggested
@@ -29,7 +29,7 @@
 #' \strong{BroodID}: Unique BroodID is currently made with
 #' Year_Plot_LocationID_Day_Month.
 #'
-#' \strong{Age_obsv}: There is no recorded capture age. This is left as NA.
+#' \strong{Age_observed}: There is no recorded capture age. This is left as NA.
 #'
 #' \strong{AvgEggMass}: Currently we only include records where the day of egg
 #' weighing is <= LayingDate + ClutchSize. This should be an estimate of the
@@ -152,7 +152,7 @@ format_BAN <- function(db = choose.dir(),
 
   write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_BAN.csv"), row.names = F)
 
-  write.csv(x = Individual_data, file = paste0(path, "\\Indv_data_BAN.csv"), row.names = F)
+  write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_BAN.csv"), row.names = F)
 
   write.csv(x = Location_data, file = paste0(path, "\\Location_data_BAN.csv"), row.names = F)
 
@@ -240,17 +240,17 @@ create_capture_BAN <- function(data) {
                                               }
 
                                             }),
-                  Age_obsv = NA, CaptureTime = NA, Mass = NA, Tarsus = NA,
+                  Age_observed = NA, CaptureTime = NA, Mass = NA, Tarsus = NA,
                   WingLength = NA, ChickAge = NA, CapturePopID = "BAN",
                   ReleasePopID = "BAN") %>%
-    calc_age(ID = IndvID, Age = Age_obsv,
+    calc_age(ID = IndvID, Age = Age_observed,
              Date = CaptureDate, Year = BreedingSeason,
              showpb = TRUE) %>%
     dplyr::select(IndvID, Species, BreedingSeason,
                   LocationID, CaptureDate, CaptureTime,
                   CapturePopID, CapturePlot = Plot,
                   ReleasePopID, ReleasePlot = Plot,
-                  Mass, Tarsus, WingLength, Age_obsv, Age_calculated,
+                  Mass, Tarsus, WingLength, Age_observed, Age_calculated,
                   ChickAge, Sex) %>%
     ungroup()
 
@@ -272,7 +272,7 @@ create_individual_BAN <- function(Capture_data) {
     dplyr::summarise(Species = unique(na.omit(Species)),
                      PopID = "BAN",
                      RingSeason = first(BreedingSeason),
-                     RingAge = first(Age_obsv),
+                     RingAge = first(Age_observed),
                      Sex = purrr::map_chr(.x = list(unique(Sex)),
                                           .f = ~{
 
