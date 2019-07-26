@@ -377,7 +377,7 @@ format_SSQ <- function(db = choose.dir(),
 
   write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_SSQ.csv"), row.names = F)
 
-  write.csv(x = Indv_data, file = paste0(path, "\\Indv_data_SSQ.csv"), row.names = F)
+  write.csv(x = Indv_data, file = paste0(path, "\\Individual_data_SSQ.csv"), row.names = F)
 
   write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_SSQ.csv"), row.names = F)
 
