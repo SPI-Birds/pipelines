@@ -17,6 +17,9 @@ quality_check <- function(db = choose.dir(),
                           species,
                           output_format = "both"){
 
+  #Force choose.dir() as first command
+  force(db)
+
   start_time <- Sys.time()
 
   message("Importing data...")
