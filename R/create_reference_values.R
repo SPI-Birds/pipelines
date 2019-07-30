@@ -120,7 +120,7 @@ create_reference_values <- function(db = choose.dir()) {
                                                 Mass = c(10, 20, 5, 25),
                                                 Tarsus = c(15, 22, 12, 25))
 
-  # --- Poecile palustris (Marsh tit)
+  ## --- Poecile palustris (Marsh tit)
   cap_adult_ref_values_POEPAL <- tibble::tibble(Species = "POEPAL",
                                                 Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
                                                 Mass = c(10, 20, 5, 25),
@@ -170,7 +170,7 @@ create_reference_values <- function(db = choose.dir()) {
                                                 Mass = c(10, 20, 5, 25),
                                                 Tarsus = c(15, 22, 12, 25))
 
-  # --- Poecile palustris (Marsh tit)
+  ## --- Poecile palustris (Marsh tit)
   cap_chick_ref_values_POEPAL <- tibble::tibble(Species = "POEPAL",
                                                 Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
                                                 Mass = c(10, 20, 5, 25),
@@ -187,69 +187,25 @@ create_reference_values <- function(db = choose.dir()) {
     return(l)
   }
 
-  list_brood_ref_values_PARMAJ <- listV(brood_ref_values_PARMAJ)
-  list_brood_ref_values_CYACAE <- listV(brood_ref_values_CYACAE)
-  list_brood_ref_values_FICHYP <- listV(brood_ref_values_FICHYP)
-  list_brood_ref_values_SITEUR <- listV(brood_ref_values_SITEUR)
-  list_brood_ref_values_PERATE <- listV(brood_ref_values_PERATE)
-  list_brood_ref_values_PASMON <- listV(brood_ref_values_PASMON)
-  list_brood_ref_values_FICALB <- listV(brood_ref_values_FICALB)
-  list_brood_ref_values_POEPAL <- listV(brood_ref_values_POEPAL)
+  ## - Brood data
+  brood_ref_values_list <- purrr::map(mget(setdiff(ls(pattern="^brood_ref"), ls(pattern="list$"))),
+                                      function(x) listV(x))
+  names(brood_ref_values_list) <- stringr::str_extract(names(brood_ref_values_list), "[^\\_]+$")
 
-  list_cap_adult_ref_values_PARMAJ <- listV(cap_adult_ref_values_PARMAJ)
-  list_cap_adult_ref_values_CYACAE <- listV(cap_adult_ref_values_CYACAE)
-  list_cap_adult_ref_values_FICHYP <- listV(cap_adult_ref_values_FICHYP)
-  list_cap_adult_ref_values_SITEUR <- listV(cap_adult_ref_values_SITEUR)
-  list_cap_adult_ref_values_PERATE <- listV(cap_adult_ref_values_PERATE)
-  list_cap_adult_ref_values_PASMON <- listV(cap_adult_ref_values_PASMON)
-  list_cap_adult_ref_values_FICALB <- listV(cap_adult_ref_values_FICALB)
-  list_cap_adult_ref_values_POEPAL <- listV(cap_adult_ref_values_POEPAL)
+  ## - Capture data
+  ## -- Adult
+  cap_adult_ref_values_list <- purrr::map(mget(setdiff(ls(pattern="^capture_adult_ref"), ls(pattern="list$"))),
+                                          function(x) listV(x))
+  names(cap_adult_ref_values_list) <- stringr::str_extract(names(cap_adult_ref_values_list), "[^\\_]+$")
 
-  list_cap_chick_ref_values_PARMAJ <- listV(cap_chick_ref_values_PARMAJ)
-  list_cap_chick_ref_values_CYACAE <- listV(cap_chick_ref_values_CYACAE)
-  list_cap_chick_ref_values_FICHYP <- listV(cap_chick_ref_values_FICHYP)
-  list_cap_chick_ref_values_SITEUR <- listV(cap_chick_ref_values_SITEUR)
-  list_cap_chick_ref_values_PERATE <- listV(cap_chick_ref_values_PERATE)
-  list_cap_chick_ref_values_PASMON <- listV(cap_chick_ref_values_PASMON)
-  list_cap_chick_ref_values_FICALB <- listV(cap_chick_ref_values_FICALB)
-  list_cap_chick_ref_values_POEPAL <- listV(cap_chick_ref_values_POEPAL)
+  ## -- Chick
+  cap_chick_ref_values_list <- purrr::map(mget(setdiff(ls(pattern="^capture_chick_ref"), ls(pattern="list$"))),
+                                          function(x) listV(x))
+  names(cap_chick_ref_values_list) <- stringr::str_extract(names(cap_chick_ref_values_list), "[^\\_]+$")
 
 
-  ## Create named list
-  listN <- function(...) {
-    dots <- list(...)
-    names(dots) <- gsub(".*\\_", "", substitute(list(...))[-1])
-    return(dots)
-  }
 
-  brood_ref_values_list <- listN(list_brood_ref_values_PARMAJ,
-                                 list_brood_ref_values_CYACAE,
-                                 list_brood_ref_values_FICHYP,
-                                 list_brood_ref_values_SITEUR,
-                                 list_brood_ref_values_PERATE,
-                                 list_brood_ref_values_PASMON,
-                                 list_brood_ref_values_FICALB,
-                                 list_brood_ref_values_POEPAL)
-
-  cap_adult_ref_values_list <- listN(list_cap_adult_ref_values_PARMAJ,
-                                     list_cap_adult_ref_values_CYACAE,
-                                     list_cap_adult_ref_values_FICHYP,
-                                     list_cap_adult_ref_values_SITEUR,
-                                     list_cap_adult_ref_values_PERATE,
-                                     list_cap_adult_ref_values_PASMON,
-                                     list_cap_adult_ref_values_FICALB,
-                                     list_cap_adult_ref_values_POEPAL)
-
-  cap_chick_ref_values_list <- listN(list_cap_chick_ref_values_PARMAJ,
-                                     list_cap_chick_ref_values_CYACAE,
-                                     list_cap_chick_ref_values_FICHYP,
-                                     list_cap_chick_ref_values_SITEUR,
-                                     list_cap_chick_ref_values_PERATE,
-                                     list_cap_chick_ref_values_PASMON,
-                                     list_cap_chick_ref_values_FICALB,
-                                     list_cap_chick_ref_values_POEPAL)
-
-  ## Save as .rda in /data
+  ## Save as .rda
   save(brood_ref_values_list, cap_adult_ref_values_list, cap_chick_ref_values_list,
        file = paste0(db, "\\reference_values.rda"))
 }
