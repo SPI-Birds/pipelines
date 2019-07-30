@@ -338,7 +338,8 @@ create_individual_CHO <- function(data){
       BroodIDFledged = BroodIDLaid,
       #Determine age at ringing as either chick or adult.
       RingAge = dplyr::case_when(.$FirstAge == "C" ~ "chick",
-                                 is.na(.$FirstAge) || .$FirstAge != "C" ~ "adult")) %>%
+                                 is.na(.$FirstAge) ~ "adult",
+                                 .$FirstAge != "C" ~ "adult")) %>%
     select(IndvID, Species, PopID, BroodIDLaid, BroodIDFledged, RingSeason = FirstYr, RingAge, Sex)
 
   return(Individual_data)
