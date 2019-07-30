@@ -4,7 +4,7 @@
 \alias{format_BAN}
 \title{Construct standard summary for data from Bandon Valley, Ireland.}
 \usage{
-format_BAN(db = choose.dir(), path = ".", species = NULL,
+format_BAN(db = utils::choose.dir(), path = ".", species = NULL,
   pop = NULL, debug = FALSE)
 }
 \arguments{
@@ -68,7 +68,4 @@ Year_Plot_LocationID_Day_Month.
 weighing is <= LayingDate + ClutchSize. This should be an estimate of the
 date that incubation began. Once incubation starts, egg weight is not easily
 comparable because it changes with chick development.
-}
-\examples{
-format_BAN()
 }

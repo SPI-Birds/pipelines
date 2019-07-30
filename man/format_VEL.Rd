@@ -4,7 +4,7 @@
 \alias{format_VEL}
 \title{Construct standard summary for data from Velky Kosir, Czechia.}
 \usage{
-format_VEL(db = choose.dir(), species = NULL, pop = NULL,
+format_VEL(db = utils::choose.dir(), species = NULL, pop = NULL,
   path = ".", debug = FALSE)
 }
 \arguments{

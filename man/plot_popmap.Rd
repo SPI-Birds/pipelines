@@ -22,4 +22,5 @@ provided.
 \examples{
 #Create jpeg map
 plot_popmap()
+file.remove("Population_map.jpg")
 }

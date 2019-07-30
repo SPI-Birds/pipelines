@@ -4,7 +4,7 @@
 \alias{format_HAR}
 \title{Construct standard summary for data from Harjavalta, Finland.}
 \usage{
-format_HAR(db = choose.dir(), species = NULL, pop = NULL,
+format_HAR(db = utils::choose.dir(), species = NULL, pop = NULL,
   path = ".", debug = FALSE)
 }
 \arguments{
@@ -130,14 +130,4 @@ in adults can be either left or right leg.
 
 \strong{Sex}: Bird classified as 'likely male' or 'likely female' are simply
 given code 'M' and 'F' respectively (i.e. this uncertainty is ignored).
-}
-\examples{
-\dontrun{
-#Just get data about great tits
-format_HAR(Species = "PARMAJ")
-
-#Get data on great and blue tits
-format_HAR(Species = c("PARMAJ", "CYACAE"))
-
-}
 }

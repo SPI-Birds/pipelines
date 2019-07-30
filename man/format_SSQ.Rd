@@ -4,7 +4,7 @@
 \alias{format_SSQ}
 \title{Construct standard summary for data from Santo Stefano Quisquina, Italy.}
 \usage{
-format_SSQ(db = choose.dir(), species = NULL, pop = NULL,
+format_SSQ(db = utils::choose.dir(), species = NULL, pop = NULL,
   path = ".", debug = FALSE)
 }
 \arguments{

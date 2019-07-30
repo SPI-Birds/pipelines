@@ -27,10 +27,10 @@ is not measured consistently
 \examples{
 #Assuming NA is 0
 #Return vector of numerics.
-fledge_calc(x = c(1, 3, NA, 4), na.rm = TRUE)
+calc_cumfledge(x = c(1, 3, NA, 4), na.rm = TRUE)
 
 #Do not assume NA is 0.
 #Return a vector of logicals showing whether an NA occurred before
 #the current record.
-fledge_calc(x = c(1, 3, NA, 4), na.rm = FALSE)
+calc_cumfledge(x = c(1, 3, NA, 4), na.rm = FALSE)
 }

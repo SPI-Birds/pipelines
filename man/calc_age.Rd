@@ -43,10 +43,12 @@ When there is no observed age at first capture we assume it couldn't be a
 chick or this would've been recorded.
 }
 \examples{
+library(dplyr)
 set.seed(666)
 bird_data <- tibble::tibble(IndvID = LETTERS[sample(1:26, 100, replace = TRUE)],
 SampleYear = sample(2012:2016, 100, replace = TRUE),
-CaptureDate = as.Date(paste(SampleYear, 3, 31, sep = "-"), format = "\%Y-\%m-\%d") + sample(1:30, 100, replace = TRUE),
+CaptureDate = as.Date(paste(SampleYear, 3, 31, sep = "-"), format = "\%Y-\%m-\%d")
++ sample(1:30, 100, replace = TRUE),
 Age_obsv = sample(c(1, 4), 100, replace = TRUE)) \%>\%
 calc_age(ID = IndvID, Age = Age_obsv, Date = CaptureDate, Year = SampleYear)
 }

@@ -4,7 +4,7 @@
 \alias{format_WYT}
 \title{Construct standard summary for data from Wytham Woods, UK.}
 \usage{
-format_WYT(db = choose.dir(), path = ".", species = NULL,
+format_WYT(db = utils::choose.dir(), path = ".", species = NULL,
   pop = NULL, debug = FALSE)
 }
 \arguments{

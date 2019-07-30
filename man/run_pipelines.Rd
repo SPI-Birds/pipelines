@@ -4,7 +4,8 @@
 \alias{run_pipelines}
 \title{Run multiple data pipelines}
 \usage{
-run_pipelines(path = choose.dir(), PopID = NULL, Species = NULL)
+run_pipelines(path = utils::choose.dir(), PopID = NULL,
+  Species = NULL)
 }
 \arguments{
 \item{path}{File path. Location of all folders for data owners. Note, the

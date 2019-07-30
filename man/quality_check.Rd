@@ -4,18 +4,21 @@
 \alias{quality_check}
 \title{A function to perform a quality check on pipeline outputs}
 \usage{
-quality_check(db = choose.dir(), report = NULL)
+quality_check(db = utils::choose.dir(), pop, species,
+  output_format = "both")
 }
 \arguments{
 \item{db}{Location of standard .csv outputs of the pipeline.}
 
-\item{report}{Produce report (pdf) for user.}
+\item{pop}{Three-letter population ID.}
+
+\item{species}{Six-letter species ID.}
+
+\item{output_format}{Format of report: "html", "pdf", or "both" (default).}
 }
 \value{
-A text file of line-by-line warnings,
-  a text file of line-by-line errors,
-  a summary dataframe of test warnings and errors for use in testthat,
-  and a user-friendly report of the line-by-line list of warnings and errors.
+A summary dataframe of test warnings and errors for use in testthat,
+  and a report of the line-by-line list of warnings and errors.
 }
 \description{
 A function to perform a quality check on pipeline outputs

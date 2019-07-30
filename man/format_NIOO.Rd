@@ -4,7 +4,7 @@
 \alias{format_NIOO}
 \title{Construct standard summary for NIOO data.}
 \usage{
-format_NIOO(db = choose.dir(), species = NULL, pop = NULL,
+format_NIOO(db = utils::choose.dir(), species = NULL, pop = NULL,
   path = ".")
 }
 \arguments{

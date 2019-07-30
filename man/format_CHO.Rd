@@ -4,7 +4,7 @@
 \alias{format_CHO}
 \title{Construct standard summary for data from Choupal, Portugal.}
 \usage{
-format_CHO(db = choose.dir(), species = NULL, pop = NULL,
+format_CHO(db = utils::choose.dir(), species = NULL, pop = NULL,
   path = ".", debug = FALSE)
 }
 \arguments{
@@ -47,15 +47,16 @@ as an estimation of fledgling numbers. This also affects
 \emph{ClutchType_calculated} as \emph{NumberFledged} is used to estimated
 second clutches.
 
-\strong{Age_observed}: Translation of age records \itemize{
+\strong{Age_observed}: Translation of age records
+\itemize{
 \item Any
 individual caught as a chick was assumed to have a EURING code of 1: 'Pullus:
-nestling or chick, unable to fly freely, still able to be caught by hand.'}
+nestling or chick, unable to fly freely, still able to be caught by hand.'
 \item Any individual listed as 'first year' was given a EURING code of 5: a
 bird hatched last calendar year and now in its second calendar year.
 \item Any
 individual listed as 'adult' was given a EURING code of 6: full-grown bird
-hatched before last calendar year; year of hatching otherwise unknown.
+hatched before last calendar year; year of hatching otherwise unknown.}
 
 \strong{ClutchType_observed}: In the raw data, there is no distinction between
 'second' and 'replacement' clutches. Any clutch recorded as '2nd' is assumed

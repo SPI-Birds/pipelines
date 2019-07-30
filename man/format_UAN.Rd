@@ -4,7 +4,7 @@
 \alias{format_UAN}
 \title{Construct standard summary for data from the Univeristy of Antwerp.}
 \usage{
-format_UAN(db = choose.dir(), species = NULL, pop = NULL,
+format_UAN(db = utils::choose.dir(), species = NULL, pop = NULL,
   path = ".", debug = FALSE)
 }
 \arguments{

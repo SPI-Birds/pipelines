@@ -13,6 +13,3 @@ One .gif showing number of nests sampled for each species over time.
 \description{
 Create plots to introduce the Hoge Veluwe population on twitter
 }
-\examples{
-VLI_twitter()
-}
