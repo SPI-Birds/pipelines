@@ -1,26 +1,48 @@
 Package: HNBStandFormat
 Title: What the Package Does (one line, title case)
 Version: 0.0.0.9000
-Authors@R: person("First", "Last", email = "first.last@example.com", role = c("aut", "cre"))
+Authors@R:  
+    c(person(given = "Liam",
+             family = "Bailey",
+             role = c("aut", "cre"),
+             email = "liam.bailey@liamdbailey.com"),
+      person(given = "Stefan",
+             family = "Vriend",
+             role = "aut",
+             email = "stefan.vriend@ntnu.no"))
 Description: What the package does (one paragraph).
-Depends: R (>= 3.5.1)
-License: What license is it under?
+Depends: R (>= 3.6.0)
+License: GPL-2
 Encoding: UTF-8
 LazyData: true
 Imports: dplyr,
+         dbplyr,
          DBI,
          purrr,
          stringr,
-         ggplot2
+         ggplot2,
+         crayon,
+         egg,
+         forcats,
+         gganimate,
+         glue,
+         lubridate,
+         odbc,
+         png,
+         reticulate,
+         sf,
+         snakecase,
+         tibble,
+         tidyr,
+         utils,
+         readxl,
+         janitor,
+         reshape2,
+         magrittr,
+         maps
 RoxygenNote: 6.1.1
 Suggests: 
     knitr,
     rmarkdown,
-    testthat,
-    readxl,
-    janitor,
-    reshape2,
-    dplyr,
-    utils,
-    purrr
+    testthat
 VignetteBuilder: knitr
