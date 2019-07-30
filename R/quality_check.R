@@ -316,8 +316,8 @@ check_format_individual <- function(Individual_data){
                                                           "BroodIDLaid", "BroodIDRinged", "RingSeason",
                                                           "RingAge", "Sex"),
                                              Format_standard = c("character", "character", "character",
-                                                                 "character", "character", "numeric",
-                                                                 "numeric", "character"))
+                                                                 "character", "character", "integer",
+                                                                 "character", "character"))
 
   ## Data frame with column names and formats from Individual data
   Individual_data_col <- tibble::tibble(Variable = names(Individual_data),
