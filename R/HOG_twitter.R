@@ -3,10 +3,6 @@
 #' @return Generate two plots. One .jpeg showing the population on the global map and study species.
 #' One .gif showing number of nests sampled for each species over time.
 #' @export
-#' @import extrafont
-#'
-#' @examples
-#' HOG_twitter()
 HOG_twitter <- function(){
 
   if(!"Brood_data_NIOO.csv" %in% list.files()){
@@ -17,11 +13,11 @@ HOG_twitter <- function(){
   }
 
   #Then load the Brood_data table
-  HOG_data <- read.csv("Brood_data_NIOO.csv", stringsAsFactors = FALSE) %>%
+  HOG_data <- utils::read.csv("Brood_data_NIOO.csv", stringsAsFactors = FALSE) %>%
     dplyr::filter(PopID == "HOG")
 
   #Load pop location info
-  pop_locations <- read.csv(system.file("extdata", "pop_locations.csv", package = "HNBStandFormat", mustWork = TRUE))
+  pop_locations <- utils::read.csv(system.file("extdata", "pop_locations.csv", package = "HNBStandFormat", mustWork = TRUE))
 
   #Load file of world boundaries
   world_map <- map_data("world")
@@ -113,13 +109,13 @@ HOG_twitter <- function(){
                   width = (5.18 * 2))
 
   timeline <- HOG_data %>%
-    dplyr::group_by(Species, SampleYear) %>%
+    dplyr::group_by(Species, BreedingSeason) %>%
     dplyr::count() %>%
-    dplyr::filter(SampleYear < 2019)
+    dplyr::filter(BreedingSeason < 2019)
 
   anim_plot <- ggplot(timeline) +
-    geom_path(aes(x = SampleYear, y = n, colour = Species), size = 1)+
-    geom_point(aes(x = SampleYear, y = n, fill = Species), shape = 21, stroke = 1, size = 4) +
+    geom_path(aes(x = BreedingSeason, y = n, colour = Species), size = 1)+
+    geom_point(aes(x = BreedingSeason, y = n, fill = Species), shape = 21, stroke = 1, size = 4) +
     theme_classic() +
     scale_fill_manual(values = bird_locations$base_colour,
                       labels = bird_locations$label) +
@@ -135,7 +131,7 @@ HOG_twitter <- function(){
           legend.title = element_text(size = 16, family = "Ubuntu"),
           legend.text = element_text(size = 14, family = "Ubuntu")) +
     #Start gganimate code
-    gganimate::transition_reveal(SampleYear)+
+    gganimate::transition_reveal(BreedingSeason)+
     gganimate::shadow_mark(alpha = 0.25, wrap = FALSE, size = 2, exclude_layer = 2:3)+
     gganimate::ease_aes("linear")
 
@@ -143,5 +139,9 @@ HOG_twitter <- function(){
 
   gganimate::anim_save("HOG_twitter.gif",
                        animation = gganimate::animate(anim_plot, duration = 10, end_pause = 10))
+
+  #Satisfy RCMD Checks
+  PopID <- `.` <- GT_dist_gg <- long <- lat <- group <- site_name <- longitude <- NULL
+  latitude <- grob <- label <- Species <- BreedingSeason <- NULL
 
 }

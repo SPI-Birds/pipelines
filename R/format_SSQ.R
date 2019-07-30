@@ -39,11 +39,8 @@
 #'
 #' @return Generates 5 .csv files with data in a standard format.
 #' @export
-#' @import readxl
-#' @import janitor
-#' @import reshape2
 
-format_SSQ <- function(db = choose.dir(),
+format_SSQ <- function(db = utils::choose.dir(),
                        species = NULL,
                        pop = NULL,
                        path = ".",
@@ -375,13 +372,13 @@ format_SSQ <- function(db = choose.dir(),
 
   message("Saving .csv files...")
 
-  write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_SSQ.csv"), row.names = F)
+  utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_SSQ.csv"), row.names = F)
 
-  write.csv(x = Indv_data, file = paste0(path, "\\Individual_data_SSQ.csv"), row.names = F)
+  utils::write.csv(x = Indv_data, file = paste0(path, "\\Individual_data_SSQ.csv"), row.names = F)
 
-  write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_SSQ.csv"), row.names = F)
+  utils::write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_SSQ.csv"), row.names = F)
 
-  write.csv(x = Nestbox_data, file = paste0(path, "\\Location_data_SSQ.csv"), row.names = F)
+  utils::write.csv(x = Nestbox_data, file = paste0(path, "\\Location_data_SSQ.csv"), row.names = F)
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 

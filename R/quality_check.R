@@ -8,11 +8,9 @@
 #' @return A summary dataframe of test warnings and errors for use in testthat,
 #'   and a report of the line-by-line list of warnings and errors.
 #'
-#' @import crayon
-#'
 #' @export
 
-quality_check <- function(db = choose.dir(),
+quality_check <- function(db = utils::choose.dir(),
                           pop,
                           species,
                           output_format = "both"){
@@ -30,10 +28,10 @@ quality_check <- function(db = choose.dir(),
   ## - Read in .csv files (names are population-specific)
   ## - or Load in R objects with generic names?
 
-  Individual_data <- read.csv(paste0(db, "/Individual_data_VEL.csv"), stringsAsFactors = FALSE)
-  Brood_data <- read.csv(paste0(db, "/Brood_data_VEL.csv"), stringsAsFactors = FALSE)
-  Capture_data <- read.csv(paste0(db, "/Capture_data_VEL.csv"), stringsAsFactors = FALSE)
-  Location_data <- read.csv(paste0(db, "/Location_data_VEL.csv"), stringsAsFactors = FALSE)
+  Individual_data <- utils::read.csv(paste0(db, "/Individual_data_VEL.csv"), stringsAsFactors = FALSE)
+  Brood_data <- utils::read.csv(paste0(db, "/Brood_data_VEL.csv"), stringsAsFactors = FALSE)
+  Capture_data <- utils::read.csv(paste0(db, "/Capture_data_VEL.csv"), stringsAsFactors = FALSE)
+  Location_data <- utils::read.csv(paste0(db, "/Location_data_VEL.csv"), stringsAsFactors = FALSE)
 
   ## Create check list with - a summary of warnings and errors per test
   check_list <- tibble::tibble(Check = c("Individual data format", "Brood data format",
@@ -365,6 +363,10 @@ check_format_individual <- function(Individual_data){
   return(list(check_list = check_list,
               warning_output = warning_output,
               error_output = error_output))
+
+  #Satisfy RCMD Checks
+  Format <- Format_standard <- NULL
+
 }
 
 
@@ -444,6 +446,10 @@ check_format_brood <- function(Brood_data){
   return(list(check_list = check_list,
               warning_output = warning_output,
               error_output = error_output))
+
+  #Satisfy RCMD Checks
+  Format <- Format_standard <- NULL
+
 }
 
 
@@ -513,6 +519,10 @@ check_format_capture <- function(Capture_data){
   return(list(check_list = check_list,
               warning_output = warning_output,
               error_output = error_output))
+
+  #Satisfy RCMD Checks
+  Format <- Format_standard <- NULL
+
 }
 
 #' Check format of location data
@@ -577,6 +587,10 @@ check_format_location <- function(Location_data){
   return(list(check_list = check_list,
               warning_output = warning_output,
               error_output = error_output))
+
+  #Satisfy RCMD Checks
+  Format <- Format_standard <- NULL
+
 }
 
 #' Compare clutch and brood sizes
@@ -638,6 +652,10 @@ compare_clutch_brood <- function(Brood_data){
   return(list(check_list = check_list,
               warning_output = warning_output,
               error_output = error_output))
+
+  #Satisfy RCMD Checks
+  ExperimentID <- ClutchSize <- BroodSize <- NULL
+
 }
 
 
@@ -700,6 +718,10 @@ compare_brood_fledglings <- function(Brood_data){
   return(list(check_list = check_list,
               warning_output = warning_output,
               error_output = error_output))
+
+  #Satisfy RCMD Checks
+  ExperimentID <- BroodSize <- NumberFledged <- NULL
+
 }
 
 
@@ -765,6 +787,10 @@ compare_laying_hatching <- function(Brood_data){
   return(list(check_list = check_list,
               warning_output = warning_output,
               error_output = error_output))
+
+  #Satisfy RCMD Checks
+  LayingDate <- HatchDate <- NULL
+
 }
 
 
@@ -829,6 +855,10 @@ compare_hatching_fledging <- function(Brood_data){
   return(list(check_list = check_list,
               warning_output = warning_output,
               error_output = error_output))
+
+  #Satisfy RCMD Checks
+  HatchDate <- FledgeDate <- NULL
+
 }
 
 
@@ -920,6 +950,8 @@ check_values_brood <- function(Brood_data, species) {
               warning_output = warning_output,
               error_output = error_output))
 
+  #Satisfy RCMD Checks
+  brood_ref_values_list <- Species <- NULL
 
 }
 
@@ -928,7 +960,7 @@ check_values_brood <- function(Brood_data, species) {
 #'
 #' Check variable values against species-specific reference values in capture data. Implausible values will result in a warning. Impossible values will result in an error. Variables that are checked: Mass, Tarsus, WingLength, Age_obsv, Age_calc, Chick_age.
 #'
-#' @param capture_data Data frame. Capture data output from pipeline.
+#' @param Capture_data Data frame. Capture data output from pipeline.
 #' @param species Six-letter species ID to select species-specific reference values.
 #'
 #' @return Check list, warning output, error output.
@@ -1050,5 +1082,8 @@ check_values_capture <- function(Capture_data, species) {
               warning_output = warning_output,
               error_output = error_output))
 
+  #Satisfy RCMD Checks
+  cap_adult_ref_values_list <- cap_chick_ref_values_list <- NULL
+  Species <- Age_calc <- NULL
 
 }

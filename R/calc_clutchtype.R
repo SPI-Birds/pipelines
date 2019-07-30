@@ -219,4 +219,8 @@ calc_clutchtype <- function(data, na.rm = FALSE) {
 
   return(clutchtype_calculated)
 
+  #Satisfy RCMD Checks
+  PopID <- BreedingSeason <- Species <- LayingDate <- FemaleID <- NumberFledged <- NULL
+  `.` <- ClutchType_calculated <- NULL
+
 }

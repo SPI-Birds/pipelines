@@ -102,18 +102,8 @@
 #'
 #'@return Generates 4 .csv files with data in a standard format.
 #'@export
-#'@import reticulate
-#'@examples
-#'\dontrun{
-#'#Just get data about great tits
-#'format_HAR(Species = "PARMAJ")
-#'
-#'#Get data on great and blue tits
-#'format_HAR(Species = c("PARMAJ", "CYACAE"))
-#'
-#'}
 
-format_HAR <- function(db = choose.dir(),
+format_HAR <- function(db = utils::choose.dir(),
                        species = NULL,
                        pop = NULL,
                        path = ".",
@@ -215,13 +205,13 @@ format_HAR <- function(db = choose.dir(),
 
   message("Saving .csv files...")
 
-  write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_HAR.csv"), row.names = F)
+  utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_HAR.csv"), row.names = F)
 
-  write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_HAR.csv"), row.names = F)
+  utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_HAR.csv"), row.names = F)
 
-  write.csv(x = Capture_data %>% select(-Sex, -BroodID), file = paste0(path, "\\Capture_data_HAR.csv"), row.names = F)
+  utils::write.csv(x = Capture_data %>% select(-Sex, -BroodID), file = paste0(path, "\\Capture_data_HAR.csv"), row.names = F)
 
-  write.csv(x = Location_data, file = paste0(path, "\\Location_data_HAR.csv"), row.names = F)
+  utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_HAR.csv"), row.names = F)
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
@@ -302,6 +292,18 @@ create_brood_HAR <- function(db, species_filter){
            ExperimentID)
 
   return(Brood_data)
+
+  #Satisfy RCMD Check
+  `.` <- AvgEggMass <- BroodID <- NULL
+  PopID <- BreedingSeason <- Species <- Plot <- LocationID <- NULL
+  FemaleID <- MaleID <- ClutchType_observed <- ClutchType_calculated <- NULL
+  LayingDate <- LayingDateError <- ClutchSize <- ClutchSizeError <- NULL
+  HatchDate <- HatchDateError <- BroodSize <- BroodSizeError <- NULL
+  FledgeDate <- FledgeDateError <- NumberFledged <- NumberFledgedError <- NULL
+  NumberEggs <- AvgChickMass <- AvgTarsus <- NumberChicksTarsus <- NULL
+  OriginalTarsusMethod <- ExperimentID <- NULL
+  ReasonFailed <- MalePresent <- ExpData1 <- TempCode2 <- NULL
+  LayingDate_day <- LayingDate_month <- HatchDate_day <- HatchDate_month <- NULL
 
 }
 
@@ -620,6 +622,14 @@ create_capture_HAR    <- function(db, Brood_data, species_filter){
            ReleasePopID, ReleasePlot, Mass, Tarsus, OriginalTarsusMethod, WingLength, Age_observed, Age_calculated, ChickAge, Sex, BroodID)
 
   return(Capture_data_expand)
+
+  #Satisfy RCMD Check
+  Species <- IndvID <- BreedingSeason <- LocationID <- Plot <- Sex <- Age_observed <- NULL
+  CaptureDate <- CaptureTime <- ObserverID <- CapturePopID <- ReleasePopID <- Mass <- Tarsus <- NULL
+  OriginalTarsusMethod <- WingLength <- Age_calculated <- ChickAge <- NULL
+  LastRingNumber_Brood <- Age <- NrNestlings <- RingNumber <- NULL
+  Capture_type <- Last2DigitsRingNr <- Month <- Wing <- LeftTarsusLength <- NULL
+  `.` <- Ring_Time <- Final_BreedingSeason <- Final_Month <- Final_Day <- Final_Time <- Day <- ischick <- NULL
 
 }
 

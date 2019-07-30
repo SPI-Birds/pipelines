@@ -37,7 +37,7 @@
 #' @return Generates 4 .csv files with data in a standard format.
 #' @export
 
-format_WYT <- function(db = choose.dir(),
+format_WYT <- function(db = utils::choose.dir(),
                        path = ".",
                        species = NULL,
                        pop = NULL,
@@ -50,7 +50,7 @@ format_WYT <- function(db = choose.dir(),
 
   message("Importing primary data...")
 
-  WYT_data <- read.csv(paste0(db, "/Wytham breeding data.csv"), header = T, sep = ",", stringsAsFactors = FALSE) %>%
+  WYT_data <- utils::read.csv(paste0(db, "/Wytham breeding data.csv"), header = T, sep = ",", stringsAsFactors = FALSE) %>%
     janitor::clean_names()
 
   pb <- dplyr::progress_estimated(n = nrow(WYT_data)*3)
@@ -170,7 +170,7 @@ create_brood_WYT <- function(data){
                   FledgeDate = NA,
                   FledgeDateError = NA,
                   NumberFledgedError = NA,
-                  AvgChickTarsus = NA,
+                  AvgTarsus = NA,
                   NumberChicksTarsus = NA) %>%
     dplyr::select(PopID, BreedingSeason,
                   Species, Plot,
@@ -190,6 +190,16 @@ create_brood_WYT <- function(data){
                   ExperimentID)
 
   return(Brood_data)
+
+  #Satisfy RCMD Check
+  `.` <- AvgEggMass <- BroodID <- NULL
+  PopID <- BreedingSeason <- Species <- Plot <- LocationID <- NULL
+  FemaleID <- MaleID <- ClutchType_observed <- ClutchType_calc <- NULL
+  LayingDate <- LayingDateError <- ClutchSize <- ClutchSizeError <- NULL
+  HatchDate <- HatchDateError <- BroodSize <- BroodSizeError <- NULL
+  FledgeDate <- FledgeDateError <- NumberFledged <- NumberFledgedError <- NULL
+  NumberEggs <- AvgChickMass <- NumberChicksMass <- AvgTarsus <- NumberChicksTarsus <- NULL
+  OriginalTarsusMethod <- ExperimentID <- NULL
 
 }
 
@@ -245,5 +255,11 @@ create_capture_WYT <- function(data){
                   Age_calculated, ChickAge)
 
   return(Capture_data)
+
+  #Satisfy RCMD Check
+  Species <- IndvID <- BreedingSeason <- LocationID <- Plot <- Sex <- Age_obsv <- NULL
+  CaptureDate <- CaptureTime <- ObserverID <- CapturePopID <- ReleasePopID <- Mass <- Tarsus <- NULL
+  OriginalTarsusMethod <- WingLength <- Age_calculated <- ChickAge <- NULL
+  FemaleID <- MaleID <- chick_1 <- chick_22 <- NULL
 
 }

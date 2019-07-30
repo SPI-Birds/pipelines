@@ -14,15 +14,16 @@
 #'\emph{ClutchType_calculated} as \emph{NumberFledged} is used to estimated
 #'second clutches.
 #'
-#'\strong{Age_observed}: Translation of age records \itemize{
+#'\strong{Age_observed}: Translation of age records
+#'\itemize{
 #'\item Any
 #'individual caught as a chick was assumed to have a EURING code of 1: 'Pullus:
-#'nestling or chick, unable to fly freely, still able to be caught by hand.'}
+#'nestling or chick, unable to fly freely, still able to be caught by hand.'
 #'\item Any individual listed as 'first year' was given a EURING code of 5: a
 #'bird hatched last calendar year and now in its second calendar year.
 #'\item Any
 #'individual listed as 'adult' was given a EURING code of 6: full-grown bird
-#'hatched before last calendar year; year of hatching otherwise unknown.
+#'hatched before last calendar year; year of hatching otherwise unknown.}
 #'
 #'\strong{ClutchType_observed}: In the raw data, there is no distinction between
 #''second' and 'replacement' clutches. Any clutch recorded as '2nd' is assumed
@@ -41,7 +42,7 @@
 #'@return Generates 4 .csv files with data in a standard format.
 #'@export
 
-format_CHO <- function(db = choose.dir(),
+format_CHO <- function(db = utils::choose.dir(),
                        species = NULL,
                        pop = NULL,
                        path = ".",
@@ -180,6 +181,13 @@ create_capture_CHO <- function(data){
 
   return(Capture_data)
 
+  #Satisfy RCMD Check
+  Species <- IndvID <- BreedingSeason <- LocationID <- Plot <- Sex <- Age_observed <- NULL
+  CaptureDate <- CaptureTime <- ObserverID <- CapturePopID <- ReleasePopID <- Mass <- Tarsus <- NULL
+  OriginalTarsusMethod <- WingLength <- Age_calculated <- ChickAge <- NULL
+  ischick <- Time <- NULL
+
+
 }
 
 ####################################################################################################
@@ -222,9 +230,9 @@ create_brood_CHO <- function(data){
     #For every brood, determine the average mass and tarsus length
     dplyr::group_by(BroodID) %>%
     dplyr::summarise(AvgChickMass = mean(Weight, na.rm = T),
-                     NumberChicksMass = length(na.omit(Weight)),
+                     NumberChicksMass = length(stats::na.omit(Weight)),
                      AvgTarsus = mean(Tarsus, na.rm = T),
-                     NumberChicksTarsus = length(na.omit(Tarsus)),
+                     NumberChicksTarsus = length(stats::na.omit(Tarsus)),
                      OriginalTarsusMethod = "Alternative")
 
   Brood_data <- data %>%
@@ -268,6 +276,19 @@ create_brood_CHO <- function(data){
 
   return(Brood_data)
 
+  `.` <- AvgEggMass <- BroodID <- NULL
+  PopID <- BreedingSeason <- Species <- Plot <- LocationID <- NULL
+  FemaleID <- MaleID <- ClutchType_observed <- ClutchType_calculated <- NULL
+  LayingDate <- LayingDateError <- ClutchSize <- ClutchSizeError <- NULL
+  HatchDate <- HatchDateError <- BroodSize <- BroodSizeError <- NULL
+  FledgeDate <- FledgeDateError <- NumberFledged <- NumberFledgedError <- NULL
+  NumberEggs <- AvgChickMass <- AvgTarsus <- NumberChicksTarsus <- NULL
+  OriginalTarsusMethod <- ExperimentID <- NULL
+  Age <- IndvID <- Sex <- M <- SecondClutch <- ChickAge <- NULL
+  Weight <- Tarsus <- CodeLine <- Ring <- JulianDate <- StanderdisedTime <- BroodId <- NULL
+  Smear <- MeanEggWeight <- NEggsWeighted <- Year <- HatchingDateJulian <- LayingDateJulian <- NULL
+  NoChicksOlder14D <- TrapingMethod <- FinalCltchSize <- NoChicksHatched <- FinalClutchSize <- NULL
+
 }
 
 ####################################################################################################
@@ -289,8 +310,8 @@ create_individual_CHO <- function(data){
               FirstAge = first(Age),
               Species = "PARMAJ",
               Sex = ifelse(all(is.na(Sex)), NA_character_,
-                           ifelse(all(na.omit(Sex) %in% "M"), "M",
-                                  ifelse(all(na.omit(Sex) %in% "F"), "F",
+                           ifelse(all(stats::na.omit(Sex) %in% "M"), "M",
+                                  ifelse(all(stats::na.omit(Sex) %in% "F"), "F",
                                          ifelse(all(c("F", "M") %in% Sex), "C", NA_character_))))) %>%
     dplyr::mutate(#Only assign a brood ID if they were first caught as a chick
       #Otherwise, the broodID will be their first clutch as a parent
@@ -326,8 +347,8 @@ create_location_CHO <- function(data){
 
   #There are no coordinates or box type information
   #Nestbox data is therefore just
-  Location_data <- dplyr::tibble(LocationID = c(na.omit(unique(data$Box)), "MN1"),
-                          NestboxID = c(na.omit(unique(data$Box)), "MN1")) %>%
+  Location_data <- dplyr::tibble(LocationID = c(stats::na.omit(unique(data$Box)), "MN1"),
+                          NestboxID = c(stats::na.omit(unique(data$Box)), "MN1")) %>%
     dplyr::mutate(LocationType = purrr::pmap_chr(.l = list(LocationID),
                                              .f = ~{
                                                if(..1 == "MN1"){

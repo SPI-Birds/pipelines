@@ -35,10 +35,9 @@
 #'
 #' @return Generates 4 .csv files with data in a standard format.
 #' @export
-#' @import readxl
 #' @import stringr
 
-format_VEL <- function(db = choose.dir(),
+format_VEL <- function(db = utils::choose.dir(),
                        species = NULL,
                        pop = NULL,
                        path = ".",
@@ -265,9 +264,9 @@ format_VEL <- function(db = choose.dir(),
     dplyr::filter(ChickAge == 13) %>%
     dplyr::group_by(BroodID) %>%
     dplyr::summarise(AvgChickMass       = mean(Mass, na.rm = TRUE),
-                     NumberChicksMass    = length(na.omit(Mass)),
+                     NumberChicksMass    = length(stats::na.omit(Mass)),
                      AvgTarsus          = mean(Tarsus, na.rm = TRUE),
-                     NumberChicksTarsus = length(na.omit(Tarsus)))
+                     NumberChicksTarsus = length(stats::na.omit(Tarsus)))
 
   Brood_data <- Brood_data %>%
     dplyr::left_join(avg_measures, by = "BroodID") %>%
@@ -296,13 +295,13 @@ format_VEL <- function(db = choose.dir(),
 
   message("Saving .csv files...")
 
-  write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_VEL.csv"), row.names = F)
+  utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_VEL.csv"), row.names = F)
 
-  write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_VEL.csv"), row.names = F)
+  utils::write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_VEL.csv"), row.names = F)
 
-  write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_VEL.csv"), row.names = F)
+  utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_VEL.csv"), row.names = F)
 
-  write.csv(x = Location_data, file = paste0(path, "\\Location_data_VEL.csv"), row.names = F)
+  utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_VEL.csv"), row.names = F)
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
@@ -337,6 +336,16 @@ create_brood_VEL          <- function(FICALB_data, TIT_data) {
                   LayingDate:ExperimentID)
 
   return(dplyr::bind_rows(FICALB_broods, TIT_broods))
+
+  #Satisfy RCMD Check
+  `.` <- AvgEggMass <- BroodID <- NULL
+  PopID <- BreedingSeason <- Species <- Plot <- LocationID <- NULL
+  FemaleID <- MaleID <- ClutchType_observed <- ClutchType_calc <- NULL
+  LayingDate <- LayingDateError <- ClutchSize <- ClutchSizeError <- NULL
+  HatchDate <- HatchDateError <- BroodSize <- BroodSizeError <- NULL
+  FledgeDate <- FledgeDateError <- NumberFledged <- NumberFledgedError <- NULL
+  NumberEggs <- AvgChickMass <- AvgTarsus <- NumberChicksTarsus <- NULL
+  OriginalTarsusMethod <- ExperimentID <- NULL
 
 }
 
@@ -479,6 +488,18 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
   FICALB_alldat <- dplyr::bind_rows(FICALB_chicks, FICALB_adults) %>%
     calc_age(ID = IndvID, Age = Age_obsv, Date = CaptureDate, Year = BreedingSeason, showpb = TRUE)
 
+  return(FICALB_alldat)
+
+  #Satisfy RCMD Check
+  Species <- IndvID <- BreedingSeason <- LocationID <- Plot <- Sex <- Age_obsv <- NULL
+  CaptureDate <- CaptureTime <- ObserverID <- CapturePopID <- ReleasePopID <- Mass <- Tarsus <- NULL
+  OriginalTarsusMethod <- WingLength <- Age_calculated <- ChickAge <- NULL
+  x1_young_ring <- x8y_wing <- ChickNr <- data <- FemaleID <- date_of_capture_52 <- tarsus_53 <- NULL
+  wing_55 <- MaleID <- date_of_capture_57 <- age <- wing_61 <- tarsus_59 <- mass_54 <- mass_60 <- NULL
+
+
+
+
 }
 
 #' Create capture data table for tits in Velky Kosir.
@@ -513,6 +534,12 @@ create_capture_VEL_TIT    <- function(TIT_data) {
 
   return(TIT_capture)
 
+  #Satisfy RCMD Check
+  Species <- IndvID <- BreedingSeason <- LocationID <- Plot <- Sex <- Age_obsv <- NULL
+  CaptureDate <- CaptureTime <- ObserverID <- CapturePopID <- ReleasePopID <- Mass <- Tarsus <- NULL
+  OriginalTarsusMethod <- WingLength <- Age_calculated <- ChickAge <- NULL
+  FemaleID <- LayingDate <- ClutchSize <- NULL
+
 }
 
 #' Create individual data table for Velky Kosir.
@@ -531,7 +558,7 @@ create_individual_VEL     <- function(Capture_data){
 
   Indvidual_data <- Capture_data %>%
     dplyr::group_by(IndvID) %>%
-    dplyr::summarise(Species = unique(na.omit(Species)),
+    dplyr::summarise(Species = unique(stats::na.omit(Species)),
                      PopID = "VEL",
                      RingSeason = first(BreedingSeason),
                      RingAge = first(Age_obsv),
@@ -597,7 +624,7 @@ create_location_VEL       <- function(Brood_data, TIT_data){
 
   ## Determine all used LocationIDs in Brood_data. These should be all locations.
   ## Assume that nestboxes are the same for Tits and Flycatchers.
-  location_data <- tibble::tibble(LocationID = as.character(na.omit(unique(Brood_data$LocationID))),
+  location_data <- tibble::tibble(LocationID = as.character(stats::na.omit(unique(Brood_data$LocationID))),
                                   NestboxID = LocationID,
                                   LocationType = "NB",
                                   PopID = "VEL",

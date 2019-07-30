@@ -9,14 +9,14 @@
 #'
 #' @return A jpeg file in the working directory
 #' @export
-#' @import maps
 #'
 #' @examples
 #' #Create jpeg map
 #' plot_popmap()
+#' file.remove("Population_map.jpg")
 plot_popmap <- function(scale = 2, filename = NULL){
 
-  pop_locations <- read.csv(system.file("extdata", "pop_locations.csv", package = "HNBStandFormat", mustWork = TRUE))
+  pop_locations <- utils::read.csv(system.file("extdata", "pop_locations.csv", package = "HNBStandFormat", mustWork = TRUE))
 
   world_map <- map_data("world")
 

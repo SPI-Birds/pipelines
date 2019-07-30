@@ -40,10 +40,8 @@
 #'
 #' @return Generates 4 .csv files with data in a standard format.
 #' @export
-#'
-#' @examples
-#' format_BAN()
-format_BAN <- function(db = choose.dir(),
+
+format_BAN <- function(db = utils::choose.dir(),
                        path = ".",
                        species = NULL,
                        pop = NULL,
@@ -148,13 +146,13 @@ format_BAN <- function(db = choose.dir(),
 
   message("Saving .csv files...")
 
-  write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_BAN.csv"), row.names = F)
+  utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_BAN.csv"), row.names = F)
 
-  write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_BAN.csv"), row.names = F)
+  utils::write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_BAN.csv"), row.names = F)
 
-  write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_BAN.csv"), row.names = F)
+  utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_BAN.csv"), row.names = F)
 
-  write.csv(x = Location_data, file = paste0(path, "\\Location_data_BAN.csv"), row.names = F)
+  utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_BAN.csv"), row.names = F)
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
@@ -206,6 +204,16 @@ create_brood_BAN   <- function(data) {
 
   return(Brood_data)
 
+  `.` <- AvgEggMass <- BroodID <- NULL
+  PopID <- BreedingSeason <- Species <- Plot <- LocationID <- NULL
+  FemaleID <- MaleID <- ClutchType_observed <- ClutchType_calculated <- NULL
+  LayingDate <- LayingDateError <- ClutchSize <- ClutchSizeError <- NULL
+  HatchDate <- HatchDateError <- BroodSize <- BroodSizeError <- NULL
+  FledgeDate <- FledgeDateError <- NumberFledged <- NumberFledgedError <- NULL
+  NumberEggs <- AvgChickMass <- NumberChicksMass <- AvgTarsus <- NumberChicksTarsus <- NULL
+  OriginalTarsusMethod <- ExperimentID <- NULL
+  EggWasIncubated <- NULL
+
 }
 
 #' Create capture data table for Bandon Valley.
@@ -246,8 +254,7 @@ create_capture_BAN <- function(data) {
                   WingLength = NA, ChickAge = NA, CapturePopID = "BAN",
                   ReleasePopID = "BAN", ObserverID = NA, OriginalTarsusMethod = "Alternative") %>%
     calc_age(ID = IndvID, Age = Age_observed,
-             Date = CaptureDate, Year = BreedingSeason,
-             showpb = TRUE) %>%
+             Date = CaptureDate, Year = BreedingSeason) %>%
     dplyr::select(IndvID, Species, BreedingSeason,
                   CaptureDate, CaptureTime,
                   ObserverID, LocationID,
@@ -256,16 +263,23 @@ create_capture_BAN <- function(data) {
                   Mass, Tarsus, OriginalTarsusMethod,
                   WingLength, Age_observed, Age_calculated,
                   ChickAge, Sex) %>%
-    ungroup()
+    dplyr::ungroup()
 
   return(Capture_data)
+
+  #Satisfy RCMD Checks
+  Species <- IndvID <- BreedingSeason <- LocationID <- Plot <- Sex <- Age_observed <- NULL
+  CaptureDate <- CaptureTime <- ObserverID <- CapturePopID <- ReleasePopID <- Mass <- Tarsus <- NULL
+  OriginalTarsusMethod <- WingLength <- Age_calculated <- ChickAge <- NULL
+  FemaleCaptureDate <- MaleCaptureDate <- FemaleID <- MaleID <- NULL
 
 }
 
 #' Create individual data table for Bandon Valley.
 #'
 #' Create individual data table in standard format for data from Bandon Valley.
-#' @param data Data frame. Primary data from Bandon Valley.
+#'
+#' @param Capture_data Data frame. Primary data from Bandon Valley.
 #'
 #' @return A data frame.
 #' @export
@@ -273,7 +287,7 @@ create_individual_BAN <- function(Capture_data) {
 
   Individual_data <- Capture_data %>%
     dplyr::group_by(IndvID) %>%
-    dplyr::summarise(Species = unique(na.omit(Species)),
+    dplyr::summarise(Species = unique(stats::na.omit(Species)),
                      PopID = "BAN",
                      RingSeason = first(BreedingSeason),
                      RingAge = first(Age_observed),
@@ -300,7 +314,8 @@ create_individual_BAN <- function(Capture_data) {
 
                                           })) %>%
     #Change RingAge to chick/adult
-    dplyr::mutate(RingAge = dplyr::case_when(is.na(.$RingAge) || .$RingAge > 3 ~ "adult",
+    dplyr::mutate(RingAge = dplyr::case_when(is.na(.$RingAge) ~ "adult",
+                                             .$RingAge > 3 ~ "adult",
                                              .$RingAge <= 3 ~ "chick"))
 
   return(Individual_data)

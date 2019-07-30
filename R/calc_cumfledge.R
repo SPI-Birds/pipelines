@@ -17,12 +17,12 @@
 #' @examples
 #' #Assuming NA is 0
 #' #Return vector of numerics.
-#' fledge_calc(x = c(1, 3, NA, 4), na.rm = TRUE)
+#' calc_cumfledge(x = c(1, 3, NA, 4), na.rm = TRUE)
 #'
 #' #Do not assume NA is 0.
 #' #Return a vector of logicals showing whether an NA occurred before
 #' #the current record.
-#' fledge_calc(x = c(1, 3, NA, 4), na.rm = FALSE)
+#' calc_cumfledge(x = c(1, 3, NA, 4), na.rm = FALSE)
 calc_cumfledge <- function(x, na.rm = TRUE){
 
   if(na.rm){
@@ -30,7 +30,7 @@ calc_cumfledge <- function(x, na.rm = TRUE){
     #This func assumes that all NAs are just 0s.
     #This is needed because otherwise cumsum returns all NAs
     #However, all we need to know is if there was atleast 1 successful nest before the current nest
-    x[!complete.cases(x)] <- 0
+    x[!stats::complete.cases(x)] <- 0
 
     nrs <- cumsum(x)
 

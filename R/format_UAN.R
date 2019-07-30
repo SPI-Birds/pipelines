@@ -61,7 +61,7 @@
 #'@return Generates 4 .csv files with data in a standard format.
 #'@export
 
-format_UAN <- function(db = choose.dir(),
+format_UAN <- function(db = utils::choose.dir(),
                        species = NULL,
                        pop = NULL,
                        path = ".",
@@ -203,13 +203,13 @@ format_UAN <- function(db = choose.dir(),
 
   message("\n Saving .csv files...")
 
-  write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_UAN.csv"), row.names = F)
+  utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_UAN.csv"), row.names = F)
 
-  write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_UAN.csv"), row.names = F)
+  utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_UAN.csv"), row.names = F)
 
-  write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_UAN.csv"), row.names = F)
+  utils::write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_UAN.csv"), row.names = F)
 
-  write.csv(x = Location_data, file = paste0(path, "\\Location_data_UAN.csv"), row.names = F)
+  utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_UAN.csv"), row.names = F)
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
@@ -225,8 +225,8 @@ create_brood_UAN <- function(data, CAPTURE_info, species_filter){
   #taken with Svensson's standard or alternative
   Tarsus_method <- CAPTURE_info %>%
     dplyr::group_by(BroodID) %>%
-    dplyr::summarise(TarsusAlt = length(na.omit(TarsusAlt)) > 0,
-                     TarsusStd = length(na.omit(TarsusStandard)) > 0) %>%
+    dplyr::summarise(TarsusAlt = length(stats::na.omit(TarsusAlt)) > 0,
+                     TarsusStd = length(stats::na.omit(TarsusStandard)) > 0) %>%
     dplyr::mutate(OriginalTarsusMethod = dplyr::case_when(TarsusAlt == "TRUE" ~ "Alternative",
                                                           TarsusAlt != "TRUE" & TarsusStd == "TRUE" ~ "Standard",
                                                           TarsusAlt != "TRUE" & TarsusStd != "TRUE" ~ NA_character_)) %>%
@@ -276,6 +276,18 @@ create_brood_UAN <- function(data, CAPTURE_info, species_filter){
                   OriginalTarsusMethod, ExperimentID)
 
   return(Brood_data)
+
+  #Satisfy RCMD Check
+  `.` <- AvgEggMass <- BroodID <- NULL
+  PopID <- BreedingSeason <- Species <- Plot <- LocationID <- NULL
+  FemaleID <- MaleID <- ClutchType_observed <- ClutchType_calculated <- NULL
+  LayingDate <- LayingDateError <- ClutchSize <- ClutchSizeError <- NULL
+  HatchDate <- HatchDateError <- BroodSize <- BroodSizeError <- NULL
+  FledgeDate <- FledgeDateError <- NumberFledged <- NumberFledgedError <- NULL
+  NumberEggs <- AvgChickMass <- NumberChicksMass <- AvgTarsus <- NumberChicksTarsus <- NULL
+  OriginalTarsusMethod <- ExperimentID <- NULL
+  TarsusAlt <- TarsusStandard <- TarsusStd <- NULL
+
 
 }
 
@@ -395,6 +407,12 @@ create_capture_UAN <- function(data, species_filter){
                   WingLength, Age_observed, Age_calculated, ChickAge)
 
   return(Capture_data)
+
+  #Satisfy RCMD Check
+  Species <- IndvID <- BreedingSeason <- LocationID <- Plot <- Sex <- Age_observed <- NULL
+  CaptureDate <- CaptureTime <- ObserverID <- CapturePopID <- ReleasePopID <- Mass <- Tarsus <- NULL
+  OriginalTarsusMethod <- WingLength <- Age_calculated <- ChickAge <- NULL
+  TarsusStandard <- `.` <- ischick <- NULL
 
 }
 

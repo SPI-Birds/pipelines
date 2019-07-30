@@ -29,7 +29,7 @@
 #' @import DBI
 #' @import purrr
 
-format_NIOO <- function(db = choose.dir(),
+format_NIOO <- function(db = utils::choose.dir(),
                         species = NULL,
                         pop = NULL,
                         path = "."){
@@ -126,10 +126,13 @@ format_NIOO <- function(db = choose.dir(),
     left_join(tbl(connection, "dbo_tbl_Capture") %>% arrange(Individual, CaptureDate, CaptureTime) %>% select(IndvID = Individual, CaptureLocation) %>% group_by(IndvID) %>%
                 collect() %>% slice(1), by = "IndvID") %>%
     #Relate the capturelocation to the three letter PopID
-    left_join(select(Locations, PopID, CaptureLocation = ID), by = "CaptureLocation") %T>%
-    #Create a progress bar for converting speciesID to species letter codes.
-    #Include species letter codes for all species
-    {species_pb <<- dplyr::progress_estimated(n = nrow(.))} %>%
+    left_join(select(Locations, PopID, CaptureLocation = ID), by = "CaptureLocation")
+
+  #Create a progress bar for converting speciesID to species letter codes.
+  #Include species letter codes for all species
+  species_pb <- dplyr::progress_estimated(n = nrow(Indv_data))
+
+  Indv_data <- Indv_data %>%
     mutate(Species = purrr::map_chr(.x = .$SpeciesID,
                                     .f = function(.x){
 
@@ -455,13 +458,13 @@ format_NIOO <- function(db = choose.dir(),
 
   print("Saving .csv files...")
 
-  write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_NIOO.csv"), row.names = F)
+  utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_NIOO.csv"), row.names = F)
 
-  write.csv(x = Indv_data %>% select(-RingNumber), file = paste0(path, "\\Individual_data_NIOO.csv"), row.names = F)
+  utils::write.csv(x = Indv_data %>% select(-RingNumber), file = paste0(path, "\\Individual_data_NIOO.csv"), row.names = F)
 
-  write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_NIOO.csv"), row.names = F)
+  utils::write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_NIOO.csv"), row.names = F)
 
-  write.csv(x = Nestbox_data, file = paste0(path, "\\Location_data_NIOO.csv"), row.names = F)
+  utils::write.csv(x = Nestbox_data, file = paste0(path, "\\Location_data_NIOO.csv"), row.names = F)
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 

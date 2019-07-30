@@ -17,7 +17,7 @@
 #' @return Generate .csv files
 #' @export
 
-run_pipelines <- function(path = choose.dir(),
+run_pipelines <- function(path = utils::choose.dir(),
                           PopID = NULL,
                           Species = NULL){
 
@@ -52,5 +52,7 @@ run_pipelines <- function(path = choose.dir(),
                  eval(parse(text = glue::glue('format_{owner}(db = dirs, pop = pops)')))
 
                })
+
+  invisible(NULL)
 
 }

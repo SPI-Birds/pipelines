@@ -23,7 +23,7 @@ generate_debug_report <- function(path, Pop, Brood_data, Capture_data, Indv_data
 
   Brood_data_summary <- Brood_data %>%
     select(Species, ClutchType_observed, ClutchType_calculated) %>%
-    summarise_all(~paste(na.omit(unique(.x)), collapse = "/"))
+    summarise_all(~paste(stats::na.omit(unique(.x)), collapse = "/"))
 
   #Turn all dates into April days
   Brood_data <- Brood_data %>%
@@ -38,11 +38,11 @@ generate_debug_report <- function(path, Pop, Brood_data, Capture_data, Indv_data
   Brood_plots <- purrr::map(.x = c("LayingDate", "ClutchSize", "HatchDate", "BroodSize", "FledgeDate", "NumberFledged", "AvgEggMass", "AvgChickMass", "AvgTarsus"),
                              .f = ~plot_debug_hist(table = Brood_data, variable = .x))
 
-  write.csv(Brood_data_summary, file = paste0(path, "\\debug_report\\Brood_summary", Pop, ".csv"))
+  utils::write.csv(Brood_data_summary, file = paste0(path, "\\debug_report\\Brood_summary", Pop, ".csv"))
 
-  pdf(file = paste0(path, "\\debug_report\\Brood_summary.pdf"), width = 7, height = 6)
+  grDevices::pdf(file = paste0(path, "\\debug_report\\Brood_summary.pdf"), width = 7, height = 6)
   purrr::map(.x = Brood_plots, .f = print)
-  dev.off()
+  grDevices::dev.off()
 
   ### DEBUG CAPTURE DATA ###
 
@@ -62,11 +62,11 @@ generate_debug_report <- function(path, Pop, Brood_data, Capture_data, Indv_data
   Capture_plots <- purrr::map(.x = c("Mass", "Tarsus", "WingLength", "Age_obsv", "Age_calc", "ChickAge"),
                             .f = ~plot_debug_hist(table = Capture_data, variable = .x))
 
-  write.csv(Capture_data_summary, file = paste0(path, "\\debug_report\\Capture_summary", Pop, ".csv"))
+  utils::write.csv(Capture_data_summary, file = paste0(path, "\\debug_report\\Capture_summary", Pop, ".csv"))
 
-  pdf(file = paste0(path, "\\debug_report\\Capture_summary.pdf"), width = 7, height = 6)
+  grDevices::pdf(file = paste0(path, "\\debug_report\\Capture_summary.pdf"), width = 7, height = 6)
   purrr::map(.x = Capture_plots, .f = print)
-  dev.off()
+  grDevices::dev.off()
 
   ### DEBUG INDIVIDUAL DATA ###
 
@@ -87,10 +87,10 @@ generate_debug_report <- function(path, Pop, Brood_data, Capture_data, Indv_data
   Indv_plots <- purrr::map(.x = c("RingSeason", "RingAge"),
                             .f = ~plot_debug_hist(table = Indv_data, variable = .x))
 
-  write.csv(Indv_data_summary, file = paste0(path, "\\debug_report\\Indv_summary", Pop, ".csv"))
+  utils::write.csv(Indv_data_summary, file = paste0(path, "\\debug_report\\Indv_summary", Pop, ".csv"))
 
-  pdf(file = paste0(path, "\\debug_report\\Indv_summary.pdf"), width = 7, height = 6)
+  grDevices::pdf(file = paste0(path, "\\debug_report\\Indv_summary.pdf"), width = 7, height = 6)
   purrr::map(.x = Indv_plots, .f = print)
-  dev.off()
+  grDevices::dev.off()
 
 }
