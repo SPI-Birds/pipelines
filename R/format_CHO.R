@@ -64,7 +64,11 @@ format_CHO <- function(db = utils::choose.dir(),
   #Read in data with readxl
   all_data <- readxl::read_excel(paste(db, "database Choupal.xlsx", sep = "\\")) %>%
     #Clean all names with janitor
-    janitor::clean_names(case = "upper_camel") %>%
+    janitor::clean_names(case = "upper_camel") %T>%
+    #There is one column with "º" that doesn't convert to ASCII with janitor
+    #This appears the be a deeper issue than janitor (potentially in unicode translation)
+    #Therefore, we will to the translation manually
+    {colnames(.) <- iconv(colnames(.), "", "ASCII", sub = "")} %>%
     #Change species to "PARMARJ" because it's only PARMAJ in Choupal
     #Add PopID and plot
     dplyr::mutate(Species = "PARMAJ",
@@ -242,7 +246,7 @@ create_brood_CHO <- function(data){
     #Now we can melt and reshape our data
     #Remove columns that do not contain relevant brood info
     dplyr::select(-CodeLine:-Ring, -JulianDate:-StanderdisedTime, -TrapingMethod,
-                  -BroodId:-Smear, -MeanEggWeight:-NºEggsWeighted, -IndvID) %>%
+                  -BroodId:-Smear, -MeanEggWeight:-NEggsWeighted, -IndvID) %>%
     #Turn all remaining columns to characters
     #melt/cast requires all values to be of the same type
     dplyr::mutate_all(as.character) %>%
