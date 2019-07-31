@@ -50,6 +50,17 @@ format_BAN <- function(db = utils::choose.dir(),
   #Force choose.dir() if used
   force(db)
 
+  #Assign species for filtering
+  if(is.null(species)){
+
+    species_filter <- Species_codes$Code
+
+  } else {
+
+    species_filter <- species
+
+  }
+
   start_time <- Sys.time()
 
   message("Importing primary data...")
@@ -87,7 +98,9 @@ format_BAN <- function(db = utils::choose.dir(),
                   ChickCaptureDate = March1Date + as.numeric(actual_pullus_ringing_date),
                   NumberFledged = as.numeric(gsub(pattern = "\\?",
                                                   replacement = "",
-                                                  number_fledged))))
+                                                  number_fledged))) %>%
+      #Filter only the species of interest
+      dplyr::filter(Species %in% species_filter))
 
   ##############
   # BROOD DATA #
