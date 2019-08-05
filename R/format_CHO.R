@@ -294,7 +294,12 @@ create_brood_CHO <- function(data){
            NumberFledged, NumberFledgedError,
            AvgEggMass, NumberEggs) %>%
     left_join(avg_measure, by = "BroodID") %>%
-    dplyr::mutate(ExperimentID = NA)
+    #Convert everything back to the right format after making everything character
+    #for the reshape
+    dplyr::mutate(ExperimentID = NA,
+                  BreedingSeason = as.numeric(BreedingSeason),
+                  ClutchSize = as.numeric(ClutchSize),
+                  NumberFledged = as.numeric(NumberFledged))
 
   return(Brood_data)
 

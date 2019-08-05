@@ -266,7 +266,7 @@ create_capture_BAN <- function(data) {
     dplyr::filter(!is.na(IndvID) & !IndvID %in% c("UNKNOWN", "NA")) %>%
     dplyr::mutate(Sex = dplyr::case_when(grepl(pattern = "Female", .$Sex) ~ "F",
                                          grepl(pattern = "Male", .$Sex) ~ "M"),
-                  CaptureDate = purrr::pmap_chr(.l = list(Sex, MaleCaptureDate,
+                  CaptureDate = as.Date(purrr::pmap_chr(.l = list(Sex, MaleCaptureDate,
                                                       FemaleCaptureDate),
                                             .f = ~{
 
@@ -280,7 +280,7 @@ create_capture_BAN <- function(data) {
 
                                               }
 
-                                            }),
+                                            })),
                   Age_observed = NA, CaptureTime = NA, Mass = NA, Tarsus = NA,
                   WingLength = NA, ChickAge = NA, CapturePopID = "BAN",
                   ReleasePopID = "BAN", ObserverID = NA, OriginalTarsusMethod = "Alternative") %>%
