@@ -78,7 +78,7 @@ run_pipelines <- function(path = utils::choose.dir(),
                          species = pop_species_subset$species),
                .f = function(dirs, owner, pops, species){
 
-                 eval(parse(text = glue::glue('format_{owner}(db = dirs, pop = pops, species = c(\"{species}\"))')))
+                 eval(parse(text = glue::glue('format_{owner}(db = dirs, pop = pops, species = species)')))
 
                })
 
