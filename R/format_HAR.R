@@ -107,7 +107,8 @@ format_HAR <- function(db = utils::choose.dir(),
                        species = NULL,
                        pop = NULL,
                        path = ".",
-                       debug = FALSE){
+                       debug = FALSE,
+                       output_type = "csv"){
 
   #Force user to select directory
   force(db)
@@ -203,19 +204,36 @@ format_HAR <- function(db = utils::choose.dir(),
   # EXPORT DATA #
   ###############
 
-  message("Saving .csv files...")
-
-  utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_HAR.csv"), row.names = F)
-
-  utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_HAR.csv"), row.names = F)
-
-  utils::write.csv(x = Capture_data %>% select(-Sex, -BroodID), file = paste0(path, "\\Capture_data_HAR.csv"), row.names = F)
-
-  utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_HAR.csv"), row.names = F)
-
   time <- difftime(Sys.time(), start_time, units = "sec")
 
   message(paste0("All tables generated in ", round(time, 2), " seconds"))
+
+  if(output_type == "csv"){
+
+    message("Saving .csv files...")
+
+    utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_HAR.csv"), row.names = F)
+
+    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_HAR.csv"), row.names = F)
+
+    utils::write.csv(x = Capture_data %>% select(-Sex, -BroodID), file = paste0(path, "\\Capture_data_HAR.csv"), row.names = F)
+
+    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_HAR.csv"), row.names = F)
+
+    invisible(NULL)
+
+  }
+
+  if(output_type == "R"){
+
+    message("Returning R objects...")
+
+    return(list(Brood_data = Brood_data,
+                Capture_data = Capture_data,
+                Individual_data = Individual_data,
+                Location_data = Location_data))
+
+  }
 
 }
 
@@ -282,10 +300,11 @@ create_brood_HAR <- function(db, species_filter){
     #Calculate clutchtype
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
     #Add Fledge date (it is NA, this isn't recorded)
-    mutate(FledgeDate = NA, ClutchSizeError = NA, BroodSizeError = NA,
-           FledgeDateError = NA, NumberFledgedError = NA) %>%
+    dplyr::mutate(FledgeDate = NA, ClutchSizeError = NA, BroodSizeError = NA,
+           FledgeDateError = NA, NumberFledgedError = NA,
+           BroodSize = as.integer(BroodSize)) %>%
     #Arrange columns correctly
-    select(BroodID, PopID, BreedingSeason, Species, Plot, LocationID, FemaleID, MaleID,
+    dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot, LocationID, FemaleID, MaleID,
            ClutchType_observed, ClutchType_calculated, LayingDate, LayingDateError,
            ClutchSize, ClutchSizeError, HatchDate, HatchDateError,
            BroodSize, BroodSizeError, FledgeDate, FledgeDateError, NumberFledged, NumberFledgedError,
