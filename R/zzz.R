@@ -15,6 +15,7 @@
 #'  generates a summary of pipeline data. This includes: a) Histogram of
 #'  continuous variables with mean/SD b) unique values of all categorical
 #'  variables.
+#'@param output_type Should the pipeline generate .csv files ('csv') or R objects ('R').
 #'
 #'@name pipeline_params
 NULL
