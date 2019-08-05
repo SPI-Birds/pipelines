@@ -2,6 +2,7 @@
 #'
 #' Run multiple data pipelines. Currently, this produces separate .csv files but
 #' will eventually produce combined .csv files for all populations.
+#'
 #' @param path File path. Location of all folders for data owners. Note, the
 #'   folders for each data owner must include the unique code of the data owner
 #'   as seen in pop_names.
@@ -13,13 +14,16 @@
 #'    protocol}. Note, this argument takes precedence over argument PopID (i.e.
 #'   if a population doesn't have the requested species it will not be
 #'   formatted.)
+#' @param combined Should pipelines create individual .csv files for each
+#'   population (FALSE) or combined .csv files for all populations (TRUE).
 #'
 #' @return Generate .csv files
 #' @export
 
 run_pipelines <- function(path = utils::choose.dir(),
                           PopID = NULL,
-                          Species = NULL){
+                          Species = NULL,
+                          combined = TRUE){
 
   #Force choose.dir()
   force(path)
@@ -72,16 +76,76 @@ run_pipelines <- function(path = utils::choose.dir(),
   all_dirs <- all_dirs[grepl(pattern = paste(pop_species_subset$owner, collapse = "|"), all_dirs)]
   all_dirs <- gsub(pattern = "\\", replacement = "/", x = all_dirs, fixed = TRUE)
 
-  #For each data owner, run the pipeline using the populations requested
-  purrr::pwalk(.l = list(dirs = all_dirs, owner = pop_species_subset$owner,
-                         pops = pop_species_subset$pops,
-                         species = pop_species_subset$species),
-               .f = function(dirs, owner, pops, species){
+  #If the data is not being combined then run each pipeline independently
+  if(combined != TRUE){
 
-                 eval(parse(text = glue::glue('format_{owner}(db = dirs, pop = pops, species = species)')))
+    #For each data owner, run the pipeline using the populations requested
+    purrr::pwalk(.l = list(dirs = all_dirs, owner = pop_species_subset$owner,
+                           pops = pop_species_subset$pops,
+                           species = pop_species_subset$species),
+                 .f = function(dirs, owner, pops, species){
 
-               })
+                   eval(parse(text = glue::glue('format_{owner}(db = dirs, pop = pops, species = species)')))
 
-  invisible(NULL)
+                 })
+
+    invisible(NULL)
+
+  } else {
+
+    #For each data owner, run the pipeline using the populations requested
+    #Return R lists rather than generating .csv files
+    R_objects <- purrr::pmap(.l = list(dirs = all_dirs, owner = pop_species_subset$owner,
+                           pops = pop_species_subset$pops,
+                           species = pop_species_subset$species),
+                 .f = function(dirs, owner, pops, species){
+
+                   eval(parse(text = glue::glue('format_{owner}(db = dirs, pop = pops, species = species,
+                                                output_type = "R")')))
+
+                 })
+
+    #For each of the four tables, go through and combine the outputs
+    Brood_data_full <- purrr::map_df(.x = R_objects,
+                                  .f = ~{
+
+                                    .x$Brood_data
+
+                                  })
+
+    Capture_data_full <- purrr::map_df(.x = R_objects,
+                                    .f = ~{
+
+                                      .x$Capture_data
+
+                                    })
+
+    Individual_data_full <- purrr::map_df(.x = R_objects,
+                                       .f = ~{
+
+                                         .x$Individual_data
+
+                                       })
+
+    Location_data_full   <- purrr::map_df(.x = R_objects,
+                                       .f = ~{
+
+                                         .x$Location_data
+
+                                       })
+
+    message("Saving combined .csv files...")
+
+    utils::write.csv(x = Brood_data_full, file = paste0(path, "\\Brood_data.csv"), row.names = F)
+
+    utils::write.csv(x = Capture_data_full, file = paste0(path, "\\Capture_data.csv"), row.names = F)
+
+    utils::write.csv(x = Individual_data_full, file = paste0(path, "\\Individual_data.csv"), row.names = F)
+
+    utils::write.csv(x = Location_data_full, file = paste0(path, "\\Location_data.csv"), row.names = F)
+
+    invisible(NULL)
+
+  }
 
 }
