@@ -26,7 +26,7 @@
 #' 1 (i.e. pre-fledging). For adults where no age was provided, we assumed that
 #' first observation was 6 (i.e. at least 2 years old)
 #'
-#' \strong{Indv_data}: There are cases where chicks from different nests are
+#' \strong{Individual_data}: There are cases where chicks from different nests are
 #' given the same ring number. Unsure if this is the rings being reused or a
 #' typo. Currently, I leave it as is and assume this is a typo that needs to be
 #' fixed in the primary data.
@@ -44,7 +44,8 @@ format_SSQ <- function(db = utils::choose.dir(),
                        species = NULL,
                        pop = NULL,
                        path = ".",
-                       debug = FALSE){
+                       debug = FALSE,
+                       output_type = "csv"){
 
   #Force user to select directory
   force(db)
@@ -62,7 +63,7 @@ format_SSQ <- function(db = utils::choose.dir(),
     dplyr::select(-Row) %>%
     janitor::remove_empty(which = "rows") %>%
     #Change column names to match consistent naming
-    dplyr::rename(SampleYear = Year, LayingDate = Ld, ClutchSize = Cs,
+    dplyr::rename(BreedingSeason = Year, LayingDate = Ld, ClutchSize = Cs,
                   HatchDate = Hd, BroodSize = Hs, NumberFledged = Fs,
                   FemaleID = FId, MaleID = MId, LocationID = NestId,
                   Plot = HabitatOfRinging,
@@ -77,7 +78,7 @@ format_SSQ <- function(db = utils::choose.dir(),
     #- ClutchType_observed
     #- FledgeDate
     dplyr::mutate(PopID = "SIC",
-                  BroodID = paste(SampleYear, LocationID, LayingDate, sep = "_"),
+                  BroodID = paste(BreedingSeason, LocationID, LayingDate, sep = "_"),
                   ClutchType_observed = dplyr::case_when(.$Class == 1 ~ "first",
                                                          .$Class == 3 ~ "second",
                                                          .$Class == 2 ~ "replacement")) %>%
@@ -96,12 +97,12 @@ format_SSQ <- function(db = utils::choose.dir(),
 
   Brood_data <- all_data %>%
     #Determine the 30 day cut-off for all species
-    group_by(PopID, SampleYear, Species) %>%
+    group_by(PopID, BreedingSeason, Species) %>%
     mutate(cutoff = tryCatch(expr = min(LayingDate, na.rm = T) + 30,
                              warning = function(...) return(NA))) %>%
     # Determine brood type for each nest based on female ID
-    arrange(SampleYear, Species, FemaleID) %>%
-    group_by(SampleYear, Species, FemaleID) %>%
+    arrange(BreedingSeason, Species, FemaleID) %>%
+    group_by(BreedingSeason, Species, FemaleID) %>%
     #Assume NAs in Fledglings are 0s.
     mutate(total_fledge = calc_cumfledge(x = NumberFledged, na.rm = T),
            total_fledge_na = calc_cumfledge(x = NumberFledged, na.rm = F),
@@ -198,7 +199,7 @@ format_SSQ <- function(db = utils::choose.dir(),
                                                }
 
                                              })) %>%
-    select(SampleYear, Species, PopID, Plot,
+    dplyr::select(BreedingSeason, Species, PopID, Plot,
            LocationID, BroodID, FemaleID, MaleID,
            ClutchType_observed, ClutchType_calc,
            LayingDate, LayingDateError,
@@ -209,7 +210,10 @@ format_SSQ <- function(db = utils::choose.dir(),
            NumberFledged, NumberFledgedError,
            AvgEggMass, NrEgg,
            AvgChickMass, NrChickMass,
-           AvgTarsus, NrChickTarsus, ExperimentID)
+           AvgTarsus, NrChickTarsus, ExperimentID) %>%
+    #Change laying date and hatch date to date objects
+    dplyr::mutate(LayingDate = as.Date(paste0("01/03/", BreedingSeason)) + LayingDate - 1,
+                  HatchDate = as.Date(paste0("01/03/", BreedingSeason)) + HatchDate - 1)
 
   ################
   # CAPTURE DATA #
@@ -218,7 +222,7 @@ format_SSQ <- function(db = utils::choose.dir(),
   message("Compiling capture information...")
 
   Adult_captures <- all_data %>%
-    dplyr::select(SampleYear, PopID, Plot, LocationID, Species, LayingDate, FemaleID, FAge, MaleID, MAge) %>%
+    dplyr::select(BreedingSeason, PopID, Plot, LocationID, Species, LayingDate, FemaleID, FAge, MaleID, MAge) %>%
     reshape2::melt(measure.vars = c("FemaleID", "MaleID"), value.name = "IndvID") %>%
     #Remove all NAs, we're only interested in cases where parents were ID'd.
     dplyr::filter(!is.na(IndvID)) %>%
@@ -234,13 +238,13 @@ format_SSQ <- function(db = utils::choose.dir(),
     dplyr::rename(CapturePopID = PopID, CapturePlot = Plot) %>%
     #Treat CaptureDate of adults as the Laying Date (currently in days since March 1st)
     dplyr::mutate(ReleasePopID = CapturePopID, ReleasePlot = CapturePlot,
-                  CaptureDate = as.Date(paste(SampleYear, "03", "01", sep = "-"), format = "%Y-%m-%d") - 1 + LayingDate,
+                  CaptureDate = as.Date(paste(BreedingSeason, "03", "01", sep = "-"), format = "%Y-%m-%d") - 1 + LayingDate,
                   CaptureTime = NA) %>%
     dplyr::select(-variable, -LayingDate, -FAge, -MAge)
 
   Chick_captures <- all_data %>%
-    dplyr::select(SampleYear, Species, PopID, Plot, LocationID, LayingDate, ClutchSize, Chick1Id:Chick13Id) %>%
-    reshape2::melt(id.vars = c("SampleYear", "Species", "PopID", "Plot", "LocationID", "LayingDate", "ClutchSize"), value.name = "IndvID") %>%
+    dplyr::select(BreedingSeason, Species, PopID, Plot, LocationID, LayingDate, ClutchSize, Chick1Id:Chick13Id) %>%
+    reshape2::melt(id.vars = c("BreedingSeason", "Species", "PopID", "Plot", "LocationID", "LayingDate", "ClutchSize"), value.name = "IndvID") %>%
     #Remove NAs
     dplyr::filter(!is.na(IndvID)) %>%
     dplyr::rename(CapturePopID = PopID, CapturePlot = Plot) %>%
@@ -248,7 +252,7 @@ format_SSQ <- function(db = utils::choose.dir(),
     #For now, we use LayingDate + ClutchSize + 15 (incubation days in SSQ) + 12.
     #Chicks were captured and weighed at 12 days old at the latest
     dplyr::mutate(ReleasePopID = CapturePopID, ReleasePlot = CapturePlot,
-                  CaptureDate = as.Date(paste(SampleYear, "03", "01", sep = "-"), format = "%Y-%m-%d") - 1 + LayingDate + ClutchSize + 27,
+                  CaptureDate = as.Date(paste(BreedingSeason, "03", "01", sep = "-"), format = "%Y-%m-%d") - 1 + LayingDate + ClutchSize + 27,
                   CaptureTime = NA, Age_obsv = 1, Age = 1) %>%
     dplyr::select(-variable, -LayingDate, -ClutchSize)
 
@@ -262,12 +266,12 @@ format_SSQ <- function(db = utils::choose.dir(),
     #Also determine Age_calc
     group_by(IndvID) %>%
     mutate(FirstAge = first(Age),
-           FirstYear = first(SampleYear)) %>%
+           FirstYear = first(BreedingSeason)) %>%
     ungroup() %>%
     #Calculate age at each capture using EURING codes
     dplyr::mutate(Age_calc = purrr::pmap_dbl(.l = list(Age = .$FirstAge,
                                                        Year1 = .$FirstYear,
-                                                       YearN = .$SampleYear),
+                                                       YearN = .$BreedingSeason),
                                              .f = function(Age, Year1, YearN){
 
                                                #Determine number of years since first capture...
@@ -330,12 +334,14 @@ format_SSQ <- function(db = utils::choose.dir(),
     dplyr::filter(!is.na(IndvID)) %>%
     dplyr::select(-variable, BroodIDLaid = BroodID)
 
-  Indv_data <- Capture_data %>%
+  Individual_data <- Capture_data %>%
     dplyr::arrange(IndvID, CaptureDate) %>%
     dplyr::group_by(IndvID) %>%
     dplyr::summarise(Species = first(Species),
                      RingYear = min(lubridate::year(CaptureDate)),
-                     RingAge = first(Age_obsv)) %>%
+                     RingAge = dplyr::case_when(is.na(first(Age_obsv)) ~ "adult",
+                                                first(Age_obsv) == 1 ~ "chick",
+                                                first(Age_obsv) > 1 ~ "adult")) %>%
     dplyr::mutate(Sex = dplyr::case_when(.$IndvID %in% Brood_data$FemaleID ~ "F",
                                          .$IndvID %in% Brood_data$MaleID ~ "M")) %>%
     #Join in BroodID from the reshaped Chick_IDs table
@@ -351,7 +357,7 @@ format_SSQ <- function(db = utils::choose.dir(),
 
   message("Compiling nestbox information...")
 
-  Nestbox_data <- all_data %>%
+  Location_data <- all_data %>%
     dplyr::group_by(LocationID) %>%
     dplyr::summarise(NestBoxType = NA,
                      PopID = "SSQ",
@@ -366,22 +372,39 @@ format_SSQ <- function(db = utils::choose.dir(),
 
     message("Generating debug report...")
 
-    generate_debug_report(path = path, Pop = "SSQ", Brood_data = Brood_data, Capture_data = Capture_data, Indv_data = Indv_data)
+    generate_debug_report(path = path, Pop = "SSQ", Brood_data = Brood_data, Capture_data = Capture_data, Indv_data = Individual_data)
 
   }
-
-  message("Saving .csv files...")
-
-  utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_SSQ.csv"), row.names = F)
-
-  utils::write.csv(x = Indv_data, file = paste0(path, "\\Individual_data_SSQ.csv"), row.names = F)
-
-  utils::write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_SSQ.csv"), row.names = F)
-
-  utils::write.csv(x = Nestbox_data, file = paste0(path, "\\Location_data_SSQ.csv"), row.names = F)
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
   message(paste0("All tables generated in ", round(time, 2), " seconds"))
+
+  if(output_type == "csv"){
+
+    message("Saving .csv files...")
+
+    utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_SSQ.csv"), row.names = F)
+
+    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_SSQ.csv"), row.names = F)
+
+    utils::write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_SSQ.csv"), row.names = F)
+
+    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_SSQ.csv"), row.names = F)
+
+    invisible(NULL)
+
+  }
+
+  if(output_type == "R"){
+
+    message("Returning R objects...")
+
+    return(list(Brood_data = Brood_data,
+                Capture_data = Capture_data,
+                Individual_data = Individual_data,
+                Location_data = Location_data))
+
+  }
 
 }
