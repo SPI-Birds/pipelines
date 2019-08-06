@@ -101,9 +101,9 @@ format_NIOO <- function(db = utils::choose.dir(),
                        dplyr::collect(),
               by = "AreaID")
 
-  ################
-  # SPECIES DATA #
-  ################
+  ###################################
+  # SPECIES AND POPUALATION FILTERS #
+  ###################################
 
   #Create a subset of the chosen species
   #Where argument 'species' is unused, include all species in the table (listed in description)
@@ -114,6 +114,12 @@ format_NIOO <- function(db = utils::choose.dir(),
   } else {
 
     species <- Species_codes[Species_codes$Code %in% species, ]$SpeciesID
+
+  }
+
+  if(is.null(pop)){
+
+    pop <- unique(Locations$ID)
 
   }
 
@@ -165,7 +171,9 @@ format_NIOO <- function(db = utils::choose.dir(),
                        dplyr::collect() %>%
                        dplyr::slice(1), by = "IndvID") %>%
     #Relate the capturelocation to the three letter PopID
-    dplyr::left_join(dplyr::select(Locations, PopID, CaptureLocation = ID), by = "CaptureLocation")
+    dplyr::left_join(dplyr::select(Locations, PopID, CaptureLocation = ID), by = "CaptureLocation") %>%
+    #Filter only chosen pop
+    dplyr::filter(PopID %in% pop)
 
   Individual_data <- Individual_data %>%
     dplyr::mutate(Species = dplyr::case_when(.$SpeciesID == 14400 ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code,
