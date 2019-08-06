@@ -456,31 +456,49 @@ format_NIOO <- function(db = utils::choose.dir(),
   # NESTBOX DATA #
   ################
 
-  print("Compiling nestbox information...")
+  message("Compiling nestbox information...")
 
   #Extract information on nestbox locations
-  Nestbox_data <- tbl(connection, "dbo_tbl_NestboxAppearance") %>%
+  Location_data <- tbl(connection, "dbo_tbl_NestboxAppearance") %>%
     collect() %>%
     #Join together information on the nestbox locations (e.g. latitude, longitude, nestbox name) and information on each nestbox that was there (e.g. how long before it was replaced).
     #This is necessary because one nestbox location could have multiple nestboxes erected at it over the study period.
     left_join(select(Locations, Location = ID, Latitude, Longitude, PopID),
               by = "Location") %>%
-    select(LocationID = Location, NestboxID = ID, NestBoxType, PopID, Latitude, Longitude, StartYear, EndYear)
-
-  print("Saving .csv files...")
-
-  utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_NIOO.csv"), row.names = F)
-
-  utils::write.csv(x = Indv_data %>% select(-RingNumber), file = paste0(path, "\\Individual_data_NIOO.csv"), row.names = F)
-
-  utils::write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_NIOO.csv"), row.names = F)
-
-  utils::write.csv(x = Nestbox_data, file = paste0(path, "\\Location_data_NIOO.csv"), row.names = F)
+    select(LocationID = Location, NestboxID = ID, NestBoxType, PopID, Latitude, Longitude, StartYear, EndYear) %>%
+    dplyr::mutate(LocationID = as.character(LocationID))
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
   dbDisconnect(connection)
 
-  print(paste0("All tables generated in ", round(time, 2), " seconds"))
+  message(paste0("All tables generated in ", round(time, 2), " seconds"))
+
+  if(output_type == "csv"){
+
+    message("Saving .csv files...")
+
+    utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_NIOO.csv"), row.names = F)
+
+    utils::write.csv(x = Individual_data %>% select(-RingNumber), file = paste0(path, "\\Individual_data_NIOO.csv"), row.names = F)
+
+    utils::write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_NIOO.csv"), row.names = F)
+
+    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_NIOO.csv"), row.names = F)
+
+    invisible(NULL)
+
+  }
+
+  if(output_type == "R"){
+
+    message("Returning R objects...")
+
+    return(list(Brood_data = Brood_data,
+                Capture_data = Capture_data,
+                Individual_data = Individual_data,
+                Location_data = Location_data))
+
+  }
 
 }
