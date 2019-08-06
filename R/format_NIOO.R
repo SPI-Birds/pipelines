@@ -50,7 +50,7 @@ format_NIOO <- function(db = utils::choose.dir(),
   #Record start time to estimate processing time.
   start_time <- Sys.time()
 
-  print("Connecting to database...")
+  message("Connecting to database...")
 
   ###N.B. IF THE ACCESS DRIVER AND VERSION OF R ARE NOT 64 BIT THIS WILL RETURN AN ERROR
   #Connect to the NIOO database backend.
@@ -66,22 +66,26 @@ format_NIOO <- function(db = utils::choose.dir(),
   main_sites <- c("Buunderkamp", "Lichtenbeek", "Westerheide", "Hoge Veluwe", "Warnsborn", "Vlieland", "Oosterhout", "Liesbosch")
 
   #Extract the corresponding areas from the AreaGroup table
-  Locations <- tbl(connection, "dbo_tl_AreaGroup") %>%
-    collect() %>%
-    filter(grepl(pattern = paste(main_sites, collapse = "|"), Name)) %>%
-    select(AreaGroup = ID, Name) %>%
+  Locations <- dplyr::tbl(connection, "dbo_tl_AreaGroup") %>%
+    dplyr::collect() %>%
+    dplyr::filter(grepl(pattern = paste(main_sites, collapse = "|"), Name)) %>%
+    dplyr::select(AreaGroup = ID, Name) %>%
     #Create three letter PopID code for each AreaGroup (i.e. population).
-    mutate(PopID = purrr::map_chr(.x = Name,
+    dplyr::mutate(PopID = purrr::map_chr(.x = Name,
                                   .f = function(.x){
 
                                     toupper(substr(.x, start = 1, stop = 3))
 
                                   })) %>%
     #Join in all the Areas within each AreaGroup (i.e. 'plots' within each population).
-    left_join(tbl(connection, "dbo_tx_Area_AreaGroup") %>% select(Area, AreaGroup) %>% collect(), by = "AreaGroup") %>%
-    rename(AreaID = Area) %>%
+    dplyr::left_join(tbl(connection, "dbo_tx_Area_AreaGroup") %>%
+                       dplyr::select(Area, AreaGroup) %>%
+                       dplyr::collect(), by = "AreaGroup") %>%
+    dplyr::rename(AreaID = Area) %>%
     #Join in all locations that are inside each Area within each AreaGroup (i.e. nest boxes/mist net locations in each plot within each population).
-    left_join(tbl(connection, "dbo_tbl_Location") %>% select(ID, UserPlaceName, AreaID, Latitude, Longitude) %>% collect(),
+    dplyr::left_join(tbl(connection, "dbo_tbl_Location") %>%
+                       dplyr::select(ID, UserPlaceName, AreaID, Latitude, Longitude) %>%
+                       dplyr::collect(),
               by = "AreaID")
 
   ################
@@ -94,98 +98,97 @@ format_NIOO <- function(db = utils::choose.dir(),
 
     species <- Species_codes$SpeciesID
 
-  }
+  } else {
 
-  Species_codes <- filter(Species_codes, SpeciesID %in% species)
+    species <- Species_codes[Species_codes$Code %in% species, ]$SpeciesID
+
+  }
 
   ###################
   # INDIVIDUAL DATA #
   ###################
 
-  print("Compiling individual information...")
+  message("Compiling individual information...")
 
   #This is a summary of each individual and general lifetime information (e.g. sex, resident/immigrant).
   #This only includes data that DOES NOT CHANGE over the individual's lifetime.
 
   #Create table with description of sex codes
-  Sex_data <- tbl(connection, "dbo_tl_Sexe") %>%
-    select(Sexe = ID, Sex = Description)
+  Sex_data <- dplyr::tbl(connection, "dbo_tl_Sexe") %>%
+    dplyr::select(Sexe = ID, Sex = Description)
 
-  Indv_data   <- tbl(connection, "dbo_tbl_Individual") %>%
-    #Subset only chosen species
-    filter(SpeciesID %in% species) %>%
+  Individual_data   <- dplyr::tbl(connection, "dbo_tbl_Individual") %>%
+    #Filter only required species
+    dplyr::filter(SpeciesID %in% species) %>%
     #Select only the basic info that we want:
     # - Individual ID
     # - GeneticBroodID
     # - BroodID (for cross fostering experiments)
     # - Species
     # - Sex
-    # - RingYear (year of first ringing)
+    # - RingSeason (year of first ringing)
     # - RingAge (EUring age at first ringing)
     # - RingNumber
-    select(IndvID = ID, GeneticBroodID, BroodID, SpeciesID, Sexe, RingYear, RingAge, RingNumber) %>%
+    dplyr::select(IndvID = ID, GeneticBroodID, BroodID, SpeciesID, Sexe, RingSeason = RingYear, RingAge, RingNumber) %>%
     #Add in sex description
-    left_join(Sex_data, by = "Sexe") %>%
+    #N.B. Our approach, if we are joining in data
+    #before we call 'collect' then we use left_join
+    #otherwise, we use case_when
+    dplyr::left_join(Sex_data, by = "Sexe") %>%
     #Remove old sex info
-    select(-Sexe) %>%
-    collect() %>%
+    dplyr::select(-Sexe) %>%
+    dplyr::collect() %>%
+    #Add sex from standard protocol
+    dplyr::mutate(Sex = dplyr::case_when(.$Sex %in% c(1, 3, 5) ~ "F",
+                                         .$Sex %in% c(2, 4, 6) ~ "M")) %>%
     #Add in the first capture location
     #This is needed to determine which population the bird belongs too.
-    left_join(tbl(connection, "dbo_tbl_Capture") %>% arrange(Individual, CaptureDate, CaptureTime) %>% select(IndvID = Individual, CaptureLocation) %>% group_by(IndvID) %>%
-                collect() %>% slice(1), by = "IndvID") %>%
+    dplyr::left_join(tbl(connection, "dbo_tbl_Capture") %>%
+                       dplyr::arrange(Individual, CaptureDate, CaptureTime) %>%
+                       dplyr::select(IndvID = Individual, CaptureLocation) %>%
+                       dplyr::group_by(IndvID) %>%
+                       dplyr::collect() %>%
+                       dplyr::slice(1), by = "IndvID") %>%
     #Relate the capturelocation to the three letter PopID
-    left_join(select(Locations, PopID, CaptureLocation = ID), by = "CaptureLocation")
+    dplyr::left_join(dplyr::select(Locations, PopID, CaptureLocation = ID), by = "CaptureLocation")
 
-  #Create a progress bar for converting speciesID to species letter codes.
-  #Include species letter codes for all species
-  species_pb <- dplyr::progress_estimated(n = nrow(Indv_data))
-
-  Indv_data <- Indv_data %>%
-    mutate(Species = purrr::map_chr(.x = .$SpeciesID,
-                                    .f = function(.x){
-
-                                      species_pb$tick()$print()
-
-                                      return(as.character(Species_codes[which(Species_codes$SpeciesID == .x), "Code"]))
-
-                                    })) %>%
+  Individual_data <- Individual_data %>%
+    dplyr::mutate(Species = dplyr::case_when(.$SpeciesID == 14400 ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code,
+                                             .$SpeciesID == 14640 ~ Species_codes[Species_codes$SpeciesID == 14640, ]$Code,
+                                             .$SpeciesID == 13490 ~ Species_codes[Species_codes$SpeciesID == 13490, ]$Code,
+                                             .$SpeciesID == 14620 ~ Species_codes[Species_codes$SpeciesID == 14620, ]$Code,
+                                             .$SpeciesID == 14790 ~ Species_codes[Species_codes$SpeciesID == 14790, ]$Code,
+                                             .$SpeciesID == 15980 ~ Species_codes[Species_codes$SpeciesID == 15980, ]$Code,
+                                             .$SpeciesID == 14610 ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code)) %>%
     #Sort out brood laid and brood fledged so that both columns are filled.
-    mutate(BroodIDLaid = purrr::map2_dbl(.x = BroodID, .y = GeneticBroodID,
+    mutate(BroodIDLaid = purrr::map2_chr(.x = BroodID, .y = GeneticBroodID,
                                          #If there is no genetic brood listed but there is a regular broodID, assume these are the same
                                          .f = ~ifelse(is.na(.y) & !is.na(.x), .x, .y)),
 
-           BroodIDRinged = purrr::map2_dbl(.x = BroodID, .y = GeneticBroodID,
+           BroodIDFledged = purrr::map2_chr(.x = BroodID, .y = GeneticBroodID,
                                            #If there is a genetic broodID listed by no regular brood ID assume these are the same.
-                                           .f = ~ifelse(!is.na(.y) & is.na(.x), .y, .x)),
-           #Transform sex information into EUring standard (M, F, U)
-           Sex = purrr::map_chr(.x = .$Sex,
-                                .f = function(.x){
-
-                                  ifelse(grepl(pattern = "male", .x), "M",
-                                         ifelse(grepl(pattern = "F", .x), "female", "U"))
-
-                                })) %>%
-    select(IndvID, RingNumber, Species, PopID, BroodIDLaid, BroodIDRinged, RingYear, RingAge, Sex)
+                                           .f = ~ifelse(!is.na(.y) & is.na(.x), .y, .x))) %>%
+    dplyr::select(IndvID, RingNumber, Species, PopID, BroodIDLaid, BroodIDFledged, RingSeason, RingAge, Sex) %>%
+    #Convert RingAge into either chick or adult
+    dplyr::mutate(RingAge = dplyr::case_when(.$RingAge %in% c(1, 2, 3) ~ "chick",
+                                             .$RingAge > 3 ~ "adult"))
 
   ################
   # CAPTURE DATA #
   ################
 
-  print("Compiling capture information...")
+  message("Compiling capture information...")
 
   #Capture data includes all times an individual was captured (with measurements like mass, tarsus etc.).
   #This will include first capture as nestling
   #This can include multiple records for a single individual.
-  Capture_data <- tbl(connection, "dbo_tbl_Capture") %>%
-    select(CaptureID = ID, CaptureDate, CaptureTime, IndvID = Individual, CaptureLocation, ReleaseLocation, CaptureType) %>%
+  Capture_data <- dplyr::tbl(connection, "dbo_tbl_Capture") %>%
+    dplyr::select(CaptureID = ID, CaptureDate, CaptureTime, IndvID = Individual, CaptureLocation, ReleaseLocation, CaptureType) %>%
     #Join in weight, tarsus and wing_length from secondary capture data table.
-    left_join(tbl(connection, "dbo_vw_MI_CaptureCaptureData") %>%
-                select(CaptureID, SpeciesID, Weight, Tarsus, Wing_Length), by = "CaptureID") %>%
+    dplyr::left_join(dplyr::tbl(connection, "dbo_vw_MI_CaptureCaptureData") %>%
+                       dplyr::select(CaptureID, SpeciesID, Weight, Tarsus, Wing_Length), by = "CaptureID") %>%
     #Filter target species
-    filter(SpeciesID %in% species) %>%
-    #Remove cases of egg measurement
-    #We are only interested in captures of chicks and adults.
-    filter(CaptureType %in% c(1, 2)) %>%
+    dplyr::filter(SpeciesID %in% species) %>%
     #Select only the basic info we need
     # -CaptureID (unique ID of capture event)
     # -CaptureDate
