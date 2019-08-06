@@ -1,38 +1,46 @@
-#' Construct standard summary for NIOO data.
+#'Construct standard summary for NIOO data.
 #'
-#' A pipeline to produce a standard output for 8 hole-nesting bird study populations
-#' at the Netherlands Institute of Ecology (NIOO-KNAW).
-#' Output follows the HNB standard breeding data format.
+#'A pipeline to produce a standard output for 8 hole-nesting bird study
+#'populations at the Netherlands Institute of Ecology (NIOO-KNAW). Output
+#'follows the HNB standard breeding data format.
 #'
-#' This section provides details on data management choices that are unique to the NIOO database.
-#' For a general description of the standard format please see XXXXX PLACE HOLDER!
+#'This section provides details on data management choices that are unique to
+#'the NIOO database. For a general description of the standard format please see
+#'\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
 #'
-#' \strong{Species}: By default the pipeline will include great tit \emph{Parus major}; blue tit \emph{Cyanistes caeruleus};
-#' pied flycatcher \emph{Ficedula hypoleuca}; Eurasian nuthatch \emph{Sitta europaea};
-#' coal tit \emph{Periparus ater}; and tree sparrow \emph{Passer montanus}.
+#'\strong{Species}: By default the pipeline will include great tit \emph{Parus
+#'major}; blue tit \emph{Cyanistes caeruleus}; pied flycatcher \emph{Ficedula
+#'hypoleuca}; Eurasian nuthatch \emph{Sitta europaea}; coal tit \emph{Periparus
+#'ater}; and tree sparrow \emph{Passer montanus}.
 #'
-#' \strong{Populations}: This pipeline extracts data for 8 populations managed by
-#' NIOO-KNAW: Buunderkamp, Lichtenbeek, Westerheide, Hoge Veluwe, Warnsborn, Vlieland, Oosterhout, and Liesbosch.
+#'\strong{Populations}: This pipeline extracts data for 8 populations managed by
+#'NIOO-KNAW: Buunderkamp, Lichtenbeek, Westerheide, Hoge Veluwe, Warnsborn,
+#'Vlieland, Oosterhout, and Liesbosch.
 #'
-#' \strong{Sex}: We condense sex information to only include groups M, F, and U (unknown) following the EUring standard.
-#' Uncertainty in sex was ignored (e.g. 'male?' or 'female?').
+#'\strong{Sex}: We condense sex information to only include groups M, F, and U
+#'(unknown) following the EUring standard. Uncertainty in sex was ignored (e.g.
+#''male?' or 'female?').
 #'
-#' \strong{Measurement error}: For BroodSize, NumberFledged XXXX FILL IN a best estimate is provided.
-#' Best estimate is halfway between the minimum and maximum possible value. \emph{N.B.:} This means that the best estimate will not necessarily be an integer.
-#' Error is provided in BroodSizeError, NumberFledgedError etc. this is the absolute error (+/-) around the best estimate.
+#'\strong{Measurement error}: For BroodSize, NumberFledged XXXX FILL IN a best
+#'estimate is provided. Best estimate is halfway between the minimum and maximum
+#'possible value. \emph{N.B.:} This means that the best estimate will not
+#'necessarily be an integer. Error is provided in BroodSizeError,
+#'NumberFledgedError etc. this is the absolute error (+/-) around the best
+#'estimate.
 #'
-#' @inheritParams pipeline_params
+#'@inheritParams pipeline_params
 #'
-#' @return Generates 5 .csv files with data in a standard format.
-#' @export
-#' @import dplyr
-#' @import DBI
-#' @import purrr
+#'@return Generates 4 .csv files with data in a standard format.
+#'@export
+#'@import dplyr
+#'@import DBI
+#'@import purrr
 
 format_NIOO <- function(db = utils::choose.dir(),
                         species = NULL,
                         pop = NULL,
-                        path = "."){
+                        path = ".",
+                        output_type = "csv"){
 
   #Force user to select directory
   force(db)
