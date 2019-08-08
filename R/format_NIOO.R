@@ -501,14 +501,17 @@ format_NIOO <- function(db = utils::choose.dir(),
   message("Compiling nestbox information...")
 
   #Extract information on nestbox locations
-  Location_data <- tbl(connection, "dbo_tbl_NestboxAppearance") %>%
-    collect() %>%
+  Location_data <- dplyr::tbl(connection, "dbo_tbl_NestboxAppearance") %>%
+    dplyr::collect() %>%
     #Join together information on the nestbox locations (e.g. latitude, longitude, nestbox name) and information on each nestbox that was there (e.g. how long before it was replaced).
     #This is necessary because one nestbox location could have multiple nestboxes erected at it over the study period.
-    left_join(select(Locations, Location = ID, Latitude, Longitude, PopID),
+    dplyr::left_join(dplyr::select(Locations, Location = ID, Latitude, Longitude, PopID),
               by = "Location") %>%
-    select(LocationID = Location, NestboxID = ID, NestBoxType, PopID, Latitude, Longitude, StartYear, EndYear) %>%
-    dplyr::mutate(LocationID = as.character(LocationID))
+    dplyr::select(LocationID = Location, NestboxID = ID, LocationType = NestBoxType, PopID, Latitude, Longitude, StartSeason = StartYear, EndSeason = EndYear) %>%
+    dplyr::mutate(LocationID = as.character(LocationID),
+                  Habitat = dplyr::case_when(.$PopID %in% c("VLI", "HOG", "WES", "BUU") ~ "Mixed",
+                                             .$PopID %in% c("OOS", "LIE", "WAR") ~ "Deciduous"))
+
   #REMOVE UNWANTED COLUMNS AND CHANGE FORMATS
   Individual_data <- Individual_data %>%
     dplyr::mutate(IndvID = as.character(IndvID)) %>%
