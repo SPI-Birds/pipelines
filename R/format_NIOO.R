@@ -332,9 +332,9 @@ format_NIOO <- function(db = utils::choose.dir(),
     mutate(BroodSizeError = BroodSizeError/2, NumberFledgedError = NumberFledgedError/2, LayingDateError = LayingDateError/2,
            BroodSize = BroodSize + BroodSizeError,
            NumberFledged = NumberFledged + NumberFledgedError,
-           Mar1 = lubridate::ymd(paste0(SampleYear, "-3-1")),
-           LayingDate = as.numeric((lubridate::ymd(LayingDate) - Mar1) + LayingDateError)) %T>%
-    #Turn species into letter codes
+           LayingDate = lubridate::ymd(LayingDate) + LayingDateError,
+           HatchDate = lubridate::ymd(HatchDate),
+           FledgeDate = lubridate::ymd(FledgeDate)) %>%
     {species_pb <<- dplyr::progress_estimated(n = nrow(.))} %>%
     #Include species letter codes for all species
     mutate(Species = purrr::map_chr(.x = .$BroodSpecies,
@@ -509,6 +509,16 @@ format_NIOO <- function(db = utils::choose.dir(),
               by = "Location") %>%
     select(LocationID = Location, NestboxID = ID, NestBoxType, PopID, Latitude, Longitude, StartYear, EndYear) %>%
     dplyr::mutate(LocationID = as.character(LocationID))
+  #REMOVE UNWANTED COLUMNS AND CHANGE FORMATS
+  Individual_data <- Individual_data %>%
+    dplyr::mutate(IndvID = as.character(IndvID)) %>%
+    dplyr::select(IndvID, Species, PopID, BroodIDLaid, BroodIDFledged,
+                  RingSeason, RingAge)
+
+  Capture_data <- Capture_data %>%
+    dplyr::mutate(IndvID = as.character(IndvID),
+                  LocationID = as.character(LocationID),
+                  CaptureDate = lubridate::ymd(CaptureDate))
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
