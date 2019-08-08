@@ -41,10 +41,18 @@ format_VEL <- function(db = utils::choose.dir(),
                        species = NULL,
                        pop = NULL,
                        path = ".",
-                       debug = FALSE) {
+                       debug = FALSE,
+                       output_type = "csv") {
 
   #Force user to select directory
   force(db)
+
+  #Add species filter
+  if(is.null(species)){
+
+    species <- Species_codes$Code
+
+  }
 
   start_time <- Sys.time()
 
@@ -289,23 +297,40 @@ format_VEL <- function(db = utils::choose.dir(),
 
   }
 
+  time <- difftime(Sys.time(), start_time, units = "sec")
+
+  message(paste0("All tables generated in ", round(time, 2), " seconds"))
+
   ###############
   # EXPORT DATA #
   ###############
 
-  message("Saving .csv files...")
+  if(output_type == "csv"){
 
-  utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_VEL.csv"), row.names = F)
+    message("Saving .csv files...")
 
-  utils::write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_VEL.csv"), row.names = F)
+    utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_VEL.csv"), row.names = F)
 
-  utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_VEL.csv"), row.names = F)
+    utils::write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_VEL.csv"), row.names = F)
 
-  utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_VEL.csv"), row.names = F)
+    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_VEL.csv"), row.names = F)
 
-  time <- difftime(Sys.time(), start_time, units = "sec")
+    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_VEL.csv"), row.names = F)
 
-  message(paste0("All tables generated in ", round(time, 2), " seconds"))
+    invisible(NULL)
+
+  }
+
+  if(output_type == "R"){
+
+    message("Returning R objects...")
+
+    return(list(Brood_data = Brood_data,
+                Capture_data = Capture_data,
+                Individual_data = Individual_data,
+                Location_data = Location_data))
+
+  }
 
 }
 
