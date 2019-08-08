@@ -521,6 +521,9 @@ format_NIOO <- function(db = utils::choose.dir(),
               by = "Location") %>%
     dplyr::select(LocationID = Location, NestboxID = ID, LocationType = NestBoxType, PopID, Latitude, Longitude, StartSeason = StartYear, EndSeason = EndYear) %>%
     dplyr::mutate(LocationID = as.character(LocationID),
+                  NestboxID = as.character(NestboxID),
+                  LocationType = dplyr::case_when(.$LocationType %in% c(0:22, 40:41) ~ "NB",
+                                                  .$LocationType %in% c(90, 101) ~ "MN"),
                   Habitat = dplyr::case_when(.$PopID %in% c("VLI", "HOG", "WES", "BUU") ~ "Mixed",
                                              .$PopID %in% c("OOS", "LIE", "WAR") ~ "Deciduous"))
 
@@ -533,6 +536,8 @@ format_NIOO <- function(db = utils::choose.dir(),
   Capture_data <- Capture_data %>%
     dplyr::mutate(IndvID = as.character(IndvID),
                   LocationID = as.character(LocationID),
+                  CapturePlot = as.character(CapturePlot),
+                  ReleasePlot = as.character(ReleasePlot),
                   CaptureDate = lubridate::ymd(CaptureDate))
 
   time <- difftime(Sys.time(), start_time, units = "sec")
