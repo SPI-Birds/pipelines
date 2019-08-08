@@ -40,6 +40,10 @@
 #'100% accuracy, otherwise this might affect the calculated age of individuals
 #'during capture.
 #'
+#'\strong{AvgEggMass} Egg measurements are included in the NIOO database, but these are a bit more difficult to include
+#'because they aren't associated with a given brood (they can be weighed before and after a cross fostering). For now,
+#'we don't include this data, but we hope to in the future. Therefore, AvgEggMass is currently just NA.
+#'
 #'
 #'@inheritParams pipeline_params
 #'
@@ -211,7 +215,7 @@ format_NIOO <- function(db = utils::choose.dir(),
     dplyr::left_join(dplyr::tbl(connection, "dbo_vw_MI_CaptureCaptureData") %>%
                        dplyr::select(CaptureID, SpeciesID, Observer, Weight, Tarsus, Wing_Length), by = "CaptureID") %>%
     #Filter target species
-    dplyr::filter(SpeciesID %in% species & AccuracyOfDate == 1) %>%
+    dplyr::filter(SpeciesID %in% species & AccuracyOfDate == 1 & CaptureType %in% c(1, 2)) %>%
     #Select only the basic info we need
     # -CaptureID (unique ID of capture event)
     # -CaptureDate
@@ -223,9 +227,8 @@ format_NIOO <- function(db = utils::choose.dir(),
     # -Weight
     # -Tarsus
     # -Wing_Length
-    # -CaptureType (needed to determine age)
     dplyr::select(CaptureID, CaptureDate, CaptureTime, IndvID, SpeciesID, CaptureLocation,
-                  ReleaseLocation, Observer, Weight, Tarsus, WingLength = Wing_Length, CaptureType) %>%
+                  ReleaseLocation, Observer, Weight, Tarsus, WingLength = Wing_Length) %>%
     dplyr::collect() %>%
     #Join in information on when the individual was first ringed (left join from the IndvData)
     #This is used to determine the age of each individual (EUring) at the time of capture
