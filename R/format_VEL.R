@@ -612,7 +612,7 @@ create_individual_VEL     <- function(Capture_data){
 
                                             if(all(c("F", "M") %in% ..1)){
 
-                                              return("CONFLICTING SEX")
+                                              return("C")
 
                                             } else if("F" %in% ..1){
 
@@ -624,7 +624,7 @@ create_individual_VEL     <- function(Capture_data){
 
                                             } else if(is.na(..1)){
 
-                                              return("U")
+                                              return(NA_character_)
 
                                             }
 
@@ -635,7 +635,7 @@ create_individual_VEL     <- function(Capture_data){
 
                                                  pb$print()$tick()
 
-                                                 if(is.na(..1) | (..1 != 1)){
+                                                 if(is.na(..1) | (..1 == "adult")){
 
                                                    return(NA)
 
@@ -646,8 +646,8 @@ create_individual_VEL     <- function(Capture_data){
                                                  }
 
                                                }),
-                     BroodIDRinged = BroodIDLaid) %>%
-    dplyr::select(IndvID, Species, PopID, BroodIDLaid, BroodIDRinged, RingSeason, RingAge, Sex) %>%
+                     BroodIDFledged = BroodIDLaid) %>%
+    dplyr::select(IndvID, Species, PopID, BroodIDLaid, BroodIDFledged, RingSeason, RingAge, Sex) %>%
     dplyr::ungroup()
 
   return(Indvidual_data)
