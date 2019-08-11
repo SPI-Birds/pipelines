@@ -241,7 +241,7 @@ format_UAN <- function(db = utils::choose.dir(),
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
-  print(paste0("All tables generated in ", round(time, 2), " seconds"))
+  message(paste0("All tables generated in ", round(time, 2), " seconds"))
 
   if(output_type == "csv"){
 
