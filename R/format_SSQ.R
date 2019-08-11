@@ -87,10 +87,12 @@ format_SSQ <- function(db = utils::choose.dir(),
                   BroodID = paste(BreedingSeason, LocationID, LayingDate, sep = "_"),
                   ClutchType_observed = dplyr::case_when(.$Class == 1 ~ "first",
                                                          .$Class == 3 ~ "second",
-                                                         .$Class == 2 ~ "replacement")) %>%
-    dplyr::mutate(FledgeDate = NA, AvgEggMass = NA, NumberEggs = NA, AvgChickMass = NA, NumberChicksMass = NA, AvgTarsus = NA, NumberChicksTarsus = NA,
+                                                         .$Class == 2 ~ "replacement"),
+                  FledgeDate = NA, AvgEggMass = NA, NumberEggs = NA, AvgChickMass = NA, NumberChicksMass = NA, AvgTarsus = NA, NumberChicksTarsus = NA,
                   LayingDateError = NA, ClutchSizeError = NA, HatchDateError = NA, BroodSizeError = NA,
-                  FledgeDateError = NA, NumberFledgedError = NA, ExperimentID = NA)
+                  FledgeDateError = NA, NumberFledgedError = NA, ExperimentID = NA,
+                  LayingDate = as.Date(paste(BreedingSeason, "03-01", sep = "-"), format = "%Y-%m-%d") + LayingDate - 1,
+                  HatchDate = as.Date(paste(BreedingSeason, "03-01", sep = "-"), format = "%Y-%m-%d") + HatchDate - 1)
 
   ##############
   # BROOD DATA #
@@ -103,7 +105,7 @@ format_SSQ <- function(db = utils::choose.dir(),
 
   Brood_data <- all_data %>%
     #Determine clutch type
-    mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
     #Determine the 30 day cut-off for all species
     # dplyr::group_by(PopID, BreedingSeason, Species) %>%
     # dplyr::mutate(cutoff = tryCatch(expr = min(LayingDate, na.rm = T) + 30,
@@ -220,10 +222,7 @@ format_SSQ <- function(db = utils::choose.dir(),
            NumberFledged, NumberFledgedError,
            AvgEggMass, NumberEggs,
            AvgChickMass, NumberChicksMass,
-           AvgTarsus, NumberChicksTarsus, OriginalTarsusMethod, ExperimentID) %>%
-    #Change laying date and hatch date to date objects
-    dplyr::mutate(LayingDate = as.Date(paste0("01/03/", BreedingSeason), format = "%d/%m/%Y") + LayingDate - 1,
-                  HatchDate = as.Date(paste0("01/03/", BreedingSeason), format = "%d/%m/%Y") + HatchDate - 1)
+           AvgTarsus, NumberChicksTarsus, OriginalTarsusMethod, ExperimentID)
 
   ################
   # CAPTURE DATA #
@@ -248,7 +247,7 @@ format_SSQ <- function(db = utils::choose.dir(),
     dplyr::rename(CapturePopID = PopID, CapturePlot = Plot) %>%
     #Treat CaptureDate of adults as the Laying Date (currently in days since March 1st)
     dplyr::mutate(ReleasePopID = CapturePopID, ReleasePlot = CapturePlot,
-                  CaptureDate = as.Date(paste(BreedingSeason, "03", "01", sep = "-"), format = "%Y-%m-%d") - 1 + LayingDate,
+                  CaptureDate = LayingDate,
                   CaptureTime = NA) %>%
     dplyr::select(-variable, -LayingDate, -FAge, -MAge)
 
@@ -262,7 +261,7 @@ format_SSQ <- function(db = utils::choose.dir(),
     #For now, we use LayingDate + ClutchSize + 15 (incubation days in SSQ) + 12.
     #Chicks were captured and weighed at 12 days old at the latest
     dplyr::mutate(ReleasePopID = CapturePopID, ReleasePlot = CapturePlot,
-                  CaptureDate = as.Date(paste(BreedingSeason, "03", "01", sep = "-"), format = "%Y-%m-%d") - 1 + LayingDate + ClutchSize + 27,
+                  CaptureDate = LayingDate + ClutchSize + 27,
                   CaptureTime = NA, Age_observed = 1, Age = 1) %>%
     dplyr::select(-variable, -LayingDate, -ClutchSize)
 
