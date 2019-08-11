@@ -281,11 +281,14 @@ format_VEL <- function(db = utils::choose.dir(),
   Brood_data <- Brood_data %>%
     dplyr::left_join(avg_measures, by = "BroodID") %>%
     dplyr::mutate(NumberChicksMass   = na_if(NumberChicksMass, 0),
-                  NumberChicksTarsus = na_if(NumberChicksTarsus, 0)) %>%
-    dplyr::select(PopID:NumberEggs, AvgChickMass:NumberChicksTarsus, ExperimentID)
+                  NumberChicksTarsus = na_if(NumberChicksTarsus, 0),
+                  OriginalTarsusMethod = dplyr::case_when(!is.na(.$AvgTarsus) ~ "Oxford")) %>%
+    dplyr::select(BroodID:NumberEggs, AvgChickMass:NumberChicksTarsus, OriginalTarsusMethod, ExperimentID)
 
   Capture_data <- Capture_data %>%
-    dplyr::select(BreedingSeason, IndvID, Species, LocationID:ChickAge)
+    dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime,
+                  ObserverID, LocationID, CapturePopID:Tarsus, OriginalTarsusMethod,
+                  WingLength, Age_observed, Age_calculated, ChickAge)
 
   #######################
   # CREATE DEBUG OPTION #
@@ -458,6 +461,8 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
 
                   })) %>%
     tidyr::unnest(data) %>%
+    dplyr::mutate(ObserverID = NA,
+                  OriginalTarsusMethod = dplyr::case_when(!is.na(.$Tarsus) ~ "Oxford")) %>%
     dplyr::select(-ChickNr)
 
   #Then create capture info for every adult.
