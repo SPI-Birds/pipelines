@@ -186,6 +186,9 @@ format_HAR <- function(db = utils::choose.dir(),
   Brood_data <- left_join(Brood_data, Chick_avg, by = "BroodID") %>%
     dplyr::select(BroodID:NumberFledgedError, AvgEggMass:OriginalTarsusMethod, ExperimentID)
 
+  Capture_data <- Capture_data %>%
+    dplyr::select(-Sex, -BroodID)
+
   #########
   # DEBUG #
   #########
