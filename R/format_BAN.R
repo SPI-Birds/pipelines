@@ -29,6 +29,10 @@
 #' \strong{BroodID}: Unique BroodID is currently made with
 #' Year_Plot_LocationID_Day_Month.
 #'
+#' \strong{BroodIDLaid/Fledged}: Currently, we have no information about the
+#' brood where each individual was laid. Therefore, these are currently
+#' kept blank.
+#'
 #' \strong{Age_observed}: There is no recorded capture age. This is left as NA.
 #'
 #' \strong{AvgEggMass}: Currently we only include records where the day of egg
@@ -320,6 +324,8 @@ create_individual_BAN <- function(Capture_data) {
     dplyr::group_by(IndvID) %>%
     dplyr::summarise(Species = unique(stats::na.omit(Species)),
                      PopID = "BAN",
+                     BroodIDLaid = NA,
+                     BroodIDFledged = NA,
                      RingSeason = first(BreedingSeason),
                      RingAge = first(Age_observed),
                      Sex = purrr::map_chr(.x = list(unique(Sex)),
