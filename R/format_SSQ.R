@@ -345,7 +345,7 @@ format_SSQ <- function(db = utils::choose.dir(),
     dplyr::arrange(IndvID, CaptureDate) %>%
     dplyr::group_by(IndvID) %>%
     dplyr::summarise(Species = first(Species),
-                     RingYear = min(lubridate::year(CaptureDate)),
+                     RingSeason = min(lubridate::year(CaptureDate)),
                      RingAge = dplyr::case_when(is.na(first(Age_obsv)) ~ "adult",
                                                 first(Age_obsv) == 1 ~ "chick",
                                                 first(Age_obsv) > 1 ~ "adult")) %>%
@@ -356,7 +356,7 @@ format_SSQ <- function(db = utils::choose.dir(),
     dplyr::mutate(BroodIDRinged = BroodIDLaid,
                   PopID = "SSQ") %>%
     select(IndvID, Species, PopID, BroodIDLaid,
-           BroodIDRinged, RingYear, RingAge, Sex)
+           BroodIDRinged, RingSeason, RingAge, Sex)
 
   ################
   # NESTBOX DATA #
