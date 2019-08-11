@@ -304,8 +304,8 @@ create_brood_HAR <- function(db, species_filter){
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
     #Add Fledge date (it is NA, this isn't recorded)
     dplyr::mutate(FledgeDate = NA, ClutchSizeError = NA, BroodSizeError = NA,
-           FledgeDateError = NA, NumberFledgedError = NA,
-           BroodSize = as.integer(BroodSize)) %>%
+                  FledgeDateError = NA, NumberFledgedError = NA,
+                  BroodSize = as.integer(BroodSize)) %>%
     #Arrange columns correctly
     dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot, LocationID, FemaleID, MaleID,
            ClutchType_observed, ClutchType_calculated, LayingDate, LayingDateError,
@@ -683,7 +683,7 @@ create_individual_HAR <- function(Capture_data){
     #For each individual, if their ring age was 1 or 3 (caught in first breeding year)
     #Then we take their first BroodID, otherwise it is NA
     mutate(BroodIDLaid = ifelse(RingAge == "chick", BroodIDLaid, NA),
-           BroodIDRinged = BroodIDLaid) %>%
+           BroodIDFledged = BroodIDLaid) %>%
     arrange(RingSeason, IndvID)
 
   return(Indv_data)
