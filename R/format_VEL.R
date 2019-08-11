@@ -353,16 +353,19 @@ create_brood_VEL          <- function(FICALB_data, TIT_data) {
   FICALB_broods <- FICALB_data %>%
     dplyr::arrange(BreedingSeason, Species, FemaleID) %>%
     #Calculate clutchtype
-    dplyr::mutate(ClutchType_calc = calc_clutchtype(data = ., na.rm = FALSE)) %>%
-    dplyr::select(PopID:ClutchType_observed, ClutchType_calc,
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
+    dplyr::select(BroodID, PopID, BreedingSeason,
+                  Species, Plot, LocationID, FemaleID, MaleID,
+                  ClutchType_observed, ClutchType_calculated,
                   LayingDate:ExperimentID)
 
   TIT_broods <- TIT_data %>%
     dplyr::arrange(BreedingSeason, Species, FemaleID) %>%
     #Calculate clutchtype
-    dplyr::mutate(ClutchType_calc = calc_clutchtype(data = ., na.rm = FALSE)) %>%
-    dplyr::select(BreedingSeason:LocationID, BroodID,
-                  FemaleID:ClutchType_observed, ClutchType_calc,
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
+    dplyr::select(BroodID, PopID, BreedingSeason,
+                  Species, Plot, LocationID, FemaleID, MaleID,
+                  ClutchType_observed, ClutchType_calculated,
                   LayingDate:ExperimentID)
 
   return(dplyr::bind_rows(FICALB_broods, TIT_broods))
@@ -370,7 +373,7 @@ create_brood_VEL          <- function(FICALB_data, TIT_data) {
   #Satisfy RCMD Check
   `.` <- AvgEggMass <- BroodID <- NULL
   PopID <- BreedingSeason <- Species <- Plot <- LocationID <- NULL
-  FemaleID <- MaleID <- ClutchType_observed <- ClutchType_calc <- NULL
+  FemaleID <- MaleID <- ClutchType_observed <- ClutchType_calculated <- NULL
   LayingDate <- LayingDateError <- ClutchSize <- ClutchSizeError <- NULL
   HatchDate <- HatchDateError <- BroodSize <- BroodSizeError <- NULL
   FledgeDate <- FledgeDateError <- NumberFledged <- NumberFledgedError <- NULL
@@ -444,12 +447,12 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
                                                               }),
                                     CaptureTime = NA, CapturePopID = "VEL", CapturePlot = Plot,
                                     ## All chick records were 6 or 13 days, so all are listed as EURING age 1
-                                    ReleasePopID = "VEL", ReleasePlot = Plot, Age_obsv = 1, Age_calculated = NA,
+                                    ReleasePopID = "VEL", ReleasePlot = Plot, Age_observed = 1, Age_calculated = NA,
                                     #Convert tarsus to Svennson's alternative
                                     Tarsus = convert_tarsus(Tarsus, method = "Oxford")) %>%
                       tidyr::unnest(CaptureDate) %>%
                       dplyr::select(IndvID, Species, BreedingSeason, LocationID, CaptureDate, CaptureTime, CapturePopID, CapturePlot,
-                                    ReleasePopID, ReleasePlot, Mass, Tarsus, WingLength, Age_obsv,
+                                    ReleasePopID, ReleasePlot, Mass, Tarsus, WingLength, Age_observed,
                                     Age_calculated, ChickAge, BroodID)
 
                     ## When the chick is 6 days old, then tarsus and wing length are not used
@@ -482,7 +485,7 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
                   Mass = purrr::pmap_dbl(.l = list(Sex, mass_54, mass_60),
                                          .f = ~{if(..1 == "F") ..2 else ..3}),
                   ##Determine age of males based on 'age' column
-                  Age_obsv = purrr::pmap_dbl(.l = list(Sex, age),
+                  Age_observed = purrr::pmap_dbl(.l = list(Sex, age),
                                              .f = ~{
 
                                                if(..1 == "M"){
@@ -512,25 +515,26 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
 
                                               }),
                   CapturePopID = "VEL", ReleasePopID = "VEL",
-                  CapturePlot = Plot, ReleasePlot = Plot) %>%
+                  CapturePlot = Plot, ReleasePlot = Plot,
+                  ObserverID = NA) %>%
     tidyr::unnest() %>%
+    dplyr::mutate(OriginalTarsusMethod = dplyr::case_when(!is.na(.$Tarsus) ~ "Oxford")) %>%
     dplyr::select(Species, BreedingSeason, LocationID, BroodID,
-                  IndvID:CaptureDate, Sex)
+                  IndvID:CaptureDate, ObserverID, OriginalTarsusMethod, Sex)
 
   FICALB_alldat <- dplyr::bind_rows(FICALB_chicks, FICALB_adults) %>%
-    calc_age(ID = IndvID, Age = Age_obsv, Date = CaptureDate, Year = BreedingSeason, showpb = TRUE)
+    calc_age(ID = IndvID, Age = Age_observed, Date = CaptureDate, Year = BreedingSeason, showpb = TRUE)
+
+
 
   return(FICALB_alldat)
 
   #Satisfy RCMD Check
-  Species <- IndvID <- BreedingSeason <- LocationID <- Plot <- Sex <- Age_obsv <- NULL
+  Species <- IndvID <- BreedingSeason <- LocationID <- Plot <- Sex <- Age_observed <- NULL
   CaptureDate <- CaptureTime <- ObserverID <- CapturePopID <- ReleasePopID <- Mass <- Tarsus <- NULL
   OriginalTarsusMethod <- WingLength <- Age_calculated <- ChickAge <- NULL
   x1_young_ring <- x8y_wing <- ChickNr <- data <- FemaleID <- date_of_capture_52 <- tarsus_53 <- NULL
   wing_55 <- MaleID <- date_of_capture_57 <- age <- wing_61 <- tarsus_59 <- mass_54 <- mass_60 <- NULL
-
-
-
 
 }
 
@@ -559,15 +563,20 @@ create_capture_VEL_TIT    <- function(TIT_data) {
                   ## There is no explicit info about age.
                   ## They must all be adults, so just give them all EURING 4
                   ## "Hatched before this calendar year"
-                  Age_obsv = 4) %>%
-    calc_age(ID = IndvID, Age = Age_obsv, Date = CaptureDate, Year = BreedingSeason) %>%
-    dplyr::select(BreedingSeason, IndvID, Species, CaptureDate, CapturePopID:ReleasePlot,
-                  Age_obsv, Age_calculated)
+                  Age_observed = 4,
+                  ObserverID = NA,
+                  LocationID = paste(Plot, nest_box, sep = "_"),
+                  OriginalTarsusMethod = NA) %>%
+    calc_age(ID = IndvID, Age = Age_observed, Date = CaptureDate, Year = BreedingSeason) %>%
+    dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, ObserverID, LocationID, CapturePopID:ReleasePlot,
+                  Age_observed, Age_calculated)
+
+
 
   return(TIT_capture)
 
   #Satisfy RCMD Check
-  Species <- IndvID <- BreedingSeason <- LocationID <- Plot <- Sex <- Age_obsv <- NULL
+  Species <- IndvID <- BreedingSeason <- LocationID <- Plot <- Sex <- Age_observed <- NULL
   CaptureDate <- CaptureTime <- ObserverID <- CapturePopID <- ReleasePopID <- Mass <- Tarsus <- NULL
   OriginalTarsusMethod <- WingLength <- Age_calculated <- ChickAge <- NULL
   FemaleID <- LayingDate <- ClutchSize <- NULL
