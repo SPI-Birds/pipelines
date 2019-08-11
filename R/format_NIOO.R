@@ -123,7 +123,7 @@ format_NIOO <- function(db = utils::choose.dir(),
 
   if(is.null(pop)){
 
-    pop <- unique(Locations$ID)
+    pop <- unique(Locations$PopID)
 
   }
 
