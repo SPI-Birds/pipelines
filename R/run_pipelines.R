@@ -33,6 +33,9 @@ run_pipelines <- function(path = utils::choose.dir(),
 
     PopID <- pop_names$code
 
+    #Currently, remove WYT because we don't have full data
+    PopID <- PopID[!grepl("WYT", PopID)]
+
   }
 
   #Assign species for filtering
