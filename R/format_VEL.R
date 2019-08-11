@@ -146,7 +146,6 @@ format_VEL <- function(db = utils::choose.dir(),
                                                   "text", "text", "text", "text",
                                                   "skip")) %>%
     janitor::clean_names() %>%
-    dplyr::filter(species %in% c("blue tit", "great tit")) %>%
     dplyr::mutate_at(.vars = vars(contains("date")),
                      .funs = function(date){
 
@@ -182,7 +181,7 @@ format_VEL <- function(db = utils::choose.dir(),
                                     } else {
 
                                       ## THERE ARE CASES WHERE THERE IS A MAXIMUM BUT NO MINIMUM
-                                      ## FOR NOW WE JUST LEAVE THESE AS NAs
+                                      ## WE TREAT THESE AS NAs
                                       return(tibble::tibble(LayingDate = mean(c(..2, ..3)),
                                                             LayingDateError = as.numeric((..2 - ..3)/2)))
 
@@ -233,7 +232,8 @@ format_VEL <- function(db = utils::choose.dir(),
 
   message("Compiling brood information...")
 
-  Brood_data <- create_brood_VEL(FICALB_data, TIT_data)
+  Brood_data <- create_brood_VEL(FICALB_data, TIT_data) %>%
+    dplyr::filter(Species %in% species)
 
   ################
   # CAPTURE DATA #
@@ -243,7 +243,8 @@ format_VEL <- function(db = utils::choose.dir(),
 
   Capture_data <- dplyr::bind_rows(create_capture_VEL_FICALB(FICALB_data),
                                    create_capture_VEL_TIT(TIT_data)) %>%
-    dplyr::ungroup()
+    dplyr::ungroup() %>%
+    dplyr::filter(Species %in% species)
 
   ###################
   # INDIVIDUAL DATA #
@@ -251,7 +252,8 @@ format_VEL <- function(db = utils::choose.dir(),
 
   message("Compiling individual information...")
 
-  Individual_data <- create_individual_VEL(Capture_data)
+  Individual_data <- create_individual_VEL(Capture_data) %>%
+    dplyr::filter(Species %in% species)
 
   #################
   # LOCATION DATA #
