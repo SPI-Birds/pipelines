@@ -396,10 +396,10 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
   FICALB_chicks <- FICALB_data %>%
     dplyr::select(BreedingSeason, Species, Plot, BroodID, LocationID, LayingDate, ClutchSize, HatchDate, x1_young_ring:x8y_wing) %>%
     reshape2::melt(measure.vars = c("x1_young_ring", "x2_young_ring",
-                                               "x3_young_ring", "x4_young_ring",
-                                               "x5_young_ring", "x6_young_ring",
-                                               "x7_young_ring", "x8_young_ring"),
-                              value.name = "IndvID", variable.name = "ChickNr") %>%
+                                    "x3_young_ring", "x4_young_ring",
+                                    "x5_young_ring", "x6_young_ring",
+                                    "x7_young_ring", "x8_young_ring"),
+                   value.name = "IndvID", variable.name = "ChickNr") %>%
     dplyr::filter(!is.na(IndvID))
 
   ## Make progress bar. Needs to be twice as long as rows because chicks are
@@ -411,58 +411,58 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
     tidyr::nest() %>%
     dplyr::mutate(ChickNr = substr(ChickNr, 1, 2)) %>%
     dplyr::mutate(data = purrr::pmap(.l = list(ChickNr, data),
-                  .f = ~{
+                                     .f = ~{
 
-                    output <- ..2 %>%
-                      dplyr::select(BreedingSeason:HatchDate, IndvID, contains(..1)) %>%
-                      reshape2::melt(id.vars = c(1:9, 11, 13), value.name = "Mass") %>%
-                      ## Rename tarsus and wing to remove name of chick
-                      dplyr::rename_at(.vars = vars(contains("tarsus")), .funs = ~{"Tarsus"}) %>%
-                      dplyr::rename_at(.vars = vars(contains("wing")), .funs = ~{"WingLength"}) %>%
-                      ## Add chick age based on the variable name
-                      dplyr::mutate(ChickAge = as.numeric(stringr::str_sub(variable, 9, -1)),
-                                    ## Capture date is hatchdate + chick age
-                                    ## If no hatch date is known then use laying date + clutch size + incubation + chick age
-                                    ## We assume incubation of 15 days, but need to check with Milos.
-                                    ## If there is no hatch date OR laying date then just use NA
-                                    CaptureDate = purrr::pmap(.l = list(LayingDate, ClutchSize, HatchDate, ChickAge),
-                                                              .f = ~{
+                                       output <- ..2 %>%
+                                         dplyr::select(BreedingSeason:HatchDate, IndvID, contains(..1)) %>%
+                                         reshape2::melt(id.vars = c(1:9, 11, 13), value.name = "Mass") %>%
+                                         ## Rename tarsus and wing to remove name of chick
+                                         dplyr::rename_at(.vars = vars(contains("tarsus")), .funs = ~{"Tarsus"}) %>%
+                                         dplyr::rename_at(.vars = vars(contains("wing")), .funs = ~{"WingLength"}) %>%
+                                         ## Add chick age based on the variable name
+                                         dplyr::mutate(ChickAge = as.numeric(stringr::str_sub(variable, 9, -1)),
+                                                       ## Capture date is hatchdate + chick age
+                                                       ## If no hatch date is known then use laying date + clutch size + incubation + chick age
+                                                       ## We assume incubation of 15 days, but need to check with Milos.
+                                                       ## If there is no hatch date OR laying date then just use NA
+                                                       CaptureDate = purrr::pmap(.l = list(LayingDate, ClutchSize, HatchDate, ChickAge),
+                                                                                 .f = ~{
 
-                                                                pb$print()$tick()
+                                                                                   pb$print()$tick()
 
-                                                                if(!is.na(..3)){
+                                                                                   if(!is.na(..3)){
 
-                                                                  return(..3 + lubridate::days(..4))
+                                                                                     return(..3 + lubridate::days(..4))
 
-                                                                } else if(!is.na(..1)) {
+                                                                                   } else if(!is.na(..1)) {
 
-                                                                  return(..1 + lubridate::days(..2 + 15 + ..4))
+                                                                                     return(..1 + lubridate::days(..2 + 15 + ..4))
 
-                                                                } else {
+                                                                                   } else {
 
-                                                                  return(NA)
+                                                                                     return(NA)
 
-                                                                }
+                                                                                   }
 
-                                                              }),
-                                    CaptureTime = NA, CapturePopID = "VEL", CapturePlot = Plot,
-                                    ## All chick records were 6 or 13 days, so all are listed as EURING age 1
-                                    ReleasePopID = "VEL", ReleasePlot = Plot, Age_observed = 1, Age_calculated = NA,
-                                    #Convert tarsus to Svennson's alternative
-                                    Tarsus = convert_tarsus(Tarsus, method = "Oxford")) %>%
-                      tidyr::unnest(CaptureDate) %>%
-                      dplyr::select(IndvID, Species, BreedingSeason, LocationID, CaptureDate, CaptureTime, CapturePopID, CapturePlot,
-                                    ReleasePopID, ReleasePlot, Mass, Tarsus, WingLength, Age_observed,
-                                    Age_calculated, ChickAge, BroodID)
+                                                                                 }),
+                                                       CaptureTime = NA, CapturePopID = "VEL", CapturePlot = Plot,
+                                                       ## All chick records were 6 or 13 days, so all are listed as EURING age 1
+                                                       ReleasePopID = "VEL", ReleasePlot = Plot, Age_observed = 1, Age_calculated = NA,
+                                                       #Convert tarsus to Svennson's alternative
+                                                       Tarsus = convert_tarsus(Tarsus, method = "Oxford")) %>%
+                                         tidyr::unnest(CaptureDate) %>%
+                                         dplyr::select(IndvID, Species, BreedingSeason, LocationID, CaptureDate, CaptureTime, CapturePopID, CapturePlot,
+                                                       ReleasePopID, ReleasePlot, Mass, Tarsus, WingLength, Age_observed,
+                                                       Age_calculated, ChickAge, BroodID)
 
-                    ## When the chick is 6 days old, then tarsus and wing length are not used
-                    ## They were only collected at 13 days old
-                    output[output$ChickAge == 6, ]$Tarsus <- NA
-                    output[output$ChickAge == 6, ]$WingLength <- NA
+                                       ## When the chick is 6 days old, then tarsus and wing length are not used
+                                       ## They were only collected at 13 days old
+                                       output[output$ChickAge == 6, ]$Tarsus <- NA
+                                       output[output$ChickAge == 6, ]$WingLength <- NA
 
-                    return(output)
+                                       return(output)
 
-                  })) %>%
+                                     })) %>%
     tidyr::unnest(data) %>%
     dplyr::mutate(ObserverID = NA,
                   OriginalTarsusMethod = dplyr::case_when(!is.na(.$Tarsus) ~ "Oxford")) %>%
@@ -486,20 +486,20 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
                                          .f = ~{if(..1 == "F") ..2 else ..3}),
                   ##Determine age of males based on 'age' column
                   Age_observed = purrr::pmap_dbl(.l = list(Sex, age),
-                                             .f = ~{
+                                                 .f = ~{
 
-                                               if(..1 == "M"){
+                                                   if(..1 == "M"){
 
-                                                 return(dplyr::case_when(..2 == "old" ~ 6,
-                                                                  ..2 == "young" ~ 5))
+                                                     return(dplyr::case_when(..2 == "old" ~ 6,
+                                                                             ..2 == "young" ~ 5))
 
-                                               } else {
+                                                   } else {
 
-                                                 return(NA)
+                                                     return(NA)
 
-                                               }
+                                                   }
 
-                                             }),
+                                                 }),
                   CaptureDate = purrr::pmap(.l = list(Sex, date_of_capture_52, date_of_capture_57),
                                             .f = ~{
 
@@ -513,7 +513,7 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
 
                                               }
 
-                                              }),
+                                            }),
                   CapturePopID = "VEL", ReleasePopID = "VEL",
                   CapturePlot = Plot, ReleasePlot = Plot,
                   ObserverID = NA) %>%

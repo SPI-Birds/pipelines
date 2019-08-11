@@ -71,41 +71,41 @@ format_BAN <- function(db = utils::choose.dir(),
   message("Importing primary data...")
 
   all_data <- suppressWarnings(readxl::read_excel(paste0(db, "/MasterBreedingDataAllYears password protected.xlsx")) %>%
-    janitor::clean_names() %>%
-    #Convert column names to meet standard format
-    dplyr::mutate(BreedingSeason = year,
-                  PopID = "BAN", Plot = site,
-                  LocationID = paste(Plot, stringr::str_pad(string = box_number, width = 3, pad = "0"), sep = "_"),
-                  Species = dplyr::case_when(grepl(pattern = "GRETI", x = .$species) ~ Species_codes[Species_codes$SpeciesID == 14640, ]$Code,
-                                             grepl(pattern = "BLUTI", x = .$species) ~ Species_codes[Species_codes$SpeciesID == 14620, ]$Code,
-                                             grepl(pattern = "COATI", x = .$species) ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code),
-                  ClutchType_observed = dplyr::case_when(grepl(pattern = 1, x = .$nest_attempt) ~ "first",
-                                                         grepl(pattern = 2, x = .$nest_attempt) ~ "second"),
-                  March1Date = as.Date(glue::glue('{Year}-03-01',
-                                                  Year = BreedingSeason),
-                                       format = "%Y-%m-%d"),
-                  LayingDate = March1Date + as.numeric(gsub(pattern = "\\?|\\+",
-                                                 replacement = "",
-                                                 x = first_egg_lay_date)),
-                  BroodID = paste(BreedingSeason, LocationID,
-                                  lubridate::day(LayingDate), lubridate::month(LayingDate), sep = "_"),
-                  AvgEggMass = as.numeric(egg_weight), NumberEggs = as.numeric(number_eggs_weighed),
-                  ClutchSize = as.numeric(final_clutch_size),
-                  StartIncubation = LayingDate + ClutchSize,
-                  EggWeighDate = (March1Date + as.numeric(weigh_date)),
-                  EggWasIncubated = (March1Date + as.numeric(weigh_date)) <= (LayingDate + ClutchSize),
-                  HatchDate = March1Date + as.numeric(gsub(pattern = "\\?",
-                                                           replacement = "",
-                                                           x = actual_hatch_date)),
-                  MaleCaptureDate = March1Date + as.numeric(actual_male_trapping_date),
-                  FemaleCaptureDate = March1Date + as.numeric(actual_female_trapping_date),
-                  MaleID = male_id, FemaleID = female_id,
-                  ChickCaptureDate = March1Date + as.numeric(actual_pullus_ringing_date),
-                  NumberFledged = as.numeric(gsub(pattern = "\\?",
-                                                  replacement = "",
-                                                  number_fledged))) %>%
-      #Filter only the species of interest
-      dplyr::filter(Species %in% species_filter))
+                                 janitor::clean_names() %>%
+                                 #Convert column names to meet standard format
+                                 dplyr::mutate(BreedingSeason = year,
+                                               PopID = "BAN", Plot = site,
+                                               LocationID = paste(Plot, stringr::str_pad(string = box_number, width = 3, pad = "0"), sep = "_"),
+                                               Species = dplyr::case_when(grepl(pattern = "GRETI", x = .$species) ~ Species_codes[Species_codes$SpeciesID == 14640, ]$Code,
+                                                                          grepl(pattern = "BLUTI", x = .$species) ~ Species_codes[Species_codes$SpeciesID == 14620, ]$Code,
+                                                                          grepl(pattern = "COATI", x = .$species) ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code),
+                                               ClutchType_observed = dplyr::case_when(grepl(pattern = 1, x = .$nest_attempt) ~ "first",
+                                                                                      grepl(pattern = 2, x = .$nest_attempt) ~ "second"),
+                                               March1Date = as.Date(glue::glue('{Year}-03-01',
+                                                                               Year = BreedingSeason),
+                                                                    format = "%Y-%m-%d"),
+                                               LayingDate = March1Date + as.numeric(gsub(pattern = "\\?|\\+",
+                                                                                         replacement = "",
+                                                                                         x = first_egg_lay_date)),
+                                               BroodID = paste(BreedingSeason, LocationID,
+                                                               lubridate::day(LayingDate), lubridate::month(LayingDate), sep = "_"),
+                                               AvgEggMass = as.numeric(egg_weight), NumberEggs = as.numeric(number_eggs_weighed),
+                                               ClutchSize = as.numeric(final_clutch_size),
+                                               StartIncubation = LayingDate + ClutchSize,
+                                               EggWeighDate = (March1Date + as.numeric(weigh_date)),
+                                               EggWasIncubated = (March1Date + as.numeric(weigh_date)) <= (LayingDate + ClutchSize),
+                                               HatchDate = March1Date + as.numeric(gsub(pattern = "\\?",
+                                                                                        replacement = "",
+                                                                                        x = actual_hatch_date)),
+                                               MaleCaptureDate = March1Date + as.numeric(actual_male_trapping_date),
+                                               FemaleCaptureDate = March1Date + as.numeric(actual_female_trapping_date),
+                                               MaleID = male_id, FemaleID = female_id,
+                                               ChickCaptureDate = March1Date + as.numeric(actual_pullus_ringing_date),
+                                               NumberFledged = as.numeric(gsub(pattern = "\\?",
+                                                                               replacement = "",
+                                                                               number_fledged))) %>%
+                                 #Filter only the species of interest
+                                 dplyr::filter(Species %in% species_filter))
 
   ##############
   # BROOD DATA #

@@ -193,8 +193,8 @@ format_NIOO <- function(db = utils::choose.dir(),
                                          .f = ~ifelse(is.na(.y) & !is.na(.x), .x, .y)),
 
            BroodIDFledged = purrr::map2_chr(.x = BroodID, .y = GeneticBroodID,
-                                           #If there is a genetic broodID listed by no regular brood ID assume these are the same.
-                                           .f = ~ifelse(!is.na(.y) & is.na(.x), .y, .x))) %>%
+                                            #If there is a genetic broodID listed by no regular brood ID assume these are the same.
+                                            .f = ~ifelse(!is.na(.y) & is.na(.x), .y, .x))) %>%
     dplyr::select(IndvID, RingNumber, Species, PopID, BroodIDLaid, BroodIDFledged, RingSeason, RingAge, RingAgeObsv, Sex) %>%
     #Convert RingAge into either chick or adult
     dplyr::mutate(RingAge = dplyr::case_when(.$RingAge %in% c(1, 2, 3) ~ "chick",
@@ -227,8 +227,8 @@ format_NIOO <- function(db = utils::choose.dir(),
     # -Weight
     # -Tarsus
     # -Wing_Length
-    dplyr::select(CaptureID, CaptureDate, CaptureTime, IndvID, SpeciesID, CaptureLocation,
-                  ReleaseLocation, Observer, Weight, Tarsus, WingLength = Wing_Length) %>%
+  dplyr::select(CaptureID, CaptureDate, CaptureTime, IndvID, SpeciesID, CaptureLocation,
+                ReleaseLocation, Observer, Weight, Tarsus, WingLength = Wing_Length) %>%
     dplyr::collect() %>%
     #Join in information on when the individual was first ringed (left join from the IndvData)
     #This is used to determine the age of each individual (EUring) at the time of capture
@@ -251,13 +251,13 @@ format_NIOO <- function(db = utils::choose.dir(),
     #                                                      #If the age at ringing was unknown make no age estimate
     #                                                      if(is.na(.x) | .x == 0){
     #
-    #                                                        return(NA)
-    #
-    #                                                      } else {
-    #
-    #                                                        #If the individual was in it's first year when ringed
-    #                                                        if(.x < 4){
-    #
+  #                                                        return(NA)
+  #
+  #                                                      } else {
+  #
+  #                                                        #If the individual was in it's first year when ringed
+  #                                                        if(.x < 4){
+  #
     #                                                          #Use categories where age is certain (5, 7, etc.)
     #                                                          return(3 + 2*(.y))
     #

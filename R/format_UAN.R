@@ -324,7 +324,7 @@ create_capture_UAN <- function(data, species_filter){
   Capture_data <- data %>%
     #Adjust species and PopID
     dplyr::mutate(CapturePopID = dplyr::case_when(.$CapturePopID == "FR" ~ "BOS",
-                                           .$CapturePopID == "PB" ~ "PEE"),
+                                                  .$CapturePopID == "PB" ~ "PEE"),
                   Species = dplyr::case_when(.$Species == "pm" ~ Species_codes[which(Species_codes$SpeciesID == 14640), ]$Code,
                                              .$Species == "pc" ~ Species_codes[which(Species_codes$SpeciesID == 14620), ]$Code)) %>%
     #Filter by species
@@ -379,9 +379,9 @@ create_capture_UAN <- function(data, species_filter){
                                            #must be able to fly. But these can be anything from fledglings
                                            #in first calendar year +
                                            #Comment this out because it's really age calculated rather than observed
-                                         # } else if (.y %in% c("FU", "GE", "MN", "ON", "NO", "SK", "SL", "LS")){
-                                         #
-                                         #   return(tibble::tibble(Age_observed = 2, ChickAge = NA))
+                                           # } else if (.y %in% c("FU", "GE", "MN", "ON", "NO", "SK", "SL", "LS")){
+                                           #
+                                           #   return(tibble::tibble(Age_observed = 2, ChickAge = NA))
 
                                          } else {
 
@@ -472,9 +472,9 @@ create_individual_UAN <- function(data, CAPTURE_info, species_filter){
                                          .$Sex %in% c(2, 4) ~ "F")) %>%
     dplyr::filter(!is.na(Species) & Species %in% species_filter) %>%
     dplyr::mutate(BroodIDFledged = BroodIDLaid,
-           RingSeason = FirstYear,
-           RingAge = dplyr::case_when(.$FirstAge > 5 | .$FirstAge == 1 ~ "chick",
-                                      is.infinite(.$FirstAge) | .$FirstAge <= 5 ~ "adult")) %>%
+                  RingSeason = FirstYear,
+                  RingAge = dplyr::case_when(.$FirstAge > 5 | .$FirstAge == 1 ~ "chick",
+                                             is.infinite(.$FirstAge) | .$FirstAge <= 5 ~ "adult")) %>%
     select(IndvID, Species, PopID, BroodIDLaid, BroodIDFledged, RingSeason, RingAge, Sex)
 
   return(Indv_data)

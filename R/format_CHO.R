@@ -182,9 +182,9 @@ create_capture_CHO <- function(data){
   #There is only one population/plot
   Capture_data <- data %>%
     dplyr::mutate(CapturePopID = PopID, ReleasePopID = PopID,
-           CapturePlot = Plot, ReleasePlot = Plot,
-           ischick = dplyr::case_when(.$Age == "C" ~ 1,
-                                      .$Age != "C" ~ 4)) %>%
+                  CapturePlot = Plot, ReleasePlot = Plot,
+                  ischick = dplyr::case_when(.$Age == "C" ~ 1,
+                                             .$Age != "C" ~ 4)) %>%
     calc_age(ID = IndvID, Age = ischick, Date = CaptureDate, Year = BreedingSeason) %>%
     dplyr::ungroup() %>%
     #Also include observed age (not calculated)
@@ -276,23 +276,23 @@ create_brood_CHO <- function(data){
     #Add in population/plot info
     #Convert LayingDate and HatchDate to date objects
     dplyr::mutate(FledgeDate = NA,
-           HatchDate = lubridate::ymd(paste0(Year, "-01-01")) + as.numeric(HatchingDateJulian),
-           LayingDate = lubridate::ymd(paste0(Year, "-01-01")) + as.numeric(LayingDateJulian),
-           LayingDateError = NA, ClutchSizeError = NA, HatchDateError = NA,
-           BroodSizeError = NA, FledgeDateError = NA, NumberFledgedError = NA,
-           AvgEggMass = NA, NumberEggs = NA, NumberFledged = NoChicksOlder14D) %>%
+                  HatchDate = lubridate::ymd(paste0(Year, "-01-01")) + as.numeric(HatchingDateJulian),
+                  LayingDate = lubridate::ymd(paste0(Year, "-01-01")) + as.numeric(LayingDateJulian),
+                  LayingDateError = NA, ClutchSizeError = NA, HatchDateError = NA,
+                  BroodSizeError = NA, FledgeDateError = NA, NumberFledgedError = NA,
+                  AvgEggMass = NA, NumberEggs = NA, NumberFledged = NoChicksOlder14D) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
     #Select relevant columns and rename
     dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot,
-           LocationID, FemaleID, MaleID,
-           ClutchType_observed, ClutchType_calculated,
-           LayingDate, LayingDateError,
-           ClutchSize = FinalClutchSize, ClutchSizeError,
-           HatchDate, HatchDateError,
-           BroodSize = NoChicksHatched, BroodSizeError,
-           FledgeDate, FledgeDateError,
-           NumberFledged, NumberFledgedError,
-           AvgEggMass, NumberEggs) %>%
+                  LocationID, FemaleID, MaleID,
+                  ClutchType_observed, ClutchType_calculated,
+                  LayingDate, LayingDateError,
+                  ClutchSize = FinalClutchSize, ClutchSizeError,
+                  HatchDate, HatchDateError,
+                  BroodSize = NoChicksHatched, BroodSizeError,
+                  FledgeDate, FledgeDateError,
+                  NumberFledged, NumberFledgedError,
+                  AvgEggMass, NumberEggs) %>%
     left_join(avg_measure, by = "BroodID") %>%
     #Convert everything back to the right format after making everything character
     #for the reshape
