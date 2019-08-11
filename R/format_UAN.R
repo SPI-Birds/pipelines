@@ -84,11 +84,48 @@ format_UAN <- function(db = utils::choose.dir(),
 
   all_files <- list.files(path = db, pattern = ".xlsx", full.names = TRUE)
 
-  BOX_info <- readxl::read_excel(all_files[grepl("BOX", all_files)])
-  BROOD_info <- readxl::read_excel(all_files[grepl("BR", all_files)])
-  INDV_info <- readxl::read_excel(all_files[grepl("IND", all_files)])
-  PLOT_info <- readxl::read_excel(all_files[grepl("PL", all_files)])
-  CAPTURE_info <- readxl::read_excel(all_files[grepl("VG", all_files)])
+  BOX_info <- readxl::read_excel(all_files[grepl("BOX", all_files)],
+                                 col_types = c("text", "numeric", "numeric",
+                                               "numeric", "numeric", "text",
+                                               "text", "text", "text", "numeric",
+                                               "numeric"))
+  BROOD_info <- readxl::read_excel(all_files[grepl("BR", all_files)],
+                                   col_types = c("text", "text", "text",
+                                                 "text", "list", "text",
+                                                 "numeric", "numeric",
+                                                 "numeric", "numeric",
+                                                 "numeric", "numeric",
+                                                 "text", "text", "text",
+                                                 "text", "list", "numeric", "text",
+                                                 "numeric", "numeric", "numeric",
+                                                 "numeric", "text", "text", "text",
+                                                 "text", "text", "text", "text", "text",
+                                                 "numeric", "numeric", "text", "numeric",
+                                                 "text")) %>%
+    tidyr::unnest()
+  INDV_info <- readxl::read_excel(all_files[grepl("IND", all_files)],
+                                  col_types = c("text", "text", "text",
+                                                "numeric", "text", "text",
+                                                "text", "list", "text",
+                                                "numeric", rep("text", 3),
+                                                "list", "text", "list", "text",
+                                                "list", "text", "list", "text",
+                                                rep("numeric", 8), "text")) %>%
+    tidyr::unnest()
+  PLOT_info <- readxl::read_excel(all_files[grepl("PL", all_files)],
+                                  col_types = c(rep("text", 4),
+                                                rep("numeric", 6),
+                                                rep("text", 3)))
+  CAPTURE_info <- readxl::read_excel(all_files[grepl("VG", all_files)],
+                                     col_types = c(rep("text", 10), "list",
+                                                   "numeric", "text",
+                                                   rep("text", 3),
+                                                   rep("numeric", 6),
+                                                   rep("text", 6),
+                                                   rep("numeric", 3),
+                                                   "text", "numeric",
+                                                   rep("text", 3))) %>%
+    tidyr::unnest()
 
   ## Rename columns
   BROOD_info <- dplyr::rename(BROOD_info, BroodID = NN, Species = SOORT, Plot = GB, NestboxNumber = PL,
