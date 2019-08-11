@@ -297,9 +297,10 @@ create_brood_CHO <- function(data){
     #Convert everything back to the right format after making everything character
     #for the reshape
     dplyr::mutate(ExperimentID = NA,
-                  BreedingSeason = as.numeric(BreedingSeason),
-                  ClutchSize = as.numeric(ClutchSize),
-                  NumberFledged = as.numeric(NumberFledged))
+                  BreedingSeason = as.integer(BreedingSeason),
+                  ClutchSize = as.integer(ClutchSize),
+                  BroodSize = as.integer(BroodSize),
+                  NumberFledged = as.integer(NumberFledged))
 
   return(Brood_data)
 
