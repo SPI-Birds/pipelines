@@ -493,7 +493,8 @@ create_individual_UAN <- function(data, CAPTURE_info, species_filter){
     dplyr::filter(!is.na(CapturePopID)) %>%
     dplyr::group_by(IndvID) %>%
     dplyr::summarise(PopID = first(CapturePopID),
-                     FirstAge = min(Age_observed, na.rm = T),
+                     FirstAge = tryCatch(min(Age_observed, na.rm = T),
+                                         warning = function(...) return(NA)),
                      FirstYear = min(lubridate::year(CaptureDate)))
 
   #There were no translocations, so BroodIDLaid/Fledged are the same
