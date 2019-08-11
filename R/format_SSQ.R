@@ -219,8 +219,8 @@ format_SSQ <- function(db = utils::choose.dir(),
            AvgChickMass, NrChickMass,
            AvgTarsus, NrChickTarsus, ExperimentID) %>%
     #Change laying date and hatch date to date objects
-    dplyr::mutate(LayingDate = as.Date(paste0("01/03/", BreedingSeason)) + LayingDate - 1,
-                  HatchDate = as.Date(paste0("01/03/", BreedingSeason)) + HatchDate - 1)
+    dplyr::mutate(LayingDate = as.Date(paste0("01/03/", BreedingSeason), format = "%d/%m/%Y") + LayingDate - 1,
+                  HatchDate = as.Date(paste0("01/03/", BreedingSeason), format = "%d/%m/%Y") + HatchDate - 1)
 
   ################
   # CAPTURE DATA #
