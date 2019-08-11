@@ -449,7 +449,7 @@ create_individual_UAN <- function(data, CAPTURE_info, species_filter){
     dplyr::arrange(IndvID, CaptureDate, CaptureTime) %>%
     dplyr::group_by(IndvID) %>%
     dplyr::filter(!is.na(BroodID) & Age_observed == 1) %>%
-    dplyr::summarise(BroodIDLaid = first(BroodID))
+    dplyr::summarise(BroodIDLaid = as.character(first(BroodID)))
 
   #Do this PopID, capture age and first year as well
   Indv_Pop <- CAPTURE_info %>%
