@@ -366,14 +366,14 @@ format_SSQ <- function(db = utils::choose.dir(),
 
   Location_data <- all_data %>%
     dplyr::group_by(LocationID) %>%
-    dplyr::summarise(NestBoxType = NA,
+    dplyr::summarise(LocationType = NA,
                      PopID = "SSQ",
-                     StartYear = 1993, EndYear = NA) %>%
+                     StartSeason = 1993, EndSeason = NA) %>%
     dplyr::mutate(NestboxID = LocationID) %>%
     #Join in first latitude and longitude data recorded for this box.
     #It's not clear why these are ever different, need to ask.
     dplyr::left_join(all_data %>% group_by(LocationID) %>% slice(1) %>% select(LocationID, Latitude, Longitude), by = "LocationID") %>%
-    dplyr::select(LocationID, NestboxID, NestBoxType, PopID, Latitude, Longitude, StartYear, EndYear)
+    dplyr::select(LocationID, NestboxID, LocationType, PopID, Latitude, Longitude, StartSeason, EndSeason)
 
   if(debug){
 
