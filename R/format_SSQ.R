@@ -84,12 +84,12 @@ format_SSQ <- function(db = utils::choose.dir(),
     #- BroodID (Year_NestID)
     #- ClutchType_observed
     #- FledgeDate
-    dplyr::mutate(PopID = "SIC",
+    dplyr::mutate(PopID = "SSQ",
                   BroodID = paste(BreedingSeason, LocationID, LayingDate, sep = "_"),
                   ClutchType_observed = dplyr::case_when(.$Class == 1 ~ "first",
                                                          .$Class == 3 ~ "second",
                                                          .$Class == 2 ~ "replacement")) %>%
-    dplyr::mutate(Species = Code, FledgeDate = NA, AvgEggMass = NA, NrEgg = NA, AvgChickMass = NA, NrChickMass = NA, AvgTarsus = NA, NrChickTarsus = NA,
+    dplyr::mutate(Species = Code, FledgeDate = NA, AvgEggMass = NA, NumberEgg = NA, AvgChickMass = NA, NumberChicksMass = NA, AvgTarsus = NA, NumberChicksTarsus = NA,
                   LayingDateError = NA, ClutchSizeError = NA, HatchDateError = NA, BroodSizeError = NA,
                   FledgeDateError = NA, NumberFledgedError = NA, ExperimentID = NA)
 
@@ -99,7 +99,7 @@ format_SSQ <- function(db = utils::choose.dir(),
 
   message("Compiling brood information...")
 
-  #Determine ClutchType_calc
+  #Determine CluchType_calculated
   clutchtype <- dplyr::progress_estimated(n = nrow(all_data))
 
   Brood_data <- all_data %>%
@@ -115,7 +115,7 @@ format_SSQ <- function(db = utils::choose.dir(),
            total_fledge_na = calc_cumfledge(x = NumberFledged, na.rm = F),
            row = 1:n()) %>%
     ungroup() %>%
-    mutate(ClutchType_calc = purrr::pmap_chr(.l = list(rows = .$row,
+    mutate(CluchType_calculated = purrr::pmap_chr(.l = list(rows = .$row,
                                                        femID = .$FemaleID,
                                                        cutoff_date = .$cutoff,
                                                        nr_fledge_before = .$total_fledge,
@@ -208,7 +208,7 @@ format_SSQ <- function(db = utils::choose.dir(),
                                              })) %>%
     dplyr::select(BreedingSeason, Species, PopID, Plot,
            LocationID, BroodID, FemaleID, MaleID,
-           ClutchType_observed, ClutchType_calc,
+           ClutchType_observed, CluchType_calculated,
            LayingDate, LayingDateError,
            ClutchSize, ClutchSizeError,
            HatchDate, HatchDateError,
