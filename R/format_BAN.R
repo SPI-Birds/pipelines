@@ -287,14 +287,15 @@ create_capture_BAN <- function(data) {
                                             })),
                   Age_observed = NA, CaptureTime = NA, Mass = NA, Tarsus = NA,
                   WingLength = NA, ChickAge = NA, CapturePopID = "BAN",
-                  ReleasePopID = "BAN", ObserverID = NA, OriginalTarsusMethod = "Alternative") %>%
+                  ReleasePopID = "BAN", ObserverID = NA, OriginalTarsusMethod = "Alternative",
+                  CapturePlot = Plot, ReleasePlot = Plot) %>%
     calc_age(ID = IndvID, Age = Age_observed,
              Date = CaptureDate, Year = BreedingSeason) %>%
     dplyr::select(IndvID, Species, BreedingSeason,
                   CaptureDate, CaptureTime,
                   ObserverID, LocationID,
-                  CapturePopID, CapturePlot = Plot,
-                  ReleasePopID, ReleasePlot = Plot,
+                  CapturePopID, CapturePlot,
+                  ReleasePopID, ReleasePlot,
                   Mass, Tarsus, OriginalTarsusMethod,
                   WingLength, Age_observed, Age_calculated,
                   ChickAge, Sex) %>%
