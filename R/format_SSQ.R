@@ -52,6 +52,12 @@ format_SSQ <- function(db = utils::choose.dir(),
 
   db <- paste0(db, "\\Data Sicily CusimanoC_MassaB.xlsx")
 
+  if(is.null(species)){
+
+    species <- Species_codes$Code
+
+  }
+
   #Record start time to provide processing time to the user.
   start_time <- Sys.time()
 
@@ -69,9 +75,10 @@ format_SSQ <- function(db = utils::choose.dir(),
                   Plot = HabitatOfRinging,
                   Latitude = YCoord, Longitude = XCoord) %>%
     #Add species codes
-    dplyr::left_join(filter(Species_codes, SpeciesID %in% c("14640", "14620")) %>%
-                mutate(Species = c("Parus major", "Cyanistes caeruleus")) %>%
-                select(Species, Code), by = "Species") %>%
+    dplyr::mutate(Species = dplyr::case_when(.$Species == "Parus majoe" ~ Species_codes[which(Species_codes$SpeciesID == 14640), ]$Code,
+                                             .$Species == "Cyanistes caeruleus" ~ Species_codes[which(Species_codes$SpeciesID == 14620), ]$Code)) %>%
+    #Filter species
+    dplyr::filter(Species %in% species) %>%
     #Add other missing data:
     #- PopID
     #- BroodID (Year_NestID)
