@@ -602,7 +602,9 @@ create_individual_VEL     <- function(Capture_data){
     dplyr::summarise(Species = unique(stats::na.omit(Species)),
                      PopID = "VEL",
                      RingSeason = first(BreedingSeason),
-                     RingAge = first(Age_obsv),
+                     RingAge = dplyr::case_when(first(Age_observed) == 1 ~ "chick",
+                                                first(Age_observed) != 1 ~ "adult",
+                                                is.na(first(Age_observed)) ~ "adult"),
                      Sex = purrr::map_chr(.x = list(unique(Sex)),
                                           .f = ~{
 
