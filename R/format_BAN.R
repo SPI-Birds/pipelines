@@ -59,6 +59,7 @@ format_BAN <- function(db = utils::choose.dir(),
   force(db)
 
   #Assign species for filtering
+  #If no species are specified, all species are included
   if(is.null(species)){
 
     species_filter <- Species_codes$Code
@@ -75,6 +76,8 @@ format_BAN <- function(db = utils::choose.dir(),
 
   all_data <- suppressWarnings(readxl::read_excel(paste0(db, "/MasterBreedingDataAllYears password protected.xlsx")) %>%
                                  janitor::clean_names() %>%
+                                 dplyr::mutate_all(.funs = toupper) %>%
+                                 dplyr::mutate_all(.funs = na_if, y = "NA") %>%
                                  #Convert column names to meet standard format
                                  dplyr::mutate(BreedingSeason = year,
                                                PopID = "BAN", Plot = site,
