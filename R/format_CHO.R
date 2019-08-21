@@ -237,15 +237,17 @@ create_brood_CHO <- function(data){
     #e.g. laying date, clutch size etc.
     #I've checked manually and the first value is always correct in each brood
     reshape2::melt(id = c("BroodID", "Species", "Year", "Site", "Box", "FemaleID", "MaleID")) %>%
-    reshape2::dcast(BroodID + Species + Year + Site + Box + FemaleID + MaleID ~ ..., fun.aggregate = first) %>%
+    reshape2::dcast(BroodID + Species + Year + Site + Box + FemaleID + MaleID ~ ...,
+                    fun.aggregate = first) %>%
     #Add in population/plot info
     #Convert LayingDate and HatchDate to date objects
     dplyr::mutate(FledgeDate = NA,
                   HatchDate = lubridate::ymd(paste0(Year, "-01-01")) + as.numeric(HatchingDateJulian),
                   LayingDate = lubridate::ymd(paste0(Year, "-01-01")) + as.numeric(LayingDateJulian),
-                  LayingDateError = NA, ClutchSizeError = NA, HatchDateError = NA,
-                  BroodSizeError = NA, FledgeDateError = NA, NumberFledgedError = NA,
-                  AvgEggMass = NA, NumberEggs = NA, NumberFledged = NoChicksOlder14D) %>%
+                  LayingDateError = NA_integer_, ClutchSizeError = NA_integer_,
+                  HatchDateError = NA_integer_, BroodSizeError = NA_integer_,
+                  FledgeDateError = NA_integer_, NumberFledgedError = NA_integer_,
+                  AvgEggMass = NA_real_, NumberEggs = NA_integer_, NumberFledged = NoChicksOlder14D) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
     #Select relevant columns and rename
     dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot,
@@ -258,10 +260,10 @@ create_brood_CHO <- function(data){
                   FledgeDate, FledgeDateError,
                   NumberFledged, NumberFledgedError,
                   AvgEggMass, NumberEggs) %>%
-    left_join(avg_measure, by = "BroodID") %>%
+    dplyr::left_join(avg_measure, by = "BroodID") %>%
     #Convert everything back to the right format after making everything character
     #for the reshape
-    dplyr::mutate(ExperimentID = NA,
+    dplyr::mutate(ExperimentID = NA_character_,
                   BreedingSeason = as.integer(BreedingSeason),
                   ClutchSize = as.integer(ClutchSize),
                   BroodSize = as.integer(BroodSize),
@@ -360,9 +362,8 @@ create_individual_CHO <- function(data){
                                          ifelse(all(c("F", "M") %in% Sex), "C", NA_character_))))) %>%
     dplyr::mutate(#Only assign a brood ID if they were first caught as a chick
       #Otherwise, the broodID will be their first clutch as a parent
-      BroodIDLaid = purrr::pmap_chr(.l = list(FirstBrood = .$FirstBrood,
-                                              FirstAge = .$FirstAge),
-                                    .f = function(FirstBrood, FirstAge){
+      BroodIDLaid = purrr::pmap_chr(.l = list(FirstBrood = .$FirstBrood, FirstAge = .$FirstAge),
+                                    function(FirstBrood, FirstAge){
 
                                       if(is.na(FirstAge) || FirstAge != "C"){
 
