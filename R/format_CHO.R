@@ -170,45 +170,13 @@ format_CHO <- function(db = utils::choose.dir(),
 
 }
 
-####################################################################################################
-
-create_capture_CHO <- function(data){
-
-  #Take all data and add population/plot info
-  #There is only one population/plot
-  Capture_data <- data %>%
-    dplyr::mutate(CapturePopID = PopID, ReleasePopID = PopID,
-                  CapturePlot = Plot, ReleasePlot = Plot,
-                  ischick = dplyr::case_when(.$Age == "C" ~ 1,
-                                             .$Age != "C" ~ 4)) %>%
-    calc_age(ID = IndvID, Age = ischick, Date = CaptureDate, Year = BreedingSeason) %>%
-    dplyr::ungroup() %>%
-    #Also include observed age (not calculated)
-    dplyr::mutate(Age_observed = dplyr::case_when(.$Age == "C" ~ 1,
-                                                  .$Age == "first year" ~ 5,
-                                                  .$Age == "adult" ~ 6),
-                  ObserverID = NA, OriginalTarsusMethod = "Alternative") %>%
-    #Select out only those columns we need.
-    dplyr::select(IndvID, Species, BreedingSeason,
-                  CaptureDate, CaptureTime = Time,
-                  ObserverID, ObserverID, LocationID,
-                  CapturePopID, CapturePlot,
-                  ReleasePopID, ReleasePlot,
-                  Mass = Weight, Tarsus, OriginalTarsusMethod,
-                  WingLength = Wing, Age_observed, Age_calculated, ChickAge)
-
-  return(Capture_data)
-
-  #Satisfy RCMD Check
-  Species <- IndvID <- BreedingSeason <- LocationID <- Plot <- Sex <- Age_observed <- NULL
-  CaptureDate <- CaptureTime <- ObserverID <- CapturePopID <- ReleasePopID <- Mass <- Tarsus <- NULL
-  OriginalTarsusMethod <- WingLength <- Age_calculated <- ChickAge <- NULL
-  ischick <- Time <- NULL
-
-
-}
-
-####################################################################################################
+#' Create brood data table for Choupal, Portugal.
+#'
+#' Create brood data table in standard format for data from Choupal,
+#' Portugal.
+#' @param data Data frame. Primary data from Choupal.
+#'
+#' @return A data frame.
 
 create_brood_CHO <- function(data){
 
@@ -227,7 +195,8 @@ create_brood_CHO <- function(data){
     #Select only the Brood, Individual Id and their sex
     dplyr::select(BroodID, IndvID, Sex) %>%
     # "No ringed/no ring" becomes NA
-    dplyr::mutate(IndvID = purrr::map_chr(.x = IndvID, .f = ~ifelse(grepl(pattern = "ring", .x), NA, .x))) %>%
+    dplyr::mutate(IndvID = purrr::map_chr(.x = IndvID,
+                                          .f = ~ifelse(grepl(pattern = "ring", .x), NA, .x))) %>%
     #Reshape data so that we have a MaleID and FemaleID column
     #Rather than an individual row for each parent
     reshape2::melt(id = c("BroodID", "Sex")) %>%
@@ -250,8 +219,8 @@ create_brood_CHO <- function(data){
     dplyr::summarise(AvgChickMass = mean(Weight, na.rm = T),
                      NumberChicksMass = length(stats::na.omit(Weight)),
                      AvgTarsus = mean(Tarsus, na.rm = T),
-                     NumberChicksTarsus = length(stats::na.omit(Tarsus)),
-                     OriginalTarsusMethod = "Alternative")
+                     NumberChicksTarsus = length(stats::na.omit(Tarsus))) %>%
+    dplyr::mutate(OriginalTarsusMethod = dplyr::case_when(!is.na(.$AvgTarsus) ~ "Alternative"))
 
   Brood_data <- data %>%
     #Join in information on parents and clutch type
@@ -315,7 +284,59 @@ create_brood_CHO <- function(data){
 
 }
 
-####################################################################################################
+#' Create capture data table for Choupal, Portugal.
+#'
+#' Create capture data table in standard format for data from Choupal,
+#' Portugal.
+#' @param data Data frame. Primary data from Choupal.
+#'
+#' @return A data frame.
+
+create_capture_CHO <- function(data){
+
+  #Take all data and add population/plot info
+  #There is only one population/plot
+  Capture_data <- data %>%
+    dplyr::mutate(CapturePopID = PopID, ReleasePopID = PopID,
+                  CapturePlot = Plot, ReleasePlot = Plot,
+                  ischick = dplyr::case_when(.$Age == "C" ~ 1,
+                                             .$Age != "C" ~ 4)) %>%
+    calc_age(ID = IndvID, Age = ischick, Date = CaptureDate, Year = BreedingSeason) %>%
+    dplyr::ungroup() %>%
+    #Also include observed age (not calculated)
+    dplyr::mutate(Age_observed = dplyr::case_when(.$Age == "C" ~ 1,
+                                                  .$Age == "first year" ~ 5,
+                                                  .$Age == "adult" ~ 6),
+                  ObserverID = NA_character_,
+                  OriginalTarsusMethod = "Alternative") %>%
+    #Select out only those columns we need.
+    dplyr::select(IndvID, Species, BreedingSeason,
+                  CaptureDate, CaptureTime = Time,
+                  ObserverID, ObserverID, LocationID,
+                  CapturePopID, CapturePlot,
+                  ReleasePopID, ReleasePlot,
+                  Mass = Weight, Tarsus, OriginalTarsusMethod,
+                  WingLength = Wing, Age_observed, Age_calculated, ChickAge)
+
+  return(Capture_data)
+
+  #Satisfy RCMD Check
+  Species <- IndvID <- BreedingSeason <- LocationID <- Plot <- Sex <- Age_observed <- NULL
+  CaptureDate <- CaptureTime <- ObserverID <- CapturePopID <- ReleasePopID <- Mass <- Tarsus <- NULL
+  OriginalTarsusMethod <- WingLength <- Age_calculated <- ChickAge <- NULL
+  ischick <- Time <- NULL
+
+
+}
+
+#' Create individual data table for Choupal, Portugal.
+#'
+#' Create individual data table in standard format for data from Choupal,
+#' Portugal.
+#'
+#' @param Capture_data Data frame. Output from \code{\link{create_capture_BAN}}.
+#'
+#' @return A data frame.
 
 create_individual_CHO <- function(data){
 
