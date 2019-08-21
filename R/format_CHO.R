@@ -382,13 +382,20 @@ create_individual_CHO <- function(data){
       RingAge = dplyr::case_when(.$FirstAge == "C" ~ "chick",
                                  is.na(.$FirstAge) ~ "adult",
                                  .$FirstAge != "C" ~ "adult")) %>%
-    select(IndvID, Species, PopID, BroodIDLaid, BroodIDFledged, RingSeason = FirstYr, RingAge, Sex)
+    dplyr::select(IndvID, Species, PopID, BroodIDLaid, BroodIDFledged, RingSeason = FirstYr, RingAge, Sex) %>%
+    dplyr::ungroup()
 
   return(Individual_data)
 
 }
 
-####################################################################################################
+#' Create location data table for Choupal, Portugal.
+#'
+#' Create location data table in standard format for data from Choupal,
+#' Portugal.
+#' @param data Data frame. Primary data from Choupal.
+#'
+#' @return A data frame.
 
 create_location_CHO <- function(data){
 
