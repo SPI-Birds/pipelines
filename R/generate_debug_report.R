@@ -41,7 +41,7 @@ generate_debug_report <- function(path, Pop, Brood_data, Capture_data, Indv_data
   utils::write.csv(Brood_data_summary, file = paste0(path, "\\debug_report\\Brood_summary", Pop, ".csv"))
 
   grDevices::pdf(file = paste0(path, "\\debug_report\\Brood_summary.pdf"), width = 7, height = 6)
-  purrr::map(.x = Brood_plots, .f = print)
+  purrr::map(.x = Brood_plots, .f = ~{if(!is.null(.x)) print(.x)})
   grDevices::dev.off()
 
   ### DEBUG CAPTURE DATA ###
@@ -65,7 +65,7 @@ generate_debug_report <- function(path, Pop, Brood_data, Capture_data, Indv_data
   utils::write.csv(Capture_data_summary, file = paste0(path, "\\debug_report\\Capture_summary", Pop, ".csv"))
 
   grDevices::pdf(file = paste0(path, "\\debug_report\\Capture_summary.pdf"), width = 7, height = 6)
-  purrr::map(.x = Capture_plots, .f = print)
+  purrr::map(.x = Capture_plots, .f = ~{if(!is.null(.x)) print(.x)})
   grDevices::dev.off()
 
   ### DEBUG INDIVIDUAL DATA ###
@@ -90,7 +90,7 @@ generate_debug_report <- function(path, Pop, Brood_data, Capture_data, Indv_data
   utils::write.csv(Indv_data_summary, file = paste0(path, "\\debug_report\\Indv_summary", Pop, ".csv"))
 
   grDevices::pdf(file = paste0(path, "\\debug_report\\Indv_summary.pdf"), width = 7, height = 6)
-  purrr::map(.x = Indv_plots, .f = print)
+  purrr::map(.x = Indv_plots, .f = ~{if(!is.null(.x)) print(.x)})
   grDevices::dev.off()
 
 }
