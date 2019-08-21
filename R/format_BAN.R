@@ -99,7 +99,7 @@ format_BAN <- function(db = utils::choose.dir(),
                                                ClutchSize = as.numeric(final_clutch_size),
                                                StartIncubation = LayingDate + ClutchSize,
                                                EggWeighDate = (March1Date + as.numeric(weigh_date)),
-                                               EggWasIncubated = (March1Date + as.numeric(weigh_date)) <= (LayingDate + ClutchSize),
+                                               EggWasIncubated = (March1Date + as.numeric(weigh_date)) > (LayingDate + ClutchSize),
                                                HatchDate = March1Date + as.numeric(gsub(pattern = "\\?",
                                                                                         replacement = "",
                                                                                         x = actual_hatch_date)),
@@ -113,41 +113,31 @@ format_BAN <- function(db = utils::choose.dir(),
                                  #Filter only the species of interest
                                  dplyr::filter(Species %in% species_filter))
 
-  ##############
-  # BROOD DATA #
-  ##############
+  # BROOD DATA
 
   message("Compiling brood information...")
 
   Brood_data <- create_brood_BAN(all_data)
 
-  ################
-  # CAPTURE DATA #
-  ################
+  # CAPTURE DATA
 
   message("Compiling capture information...")
 
   Capture_data <- create_capture_BAN(all_data)
 
-  ###################
-  # INDIVIDUAL DATA #
-  ###################
+  # INDIVIDUAL DATA
 
   message("Compiling individual information...")
 
   Individual_data <- create_individual_BAN(Capture_data)
 
-  #################
-  # LOCATION DATA #
-  #################
+  # LOCATION DATA
 
   message("Compiling location information...")
 
   Location_data <- create_location_BAN(all_data)
 
-  #######################
-  # CREATE DEBUG OPTION #
-  #######################
+  # CREATE DEBUG REPORT
 
   if(debug){
 
@@ -157,16 +147,12 @@ format_BAN <- function(db = utils::choose.dir(),
 
   }
 
-  ###########################
-  # WRANGLE DATA FOR EXPORT #
-  ###########################
+  # WRANGLE DATA FOR EXPORT
 
   Capture_data <- Capture_data %>%
     dplyr::select(-Sex)
 
-  ###############
-  # EXPORT DATA #
-  ###############
+  # EXPORT DATA
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
@@ -201,13 +187,14 @@ format_BAN <- function(db = utils::choose.dir(),
 
 }
 
-#' Create brood data table for Bandon Valley.
+#' Create brood data table for Bandon Valley, Ireland.
 #'
-#' Create brood data table in standard format for data from Bandon Valley.
+#' Create brood data table in standard format for data from Bandon Valley,
+#' Ireland.
 #' @param data Data frame. Primary data from Bandon Valley.
 #'
 #' @return A data frame.
-#' @export
+
 create_brood_BAN   <- function(data) {
 
   Brood_data <- data %>%
@@ -220,12 +207,11 @@ create_brood_BAN   <- function(data) {
                   NumberFledgedError = NA,
                   AvgChickMass = NA, NumberChicksMass = NA,
                   AvgTarsus = NA, NumberChicksTarsus = NA,
-                  OriginalTarsusMethod = "Alternative",
+                  OriginalTarsusMethod = NA,
                   ExperimentID = NA) %>%
     ## Remove egg weights when the day of weighing is outside our given range
-    ## FOR NOW WE INCLUDE ALL EGG MASS DATES
     dplyr::mutate(AvgEggMass = purrr::map2_dbl(.x = AvgEggMass, .y = EggWasIncubated,
-                                               .f = ~{ifelse(!..2, NA, as.numeric(..1))})) %>%
+                                               .f = ~{ifelse(..2, NA, as.numeric(..1))})) %>%
     dplyr::select(BroodID, PopID, BreedingSeason,
                   Species, Plot, LocationID,
                   FemaleID, MaleID,
