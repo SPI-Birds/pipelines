@@ -310,7 +310,7 @@ create_capture_BAN <- function(data) {
 #' Create individual data table in standard format for data from Bandon Valley,
 #' Ireland.
 #'
-#' @param Capture_data Data frame. Primary data from Bandon Valley.
+#' @param Capture_data Data frame. Output from \code{\link{create_capture_BAN}}.
 #'
 #' @return A data frame.
 

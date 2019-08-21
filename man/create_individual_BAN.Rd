@@ -7,7 +7,7 @@
 create_individual_BAN(Capture_data)
 }
 \arguments{
-\item{Capture_data}{Data frame. Primary data from Bandon Valley.}
+\item{Capture_data}{Data frame. Output from \code{\link{create_capture_BAN}}.}
 }
 \value{
 A data frame.
