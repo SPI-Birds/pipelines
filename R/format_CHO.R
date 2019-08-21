@@ -68,12 +68,12 @@ format_CHO <- function(db = utils::choose.dir(),
     janitor::clean_names(case = "upper_camel") %T>%
     #There is one column with "º" that doesn't convert to ASCII with janitor
     #This appears the be a deeper issue than janitor (potentially in unicode translation)
-    #Therefore, we will to the translation manually
+    #Therefore, we will do the translation manually
     {colnames(.) <- iconv(colnames(.), "", "ASCII", sub = "")} %>%
     #Change species to "PARMARJ" because it's only PARMAJ in Choupal
     #Add PopID and plot
     dplyr::mutate(Species = "PARMAJ",
-           PopID = "CHO", Plot = NA) %>%
+           PopID = "CHO", Plot = NA_character_) %>%
     dplyr::filter(Species %in% species) %>%
     #BroodIDs are not unique (they are repeated each year)
     #We need to create unique IDs for each year
@@ -101,37 +101,31 @@ format_CHO <- function(db = utils::choose.dir(),
 
                                         }))
 
-  ################
-  # CAPTURE DATA #
-  ################
+  # CAPTURE DATA
 
   message("Compiling capture information...")
 
   Capture_data <- create_capture_CHO(all_data)
 
-  ##############
-  # BROOD DATA #
-  ##############
+  # BROOD DATA
 
   message("Compiling brood information...")
 
   Brood_data <- create_brood_CHO(all_data)
 
-  ###################
-  # INDIVIDUAL DATA #
-  ###################
+  # INDIVIDUAL DATA
 
   message("Compiling individual information...")
 
   Individual_data <- create_individual_CHO(all_data)
 
-  ################
-  # NESTBOX DATA #
-  ################
+  # NESTBOX DATA
 
   message("Compiling nestbox information...")
 
   Location_data <- create_location_CHO(all_data)
+
+  # CREATE DEBUG REPORT
 
   if(debug){
 
@@ -144,6 +138,8 @@ format_CHO <- function(db = utils::choose.dir(),
   time <- difftime(Sys.time(), start_time, units = "sec")
 
   message(paste0("All tables generated in ", round(time, 2), " seconds"))
+
+  # EXPORT DATA
 
   if(output_type == "csv"){
 
