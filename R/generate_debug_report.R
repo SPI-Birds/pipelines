@@ -62,7 +62,7 @@ generate_debug_report <- function(path, Pop, Brood_data, Capture_data, Indv_data
     dplyr::rename(PopID = CapturePopID))
 
   #Create a list of all histograms for continuous variables
-  Capture_plots <- purrr::map(.x = c("Mass", "Tarsus", "WingLength", "Age_obsv", "Age_calc", "ChickAge"),
+  Capture_plots <- purrr::map(.x = c("Mass", "Tarsus", "WingLength", "Age_observed", "Age_calculated", "ChickAge"),
                             .f = ~plot_debug_hist(table = Capture_data, variable = .x))
 
   utils::write.csv(Capture_data_summary, file = paste0(path, "\\debug_report\\Capture_summary", Pop, ".csv"))
@@ -87,7 +87,7 @@ generate_debug_report <- function(path, Pop, Brood_data, Capture_data, Indv_data
     })
 
   #Create a list of all histograms for continuous variables
-  Indv_plots <- purrr::map(.x = c("RingSeason", "RingAge"),
+  Indv_plots <- purrr::map(.x = c("RingSeason"),
                             .f = ~plot_debug_hist(table = Indv_data, variable = .x))
 
   utils::write.csv(Indv_data_summary, file = paste0(path, "\\debug_report\\Indv_summary", Pop, ".csv"))
