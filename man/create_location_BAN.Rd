@@ -2,7 +2,7 @@
 % Please edit documentation in R/format_BAN.R
 \name{create_location_BAN}
 \alias{create_location_BAN}
-\title{Create location data table for Bandon Valley.}
+\title{Create location data table for Bandon Valley, Ireland.}
 \usage{
 create_location_BAN(data)
 }
@@ -13,5 +13,6 @@ create_location_BAN(data)
 A data frame.
 }
 \description{
-Create location data table in standard format for data from Bandon Valley.
+Create location data table in standard format for data from Bandon Valley,
+Ireland.
 }

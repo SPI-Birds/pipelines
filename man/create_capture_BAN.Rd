@@ -2,7 +2,7 @@
 % Please edit documentation in R/format_BAN.R
 \name{create_capture_BAN}
 \alias{create_capture_BAN}
-\title{Create capture data table for Bandon Valley.}
+\title{Create capture data table for Bandon Valley, Ireland.}
 \usage{
 create_capture_BAN(data)
 }
@@ -13,5 +13,6 @@ create_capture_BAN(data)
 A data frame.
 }
 \description{
-Create capture data table in standard format for data from Bandon Valley.
+Create capture data table in standard format for data from Bandon Valley,
+Ireland.
 }

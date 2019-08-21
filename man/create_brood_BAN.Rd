@@ -2,7 +2,7 @@
 % Please edit documentation in R/format_BAN.R
 \name{create_brood_BAN}
 \alias{create_brood_BAN}
-\title{Create brood data table for Bandon Valley.}
+\title{Create brood data table for Bandon Valley, Ireland.}
 \usage{
 create_brood_BAN(data)
 }
@@ -13,5 +13,6 @@ create_brood_BAN(data)
 A data frame.
 }
 \description{
-Create brood data table in standard format for data from Bandon Valley.
+Create brood data table in standard format for data from Bandon Valley,
+Ireland.
 }

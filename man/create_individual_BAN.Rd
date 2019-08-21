@@ -2,7 +2,7 @@
 % Please edit documentation in R/format_BAN.R
 \name{create_individual_BAN}
 \alias{create_individual_BAN}
-\title{Create individual data table for Bandon Valley.}
+\title{Create individual data table for Bandon Valley, Ireland.}
 \usage{
 create_individual_BAN(Capture_data)
 }
@@ -13,5 +13,6 @@ create_individual_BAN(Capture_data)
 A data frame.
 }
 \description{
-Create individual data table in standard format for data from Bandon Valley.
+Create individual data table in standard format for data from Bandon Valley,
+Ireland.
 }

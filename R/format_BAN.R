@@ -1,49 +1,52 @@
-#' Construct standard summary for data from Bandon Valley, Ireland.
+#'Construct standard summary for data from Bandon Valley, Ireland.
 #'
-#' A pipeline to produce a standard output for the nest box population in Bandon
-#' Valley, Ireland, administered by John Quinn.
+#'A pipeline to produce a standard output for the nest box population in Bandon
+#'Valley, Ireland, administered by John Quinn.
 #'
-#' This section provides details on data management choices that are unique to
-#' this data. For a general description of the standard format please see
+#'This section provides details on data management choices that are unique to
+#'this data. For a general description of the standard format please see
 #'\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
 #'
-#' \strong{Species}: There are records where species is uncertain (e.g. listed
-#' as 'GRETI?'). This uncertainty is ignored. We assume that the suggested
-#' species is correct. We include blue tit, great tit, and coal tit. No other
-#' species are recorded.
+#'\strong{Species}: There are records where species is uncertain (e.g. listed as
+#''GRETI?'). This uncertainty is ignored. We assume that the suggested species
+#'is correct. We include blue tit, great tit, and coal tit. No other species are
+#'recorded.
 #'
-#' \strong{ClutchType_observed}: Clutch type is only listed as 'first' and
-#' 'second'. There is no distinction between 'second' and 'replacement'. We
-#' categorise all these as 'second'. Possible distinction between 'second' and
-#' 'replacement' could be made with \strong{ClutchType_calculated}. There are a small
-#' number of cases where nest attempt number is uncertain (e.g. `2(MAYBE)`).
-#' This uncertainty is ignored.
+#'\strong{ClutchType_observed}: Clutch type is only listed as 'first' and
+#''second'. There is no distinction between 'second' and 'replacement'. We
+#'categorise all these as 'second'. Possible distinction between 'second' and
+#''replacement' can be made with \strong{ClutchType_calculated}. There are a
+#'small number of cases where nest attempt number is uncertain (e.g.
+#'`2(MAYBE)`). This uncertainty is ignored.
 #'
-#' \strong{LayingDate, HatchDate, NumberFledged}: There are some cases where
-#' values are given with uncertainty (e.g. 97+, 95?). We don't know how much
-#' uncertainty is involved here, it is ignored.
+#'\strong{LayingDate, HatchDate, NumberFledged}: There are some cases where
+#'values are given with uncertainty (e.g. 97+, 95?). We don't know how much
+#'uncertainty is involved here, it is ignored.
 #'
-#' \strong{ClutchSize}: Cases where nests were predated before completion are
-#' ignored (i.e. true clutch size is unknown).
+#'\strong{ClutchSize}: Cases where clutch size is uncertain (e.g. nests were
+#'predated before completion) are treated as NA because clutch size is unknown.
 #'
-#' \strong{BroodID}: Unique BroodID is currently made with
-#' Year_Plot_LocationID_Day_Month.
+#'\strong{BroodID}: Unique BroodID is currently made with
+#'Year_Plot_LocationID_Day_Month.
 #'
-#' \strong{BroodIDLaid/Fledged}: Currently, we have no information about the
-#' brood where each individual was laid. Therefore, these are currently
-#' kept blank.
+#'\strong{BroodIDLaid/Fledged}: Currently, we have no information about the
+#'brood where each individual was laid. Therefore, these are currently kept
+#'blank.
 #'
-#' \strong{Age_observed}: There is no recorded capture age. This is left as NA.
+#'\strong{Age_observed}: There is no recorded capture age. This is left as NA.
 #'
-#' \strong{AvgEggMass}: Currently we only include records where the day of egg
-#' weighing is <= LayingDate + ClutchSize. This should be an estimate of the
-#' date that incubation began. Once incubation starts, egg weight is not easily
-#' comparable because it changes with chick development.
+#'\strong{AvgEggMass}: Currently we only include records where the day of egg
+#'weighing is <= LayingDate + ClutchSize. This should be an estimate of the date
+#'that incubation began. Once incubation starts, egg weight is not easily
+#'comparable because it changes with chick development.
+#'
+#'\strong{AvgChickMass/AvgTarsus}: Individual capture data is not included in
+#'the data currently provided. These values are therefore left blank.
 #'
 #'@inheritParams pipeline_params
 #'
-#' @return Generates 4 .csv files with data in a standard format.
-#' @export
+#'@return Generates either 4 .csv files or 4 data frames in the standard format.
+#'@export
 
 format_BAN <- function(db = utils::choose.dir(),
                        path = ".",
