@@ -243,13 +243,14 @@ create_brood_BAN   <- function(data) {
 
 }
 
-#' Create capture data table for Bandon Valley.
+#' Create capture data table for Bandon Valley, Ireland.
 #'
-#' Create capture data table in standard format for data from Bandon Valley.
+#' Create capture data table in standard format for data from Bandon Valley,
+#' Ireland.
 #' @param data Data frame. Primary data from Bandon Valley.
 #'
 #' @return A data frame.
-#' @export
+
 create_capture_BAN <- function(data) {
 
   Capture_data <- data %>%
@@ -279,7 +280,8 @@ create_capture_BAN <- function(data) {
                                             })),
                   Age_observed = NA, CaptureTime = NA, Mass = NA, Tarsus = NA,
                   WingLength = NA, ChickAge = NA, CapturePopID = "BAN",
-                  ReleasePopID = "BAN", ObserverID = NA, OriginalTarsusMethod = "Alternative",
+                  ReleasePopID = "BAN", ObserverID = NA,
+                  OriginalTarsusMethod = NA,
                   CapturePlot = Plot, ReleasePlot = Plot) %>%
     calc_age(ID = IndvID, Age = Age_observed,
              Date = CaptureDate, Year = BreedingSeason) %>%
@@ -303,14 +305,15 @@ create_capture_BAN <- function(data) {
 
 }
 
-#' Create individual data table for Bandon Valley.
+#' Create individual data table for Bandon Valley, Ireland.
 #'
-#' Create individual data table in standard format for data from Bandon Valley.
+#' Create individual data table in standard format for data from Bandon Valley,
+#' Ireland.
 #'
 #' @param Capture_data Data frame. Primary data from Bandon Valley.
 #'
 #' @return A data frame.
-#' @export
+
 create_individual_BAN <- function(Capture_data) {
 
   Individual_data <- Capture_data %>%
@@ -352,13 +355,14 @@ create_individual_BAN <- function(Capture_data) {
 
 }
 
-#' Create location data table for Bandon Valley.
+#' Create location data table for Bandon Valley, Ireland.
 #'
-#' Create location data table in standard format for data from Bandon Valley.
+#' Create location data table in standard format for data from Bandon Valley,
+#' Ireland.
 #' @param data Data frame. Primary data from Bandon Valley.
 #'
 #' @return A data frame.
-#' @export
+
 create_location_BAN <- function(data) {
 
   Location_data <- tibble::tibble(LocationID = unique(data$LocationID),
