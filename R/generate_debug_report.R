@@ -47,14 +47,15 @@ generate_debug_report <- function(path, Pop, Brood_data, Capture_data, Indv_data
   ### DEBUG CAPTURE DATA ###
 
   Capture_data_summary <- Capture_data %>%
-    select(Species, CaptureTime) %>%
-    summarise_all(~paste(unique(.x), collapse = "/"))
+    dplyr::select(Species, CaptureTime) %>%
+    dplyr::summarise_all(~paste(unique(.x), collapse = "/"))
 
   #Turn all dates into April days
-  Capture_data <- Capture_data %>%
-    mutate_if(.predicate = ~class(.x) == "Date", .funs = function(.x){
+  #Suppress warnings when trying to coerce NA to numeric
+  Capture_data <- suppressWarnings(Capture_data %>%
+    dplyr::mutate_if(.predicate = ~class(.x) == "Date", .funs = function(.x){
 
-      as.numeric(.x - lubridate::ymd(paste(lubridate::year(.x), "01", "04")))
+        as.numeric(.x - lubridate::ymd(paste(lubridate::year(.x), "01", "04")))
 
     }) %>%
     #Column PopID needed for histograms to work
