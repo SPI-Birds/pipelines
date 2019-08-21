@@ -76,7 +76,6 @@ format_BAN <- function(db = utils::choose.dir(),
 
   all_data <- suppressWarnings(readxl::read_excel(paste0(db, "/MasterBreedingDataAllYears password protected.xlsx")) %>%
                                  janitor::clean_names() %>%
-                                 dplyr::mutate_all(.funs = toupper) %>%
                                  dplyr::mutate_all(.funs = na_if, y = "NA") %>%
                                  #Convert column names to meet standard format
                                  dplyr::mutate(BreedingSeason = year,
@@ -199,19 +198,19 @@ create_brood_BAN   <- function(data) {
 
   Brood_data <- data %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(., na.rm = FALSE),
-                  LayingDateError = NA,
-                  ClutchSizeError = NA,
-                  HatchDateError = NA,
-                  BroodSize = NA, BroodSizeError = NA,
-                  FledgeDate = NA, FledgeDateError = NA,
-                  NumberFledgedError = NA,
-                  AvgChickMass = NA, NumberChicksMass = NA,
-                  AvgTarsus = NA, NumberChicksTarsus = NA,
-                  OriginalTarsusMethod = NA,
-                  ExperimentID = NA) %>%
+                  LayingDateError = NA_integer_,
+                  ClutchSizeError = NA_integer_,
+                  HatchDateError = NA_integer_,
+                  BroodSize = NA_integer_, BroodSizeError = NA_integer_,
+                  FledgeDate = NA_integer_, FledgeDateError = NA_integer_,
+                  NumberFledgedError = NA_integer_,
+                  AvgChickMass = NA_real_, NumberChicksMass = NA_integer_,
+                  AvgTarsus = NA_real_, NumberChicksTarsus = NA_integer_,
+                  OriginalTarsusMethod = NA_character_,
+                  ExperimentID = NA_character_) %>%
     ## Remove egg weights when the day of weighing is outside our given range
     dplyr::mutate(AvgEggMass = purrr::map2_dbl(.x = AvgEggMass, .y = EggWasIncubated,
-                                               .f = ~{ifelse(..2, NA, as.numeric(..1))})) %>%
+                                               .f = ~{ifelse(..2, NA_real_, as.numeric(..1))})) %>%
     dplyr::select(BroodID, PopID, BreedingSeason,
                   Species, Plot, LocationID,
                   FemaleID, MaleID,
@@ -278,10 +277,11 @@ create_capture_BAN <- function(data) {
                                               }
 
                                             })),
-                  Age_observed = NA, CaptureTime = NA, Mass = NA, Tarsus = NA,
-                  WingLength = NA, ChickAge = NA, CapturePopID = "BAN",
-                  ReleasePopID = "BAN", ObserverID = NA,
-                  OriginalTarsusMethod = NA,
+                  Age_observed = NA_integer_, CaptureTime = NA_character_,
+                  Mass = NA_real_, Tarsus = NA_real_,
+                  WingLength = NA_real_, ChickAge = NA_integer_, CapturePopID = "BAN",
+                  ReleasePopID = "BAN", ObserverID = NA_character_,
+                  OriginalTarsusMethod = NA_character_,
                   CapturePlot = Plot, ReleasePlot = Plot) %>%
     calc_age(ID = IndvID, Age = Age_observed,
              Date = CaptureDate, Year = BreedingSeason) %>%
@@ -320,8 +320,8 @@ create_individual_BAN <- function(Capture_data) {
     dplyr::group_by(IndvID) %>%
     dplyr::summarise(Species = unique(stats::na.omit(Species)),
                      PopID = "BAN",
-                     BroodIDLaid = NA,
-                     BroodIDFledged = NA,
+                     BroodIDLaid = NA_character_,
+                     BroodIDFledged = NA_character_,
                      RingSeason = first(BreedingSeason),
                      RingAge = first(Age_observed),
                      Sex = purrr::map_chr(.x = list(unique(Sex)),
@@ -369,9 +369,9 @@ create_location_BAN <- function(data) {
                                   NestboxID = LocationID,
                                   LocationType = "NB",
                                   PopID = "BAN",
-                                  Latitude = NA, Longitude = NA,
+                                  Latitude = NA_real_, Longitude = NA_real_,
                                   StartSeason = 2013,
-                                  EndSeason = NA, Habitat = NA)
+                                  EndSeason = NA_integer_, Habitat = NA_character_)
 
   return(Location_data)
 
