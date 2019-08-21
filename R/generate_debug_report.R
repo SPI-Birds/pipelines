@@ -56,7 +56,9 @@ generate_debug_report <- function(path, Pop, Brood_data, Capture_data, Indv_data
 
       as.numeric(.x - lubridate::ymd(paste(lubridate::year(.x), "01", "04")))
 
-    })
+    }) %>%
+    #Column PopID needed for histograms to work
+    dplyr::rename(PopID = CapturePopID))
 
   #Create a list of all histograms for continuous variables
   Capture_plots <- purrr::map(.x = c("Mass", "Tarsus", "WingLength", "Age_obsv", "Age_calc", "ChickAge"),
