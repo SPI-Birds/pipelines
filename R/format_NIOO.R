@@ -552,7 +552,7 @@ format_NIOO <- function(db = utils::choose.dir(),
 
     utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_NIOO.csv"), row.names = F)
 
-    utils::write.csv(x = Individual_data %>% select(-RingNumber), file = paste0(path, "\\Individual_data_NIOO.csv"), row.names = F)
+    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_NIOO.csv"), row.names = F)
 
     utils::write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_NIOO.csv"), row.names = F)
 
