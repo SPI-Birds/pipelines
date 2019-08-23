@@ -95,135 +95,11 @@ format_SSQ <- function(db = utils::choose.dir(),
                   LayingDate = as.Date(paste(BreedingSeason, "03-01", sep = "-"), format = "%Y-%m-%d") + LayingDate - 1,
                   HatchDate = as.Date(paste(BreedingSeason, "03-01", sep = "-"), format = "%Y-%m-%d") + HatchDate - 1)
 
-  ##############
-  # BROOD DATA #
-  ##############
+  # BROOD DATA
 
   message("Compiling brood information...")
 
-  #Determine ClutchType_calculated
-  clutchtype <- dplyr::progress_estimated(n = nrow(all_data))
-
-  Brood_data <- all_data %>%
-    #Determine clutch type
-    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
-    #Determine the 30 day cut-off for all species
-    # dplyr::group_by(PopID, BreedingSeason, Species) %>%
-    # dplyr::mutate(cutoff = tryCatch(expr = min(LayingDate, na.rm = T) + 30,
-    #                          warning = function(...) return(NA))) %>%
-    # # Determine brood type for each nest based on female ID
-    # arrange(BreedingSeason, Species, FemaleID) %>%
-    # group_by(BreedingSeason, Species, FemaleID) %>%
-    # #Assume NAs in Fledglings are 0s.
-    # mutate(total_fledge = calc_cumfledge(x = NumberFledged, na.rm = T),
-    #        total_fledge_na = calc_cumfledge(x = NumberFledged, na.rm = F),
-    #        row = 1:n()) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(
-      # ClutchType_calculated = purrr::pmap_chr(.l = list(rows = .$row,
-      #                                                  femID = .$FemaleID,
-      #                                                  cutoff_date = .$cutoff,
-      #                                                  nr_fledge_before = .$total_fledge,
-      #                                                  na_fledge_before = .$total_fledge_na,
-      #                                                  LD = .$LayingDate),
-      #                                        .f = function(rows, femID, cutoff_date,
-      #                                                      nr_fledge_before, na_fledge_before,
-      #                                                      LD){
-      #
-      #                                          clutchtype$tick()$print()
-      #
-      #                                          #Firstly, check if the nest has a LD
-      #                                          #If not, we cannot calculate BroodType
-      #
-      #                                          if(is.na(LD)){
-      #
-      #                                            return(NA)
-      #
-      #                                          }
-      #
-      #                                          #Next, check if the female is banded
-      #                                          #If a female is unbanded we assume the nest can NEVER be secondary
-      #                                          #If she had had a successful clutch before she would have been caught and banded
-      #                                          #Therefore it can only be first or replacement (based on 30d rule)
-      #                                          if(is.na(femID)){
-      #
-      #                                            if(LD > cutoff_date){
-      #
-      #                                              return("replacement")
-      #
-      #                                            } else {
-      #
-      #                                              return("first")
-      #
-      #                                            }
-      #
-      #                                          }
-      #
-      #                                          #If she is banded, then we need to apply all rules
-      #                                          #If it's the first nest recorded for this female in this year...
-      #                                          if(rows == 1){
-      #
-      #                                            #If it doesn't meet the 30 day rule, then name it as replacement
-      #                                            if(LD > cutoff_date){
-      #
-      #                                              return("replacement")
-      #
-      #                                            } else {
-      #
-      #                                              #Otherwise, we assume it was the first clutch
-      #                                              return("first")
-      #
-      #                                            }
-      #
-      #                                          #If it's NOT the first nest of the season for this female
-      #                                          } else {
-      #
-      #                                            #If there have been no fledglings before this point..
-      #                                            if(nr_fledge_before == 0){
-      #
-      #                                              #If there was atleast one NA record before this one
-      #                                              #then we don't know if number of fledged before is
-      #                                              #0 or >0. Therefore, we have to say NA.
-      #                                              if(na_fledge_before > 0){
-      #
-      #                                                return(NA)
-      #
-      #                                              } else {
-      #
-      #                                                #Otherwise, we can be confident that
-      #                                                #number of fledge before is 0
-      #                                                #and it must be a replacement
-      #                                                return("replacement")
-      #
-      #                                              }
-      #
-      #                                            } else {
-      #
-      #                                              #If there has been atleast one clutch
-      #                                              #that previously produced fledgligns
-      #                                              #then this nest is 'second'
-      #                                              #N.B. This is the case even if one of the previous nests
-      #                                              #was an NA. We just need to know if it's >0, not the exact number
-      #                                              return("second")
-      #
-      #                                            }
-      #
-      #                                          }
-      #
-      #                                        }),
-           OriginalTarsusMethod = NA) %>%
-    dplyr::select(BreedingSeason, Species, PopID, Plot,
-           LocationID, BroodID, FemaleID, MaleID,
-           ClutchType_observed, ClutchType_calculated,
-           LayingDate, LayingDateError,
-           ClutchSize, ClutchSizeError,
-           HatchDate, HatchDateError,
-           BroodSize, BroodSizeError,
-           FledgeDate, FledgeDateError,
-           NumberFledged, NumberFledgedError,
-           AvgEggMass, NumberEggs,
-           AvgChickMass, NumberChicksMass,
-           AvgTarsus, NumberChicksTarsus, OriginalTarsusMethod, ExperimentID)
+  Brood_data <- create_brood_SSQ(all_data)
 
   ################
   # CAPTURE DATA #
@@ -419,5 +295,41 @@ format_SSQ <- function(db = utils::choose.dir(),
                 Location_data = Location_data))
 
   }
+
+}
+
+#' Create brood data table for Santo Stefano Quisquina, Italy.
+#'
+#' Create brood data table in standard format for data from Santo Stefano
+#' Quisquina, Italy
+#' @param data Data frame. Primary data from Santo Stefano Quisquina.
+#'
+#' @return A data frame.
+
+create_brood_SSQ <- function(data){
+
+  #Determine ClutchType_calculated
+  clutchtype <- dplyr::progress_estimated(n = nrow(data))
+
+  Brood_data <- data %>%
+    #Calculate clutch type
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE),
+                  OriginalTarsusMethod = NA) %>%
+    #Arrange columns to match standard protocol
+    dplyr::select(BreedingSeason, Species, PopID, Plot,
+                  LocationID, BroodID, FemaleID, MaleID,
+                  ClutchType_observed, ClutchType_calculated,
+                  LayingDate, LayingDateError,
+                  ClutchSize, ClutchSizeError,
+                  HatchDate, HatchDateError,
+                  BroodSize, BroodSizeError,
+                  FledgeDate, FledgeDateError,
+                  NumberFledged, NumberFledgedError,
+                  AvgEggMass, NumberEggs,
+                  AvgChickMass, NumberChicksMass,
+                  AvgTarsus, NumberChicksTarsus, OriginalTarsusMethod, ExperimentID) %>%
+    dplyr::ungroup()
+
+  return(Brood_data)
 
 }
