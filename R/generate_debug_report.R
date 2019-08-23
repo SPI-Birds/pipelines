@@ -26,13 +26,12 @@ generate_debug_report <- function(path, Pop, Brood_data, Capture_data, Indv_data
     summarise_all(~paste(stats::na.omit(unique(.x)), collapse = "/"))
 
   #Turn all dates into April days
-  Brood_data <- Brood_data %>%
+  Brood_data <- suppressWarnings(Brood_data %>%
     mutate_if(.predicate = ~class(.x) == "Date", .funs = function(.x){
 
-      tryCatch(expr = as.numeric(.x - lubridate::ymd(paste(lubridate::year(.x), "01", "04"))),
-               warning = function(...) return(NA))
+      as.numeric(.x - lubridate::ymd(paste(lubridate::year(.x), "01", "04")))
 
-    })
+    }))
 
   #Create a list of all histograms for continuous variables
   Brood_plots <- purrr::map(.x = c("LayingDate", "ClutchSize", "HatchDate", "BroodSize", "FledgeDate", "NumberFledged", "AvgEggMass", "AvgChickMass", "AvgTarsus"),
@@ -76,15 +75,6 @@ generate_debug_report <- function(path, Pop, Brood_data, Capture_data, Indv_data
   Indv_data_summary <- Indv_data %>%
     select(Species, Sex) %>%
     summarise_all(~paste(unique(.x), collapse = "/"))
-
-  #Turn all dates into April days
-  Indv_data <- Indv_data %>%
-    ungroup() %>%
-    mutate_if(.predicate = ~class(.x) == "Date", .funs = function(.x){
-
-      as.numeric(.x - lubridate::ymd(paste(lubridate::year(.x), "01", "04")))
-
-    })
 
   #Create a list of all histograms for continuous variables
   Indv_plots <- purrr::map(.x = c("RingSeason"),
