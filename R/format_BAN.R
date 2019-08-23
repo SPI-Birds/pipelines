@@ -1,6 +1,6 @@
-#'Construct standard summary for data from Bandon Valley, Ireland.
+#'Construct standard format for data from Bandon Valley, Ireland.
 #'
-#'A pipeline to produce a standard output for the nest box population in Bandon
+#'A pipeline to produce the standard format for the nest box population in Bandon
 #'Valley, Ireland, administered by John Quinn.
 #'
 #'This section provides details on data management choices that are unique to
@@ -26,8 +26,11 @@
 #'\strong{ClutchSize}: Cases where clutch size is uncertain (e.g. nests were
 #'predated before completion) are treated as NA because clutch size is unknown.
 #'
+#'\strong{LocationID}: Box numbers are not unique, they are repeated between
+#'plots. To generate LocationID, we therefore use Plot_BoxNumber.
+#'
 #'\strong{BroodID}: Unique BroodID is currently made with
-#'Year_Plot_LocationID_Day_Month.
+#'Year_Plot_BoxNumber_Day_Month.
 #'
 #'\strong{BroodIDLaid/Fledged}: Currently, we have no information about the
 #'brood where each individual was laid. Therefore, these are currently kept
@@ -74,31 +77,42 @@ format_BAN <- function(db = utils::choose.dir(),
 
   message("Importing primary data...")
 
+  #Warnings arise when we coerce records like 'UNKNOWN' into numeric (making NA by coercion)
+  #We want this behaviour, so we hide the warnings.
   all_data <- suppressWarnings(readxl::read_excel(paste0(db, "/MasterBreedingDataAllYears password protected.xlsx")) %>%
+                                 #Convert all cols to snake_case
                                  janitor::clean_names() %>%
                                  dplyr::mutate_all(.funs = na_if, y = "NA") %>%
-                                 #Convert column names to meet standard format
+                                 #Convert column names to match standard format
                                  dplyr::mutate(BreedingSeason = year,
                                                PopID = "BAN", Plot = site,
+                                               #Create a unique LocationID using plot and box number
                                                LocationID = paste(Plot, stringr::str_pad(string = box_number, width = 3, pad = "0"), sep = "_"),
+                                               #Ignore uncertainty in species (e.g. GRETI?)
                                                Species = dplyr::case_when(grepl(pattern = "GRETI", x = .$species) ~ Species_codes[Species_codes$SpeciesID == 14640, ]$Code,
                                                                           grepl(pattern = "BLUTI", x = .$species) ~ Species_codes[Species_codes$SpeciesID == 14620, ]$Code,
                                                                           grepl(pattern = "COATI", x = .$species) ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code),
+                                               #Ignore uncertainty in clutch type (e.g. 2(MAYBE))
                                                ClutchType_observed = dplyr::case_when(grepl(pattern = 1, x = .$nest_attempt) ~ "first",
                                                                                       grepl(pattern = 2, x = .$nest_attempt) ~ "second"),
                                                March1Date = as.Date(glue::glue('{Year}-03-01',
                                                                                Year = BreedingSeason),
                                                                     format = "%Y-%m-%d"),
+                                               #Ignore uncertainty in laying date (e.g. 97? or 97+)
                                                LayingDate = March1Date + as.numeric(gsub(pattern = "\\?|\\+",
                                                                                          replacement = "",
                                                                                          x = first_egg_lay_date)),
+                                               #Create a unique BroodID from Year_Plot_BoxNumber_LayingDay_LayingMonth
                                                BroodID = paste(BreedingSeason, LocationID,
                                                                lubridate::day(LayingDate), lubridate::month(LayingDate), sep = "_"),
                                                AvgEggMass = as.numeric(egg_weight), NumberEggs = as.numeric(number_eggs_weighed),
                                                ClutchSize = as.numeric(final_clutch_size),
+                                               #Assume incubation begins immediately after the last egg is laid.
                                                StartIncubation = LayingDate + ClutchSize,
                                                EggWeighDate = (March1Date + as.numeric(weigh_date)),
+                                               #Distinguish whether egg was being incubated when weighed.
                                                EggWasIncubated = (March1Date + as.numeric(weigh_date)) > (LayingDate + ClutchSize),
+                                               #Ignore uncertainty in hatch date (e.g. 97?)
                                                HatchDate = March1Date + as.numeric(gsub(pattern = "\\?",
                                                                                         replacement = "",
                                                                                         x = actual_hatch_date)),
@@ -106,6 +120,7 @@ format_BAN <- function(db = utils::choose.dir(),
                                                FemaleCaptureDate = March1Date + as.numeric(actual_female_trapping_date),
                                                MaleID = male_id, FemaleID = female_id,
                                                ChickCaptureDate = March1Date + as.numeric(actual_pullus_ringing_date),
+                                               #Ignore uncertainty in NumberFledged (e.g. 97?)
                                                NumberFledged = as.numeric(gsub(pattern = "\\?",
                                                                                replacement = "",
                                                                                number_fledged))) %>%
@@ -208,7 +223,7 @@ create_brood_BAN   <- function(data) {
                   AvgTarsus = NA_real_, NumberChicksTarsus = NA_integer_,
                   OriginalTarsusMethod = NA_character_,
                   ExperimentID = NA_character_) %>%
-    ## Remove egg weights when the day of weighing is outside our given range
+    ## Remove egg weights when the day of weighing is during incubation
     dplyr::mutate(AvgEggMass = purrr::map2_dbl(.x = AvgEggMass, .y = EggWasIncubated,
                                                .f = ~{ifelse(..2, NA_real_, as.numeric(..1))})) %>%
     dplyr::select(BroodID, PopID, BreedingSeason,

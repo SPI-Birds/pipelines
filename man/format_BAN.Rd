@@ -2,7 +2,7 @@
 % Please edit documentation in R/format_BAN.R
 \name{format_BAN}
 \alias{format_BAN}
-\title{Construct standard summary for data from Bandon Valley, Ireland.}
+\title{Construct standard format for data from Bandon Valley, Ireland.}
 \usage{
 format_BAN(db = utils::choose.dir(), path = ".", species = NULL,
   pop = NULL, debug = FALSE, output_type = "csv")
@@ -34,7 +34,7 @@ variables.}
 Generates either 4 .csv files or 4 data frames in the standard format.
 }
 \description{
-A pipeline to produce a standard output for the nest box population in Bandon
+A pipeline to produce the standard format for the nest box population in Bandon
 Valley, Ireland, administered by John Quinn.
 }
 \details{
@@ -61,8 +61,11 @@ uncertainty is involved here, it is ignored.
 \strong{ClutchSize}: Cases where clutch size is uncertain (e.g. nests were
 predated before completion) are treated as NA because clutch size is unknown.
 
+\strong{LocationID}: Box numbers are not unique, they are repeated between
+plots. To generate LocationID, we therefore use Plot_BoxNumber.
+
 \strong{BroodID}: Unique BroodID is currently made with
-Year_Plot_LocationID_Day_Month.
+Year_Plot_BoxNumber_Day_Month.
 
 \strong{BroodIDLaid/Fledged}: Currently, we have no information about the
 brood where each individual was laid. Therefore, these are currently kept
