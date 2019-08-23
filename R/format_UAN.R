@@ -195,41 +195,31 @@ format_UAN <- function(db = utils::choose.dir(),
                              AllTarsusObservations = tarsus_n,
                              TarsusMethod = tarsus_ty)
 
-  ##############
-  # BROOD DATA #
-  ##############
+  # BROOD DATA
 
   message("\n Compiling brood information...")
 
   Brood_data <- create_brood_UAN(BROOD_info, CAPTURE_info, species)
 
-  ################
-  # CAPTURE DATA #
-  ################
+  # CAPTURE DATA
 
   message("\n Compiling capture information...")
 
   Capture_data <- create_capture_UAN(CAPTURE_info, species)
 
-  ###################
-  # INDIVIDUAL DATA #
-  ###################
+  # INDIVIDUAL DATA
 
   message("\n Compiling individual information...")
 
   Individual_data <- create_individual_UAN(INDV_info, CAPTURE_info, species)
 
-  #################
-  # LOCATION DATA #
-  #################
+  # LOCATION DATA
 
   message("\n Compiling location information...")
 
   Location_data <- create_location_UAN(BOX_info)
 
-  #########
-  # DEBUG #
-  #########
+  # GENERATE DEBUG REPORT
 
   if(debug){
 
@@ -238,6 +228,8 @@ format_UAN <- function(db = utils::choose.dir(),
     generate_debug_report(path = path, Pop = "UAN", Brood_data = Brood_data, Capture_data = Capture_data, Indv_data = Individual_data)
 
   }
+
+  # EXPORT DATA
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
@@ -272,7 +264,16 @@ format_UAN <- function(db = utils::choose.dir(),
 
 }
 
-#############################################################################################
+#' Create brood data table for data from University of Antwerp, Belgium.
+#'
+#' Create brood data table in standard format for data from University of
+#' Antwerp, Belgium.
+#'
+#' @param data Data frame. Primary data from University of Antwerp.
+#' @param CAPTURE_info Capture data table from the raw data
+#' @param species_filter 6 letter species codes for filtering data.
+#'
+#' @return A data frame.
 
 create_brood_UAN <- function(data, CAPTURE_info, species_filter){
 
@@ -348,7 +349,15 @@ create_brood_UAN <- function(data, CAPTURE_info, species_filter){
 
 }
 
-#############################################################################################
+#' Create capture data table for data from University of Antwerp, Belgium.
+#'
+#' Create capture data table in standard format for data from University of
+#' Antwerp, Belgium.
+#'
+#' @param data Data frame. Primary data from University of Antwerp.
+#' @param species_filter 6 letter species codes for filtering data.
+#'
+#' @return A data frame.
 
 create_capture_UAN <- function(data, species_filter){
 
@@ -372,7 +381,7 @@ create_capture_UAN <- function(data, species_filter){
     dplyr::mutate(TarsusStandard = convert_tarsus(TarsusStandard, method = "Standard")) %>%
     #Add tarsus and original tarsus method with bind_cols
     dplyr::bind_cols(purrr::pmap_dfr(.l = list(SvenStd = .$TarsusStandard, SvenAlt = .$TarsusAlt),
-                                     .f = function(SvenStd, SvenAlt){
+                                     function(SvenStd, SvenAlt){
 
                                        pb$print()$tick()
 
@@ -473,7 +482,16 @@ create_capture_UAN <- function(data, species_filter){
 
 }
 
-#############################################################################################
+#' Create individual data table for data from University of Antwerp, Belgium.
+#'
+#' Create individual data table in standard format for data from University of
+#' Antwerp, Belgium.
+#'
+#' @param data Data frame. Primary data from University of Antwerp.
+#' @param CAPTURE_info Capture data table from the raw data
+#' @param species_filter 6 letter species codes for filtering data.
+#'
+#' @return A data frame.
 
 create_individual_UAN <- function(data, CAPTURE_info, species_filter){
 
@@ -519,7 +537,14 @@ create_individual_UAN <- function(data, CAPTURE_info, species_filter){
 
 }
 
-#############################################################################################
+#' Create location data table for data from University of Antwerp, Belgium.
+#'
+#' Create location data table in standard format for data from University of
+#' Antwerp, Belgium.
+#'
+#' @param data Data frame. Primary data from University of Antwerp.
+#'
+#' @return A data frame.
 
 create_location_UAN <- function(data){
 
