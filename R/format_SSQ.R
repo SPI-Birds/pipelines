@@ -101,144 +101,17 @@ format_SSQ <- function(db = utils::choose.dir(),
 
   Brood_data <- create_brood_SSQ(all_data)
 
-  ################
-  # CAPTURE DATA #
-  ################
+  # CAPTURE DATA
 
   message("Compiling capture information...")
 
-  Adult_captures <- all_data %>%
-    dplyr::select(BreedingSeason, PopID, Plot, LocationID, Species, LayingDate, FemaleID, FAge, MaleID, MAge) %>%
-    reshape2::melt(measure.vars = c("FemaleID", "MaleID"), value.name = "IndvID") %>%
-    #Remove all NAs, we're only interested in cases where parents were ID'd.
-    dplyr::filter(!is.na(IndvID)) %>%
-    #Make a single Age column. If variable == "FemaleID", then use FAge and visa versa
-    dplyr::rowwise() %>%
-    dplyr::mutate(Age = ifelse(variable == "FemaleID", FAge, MAge)) %>%
-    dplyr::ungroup() %>%
-    #Convert these age values to current EURING codes
-    #If NA, we know it's an adult but don't know it's age
-    #We don't want to assume anything here
-    dplyr::mutate(Age_observed = dplyr::case_when(.$Age == 1 ~ 5,
-                                                  .$Age == 2 ~ 6)) %>%
-    dplyr::rename(CapturePopID = PopID, CapturePlot = Plot) %>%
-    #Treat CaptureDate of adults as the Laying Date (currently in days since March 1st)
-    dplyr::mutate(ReleasePopID = CapturePopID, ReleasePlot = CapturePlot,
-                  CaptureDate = LayingDate,
-                  CaptureTime = NA) %>%
-    dplyr::select(-variable, -LayingDate, -FAge, -MAge)
+  Capture_data <- create_capture_SSQ(all_data)
 
-  Chick_captures <- all_data %>%
-    dplyr::select(BreedingSeason, Species, PopID, Plot, LocationID, LayingDate, ClutchSize, Chick1Id:Chick13Id) %>%
-    reshape2::melt(id.vars = c("BreedingSeason", "Species", "PopID", "Plot", "LocationID", "LayingDate", "ClutchSize"), value.name = "IndvID") %>%
-    #Remove NAs
-    dplyr::filter(!is.na(IndvID)) %>%
-    dplyr::rename(CapturePopID = PopID, CapturePlot = Plot) %>%
-    #For chicks, we currently don't have the version of the individual level capture data.
-    #For now, we use LayingDate + ClutchSize + 15 (incubation days in SSQ) + 12.
-    #Chicks were captured and weighed at 12 days old at the latest
-    dplyr::mutate(ReleasePopID = CapturePopID, ReleasePlot = CapturePlot,
-                  CaptureDate = LayingDate + ClutchSize + 27,
-                  CaptureTime = NA, Age_observed = 1, Age = 1) %>%
-    dplyr::select(-variable, -LayingDate, -ClutchSize)
-
-  #Combine Adult and chick data
-  Capture_data <- dplyr::bind_rows(Adult_captures, Chick_captures) %>%
-    dplyr::arrange(IndvID, CaptureDate) %>%
-    #Add NA for morphometric measures and chick age
-    #ChickAge (in days) is NA because we have no exact CaptureDate
-    dplyr::mutate(Mass = NA, Tarsus = NA, OriginalTarsusMethod = NA,
-                  WingLength = NA,
-                  ChickAge = NA, ObserverID = NA) %>%
-    calc_age(ID = IndvID, Age = Age, Date = CaptureDate, Year = BreedingSeason) %>%
-#
-#     #Also determine Age_calculated
-#     group_by(IndvID) %>%
-#     mutate(FirstAge = first(Age),
-#            FirstYear = first(BreedingSeason)) %>%
-#     ungroup() %>%
-#     #Calculate age at each capture using EURING codes
-#     dplyr::mutate(Age_calculated = purrr::pmap_dbl(.l = list(Age = .$FirstAge,
-#                                                        Year1 = .$FirstYear,
-#                                                        YearN = .$BreedingSeason),
-#                                              .f = function(Age, Year1, YearN){
-#
-#                                                #Determine number of years since first capture...
-#                                                diff_yr <- (YearN - Year1)
-#
-#                                                #If it was not caught as a chick...
-#                                                if(Age != 1 | is.na(Age)){
-#
-#                                                  #If it's listed as EURING 5,
-#                                                  #then its age is known at first capture
-#                                                  if(!is.na(Age) & Age == 5){
-#
-#                                                    return(5 + 2*diff_yr)
-#
-#                                                  #Otherwise, when it was first caught it was at least EURING code 6.
-#                                                  #This also applies to birds with both Age == 6 (where they were recorded as being >2yo)
-#                                                  #and Age == NA. We assume any bird that was a known 2nd year would be listed as such.
-#                                                  } else {
-#
-#                                                    #Use categories where age is uncertain
-#                                                    #(6, 8)
-#                                                    return(6 + 2*diff_yr)
-#
-#                                                  }
-#
-#                                                } else {
-#
-#                                                  #If it was caught as a chick
-#                                                  if(diff_yr == 0){
-#
-#                                                    #Make the age at first capture 1 (nestling/unable to fly)
-#                                                    #N.B. There is no distinction between chick and fledgling in the data
-#                                                    return(1)
-#
-#                                                  } else {
-#
-#                                                    #Otherwise, use categories where age is certain (5, 7, etc.)
-#                                                    return(3 + 2*diff_yr)
-#
-#                                                  }
-#
-#                                                }
-#
-#                                              })) %>%
-    #Order variables to match other data
-    dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, ObserverID, IndvID, Species,
-                  CapturePopID, CapturePlot, ReleasePopID, ReleasePlot,
-                  Mass, Tarsus, WingLength, Age_observed, Age_calculated, ChickAge)
-
-  ###################
-  # INDIVIDUAL DATA #
-  ###################
+  # INDIVIDUAL DATA
 
   message("Compiling individual information...")
 
-  #Create a list of all chicks
-  Chick_IDs <- all_data %>%
-    dplyr::select(BroodID, Chick1Id:Chick13Id) %>%
-    reshape2::melt(id.vars = "BroodID", value.name = "IndvID") %>%
-    dplyr::filter(!is.na(IndvID)) %>%
-    dplyr::select(-variable, BroodIDLaid = BroodID)
-
-  Individual_data <- Capture_data %>%
-    dplyr::arrange(IndvID, CaptureDate) %>%
-    dplyr::group_by(IndvID) %>%
-    dplyr::summarise(Species = first(Species),
-                     RingSeason = min(lubridate::year(CaptureDate)),
-                     RingAge = dplyr::case_when(is.na(first(Age_observed)) ~ "adult",
-                                                first(Age_observed) == 1 ~ "chick",
-                                                first(Age_observed) > 1 ~ "adult")) %>%
-    dplyr::mutate(Sex = dplyr::case_when(.$IndvID %in% Brood_data$FemaleID ~ "F",
-                                         .$IndvID %in% Brood_data$MaleID ~ "M")) %>%
-    #Join in BroodID from the reshaped Chick_IDs table
-    dplyr::left_join(Chick_IDs, by = "IndvID") %>%
-    dplyr::mutate(BroodIDFledged = BroodIDLaid,
-                  PopID = "SSQ") %>%
-    select(IndvID, Species, PopID, BroodIDLaid,
-           BroodIDFledged, RingSeason, RingAge, Sex)
+  Individual_data <- create_individual_SSQ(all_data, Capture_data, Brood_data)
 
   ################
   # NESTBOX DATA #
@@ -331,5 +204,111 @@ create_brood_SSQ <- function(data){
     dplyr::ungroup()
 
   return(Brood_data)
+
+}
+
+#' Create capture data table for Santo Stefano Quisquina, Italy.
+#'
+#' Create capture data table in standard format for data from Santo Stefano
+#' Quisquina, Italy
+#' @param data Data frame. Primary data from Santo Stefano Quisquina.
+#'
+#' @return A data frame.
+
+create_capture_SSQ <- function(data){
+
+  Adult_captures <- data %>%
+    dplyr::select(BreedingSeason, PopID, Plot, LocationID, Species, LayingDate, FemaleID, FAge, MaleID, MAge) %>%
+    #Combine column FemaleID and MaleID
+    reshape2::melt(measure.vars = c("FemaleID", "MaleID"), value.name = "IndvID") %>%
+    #Remove all NAs, we're only interested in cases where parents were ID'd.
+    dplyr::filter(!is.na(IndvID)) %>%
+    #Make a single Age column. If variable == "FemaleID", then use FAge and visa versa
+    dplyr::rowwise() %>%
+    dplyr::mutate(Age = ifelse(variable == "FemaleID", FAge, MAge)) %>%
+    dplyr::ungroup() %>%
+    #Convert these age values to current EURING codes
+    #If NA, we know it's an adult but don't know it's age
+    #We don't want to assume anything here
+    dplyr::mutate(Age_observed = dplyr::case_when(.$Age == 1 ~ 5,
+                                                  .$Age == 2 ~ 6)) %>%
+    dplyr::rename(CapturePopID = PopID, CapturePlot = Plot) %>%
+    #Treat CaptureDate of adults as the Laying Date
+    dplyr::mutate(ReleasePopID = CapturePopID, ReleasePlot = CapturePlot,
+                  CaptureDate = LayingDate,
+                  CaptureTime = NA) %>%
+    dplyr::select(-variable, -LayingDate, -FAge, -MAge)
+
+  #Also extract chick capture information
+  Chick_captures <- data %>%
+    dplyr::select(BreedingSeason, Species, PopID, Plot, LocationID, LayingDate, ClutchSize, Chick1Id:Chick13Id) %>%
+    #Create separate rows for every chick ID
+    reshape2::melt(id.vars = c("BreedingSeason", "Species", "PopID", "Plot", "LocationID", "LayingDate", "ClutchSize"), value.name = "IndvID") %>%
+    #Remove NAs
+    dplyr::filter(!is.na(IndvID)) %>%
+    dplyr::rename(CapturePopID = PopID, CapturePlot = Plot) %>%
+    #For chicks, we currently don't have the version of the individual level capture data.
+    #For now, we use LayingDate + ClutchSize + 15 (incubation days in SSQ) + 12.
+    #Chicks were captured and weighed at 12 days old at the latest
+    dplyr::mutate(ReleasePopID = CapturePopID, ReleasePlot = CapturePlot,
+                  CaptureDate = LayingDate + ClutchSize + 27,
+                  CaptureTime = NA, Age_observed = 1, Age = 1) %>%
+    dplyr::select(-variable, -LayingDate, -ClutchSize)
+
+  #Combine Adult and chick data
+  Capture_data <- dplyr::bind_rows(Adult_captures, Chick_captures) %>%
+    dplyr::arrange(IndvID, CaptureDate) %>%
+    #Add NA for morphometric measures and chick age
+    #ChickAge (in days) is NA because we have no exact CaptureDate
+    dplyr::mutate(Mass = NA, Tarsus = NA, OriginalTarsusMethod = NA,
+                  WingLength = NA,
+                  ChickAge = NA, ObserverID = NA) %>%
+    calc_age(ID = IndvID, Age = Age, Date = CaptureDate, Year = BreedingSeason) %>%
+  #Order variables to match other data
+    dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, ObserverID, IndvID, Species,
+                  CapturePopID, CapturePlot, ReleasePopID, ReleasePlot,
+                  Mass, Tarsus, WingLength, Age_observed, Age_calculated, ChickAge)
+
+  return(Capture_data)
+
+}
+
+#' Create individual data table for Santo Stefano Quisquina, Italy.
+#'
+#' Create individual data table in standard format for data from Santo Stefano
+#' Quisquina, Italy
+#' @param data Data frame. Primary data from Santo Stefano Quisquina.
+#' @param Capture_data Data frame. Generate by \link{\code{create_capture_SSQ}}.
+#' @param Brood_data Data frame. Generate by \link{\code{create_brood_SSQ}}.
+#'
+#' @return A data frame.
+
+create_individual_SSQ <- function(data, Capture_data, Brood_data){
+
+  #Create a list of all chicks
+  Chick_IDs <- data %>%
+    dplyr::select(BroodID, Chick1Id:Chick13Id) %>%
+    reshape2::melt(id.vars = "BroodID", value.name = "IndvID") %>%
+    dplyr::filter(!is.na(IndvID)) %>%
+    dplyr::select(-variable, BroodIDLaid = BroodID)
+
+  #Determine summary data for every captured individual
+  Individual_data <- Capture_data %>%
+    dplyr::arrange(IndvID, CaptureDate) %>%
+    dplyr::group_by(IndvID) %>%
+    dplyr::summarise(Species = first(Species),
+                     RingSeason = min(lubridate::year(CaptureDate)),
+                     RingAge = dplyr::case_when(is.na(first(Age_observed)) ~ "adult",
+                                                first(Age_observed) == 1 ~ "chick",
+                                                first(Age_observed) > 1 ~ "adult")) %>%
+    dplyr::mutate(Sex = dplyr::case_when(.$IndvID %in% Brood_data$FemaleID ~ "F",
+                                         .$IndvID %in% Brood_data$MaleID ~ "M",
+                                         .$IndvID %in% Brood_data$MaleID & .$IndvID %in% Brood_data$FemaleID ~ "C")) %>%
+    #Join in BroodID from the reshaped Chick_IDs table
+    dplyr::left_join(Chick_IDs, by = "IndvID") %>%
+    dplyr::mutate(BroodIDFledged = BroodIDLaid,
+                  PopID = "SSQ") %>%
+    select(IndvID, Species, PopID, BroodIDLaid,
+           BroodIDFledged, RingSeason, RingAge, Sex)
 
 }
