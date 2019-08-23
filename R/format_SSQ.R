@@ -82,8 +82,10 @@ format_SSQ <- function(db = utils::choose.dir(),
     #- BroodID (Year_NestID)
     #- ClutchType_observed
     #- FledgeDate
+    #Pad LocationID so they are all the same length
     dplyr::mutate(PopID = "SSQ",
-                  BroodID = paste(BreedingSeason, LocationID, LayingDate, sep = "_"),
+                  LocationID = stringr::str_pad(LocationID, width = 3, pad = "0"),
+                  BroodID = paste(BreedingSeason, LocationID, stringr::str_pad(LayingDate, width = 3, pad = "0"), sep = "_"),
                   ClutchType_observed = dplyr::case_when(.$Class == 1 ~ "first",
                                                          .$Class == 3 ~ "second",
                                                          .$Class == 2 ~ "replacement"),
