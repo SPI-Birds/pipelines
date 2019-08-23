@@ -2,7 +2,7 @@
 % Please edit documentation in R/format_CHO.R
 \name{format_CHO}
 \alias{format_CHO}
-\title{Construct standard summary for data from Choupal, Portugal.}
+\title{Construct standard format for data from Choupal, Portugal.}
 \usage{
 format_CHO(db = utils::choose.dir(), species = NULL, pop = NULL,
   path = ".", debug = FALSE, output_type = "csv")
@@ -31,12 +31,11 @@ variables.}
 \item{output_type}{Should the pipeline generate .csv files ('csv') or R objects ('R').}
 }
 \value{
-Generates 4 .csv files with data in a standard format.
+Generates either 4 .csv files or 4 data frames in the standard format.
 }
 \description{
-A pipeline to produce a standard output for the great tit population in
-Choupal, Portugal, administered by the University of Coimbra. Output follows
-the HNB standard breeding data format.
+A pipeline to produce the standard format for the great tit population in
+Choupal, Portugal, administered by the University of Coimbra.
 }
 \details{
 This section provides details on data management choices that are unique to
@@ -46,17 +45,14 @@ this data. For a general description of the standard format please see
 \strong{NumberFledged}: This population has no estimation of actual fledgling
 numbers. The last time nests are counted is 14 days post hatching. We use this
 as an estimation of fledgling numbers. This also affects
-\emph{ClutchType_calculated} as \emph{NumberFledged} is used to estimated
-second clutches.
+\emph{ClutchType_calculated} as we use the estimate of fledgling numbers to
+distinguish second/replacement clutches.
 
-\strong{Age_observed}: Translation of age records
-\itemize{
-\item Any
+\strong{Age_observed}: Translation of age records: \itemize{ \item Any
 individual caught as a chick was assumed to have a EURING code of 1: 'Pullus:
 nestling or chick, unable to fly freely, still able to be caught by hand.'
 \item Any individual listed as 'first year' was given a EURING code of 5: a
-bird hatched last calendar year and now in its second calendar year.
-\item Any
+bird hatched last calendar year and now in its second calendar year. \item Any
 individual listed as 'adult' was given a EURING code of 6: full-grown bird
 hatched before last calendar year; year of hatching otherwise unknown.}
 
@@ -69,6 +65,11 @@ give a more appropriate estimate of clutch type for this data.
 of clutch, brood, and fledgling numbers that are recorded explicitly in the
 data. This means that there are some nests where chicks have capture records,
 but the \emph{Brood data} table will not give any value of NumberFledged.
-(e.g. see BroodID 2004_NA). These capture records should be included, but we need
-to determine the amount of potential uncertainty around these records.
+(e.g. see BroodID 2004_NA). These capture records should be included, but we
+need to determine the amount of potential uncertainty around these records.
+
+\strong{LocationID}: For individuals captures in mist nets (specified by
+trapping method column), a single LocationID "MN1" is used.
+
+\strong{StartSeason}: Assume all boxes were placed in the first year of the study.
 }

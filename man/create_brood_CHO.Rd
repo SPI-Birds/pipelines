@@ -11,6 +11,8 @@ create_brood_CHO(data)
 }
 \value{
 A data frame.
+first'. For ClutchType_observed we are not giving broods the value
+replacement' as we don't have enough info.
 }
 \description{
 Create brood data table in standard format for data from Choupal,
