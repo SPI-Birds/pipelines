@@ -2,7 +2,7 @@
 % Please edit documentation in R/format_HAR.R
 \name{create_brood_HAR}
 \alias{create_brood_HAR}
-\title{Create brood data table for Harjavalta.}
+\title{Create brood data table for Harjavalta, Finland.}
 \usage{
 create_brood_HAR(db, species_filter)
 }

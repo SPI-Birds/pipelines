@@ -2,12 +2,12 @@
 % Please edit documentation in R/format_HAR.R
 \name{create_nestling_HAR}
 \alias{create_nestling_HAR}
-\title{Create nestling data capture table for Harjavalta.}
+\title{Create nestling data capture table for Harjavalta, Finland.}
 \usage{
 create_nestling_HAR(db, Brood_data)
 }
 \arguments{
-\item{db}{Location of primary data from Harjavalta.}
+\item{db}{Location of primary data from Harjavalta, Finland.}
 
 \item{Brood_data}{Output of \code{\link{create_brood_HAR}}.}
 }

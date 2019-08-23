@@ -2,7 +2,7 @@
 % Please edit documentation in R/format_HAR.R
 \name{create_location_HAR}
 \alias{create_location_HAR}
-\title{Create location table for Harjavalta.}
+\title{Create location table for Harjavalta, Finland.}
 \usage{
 create_location_HAR(db)
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/format_HAR.R
 \name{create_individual_HAR}
 \alias{create_individual_HAR}
-\title{Create individual table for Harjavalta.}
+\title{Create individual table for Harjavalta, Finland.}
 \usage{
 create_individual_HAR(Capture_data)
 }

@@ -124,17 +124,13 @@ format_HAR <- function(db = utils::choose.dir(),
   #Record start time to estimate processing time.
   start_time <- Sys.time()
 
-  ##############
-  # BROOD DATA #
-  ##############
+  # BROOD DATA
 
   message("Compiling brood data....")
 
   Brood_data <- create_brood_HAR(db = db, species_filter = species)
 
-  ################
-  # CAPTURE DATA #
-  ################
+  # CAPTURE DATA
 
   #Ringing data for nestlings and adults is stored separately.
   #First we will extract nestling info so we can determine average mass/tarsus
@@ -143,28 +139,22 @@ format_HAR <- function(db = utils::choose.dir(),
 
   Capture_data <- create_capture_HAR(db = db, Brood_data = Brood_data, species_filter = species)
 
-  ###################
-  # INDIVIDUAL DATA #
-  ###################
+  # INDIVIDUAL DATA
 
   message("Compiling individual data...")
 
   Individual_data <- create_individual_HAR(Capture_data = Capture_data)
 
-  #################
-  # LOCATION DATA #
-  #################
+  # LOCATION DATA
 
   message("Compiling location data...")
 
   Location_data <- create_location_HAR(db = db)
 
-  ###CURRENTLY ASSUMING THAT EACH LOCATION AND NEST BOX ARE IDENTICAL
-  ###GO THROUGH AND CHECK MORE THOROUGHLY
+  #CURRENTLY ASSUMING THAT EACH LOCATION AND NEST BOX ARE IDENTICAL
+  #GO THROUGH AND CHECK MORE THOROUGHLY
 
-  ###########################
-  # WRANGLE DATA FOR EXPORT #
-  ###########################
+  # WRANGLE DATA FOR EXPORT
 
   ## Add average chick mass and tarsus to brood data
 
@@ -189,9 +179,7 @@ format_HAR <- function(db = utils::choose.dir(),
   Capture_data <- Capture_data %>%
     dplyr::select(-Sex, -BroodID)
 
-  #########
-  # DEBUG #
-  #########
+  # GENERATE DEBUG REPORT
 
   if(debug){
 
@@ -203,9 +191,7 @@ format_HAR <- function(db = utils::choose.dir(),
 
   }
 
-  ###############
-  # EXPORT DATA #
-  ###############
+  # EXPORT DATA
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
@@ -240,9 +226,7 @@ format_HAR <- function(db = utils::choose.dir(),
 
 }
 
-################################################################################################################
-
-#' Create brood data table for Harjavalta.
+#' Create brood data table for Harjavalta, Finland.
 #'
 #' Create brood data table in standard format for data from Harjavalta, Finland.
 #'
@@ -253,7 +237,6 @@ format_HAR <- function(db = utils::choose.dir(),
 #'  protocol}.
 #'
 #' @return A data frame.
-#' @export
 
 create_brood_HAR <- function(db, species_filter){
 
@@ -329,18 +312,15 @@ create_brood_HAR <- function(db, species_filter){
 
 }
 
-################################################################################################################
-
-#' Create nestling data capture table for Harjavalta.
+#' Create nestling data capture table for Harjavalta, Finland.
 #'
 #' Create nestling data capture table for data from Harjavalta, Finland. This is
 #' used inside \code{\link{create_capture_HAR}}.
 #'
 #' @param Brood_data Output of \code{\link{create_brood_HAR}}.
-#' @param db Location of primary data from Harjavalta.
+#' @param db Location of primary data from Harjavalta, Finland.
 #'
 #' @return A data frame.
-#' @export
 
 create_nestling_HAR <- function(db, Brood_data){
 
@@ -382,9 +362,7 @@ create_nestling_HAR <- function(db, Brood_data){
 
 }
 
-################################################################################################################
-
-#' Create capture table for Harjavalta.
+#' Create capture table for Harjavalta, Finland.
 #'
 #' Create full capture data table in standard format for data from Harjavalta, Finland.
 #'
@@ -396,7 +374,6 @@ create_nestling_HAR <- function(db, Brood_data){
 #'  protocol}.
 #'
 #' @return A data frame.
-#' @export
 
 create_capture_HAR    <- function(db, Brood_data, species_filter){
 
@@ -640,8 +617,10 @@ create_capture_HAR    <- function(db, Brood_data, species_filter){
                                               Age == "2" ~ 7,
                                               Age == "2+" ~ 6),
                   OriginalTarsusMethod = "Alternative") %>%
-    select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, CapturePopID, CapturePlot,
-           ReleasePopID, ReleasePlot, Mass, Tarsus, OriginalTarsusMethod, WingLength, Age_observed, Age_calculated, ChickAge, Sex, BroodID)
+    dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, CapturePopID, CapturePlot,
+           ReleasePopID, ReleasePlot, Mass, Tarsus, OriginalTarsusMethod, WingLength, Age_observed, Age_calculated, ChickAge, Sex, BroodID) %>%
+    #Ungroup data to remove warnings in debug report
+    dplyr::ungroup()
 
   return(Capture_data_expand)
 
@@ -655,16 +634,13 @@ create_capture_HAR    <- function(db, Brood_data, species_filter){
 
 }
 
-################################################################################################################
-
-#' Create individual table for Harjavalta.
+#' Create individual table for Harjavalta, Finland.
 #'
 #' Create full individual data table in standard format for data from Harjavalta, Finland.
 #'
 #' @param Capture_data Output of \code{\link{create_capture_HAR}}.
 #'
 #' @return A data frame.
-#' @export
 
 create_individual_HAR <- function(Capture_data){
 
@@ -679,20 +655,20 @@ create_individual_HAR <- function(Capture_data){
               RingSeason = first(lubridate::year(CaptureDate)),
               RingAge = ifelse(any(Age_calculated %in% c(1, 3)), "chick", "adult"),
               Sex = first(Sex)) %>%
-    rowwise() %>%
+    dplyr::rowwise() %>%
     #For each individual, if their ring age was 1 or 3 (caught in first breeding year)
     #Then we take their first BroodID, otherwise it is NA
-    mutate(BroodIDLaid = ifelse(RingAge == "chick", BroodIDLaid, NA),
+    dplyr::mutate(BroodIDLaid = ifelse(RingAge == "chick", BroodIDLaid, NA),
            BroodIDFledged = BroodIDLaid) %>%
-    arrange(RingSeason, IndvID)
+    #Ungroup to prevent warnings in debug report
+    dplyr::ungroup() %>%
+    dplyr::arrange(RingSeason, IndvID)
 
   return(Indv_data)
 
 }
 
-################################################################################################################
-
-#' Create location table for Harjavalta.
+#' Create location table for Harjavalta, Finland.
 #'
 #' Create full location data table in standard format for data from Harjavalta, Finland.
 #'

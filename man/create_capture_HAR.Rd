@@ -2,7 +2,7 @@
 % Please edit documentation in R/format_HAR.R
 \name{create_capture_HAR}
 \alias{create_capture_HAR}
-\title{Create capture table for Harjavalta.}
+\title{Create capture table for Harjavalta, Finland.}
 \usage{
 create_capture_HAR(db, Brood_data, species_filter)
 }
