@@ -113,22 +113,13 @@ format_SSQ <- function(db = utils::choose.dir(),
 
   Individual_data <- create_individual_SSQ(all_data, Capture_data, Brood_data)
 
-  ################
-  # NESTBOX DATA #
-  ################
+  # LOCATION DATA
 
   message("Compiling nestbox information...")
 
-  Location_data <- all_data %>%
-    dplyr::group_by(LocationID) %>%
-    dplyr::summarise(LocationType = NA,
-                     PopID = "SSQ",
-                     StartSeason = 1993, EndSeason = NA) %>%
-    dplyr::mutate(NestboxID = LocationID) %>%
-    #Join in first latitude and longitude data recorded for this box.
-    #It's not clear why these are ever different, need to ask.
-    dplyr::left_join(all_data %>% group_by(LocationID) %>% slice(1) %>% select(LocationID, Latitude, Longitude), by = "LocationID") %>%
-    dplyr::select(LocationID, NestboxID, LocationType, PopID, Latitude, Longitude, StartSeason, EndSeason)
+  Location_data <- create_location_SSQ(all_data)
+
+  # GENERATE DEBUG REPORT
 
   if(debug){
 
@@ -310,5 +301,28 @@ create_individual_SSQ <- function(data, Capture_data, Brood_data){
                   PopID = "SSQ") %>%
     select(IndvID, Species, PopID, BroodIDLaid,
            BroodIDFledged, RingSeason, RingAge, Sex)
+
+}
+
+#' Create location data table for Santo Stefano Quisquina, Italy.
+#'
+#' Create location data table in standard format for data from Santo Stefano
+#' Quisquina, Italy
+#' @param data Data frame. Primary data from Santo Stefano Quisquina.
+#'
+#' @return A data frame.
+
+create_location_SSQ <- function(data){
+
+  Location_data <- data %>%
+    dplyr::group_by(LocationID) %>%
+    dplyr::summarise(LocationType = "NB",
+                     PopID = "SSQ",
+                     StartSeason = 1993, EndSeason = NA) %>%
+    dplyr::mutate(NestboxID = LocationID) %>%
+    #Join in first latitude and longitude data recorded for this box.
+    #It's not clear why these are ever different, need to ask.
+    dplyr::left_join(data %>% group_by(LocationID) %>% slice(1) %>% select(LocationID, Latitude, Longitude), by = "LocationID") %>%
+    dplyr::select(LocationID, NestboxID, LocationType, PopID, Latitude, Longitude, StartSeason, EndSeason)
 
 }
