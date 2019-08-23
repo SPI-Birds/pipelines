@@ -46,12 +46,18 @@ calc_age <- function(data, ID, Age, Date, Year, showpb = TRUE){
     dplyr::mutate(FirstAge  = first({{Age}}),
                   FirstYear = as.numeric(first({{Year}}))) %>%
     dplyr::mutate(yr_diff   = as.numeric({{Year}}) - FirstYear,
-                  Age_calculated = purrr::pmap_dbl(.l = list(FirstAge, yr_diff, {{Age}}),
+                  Age_calculated = purrr::pmap_dbl(.l = list(FirstAge, yr_diff, {{Age}}, {{ID}}),
                                              .f = ~{
 
                                                if(showpb){
 
                                                  pb$print()$tick()
+
+                                               }
+
+                                               if(is.na(..4)){
+
+                                                 return(NA)
 
                                                }
 
