@@ -2,7 +2,7 @@
 % Please edit documentation in R/format_UAN.R
 \name{format_UAN}
 \alias{format_UAN}
-\title{Construct standard summary for data from the Univeristy of Antwerp.}
+\title{Construct standard format for data from the Univeristy of Antwerp.}
 \usage{
 format_UAN(db = utils::choose.dir(), species = NULL, pop = NULL,
   path = ".", debug = FALSE, output_type = "csv")
@@ -31,12 +31,11 @@ variables.}
 \item{output_type}{Should the pipeline generate .csv files ('csv') or R objects ('R').}
 }
 \value{
-Generates 4 .csv files with data in a standard format.
+Generates either 4 .csv files or 4 data frames in the standard format.
 }
 \description{
-A pipeline to produce a standard output for 2 hole-nesting bird study
-populations administered by the University of Antwerp. Output follows the HNB
-standard breeding data format.
+A pipeline to produce the standard format for 2 hole-nesting bird study
+populations administered by the University of Antwerp.
 }
 \details{
 This section provides details on data management choices that are unique to
@@ -44,13 +43,13 @@ this data. For a general description of the standard format please see
 \href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
 
 \strong{ClutchType_observed}: The raw data distinguishes second and third
-nests and first second and third replacements. We group these all as 'second'
-and 'replacement'.
+nests and first, second, and third replacements. We group these all as 'second'
+and 'replacement' respectively.
 
 \strong{ClutchSizeError}: The raw data includes a column to determine whether
 clutch size was counted with or without a brooding female. The presence of a
 brooding female can effect the uncertainty in the count. After discussions
-with the data owner clutch size counted with a brooding female have an error
+with the data owner clutch size counted with a brooding female is given an error
 of 2.
 
 \strong{ExperimentID}: Experimental codes are provided in their original

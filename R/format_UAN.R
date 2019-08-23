@@ -1,21 +1,20 @@
-#'Construct standard summary for data from the Univeristy of Antwerp.
+#'Construct standard format for data from the Univeristy of Antwerp.
 #'
-#'A pipeline to produce a standard output for 2 hole-nesting bird study
-#'populations administered by the University of Antwerp. Output follows the HNB
-#'standard breeding data format.
+#'A pipeline to produce the standard format for 2 hole-nesting bird study
+#'populations administered by the University of Antwerp.
 #'
 #'This section provides details on data management choices that are unique to
 #'this data. For a general description of the standard format please see
 #'\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
 #'
 #'\strong{ClutchType_observed}: The raw data distinguishes second and third
-#'nests and first second and third replacements. We group these all as 'second'
-#'and 'replacement'.
+#'nests and first, second, and third replacements. We group these all as 'second'
+#'and 'replacement' respectively.
 #'
 #'\strong{ClutchSizeError}: The raw data includes a column to determine whether
 #'clutch size was counted with or without a brooding female. The presence of a
 #'brooding female can effect the uncertainty in the count. After discussions
-#'with the data owner clutch size counted with a brooding female have an error
+#'with the data owner clutch size counted with a brooding female is given an error
 #'of 2.
 #'
 #'\strong{ExperimentID}: Experimental codes are provided in their original
@@ -58,7 +57,7 @@
 #'
 #'@inheritParams pipeline_params
 #'
-#'@return Generates 4 .csv files with data in a standard format.
+#'@return Generates either 4 .csv files or 4 data frames in the standard format.
 #'@export
 
 format_UAN <- function(db = utils::choose.dir(),
@@ -506,7 +505,7 @@ create_individual_UAN <- function(data, CAPTURE_info, species_filter){
     dplyr::filter(!is.na(BroodID) & Age_observed == 1) %>%
     dplyr::summarise(BroodIDLaid = as.character(first(BroodID)))
 
-  #Do this PopID, capture age and first year as well
+  #Do this for PopID, capture age and first year as well
   Indv_Pop <- CAPTURE_info %>%
     dplyr::filter(!is.na(CapturePopID)) %>%
     dplyr::group_by(IndvID) %>%
