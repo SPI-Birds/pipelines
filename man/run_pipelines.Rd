@@ -5,7 +5,7 @@
 \title{Run multiple data pipelines}
 \usage{
 run_pipelines(path = utils::choose.dir(), PopID = NULL,
-  Species = NULL)
+  Species = NULL, combined = TRUE)
 }
 \arguments{
 \item{path}{File path. Location of all folders for data owners. Note, the
@@ -21,6 +21,9 @@ as seen in pop_names.}
  protocol}. Note, this argument takes precedence over argument PopID (i.e.
 if a population doesn't have the requested species it will not be
 formatted.)}
+
+\item{combined}{Should pipelines create individual .csv files for each
+population (FALSE) or combined .csv files for all populations (TRUE).}
 }
 \value{
 Generate .csv files

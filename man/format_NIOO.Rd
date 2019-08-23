@@ -5,7 +5,7 @@
 \title{Construct standard summary for NIOO data.}
 \usage{
 format_NIOO(db = utils::choose.dir(), species = NULL, pop = NULL,
-  path = ".")
+  path = ".", output_type = "csv")
 }
 \arguments{
 \item{db}{Location of database file.}
@@ -22,30 +22,55 @@ individual populations. For other pipelines that contain only one population
 this argument can be ignored.}
 
 \item{path}{Location where output csv files will be saved.}
+
+\item{output_type}{Should the pipeline generate .csv files ('csv') or R objects ('R').}
 }
 \value{
-Generates 5 .csv files with data in a standard format.
+Generates 4 .csv files with data in a standard format.
 }
 \description{
-A pipeline to produce a standard output for 8 hole-nesting bird study populations
-at the Netherlands Institute of Ecology (NIOO-KNAW).
-Output follows the HNB standard breeding data format.
+A pipeline to produce a standard output for 8 hole-nesting bird study
+populations at the Netherlands Institute of Ecology (NIOO-KNAW). Output
+follows the HNB standard breeding data format.
 }
 \details{
-This section provides details on data management choices that are unique to the NIOO database.
-For a general description of the standard format please see XXXXX PLACE HOLDER!
+This section provides details on data management choices that are unique to
+the NIOO database. For a general description of the standard format please see
+\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
 
-\strong{Species}: By default the pipeline will include great tit \emph{Parus major}; blue tit \emph{Cyanistes caeruleus};
-pied flycatcher \emph{Ficedula hypoleuca}; Eurasian nuthatch \emph{Sitta europaea};
-coal tit \emph{Periparus ater}; and tree sparrow \emph{Passer montanus}.
+\strong{Species}: By default the pipeline will include great tit \emph{Parus
+major}; blue tit \emph{Cyanistes caeruleus}; pied flycatcher \emph{Ficedula
+hypoleuca}; Eurasian nuthatch \emph{Sitta europaea}; coal tit \emph{Periparus
+ater}; and tree sparrow \emph{Passer montanus}.
 
 \strong{Populations}: This pipeline extracts data for 8 populations managed by
-NIOO-KNAW: Buunderkamp, Lichtenbeek, Westerheide, Hoge Veluwe, Warnsborn, Vlieland, Oosterhout, and Liesbosch.
+NIOO-KNAW: Buunderkamp, Lichtenbeek, Westerheide, Hoge Veluwe, Warnsborn,
+Vlieland, Oosterhout, and Liesbosch.
 
-\strong{Sex}: We condense sex information to only include groups M, F, and U (unknown) following the EUring standard.
-Uncertainty in sex was ignored (e.g. 'male?' or 'female?').
+\strong{Sex}: We condense sex information to only include groups M, F, and U
+(unknown) following the EUring standard. Uncertainty in sex was ignored (e.g.
+'male?' or 'female?').
 
-\strong{Measurement error}: For BroodSize, NumberFledged XXXX FILL IN a best estimate is provided.
-Best estimate is halfway between the minimum and maximum possible value. \emph{N.B.:} This means that the best estimate will not necessarily be an integer.
-Error is provided in BroodSizeError, NumberFledgedError etc. this is the absolute error (+/-) around the best estimate.
+\strong{Measurement error}: For BroodSize, NumberFledged XXXX FILL IN a best
+estimate is provided. Best estimate is halfway between the minimum and maximum
+possible value. \emph{N.B.:} This means that the best estimate will not
+necessarily be an integer. Error is provided in BroodSizeError,
+NumberFledgedError etc. this is the absolute error (+/-) around the best
+estimate.
+
+\strong{CapturePlot, ReleasePlot, LocationID}: NIOO data gives CaptureLocation
+and ReleaseLocation (e.g. which nest box was a check transfered to during crossfoster).
+Currently, we use these as the Capture/ReleasePlot. In Capture_data
+we specify the LocationID as the same as the CapturePlot. We need to fix
+this to distinguish between Location (the smallest scale), Plot (middle scale),
+and PopID (largest scale).
+
+\strong{Capture_data}Capture_data has information on the accuracy of capture dates.
+For now, I am only including those individuals where capture date is known with
+100% accuracy, otherwise this might affect the calculated age of individuals
+during capture.
+
+\strong{AvgEggMass} Egg measurements are included in the NIOO database, but these are a bit more difficult to include
+because they aren't associated with a given brood (they can be weighed before and after a cross fostering). For now,
+we don't include this data, but we hope to in the future. Therefore, AvgEggMass is currently just NA.
 }

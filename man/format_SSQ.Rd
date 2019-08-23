@@ -5,7 +5,7 @@
 \title{Construct standard summary for data from Santo Stefano Quisquina, Italy.}
 \usage{
 format_SSQ(db = utils::choose.dir(), species = NULL, pop = NULL,
-  path = ".", debug = FALSE)
+  path = ".", debug = FALSE, output_type = "csv")
 }
 \arguments{
 \item{db}{Location of database file.}
@@ -27,9 +27,11 @@ this argument can be ignored.}
 generates a summary of pipeline data. This includes: a) Histogram of
 continuous variables with mean/SD b) unique values of all categorical
 variables.}
+
+\item{output_type}{Should the pipeline generate .csv files ('csv') or R objects ('R').}
 }
 \value{
-Generates 5 .csv files with data in a standard format.
+Generates 4 .csv files with data in a standard format.
 }
 \description{
 A pipeline to produce a standard output for the great and blue tit population
@@ -38,11 +40,10 @@ and Daniela Campobello.
 }
 \details{
 This section provides details on data management choices that are unique to
-this data. For a general description of the standard format please see XXXXX
-PLACE HOLDER!
+this data. For a general description of the standard format please see
+\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
 
 \strong{BroodID}: For now we make BroodID as a combination of: year of nest,
-nestID, layingdate. This is necessary because there are no other ways to
 distinguish a two broods laid in the same nest and same year.
 
 \strong{Species}: In the individual data, there are some cases where an
@@ -55,16 +56,16 @@ ever captured on the nest, we used laying date + clutch size + 15 days
 incubation + 12 days. This is because chicks were ringed at 12 days old at
 the latest.
 
-\strong{Age_calc}: All ringed chicks were assumed to be ringed at EURING code
+\strong{Age_calculated}: All ringed chicks were assumed to be ringed at EURING code
 1 (i.e. pre-fledging). For adults where no age was provided, we assumed that
 first observation was 6 (i.e. at least 2 years old)
 
-\strong{Indv_data}: There are cases where chicks from different nests are
+\strong{Individual_data}: There are cases where chicks from different nests are
 given the same ring number. Unsure if this is the rings being reused or a
 typo. Currently, I leave it as is and assume this is a typo that needs to be
 fixed in the primary data.
 
-\strong{Nestbox StartYear}: Some nest boxes were replaced over the course of
+\strong{Nestbox StartSeason}: Some nest boxes were replaced over the course of
 the study; however, these replacements were not explicitly recorded.
 Therefore, we list all nestboxes as functioning for the full study period.
 }

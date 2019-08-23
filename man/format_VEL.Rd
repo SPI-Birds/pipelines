@@ -5,7 +5,7 @@
 \title{Construct standard summary for data from Velky Kosir, Czechia.}
 \usage{
 format_VEL(db = utils::choose.dir(), species = NULL, pop = NULL,
-  path = ".", debug = FALSE)
+  path = ".", debug = FALSE, output_type = "csv")
 }
 \arguments{
 \item{db}{Location of database file.}
@@ -27,6 +27,8 @@ this argument can be ignored.}
 generates a summary of pipeline data. This includes: a) Histogram of
 continuous variables with mean/SD b) unique values of all categorical
 variables.}
+
+\item{output_type}{Should the pipeline generate .csv files ('csv') or R objects ('R').}
 }
 \value{
 Generates 4 .csv files with data in a standard format.
