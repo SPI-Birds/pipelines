@@ -61,7 +61,7 @@ format_SSQ <- function(db = utils::choose.dir(),
 
   #Read in data with readxl
   all_data <- readxl::read_excel(db) %>%
-    #Clean all names with janitor
+    #Clean all names with janitor to snake_case
     janitor::clean_names(case = "upper_camel") %>%
     #Remove the column 'Row'. This is just the row number, we have this already.
     dplyr::select(-Row) %>%
@@ -79,7 +79,7 @@ format_SSQ <- function(db = utils::choose.dir(),
     dplyr::filter(Species %in% species) %>%
     #Add other missing data:
     #- PopID
-    #- BroodID (Year_NestID)
+    #- BroodID (Year_LocationID_LayingDate)
     #- ClutchType_observed
     #- FledgeDate
     #Pad LocationID so they are all the same length
@@ -128,6 +128,8 @@ format_SSQ <- function(db = utils::choose.dir(),
     generate_debug_report(path = path, Pop = "SSQ", Brood_data = Brood_data, Capture_data = Capture_data, Indv_data = Individual_data)
 
   }
+
+  # EXPORT DATA
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
