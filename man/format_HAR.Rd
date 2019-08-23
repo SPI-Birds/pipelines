@@ -2,7 +2,7 @@
 % Please edit documentation in R/format_HAR.R
 \name{format_HAR}
 \alias{format_HAR}
-\title{Construct standard summary for data from Harjavalta, Finland.}
+\title{Construct standard format for data from Harjavalta, Finland.}
 \usage{
 format_HAR(db = utils::choose.dir(), species = NULL, pop = NULL,
   path = ".", debug = FALSE, output_type = "csv")
@@ -31,12 +31,11 @@ variables.}
 \item{output_type}{Should the pipeline generate .csv files ('csv') or R objects ('R').}
 }
 \value{
-Generates 4 .csv files with data in a standard format.
+Generates either 4 .csv files or 4 data frames in the standard format.
 }
 \description{
-A pipeline to produce a standard output for the hole nesting bird population
-in Harjavalta, Finland, administered by the University of Turku. Output
-follows the HNB standard breeding data format.
+A pipeline to produce the standard format for the hole nesting bird population
+in Harjavalta, Finland, administered by the University of Turku.
 }
 \details{
 This section provides details on data management choices that are unique to
@@ -48,19 +47,19 @@ hole nesting species; however, only 4 of these (great tit, blue tit, coal tit,
 pied flycatcher) have >100 nest records. Only data from these 4 species is
 considered.
 
-\strong{Age}: Chick age is listed as: PP (nestling), PM (fledgling), 1, 1+, 2, 2+.
-The numbers are said to follow the EURING system. I'm not sure which
-version of the EURING code this would be. I think that 1 = first year bird,
-1+ = >first year bird, 2 = second year bird, 2+ = >second year bird.
-It's not clear to me the distinction between PP, PM, and 1. For now, only PP and PM
-are counted as being caught as chicks (i.e. with exact hatching year known),
+\strong{Age}: Chick age is listed as: PP (nestling), PM (fledgling), 1, 1+, 2,
+2+. The numbers are said to follow the EURING system. I'm not sure which
+version of the EURING code this would be. I assume that 1 = first year bird,
+1+ = >first year bird, 2 = second year bird, 2+ = >second year bird. It's not
+clear to me the distinction between PP, PM, and 1. For now, only PP and PM are
+counted as being caught as chicks (i.e. with exact hatching year known),
 everything else is assumed to be an estimate. This does mean that we have some
 cases where the Age_calculated is 1 and the Age_observed is >= 5.
 
 \strong{LayingDateError & HatchDateError}: Accuracy of laying and hatch date
 are given as categories: 0-1; 1-2; 2-3; >3 (N.B. Need to check this with
-Tapio). More conservative error is provided (i.e. 0-1 is recorded as 1). For
-now >3 is recorded as 4. N.B. Need to check this with Tapio!!
+Tapio). More conservative error is used (i.e. 0-1 is recorded as 1). For now
+>3 is recorded as 4. N.B. Need to check this with Tapio!!
 
 \strong{Capture_data}: Combining capture data is fairly difficult with this
 dataset: \itemize{ \item All data from adults when first ringed and recaptured
@@ -98,32 +97,30 @@ the 'Ringing' table (e.g. BroodID: 2008_0222_1 or 2018_1378_2).
 but many of these chicks are missing in the 'Nestling' table (e.g. BroodID:
 2007_1714_1).
 
-\item In some cases, chicks were ringed with two different series and there
-are two different records of chick ringing.
-
 \item In some cases, chicks were recorded in 'Ringing' but have no matching
 BroodID in Brood_data (e.g. 2004_1012_0).
 
 \item In some cases, one BroodID is used in the 'Ringing' table and another in
 the 'Nestling' table even though the ring numbers are the same (e.g.
-2018_0323_1/2).
+2018_0323_1/2). I think this conflict of BroodID is what causes most of the
+problems above.
 
 }
 
-How do we deal with all these conflicts? For now, we assume that if a chick
-was listed as 'ringed' but has no record in the 'Nestlings' table, we assume
-it was ringed but no measurements were taken (e.g. tarsus) or the measurements
-were not found because the BroodID was entered incorrectly. If a chick was
-captured in 'Nestlings' but is not recorded in 'Ringing' for now these will be
-excluded because they won't join to the data in 'Ringing'. These cases are the
-most problematic because to give these chicks a true ring number we need to
-know the rest of the ring number (not just last 2 digits). If they have no
-record in ringing, it is impossible to include this information! For records
-where no ring number is given (e.g. A), we include only those where the
-BroodID is in either the 'Ringing' table or the 'Brood' table. This ensures
-that the unringed chick is of the right species.
+How do we deal with all these conflicts? For now, if a chick was listed in the
+'Ringing' table but has no record in the 'Nestlings' table, we assume it was
+ringed but no measurements were taken (e.g. tarsus) or the measurements were
+not found because the BroodID was entered incorrectly. If a chick was captured
+in 'Nestlings' but is not recorded in 'Ringing' for now these will be excluded
+because they won't join to any corresponding data in 'Ringing'. These cases
+are the most problematic because to give these chicks a true ring number we
+need to know the rest of the ring number (not just last 2 digits). If they
+have no record in the Ringing table, it is impossible to include this
+information! For records where no ring number is given (e.g. A), we include
+only those where the BroodID is in either the 'Ringing' table or the 'Brood'
+table. This ensures that the unringed chick is of the right species.
 
-\strong{Mass}: Mass of birds appears to be measured in mg. This is converted
+\strong{Mass}: Mass of birds is measured in mg. This is converted
 to grams to match other populations.
 
 \strong{Tarsus}: Tarsus length is measured for both left and right leg.
@@ -132,4 +129,7 @@ in adults can be either left or right leg.
 
 \strong{Sex}: Bird classified as 'likely male' or 'likely female' are simply
 given code 'M' and 'F' respectively (i.e. this uncertainty is ignored).
+
+\strong{BroodID}: Unique BroodID values are generated using
+BreedingSeason_LocationID_BroodID
 }
