@@ -85,7 +85,8 @@ calc_age <- function(data, ID, Age, Date, Year, showpb = TRUE){
                                                }
 
                                              })) %>%
-    dplyr::select(-FirstAge:-yr_diff)
+    dplyr::select(-FirstAge:-yr_diff) %>%
+    dplyr::ungroup()
 
   return(output)
 
