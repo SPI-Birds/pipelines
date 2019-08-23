@@ -1,6 +1,6 @@
-#' Construct standard summary for data from Santo Stefano Quisquina, Italy.
+#' Construct standard format for data from Santo Stefano Quisquina, Italy.
 #'
-#' A pipeline to produce a standard output for the great and blue tit population
+#' A pipeline to produce the standard format for the great and blue tit population
 #' in Santo Stefano Quisquina, Sicly, Italy, administered by Camillo Cusimano
 #' and Daniela Campobello.
 #'
@@ -8,35 +8,34 @@
 #' this data. For a general description of the standard format please see
 #'\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
 #'
-#' \strong{BroodID}: For now we make BroodID as a combination of: year of nest,
-#' distinguish a two broods laid in the same nest and same year.
+#' \strong{BroodID}: Unique BroodID is constructed using:
+#' BreedingSeason_LocationID_LayingDate (April days)
 #'
 #' \strong{Species}: In the individual data, there are some cases where an
 #' IndvID is associated with >1 species. I assume these are just typos and I
 #' will just take the first species.
 #'
 #' \strong{CaptureDate}: No exact capture date is currently given. For adults we
-#' use the laying date of the nest as a proxy for capture date. Chick were only
+#' use the laying date of the nest as a proxy for capture date. Chicks were only
 #' ever captured on the nest, we used laying date + clutch size + 15 days
 #' incubation + 12 days. This is because chicks were ringed at 12 days old at
 #' the latest.
 #'
 #' \strong{Age_calculated}: All ringed chicks were assumed to be ringed at EURING code
-#' 1 (i.e. pre-fledging). For adults where no age was provided, we assumed that
-#' first observation was 6 (i.e. at least 2 years old)
+#' 1 (i.e. pre-fledging).
 #'
 #' \strong{Individual_data}: There are cases where chicks from different nests are
 #' given the same ring number. Unsure if this is the rings being reused or a
 #' typo. Currently, I leave it as is and assume this is a typo that needs to be
 #' fixed in the primary data.
 #'
-#' \strong{Nestbox StartSeason}: Some nest boxes were replaced over the course of
+#' \strong{StartSeason}: Some nest boxes were replaced over the course of
 #' the study; however, these replacements were not explicitly recorded.
 #' Therefore, we list all nestboxes as functioning for the full study period.
 #'
 #' @inheritParams pipeline_params
 #'
-#' @return Generates 4 .csv files with data in a standard format.
+#' @return Generates either 4 .csv files or 4 data frames in the standard format.
 #' @export
 
 format_SSQ <- function(db = utils::choose.dir(),
