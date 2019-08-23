@@ -1,8 +1,7 @@
-#'Construct standard summary for data from Choupal, Portugal.
+#'Construct standard format for data from Choupal, Portugal.
 #'
-#'A pipeline to produce a standard output for the great tit population in
-#'Choupal, Portugal, administered by the University of Coimbra. Output follows
-#'the HNB standard breeding data format.
+#'A pipeline to produce the standard format for the great tit population in
+#'Choupal, Portugal, administered by the University of Coimbra.
 #'
 #'This section provides details on data management choices that are unique to
 #'this data. For a general description of the standard format please see
@@ -11,17 +10,14 @@
 #'\strong{NumberFledged}: This population has no estimation of actual fledgling
 #'numbers. The last time nests are counted is 14 days post hatching. We use this
 #'as an estimation of fledgling numbers. This also affects
-#'\emph{ClutchType_calculated} as \emph{NumberFledged} is used to estimated
-#'second clutches.
+#'\emph{ClutchType_calculated} as we use the estimate of fledgling numbers to
+#'distinguish second/replacement clutches.
 #'
-#'\strong{Age_observed}: Translation of age records
-#'\itemize{
-#'\item Any
+#'\strong{Age_observed}: Translation of age records: \itemize{ \item Any
 #'individual caught as a chick was assumed to have a EURING code of 1: 'Pullus:
 #'nestling or chick, unable to fly freely, still able to be caught by hand.'
 #'\item Any individual listed as 'first year' was given a EURING code of 5: a
-#'bird hatched last calendar year and now in its second calendar year.
-#'\item Any
+#'bird hatched last calendar year and now in its second calendar year. \item Any
 #'individual listed as 'adult' was given a EURING code of 6: full-grown bird
 #'hatched before last calendar year; year of hatching otherwise unknown.}
 #'
@@ -34,12 +30,17 @@
 #'of clutch, brood, and fledgling numbers that are recorded explicitly in the
 #'data. This means that there are some nests where chicks have capture records,
 #'but the \emph{Brood data} table will not give any value of NumberFledged.
-#'(e.g. see BroodID 2004_NA). These capture records should be included, but we need
-#'to determine the amount of potential uncertainty around these records.
+#'(e.g. see BroodID 2004_NA). These capture records should be included, but we
+#'need to determine the amount of potential uncertainty around these records.
+#'
+#'\strong{LocationID}: For individuals captures in mist nets (specified by
+#'trapping method column), a single LocationID "MN1" is used.
+#'
+#'\strong{StartSeason}: Assume all boxes were placed in the first year of the study.
 #'
 #'@inheritParams pipeline_params
 #'
-#'@return Generates 4 .csv files with data in a standard format.
+#'@return Generates either 4 .csv files or 4 data frames in the standard format.
 #'@export
 
 format_CHO <- function(db = utils::choose.dir(),
@@ -64,28 +65,26 @@ format_CHO <- function(db = utils::choose.dir(),
 
   #Read in data with readxl
   all_data <- readxl::read_excel(paste(db, "database Choupal.xlsx", sep = "\\")) %>%
-    #Clean all names with janitor
+    #Clean all names with janitor into snake_case
     janitor::clean_names(case = "upper_camel") %T>%
     #There is one column with "º" that doesn't convert to ASCII with janitor
     #This appears the be a deeper issue than janitor (potentially in unicode translation)
     #Therefore, we will do the translation manually
     {colnames(.) <- iconv(colnames(.), "", "ASCII", sub = "")} %>%
-    #Change species to "PARMARJ" because it's only PARMAJ in Choupal
-    #Add PopID and plot
+    #Change species to "PARMAJ" because it's only PARMAJ in Choupal
     dplyr::mutate(Species = "PARMAJ",
            PopID = "CHO", Plot = NA_character_) %>%
     dplyr::filter(Species %in% species) %>%
     #BroodIDs are not unique (they are repeated each year)
-    #We need to create unique IDs for each year
-    #Convert capture date into a date object (not Julian days)
-    #Need this to order captures chronologically
-    #Fix time format (it's currently trying to estimate date)
+    #We need to create unique IDs for each year using Year_BroodID
     dplyr::mutate(BroodID = paste(Year, BroodId, sep = "_"),
            IndvID = Ring,
            CaptureDate = lubridate::ymd(paste0(Year, "-01-01")) + JulianDate,
            Time = format.POSIXct(Time, format = "%H:%M:%S"),
-           ChickAge = as.numeric(na_if(ChickAge, "na")),
+           ChickAge = as.numeric(dplyr::na_if(ChickAge, "na")),
            BreedingSeason = Year,
+           #If an individual was caught in a mist net give a generic LocationID (MN1)
+           #Otherwise, give the box number.
            LocationID = purrr::pmap_chr(.l = list(TrapingMethod, as.character(Box)),
                                         .f = ~{
 
@@ -188,7 +187,7 @@ create_brood_CHO <- function(data){
     dplyr::filter(TrapingMethod != "mist net")
 
   #Identify any adults caught on the brood
-  #Reshape data so that sex is a column not a row (i.e. MaleID, FemaleID)
+  #Reshape data so that MaleID and FemaleID are separate columns for each brood
   Parents <- data %>%
     #Remove all records with chicks
     dplyr::filter(Age != "C") %>%
@@ -198,20 +197,21 @@ create_brood_CHO <- function(data){
     dplyr::mutate(IndvID = purrr::map_chr(.x = IndvID,
                                           .f = ~ifelse(grepl(pattern = "ring", .x), NA, .x))) %>%
     #Reshape data so that we have a MaleID and FemaleID column
-    #Rather than an individual row for each parent
+    #Rather than an individual row for each parent capture
     reshape2::melt(id = c("BroodID", "Sex")) %>%
     reshape2::dcast(BroodID ~ Sex) %>%
     dplyr::rename(FemaleID = `F`, MaleID = `M`)
 
   #Determine whether clutches are 2nd clutch
   ClutchType_obsv <- data %>%
-    #For each brood, if a clutch is listed as '2nd' make it 'second' otherwise 'first'.
-    #For ClutchType_observed we are excluding 'replacement' as we don't have enough info.
+    #For each brood, if a clutch is listed as '2nd' make it 'second' otherwise
+    #'first'. For ClutchType_observed we are not giving broods the value
+    #'replacement' as we don't have enough info.
     dplyr::group_by(BroodID) %>%
     dplyr::summarise(ClutchType_observed = ifelse("2nd" %in% SecondClutch, "second", "first"))
 
-  #Finally, we add in average mass and tarsus measured for all chicks at 14d
-  #From Capture_data, subset only those chicks that were 14 - 16 days when captured.
+  #Finally, we add in average mass and tarsus measured for all chicks at 14 - 16d
+  #Subset only those chicks that were 14 - 16 days when captured.
   avg_measure <- data %>%
     dplyr::filter(!is.na(ChickAge) & between(ChickAge, 14, 16)) %>%
     #For every brood, determine the average mass and tarsus length
@@ -233,7 +233,7 @@ create_brood_CHO <- function(data){
     #Turn all remaining columns to characters
     #melt/cast requires all values to be of the same type
     dplyr::mutate_all(as.character) %>%
-    #Melt and cast data so that we return the first value of relevant brood data
+    #Melt and cast data so that we return the first value of relevant data for each brood
     #e.g. laying date, clutch size etc.
     #I've checked manually and the first value is always correct in each brood
     reshape2::melt(id = c("BroodID", "Species", "Year", "Site", "Box", "FemaleID", "MaleID")) %>%
@@ -260,6 +260,7 @@ create_brood_CHO <- function(data){
                   FledgeDate, FledgeDateError,
                   NumberFledged, NumberFledgedError,
                   AvgEggMass, NumberEggs) %>%
+    #Join in average chick measurements
     dplyr::left_join(avg_measure, by = "BroodID") %>%
     #Convert everything back to the right format after making everything character
     #for the reshape
@@ -304,7 +305,6 @@ create_capture_CHO <- function(data){
                   ischick = dplyr::case_when(.$Age == "C" ~ 1,
                                              .$Age != "C" ~ 4)) %>%
     calc_age(ID = IndvID, Age = ischick, Date = CaptureDate, Year = BreedingSeason) %>%
-    dplyr::ungroup() %>%
     #Also include observed age (not calculated)
     dplyr::mutate(Age_observed = dplyr::case_when(.$Age == "C" ~ 1,
                                                   .$Age == "first year" ~ 5,
@@ -318,7 +318,8 @@ create_capture_CHO <- function(data){
                   CapturePopID, CapturePlot,
                   ReleasePopID, ReleasePlot,
                   Mass = Weight, Tarsus, OriginalTarsusMethod,
-                  WingLength = Wing, Age_observed, Age_calculated, ChickAge)
+                  WingLength = Wing, Age_observed, Age_calculated, ChickAge) %>%
+    dplyr::ungroup()
 
   return(Capture_data)
 
@@ -400,7 +401,6 @@ create_individual_CHO <- function(data){
 create_location_CHO <- function(data){
 
   #There are no coordinates or box type information
-  #Nestbox data is therefore just
   Location_data <- dplyr::tibble(LocationID = c(stats::na.omit(unique(data$Box)), "MN1"),
                           NestboxID = c(stats::na.omit(unique(data$Box)), "MN1")) %>%
     dplyr::mutate(LocationType = purrr::pmap_chr(.l = list(LocationID),
@@ -415,7 +415,7 @@ create_location_CHO <- function(data){
 
                                                }}), PopID = "CHO",
                           Latitude = NA, Longitude = NA,
-                          StartSeason = NA, EndSeason = NA,
+                          StartSeason = 2003, EndSeason = NA,
                           Habitat = "Deciduous")
 
   return(Location_data)
