@@ -418,7 +418,7 @@ create_capture_UAN <- function(data, species_filter){
                                          #Capture type P and PP are chicks in the nest
                                          if(..2 %in% c("P", "PP")){
 
-                                           return(tibble::tibble(Age_observed = 1, ChickAge = NA))
+                                           return(tibble::tibble(Age_observed_new = 1, ChickAge = NA))
 
                                            #Captures in mist nets, observed rings, cage traps, roost checks
                                            #must be able to fly. But these can be anything from fledglings
@@ -431,31 +431,29 @@ create_capture_UAN <- function(data, species_filter){
                                          } else {
 
                                            #If no age and no chick capture type is given, then observed age is unknown.
-                                           return(tibble::tibble(Age_observed = NA, ChickAge = NA))
+                                           return(tibble::tibble(Age_observed_new = NA, ChickAge = NA))
 
                                          }
 
-                                       }
-
                                        #If age is > 5 this is the chick age in days
-                                       if(..1 > 5){
+                                       } else if(..1 > 5){
 
-                                         return(tibble::tibble(Age_observed = 1, ChickAge = ..1))
+                                         return(tibble::tibble(Age_observed_new = 1, ChickAge = ..1))
 
                                        } else {
 
                                          #If it's 1-5 then we translate into EURING codes for adults
                                          if(..1 %in% c(1, 2)){
 
-                                           return(tibble::tibble(Age_observed = 1 + ..1*2, ChickAge = NA))
+                                           return(tibble::tibble(Age_observed_new = 1 + ..1*2, ChickAge = NA))
 
                                          } else if (..1 %in% c(3, 4)) {
 
-                                           return(tibble::tibble(Age_observed = 4 + (..1 - 3)*2, ChickAge = NA))
+                                           return(tibble::tibble(Age_observed_new = 4 + (..1 - 3)*2, ChickAge = NA))
 
                                          } else {
 
-                                           return(tibble::tibble(Age_observed = NA, ChickAge = NA))
+                                           return(tibble::tibble(Age_observed_new = NA, ChickAge = NA))
 
                                          }
 
@@ -463,13 +461,14 @@ create_capture_UAN <- function(data, species_filter){
 
                                      })) %>%
     #Determine age at first capture for every individual
-    dplyr::mutate(ischick = dplyr::case_when(.$Age_observed <= 3 ~ 1)) %>%
+    dplyr::mutate(ischick = dplyr::case_when(.$Age_observed_new <= 3 ~ 1)) %>%
     calc_age(ID = IndvID, Age = ischick, Date = CaptureDate, Year = BreedingSeason) %>%
     #Arrange columns
+    #Replace Age_observed with Age_observed_new which has been converted to EURING codes
     dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime,
                   ObserverID, LocationID, CapturePopID, CapturePlot,
                   ReleasePopID, ReleasePlot, Mass, Tarsus, OriginalTarsusMethod,
-                  WingLength, Age_observed, Age_calculated, ChickAge)
+                  WingLength, Age_observed = Age_observed_new, Age_calculated, ChickAge)
 
   return(Capture_data)
 
