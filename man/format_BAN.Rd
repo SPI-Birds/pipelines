@@ -80,4 +80,6 @@ comparable because it changes with chick development.
 
 \strong{AvgChickMass/AvgTarsus}: Individual capture data is not included in
 the data currently provided. These values are therefore left blank.
+
+\strong{StartSeason}: Assume all boxes were placed in the first year of the study.
 }

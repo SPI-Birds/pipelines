@@ -46,6 +46,8 @@
 #'\strong{AvgChickMass/AvgTarsus}: Individual capture data is not included in
 #'the data currently provided. These values are therefore left blank.
 #'
+#'\strong{StartSeason}: Assume all boxes were placed in the first year of the study.
+#'
 #'@inheritParams pipeline_params
 #'
 #'@return Generates either 4 .csv files or 4 data frames in the standard format.
