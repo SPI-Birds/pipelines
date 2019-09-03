@@ -62,3 +62,16 @@ NULL
 #'@format A spatial data polygon.
 #'@name GT_dist_gg
 NULL
+
+
+#'Combination of all PopID and Species from all pipelines.
+#'
+#'A data frame with each row containing a unique population
+#'and species combination.
+#'@format A data frame with 60 rows and 2 variables.
+#'\describe{
+#'    \item{pop}{Three letter population ID.}
+#'    \item{species}{Six letter species ID.}
+#'}
+#'@name pop_species_combos
+NULL
