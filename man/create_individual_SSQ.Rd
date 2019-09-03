@@ -9,9 +9,9 @@ create_individual_SSQ(data, Capture_data, Brood_data)
 \arguments{
 \item{data}{Data frame. Primary data from Santo Stefano Quisquina.}
 
-\item{Capture_data}{Data frame. Generate by \link{\code{create_capture_SSQ}}.}
+\item{Capture_data}{Data frame. Generate by \code{\link{create_capture_SSQ}}.}
 
-\item{Brood_data}{Data frame. Generate by \link{\code{create_brood_SSQ}}.}
+\item{Brood_data}{Data frame. Generate by \code{\link{create_brood_SSQ}}.}
 }
 \value{
 A data frame.
