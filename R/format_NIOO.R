@@ -1,8 +1,7 @@
-#'Construct standard summary for NIOO data.
+#'Construct standard format for NIOO data.
 #'
-#'A pipeline to produce a standard output for 8 hole-nesting bird study
-#'populations at the Netherlands Institute of Ecology (NIOO-KNAW). Output
-#'follows the HNB standard breeding data format.
+#'A pipeline to produce the standard format for 8 hole-nesting bird study
+#'populations at the Netherlands Institute of Ecology (NIOO-KNAW).
 #'
 #'This section provides details on data management choices that are unique to
 #'the NIOO database. For a general description of the standard format please see
@@ -17,8 +16,8 @@
 #'NIOO-KNAW: Buunderkamp, Lichtenbeek, Westerheide, Hoge Veluwe, Warnsborn,
 #'Vlieland, Oosterhout, and Liesbosch.
 #'
-#'\strong{Sex}: We condense sex information to only include groups M, F, and U
-#'(unknown) following the EUring standard. Uncertainty in sex was ignored (e.g.
+#'\strong{Sex}: We condense sex information to only include groups M, F, and C
+#'(conflicting). Uncertainty in sex was ignored (e.g.
 #''male?' or 'female?').
 #'
 #'\strong{Measurement error}: For BroodSize, NumberFledged XXXX FILL IN a best
@@ -73,9 +72,7 @@ format_NIOO <- function(db = utils::choose.dir(),
   #Connect to the NIOO database backend.
   connection <- DBI::dbConnect(drv = odbc::odbc(), .connection_string = paste0("Driver={Microsoft Access Driver (*.mdb, *.accdb)};Dbq=", db, ";Uid=Admin;Pwd=;"))
 
-  #################
-  # LOCATION DATA #
-  #################
+  # LOCATION DATA
 
   #We first need to compile location information (and area names) as this will be included with all data tables.
 
@@ -89,7 +86,7 @@ format_NIOO <- function(db = utils::choose.dir(),
     dplyr::select(AreaGroup = ID, Name) %>%
     #Create three letter PopID code for each AreaGroup (i.e. population).
     dplyr::mutate(PopID = purrr::map_chr(.x = Name,
-                                  .f = function(.x){
+                                         function(.x){
 
                                     toupper(substr(.x, start = 1, stop = 3))
 
@@ -105,9 +102,7 @@ format_NIOO <- function(db = utils::choose.dir(),
                        dplyr::collect(),
               by = "AreaID")
 
-  ###################################
-  # SPECIES AND POPUALATION FILTERS #
-  ###################################
+  # SPECIES AND POPUALATION FILTERS
 
   #Create a subset of the chosen species
   #Where argument 'species' is unused, include all species in the table (listed in description)
@@ -127,9 +122,7 @@ format_NIOO <- function(db = utils::choose.dir(),
 
   }
 
-  ###################
-  # INDIVIDUAL DATA #
-  ###################
+  # INDIVIDUAL DATA
 
   message("Compiling individual information...")
 
@@ -199,10 +192,6 @@ format_NIOO <- function(db = utils::choose.dir(),
     #Convert RingAge into either chick or adult
     dplyr::mutate(RingAge = dplyr::case_when(.$RingAge %in% c(1, 2, 3) ~ "chick",
                                              .$RingAge > 3 ~ "adult"))
-
-  ################
-  # CAPTURE DATA #
-  ################
 
   message("Compiling capture information...")
 
@@ -296,9 +285,7 @@ format_NIOO <- function(db = utils::choose.dir(),
                   ReleasePopID, ReleasePlot = ReleaseLocation,
                   Mass = Weight, Tarsus, OriginalTarsusMethod, WingLength, Age_observed, Age_calculated, ChickAge)
 
-  ##############
-  # BROOD DATA #
-  ##############
+  # BROOD DATA
 
   #This data will include 1 row for every recorded brood.
 
@@ -506,9 +493,7 @@ format_NIOO <- function(db = utils::choose.dir(),
                   ClutchSize, ClutchSizeError, HatchDate, HatchDateError, BroodSize, BroodSizeError, FledgeDate, FledgeDateError, NumberFledged, NumberFledgedError,
                   AvgEggMass, NumberEggs, AvgChickMass, NumberChicksMass, AvgTarsus, NumberChicksTarsus, OriginalTarsusMethod, ExperimentID)
 
-  ################
-  # NESTBOX DATA #
-  ################
+  # NESTBOX DATA
 
   message("Compiling nestbox information...")
 
@@ -527,7 +512,7 @@ format_NIOO <- function(db = utils::choose.dir(),
                   Habitat = dplyr::case_when(.$PopID %in% c("VLI", "HOG", "WES", "BUU") ~ "Mixed",
                                              .$PopID %in% c("OOS", "LIE", "WAR") ~ "Deciduous"))
 
-  #REMOVE UNWANTED COLUMNS AND CHANGE FORMATS
+  # REMOVE UNWANTED COLUMNS AND CHANGE FORMATS
   Individual_data <- Individual_data %>%
     dplyr::mutate(IndvID = as.character(IndvID)) %>%
     dplyr::select(IndvID, Species, PopID, BroodIDLaid, BroodIDFledged,
