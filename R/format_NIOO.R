@@ -165,6 +165,18 @@ format_NIOO <- function(db = utils::choose.dir(),
                   ReleasePlot = as.character(ReleasePlot),
                   CaptureDate = lubridate::ymd(CaptureDate))
 
+  # CREATE DEBUG REPORT
+
+  if(debug){
+
+    message("Generating debug report...")
+
+    generate_debug_report(path = path, Pop = "NIOO", Brood_data = Brood_data, Capture_data = Capture_data, Indv_data = Individual_data)
+
+  }
+
+  # EXPORT DATA
+
   time <- difftime(Sys.time(), start_time, units = "sec")
 
   dbDisconnect(connection)
