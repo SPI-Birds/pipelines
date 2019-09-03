@@ -90,7 +90,7 @@ format_VEL <- function(db = utils::choose.dir(),
     ## This returns dates for dd/mm/yyyy, but character for dd.mm.yyyy.
     ## Then we just have to go through and make these few character strings into dates.
     dplyr::mutate_at(.vars = vars(contains("date")),
-                     .funs = function(date){
+                     function(date){
 
                        purrr::map(.x = date,
                                   .f = ~{
@@ -147,7 +147,7 @@ format_VEL <- function(db = utils::choose.dir(),
                                                   "skip")) %>%
     janitor::clean_names() %>%
     dplyr::mutate_at(.vars = vars(contains("date")),
-                     .funs = function(date){
+                     function(date){
 
                        purrr::map(.x = date,
                                   .f = ~{
@@ -226,18 +226,14 @@ format_VEL <- function(db = utils::choose.dir(),
                   Habitat = dplyr::case_when(.$habitat == "oak" ~ "deciduous",
                                              .$habitat == "spruce" ~ "evergreen"))
 
-  ##############
-  # BROOD DATA #
-  ##############
+  # BROOD DATA
 
   message("Compiling brood information...")
 
   Brood_data <- create_brood_VEL(FICALB_data, TIT_data) %>%
     dplyr::filter(Species %in% species)
 
-  ################
-  # CAPTURE DATA #
-  ################
+  # CAPTURE DATA
 
   message("Compiling capture information...")
 
@@ -246,26 +242,20 @@ format_VEL <- function(db = utils::choose.dir(),
     dplyr::ungroup() %>%
     dplyr::filter(Species %in% species)
 
-  ###################
-  # INDIVIDUAL DATA #
-  ###################
+  # INDIVIDUAL DATA
 
   message("Compiling individual information...")
 
   Individual_data <- create_individual_VEL(Capture_data) %>%
     dplyr::filter(Species %in% species)
 
-  #################
-  # LOCATION DATA #
-  #################
+  # LOCATION DATA
 
   message("Compiling location information...")
 
   Location_data <- create_location_VEL(Brood_data, TIT_data)
 
-  ###########################
-  # WRANGLE DATA FOR EXPORT #
-  ###########################
+  # WRANGLE DATA FOR EXPORT
 
   ## Combine capture data and brood data to determine avg chick mass and tarsus
   ## Calculate AvgChickMass and AvgTarsus
@@ -290,9 +280,7 @@ format_VEL <- function(db = utils::choose.dir(),
                   ObserverID, LocationID, CapturePopID:Tarsus, OriginalTarsusMethod,
                   WingLength, Age_observed, Age_calculated, ChickAge)
 
-  #######################
-  # CREATE DEBUG OPTION #
-  #######################
+  # GENERATE DEBUG REPORT
 
   if(debug){
 
@@ -306,9 +294,7 @@ format_VEL <- function(db = utils::choose.dir(),
 
   message(paste0("All tables generated in ", round(time, 2), " seconds"))
 
-  ###############
-  # EXPORT DATA #
-  ###############
+  # EXPORT DATA
 
   if(output_type == "csv"){
 
@@ -347,8 +333,8 @@ format_VEL <- function(db = utils::choose.dir(),
 #' @param TIT_data Data frame. Tit data from Velky Kosir.
 #'
 #' @return A data frame.
-#' @export
-create_brood_VEL          <- function(FICALB_data, TIT_data) {
+
+create_brood_VEL <- function(FICALB_data, TIT_data) {
 
   FICALB_broods <- FICALB_data %>%
     dplyr::arrange(BreedingSeason, Species, FemaleID) %>%
@@ -389,7 +375,7 @@ create_brood_VEL          <- function(FICALB_data, TIT_data) {
 #' @param FICALB_data Data frame. Flycatcher data from Velky Kosir.
 #'
 #' @return A data frame.
-#' @export
+
 create_capture_VEL_FICALB <- function(FICALB_data) {
 
   ## First create a table for flycatcher chick captures on the nest
@@ -545,7 +531,7 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
 #' @param TIT_data Data frame. Tit data from Velky Kosir.
 #'
 #' @return A data frame.
-#' @export
+
 create_capture_VEL_TIT    <- function(TIT_data) {
 
   ## There is no chick info for tits
@@ -592,7 +578,7 @@ create_capture_VEL_TIT    <- function(TIT_data) {
 #'   \code{\link{create_capture_VEL_TIT}}.
 #'
 #' @return A data frame.
-#' @export
+
 create_individual_VEL     <- function(Capture_data){
 
   pb <- dplyr::progress_estimated(n = length(unique(Capture_data$IndvID)) * 2)
@@ -662,7 +648,7 @@ create_individual_VEL     <- function(Capture_data){
 #'   needed to include habitat type information.
 #'
 #' @return A data frame.
-#' @export
+
 create_location_VEL       <- function(Brood_data, TIT_data){
 
   ## Determine all used LocationIDs in Brood_data. These should be all locations.
