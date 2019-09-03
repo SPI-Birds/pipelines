@@ -108,17 +108,21 @@ format_NIOO <- function(db = utils::choose.dir(),
   #Where argument 'species' is unused, include all species in the table (listed in description)
   if(is.null(species)){
 
-    species <- Species_codes$SpeciesID
+    species_filter <- Species_codes$SpeciesID
 
   } else {
 
-    species <- Species_codes[Species_codes$Code %in% species, ]$SpeciesID
+    species_filter <- Species_codes[Species_codes$Code %in% species, ]$SpeciesID
 
   }
 
   if(is.null(pop)){
 
-    pop <- unique(Locations$PopID)
+    pop_filter <- unique(Locations$PopID)
+
+  } else {
+
+    pop_filter <- pop
 
   }
 
