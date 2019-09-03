@@ -271,8 +271,8 @@ create_capture_SSQ <- function(data){
 #' Create individual data table in standard format for data from Santo Stefano
 #' Quisquina, Italy
 #' @param data Data frame. Primary data from Santo Stefano Quisquina.
-#' @param Capture_data Data frame. Generate by \link{\code{create_capture_SSQ}}.
-#' @param Brood_data Data frame. Generate by \link{\code{create_brood_SSQ}}.
+#' @param Capture_data Data frame. Generate by \code{\link{create_capture_SSQ}}.
+#' @param Brood_data Data frame. Generate by \code{\link{create_brood_SSQ}}.
 #'
 #' @return A data frame.
 
