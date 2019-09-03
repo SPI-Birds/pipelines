@@ -136,7 +136,7 @@ format_NIOO <- function(db = utils::choose.dir(),
 
   message("Compiling capture information...")
 
-  Capture_data <- create_capture_NIOO(connection, Locations, species_filter, pop_filter)
+  Capture_data <- create_capture_NIOO(connection, Individual_data, Locations, species_filter, pop_filter)
 
   # BROOD DATA
 
@@ -144,207 +144,7 @@ format_NIOO <- function(db = utils::choose.dir(),
 
   message("Compiling brood information...")
 
-  Brood_data  <- dplyr::tbl(connection, "dbo_tbl_Brood") %>%
-    #Subset only broods of designated species in main areas
-    dplyr::filter(BroodSpecies %in% species & BroodLocationID %in% !!Locations$ID) %>%
-    #Link the ClutchType description (e.g. first, second, replacement)
-    dplyr::left_join(dplyr::tbl(connection, "dbo_tl_BroodType") %>%
-                       dplyr::select(BroodType = ID, Description), by = "BroodType") %>%
-    #Extract basic info that we want:
-    # - BreedingSeason
-    # - BroodID
-    # - BroodSpecies
-    # - BroodLocation
-    # - RingNumberFemale
-    # - RingNumberMale
-    # - Clutch Type (e.g. first, second, replacement)
-    # - LayDate (calendar date)
-    # - ClutchSize
-    # - HatchDate
-  # - BroodSize
-  # - FledgeDate
-  # - NumberFledged
-  dplyr::select(BreedingSeason = BroodYear, BroodID = ID, BroodSpecies, BroodLocation = BroodLocationID, Female_ring = RingNumberFemale, Male_ring = RingNumberMale,
-         ClutchType_observed = Description, LayingDate = LayDate, LayingDateError = LayDateDeviation,
-         ClutchSize, HatchDate, BroodSize = NumberHatched, BroodSizeError = NumberHatchedDeviation,
-         FledgeDate, NumberFledged, NumberFledgedError = NumberFledgedDeviation) %>%
-    dplyr::collect() %>%
-    #Account for error in brood size
-    dplyr::mutate(BroodSizeError = BroodSizeError/2, NumberFledgedError = NumberFledgedError/2,
-                  LayingDateError = LayingDateError/2,
-           BroodSize = BroodSize + BroodSizeError,
-           NumberFledged = NumberFledged + NumberFledgedError,
-           LayingDate = lubridate::ymd(LayingDate) + LayingDateError,
-           HatchDate = lubridate::ymd(HatchDate),
-           FledgeDate = lubridate::ymd(FledgeDate)) %>%
-    #Include species letter codes for all species
-    dplyr::mutate(Species = dplyr::case_when(.$BroodSpecies == 14400 ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code,
-                                             .$BroodSpecies == 14640 ~ Species_codes[Species_codes$SpeciesID == 14640, ]$Code,
-                                             .$BroodSpecies == 13490 ~ Species_codes[Species_codes$SpeciesID == 13490, ]$Code,
-                                             .$BroodSpecies == 14620 ~ Species_codes[Species_codes$SpeciesID == 14620, ]$Code,
-                                             .$BroodSpecies == 14790 ~ Species_codes[Species_codes$SpeciesID == 14790, ]$Code,
-                                             .$BroodSpecies == 15980 ~ Species_codes[Species_codes$SpeciesID == 15980, ]$Code,
-                                             .$BroodSpecies == 14610 ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code),
-           Plot = NA,
-           #Adjust ClutchType names to fit "first", "second", "replacement".
-           #We ignore any uncertainty (e.g. "probably second" is just listed as "second")
-           #ClutchTypes like 'different species inside one clutch' are listed as NA.
-           ClutchType_observed = dplyr::case_when(grepl(pattern = "replacement", .$ClutchType_observed) ~ "replacement",
-                                                  grepl(pattern = "second clutch after|probably second|third clutch", .$ClutchType_observed) ~ "second",
-                                                  grepl(pattern = "first clutch", .$ClutchType_observed) ~ "first")) %>%
-             # purrr::map_chr(.x = .$ClutchType_observed,
-             #                                    .f = function(.x){
-             #
-             #                                      ifelse(grepl(pattern = "replacement", .x), "replacement",
-             #                                             ifelse(grepl(pattern = "second clutch after|probably second|third clutch", .x), "second",
-             #                                                    ifelse(grepl(pattern = "first clutch", .x), "first", NA)))
-
-                                                # })
-    #Make individuals with no ring number into NA
-    dplyr::mutate(Female_ring = purrr::map_chr(.x = .$Female_ring,
-                                        .f = ~ifelse(.x == "0000000000"|.x == "",
-                                                     NA, .x)),
-           Male_ring = purrr::map_chr(.x = .$Male_ring,
-                                      .f = ~ifelse(.x == "0000000000"|.x == "",
-                                                   NA, .x))) %>%
-    ########### N.B. CURRENTLY THERE ARE A FEW (~25) RING NUMBERS THAT ARE ASSIGNED TO 2 INDIVIDUALS
-    ########### THIS MEANS THAT WE WILL GET A FEW DUPLICATE RECORDS WITH THIS APPROACH
-    ########### THESE NEED TO BE ADDRESSED IN THE DATABASE BEFORE THEY CAN BE FIXED HERE
-    #Join in ID numbers for the parents of the brood from the individual table above
-    dplyr::left_join(dplyr::select(Individual_data, Female_ring = RingNumber, FemaleID = IndvID) %>%
-                dplyr::filter(Female_ring != ""), by = "Female_ring") %>%
-    dplyr::left_join(select(Individual_data, Male_ring = RingNumber, MaleID = IndvID) %>%
-                dplyr::filter(Male_ring != ""), by = "Male_ring") %>%
-    #Join location info (including site ID and nestbox ID)
-    dplyr::left_join(dplyr::select(Locations, BroodLocation = ID, PopID), by = "BroodLocation") %>%
-    dplyr::arrange(PopID, BreedingSeason, Species, FemaleID) %>%
-    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
-
-  # #Calcualte ClutchType manually using known laying date and fledgling information
-  # clutchtype <- dplyr::progress_estimated(n = nrow(Brood_data))
-
-  # Brood_data <- Brood_data %>%
-  #   #Go through and change all NA fledge numbers to 0s
-  #   ### NEED TO SEND LOUIS A MESSAGE ABOUT THESE.
-  #   rowwise() %>%
-  #   mutate(NumberFledged = ifelse(is.na(NumberFledged), 0, NumberFledged)) %>%
-  #   ungroup() %>%
-  #   #Determine the 30 day cut-off for all species
-  #   ### NEED TO GO THROUGH AND DETERMINE WHETHER THE 30 DAY CUT OFF IS REASONABLE FOR ALL SPECIES
-  #   ### LOOK AT THIS LATER
-  #   group_by(PopID, BreedingSeason, Species) %>%
-  #   mutate(cutoff = tryCatch(expr = min(LayingDate, na.rm = T) + 30,
-  #                            warning = function(...) return(NA))) %>%
-  #   # Determine brood type for each nest based on female ID
-  #   arrange(BreedingSeason, Species, FemaleID) %>%
-  #   group_by(BreedingSeason, Species, FemaleID) %>%
-  #   mutate(total_fledge = cumsum(NumberFledged), row = 1:n()) %>%
-  #   ungroup() %>%
-  #   mutate(ClutchType_calc = purrr::pmap_chr(.l = list(rows = .$row,
-  #                                                      femID = .$FemaleID,
-  #                                                      cutoff_date = .$cutoff,
-  #                                                      nr_fledge_before = .$total_fledge,
-  #                                                      nr_fledge_now = .$NumberFledged,
-  #                                                      LD = .$LayingDate),
-  #                                            .f = function(rows, femID, cutoff_date, nr_fledge_before, nr_fledge_now, LD){
-  #
-  #                                              clutchtype$tick()$print()
-  #
-  #                                              #Firstly, check if the nest has a LD
-  #                                              #If not, we cannot calculate BroodType
-  #
-  #                                              if(is.na(LD)){
-  #
-  #                                                return(NA)
-  #
-  #                                              }
-  #
-  #                                              #Next, check if the female is banded
-  #                                              #If a female is unbanded we assume the nest can NEVER be secondary
-  #                                              #If she had had a successful clutch before she would have been caught and banded
-  #                                              #Therefore it can only be first or replacement (based on 30d rule)
-  #                                              if(is.na(femID)){
-  #
-  #                                                if(LD > cutoff_date){
-  #
-  #                                                  return("replacement")
-  #
-  #                                                } else {
-  #
-  #                                                  return("first")
-  #
-  #                                                }
-  #
-  #                                              }
-  #
-  #                                              #If she is banded, then we need to apply all rules
-  #                                              #If it's the first nest recorded for this female in this year...
-  #                                              if(rows == 1){
-  #
-  #                                                #If it doesn't meet the 30 day rule, then name it as replacement
-  #                                                if(LD > cutoff_date){
-  #
-  #                                                  return("replacement")
-  #
-  #                                                } else {
-  #
-  #                                                  #Otherwise, we assume it was the first clutch
-  #                                                  return("first")
-  #
-  #                                                }
-  #
-  #                                                #If it's NOT the first nest of the season for this female
-  #                                              } else {
-  #
-  #                                                #If there have been no fledglings before this point..
-  #                                                if(nr_fledge_before - nr_fledge_now == 0){
-  #
-  #                                                  #Then it is a replacement
-  #                                                  return("replacement")
-  #
-  #                                                } else {
-  #
-  #                                                  #Otherwise, it is a secondary clutch
-  #                                                  return("second")
-  #
-  #                                                }
-  #
-  #                                              }
-  #
-  #                                            })) %>%
-    #Add extra columns where data was not provided
-    #N.B. Need to go through and include experiment ID
-    dplyr::mutate(ClutchSizeError = NA, HatchDateError = NA, FledgeDateError = NA, ExperimentID = NA,
-           BroodLocation = as.character(BroodLocation), BroodID = as.character(BroodID),
-           FemaleID = as.character(FemaleID), MaleID = as.character(MaleID))
-
-  #Next, we calculate mean mass, tarsus for all chicks in the brood
-  #AT 14-16 DAYS POST HATCHING!!!
-  #IF THEY ARE NOT CAUGHT DURING THIS TIME, THEN LEAVE AS NA.
-  #WE EXCLUDE EGG MASS CAPTURES AT THE MOMENT BECAUSE THIS IS A BIT DIFFICULT
-  #WE KNOW THE 'LOCATIONID' WHERE EGGS WERE WEIGHED, BUT THIS DOESN'T TELL US THE BROOD
-  #TO DETERMINE THE BROOD, WE WOULD NEED TO IDENTIFY THE LOCATION OF THE BROOD IN THE SAME YEAR
-  #THIS SHOULD BE POSSIBLE, BUT CURRENTLY WE JUST NEED TO GET THE PIPELINE WORKING
-  avg_mass <- Brood_data %>%
-    #Join mass and tarsus data for chicks by linking to the brood in which they were born
-    dplyr::left_join(dplyr::left_join(dplyr::select(Capture_data, CaptureDate, IndvID, Mass, Tarsus),
-                        dplyr::select(Individual_data, IndvID, BroodID = BroodIDFledged), by = "IndvID"), by = "BroodID") %>%
-    #Filter those that were not caught at 14 - 16 days
-    dplyr::mutate(CaptureDate = lubridate::ymd(CaptureDate)) %>%
-    dplyr::filter(CaptureDate >= (HatchDate + 14) & CaptureDate <= (HatchDate + 16)) %>%
-    dplyr::group_by(BroodID) %>%
-    dplyr::summarise(AvgEggMass = NA, NumberEggs = NA, AvgChickMass = mean(Mass, na.rm = T),
-                     NumberChicksMass = length(stats::na.omit(Mass)),
-                     AvgTarsus = mean(Tarsus, na.rm = T),
-                     NumberChicksTarsus = length(stats::na.omit(Tarsus)),
-                     OriginalTarsusMethod = "Alternative")
-
-  #Join this average mass/tarsus data back into the brood data table
-  Brood_data <- Brood_data %>%
-    dplyr::left_join(avg_mass, by = "BroodID")  %>%
-    dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot, LocationID = BroodLocation, FemaleID, MaleID, ClutchType_observed, ClutchType_calculated, LayingDate, LayingDateError,
-                  ClutchSize, ClutchSizeError, HatchDate, HatchDateError, BroodSize, BroodSizeError, FledgeDate, FledgeDateError, NumberFledged, NumberFledgedError,
-                  AvgEggMass, NumberEggs, AvgChickMass, NumberChicksMass, AvgTarsus, NumberChicksTarsus, OriginalTarsusMethod, ExperimentID)
+  Brood_data <- create_brood_NIOO(connection, Individual_data, Capture_data, Locations, species_filter, pop_filter)
 
   # NESTBOX DATA
 
@@ -487,7 +287,7 @@ create_individual_NIOO <- function(database, location_data, species_filter, pop_
 
 }
 
-create_capture_NIOO <- function(database, location_data, species_filter, pop_filter){
+create_capture_NIOO <- function(database, Individual_data, location_data, species_filter, pop_filter){
 
   #Capture data includes all times an individual was captured (with measurements like mass, tarsus etc.).
   #This will include first capture as nestling
@@ -546,5 +346,112 @@ create_capture_NIOO <- function(database, location_data, species_filter, pop_fil
                   Mass = Weight, Tarsus, OriginalTarsusMethod, WingLength, Age_observed, Age_calculated, ChickAge)
 
   return(Capture_data)
+
+}
+
+create_brood_NIOO <- function(database, Individual_data, Capture_data, location_data, species_filter, pop_filter){
+
+  Brood_data  <- dplyr::tbl(database, "dbo_tbl_Brood") %>%
+    #Subset only broods of designated species in main areas
+    dplyr::filter(BroodSpecies %in% species_filter & BroodLocationID %in% !!location_data$ID) %>%
+    #Link the ClutchType description (e.g. first, second, replacement)
+    dplyr::left_join(dplyr::tbl(database, "dbo_tl_BroodType") %>%
+                       dplyr::select(BroodType = ID, Description), by = "BroodType") %>%
+    #Extract basic info that we want:
+    # - BreedingSeason
+    # - BroodID
+    # - BroodSpecies
+    # - BroodLocation
+    # - RingNumberFemale
+    # - RingNumberMale
+    # - Clutch Type (e.g. first, second, replacement)
+    # - LayDate (calendar date)
+    # - ClutchSize
+    # - HatchDate
+  # - BroodSize
+  # - FledgeDate
+  # - NumberFledged
+  dplyr::select(BreedingSeason = BroodYear, BroodID = ID, BroodSpecies, BroodLocation = BroodLocationID, Female_ring = RingNumberFemale, Male_ring = RingNumberMale,
+                ClutchType_observed = Description, LayingDate = LayDate, LayingDateError = LayDateDeviation,
+                ClutchSize, HatchDate, BroodSize = NumberHatched, BroodSizeError = NumberHatchedDeviation,
+                FledgeDate, NumberFledged, NumberFledgedError = NumberFledgedDeviation) %>%
+    dplyr::collect() %>%
+    #Account for error in brood size
+    dplyr::mutate(BroodSizeError = BroodSizeError/2, NumberFledgedError = NumberFledgedError/2,
+                  LayingDateError = LayingDateError/2,
+                  BroodSize = BroodSize + BroodSizeError,
+                  NumberFledged = NumberFledged + NumberFledgedError,
+                  LayingDate = lubridate::ymd(LayingDate) + LayingDateError,
+                  HatchDate = lubridate::ymd(HatchDate),
+                  FledgeDate = lubridate::ymd(FledgeDate)) %>%
+    #Include species letter codes for all species
+    dplyr::mutate(Species = dplyr::case_when(.$BroodSpecies == 14400 ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code,
+                                             .$BroodSpecies == 14640 ~ Species_codes[Species_codes$SpeciesID == 14640, ]$Code,
+                                             .$BroodSpecies == 13490 ~ Species_codes[Species_codes$SpeciesID == 13490, ]$Code,
+                                             .$BroodSpecies == 14620 ~ Species_codes[Species_codes$SpeciesID == 14620, ]$Code,
+                                             .$BroodSpecies == 14790 ~ Species_codes[Species_codes$SpeciesID == 14790, ]$Code,
+                                             .$BroodSpecies == 15980 ~ Species_codes[Species_codes$SpeciesID == 15980, ]$Code,
+                                             .$BroodSpecies == 14610 ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code),
+                  Plot = NA,
+                  #Adjust ClutchType names to fit "first", "second", "replacement".
+                  #We ignore any uncertainty (e.g. "probably second" is just listed as "second")
+                  #ClutchTypes like 'different species inside one clutch' are listed as NA.
+                  ClutchType_observed = dplyr::case_when(grepl(pattern = "replacement", .$ClutchType_observed) ~ "replacement",
+                                                         grepl(pattern = "second clutch after|probably second|third clutch", .$ClutchType_observed) ~ "second",
+                                                         grepl(pattern = "first clutch", .$ClutchType_observed) ~ "first")) %>%
+    #Make individuals with no ring number into NA
+    dplyr::mutate(Female_ring = purrr::map_chr(.x = .$Female_ring,
+                                               .f = ~ifelse(.x == "0000000000"|.x == "",
+                                                            NA, .x)),
+                  Male_ring = purrr::map_chr(.x = .$Male_ring,
+                                             .f = ~ifelse(.x == "0000000000"|.x == "",
+                                                          NA, .x))) %>%
+    ########### N.B. CURRENTLY THERE ARE A FEW (~25) RING NUMBERS THAT ARE ASSIGNED TO 2 INDIVIDUALS
+    ########### THIS MEANS THAT WE WILL GET A FEW DUPLICATE RECORDS WITH THIS APPROACH
+    ########### THESE NEED TO BE ADDRESSED IN THE DATABASE BEFORE THEY CAN BE FIXED HERE
+    #Join in ID numbers for the parents of the brood from the individual table above
+    dplyr::left_join(dplyr::select(Individual_data, Female_ring = RingNumber, FemaleID = IndvID) %>%
+                       dplyr::filter(Female_ring != ""), by = "Female_ring") %>%
+    dplyr::left_join(select(Individual_data, Male_ring = RingNumber, MaleID = IndvID) %>%
+                       dplyr::filter(Male_ring != ""), by = "Male_ring") %>%
+    #Join location info (including site ID and nestbox ID)
+    dplyr::left_join(dplyr::select(location_data, BroodLocation = ID, PopID), by = "BroodLocation") %>%
+    dplyr::arrange(PopID, BreedingSeason, Species, FemaleID) %>%
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
+  #Add extra columns where data was not provided
+  #N.B. Need to go through and include experiment ID
+  dplyr::mutate(ClutchSizeError = NA, HatchDateError = NA, FledgeDateError = NA, ExperimentID = NA,
+                BroodLocation = as.character(BroodLocation), BroodID = as.character(BroodID),
+                FemaleID = as.character(FemaleID), MaleID = as.character(MaleID))
+
+  #Next, we calculate mean mass, tarsus for all chicks in the brood
+  #AT 14-16 DAYS POST HATCHING!!!
+  #IF THEY ARE NOT CAUGHT DURING THIS TIME, THEN LEAVE AS NA.
+  #WE EXCLUDE EGG MASS CAPTURES AT THE MOMENT BECAUSE THIS IS A BIT DIFFICULT
+  #WE KNOW THE 'LOCATIONID' WHERE EGGS WERE WEIGHED, BUT THIS DOESN'T TELL US THE BROOD
+  #TO DETERMINE THE BROOD, WE WOULD NEED TO IDENTIFY THE LOCATION OF THE BROOD IN THE SAME YEAR
+  #THIS SHOULD BE POSSIBLE, BUT CURRENTLY WE JUST NEED TO GET THE PIPELINE WORKING
+  avg_mass <- Brood_data %>%
+    #Join mass and tarsus data for chicks by linking to the brood in which they were born
+    dplyr::left_join(dplyr::left_join(dplyr::select(Capture_data, CaptureDate, IndvID, Mass, Tarsus),
+                                      dplyr::select(Individual_data, IndvID, BroodID = BroodIDFledged), by = "IndvID"), by = "BroodID") %>%
+    #Filter those that were not caught at 14 - 16 days
+    dplyr::mutate(CaptureDate = lubridate::ymd(CaptureDate)) %>%
+    dplyr::filter(CaptureDate >= (HatchDate + 14) & CaptureDate <= (HatchDate + 16)) %>%
+    dplyr::group_by(BroodID) %>%
+    dplyr::summarise(AvgEggMass = NA, NumberEggs = NA, AvgChickMass = mean(Mass, na.rm = T),
+                     NumberChicksMass = length(stats::na.omit(Mass)),
+                     AvgTarsus = mean(Tarsus, na.rm = T),
+                     NumberChicksTarsus = length(stats::na.omit(Tarsus)),
+                     OriginalTarsusMethod = "Alternative")
+
+  #Join this average mass/tarsus data back into the brood data table
+  Brood_data <- Brood_data %>%
+    dplyr::left_join(avg_mass, by = "BroodID")  %>%
+    dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot, LocationID = BroodLocation, FemaleID, MaleID, ClutchType_observed, ClutchType_calculated, LayingDate, LayingDateError,
+                  ClutchSize, ClutchSizeError, HatchDate, HatchDateError, BroodSize, BroodSizeError, FledgeDate, FledgeDateError, NumberFledged, NumberFledgedError,
+                  AvgEggMass, NumberEggs, AvgChickMass, NumberChicksMass, AvgTarsus, NumberChicksTarsus, OriginalTarsusMethod, ExperimentID)
+
+  return(Brood_data)
 
 }
