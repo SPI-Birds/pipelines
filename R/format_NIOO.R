@@ -130,72 +130,11 @@ format_NIOO <- function(db = utils::choose.dir(),
 
   message("Compiling individual information...")
 
-  #This is a summary of each individual and general lifetime information (e.g. sex, resident/immigrant).
-  #This only includes data that DOES NOT CHANGE over the individual's lifetime.
+  Individual_data <- create_individual_NIOO(connection, Locations, species_filter, pop_filter)
 
-  #Create table with description of sex codes
-  Sex_data <- dplyr::tbl(connection, "dbo_tl_Sexe") %>%
-    dplyr::select(Sexe = ID, Sex = Description)
+  # CAPTURE DATA
 
-  Individual_data   <- dplyr::tbl(connection, "dbo_tbl_Individual") %>%
-    #Filter only required species
-    dplyr::filter(SpeciesID %in% species) %>%
-    #Select only the basic info that we want:
-    # - Individual ID
-    # - GeneticBroodID
-    # - BroodID (for cross fostering experiments)
-    # - Species
-    # - Sex
-    # - RingSeason (year of first ringing)
-    # - RingAge (EUring age at first ringing)
-    # - RingNumber
-    dplyr::select(IndvID = ID, GeneticBroodID, BroodID, SpeciesID, Sexe, RingSeason = RingYear, RingAge, RingNumber) %>%
-    #Add in sex description
-    #N.B. Our approach, if we are joining in data
-    #before we call 'collect' then we use left_join
-    #otherwise, we use case_when
-    dplyr::left_join(Sex_data, by = "Sexe") %>%
-    #Remove old sex info
-    dplyr::select(-Sexe) %>%
-    dplyr::collect() %>%
-    #Add sex from standard protocol
-    #Add a ring age observed for determining Age_observed in Capture_data
-    dplyr::mutate(Sex = dplyr::case_when(.$Sex %in% c(1, 3, 5) ~ "F",
-                                         .$Sex %in% c(2, 4, 6) ~ "M"),
-                  RingAgeObsv = RingAge) %>%
-    #Add in the first capture location
-    #This is needed to determine which population the bird belongs too.
-    dplyr::left_join(tbl(connection, "dbo_tbl_Capture") %>%
-                       dplyr::arrange(Individual, CaptureDate, CaptureTime) %>%
-                       dplyr::select(IndvID = Individual, CaptureLocation) %>%
-                       dplyr::group_by(IndvID) %>%
-                       dplyr::collect() %>%
-                       dplyr::slice(1), by = "IndvID") %>%
-    #Relate the capturelocation to the three letter PopID
-    dplyr::left_join(dplyr::select(Locations, PopID, CaptureLocation = ID), by = "CaptureLocation") %>%
-    #Filter only chosen pop
-    dplyr::filter(PopID %in% pop)
-
-  Individual_data <- Individual_data %>%
-    dplyr::mutate(Species = dplyr::case_when(.$SpeciesID == 14400 ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code,
-                                             .$SpeciesID == 14640 ~ Species_codes[Species_codes$SpeciesID == 14640, ]$Code,
-                                             .$SpeciesID == 13490 ~ Species_codes[Species_codes$SpeciesID == 13490, ]$Code,
-                                             .$SpeciesID == 14620 ~ Species_codes[Species_codes$SpeciesID == 14620, ]$Code,
-                                             .$SpeciesID == 14790 ~ Species_codes[Species_codes$SpeciesID == 14790, ]$Code,
-                                             .$SpeciesID == 15980 ~ Species_codes[Species_codes$SpeciesID == 15980, ]$Code,
-                                             .$SpeciesID == 14610 ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code)) %>%
-    #Sort out brood laid and brood fledged so that both columns are filled.
-    mutate(BroodIDLaid = purrr::map2_chr(.x = BroodID, .y = GeneticBroodID,
-                                         #If there is no genetic brood listed but there is a regular broodID, assume these are the same
-                                         .f = ~ifelse(is.na(.y) & !is.na(.x), .x, .y)),
-
-           BroodIDFledged = purrr::map2_chr(.x = BroodID, .y = GeneticBroodID,
-                                            #If there is a genetic broodID listed by no regular brood ID assume these are the same.
-                                            .f = ~ifelse(!is.na(.y) & is.na(.x), .y, .x))) %>%
-    dplyr::select(IndvID, RingNumber, Species, PopID, BroodIDLaid, BroodIDFledged, RingSeason, RingAge, RingAgeObsv, Sex) %>%
-    #Convert RingAge into either chick or adult
-    dplyr::mutate(RingAge = dplyr::case_when(.$RingAge %in% c(1, 2, 3) ~ "chick",
-                                             .$RingAge > 3 ~ "adult"))
+  browser()
 
   message("Compiling capture information...")
 
@@ -561,5 +500,76 @@ format_NIOO <- function(db = utils::choose.dir(),
                 Location_data = Location_data))
 
   }
+
+}
+
+
+create_individual_NIOO <- function(database, location_data, species_filter, pop_filter){
+
+  #This is a summary of each individual and general lifetime information (e.g. sex, resident/immigrant).
+  #This only includes data that DOES NOT CHANGE over the individual's lifetime.
+
+  #Create table with description of sex codes
+  Sex_data <- dplyr::tbl(database, "dbo_tl_Sexe") %>%
+    dplyr::select(Sexe = ID, Sex = Description)
+
+  Individual_data   <- dplyr::tbl(database, "dbo_tbl_Individual") %>%
+    #Filter only required species
+    dplyr::filter(SpeciesID %in% species_filter) %>%
+    #Select only the basic info that we want:
+    # - Individual ID
+    # - GeneticBroodID
+    # - BroodID (for cross fostering experiments)
+    # - Species
+    # - Sex
+    # - RingSeason (year of first ringing)
+    # - RingAge (EURING age at first ringing)
+    # - RingNumber
+    dplyr::select(IndvID = ID, GeneticBroodID, BroodID, SpeciesID, Sexe, RingSeason = RingYear, RingAge, RingNumber) %>%
+    #Add in sex description
+    #N.B. Our approach, if we are joining in data
+    #before we call 'collect' then we use left_join
+    #otherwise, we use case_when
+    dplyr::left_join(Sex_data, by = "Sexe") %>%
+    #Remove old sex info
+    dplyr::select(-Sexe) %>%
+    dplyr::collect() %>%
+    #Add sex from standard protocol
+    #Add a ring age observed for determining Age_observed in Capture_data
+    dplyr::mutate(Sex = dplyr::case_when(.$Sex %in% c(1, 3, 5) ~ "F",
+                                         .$Sex %in% c(2, 4, 6) ~ "M")) %>%
+    #Add in the first capture location
+    #This is needed to determine which population the bird belongs too.
+    dplyr::left_join(tbl(database, "dbo_tbl_Capture") %>%
+                       dplyr::arrange(Individual, CaptureDate, CaptureTime) %>%
+                       dplyr::select(IndvID = Individual, CaptureLocation) %>%
+                       dplyr::group_by(IndvID) %>%
+                       dplyr::collect() %>%
+                       dplyr::slice(1), by = "IndvID") %>%
+    #Relate the capturelocation to the three letter PopID
+    dplyr::left_join(dplyr::select(location_data, PopID, CaptureLocation = ID), by = "CaptureLocation") %>%
+    #Filter only chosen pop
+    dplyr::filter(PopID %in% pop_filter)
+
+  Individual_data <- Individual_data %>%
+    dplyr::mutate(Species = dplyr::case_when(.$SpeciesID == 14400 ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code,
+                                             .$SpeciesID == 14640 ~ Species_codes[Species_codes$SpeciesID == 14640, ]$Code,
+                                             .$SpeciesID == 13490 ~ Species_codes[Species_codes$SpeciesID == 13490, ]$Code,
+                                             .$SpeciesID == 14620 ~ Species_codes[Species_codes$SpeciesID == 14620, ]$Code,
+                                             .$SpeciesID == 14790 ~ Species_codes[Species_codes$SpeciesID == 14790, ]$Code,
+                                             .$SpeciesID == 15980 ~ Species_codes[Species_codes$SpeciesID == 15980, ]$Code,
+                                             .$SpeciesID == 14610 ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code)) %>%
+    #Sort out brood laid and brood fledged so that both columns are filled.
+    mutate(BroodIDLaid = purrr::map2_chr(.x = BroodID, .y = GeneticBroodID,
+                                         #If there is no genetic brood listed but there is a regular broodID, assume these are the same
+                                         .f = ~ifelse(is.na(.y) & !is.na(.x), .x, .y)),
+
+           BroodIDFledged = purrr::map2_chr(.x = BroodID, .y = GeneticBroodID,
+                                            #If there is a genetic broodID listed by no regular brood ID assume these are the same.
+                                            .f = ~ifelse(!is.na(.y) & is.na(.x), .y, .x))) %>%
+    dplyr::select(IndvID, RingNumber, Species, PopID, BroodIDLaid, BroodIDFledged, RingSeason, RingAge, RingAgeObsv, Sex) %>%
+    #Convert RingAge into either chick or adult
+    dplyr::mutate(RingAge = dplyr::case_when(.$RingAge %in% c(1, 2, 3) ~ "chick",
+                                             .$RingAge > 3 ~ "adult"))
 
 }
