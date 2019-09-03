@@ -56,6 +56,7 @@ format_NIOO <- function(db = utils::choose.dir(),
                         species = NULL,
                         pop = NULL,
                         path = ".",
+                        debug = FALSE,
                         output_type = "csv"){
 
   #Force user to select directory
@@ -156,7 +157,7 @@ format_NIOO <- function(db = utils::choose.dir(),
   Individual_data <- Individual_data %>%
     dplyr::mutate(IndvID = as.character(IndvID)) %>%
     dplyr::select(IndvID, Species, PopID, BroodIDLaid, BroodIDFledged,
-                  RingSeason, RingAge)
+                  RingSeason, RingAge, Sex)
 
   Capture_data <- Capture_data %>%
     dplyr::mutate(IndvID = as.character(IndvID),
@@ -235,18 +236,12 @@ create_individual_NIOO <- function(database, location_data, species_filter, pop_
     # - RingAge (EURING age at first ringing)
     # - RingNumber
     dplyr::select(IndvID = ID, GeneticBroodID, BroodID, SpeciesID, Sexe, RingSeason = RingYear, RingAge, RingNumber) %>%
-    #Add in sex description
-    #N.B. Our approach, if we are joining in data
-    #before we call 'collect' then we use left_join
-    #otherwise, we use case_when
-    dplyr::left_join(Sex_data, by = "Sexe") %>%
-    #Remove old sex info
-    dplyr::select(-Sexe) %>%
+    #Add in sex description. Sex categories are described in "dbo_tl_Sexe"
     dplyr::collect() %>%
     #Add sex from standard protocol
     #Add a ring age observed for determining Age_observed in Capture_data
-    dplyr::mutate(Sex = dplyr::case_when(.$Sex %in% c(1, 3, 5) ~ "F",
-                                         .$Sex %in% c(2, 4, 6) ~ "M"),
+    dplyr::mutate(Sex = dplyr::case_when(.$Sexe %in% c(1, 3, 5) ~ "F",
+                                         .$Sexe %in% c(2, 4, 6) ~ "M"),
                   RingAgeObsv = RingAge) %>%
     #Add in the first capture location
     #This is needed to determine which population the bird belongs too.
