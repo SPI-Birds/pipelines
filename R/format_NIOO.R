@@ -134,99 +134,9 @@ format_NIOO <- function(db = utils::choose.dir(),
 
   # CAPTURE DATA
 
-  browser()
-
   message("Compiling capture information...")
 
-  #Capture data includes all times an individual was captured (with measurements like mass, tarsus etc.).
-  #This will include first capture as nestling
-  #This can include multiple records for a single individual.
-  Capture_data <- dplyr::tbl(connection, "dbo_tbl_Capture") %>%
-    dplyr::select(CaptureID = ID, AccuracyOfDate, CaptureDate, CaptureTime, IndvID = Individual, CaptureLocation, ReleaseLocation, CaptureType) %>%
-    #Join in weight, tarsus and wing_length from secondary capture data table.
-    dplyr::left_join(dplyr::tbl(connection, "dbo_vw_MI_CaptureCaptureData") %>%
-                       dplyr::select(CaptureID, SpeciesID, Observer, Weight, Tarsus, Wing_Length), by = "CaptureID") %>%
-    #Filter target species
-    dplyr::filter(SpeciesID %in% species & AccuracyOfDate == 1 & CaptureType %in% c(1, 2)) %>%
-    #Select only the basic info we need
-    # -CaptureID (unique ID of capture event)
-    # -CaptureDate
-    # -CaptureTime
-    # -Individual ID
-    # -Species
-    # -Capture Location
-    # -Release Location (for translocation)
-    # -Weight
-    # -Tarsus
-    # -Wing_Length
-  dplyr::select(CaptureID, CaptureDate, CaptureTime, IndvID, SpeciesID, CaptureLocation,
-                ReleaseLocation, Observer, Weight, Tarsus, WingLength = Wing_Length) %>%
-    dplyr::collect() %>%
-    #Join in information on when the individual was first ringed (left join from the IndvData)
-    #This is used to determine the age of each individual (EUring) at the time of capture
-    dplyr::left_join(dplyr::select(Individual_data, IndvID, RingSeason, RingAgeObsv), by = "IndvID") %>%
-    #Convert RingAgeObsv into Age_observed
-    #These numbers should convert exactly, be we need to check them explicitly when I have
-    #wifi again!
-    #Add BreedingSeason
-    dplyr::mutate(Age_observed = RingAgeObsv,
-                  BreedingSeason = lubridate::year(CaptureDate)) %>%
-    calc_age(ID = IndvID, Age = Age_observed, Date = CaptureDate, Year = BreedingSeason, showpb = TRUE) %>%
-    #Determine the time between first capture and current capture (in years)
-    # mutate(MinAge = lubridate::year(lubridate::ymd(CaptureDate)) - RingSeason) %>%
-    #Adjust this value to account for the age of the bird when first ringed
-    #Using EUring codes, so we account for certainty in the age.
-    # mutate(MinAge = toupper(as.hexmode(purrr::pmap_dbl(.l = list(.x = RingAge,
-    #                                                              .y = MinAge),
-    #                                                    .f = function(.x, .y){
-    #
-    #                                                      #If the age at ringing was unknown make no age estimate
-    #                                                      if(is.na(.x) | .x == 0){
-    #
-  #                                                        return(NA)
-  #
-  #                                                      } else {
-  #
-  #                                                        #If the individual was in it's first year when ringed
-  #                                                        if(.x < 4){
-  #
-    #                                                          #Use categories where age is certain (5, 7, etc.)
-    #                                                          return(3 + 2*(.y))
-    #
-    #                                                        } else {
-    #
-    #                                                          #If it was not caught in first year, use categories where age is uncertain
-    #                                                          #(6, 8)
-    #                                                          return(.x + 2*(.y))
-    #
-    #                                                        }
-    #
-    #                                                      }
-    #
-    #                                                    })))) %T>%
-    #Include species letter codes for all species
-    dplyr::ungroup() %>%
-    dplyr::mutate(Species = dplyr::case_when(.$SpeciesID == 14400 ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code,
-                                             .$SpeciesID == 14640 ~ Species_codes[Species_codes$SpeciesID == 14640, ]$Code,
-                                             .$SpeciesID == 13490 ~ Species_codes[Species_codes$SpeciesID == 13490, ]$Code,
-                                             .$SpeciesID == 14620 ~ Species_codes[Species_codes$SpeciesID == 14620, ]$Code,
-                                             .$SpeciesID == 14790 ~ Species_codes[Species_codes$SpeciesID == 14790, ]$Code,
-                                             .$SpeciesID == 15980 ~ Species_codes[Species_codes$SpeciesID == 15980, ]$Code,
-                                             .$SpeciesID == 14610 ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code),
-                  #Add original tarsus method
-                  OriginalTarsusMethod = dplyr::case_when(!is.na(.$Tarsus) ~ "Alternative"),
-                  ChickAge = NA, ObserverID = as.character(Observer)) %>%
-    #Arrange by species, indv and date/time
-    dplyr::arrange(Species, IndvID, CaptureDate, CaptureTime) %>%
-    #Include three letter population codes for both the capture and release location (some individuals may have been translocated e.g. cross-fostering)
-    dplyr::left_join(dplyr::select(Locations, CaptureLocation = ID, CapturePopID = PopID), by = "CaptureLocation") %>%
-    dplyr::left_join(dplyr::select(Locations, ReleaseLocation = ID, ReleasePopID = PopID), by = "ReleaseLocation") %>%
-    dplyr::filter(CapturePopID %in% pop) %>%
-    dplyr::mutate(LocationID = CaptureLocation) %>%
-    #Arrange columns
-    dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, CapturePopID, CapturePlot = CaptureLocation,
-                  ReleasePopID, ReleasePlot = ReleaseLocation,
-                  Mass = Weight, Tarsus, OriginalTarsusMethod, WingLength, Age_observed, Age_calculated, ChickAge)
+  Capture_data <- create_capture_NIOO(connection, Locations, species_filter, pop_filter)
 
   # BROOD DATA
 
@@ -537,7 +447,8 @@ create_individual_NIOO <- function(database, location_data, species_filter, pop_
     #Add sex from standard protocol
     #Add a ring age observed for determining Age_observed in Capture_data
     dplyr::mutate(Sex = dplyr::case_when(.$Sex %in% c(1, 3, 5) ~ "F",
-                                         .$Sex %in% c(2, 4, 6) ~ "M")) %>%
+                                         .$Sex %in% c(2, 4, 6) ~ "M"),
+                  RingAgeObsv = RingAge) %>%
     #Add in the first capture location
     #This is needed to determine which population the bird belongs too.
     dplyr::left_join(tbl(database, "dbo_tbl_Capture") %>%
@@ -571,5 +482,69 @@ create_individual_NIOO <- function(database, location_data, species_filter, pop_
     #Convert RingAge into either chick or adult
     dplyr::mutate(RingAge = dplyr::case_when(.$RingAge %in% c(1, 2, 3) ~ "chick",
                                              .$RingAge > 3 ~ "adult"))
+
+  return(Individual_data)
+
+}
+
+create_capture_NIOO <- function(database, location_data, species_filter, pop_filter){
+
+  #Capture data includes all times an individual was captured (with measurements like mass, tarsus etc.).
+  #This will include first capture as nestling
+  #This can include multiple records for a single individual.
+  Capture_data <- dplyr::tbl(database, "dbo_tbl_Capture") %>%
+    dplyr::select(CaptureID = ID, AccuracyOfDate, CaptureDate, CaptureTime, IndvID = Individual, CaptureLocation, ReleaseLocation, CaptureType) %>%
+    #Join in weight, tarsus and wing_length from secondary capture data table.
+    dplyr::left_join(dplyr::tbl(database, "dbo_vw_MI_CaptureCaptureData") %>%
+                       dplyr::select(CaptureID, SpeciesID, Observer, Weight, Tarsus, Wing_Length), by = "CaptureID") %>%
+    #Filter target species
+    dplyr::filter(SpeciesID %in% species_filter & AccuracyOfDate == 1 & CaptureType %in% c(1, 2)) %>%
+    #Select only the basic info we need
+    # -CaptureID (unique ID of capture event)
+    # -CaptureDate
+    # -CaptureTime
+    # -Individual ID
+    # -Species
+    # -Capture Location
+    # -Release Location (for translocation)
+    # -Weight
+    # -Tarsus
+    # -Wing_Length
+  dplyr::select(CaptureID, CaptureDate, CaptureTime, IndvID, SpeciesID, CaptureLocation,
+                ReleaseLocation, Observer, Weight, Tarsus, WingLength = Wing_Length) %>%
+    dplyr::collect() %>%
+    #Join in information on when the individual was first ringed (left join from the IndvData)
+    #This is used to determine the age of each individual (EURING) at the time of capture
+    dplyr::left_join(dplyr::select(Individual_data, IndvID, RingSeason, RingAgeObsv), by = "IndvID") %>%
+    #Convert RingAgeObsv into Age_observed
+    #These numbers should convert exactly, be we need to check them explicitly
+    dplyr::mutate(Age_observed = RingAgeObsv,
+                  BreedingSeason = lubridate::year(CaptureDate)) %>%
+    calc_age(ID = IndvID, Age = Age_observed, Date = CaptureDate, Year = BreedingSeason, showpb = TRUE) %>%
+    #Include species letter codes for all species
+    dplyr::ungroup() %>%
+    dplyr::mutate(Species = dplyr::case_when(.$SpeciesID == 14400 ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code,
+                                             .$SpeciesID == 14640 ~ Species_codes[Species_codes$SpeciesID == 14640, ]$Code,
+                                             .$SpeciesID == 13490 ~ Species_codes[Species_codes$SpeciesID == 13490, ]$Code,
+                                             .$SpeciesID == 14620 ~ Species_codes[Species_codes$SpeciesID == 14620, ]$Code,
+                                             .$SpeciesID == 14790 ~ Species_codes[Species_codes$SpeciesID == 14790, ]$Code,
+                                             .$SpeciesID == 15980 ~ Species_codes[Species_codes$SpeciesID == 15980, ]$Code,
+                                             .$SpeciesID == 14610 ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code),
+                  #Add original tarsus method
+                  OriginalTarsusMethod = dplyr::case_when(!is.na(.$Tarsus) ~ "Alternative"),
+                  ChickAge = NA, ObserverID = as.character(Observer)) %>%
+    #Arrange by species, indv and date/time
+    dplyr::arrange(Species, IndvID, CaptureDate, CaptureTime) %>%
+    #Include three letter population codes for both the capture and release location (some individuals may have been translocated e.g. cross-fostering)
+    dplyr::left_join(dplyr::select(location_data, CaptureLocation = ID, CapturePopID = PopID), by = "CaptureLocation") %>%
+    dplyr::left_join(dplyr::select(location_data, ReleaseLocation = ID, ReleasePopID = PopID), by = "ReleaseLocation") %>%
+    dplyr::filter(CapturePopID %in% pop_filter) %>%
+    dplyr::mutate(LocationID = CaptureLocation) %>%
+    #Arrange columns
+    dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, CapturePopID, CapturePlot = CaptureLocation,
+                  ReleasePopID, ReleasePlot = ReleaseLocation,
+                  Mass = Weight, Tarsus, OriginalTarsusMethod, WingLength, Age_observed, Age_calculated, ChickAge)
+
+  return(Capture_data)
 
 }
