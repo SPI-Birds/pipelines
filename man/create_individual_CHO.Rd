@@ -7,7 +7,7 @@
 create_individual_CHO(data)
 }
 \arguments{
-\item{Capture_data}{Data frame. Output from \code{\link{create_capture_BAN}}.}
+\item{data}{Data frame. Primary data from Choupal.}
 }
 \value{
 A data frame.
