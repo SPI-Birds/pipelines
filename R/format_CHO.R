@@ -337,7 +337,7 @@ create_capture_CHO <- function(data){
 #' Create individual data table in standard format for data from Choupal,
 #' Portugal.
 #'
-#' @param Capture_data Data frame. Output from \code{\link{create_capture_BAN}}.
+#' @param data Data frame. Primary data from Choupal.
 #'
 #' @return A data frame.
 
