@@ -2,10 +2,10 @@
 % Please edit documentation in R/format_NIOO.R
 \name{format_NIOO}
 \alias{format_NIOO}
-\title{Construct standard summary for NIOO data.}
+\title{Construct standard format for NIOO data.}
 \usage{
 format_NIOO(db = utils::choose.dir(), species = NULL, pop = NULL,
-  path = ".", output_type = "csv")
+  path = ".", debug = FALSE, output_type = "csv")
 }
 \arguments{
 \item{db}{Location of database file.}
@@ -23,15 +23,19 @@ this argument can be ignored.}
 
 \item{path}{Location where output csv files will be saved.}
 
+\item{debug}{For internal use when editing pipelines. If TRUE, pipeline
+generates a summary of pipeline data. This includes: a) Histogram of
+continuous variables with mean/SD b) unique values of all categorical
+variables.}
+
 \item{output_type}{Should the pipeline generate .csv files ('csv') or R objects ('R').}
 }
 \value{
 Generates 4 .csv files with data in a standard format.
 }
 \description{
-A pipeline to produce a standard output for 8 hole-nesting bird study
-populations at the Netherlands Institute of Ecology (NIOO-KNAW). Output
-follows the HNB standard breeding data format.
+A pipeline to produce the standard format for 8 hole-nesting bird study
+populations at the Netherlands Institute of Ecology (NIOO-KNAW).
 }
 \details{
 This section provides details on data management choices that are unique to
@@ -47,8 +51,8 @@ ater}; and tree sparrow \emph{Passer montanus}.
 NIOO-KNAW: Buunderkamp, Lichtenbeek, Westerheide, Hoge Veluwe, Warnsborn,
 Vlieland, Oosterhout, and Liesbosch.
 
-\strong{Sex}: We condense sex information to only include groups M, F, and U
-(unknown) following the EUring standard. Uncertainty in sex was ignored (e.g.
+\strong{Sex}: We condense sex information to only include groups M, F, and C
+(conflicting). Uncertainty in sex was ignored (e.g.
 'male?' or 'female?').
 
 \strong{Measurement error}: For BroodSize, NumberFledged XXXX FILL IN a best
