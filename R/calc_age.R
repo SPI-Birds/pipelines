@@ -43,10 +43,10 @@ calc_age <- function(data, ID, Age, Date, Year, showpb = TRUE){
   output <- data %>%
     dplyr::arrange({{ID}}, {{Year}}, {{Date}}) %>%
     dplyr::group_by({{ID}}) %>%
-    dplyr::mutate(FirstAge  = first({{Age}}),
-                  FirstYear = as.numeric(first({{Year}}))) %>%
-    dplyr::mutate(yr_diff   = as.numeric({{Year}}) - FirstYear,
-                  Age_calculated = purrr::pmap_dbl(.l = list(FirstAge, yr_diff, {{Age}}, {{ID}}),
+    dplyr::mutate(FirstAge  = as.integer(first({{Age}})),
+                  FirstYear = as.integer(first({{Year}}))) %>%
+    dplyr::mutate(yr_diff   = as.integer({{Year}}) - FirstYear,
+                  Age_calculated = purrr::pmap_int(.l = list(FirstAge, yr_diff, {{Age}}, {{ID}}),
                                              .f = ~{
 
                                                if(showpb){
@@ -57,7 +57,7 @@ calc_age <- function(data, ID, Age, Date, Year, showpb = TRUE){
 
                                                if(is.na(..4)){
 
-                                                 return(NA)
+                                                 return(NA_integer_)
 
                                                }
 
@@ -66,13 +66,13 @@ calc_age <- function(data, ID, Age, Date, Year, showpb = TRUE){
                                                if(is.na(..1) | ..1 > 3) {
 
                                                  #Give an age which is at least >1yo
-                                                 return(4 + 2*..2)
+                                                 return(4L + 2L*..2)
 
                                                } else {
 
                                                  #Otherwise, if it was first caught as a chick
                                                  #and it's the same year of chick capture.
-                                                 if(..2 == 0){
+                                                 if(..2 == 0L){
 
                                                    #Return the recorded age
                                                    #This is important because it could also have been
@@ -84,7 +84,7 @@ calc_age <- function(data, ID, Age, Date, Year, showpb = TRUE){
 
                                                    #If it's later than the year of birth,
                                                    #give it a known age.
-                                                   return(3 + 2*..2)
+                                                   return(3L + 2L*..2)
 
                                                  }
 
