@@ -86,7 +86,7 @@ format_BAN <- function(db = utils::choose.dir(),
                                  janitor::clean_names() %>%
                                  dplyr::mutate_all(.funs = na_if, y = "NA") %>%
                                  #Convert column names to match standard format
-                                 dplyr::mutate(BreedingSeason = year,
+                                 dplyr::mutate(BreedingSeason = as.integer(year),
                                                PopID = "BAN", Plot = site,
                                                #Create a unique LocationID using plot and box number
                                                LocationID = paste(Plot, stringr::str_pad(string = box_number, width = 3, pad = "0"), sep = "_"),
@@ -107,8 +107,8 @@ format_BAN <- function(db = utils::choose.dir(),
                                                #Create a unique BroodID from Year_Plot_BoxNumber_LayingDay_LayingMonth
                                                BroodID = paste(BreedingSeason, LocationID,
                                                                lubridate::day(LayingDate), lubridate::month(LayingDate), sep = "_"),
-                                               AvgEggMass = as.numeric(egg_weight), NumberEggs = as.numeric(number_eggs_weighed),
-                                               ClutchSize = as.numeric(final_clutch_size),
+                                               AvgEggMass = as.numeric(egg_weight), NumberEggs = as.integer(number_eggs_weighed),
+                                               ClutchSize = as.integer(final_clutch_size),
                                                #Assume incubation begins immediately after the last egg is laid.
                                                StartIncubation = LayingDate + ClutchSize,
                                                EggWeighDate = (March1Date + as.numeric(weigh_date)),
@@ -123,7 +123,7 @@ format_BAN <- function(db = utils::choose.dir(),
                                                MaleID = male_id, FemaleID = female_id,
                                                ChickCaptureDate = March1Date + as.numeric(actual_pullus_ringing_date),
                                                #Ignore uncertainty in NumberFledged (e.g. 97?)
-                                               NumberFledged = as.numeric(gsub(pattern = "\\?",
+                                               NumberFledged = as.integer(gsub(pattern = "\\?",
                                                                                replacement = "",
                                                                                number_fledged))) %>%
                                  #Filter only the species of interest
@@ -215,12 +215,12 @@ create_brood_BAN   <- function(data) {
 
   Brood_data <- data %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(., na.rm = FALSE),
-                  LayingDateError = NA_integer_,
-                  ClutchSizeError = NA_integer_,
-                  HatchDateError = NA_integer_,
-                  BroodSize = NA_integer_, BroodSizeError = NA_integer_,
-                  FledgeDate = NA_integer_, FledgeDateError = NA_integer_,
-                  NumberFledgedError = NA_integer_,
+                  LayingDateError = NA_real_,
+                  ClutchSizeError = NA_real_,
+                  HatchDateError = NA_real_,
+                  BroodSize = NA_integer_, BroodSizeError = NA_real_,
+                  FledgeDate = as.Date(NA), FledgeDateError = NA_real_,
+                  NumberFledgedError = NA_real_,
                   AvgChickMass = NA_real_, NumberChicksMass = NA_integer_,
                   AvgTarsus = NA_real_, NumberChicksTarsus = NA_integer_,
                   OriginalTarsusMethod = NA_character_,
@@ -387,7 +387,7 @@ create_location_BAN <- function(data) {
                                   LocationType = "NB",
                                   PopID = "BAN",
                                   Latitude = NA_real_, Longitude = NA_real_,
-                                  StartSeason = 2013,
+                                  StartSeason = 2013L,
                                   EndSeason = NA_integer_, Habitat = NA_character_)
 
   return(Location_data)
