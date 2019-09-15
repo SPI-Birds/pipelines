@@ -1,24 +1,17 @@
 context("Run data quality check on Choupal pipeline output")
 
-test_that("CHO pipeline works...", {
-
-  #Save in global environment for use later
-  suppressWarnings(pipeline_output <<- run_pipelines(path = path, PopID = "CHO", output_type = "R"))
-
-})
-
 test_that("CHO outputs all files...", {
 
-  expect_true(exists("Brood_data", where = .GlobalEnv$pipeline_output$CHO))
-  expect_true(exists("Capture_data", where = .GlobalEnv$pipeline_output$CHO))
-  expect_true(exists("Individual_data", where = .GlobalEnv$pipeline_output$CHO))
-  expect_true(exists("Location_data", where = .GlobalEnv$pipeline_output$CHO))
+  expect_true(exists("Brood_data", where = pipeline_output$CHO))
+  expect_true(exists("Capture_data", where = pipeline_output$CHO))
+  expect_true(exists("Individual_data", where = pipeline_output$CHO))
+  expect_true(exists("Location_data", where = pipeline_output$CHO))
 
 })
 
 test_that("CHO individual data has no errors...", {
 
-  check <- check_format_individual(.GlobalEnv$pipeline_output$CHO$Individual_data)
+  check <- check_format_individual(pipeline_output$CHO$Individual_data)
 
   expect_false(check$check_list$Error)
 
@@ -33,7 +26,7 @@ test_that("CHO individual data has no errors...", {
 test_that("CHO brood data has no errors...", {
 
   #Check that the format of the data is correct
-  check <- check_format_individual(.GlobalEnv$pipeline_output$CHO$Brood_data)
+  check <- check_format_individual(pipeline_output$CHO$Brood_data)
 
   expect_false(check$check_list$Error)
 
@@ -44,7 +37,7 @@ test_that("CHO brood data has no errors...", {
   }
 
   #Check that clutch size < brood size
-  check <- compare_clutch_brood(.GlobalEnv$pipeline_output$CHO$Brood_data)
+  check <- compare_clutch_brood(pipeline_output$CHO$Brood_data)
 
   expect_false(check$check_list$Error)
 
@@ -55,7 +48,7 @@ test_that("CHO brood data has no errors...", {
   }
 
   #Check that brood size < fledglings
-  check <- compare_brood_fledglings(.GlobalEnv$pipeline_output$CHO$Brood_data)
+  check <- compare_brood_fledglings(pipeline_output$CHO$Brood_data)
 
   expect_false(check$check_list$Error)
 
@@ -66,7 +59,7 @@ test_that("CHO brood data has no errors...", {
   }
 
   #Check that laying date < hatch date
-  check <- compare_laying_hatching(.GlobalEnv$pipeline_output$CHO$Brood_data)
+  check <- compare_laying_hatching(pipeline_output$CHO$Brood_data)
 
   expect_false(check$check_list$Error)
 
@@ -77,7 +70,7 @@ test_that("CHO brood data has no errors...", {
   }
 
   #Check that hatch date < fledge date
-  check <- compare_hatching_fledging(.GlobalEnv$pipeline_output$CHO$Brood_data)
+  check <- compare_hatching_fledging(pipeline_output$CHO$Brood_data)
 
   expect_false(check$check_list$Error)
 
@@ -92,7 +85,7 @@ test_that("CHO brood data has no errors...", {
 test_that("Check for impossible values in CHO brood data...", {
 
   #Check that the format of the data is correct
-  brood_data <- .GlobalEnv$pipeline_output$CHO$Brood_data %>%
+  brood_data <- pipeline_output$CHO$Brood_data %>%
     split(f = as.factor(.$Species))
 
   purrr::pwalk(.l = list(brood_data),
@@ -132,7 +125,7 @@ test_that("Check for impossible values in CHO brood data...", {
 
 test_that("CHO capture data has no errors...", {
 
-  check <- check_format_individual(.GlobalEnv$pipeline_output$CHO$Capture_data)
+  check <- check_format_individual(pipeline_output$CHO$Capture_data)
 
   expect_false(check$check_list$Error)
 
@@ -146,7 +139,7 @@ test_that("CHO capture data has no errors...", {
 
 test_that("CHO location data has no errors...", {
 
-  check <- check_format_individual(.GlobalEnv$pipeline_output$CHO$Location_data)
+  check <- check_format_individual(pipeline_output$CHO$Location_data)
 
   expect_false(check$check_list$Error)
 

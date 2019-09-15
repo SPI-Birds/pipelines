@@ -1,61 +1,91 @@
-context("Run data quality check on Santo Stefano Quisquina pipeline output")
-
-test_that("BAN pipeline works...", {
-
-  suppressWarnings(run_pipelines(path = path, PopID = "BAN"))
-
-})
+context("Run data quality check on Bandon Valley pipeline output")
 
 test_that("BAN outputs all files...", {
 
-  expect_true(file.exists("Brood_data_BAN.csv"))
-  expect_true(file.exists("Capture_data_BAN.csv"))
-  expect_true(file.exists("Individual_data_BAN.csv"))
-  expect_true(file.exists("Location_data_BAN.csv"))
+  expect_true(exists("Brood_data", where = pipeline_output$BAN))
+  expect_true(exists("Capture_data", where = pipeline_output$BAN))
+  expect_true(exists("Individual_data", where = pipeline_output$BAN))
+  expect_true(exists("Location_data", where = pipeline_output$BAN))
 
 })
 
 test_that("BAN individual data has no errors...", {
 
-  check <- check_format_individual(utils::read.csv("Individual_data_BAN.csv", stringsAsFactors = FALSE))
+  check <- check_format_individual(pipeline_output$BAN$Individual_data)
 
   expect_false(check$check_list$Error)
+
+  if(check$check_list$Error == TRUE){
+
+    purrr::pwalk(.l = check$error_output, .f = print)
+
+  }
 
 })
 
 test_that("BAN brood data has no errors...", {
 
   #Check that the format of the data is correct
-  check <- check_format_individual(utils::read.csv("Brood_data_BAN.csv", stringsAsFactors = FALSE))
+  check <- check_format_individual(pipeline_output$BAN$Brood_data)
 
   expect_false(check$check_list$Error)
+
+  if(check$check_list$Error == TRUE){
+
+    purrr::pwalk(.l = check$error_output, .f = print)
+
+  }
 
   #Check that clutch size < brood size
-  check <- compare_clutch_brood(utils::read.csv("Brood_data_BAN.csv", stringsAsFactors = FALSE))
+  check <- compare_clutch_brood(pipeline_output$BAN$Brood_data)
 
   expect_false(check$check_list$Error)
+
+  if(check$check_list$Error == TRUE){
+
+    purrr::pwalk(.l = check$error_output, .f = print)
+
+  }
 
   #Check that brood size < fledglings
-  check <- compare_brood_fledglings(utils::read.csv("Brood_data_BAN.csv", stringsAsFactors = FALSE))
+  check <- compare_brood_fledglings(pipeline_output$BAN$Brood_data)
 
   expect_false(check$check_list$Error)
+
+  if(check$check_list$Error == TRUE){
+
+    purrr::pwalk(.l = check$error_output, .f = print)
+
+  }
 
   #Check that laying date < hatch date
-  check <- compare_laying_hatching(utils::read.csv("Brood_data_BAN.csv", stringsAsFactors = FALSE))
+  check <- compare_laying_hatching(pipeline_output$BAN$Brood_data)
 
   expect_false(check$check_list$Error)
+
+  if(check$check_list$Error == TRUE){
+
+    purrr::pwalk(.l = check$error_output, .f = print)
+
+  }
 
   #Check that hatch date < fledge date
-  check <- compare_hatching_fledging(utils::read.csv("Brood_data_BAN.csv", stringsAsFactors = FALSE))
+  check <- compare_hatching_fledging(pipeline_output$BAN$Brood_data)
 
   expect_false(check$check_list$Error)
+
+  if(check$check_list$Error == TRUE){
+
+    purrr::pwalk(.l = check$error_output, .f = print)
+
+  }
 
 })
 
 test_that("Check for impossible values in BAN brood data...", {
 
   #Check that the format of the data is correct
-  brood_data <- utils::read.csv("Brood_data_BAN.csv", stringsAsFactors = FALSE) %>%
+  brood_data <- pipeline_output$BAN$Brood_data %>%
     split(f = as.factor(.$Species))
 
   purrr::pwalk(.l = list(brood_data),
@@ -64,6 +94,12 @@ test_that("Check for impossible values in BAN brood data...", {
                  check <- check_values_brood(Brood_data = ..1, species = unique(..1$Species))
 
                  expect_false(check$check_list$Error)
+
+                 if(check$check_list$Error == TRUE){
+
+                   purrr::pwalk(.l = check$error_output, .f = print)
+
+                 }
 
                })
 
@@ -89,16 +125,28 @@ test_that("Check for impossible values in BAN brood data...", {
 
 test_that("BAN capture data has no errors...", {
 
-  check <- check_format_individual(utils::read.csv("Capture_data_BAN.csv", stringsAsFactors = FALSE))
+  check <- check_format_individual(pipeline_output$BAN$Capture_data)
 
   expect_false(check$check_list$Error)
+
+  if(check$check_list$Error == TRUE){
+
+    purrr::pwalk(.l = check$error_output, .f = print)
+
+  }
 
 })
 
 test_that("BAN location data has no errors...", {
 
-  check <- check_format_individual(utils::read.csv("Location_data_BAN.csv", stringsAsFactors = FALSE))
+  check <- check_format_individual(pipeline_output$BAN$Location_data)
 
   expect_false(check$check_list$Error)
+
+  if(check$check_list$Error == TRUE){
+
+    purrr::pwalk(.l = check$error_output, .f = print)
+
+  }
 
 })
