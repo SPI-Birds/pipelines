@@ -1,37 +1,35 @@
 #' A function to perform a quality check on pipeline outputs
 #'
-#' @param db Location of standard .csv outputs of the pipeline.
-#' @param pop Three-letter population ID.
-#' @param species Six-letter species ID.
+#' @param R_data Output of pipeline as an R object. Generated using
+#' 'output_type = R' in run_pipelines.
+#' @param species Species on which to test (6 letter species code)
 #' @param output_format Format of report: "html", "pdf", or "both" (default).
 #'
 #' @return A summary dataframe of test warnings and errors for use in testthat,
 #'   and a report of the line-by-line list of warnings and errors.
 #'
+#' @example
+#' \dontrun{
+#'
+#' CHO <- run_pipelines(PopID = "CHO", output_type = "R")
+#' quality_check(CHO, species = "PARMAJ")
+#'
+#' }
 #' @export
 
-quality_check <- function(db = utils::choose.dir(),
-                          pop,
+quality_check <- function(R_data,
                           species,
                           output_format = "both"){
 
-  #Force choose.dir() as first command
-  force(db)
+  #Name of the pop (3 letter code) is also the name of the R data object
+  pop <- names(R_data)[1]
 
   start_time <- Sys.time()
 
-  message("Importing data...")
-
-  ## Each pipeline produces 4 .csv outputs in standard format
-
-  ## DECISION TO BE MADE:
-  ## - Read in .csv files (names are population-specific)
-  ## - or Load in R objects with generic names?
-
-  Individual_data <- utils::read.csv(paste0(db, "/Individual_data_VEL.csv"), stringsAsFactors = FALSE)
-  Brood_data <- utils::read.csv(paste0(db, "/Brood_data_VEL.csv"), stringsAsFactors = FALSE)
-  Capture_data <- utils::read.csv(paste0(db, "/Capture_data_VEL.csv"), stringsAsFactors = FALSE)
-  Location_data <- utils::read.csv(paste0(db, "/Location_data_VEL.csv"), stringsAsFactors = FALSE)
+  Individual_data <- R_data[[1]]$Individual_data
+  Brood_data <- R_data[[1]]$Brood_data
+  Capture_data <- R_data[[1]]$Capture_data
+  Location_data <- R_data[[1]]$Location_data
 
   ## Create check list with - a summary of warnings and errors per test
   check_list <- tibble::tibble(Check = c("Individual data format", "Brood data format",
@@ -984,10 +982,10 @@ check_values_capture <- function(Capture_data, species) {
 
   # Separate adults from chicks, as they have different reference values
   Adult_data <- Capture_data %>%
-    dplyr::filter(Age_calc > 3)
+    dplyr::filter(Age_calculated > 3)
 
   Chick_data <- Capture_data %>%
-    dplyr::filter(Age_calc <= 3)
+    dplyr::filter(Age_calculated <= 3)
 
   # Create warning & error list of variable-specific dataframes for
   # - adults
