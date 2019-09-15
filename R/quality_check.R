@@ -465,15 +465,17 @@ check_format_capture <- function(Capture_data){
 
   ## Data frame with column names and formats according to the standard protocol
   Capture_data_standard <- tibble::tibble(Variable = c("IndvID", "Species", "BreedingSeason",
-                                                       "LocationID", "CaptureDate", "CaptureTime",
-                                                       "CapturePopID", "CapturePlot", "ReleasePopID",
-                                                       "ReleasePlot", "Mass", "Tarsus", "WingLength",
-                                                       "Age_obsv", "Age_calc", "ChickAge"),
-                                          Format_standard = c("character", "character", "numeric",
-                                                              "character", "Date", "Date",
+                                                       "CaptureDate", "CaptureTime", "ObserverID",
+                                                       "LocationID", "CapturePopID", "CapturePlot",
+                                                       "ReleasePopID", "ReleasePlot",
+                                                       "Mass", "Tarsus", "OriginalTarsusMethod",
+                                                       "WingLength", "Age_obsverved", "Age_calculated", "ChickAge"),
+                                          Format_standard = c("character", "character", "integer",
+                                                              "Date", "character", "character",
                                                               "character", "character", "character",
-                                                              "character", "numeric", "numeric", "numeric",
-                                                              "numeric", "numeric", "numeric"))
+                                                              "character", "character",
+                                                              "numeric", "numeric", "character", "numeric",
+                                                              "integer", "integer", "integer"))
 
   ## Data frame with column names and formats from Capture data
   Capture_data_col <- tibble::tibble(Variable = names(Capture_data),
