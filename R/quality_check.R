@@ -313,7 +313,7 @@ check_format_individual <- function(Individual_data){
 
   ## Data frame with column names and formats according to the standard protocol
   Individual_data_standard <- tibble::tibble(Variable = c("IndvID", "Species", "PopID",
-                                                          "BroodIDLaid", "BroodIDRinged", "RingSeason",
+                                                          "BroodIDLaid", "BroodIDFledged", "RingSeason",
                                                           "RingAge", "Sex"),
                                              Format_standard = c("character", "character", "character",
                                                                  "character", "character", "integer",
