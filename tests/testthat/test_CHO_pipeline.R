@@ -17,7 +17,7 @@ test_that("CHO individual data has no errors...", {
 
   if(check$check_list$Error == TRUE){
 
-    purrr::pwalk(.l = check$error_output, .f = print)
+    sapply(check$error_output, print)
 
   }
 
@@ -32,7 +32,7 @@ test_that("CHO brood data has no errors...", {
 
   if(check$check_list$Error == TRUE){
 
-    purrr::pwalk(.l = check$error_output, .f = print)
+    sapply(check$error_output, print)
 
   }
 
@@ -43,7 +43,7 @@ test_that("CHO brood data has no errors...", {
 
   if(check$check_list$Error == TRUE){
 
-    purrr::pwalk(.l = check$error_output, .f = print)
+    sapply(check$error_output, print)
 
   }
 
@@ -54,7 +54,7 @@ test_that("CHO brood data has no errors...", {
 
   if(check$check_list$Error == TRUE){
 
-    purrr::pwalk(.l = check$error_output, .f = print)
+    sapply(check$error_output, print)
 
   }
 
@@ -65,7 +65,7 @@ test_that("CHO brood data has no errors...", {
 
   if(check$check_list$Error == TRUE){
 
-    purrr::pwalk(.l = check$error_output, .f = print)
+    sapply(check$error_output, print)
 
   }
 
@@ -76,7 +76,7 @@ test_that("CHO brood data has no errors...", {
 
   if(check$check_list$Error == TRUE){
 
-    purrr::pwalk(.l = check$error_output, .f = print)
+    sapply(check$error_output, print)
 
   }
 
@@ -97,7 +97,7 @@ test_that("Check for impossible values in CHO brood data...", {
 
                  if(check$check_list$Error == TRUE){
 
-                   purrr::pwalk(.l = check$error_output, .f = print)
+                   sapply(check$error_output, print)
 
                  }
 
@@ -131,7 +131,7 @@ test_that("CHO capture data has no errors...", {
 
   if(check$check_list$Error == TRUE){
 
-    purrr::pwalk(.l = check$error_output, .f = print)
+    sapply(check$error_output, print)
 
   }
 
@@ -145,7 +145,7 @@ test_that("CHO location data has no errors...", {
 
   if(check$check_list$Error == TRUE){
 
-    purrr::pwalk(.l = check$error_output, .f = print)
+    sapply(check$error_output, print)
 
   }
 
