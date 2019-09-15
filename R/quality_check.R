@@ -340,19 +340,47 @@ check_format_individual <- function(Individual_data){
   }
 
   ## Missing columns
-  Individual_data_missing <- dplyr::left_join(Individual_data_standard, Individual_data_col, by="Variable") %>%
-    filter(Format == "logical")
+  # Individual_data_missing <- dplyr::left_join(Individual_data_standard, Individual_data_col, by="Variable") %>%
+  #   filter(Format == "logical")
+  #
+  # war <- FALSE
+  # warning_output <- NULL
+  #
+  # if(nrow(Individual_data_missing) > 0) {
+  #   war <- TRUE
+  #
+  #   warning_output <- purrr::map(.x = Individual_data_missing$Variable,
+  #                                .f = ~{
+  #                                  paste0(.x, " in Individual_data is missing, unmeasured or undetermined (NA).")
+  #                                })
+  # }
 
-  war <- FALSE
-  warning_output <- NULL
+  #Test for empty columns by looking at uniques, rather than using data type
+  warning_output <- purrr::pmap(.l = list(as.list(Individual_data), colnames(Individual_data)),
+                                .f = ~{
 
-  if(nrow(Individual_data_missing) > 0) {
-    war <- TRUE
+                                  if(all(is.na(unique(..1)))){
 
-    warning_output <- purrr::map(.x = Individual_data_missing$Variable,
-                                 .f = ~{
-                                   paste0(.x, " in Individual_data is missing, unmeasured or undetermined (NA).")
-                                 })
+                                    return(paste0(..2, " in Individual_data is missing, unmeasured or undetermined (NA)."))
+
+                                  } else {
+
+                                    return()
+
+                                  }
+
+                                })
+
+
+
+  #Remove all cases that return NULL
+  #Assigning NULL (rather than returning NULL in function) removes the list item
+  warning_output[sapply(warning_output, is.null)] <- NULL
+
+  if(length(warning_output) > 0){
+
+    war = TRUE
+
   }
 
   check_list <- tibble::tibble(Warning = war,
@@ -423,19 +451,47 @@ check_format_brood <- function(Brood_data){
   }
 
   ## Missing columns
-  Brood_data_missing <- dplyr::left_join(Brood_data_standard, Brood_data_col, by="Variable") %>%
-    filter(Format == "logical")
+  # Brood_data_missing <- dplyr::left_join(Brood_data_standard, Brood_data_col, by="Variable") %>%
+  #   filter(Format == "logical")
+  #
+  # war <- FALSE
+  # warning_output <- NULL
+  #
+  # if(nrow(Brood_data_missing) > 0) {
+  #   war <- TRUE
+  #
+  #   warning_output <- purrr::map(.x = Brood_data_missing$Variable,
+  #                                .f = ~{
+  #                                  paste0(.x, " in Brood_data is missing, unmeasured or undetermined (NA).")
+  #                                })
+  # }
 
-  war <- FALSE
-  warning_output <- NULL
+  #Test for empty columns by looking at uniques, rather than using data type
+  warning_output <- purrr::pmap(.l = list(as.list(Brood_data), colnames(Brood_data)),
+                                .f = ~{
 
-  if(nrow(Brood_data_missing) > 0) {
-    war <- TRUE
+                                  if(all(is.na(unique(..1)))){
 
-    warning_output <- purrr::map(.x = Brood_data_missing$Variable,
-                                 .f = ~{
-                                   paste0(.x, " in Brood_data is missing, unmeasured or undetermined (NA).")
-                                 })
+                                    return(paste0(..2, " in Brood_data is missing, unmeasured or undetermined (NA)."))
+
+                                  } else {
+
+                                    return()
+
+                                  }
+
+                                })
+
+
+
+  #Remove all cases that return NULL
+  #Assigning NULL (rather than returning NULL in function) removes the list item
+  warning_output[sapply(warning_output, is.null)] <- NULL
+
+  if(length(warning_output) > 0){
+
+    war = TRUE
+
   }
 
   check_list <- tibble::tibble(Warning = war,
@@ -498,19 +554,47 @@ check_format_capture <- function(Capture_data){
   }
 
   ## Missing columns
-  Capture_data_missing <- dplyr::left_join(Capture_data_standard, Capture_data_col, by="Variable") %>%
-    filter(Format == "logical")
+  # Capture_data_missing <- dplyr::left_join(Capture_data_standard, Capture_data_col, by="Variable") %>%
+  #   filter(Format == "logical")
+  #
+  # war <- FALSE
+  # warning_output <- NULL
+  #
+  # if(nrow(Capture_data_missing) > 0) {
+  #   war <- TRUE
+  #
+  #   warning_output <- purrr::map(.x = Capture_data_missing$Variable,
+  #                                .f = ~{
+  #                                  paste0(.x, " in Capture_data is missing, unmeasured or undetermined (NA).")
+  #                                })
+  # }
 
-  war <- FALSE
-  warning_output <- NULL
+  #Test for empty columns by looking at uniques, rather than using data type
+  warning_output <- purrr::pmap(.l = list(as.list(Capture_data), colnames(Capture_data)),
+                                .f = ~{
 
-  if(nrow(Capture_data_missing) > 0) {
-    war <- TRUE
+                                  if(all(is.na(unique(..1)))){
 
-    warning_output <- purrr::map(.x = Capture_data_missing$Variable,
-                                 .f = ~{
-                                   paste0(.x, " in Capture_data is missing, unmeasured or undetermined (NA).")
-                                 })
+                                    return(paste0(..2, " in Capture_data is missing, unmeasured or undetermined (NA)."))
+
+                                  } else {
+
+                                    return()
+
+                                  }
+
+                                })
+
+
+
+  #Remove all cases that return NULL
+  #Assigning NULL (rather than returning NULL in function) removes the list item
+  warning_output[sapply(warning_output, is.null)] <- NULL
+
+  if(length(warning_output) > 0){
+
+    war = TRUE
+
   }
 
   check_list <- tibble::tibble(Warning = war,
@@ -566,19 +650,47 @@ check_format_location <- function(Location_data){
   }
 
   ## Missing columns
-  Location_data_missing <- dplyr::left_join(Location_data_standard, Location_data_col, by="Variable") %>%
-    filter(Format == "logical")
+  # Location_data_missing <- dplyr::left_join(Location_data_standard, Location_data_col, by="Variable") %>%
+  #   filter(Format == "logical")
+  #
+  # war <- FALSE
+  # warning_output <- NULL
+  #
+  # if(nrow(Location_data_missing) > 0) {
+  #   war <- TRUE
+  #
+  #   warning_output <- purrr::map(.x = Location_data_missing$Variable,
+  #                                .f = ~{
+  #                                  paste0(.x, " in Location_data is missing, unmeasured or undetermined (NA).")
+  #                                })
+  # }
 
-  war <- FALSE
-  warning_output <- NULL
+  #Test for empty columns by looking at uniques, rather than using data type
+  warning_output <- purrr::pmap(.l = list(as.list(Location_data), colnames(Location_data)),
+                                .f = ~{
 
-  if(nrow(Location_data_missing) > 0) {
-    war <- TRUE
+                                  if(all(is.na(unique(..1)))){
 
-    warning_output <- purrr::map(.x = Location_data_missing$Variable,
-                                 .f = ~{
-                                   paste0(.x, " in Location_data is missing, unmeasured or undetermined (NA).")
-                                 })
+                                    return(paste0(..2, " in Location_data is missing, unmeasured or undetermined (NA)."))
+
+                                  } else {
+
+                                    return()
+
+                                  }
+
+                                })
+
+
+
+  #Remove all cases that return NULL
+  #Assigning NULL (rather than returning NULL in function) removes the list item
+  warning_output[sapply(warning_output, is.null)] <- NULL
+
+  if(length(warning_output) > 0){
+
+    war = TRUE
+
   }
 
   check_list <- tibble::tibble(Warning = war,
