@@ -81,8 +81,8 @@ format_CHO <- function(db = utils::choose.dir(),
            IndvID = Ring,
            CaptureDate = lubridate::ymd(paste0(Year, "-01-01")) + JulianDate,
            Time = format.POSIXct(Time, format = "%H:%M:%S"),
-           ChickAge = as.numeric(dplyr::na_if(ChickAge, "na")),
-           BreedingSeason = Year,
+           ChickAge = as.integer(dplyr::na_if(ChickAge, "na")),
+           BreedingSeason = as.integer(Year),
            #If an individual was caught in a mist net give a generic LocationID (MN1)
            #Otherwise, give the box number.
            LocationID = purrr::pmap_chr(.l = list(TrapingMethod, as.character(Box)),
@@ -241,12 +241,12 @@ create_brood_CHO <- function(data){
                     fun.aggregate = first) %>%
     #Add in population/plot info
     #Convert LayingDate and HatchDate to date objects
-    dplyr::mutate(FledgeDate = NA,
+    dplyr::mutate(FledgeDate = as.Date(NA),
                   HatchDate = lubridate::ymd(paste0(Year, "-01-01")) + as.numeric(HatchingDateJulian),
                   LayingDate = lubridate::ymd(paste0(Year, "-01-01")) + as.numeric(LayingDateJulian),
-                  LayingDateError = NA_integer_, ClutchSizeError = NA_integer_,
-                  HatchDateError = NA_integer_, BroodSizeError = NA_integer_,
-                  FledgeDateError = NA_integer_, NumberFledgedError = NA_integer_,
+                  LayingDateError = NA_real_, ClutchSizeError = NA_real_,
+                  HatchDateError = NA_real_, BroodSizeError = NA_real_,
+                  FledgeDateError = NA_real_, NumberFledgedError = NA_real_,
                   AvgEggMass = NA_real_, NumberEggs = NA_integer_, NumberFledged = NoChicksOlder14D) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
     #Select relevant columns and rename
@@ -302,8 +302,8 @@ create_capture_CHO <- function(data){
   Capture_data <- data %>%
     dplyr::mutate(CapturePopID = PopID, ReleasePopID = PopID,
                   CapturePlot = Plot, ReleasePlot = Plot,
-                  ischick = dplyr::case_when(.$Age == "C" ~ 1,
-                                             .$Age != "C" ~ 4)) %>%
+                  ischick = dplyr::case_when(.$Age == "C" ~ 1L,
+                                             .$Age != "C" ~ 4L)) %>%
     calc_age(ID = IndvID, Age = ischick, Date = CaptureDate, Year = BreedingSeason) %>%
     #Also include observed age (not calculated)
     dplyr::mutate(Age_observed = dplyr::case_when(.$Age == "C" ~ 1,
@@ -354,8 +354,8 @@ create_individual_CHO <- function(data){
     #Determine the first recorded broodID, year and age.
     #Determine if there were any records where sex was identified.
     dplyr::summarise(FirstBrood = first(BroodID),
-              FirstYr = first(Year),
-              FirstAge = first(Age),
+              FirstYr = as.integer(first(Year)),
+              FirstAge = as.integer(first(Age)),
               Species = "PARMAJ",
               Sex = ifelse(all(is.na(Sex)), NA_character_,
                            ifelse(all(stats::na.omit(Sex) %in% "M"), "M",
@@ -414,8 +414,8 @@ create_location_CHO <- function(data){
                                                  return("NB")
 
                                                }}), PopID = "CHO",
-                          Latitude = NA, Longitude = NA,
-                          StartSeason = 2003, EndSeason = NA,
+                          Latitude = NA_real_, Longitude = NA_real_,
+                          StartSeason = 2003L, EndSeason = NA_integer_,
                           Habitat = "Deciduous")
 
   return(Location_data)
