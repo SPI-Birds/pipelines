@@ -67,8 +67,8 @@ format_SSQ <- function(db = utils::choose.dir(),
     dplyr::select(-Row) %>%
     janitor::remove_empty(which = "rows") %>%
     #Change column names to match consistent naming
-    dplyr::rename(BreedingSeason = Year, LayingDate = Ld, ClutchSize = Cs,
-                  HatchDate = Hd, BroodSize = Hs, NumberFledged = Fs,
+    dplyr::mutate(BreedingSeason = as.integer(Year), LayingDate = Ld, ClutchSize = as.integer(Cs),
+                  HatchDate = Hd, BroodSize = as.integer(Hs), NumberFledged = as.integer(Fs),
                   FemaleID = FId, MaleID = MId, LocationID = NestId,
                   Plot = HabitatOfRinging,
                   Latitude = YCoord, Longitude = XCoord) %>%
@@ -218,13 +218,13 @@ create_capture_SSQ <- function(data){
     dplyr::filter(!is.na(IndvID)) %>%
     #Make a single Age column. If variable == "FemaleID", then use FAge and visa versa
     dplyr::rowwise() %>%
-    dplyr::mutate(Age = ifelse(variable == "FemaleID", FAge, MAge)) %>%
+    dplyr::mutate(Age = ifelse(variable == "FemaleID", as.integer(FAge), as.integer(MAge))) %>%
     dplyr::ungroup() %>%
     #Convert these age values to current EURING codes
     #If NA, we know it's an adult but don't know it's age
     #We don't want to assume anything here
-    dplyr::mutate(Age_observed = dplyr::case_when(.$Age == 1 ~ 5,
-                                                  .$Age == 2 ~ 6)) %>%
+    dplyr::mutate(Age_observed = dplyr::case_when(.$Age == 1 ~ 5L,
+                                                  .$Age == 2 ~ 6L)) %>%
     dplyr::rename(CapturePopID = PopID, CapturePlot = Plot) %>%
     #Treat CaptureDate of adults as the Laying Date
     dplyr::mutate(ReleasePopID = CapturePopID, ReleasePlot = CapturePlot,
@@ -245,7 +245,7 @@ create_capture_SSQ <- function(data){
     #Chicks were captured and weighed at 12 days old at the latest
     dplyr::mutate(ReleasePopID = CapturePopID, ReleasePlot = CapturePlot,
                   CaptureDate = LayingDate + ClutchSize + 27,
-                  CaptureTime = NA, Age_observed = 1, Age = 1) %>%
+                  CaptureTime = NA, Age_observed = 1, Age = 1L) %>%
     dplyr::select(-variable, -LayingDate, -ClutchSize)
 
   #Combine Adult and chick data
@@ -290,7 +290,7 @@ create_individual_SSQ <- function(data, Capture_data, Brood_data){
     dplyr::arrange(IndvID, CaptureDate) %>%
     dplyr::group_by(IndvID) %>%
     dplyr::summarise(Species = first(Species),
-                     RingSeason = min(lubridate::year(CaptureDate)),
+                     RingSeason = as.integer(min(lubridate::year(CaptureDate))),
                      RingAge = dplyr::case_when(is.na(first(Age_observed)) ~ "adult",
                                                 first(Age_observed) == 1 ~ "chick",
                                                 first(Age_observed) > 1 ~ "adult")) %>%
@@ -320,7 +320,7 @@ create_location_SSQ <- function(data){
     dplyr::group_by(LocationID) %>%
     dplyr::summarise(LocationType = "NB",
                      PopID = "SSQ",
-                     StartSeason = 1993, EndSeason = NA) %>%
+                     StartSeason = 1993L, EndSeason = NA_integer_) %>%
     dplyr::mutate(NestboxID = LocationID) %>%
     #Join in first latitude and longitude data recorded for this box.
     #It's not clear why these are ever different, need to ask.
