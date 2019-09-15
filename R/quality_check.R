@@ -379,7 +379,11 @@ check_format_individual <- function(Individual_data){
 
   if(length(warning_output) > 0){
 
-    war = TRUE
+    war <- TRUE
+
+  } else {
+
+    war <- FALSE
 
   }
 
@@ -490,7 +494,11 @@ check_format_brood <- function(Brood_data){
 
   if(length(warning_output) > 0){
 
-    war = TRUE
+    war <- TRUE
+
+  } else {
+
+    war <- FALSE
 
   }
 
@@ -593,7 +601,11 @@ check_format_capture <- function(Capture_data){
 
   if(length(warning_output) > 0){
 
-    war = TRUE
+    war <- TRUE
+
+  } else {
+
+    war <- FALSE
 
   }
 
@@ -689,7 +701,11 @@ check_format_location <- function(Location_data){
 
   if(length(warning_output) > 0){
 
-    war = TRUE
+    war <- TRUE
+
+  } else {
+
+    war <- FALSE
 
   }
 
