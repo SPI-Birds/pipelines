@@ -969,8 +969,8 @@ check_values_brood <- function(Brood_data, species) {
 check_values_capture <- function(Capture_data, species) {
 
   # Select species-specific reference values
-  ref_adult <- cap_adult_ref_values_list[[species]]
-  ref_chick <- cap_chick_ref_values_list[[species]]
+  ref_adult <- capture_ref_values_list[[species]]
+  # ref_chick <- cap_chick_ref_values_list[[species]]
 
   # Add unique row identifier to capture data
   Capture_data <- Capture_data %>%
@@ -989,7 +989,7 @@ check_values_capture <- function(Capture_data, species) {
 
   # Create warning & error list of variable-specific dataframes for
   # - adults
-  Adult_list <- purrr::map2(.x = Adult_data[, c("Mass", "Tarsus")],
+  Capture_list <- purrr::map2(.x = Adult_data[, c("Mass", "Tarsus")],
                             .y = ref_adult,
                             .f = ~{
                               tibble::tibble(IndvID = Adult_data$IndvID,
@@ -1004,27 +1004,27 @@ check_values_capture <- function(Capture_data, species) {
                                                              TRUE, FALSE))
                             })
   # - and chicks
-  Chick_list <- purrr::map2(.x = Chick_data[, c("Mass", "Tarsus")],
-                            .y = ref_chick,
-                            .f = ~{
-                              tibble::tibble(IndvID = Chick_data$IndvID,
-                                             RowID = Chick_data$RowID,
-                                             Age = "Chick",
-                                             Variable = names(.y)[3],
-                                             .x) %>%
-                                dplyr::filter(!is.na(.x)) %>% # Only non-NA's
-                                dplyr::mutate(Warning = ifelse(.x > as.numeric(.y[2,3]),
-                                                               TRUE, FALSE),
-                                              Error = ifelse(.x < as.numeric(.y[3,3]) | .x > as.numeric(.y[4,3]),
-                                                             TRUE, FALSE))
-                            })
+  # Chick_list <- purrr::map2(.x = Chick_data[, c("Mass", "Tarsus")],
+  #                           .y = ref_chick,
+  #                           .f = ~{
+  #                             tibble::tibble(IndvID = Chick_data$IndvID,
+  #                                            RowID = Chick_data$RowID,
+  #                                            Age = "Chick",
+  #                                            Variable = names(.y)[3],
+  #                                            .x) %>%
+  #                               dplyr::filter(!is.na(.x)) %>% # Only non-NA's
+  #                               dplyr::mutate(Warning = ifelse(.x > as.numeric(.y[2,3]),
+  #                                                              TRUE, FALSE),
+  #                                             Error = ifelse(.x < as.numeric(.y[3,3]) | .x > as.numeric(.y[4,3]),
+  #                                                            TRUE, FALSE))
+  #                           })
 
   # Combine adults and chicks
-  Capture_list <- purrr::map2(.x = Adult_list,
-                              .y = Chick_list,
-                              .f = ~{
-                                dplyr::bind_rows(.x, .y)
-                              })
+  # Capture_list <- purrr::map2(.x = Adult_list,
+  #                             .y = Chick_list,
+  #                             .f = ~{
+  #                               dplyr::bind_rows(.x, .y)
+  #                             })
 
 
   # Select records with errors (impossible values) from list
