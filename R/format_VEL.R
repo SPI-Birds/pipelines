@@ -111,7 +111,7 @@ format_VEL <- function(db = utils::choose.dir(),
     tidyr::unnest() %>%
     ## CHANGE COL NAMES TO MATCH STANDARD FORMAT
     dplyr::mutate(PopID = "VEL",
-                  BreedingSeason = year,
+                  BreedingSeason = as.integer(year),
                   Species = Species_codes[which(Species_codes$SpeciesID == 13480), ]$Code,
                   Plot = plot,
                   LocationID = stringr::str_pad(string = nest, width = 2, pad = "0"),
@@ -122,15 +122,15 @@ format_VEL <- function(db = utils::choose.dir(),
                                                    width = 2,
                                                    pad = "0"), sep = "_"),
                   FemaleID = female_ring, MaleID = male_ring,
-                  ClutchType_observed = NA,
-                  LayingDate = laying_date, LayingDateError = NA,
-                  ClutchSize = as.numeric(gsub(pattern = "\\+|\\-", replacement = "", clutch_size)), ClutchSizeError = NA,
-                  HatchDate = hatching_date, HatchDateError = NA,
-                  BroodSize = as.numeric(gsub(pattern = "\\+|\\-", replacement = "", number_hatched)), BroodSizeError = NA,
-                  FledgeDate = NA, FledgeDateError = NA,
-                  NumberFledged = as.numeric(gsub(pattern = "\\+|\\-", replacement = "", number_fledged)), NumberFledgedError = NA,
+                  ClutchType_observed = NA_character_,
+                  LayingDate = laying_date, LayingDateError = NA_real_,
+                  ClutchSize = as.integer(gsub(pattern = "\\+|\\-", replacement = "", clutch_size)), ClutchSizeError = NA,
+                  HatchDate = hatching_date, HatchDateError = NA_real_,
+                  BroodSize = as.integer(gsub(pattern = "\\+|\\-", replacement = "", number_hatched)), BroodSizeError = NA,
+                  FledgeDate = as.Date(NA), FledgeDateError = NA_real_,
+                  NumberFledged = as.integer(gsub(pattern = "\\+|\\-", replacement = "", number_fledged)), NumberFledgedError = NA,
                   ##ADD EMPTY EGG COLS. NO EGG DATA.
-                  AvgEggMass = NA, NumberEggs = NA,
+                  AvgEggMass = NA_real_, NumberEggs = NA_integer_,
                   ExperimentID = treatment)
 
   ## No columns are excluded except row number and final col.
@@ -176,7 +176,7 @@ format_VEL <- function(db = utils::choose.dir(),
                                     if(!is.na(..1)){
 
                                       return(tibble::tibble(LayingDate = ..1,
-                                                            LayingDateError = NA))
+                                                            LayingDateError = NA_real_))
 
                                     } else {
 
@@ -190,31 +190,31 @@ format_VEL <- function(db = utils::choose.dir(),
                                   })
 
   TIT_data <- TIT_data %>%
-    dplyr::mutate(BreedingSeason = year,
+    dplyr::mutate(BreedingSeason = as.integer(year),
                   Species = dplyr::case_when(.$species == "blue tit" ~ Species_codes[which(Species_codes$SpeciesID == 14620), ]$Code,
                                              .$species == "great tit" ~ Species_codes[which(Species_codes$SpeciesID == 14640), ]$Code),
                   PopID = "VEL",
                   Plot = plot,
                   LocationID = stringr::str_pad(nest_box, 3, pad = "0"),
-                  FemaleID = female_ring, MaleID = NA,
-                  ClutchType_observed = NA,
+                  FemaleID = female_ring, MaleID = NA_character_,
+                  ClutchType_observed = NA_character_,
                   LayingDate = TIT_LD_error$LayingDate,
                   LayingDateError = TIT_LD_error$LayingDateError,
                   ##FOR NOW, I'M JUST ASSUMING THAT 11+ CLUTCH SIZE
                   ##MEANS CLUTCH 11 THAT WAS ARTIFIICALLY INCREASED
                   ##THEREFORE, I JUST REMOVE THE + AND ADD THAT IT WAS AN EXPERIMENTAL NEST
                   ##NEED TO CHECK WITH MILOS
-                  ClutchSize = as.numeric(gsub(pattern = "\\+|\\-|\\?", replacement = "", clutch_size)),
-                  ClutchSizeError = NA,
+                  ClutchSize = as.integer(gsub(pattern = "\\+|\\-|\\?", replacement = "", clutch_size)),
+                  ClutchSizeError = NA_real_,
                   ##DO THE SAME FOR BROOD SIZE AND NUMBER FLEDGED
-                  HatchDate = NA, HatchDateError = NA,
-                  BroodSize = as.numeric(gsub(pattern = "\\+|\\-|\\?", replacement = "", number_hatched)),
-                  BroodSizeError = NA,
-                  FledgeDate = NA, FledgeDateError = NA,
-                  NumberFledged = as.numeric(gsub(pattern = "\\+|\\-|\\?", replacement = "", number_fledged)),
-                  NumberFledgedError = NA,
+                  HatchDate = as.Date(NA), HatchDateError = NA_real_,
+                  BroodSize = as.integer(gsub(pattern = "\\+|\\-|\\?", replacement = "", number_hatched)),
+                  BroodSizeError = NA_real_,
+                  FledgeDate = as.Date(NA), FledgeDateError = NA_real_,
+                  NumberFledged = as.integer(gsub(pattern = "\\+|\\-|\\?", replacement = "", number_fledged)),
+                  NumberFledgedError = NA_real_,
                   ##ADD EMPTY EGG DATA COLS.
-                  AvgEggMass = NA, NumberEggs = NA,
+                  AvgEggMass = NA_real_, NumberEggs = NA_integer_,
                   ExperimentID = experiment,
                   ## Estimate broodID last because it requires us to estimate LayingDate first
                   BroodID = paste(year, nest_box, stringr::str_pad(string = lubridate::day(LayingDate),
@@ -261,7 +261,7 @@ format_VEL <- function(db = utils::choose.dir(),
   ## Calculate AvgChickMass and AvgTarsus
   avg_measures <- Capture_data %>%
     ## Filter just 13 day old chicks
-    dplyr::filter(ChickAge == 13) %>%
+    dplyr::filter(ChickAge == 13L) %>%
     dplyr::group_by(BroodID) %>%
     dplyr::summarise(AvgChickMass       = mean(Mass, na.rm = TRUE),
                      NumberChicksMass    = length(stats::na.omit(Mass)),
@@ -406,7 +406,7 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
                                          dplyr::rename_at(.vars = vars(contains("tarsus")), .funs = ~{"Tarsus"}) %>%
                                          dplyr::rename_at(.vars = vars(contains("wing")), .funs = ~{"WingLength"}) %>%
                                          ## Add chick age based on the variable name
-                                         dplyr::mutate(ChickAge = as.numeric(stringr::str_sub(variable, 9, -1)),
+                                         dplyr::mutate(ChickAge = as.integer(stringr::str_sub(variable, 9, -1)),
                                                        ## Capture date is hatchdate + chick age
                                                        ## If no hatch date is known then use laying date + clutch size + incubation + chick age
                                                        ## We assume incubation of 15 days, but need to check with Milos.
@@ -431,9 +431,9 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
                                                                                    }
 
                                                                                  }),
-                                                       CaptureTime = NA, CapturePopID = "VEL", CapturePlot = Plot,
+                                                       CaptureTime = NA_character_, CapturePopID = "VEL", CapturePlot = Plot,
                                                        ## All chick records were 6 or 13 days, so all are listed as EURING age 1
-                                                       ReleasePopID = "VEL", ReleasePlot = Plot, Age_observed = 1, Age_calculated = NA,
+                                                       ReleasePopID = "VEL", ReleasePlot = Plot, Age_observed = 1L, Age_calculated = NA_integer_,
                                                        #Convert tarsus to Svennson's alternative
                                                        Tarsus = convert_tarsus(Tarsus, method = "Oxford")) %>%
                                          tidyr::unnest(CaptureDate) %>%
@@ -450,7 +450,7 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
 
                                      })) %>%
     tidyr::unnest(data) %>%
-    dplyr::mutate(ObserverID = NA,
+    dplyr::mutate(ObserverID = NA_character_,
                   OriginalTarsusMethod = dplyr::case_when(!is.na(.$Tarsus) ~ "Oxford")) %>%
     dplyr::select(-ChickNr)
 
@@ -471,17 +471,17 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
                   Mass = purrr::pmap_dbl(.l = list(Sex, mass_54, mass_60),
                                          .f = ~{if(..1 == "F") ..2 else ..3}),
                   ##Determine age of males based on 'age' column
-                  Age_observed = purrr::pmap_dbl(.l = list(Sex, age),
+                  Age_observed = purrr::pmap_int(.l = list(Sex, age),
                                                  .f = ~{
 
                                                    if(..1 == "M"){
 
-                                                     return(dplyr::case_when(..2 == "old" ~ 6,
-                                                                             ..2 == "young" ~ 5))
+                                                     return(dplyr::case_when(..2 == "old" ~ 6L,
+                                                                             ..2 == "young" ~ 5L))
 
                                                    } else {
 
-                                                     return(NA)
+                                                     return(NA_integer_)
 
                                                    }
 
@@ -502,7 +502,7 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
                                             }),
                   CapturePopID = "VEL", ReleasePopID = "VEL",
                   CapturePlot = Plot, ReleasePlot = Plot,
-                  ObserverID = NA) %>%
+                  ObserverID = NA_character_) %>%
     tidyr::unnest() %>%
     dplyr::mutate(OriginalTarsusMethod = dplyr::case_when(!is.na(.$Tarsus) ~ "Oxford")) %>%
     dplyr::select(Species, BreedingSeason, LocationID, BroodID,
@@ -549,10 +549,10 @@ create_capture_VEL_TIT    <- function(TIT_data) {
                   ## There is no explicit info about age.
                   ## They must all be adults, so just give them all EURING 4
                   ## "Hatched before this calendar year"
-                  Age_observed = 4,
-                  ObserverID = NA,
+                  Age_observed = 4L,
+                  ObserverID = NA_character_,
                   LocationID = paste(Plot, nest_box, sep = "_"),
-                  OriginalTarsusMethod = NA) %>%
+                  OriginalTarsusMethod = NA_character_) %>%
     calc_age(ID = IndvID, Age = Age_observed, Date = CaptureDate, Year = BreedingSeason) %>%
     dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, ObserverID, LocationID, CapturePopID:ReleasePlot,
                   Age_observed, Age_calculated)
@@ -657,9 +657,9 @@ create_location_VEL       <- function(Brood_data, TIT_data){
                                   NestboxID = LocationID,
                                   LocationType = "NB",
                                   PopID = "VEL",
-                                  Latitude = NA,
-                                  Longitude = NA,
-                                  StartSeason = 1997, EndSeason = NA) %>%
+                                  Latitude = NA_real_,
+                                  Longitude = NA_real_,
+                                  StartSeason = 1997L, EndSeason = NA_integer_) %>%
     ## Join in habitat data from TIT_data table
     dplyr::left_join(TIT_data %>% dplyr::group_by(LocationID) %>% dplyr::summarise(Habitat = first(Habitat)), by = "LocationID")
 
