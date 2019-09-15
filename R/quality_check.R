@@ -381,26 +381,26 @@ check_format_individual <- function(Individual_data){
 check_format_brood <- function(Brood_data){
 
   ## Data frame with column names and formats according to the standard protocol
-  Brood_data_standard <- tibble::tibble(Variable = c("PopID", "BreedingSeason", "Species", "Plot",
-                                                     "LocationID", "BroodID", "FemaleID", "MaleID",
-                                                     "ClutchType_observed", "ClutchType_calc",
+  Brood_data_standard <- tibble::tibble(Variable = c("BroodID", "PopID", "BreedingSeason", "Species", "Plot",
+                                                     "LocationID", "FemaleID", "MaleID",
+                                                     "ClutchType_observed", "ClutchType_calculated",
                                                      "LayingDate", "LayingDateError", "ClutchSize",
                                                      "ClutchSizeError", "HatchDate", "HatchDateError",
                                                      "BroodSize", "BroodSizeError", "FledgeDate",
                                                      "FledgeDateError", "NumberFledged",
                                                      "NumberFledgedError", "AvgEggMass", "NumberEggs",
                                                      "AvgChickMass", "NumberChicksMass", "AvgTarsus",
-                                                     "NumberChicksTarsus", "ExperimentID"),
-                                        Format_standard = c("character", "numeric", "character", "character",
+                                                     "NumberChicksTarsus", "OriginalTarsusMethod", "ExperimentID"),
+                                        Format_standard = c("character", "character", "integer", "character",
                                                             "character", "character", "character", "character",
                                                             "character", "character",
-                                                            "Date", "numeric", "numeric",
+                                                            "Date", "numeric", "integer",
                                                             "numeric", "Date", "numeric",
-                                                            "numeric", "numeric", "Date",
-                                                            "numeric", "numeric",
-                                                            "numeric", "numeric", "numeric",
-                                                            "numeric", "numeric", "numeric",
-                                                            "numeric", "character"))
+                                                            "integer", "numeric", "Date",
+                                                            "numeric", "integer",
+                                                            "numeric", "numeric", "integer",
+                                                            "numeric", "integer", "numeric",
+                                                            "integer", "character", "character"))
 
   ## Data frame with column names and formats from Brood data
   Brood_data_col <- tibble::tibble(Variable = names(Brood_data),
