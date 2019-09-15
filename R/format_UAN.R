@@ -127,14 +127,14 @@ format_UAN <- function(db = utils::choose.dir(),
     tidyr::unnest()
 
   ## Rename columns
-  BROOD_info <- dplyr::rename(BROOD_info, BroodID = NN, Species = SOORT, Plot = GB, NestboxNumber = PL,
+  BROOD_info <- dplyr::mutate(BROOD_info, BroodID = NN, Species = SOORT, Plot = GB, NestboxNumber = PL,
                               LayingDate = LD, ClutchSizeError = JAE,
-                              ClutchSize = AE, NrUnhatchedChicks = AEN,
-                              BroodSize = NP, NrDeadChicks = PD,
-                              NumberFledged = PU, LDInterruption = LO,
+                              ClutchSize = as.integer(AE), NrUnhatchedChicks = AEN,
+                              BroodSize = as.integer(NP), NrDeadChicks = PD,
+                              NumberFledged = as.integer(PU), LDInterruption = LO,
                               ClutchType_observed = TY, MaleID = RM, FemaleID = RW,
                               Unknown = AW, ChickWeighAge = WD, ChickWeighTime = WU,
-                              ObserverID = ME, NumberChicksMass = GN,
+                              ObserverID = ME, NumberChicksMass = as.integer(GN),
                               AvgTarsus = GT, AvgChickMass = GG,
                               AvgChickBodyCondition = CON, PopID = SA,
                               NestNumberFirstBrood = NNN1,
@@ -145,17 +145,17 @@ format_UAN <- function(db = utils::choose.dir(),
                               StageAbandoned = VERL,
                               ExperimentID = exp,
                               Longitude = coorx, Latitude = coory,
-                              Comments = comm, BreedingSeason = year,
+                              Comments = comm, BreedingSeason = as.integer(year),
                               LocationID = gbpl)
 
   #Rename columns to make it easier to understand
-  CAPTURE_info <- dplyr::rename(CAPTURE_info, Species = SOORT,
+  CAPTURE_info <- dplyr::mutate(CAPTURE_info, Species = SOORT,
                                 IndvID = RN, MetalRingStatus = NRN,
                                 ColourRing = KLR, ColourRingStatus = NKLR,
                                 TagType = TAGTY, TagID = TAG,
                                 TagStatus = NTAG, BroodID = NN,
                                 Sex = GS, CaptureDate = VD,
-                                Age_observed = LT,
+                                Age_observed = as.integer(LT),
                                 CapturePlot = GB, NestBoxNumber = PL,
                                 CaptureMethod = VW,
                                 ObserverID = ME, WingLength = VLL,
@@ -172,7 +172,7 @@ format_UAN <- function(db = utils::choose.dir(),
                                 OldColourRing = klr_old,
                                 LocationID = gbpl)
 
-  INDV_info <- dplyr::rename(INDV_info, Species = soort,
+  INDV_info <- dplyr::mutate(INDV_info, Species = soort,
                              IndvID = rn, Sex = sex,
                              BirthYear = gbj, BirthYearKnown = cgj,
                              CaptureType = mode, PlotID = gb,
@@ -305,12 +305,12 @@ create_brood_UAN <- function(data, CAPTURE_info, species_filter){
     dplyr::filter(Species %in% species_filter) %>%
     #Add NA columns and convert dates
     dplyr::mutate(LayingDate = lubridate::ymd(LayingDate),
-                  LayingDateError = NA,
-                  HatchDate = NA, HatchDateError = NA,
-                  BroodSizeError = NA,
-                  FledgeDate = NA, FledgeDateError = NA,
-                  NumberFledgedError = NA,
-                  AvgEggMass = NA, NumberEggs = NA,
+                  LayingDateError = NA_real_,
+                  HatchDate = as.Date(NA), HatchDateError = NA_real_,
+                  BroodSizeError = NA_real_,
+                  FledgeDate = as.Date(NA), FledgeDateError = NA_real_,
+                  NumberFledgedError = NA_real_,
+                  AvgEggMass = NA_real_, NumberEggs = NA_integer_,
                   NumberChicksTarsus = NumberChicksMass) %>%
     #Calculate clutchtype, assuming NAs are true unknowns
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(., na.rm = FALSE)) %>%
@@ -394,12 +394,12 @@ create_capture_UAN <- function(data, species_filter){
 
                                        } else {
 
-                                         return(tibble::tibble(Tarsus = NA, OriginalTarsusMethod = NA))
+                                         return(tibble::tibble(Tarsus = NA_real_, OriginalTarsusMethod = NA_character_))
 
                                        }})) %>%
     #Create NAs and convert date/time
     dplyr::mutate(CaptureDate = lubridate::ymd(CaptureDate),
-                  BreedingSeason = lubridate::year(CaptureDate),
+                  BreedingSeason = as.integer(lubridate::year(CaptureDate)),
                   CaptureTime = na_if(paste(CaptureTime %/% 1,
                                             stringr::str_pad(string = round((CaptureTime %% 1)*60),
                                                              width = 2,
@@ -418,7 +418,7 @@ create_capture_UAN <- function(data, species_filter){
                                          #Capture type P and PP are chicks in the nest
                                          if(..2 %in% c("P", "PP")){
 
-                                           return(tibble::tibble(Age_observed_new = 1, ChickAge = NA))
+                                           return(tibble::tibble(Age_observed_new = 1, ChickAge = NA_integer_))
 
                                            #Captures in mist nets, observed rings, cage traps, roost checks
                                            #must be able to fly. But these can be anything from fledglings
@@ -431,7 +431,7 @@ create_capture_UAN <- function(data, species_filter){
                                          } else {
 
                                            #If no age and no chick capture type is given, then observed age is unknown.
-                                           return(tibble::tibble(Age_observed_new = NA, ChickAge = NA))
+                                           return(tibble::tibble(Age_observed_new = NA_integer_, ChickAge = NA_integer_))
 
                                          }
 
@@ -445,15 +445,15 @@ create_capture_UAN <- function(data, species_filter){
                                          #If it's 1-5 then we translate into EURING codes for adults
                                          if(..1 %in% c(1, 2)){
 
-                                           return(tibble::tibble(Age_observed_new = 1 + ..1*2, ChickAge = NA))
+                                           return(tibble::tibble(Age_observed_new = 1 + ..1*2, ChickAge = NA_integer_))
 
                                          } else if (..1 %in% c(3, 4)) {
 
-                                           return(tibble::tibble(Age_observed_new = 4 + (..1 - 3)*2, ChickAge = NA))
+                                           return(tibble::tibble(Age_observed_new = 4 + (..1 - 3)*2, ChickAge = NA_integer_))
 
                                          } else {
 
-                                           return(tibble::tibble(Age_observed_new = NA, ChickAge = NA))
+                                           return(tibble::tibble(Age_observed_new = NA, ChickAge = NA_integer_))
 
                                          }
 
@@ -461,7 +461,7 @@ create_capture_UAN <- function(data, species_filter){
 
                                      })) %>%
     #Determine age at first capture for every individual
-    dplyr::mutate(ischick = dplyr::case_when(.$Age_observed_new <= 3 ~ 1)) %>%
+    dplyr::mutate(ischick = dplyr::case_when(.$Age_observed_new <= 3 ~ 1L)) %>%
     calc_age(ID = IndvID, Age = ischick, Date = CaptureDate, Year = BreedingSeason) %>%
     #Arrange columns
     #Replace Age_observed with Age_observed_new which has been converted to EURING codes
@@ -511,7 +511,7 @@ create_individual_UAN <- function(data, CAPTURE_info, species_filter){
     dplyr::summarise(PopID = first(CapturePopID),
                      FirstAge = tryCatch(min(Age_observed, na.rm = T),
                                          warning = function(...) return(NA)),
-                     FirstYear = min(lubridate::year(CaptureDate)))
+                     FirstYear = as.integer(min(lubridate::year(CaptureDate))))
 
   #There were no translocations, so BroodIDLaid/Fledged are the same
   Indv_data <- data %>%
@@ -551,7 +551,7 @@ create_location_UAN <- function(data){
                      PopID = dplyr::case_when(.$SA == "FR" ~ "BOS",
                                               .$SA == "PB" ~ "PEE"),
                      Latitude = Y_deg, Longitude = X_deg,
-                     StartSeason = YEARFIRST, EndSeason = YEARLAST,
+                     StartSeason = as.integer(YEARFIRST), EndSeason = as.integer(YEARLAST),
                      Habitat = "deciduous",
                      HasCoords = as.factor(!is.na(Latitude))) %>%
     #Split into two groups whether they have coordinates or not
