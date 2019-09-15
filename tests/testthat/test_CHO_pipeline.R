@@ -1,4 +1,4 @@
-context("Run data quality check on Santo Stefano Quisquina pipeline output")
+context("Run data quality check on Choupal pipeline output")
 
 test_that("CHO pipeline works...", {
 
