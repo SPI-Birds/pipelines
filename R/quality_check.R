@@ -543,7 +543,7 @@ check_format_location <- function(Location_data){
                                                         "StartSeason", "EndSeason", "Habitat"),
                                            Format_standard = c("character", "character", "character",
                                                                "character", "numeric", "numeric",
-                                                               "numeric", "numeric", "character"))
+                                                               "integer", "integer", "character"))
 
   ## Data frame with column names and formats from Location data
   Location_data_col <- tibble::tibble(Variable = names(Location_data),
