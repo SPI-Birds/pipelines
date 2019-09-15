@@ -339,8 +339,8 @@ create_capture_NIOO <- function(database, Individual_data, location_data, specie
     dplyr::left_join(dplyr::select(Individual_data, IndvID, RingSeason, RingAgeObsv), by = "IndvID") %>%
     #Convert RingAgeObsv into Age_observed
     #These numbers should convert exactly, be we need to check them explicitly
-    dplyr::mutate(Age_observed = RingAgeObsv,
-                  BreedingSeason = lubridate::year(CaptureDate)) %>%
+    dplyr::mutate(Age_observed = as.integer(RingAgeObsv),
+                  BreedingSeason = as.integer(lubridate::year(CaptureDate))) %>%
     calc_age(ID = IndvID, Age = Age_observed, Date = CaptureDate, Year = BreedingSeason, showpb = TRUE) %>%
     #Include species letter codes for all species
     dplyr::ungroup() %>%
@@ -353,7 +353,7 @@ create_capture_NIOO <- function(database, Individual_data, location_data, specie
                                              .$SpeciesID == 14610 ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code),
                   #Add original tarsus method
                   OriginalTarsusMethod = dplyr::case_when(!is.na(.$Tarsus) ~ "Alternative"),
-                  ChickAge = NA, ObserverID = as.character(Observer)) %>%
+                  ChickAge = NA_integer_, ObserverID = as.character(Observer)) %>%
     #Arrange by species, indv and date/time
     dplyr::arrange(Species, IndvID, CaptureDate, CaptureTime) %>%
     #Include three letter population codes for both the capture and release location (some individuals may have been translocated e.g. cross-fostering)
@@ -417,8 +417,8 @@ create_brood_NIOO <- function(database, Individual_data, Capture_data, location_
     #Account for error in brood size
     dplyr::mutate(BroodSizeError = BroodSizeError/2, NumberFledgedError = NumberFledgedError/2,
                   LayingDateError = LayingDateError/2,
-                  BroodSize = BroodSize + BroodSizeError,
-                  NumberFledged = NumberFledged + NumberFledgedError,
+                  BroodSize = as.integer(BroodSize + BroodSizeError),
+                  NumberFledged = as.integer(NumberFledged + NumberFledgedError),
                   LayingDate = lubridate::ymd(LayingDate) + LayingDateError,
                   HatchDate = lubridate::ymd(HatchDate),
                   FledgeDate = lubridate::ymd(FledgeDate)) %>%
@@ -430,7 +430,7 @@ create_brood_NIOO <- function(database, Individual_data, Capture_data, location_
                                              .$BroodSpecies == 14790 ~ Species_codes[Species_codes$SpeciesID == 14790, ]$Code,
                                              .$BroodSpecies == 15980 ~ Species_codes[Species_codes$SpeciesID == 15980, ]$Code,
                                              .$BroodSpecies == 14610 ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code),
-                  Plot = NA,
+                  Plot = NA_character_,
                   #Adjust ClutchType names to fit "first", "second", "replacement".
                   #We ignore any uncertainty (e.g. "probably second" is just listed as "second")
                   #ClutchTypes like 'different species inside one clutch' are listed as NA.
@@ -458,7 +458,7 @@ create_brood_NIOO <- function(database, Individual_data, Capture_data, location_
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
   #Add extra columns where data was not provided
   #N.B. Need to go through and include experiment ID
-  dplyr::mutate(ClutchSizeError = NA, HatchDateError = NA, FledgeDateError = NA, ExperimentID = NA,
+  dplyr::mutate(ClutchSizeError = NA_real_, HatchDateError = NA_real_, FledgeDateError = NA_real_, ExperimentID = NA_character_,
                 BroodLocation = as.character(BroodLocation), BroodID = as.character(BroodID),
                 FemaleID = as.character(FemaleID), MaleID = as.character(MaleID))
 
@@ -477,9 +477,9 @@ create_brood_NIOO <- function(database, Individual_data, Capture_data, location_
     dplyr::mutate(CaptureDate = lubridate::ymd(CaptureDate)) %>%
     dplyr::filter(CaptureDate >= (HatchDate + 14) & CaptureDate <= (HatchDate + 16)) %>%
     dplyr::group_by(BroodID) %>%
-    dplyr::summarise(AvgEggMass = NA, NumberEggs = NA, AvgChickMass = mean(Mass, na.rm = T),
+    dplyr::summarise(AvgEggMass = NA_real_, NumberEggs = NA_integer_, AvgChickMass = mean(Mass, na.rm = TRUE),
                      NumberChicksMass = length(stats::na.omit(Mass)),
-                     AvgTarsus = mean(Tarsus, na.rm = T),
+                     AvgTarsus = mean(Tarsus, na.rm = TRUE),
                      NumberChicksTarsus = length(stats::na.omit(Tarsus)),
                      OriginalTarsusMethod = "Alternative")
 
