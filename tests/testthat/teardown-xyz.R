@@ -5,7 +5,3 @@
 #                file.remove(eval(..1))
 #
 #              })
-
-#Remove path object and pipeline output object from the Global Env
-rm(path)
-rm(pipeline_output, envir = .GlobalEnv)
