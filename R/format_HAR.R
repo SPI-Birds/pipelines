@@ -282,8 +282,10 @@ create_brood_HAR <- function(db, species_filter){
     dplyr::arrange(BreedingSeason, Species, FemaleID) %>%
     #Calculate clutchtype
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
-    dplyr::mutate(FledgeDate = NA, ClutchSizeError = NA, BroodSizeError = NA,
-                  FledgeDateError = NA, NumberFledgedError = NA,
+    dplyr::mutate(LayingDateError = as.numeric(LayingDateError),
+                  HatchDateError = as.numeric(HatchDateError),
+                  FledgeDate = as.Date(NA), ClutchSizeError = NA_real_, BroodSizeError = NA_real_,
+                  FledgeDateError = NA_real_, NumberFledgedError = NA_real_,
                   BroodSize = as.integer(BroodSize)) %>%
     #Arrange columns correctly
     dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot, LocationID, FemaleID, MaleID,
@@ -352,7 +354,7 @@ create_nestling_HAR <- function(db, Brood_data){
     #Join hatch date data from brood data table
     dplyr::left_join(select(Brood_data, BroodID, HatchDate), by = "BroodID") %>%
     #Determine age at capture
-    dplyr::mutate(ChickAge = as.numeric(CatchDate - HatchDate))
+    dplyr::mutate(ChickAge = as.integer(CatchDate - HatchDate))
 
   return(Nestling_data)
 
@@ -540,7 +542,7 @@ create_capture_HAR    <- function(db, Brood_data, species_filter){
     #Filter any cases where no species info was detected
     #i.e. the brood wasn't from one of the 4 species.
     dplyr::filter(!is.na(Species)) %>%
-    dplyr::mutate(Age = "PP", Capture_type = "Unringed_chick", IndvID = NA) %>%
+    dplyr::mutate(Age = "PP", Capture_type = "Unringed_chick", IndvID = NA_character_) %>%
     dplyr::select(IndvID, BreedingSeason, BroodID:Time,
            Species, Sex, Age, WingLength = Wing, Mass, Tarsus = LeftTarsusLength, Capture_type, Last2DigitsRingNr, ChickAge)
 
@@ -583,10 +585,10 @@ create_capture_HAR    <- function(db, Brood_data, species_filter){
     dplyr::mutate(CaptureDate = as.Date(paste(Day, Month, BreedingSeason, sep = "/"), format = "%d/%m/%Y")) %>%
     #Create capture time
     dplyr::mutate(CaptureTime = na_if(paste(Time, "00", sep = ":"), "NA:00"),
-           CapturePopID = "HAR", CapturePlot = NA,
-           ReleasePopID = "HAR", ReleasePlot = NA,
-           ischick = dplyr::case_when(Age == "PP" ~ 1,
-                                      Age %in% c("PM", "FL") ~ 3)) %>%
+           CapturePopID = "HAR", CapturePlot = NA_character_,
+           ReleasePopID = "HAR", ReleasePlot = NA_character_,
+           ischick = dplyr::case_when(Age == "PP" ~ 1L,
+                                      Age %in% c("PM", "FL") ~ 3L)) %>%
     #Determine age at first capture for every individual
     #First arrange the data chronologically within each individual
     dplyr::arrange(IndvID, CaptureDate) %>%
@@ -638,7 +640,7 @@ create_individual_HAR <- function(Capture_data){
     dplyr::summarise(Species = first(Species), PopID = "HAR",
               BroodIDLaid = first(BroodID),
               BroodIDFledged = BroodIDLaid,
-              RingSeason = first(lubridate::year(CaptureDate)),
+              RingSeason = as.integer(first(lubridate::year(CaptureDate))),
               RingAge = ifelse(any(Age_calculated %in% c(1, 3)), "chick", "adult"),
               Sex = first(Sex)) %>%
     dplyr::rowwise() %>%
@@ -690,9 +692,10 @@ create_location_HAR <- function(db){
                               "LocationName")
 
   Location_data <- Location_data %>%
-    mutate(NestboxID = LocationID, PopID = "HAR",
-           LocationType = NA, StartSeason = NA, EndSeason = NA, Habitat = "Evergreen") %>%
-    select(LocationID, NestboxID, LocationType, PopID, Latitude, Longitude, StartSeason, EndSeason, Habitat)
+    dplyr::mutate(NestboxID = LocationID, PopID = "HAR",
+                  Latitude = as.numeric(Latitude), Longitude = as.numeric(Longitude),
+           LocationType = NA_character_, StartSeason = NA_integer_, EndSeason = NA_integer_, Habitat = "Evergreen") %>%
+    dplyr::select(LocationID, NestboxID, LocationType, PopID, Latitude, Longitude, StartSeason, EndSeason, Habitat)
 
   return(Location_data)
 
