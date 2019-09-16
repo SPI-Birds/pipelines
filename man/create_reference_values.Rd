@@ -4,7 +4,7 @@
 \alias{create_reference_values}
 \title{Create biological reference values}
 \usage{
-create_reference_values(db = choose.dir())
+create_reference_values(db = utils::choose.dir())
 }
 \arguments{
 \item{db}{Directory to save reference values.}

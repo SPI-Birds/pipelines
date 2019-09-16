@@ -105,4 +105,9 @@ utils::globalVariables(c(".", "AvgChickTarsus", "AvgChickMass", "AvgTarsus", "Po
                          "mother", "nest", "nest_box", "nestbox", "num_chicks",
                          "num_chicks_ringed", "num_eggs_weighed", "num_fledglings",
                          "number_hatched", "owner", "plot", "pop_names",
-                         "py", "section", "total_egg_weight", "treatment"))
+                         "py", "section", "total_egg_weight", "treatment",
+                         "capture_ref_values_list", "AccuracyOfDate",
+                         "Observer", "RingAgeObsv", "ObserverID",
+                         "Age_observed_new", "choose.dir",
+                         "pop_species_combos", "pop", "species",
+                         "total_sp"))

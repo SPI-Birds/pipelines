@@ -8,7 +8,7 @@
 #' @return A summary dataframe of test warnings and errors for use in testthat,
 #'   and a report of the line-by-line list of warnings and errors.
 #'
-#' @example
+#' @examples
 #' \dontrun{
 #'
 #' CHO <- run_pipelines(PopID = "CHO", output_type = "R")

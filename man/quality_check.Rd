@@ -4,15 +4,13 @@
 \alias{quality_check}
 \title{A function to perform a quality check on pipeline outputs}
 \usage{
-quality_check(db = utils::choose.dir(), pop, species,
-  output_format = "both")
+quality_check(R_data, species, output_format = "both")
 }
 \arguments{
-\item{db}{Location of standard .csv outputs of the pipeline.}
+\item{R_data}{Output of pipeline as an R object. Generated using
+'output_type = R' in run_pipelines.}
 
-\item{pop}{Three-letter population ID.}
-
-\item{species}{Six-letter species ID.}
+\item{species}{Species on which to test (6 letter species code)}
 
 \item{output_format}{Format of report: "html", "pdf", or "both" (default).}
 }
@@ -22,4 +20,12 @@ A summary dataframe of test warnings and errors for use in testthat,
 }
 \description{
 A function to perform a quality check on pipeline outputs
+}
+\examples{
+\dontrun{
+
+CHO <- run_pipelines(PopID = "CHO", output_type = "R")
+quality_check(CHO, species = "PARMAJ")
+
+}
 }
