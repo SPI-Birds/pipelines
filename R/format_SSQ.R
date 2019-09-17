@@ -60,65 +60,18 @@ format_SSQ <- function(db = utils::choose.dir(),
   start_time <- Sys.time()
 
   #Read in data with readxl
-  #Remove the 'row' column, it is not needed
-  #Specify other data types explicitly
-  all_data <- readxl::read_excel(db,
-                                 col_types = c("skip", "text", "numeric",
-                                               "text", "text", "text",
-                                               "numeric", "text", "numeric",
-                                               "text", "numeric", "numeric",
-                                               "numeric", "numeric", "numeric",
-                                               "numeric", "numeric", "text", "text", "text",
-                                               "text", "numeric", "list",
-                                               "text", "text", "numeric", "list",
-                                               "text", "text", "list", "numeric", "numeric",
-                                               "text", "list", "numeric", "numeric",
-                                               "text", "list", "numeric", "numeric",
-                                               "text", "list", "numeric", "numeric",
-                                               "text", "list", "numeric", "numeric",
-                                               "text", "list", "numeric", "numeric",
-                                               "text", "list", "numeric", "numeric",
-                                               "text", "list", "numeric", "numeric",
-                                               "text", "list", "numeric", "numeric",
-                                               "text", "list", "numeric", "numeric",
-                                               "text", "list", "numeric", "numeric",
-                                               "text", "list", "numeric", "numeric",
-                                               "text", "list", "numeric", "numeric",
-                                               "numeric", "text", "text")) %>%
+  all_data <- readxl::read_excel(db) %>%
     #Clean all names with janitor to snake_case
     janitor::clean_names(case = "upper_camel") %>%
+    #Remove the column 'Row'. This is just the row number, we have this already.
+    dplyr::select(-Row) %>%
     janitor::remove_empty(which = "rows") %>%
-    #Remove all "NA" and replace with NA
-    dplyr::mutate_all(na_if, y = "NA") %>%
-    #Convert everything to date
-    dplyr::mutate_at(.vars = vars(contains("Date")),
-                     function(date){
-
-                       purrr::map(.x = date,
-                                  .f = ~{
-
-                                    if(is.character(.x)){
-
-                                      #Use lubridate when it's character
-                                      #Because this is more flexible
-                                      #dealing with odd date time (e.g. dd/mm/yyyy*)
-                                      return(lubridate::dmy(.x))
-
-                                    } else {
-
-                                      return(as.Date(.x))
-
-                                    }
-
-                                  })
-
-                     }) %>%
     #Change column names to match consistent naming
     dplyr::mutate(BreedingSeason = as.integer(Year), LayingDate = Ld, ClutchSize = as.integer(Cs),
-                  HatchDate = as.integer(Hd), BroodSize = as.integer(Hs), NumberFledged = as.integer(Fs),
+                  HatchDate = Hd, BroodSize = as.integer(Hs), NumberFledged = as.integer(Fs),
                   FemaleID = FId, MaleID = MId, LocationID = NestId,
-                  Plot = HabitatOfRinging23,
-                  Latitude = YCoord, Longitude = XCoord, StartSeason = YearPositioning) %>%
+                  Plot = HabitatOfRinging,
+                  Latitude = YCoord, Longitude = XCoord) %>%
     #Add species codes
     dplyr::mutate(Species = dplyr::case_when(.$Species == "Parus major" ~ Species_codes[which(Species_codes$SpeciesID == 14640), ]$Code,
                                              .$Species == "Cyanistes caeruleus" ~ Species_codes[which(Species_codes$SpeciesID == 14620), ]$Code)) %>%
