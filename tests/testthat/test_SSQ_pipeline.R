@@ -142,7 +142,7 @@ test_that("Capture_data returns an expected outcome...", {
   #Individual LS05355 should be caught at "2017-05-03" (laying date of clutch)
   expect_equal(subset(pipeline_output$SSQ$Capture_data, IndvID == "LS05355")$CaptureDate[2], as.Date("2017-05-03"))
   #Age observed should be 4, and Age calculated should be 5
-  expect_equal(subset(pipeline_output$SSQ$Capture_data, IndvID == "LS05355")$Age_observed[2], 4)
+  expect_equal(subset(pipeline_output$SSQ$Capture_data, IndvID == "LS05355")$Age_observed[2], 5)
   expect_equal(subset(pipeline_output$SSQ$Capture_data, IndvID == "LS05355")$Age_calculated[2], 5)
 
   #Test 3: Blue tit caught as a chick
@@ -154,24 +154,24 @@ test_that("Capture_data returns an expected outcome...", {
 
   #Test 4: Blue tit caught as a adult
   #Individual 8A07415 was caught for a second time at "2016-04-27" (laying date of clutch)
-  expect_equal(subset(pipeline_output$SSQ$Capture_data, IndvID == "8A07415")$CaptureDate[2], as.Date("2016-04-27"))
+  expect_equal(subset(pipeline_output$SSQ$Capture_data, IndvID == "8A07415")$CaptureDate[3], as.Date("2016-04-27"))
   #Age observed should be 4, and Age calculated should be 5 + 3*2 = 11
-  expect_equal(subset(pipeline_output$SSQ$Capture_data, IndvID == "8A07415")$Age_observed[2], 4)
-  expect_equal(subset(pipeline_output$SSQ$Capture_data, IndvID == "8A07415")$Age_calculated[2], 11)
-
-  #Test 5: Blue tit caught as an adult (first time after being a chick)
-  #Individual 6A33877 was caught for a second time at "2013-04-20" (laying date of clutch)
-  expect_equal(subset(pipeline_output$SSQ$Capture_data, IndvID == "6A33877")$CaptureDate[2], as.Date("2013-04-20"))
-  #Age observed should be 4, and Age calculated should be 5 + 2 = 7
-  expect_equal(subset(pipeline_output$SSQ$Capture_data, IndvID == "6A33877")$Age_observed[2], 4)
-  expect_equal(subset(pipeline_output$SSQ$Capture_data, IndvID == "6A33877")$Age_calculated[2], 7)
+  expect_equal(subset(pipeline_output$SSQ$Capture_data, IndvID == "8A07415")$Age_observed[3], NA_integer_)
+  expect_equal(subset(pipeline_output$SSQ$Capture_data, IndvID == "8A07415")$Age_calculated[3], 11)
 
   #Test 5: Blue tit caught as an adult (second time after being a chick)
+  #Individual 6A33877 was caught for a second time at "2013-04-20" (laying date of clutch)
+  expect_equal(subset(pipeline_output$SSQ$Capture_data, IndvID == "6A33877")$CaptureDate[3], as.Date("2013-04-20"))
+  #Age observed should be 4, and Age calculated should be 5 + 2 = 7
+  expect_equal(subset(pipeline_output$SSQ$Capture_data, IndvID == "6A33877")$Age_observed[3], 6)
+  expect_equal(subset(pipeline_output$SSQ$Capture_data, IndvID == "6A33877")$Age_calculated[3], 7)
+
+  #Test 5: Blue tit caught as an adult (third time after being a chick)
   #Individual 6A33877 was caught for a third time at "2015-04-20" (laying date of clutch)
-  expect_equal(subset(pipeline_output$SSQ$Capture_data, IndvID == "6A33877")$CaptureDate[3], as.Date("2015-04-20"))
+  expect_equal(subset(pipeline_output$SSQ$Capture_data, IndvID == "6A33877")$CaptureDate[4], as.Date("2015-04-20"))
   #Age observed should be 4, and Age calculated should be 5 + 3*2 = 11
-  expect_equal(subset(pipeline_output$SSQ$Capture_data, IndvID == "6A33877")$Age_observed[3], 4)
-  expect_equal(subset(pipeline_output$SSQ$Capture_data, IndvID == "6A33877")$Age_calculated[3], 11)
+  expect_equal(subset(pipeline_output$SSQ$Capture_data, IndvID == "6A33877")$Age_observed[4], 6)
+  expect_equal(subset(pipeline_output$SSQ$Capture_data, IndvID == "6A33877")$Age_calculated[4], 11)
 
 })
 
