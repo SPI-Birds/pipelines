@@ -178,6 +178,8 @@ create_brood_SSQ <- function(data){
   clutchtype <- dplyr::progress_estimated(n = nrow(data))
 
   Brood_data <- data %>%
+    #Arrange data for use with ClutchType_calculated (should be chronological)
+    dplyr::arrange(BreedingSeason, FemaleID, LayingDate) %>%
     #Calculate clutch type
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE),
                   OriginalTarsusMethod = NA) %>%
