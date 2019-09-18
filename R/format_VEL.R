@@ -552,12 +552,11 @@ create_capture_VEL_TIT    <- function(TIT_data) {
                   Age_observed = 4L,
                   ObserverID = NA_character_,
                   LocationID = paste(Plot, nest_box, sep = "_"),
-                  OriginalTarsusMethod = NA_character_) %>%
+                  OriginalTarsusMethod = NA_character_,
+                  Sex = "F") %>%
     calc_age(ID = IndvID, Age = Age_observed, Date = CaptureDate, Year = BreedingSeason) %>%
     dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, ObserverID, LocationID, CapturePopID:ReleasePlot,
-                  Age_observed, Age_calculated)
-
-
+                  Age_observed, Age_calculated, Sex)
 
   return(TIT_capture)
 
