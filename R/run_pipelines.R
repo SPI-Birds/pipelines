@@ -78,7 +78,7 @@ run_pipelines <- function(path = utils::choose.dir(),
                      pops = list(c(pop)))
 
   #Find the file path for each of the data owners of interest
-  all_dirs <- list.dirs(path = path, full.names = TRUE)
+  all_dirs <- list.dirs(path = path, full.names = TRUE, recursive = FALSE)
   all_dirs <- all_dirs[grepl(pattern = paste(pop_species_subset$owner, collapse = "|"), all_dirs)]
   all_dirs <- gsub(pattern = "\\", replacement = "/", x = all_dirs, fixed = TRUE)
 
