@@ -101,7 +101,10 @@ format_BAN <- function(db = utils::choose.dir(),
                                                                                Year = BreedingSeason),
                                                                     format = "%Y-%m-%d"),
                                                #Ignore uncertainty in laying date (e.g. 97? or 97+)
-                                               LayingDate = March1Date + as.numeric(gsub(pattern = "\\?|\\+",
+                                               #Laying date is calculated where LayingDate 1 = March 1st
+                                               #We need to do March 1st - 1 + Laying date to get corresponding calendar date
+                                               #(can't use end of Feb + Laying date because of leap years)
+                                               LayingDate = March1Date - 1 + as.numeric(gsub(pattern = "\\?|\\+",
                                                                                          replacement = "",
                                                                                          x = first_egg_lay_date)),
                                                #Create a unique BroodID from Year_Plot_BoxNumber_LayingDay_LayingMonth
