@@ -115,17 +115,17 @@ format_BAN <- function(db = utils::choose.dir(),
                                                ClutchSize = as.integer(final_clutch_size),
                                                #Assume incubation begins immediately after the last egg is laid.
                                                StartIncubation = LayingDate + ClutchSize,
-                                               EggWeighDate = (March1Date + as.numeric(weigh_date)),
+                                               EggWeighDate = (March1Date - 1 + as.numeric(weigh_date)),
                                                #Distinguish whether egg was being incubated when weighed.
-                                               EggWasIncubated = (March1Date + as.numeric(weigh_date)) > (LayingDate + ClutchSize),
+                                               EggWasIncubated = (March1Date - 1 + as.numeric(weigh_date)) > (LayingDate + ClutchSize),
                                                #Ignore uncertainty in hatch date (e.g. 97?)
-                                               HatchDate = March1Date + as.numeric(gsub(pattern = "\\?",
+                                               HatchDate = March1Date - 1 + as.numeric(gsub(pattern = "\\?",
                                                                                         replacement = "",
                                                                                         x = actual_hatch_date)),
-                                               MaleCaptureDate = March1Date + as.numeric(actual_male_trapping_date),
-                                               FemaleCaptureDate = March1Date + as.numeric(actual_female_trapping_date),
+                                               MaleCaptureDate = March1Date - 1 + as.numeric(actual_male_trapping_date),
+                                               FemaleCaptureDate = March1Date - 1 + as.numeric(actual_female_trapping_date),
                                                MaleID = male_id, FemaleID = female_id,
-                                               ChickCaptureDate = March1Date + as.numeric(actual_pullus_ringing_date),
+                                               ChickCaptureDate = March1Date - 1 + as.numeric(actual_pullus_ringing_date),
                                                #Ignore uncertainty in NumberFledged (e.g. 97?)
                                                NumberFledged = as.integer(gsub(pattern = "\\?",
                                                                                replacement = "",
