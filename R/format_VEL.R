@@ -339,7 +339,7 @@ format_VEL <- function(db = utils::choose.dir(),
 create_brood_VEL <- function(FICALB_data, TIT_data) {
 
   FICALB_broods <- FICALB_data %>%
-    dplyr::arrange(BreedingSeason, Species, FemaleID) %>%
+    dplyr::arrange(BreedingSeason, Species, FemaleID, LayingDate) %>%
     #Calculate clutchtype
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
     dplyr::select(BroodID, PopID, BreedingSeason,
@@ -348,7 +348,7 @@ create_brood_VEL <- function(FICALB_data, TIT_data) {
                   LayingDate:ExperimentID)
 
   TIT_broods <- TIT_data %>%
-    dplyr::arrange(BreedingSeason, Species, FemaleID) %>%
+    dplyr::arrange(BreedingSeason, Species, FemaleID, LayingDate) %>%
     #Calculate clutchtype
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
     dplyr::select(BroodID, PopID, BreedingSeason,
