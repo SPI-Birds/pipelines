@@ -109,7 +109,8 @@ format_BAN <- function(db = utils::choose.dir(),
                                                                                          x = first_egg_lay_date)),
                                                #Create a unique BroodID from Year_Plot_BoxNumber_LayingDay_LayingMonth
                                                BroodID = paste(BreedingSeason, LocationID,
-                                                               lubridate::day(LayingDate), lubridate::month(LayingDate), sep = "_"),
+                                                               stringr::str_pad(lubridate::day(LayingDate), width = 2, pad = "0"),
+                                                               stringr::str_pad(lubridate::month(LayingDate), width = 2, pad = "0"), sep = "_"),
                                                AvgEggMass = as.numeric(egg_weight), NumberEggs = as.integer(number_eggs_weighed),
                                                ClutchSize = as.integer(final_clutch_size),
                                                #Assume incubation begins immediately after the last egg is laid.
