@@ -94,7 +94,7 @@ format_CHO <- function(db = utils::choose.dir(),
 
                                           } else {
 
-                                            return(..2)
+                                            return(stringr::str_pad(..2, width = 2, pad = "0"))
 
                                           }
 
