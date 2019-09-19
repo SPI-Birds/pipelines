@@ -80,7 +80,7 @@ format_CHO <- function(db = utils::choose.dir(),
     dplyr::mutate(BroodID = paste(Year, stringr::str_pad(BroodId, width = 3, pad = "0"), sep = "_"),
            IndvID = Ring,
            CaptureDate = lubridate::ymd(paste0(Year, "-01-01")) + JulianDate,
-           Time = format.POSIXct(Time, format = "%H:%M:%S"),
+           CaptureTime = format.POSIXct(Time, format = "%H:%M:%S"),
            ChickAge = as.integer(dplyr::na_if(ChickAge, "na")),
            BreedingSeason = as.integer(Year),
            #If an individual was caught in a mist net give a generic LocationID (MN1)
@@ -313,7 +313,7 @@ create_capture_CHO <- function(data){
                   OriginalTarsusMethod = "Alternative") %>%
     #Select out only those columns we need.
     dplyr::select(IndvID, Species, BreedingSeason,
-                  CaptureDate, CaptureTime = Time,
+                  CaptureDate, CaptureTime,
                   ObserverID, ObserverID, LocationID,
                   CapturePopID, CapturePlot,
                   ReleasePopID, ReleasePlot,
@@ -346,7 +346,7 @@ create_individual_CHO <- function(data){
   #Determine first age, brood, and ring year of each individual
   Individual_data <- data %>%
     #Arrange data for each individual chronologically
-    dplyr::arrange(IndvID, CaptureDate) %>%
+    dplyr::arrange(IndvID, CaptureDate, CaptureTime) %>%
     #Replace 'na' with NA in Sex
     dplyr::mutate(Sex = na_if(x = Sex, y = "na")) %>%
     #For every individual
@@ -355,7 +355,7 @@ create_individual_CHO <- function(data){
     #Determine if there were any records where sex was identified.
     dplyr::summarise(FirstBrood = first(BroodID),
               FirstYr = as.integer(first(Year)),
-              FirstAge = as.integer(first(Age)),
+              FirstAge = first(Age),
               Species = "PARMAJ",
               Sex = ifelse(all(is.na(Sex)), NA_character_,
                            ifelse(all(stats::na.omit(Sex) %in% "M"), "M",
