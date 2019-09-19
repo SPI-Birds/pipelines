@@ -77,7 +77,7 @@ format_CHO <- function(db = utils::choose.dir(),
     dplyr::filter(Species %in% species) %>%
     #BroodIDs are not unique (they are repeated each year)
     #We need to create unique IDs for each year using Year_BroodID
-    dplyr::mutate(BroodID = paste(Year, BroodId, sep = "_"),
+    dplyr::mutate(BroodID = paste(Year, stringr::str_pad(BroodId, width = 3, pad = "0"), sep = "_"),
            IndvID = Ring,
            CaptureDate = lubridate::ymd(paste0(Year, "-01-01")) + JulianDate,
            Time = format.POSIXct(Time, format = "%H:%M:%S"),
