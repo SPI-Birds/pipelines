@@ -98,7 +98,8 @@ format_CHO <- function(db = utils::choose.dir(),
 
                                           }
 
-                                        }))
+                                        }),
+           AvgEggMass = MeanEggWeight, NumberEggs = NEggsWeighted)
 
   # CAPTURE DATA
 
@@ -203,17 +204,20 @@ create_brood_CHO <- function(data){
     dplyr::rename(FemaleID = `F`, MaleID = `M`)
 
   #Determine whether clutches are 2nd clutch
-  ClutchType_obsv <- data %>%
+  #Determine if there is mean egg mass data
+  Brood_info <- data %>%
     #For each brood, if a clutch is listed as '2nd' make it 'second' otherwise
     #'first'. For ClutchType_observed we are not giving broods the value
     #'replacement' as we don't have enough info.
     dplyr::group_by(BroodID) %>%
-    dplyr::summarise(ClutchType_observed = ifelse("2nd" %in% SecondClutch, "second", "first"))
+    dplyr::summarise(ClutchType_observed = ifelse("2nd" %in% SecondClutch, "second", "first"),
+                     AvgEggMass = ifelse(any(is.numeric(AvgEggMass)), min(AvgEggMass), NA_real_),
+                     NumberEggs = ifelse(any(is.numeric(NumberEggs)), min(NumberEggs), NA_integer_))
 
   #Finally, we add in average mass and tarsus measured for all chicks at 14 - 16d
   #Subset only those chicks that were 14 - 16 days when captured.
   avg_measure <- data %>%
-    dplyr::filter(!is.na(ChickAge) & between(ChickAge, 14, 16)) %>%
+    dplyr::filter(Age == "C" & !is.na(ChickAge) & between(ChickAge, 14, 16)) %>%
     #For every brood, determine the average mass and tarsus length
     dplyr::group_by(BroodID) %>%
     dplyr::summarise(AvgChickMass = mean(Weight, na.rm = T),
@@ -225,7 +229,7 @@ create_brood_CHO <- function(data){
   Brood_data <- data %>%
     #Join in information on parents and clutch type
     dplyr::left_join(Parents, by = "BroodID") %>%
-    dplyr::left_join(ClutchType_obsv, by = "BroodID") %>%
+    dplyr::left_join(Brood_info, by = "BroodID") %>%
     #Now we can melt and reshape our data
     #Remove columns that do not contain relevant brood info
     dplyr::select(-CodeLine:-Ring, -JulianDate:-StanderdisedTime, -TrapingMethod,
