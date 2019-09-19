@@ -210,9 +210,7 @@ create_brood_CHO <- function(data){
     #'first'. For ClutchType_observed we are not giving broods the value
     #'replacement' as we don't have enough info.
     dplyr::group_by(BroodID) %>%
-    dplyr::summarise(ClutchType_observed = ifelse("2nd" %in% SecondClutch, "second", "first"),
-                     AvgEggMass = ifelse(any(is.numeric(AvgEggMass)), min(AvgEggMass), NA_real_),
-                     NumberEggs = ifelse(any(is.numeric(NumberEggs)), min(NumberEggs), NA_integer_))
+    dplyr::summarise(ClutchType_observed = ifelse("2nd" %in% SecondClutch, "second", "first"))
 
   #Finally, we add in average mass and tarsus measured for all chicks at 14 - 16d
   #Subset only those chicks that were 14 - 16 days when captured.
@@ -233,7 +231,7 @@ create_brood_CHO <- function(data){
     #Now we can melt and reshape our data
     #Remove columns that do not contain relevant brood info
     dplyr::select(-CodeLine:-Ring, -JulianDate:-StanderdisedTime, -TrapingMethod,
-                  -BroodId:-Smear, -MeanEggWeight:-NEggsWeighted, -IndvID) %>%
+                  -BroodId:-Smear, -TotalEggWeight, -IndvID) %>%
     #Turn all remaining columns to characters
     #melt/cast requires all values to be of the same type
     dplyr::mutate_all(as.character) %>%
@@ -250,8 +248,7 @@ create_brood_CHO <- function(data){
                   LayingDate = lubridate::ymd(paste0(Year, "-01-01")) + as.numeric(LayingDateJulian),
                   LayingDateError = NA_real_, ClutchSizeError = NA_real_,
                   HatchDateError = NA_real_, BroodSizeError = NA_real_,
-                  FledgeDateError = NA_real_, NumberFledgedError = NA_real_,
-                  AvgEggMass = NA_real_, NumberEggs = NA_integer_, NumberFledged = NoChicksOlder14D) %>%
+                  FledgeDateError = NA_real_, NumberFledgedError = NA_real_, NumberFledged = NoChicksOlder14D) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
     #Select relevant columns and rename
     dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot,
@@ -272,7 +269,9 @@ create_brood_CHO <- function(data){
                   BreedingSeason = as.integer(BreedingSeason),
                   ClutchSize = as.integer(ClutchSize),
                   BroodSize = as.integer(BroodSize),
-                  NumberFledged = as.integer(NumberFledged))
+                  NumberFledged = as.integer(NumberFledged),
+                  AvgEggMass = as.numeric(AvgEggMass),
+                  NumberEggs = as.integer(NumberEggs))
 
   return(Brood_data)
 
