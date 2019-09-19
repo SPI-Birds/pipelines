@@ -94,7 +94,7 @@ format_CHO <- function(db = utils::choose.dir(),
 
                                           } else {
 
-                                            return(stringr::str_pad(..2, width = 2, pad = "0"))
+                                            return(stringr::str_pad(..2, width = 3, pad = "0"))
 
                                           }
 
@@ -401,22 +401,14 @@ create_individual_CHO <- function(data){
 create_location_CHO <- function(data){
 
   #There are no coordinates or box type information
-  Location_data <- dplyr::tibble(LocationID = c(stats::na.omit(unique(data$Box)), "MN1"),
-                          NestboxID = c(stats::na.omit(unique(data$Box)), "MN1")) %>%
-    dplyr::mutate(LocationType = purrr::pmap_chr(.l = list(LocationID),
-                                             .f = ~{
-                                               if(..1 == "MN1"){
-
-                                                 return("MN")
-
-                                               } else {
-
-                                                 return("NB")
-
-                                               }}), PopID = "CHO",
-                          Latitude = NA_real_, Longitude = NA_real_,
-                          StartSeason = 2003L, EndSeason = NA_integer_,
-                          Habitat = "Deciduous")
+  Location_data <- dplyr::tibble(LocationID = stats::na.omit(unique(data$LocationID)),
+                          NestboxID = stats::na.omit(unique(data$LocationID))) %>%
+    dplyr::mutate(LocationType = dplyr::case_when(.$LocationID == "MN1" ~ "MN",
+                                                  .$LocationID != "MN1" ~ "NB"),
+                  PopID = "CHO",
+                  Latitude = NA_real_, Longitude = NA_real_,
+                  StartSeason = 2003L, EndSeason = NA_integer_,
+                  Habitat = "Deciduous")
 
   return(Location_data)
 
