@@ -249,6 +249,8 @@ create_brood_CHO <- function(data){
                   LayingDateError = NA_real_, ClutchSizeError = NA_real_,
                   HatchDateError = NA_real_, BroodSizeError = NA_real_,
                   FledgeDateError = NA_real_, NumberFledgedError = NA_real_, NumberFledged = NoChicksOlder14D) %>%
+    #Arrange data chronologically for each female for clutchtype caculation
+    dplyr::arrange(Year, FemaleID, LayingDate) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
     #Select relevant columns and rename
     dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot,
@@ -304,15 +306,46 @@ create_capture_CHO <- function(data){
   #There is only one population/plot
   Capture_data <- data %>%
     dplyr::mutate(CapturePopID = PopID, ReleasePopID = PopID,
-                  CapturePlot = Plot, ReleasePlot = Plot,
-                  ischick = dplyr::case_when(.$Age == "C" ~ 1L,
-                                             .$Age != "C" ~ 4L)) %>%
-    calc_age(ID = IndvID, Age = ischick, Date = CaptureDate, Year = BreedingSeason) %>%
+                  CapturePlot = Plot, ReleasePlot = Plot) %>%
+    #Arrange chronologically for each individual
+    dplyr::arrange(IndvID, CaptureDate, CaptureTime) %>%
+    dplyr::group_by(IndvID) %>%
+    dplyr::mutate(YoungestCatch = first(Age), FirstYr = first(BreedingSeason)) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(Age_observed = purrr::pmap_int(.l = list(Age, YoungestCatch, BreedingSeason, FirstYr),
+                                             function(Age, YoungestCatch, CurrentYr, FirstYr){
+
+      #If there is no age record, it has no observed age
+      if(is.na(Age)){
+
+        return(NA)
+
+      #If it was recorded as a chick, give EURING code 1
+      } else if(Age == "C"){
+
+        return(1L)
+
+      #If it's not recorded as chick but was caught in the same year that it was a chick
+      #Then it's a fledgling (EURING code 3)
+      } else if(YoungestCatch == "C" & CurrentYr == FirstYr){
+
+        return(3L)
+
+      #If it's a 'first year' bird that was never caught as
+      } else if(Age == "first year"){
+
+        return(5L)
+
+      } else if(Age == "adult"){
+
+        return(4L)
+
+      }
+
+    })) %>%
+    calc_age(ID = IndvID, Age = Age_observed, Date = CaptureDate, Year = BreedingSeason) %>%
     #Also include observed age (not calculated)
-    dplyr::mutate(Age_observed = dplyr::case_when(.$Age == "C" ~ 1,
-                                                  .$Age == "first year" ~ 5,
-                                                  .$Age == "adult" ~ 6),
-                  ObserverID = NA_character_,
+    dplyr::mutate(ObserverID = NA_character_,
                   OriginalTarsusMethod = "Alternative") %>%
     #Select out only those columns we need.
     dplyr::select(IndvID, Species, BreedingSeason,
