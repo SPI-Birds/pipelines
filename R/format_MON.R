@@ -9,6 +9,12 @@
 #'
 #'\strong(Sex:) We ignore uncertainty in sex (e.g. category 4 = Male probable but not certain)
 #'
+#'\strong(LocationID:) For birds caught in boxes. Location is Plot_NextboxNumber.
+#'
+#'\strong(Tarsus:) Left and right tarsus are measured. Right generally has more data, so we use this as our
+#'measure of tarsus length. Currently, we assume everything is in Svensson's alternative, but there is supposedly
+#'some change from before 1989. Need to ask Anne about this.
+#'
 #'\strong(Age:) We translate observed age codes into EURING codes as follows:
 #'\itemize{
 #'
