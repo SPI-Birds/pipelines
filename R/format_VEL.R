@@ -108,7 +108,7 @@ format_VEL <- function(db = utils::choose.dir(),
                                   })
 
                      }) %>%
-    tidyr::unnest() %>%
+    tidyr::unnest(cols = c(laying_date, hatching_date, date_of_capture_52, date_of_capture_57)) %>%
     ## CHANGE COL NAMES TO MATCH STANDARD FORMAT
     dplyr::mutate(PopID = "VEL",
                   BreedingSeason = as.integer(year),
@@ -165,7 +165,7 @@ format_VEL <- function(db = utils::choose.dir(),
                                   })
 
                      }) %>%
-    tidyr::unnest()
+    tidyr::unnest(cols = c(laying_date, laying_date_minimum, laying_date_maximum))
 
   ## Determine laying date for every nest, accounting for error in nests
   TIT_LD_error <- purrr::pmap_dfr(.l = list(TIT_data$laying_date,
@@ -397,6 +397,7 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
   FICALB_chicks <- FICALB_chicks %>%
     dplyr::group_by(ChickNr) %>%
     tidyr::nest() %>%
+    dplyr::ungroup() %>%
     dplyr::mutate(ChickNr = substr(ChickNr, 1, 2)) %>%
     dplyr::mutate(data = purrr::pmap(.l = list(ChickNr, data),
                                      .f = ~{
@@ -501,8 +502,8 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
 
                                               }
 
-                                            }),
-                  CapturePopID = "VEL", ReleasePopID = "VEL",
+                                            })) %>%
+    tidyr::unnest(cols = c(CaptureDate)) %>%
                   CapturePlot = Plot, ReleasePlot = Plot,
                   ObserverID = NA_character_) %>%
     tidyr::unnest() %>%
