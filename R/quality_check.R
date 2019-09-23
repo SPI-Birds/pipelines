@@ -1,8 +1,7 @@
 #' A function to perform a quality check on pipeline outputs
 #'
 #' @param R_data Output of pipeline as an R object. Generated using
-#' 'output_type = R' in run_pipelines.
-#' @param species Species on which to test (6 letter species code)
+#' 'output_type = R' in \code{\link{run_pipelines}}.
 #' @param output_format Format of report: "html", "pdf", or "both" (default).
 #'
 #' @return A summary dataframe of test warnings and errors for use in testthat,
@@ -18,20 +17,21 @@
 #' @export
 
 quality_check <- function(R_data,
-                          species,
                           output_format = "both"){
-
-  #Name of the pop (3 letter code) is also the name of the R data object
-  pop <- names(R_data)[1]
 
   start_time <- Sys.time()
 
-  Individual_data <- R_data[[1]]$Individual_data
-  Brood_data <- R_data[[1]]$Brood_data
-  Capture_data <- R_data[[1]]$Capture_data
-  Location_data <- R_data[[1]]$Location_data
+  # Subset each item
+  Individual_data <- R_data$Individual_data
+  Brood_data <- R_data$Brood_data
+  Capture_data <- R_data$Capture_data
+  Location_data <- R_data$Location_data
 
-  ## Create check list with - a summary of warnings and errors per test
+  # Unique PopIDs and Species
+  pop <- unique(R_data$Brood_data$PopID)
+  species <- unique(R_data$Brood_data$Species)
+
+  # Create check list with - a summary of warnings and errors per test
   check_list <- tibble::tibble(Check = c("Individual data format", "Brood data format",
                                          "Capture data format", "Location data format",
                                          "Clutch and brood sizes", "Brood sizes and fledgling numbers",
@@ -41,73 +41,71 @@ quality_check <- function(R_data,
                                Warning = NA,
                                Error = NA)
 
-  ## Checks
-  ## - Check formats
-  ## -- Individual data
+  # Checks
+  # - Check format individual data
   message("Check 1: Checking format of individual data...")
 
   check_format_individual_output <- check_format_individual(Individual_data)
 
   check_list[1,2:3] <- check_format_individual_output$check_list
 
-  ## -- Brood data
+  # - Check format brood data
   message("Check 2: Checking format of brood data...")
 
   check_format_brood_output <- check_format_brood(Brood_data)
 
   check_list[2,2:3] <- check_format_brood_output$check_list
 
-  ## -- Capture data
+  # - Check format capture data
   message("Check 3: Checking format of capture data...")
 
   check_format_capture_output <- check_format_capture(Capture_data)
 
   check_list[3,2:3] <- check_format_capture_output$check_list
 
-  ## -- Location data
+  # - Check format location data
   message("Check 4: Checking format of location data...")
 
   check_format_location_output <- check_format_location(Location_data)
 
   check_list[4,2:3] <- check_format_location_output$check_list
 
-
-  ## - Compare clutch and brood sizes
+  # - Compare clutch and brood sizes
   message("Check 5: Comparing clutch and brood sizes...")
 
   compare_clutch_brood_output <- compare_clutch_brood(Brood_data)
 
   check_list[5,2:3] <- compare_clutch_brood_output$check_list
 
-  ## - Compare brood sizes and fledglings numbers
+  # - Compare brood sizes and fledglings numbers
   message("Check 6: Comparing brood sizes and fledgling numbers...")
 
   compare_brood_fledglings_output <- compare_brood_fledglings(Brood_data)
 
   check_list[6,2:3] <- compare_brood_fledglings_output$check_list
 
-  ## - Compare laying and hatching dates
+  # - Compare laying and hatching dates
   message("Check 7: Comparing laying and hatching dates...")
 
   compare_laying_hatching_output <- compare_laying_hatching(Brood_data)
 
   check_list[7,2:3] <- compare_laying_hatching_output$check_list
 
-  ## - Compare hatching and fledging dates
+  # - Compare hatching and fledging dates
   message("Check 8: Comparing hatching and fledging dates...")
 
   compare_hatching_fledging_output <- compare_hatching_fledging(Brood_data)
 
   check_list[8,2:3] <- compare_hatching_fledging_output$check_list
 
-  ## - Check brood variable values against reference values
+  # - Check brood variable values against reference values
   message("Check 9: Checking brood variable values against reference values...")
 
   check_values_brood_output <- check_values_brood(Brood_data, species)
 
   check_list[9,2:3] <- check_values_brood_output$check_list
 
-  ## - Check capture variable values against reference values
+  # - Check capture variable values against reference values
   message("Check 10: Checking capture variable values against reference values...")
 
   check_values_capture_output <- check_values_capture(Capture_data, species)
@@ -115,40 +113,7 @@ quality_check <- function(R_data,
   check_list[10,2:3] <- check_values_capture_output$check_list
 
 
-
-
-  # cat("Check 1: Individual data format\n\n")
-  # cat(unlist(check_format_individual_output$warning_output), sep="\n", "\n")
-  #
-  # cat("Check 2: Brood data format\n\n")
-  # cat(unlist(check_format_brood_output$warning_output), sep="\n", "\n")
-  #
-  # cat("Check 3: Capture data format\n\n")
-  # cat(unlist(check_format_capture_output$warning_output), sep="\n", "\n")
-  #
-  # cat("Check 4: Location data format\n\n")
-  # cat(unlist(check_format_location_output$warning_output), sep="\n", "\n")
-  #
-  # cat("Check 5: Clutch and brood sizes\n\n")
-  # cat(unlist(compare_clutch_brood_output$warning_output), sep="\n", "\n")
-  #
-  # cat("Check 6: Brood sizes and fledgling numbers\n\n")
-  # cat(unlist(compare_brood_fledglings_output$warning_output), sep="\n", "\n")
-  #
-  # cat("Check 7: Laying and hatching dates\n\n")
-  # cat(unlist(compare_laying_hatching_output$warning_output), sep="\n", "\n")
-  #
-  # cat("Check 8: Hatching and fledging dates\n\n")
-  # cat(unlist(compare_hatching_fledging_output$warning_output), sep="\n", "\n")
-  #
-  # cat("Check 9: Improbable and impossible values in brood data\n\n")
-  # cat(unlist(check_values_brood_output$warning_output), sep="\n", "\n")
-  #
-  # cat("Check 10: Improbable and impossible values in capture data\n\n")
-  # cat(unlist(check_values_capture_output$warning_output), sep="\n", "\n")
-  #
-  # sink()
-
+  # Check messages
   time <- difftime(Sys.time(), start_time, units = "sec")
 
   cat(paste0("\nAll checks performed in ", round(time, 2), " seconds"))
@@ -160,7 +125,7 @@ quality_check <- function(R_data,
   cat(crayon::yellow(paste0("\n", checks_warnings, " out of ", nrow(check_list), " checks resulted in warnings.")),
       crayon::red(paste0("\n", checks_errors, " out of ", nrow(check_list), " checks resulted in errors.\n\n")))
 
-  ## Create output file
+  # Create output file
   title <- paste0("Quality check report for ", Species_codes[Species_codes$Code == species, "CommonName"],
                   " in ", pop_names[pop_names$code == pop, "name"])
 
@@ -290,8 +255,7 @@ quality_check <- function(R_data,
                    '```')
 
   knitr::knit(text = mark_output, output = "output-report.md")
-  #txt <- markdown::renderMarkdown(text = knitr::knit(text = mark_output))
-  #markdown::markdownToHTML(text = knitr::knit(text = mark_output), output = "report.html")
+
   if(output_format == "html") rmarkdown::render("output-report.md", output_format = "html_document")
   if(output_format == "pdf") rmarkdown::render("output-report.md", output_format = "pdf_document")
   if(output_format == "both") rmarkdown::render("output-report.md", output_format = "all")
@@ -1210,7 +1174,7 @@ check_values_capture <- function(Capture_data, species) {
               warning_output = warning_output,
               error_output = error_output))
 
-  #Satisfy RCMD Checks
+  # Satisfy RCMD Checks
   cap_adult_ref_values_list <- cap_chick_ref_values_list <- NULL
   Species <- Age_calc <- NULL
 
