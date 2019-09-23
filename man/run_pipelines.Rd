@@ -5,7 +5,7 @@
 \title{Run multiple data pipelines}
 \usage{
 run_pipelines(path = utils::choose.dir(), PopID = NULL,
-  Species = NULL, output_type = "csv", combined = TRUE)
+  Species = NULL, output_type = "csv")
 }
 \arguments{
 \item{path}{File path. Location of all folders for data owners. Note, the
@@ -23,15 +23,19 @@ if a population doesn't have the requested species it will not be
 formatted.)}
 
 \item{output_type}{Should the pipeline generate .csv files ('csv') or R objects ('R').}
-
-\item{combined}{If `output_type` is csv.
-Should pipelines create individual .csv files for each
-population (FALSE) or combined .csv files for all populations (TRUE).}
 }
 \value{
-Generate .csv files
+Generate .csv files or return an R list object with 4 items
 }
 \description{
 Run multiple data pipelines. Currently, this produces separate .csv files but
 will eventually produce combined .csv files for all populations.
+}
+\examples{
+\dontrun{
+
+#Create an R list of Harjavalta data
+HAR_data <- run_pipelines(PopID = "HAR", Species = "PARMAJ", output_type = "R")
+
+}
 }
