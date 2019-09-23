@@ -1,10 +1,31 @@
 #' Quality check dummy data
 #'
-#' Create dummy pipeline output (\code{dummy_data}) to be tested in \code\link{quality_check}}.
-#' Each row in \code{dummy_data} corresponds to a single check in \code\link{quality_check}}.
+#' Create dummy pipeline output (\code{dummy_data}) to be tested in \code{\link{quality_check}}. In each data frame, rows are specifically created to violate single checks from \code{\link{quality_check}. See a detailed description of which rows correspond to which checks in \sQuote{Details}.
+#'
+#' \strong{Brood data}:
+#' \enumerate{
+#'   \item Row 1 represents a non-manipulated brood that violates \sQuote{Check 5: Comparing clutch and brood sizes} (see \code{\link{compare_clutch_brood}}).
+#'   \item Row 2 represents a manipulated brood that violates \sQuote{Check 5: Comparing clutch and brood sizes} (see \code{\link{compare_clutch_brood}}).
+#' }
+#'
+#' \strong{Capture data}:
+#'
+#' \strong{Individual data}:
+#'
+#' \strong{Location data}:
+#'
+#' @format
+#' List of 4 dataframes.
+#' \describe{
+#'   \item{Brood_data}{Dummy brood data.}
+#'   \item{Capture_data}{Dummy capture data.}
+#'   \item{Individual_data}{Dummy individual data.}
+#'   \item{Location_data}{Dummy location data.}
+#' }
+#'
+#' @name dummy_data
 
-
-# Create skeletons for each pipeline dataframe
+# Create skeletons for each pipeline data frame
 # Brood data
 tibble::tibble(
   Row = NA_integer_,
@@ -97,10 +118,35 @@ tibble::tibble(
 ) ->
   Location_data
 
+
+# Add rows in which single checks are violated
+# Check 5: Comparing clutch and brood sizes
+
+# Non-manipulated brood
+Brood_data %>%
+  dplyr::mutate(
+    Row = 1,
+    ClutchSize = 7,
+    BroodSize = 8,
+  ) ->
+  Brood_data
+
+# Manipulated brood
+Brood_data %>%
+  bind_rows(
+    Brood_data %>%
+      dplyr::mutate(
+        Row = 2,
+        ClutchSize = 7,
+        BroodSize = 8,
+        ExperimentID = "COHORT"
+      )
+  ) ->
+  Brood_data
+
+
 # Combine in list
 dummy_data <- list(Brood_data = Brood_data,
                    Capture_data = Capture_data,
                    Individual_data = Individual_data,
                    Location_data = Location_data)
-
-# Add row that violates
