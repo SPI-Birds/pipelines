@@ -42,19 +42,19 @@ This section provides details on data management choices that are unique to
 this data. For a general description of the standard protocl please see
 \href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
 
-\strong(Sex:) We ignore uncertainty in sex (e.g. category 4 = Male probable but not certain)
+\strong{Sex:} We ignore uncertainty in sex (e.g. category 4 = Male probable but not certain)
 
-\strong(LocationID:) For birds caught in boxes. Location is Plot_NextboxNumber.
+\strong{LocationID:} For birds caught in boxes. Location is Plot_NextboxNumber.
 
-\strong(BroodID:) Broods are BreedingSeason_LocationID_day_month = BreedingSeason_Plot_NestboxNumber_day_month.
+\strong{BroodID:} Broods are BreedingSeason_LocationID_day_month = BreedingSeason_Plot_NestboxNumber_day_month.
 
-\strong(ClutchTypeObserved:) No clutch type recorded, only calculated clutch type is given.
+\strong{ClutchTypeObserved:} No clutch type recorded, only calculated clutch type is given.
 
-\strong(Tarsus:) Left and right tarsus are measured. Right generally has more data, so we use this as our
+\strong{Tarsus:} Left and right tarsus are measured. Right generally has more data, so we use this as our
 measure of tarsus length. Currently, we assume everything is in Svensson's alternative, but there is supposedly
 some change from before 1989. Need to ask Anne about this.
 
-\strong(Age:) We translate observed age codes into EURING codes as follows:
+\strong{Age:} We translate observed age codes into EURING codes as follows:
 \itemize{
 
 \item P0 (Poussin bagué au nichoir ou en cavité naturelle/chick banded in box or natural cavity):

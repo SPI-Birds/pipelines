@@ -2,13 +2,21 @@
 % Please edit documentation in R/format_MON.R
 \name{create_capture_MON}
 \alias{create_capture_MON}
-\title{Title}
+\title{Create capture data table for Montpellier}
 \usage{
 create_capture_MON(db, species_filter)
 }
 \arguments{
-\item{species_filter}{}
+\item{db}{Location of primary data from Montpellier.}
+
+\item{species_filter}{Species of interest. The 6 letter codes of all the species of
+interest as listed in the
+\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{standard
+protocol}.}
+}
+\value{
+A data frame with capture data
 }
 \description{
-Title
+Create capture data table for Montpellier
 }
