@@ -77,3 +77,45 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(MON_data, BroodID == "1984_pir_47_10_06")$AvgTarsus, NA_real_)
 
 })
+
+test_that("Individual data returns an expected outcome...", {
+
+  #We want to run a test for each sex for individuals caught as adults and chicks
+
+  #Take a subset of only MON data
+  MON_data <- dplyr::filter(pipeline_output$Individual_data, PopID %in% c("COR", "ROU"))
+
+  #Test 1: Male caught first as adult
+  #Individual C044309 should be listed as a male coal tit
+  expect_equal(subset(MON_data, IndvID == "2221101")$Sex, "M")
+  expect_equal(subset(MON_data, IndvID == "2221101")$Species, "PERATE")
+  #She should have no BroodIDLaid or Fledged because she was never caught as a chick
+  expect_equal(subset(MON_data, IndvID == "2221101")$BroodIDLaid, NA_character_)
+  expect_equal(subset(MON_data, IndvID == "2221101")$BroodIDFledged, NA_character_)
+  #Her ring season should be 1991 with a RingAge of 'adult'
+  expect_equal(subset(MON_data, IndvID == "2221101")$RingSeason, 1991)
+  expect_equal(subset(MON_data, IndvID == "2221101")$RingAge, "adult")
+
+  #Test 2: Female caught first as adult
+  #Individual 2546616 should be listed as a female blue tit
+  expect_equal(subset(MON_data, IndvID == "2546616")$Sex, "F")
+  expect_equal(subset(MON_data, IndvID == "2546616")$Species, "CYACAE")
+  #She should have no BroodIDLaid or Fledged because this individual was caught as an adult
+  expect_equal(subset(MON_data, IndvID == "2546616")$BroodIDLaid, NA_character_)
+  expect_equal(subset(MON_data, IndvID == "2546616")$BroodIDFledged, NA_character_)
+  #Her ring season should be 2003 with a RingAge of 'chick'
+  expect_equal(subset(MON_data, IndvID == "2546616")$RingSeason, 1981)
+  expect_equal(subset(MON_data, IndvID == "2546616")$RingAge, "adult")
+
+  #Test 3: Caught as chick
+  #Individual 8189538 should be listed as a female great tit
+  expect_equal(subset(MON_data, IndvID == "8189538")$Sex, "F")
+  expect_equal(subset(MON_data, IndvID == "8189538")$Species, "PARMAJ")
+  #Should have BroodID Laid and Fledged of XXXX (NOT YET INCLUDED, this should return an error)
+  expect_equal(subset(MON_data, IndvID == "8189538")$BroodIDLaid, "XXX")
+  expect_equal(subset(MON_data, IndvID == "8189538")$BroodIDFledged, "XXX")
+  #Ring season should be 2017 with a RingAge of 'chick'
+  expect_equal(subset(MON_data, IndvID == "8189538")$RingSeason, 2017)
+  expect_equal(subset(MON_data, IndvID == "8189538")$RingAge, "chick")
+
+})
