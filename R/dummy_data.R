@@ -4,8 +4,10 @@
 #'
 #' \strong{Brood data}:
 #' \enumerate{
-#'   \item Row 1 represents a non-manipulated brood that violates \sQuote{Check 5: Comparing clutch and brood sizes} (see \code{\link{compare_clutch_brood}}).
-#'   \item Row 2 represents a manipulated brood that violates \sQuote{Check 5: Comparing clutch and brood sizes} (see \code{\link{compare_clutch_brood}}).
+#'   \item Row 1 represents a non-manipulated brood that violates \sQuote{Brood check 2: Comparing clutch and brood sizes} (see \code{\link{compare_clutch_brood}}).
+#'   \item Row 2 represents a manipulated brood that violates \sQuote{Brood check 2: Comparing clutch and brood sizes} (see \code{\link{compare_clutch_brood}}).
+#'   \item Row 3 represents a non-manipulated brood that violates \sQuote{Brood check 3: Comparing brood sizes and fledgling numbers} (see \code{\link{compare_brood_fledglings}}).
+#'   \item Row 4 represents a manipulated brood that violates \sQuote{Brood check 3: Comparing brood sizes and fledgling numbers} (see \code{\link{compare_brood_fledglings}}).
 #' }
 #'
 #' \strong{Capture data}:
@@ -120,7 +122,7 @@ tibble::tibble(
 
 
 # Add rows in which single checks are violated
-# Check 5: Comparing clutch and brood sizes
+# Brood check 2: Comparing clutch and brood sizes
 
 # Non-manipulated brood
 Brood_data %>%
@@ -133,14 +135,34 @@ Brood_data %>%
 
 # Manipulated brood
 Brood_data %>%
-  bind_rows(
-    Brood_data %>%
-      dplyr::mutate(
-        Row = 2,
-        ClutchSize = 7,
-        BroodSize = 8,
-        ExperimentID = "COHORT"
-      )
+  tibble::add_row(
+    Row = 2,
+    ClutchSize = 7,
+    BroodSize = 8,
+    ExperimentID = "COHORT"
+  ) ->
+  Brood_data
+
+
+# Brood check 3: Comparing brood sizes and fledgling numbers
+
+# Non-manipulated brood
+Brood_data %>%
+  tibble::add_row(
+    Row = 3,
+    BroodSize = 5,
+    NumberFledged = 6
+  ) ->
+  Brood_data
+
+
+# Manipulated brood
+Brood_data %>%
+  tibble::add_row(
+    Row = 4,
+    BroodSize = 5,
+    NumberFledged = 6,
+    ExperimentID = "COHORT"
   ) ->
   Brood_data
 
@@ -150,3 +172,6 @@ dummy_data <- list(Brood_data = Brood_data,
                    Capture_data = Capture_data,
                    Individual_data = Individual_data,
                    Location_data = Location_data)
+
+save(dummy_data,
+     file = paste0(utils::choose.dir(), "\\dummy_data.rda"))

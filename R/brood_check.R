@@ -8,6 +8,35 @@
 
 brood_check <- function(Brood_data){
 
+  # Create check list with - a summary of warnings and errors per test
+  check_list <- tibble::tibble(Check = c("Brood data format", "Clutch and brood sizes",
+                                         "Brood sizes and fledgling numbers",
+                                         "Laying and hatching dates", "Hatching and fledging dates",
+                                         "Improbable and impossible values brood data"),
+                               Warning = NA,
+                               Error = NA)
+
+  # Checks
+  # - Check format brood data
+  message("Brood check 1: Checking format of brood data...")
+
+  check_format_brood_output <- check_format_brood(Brood_data)
+
+  check_list[1,2:3] <- check_format_brood_output$check_list
+
+  # - Compare clutch and brood sizes
+  message("Brood check 2: Comparing clutch and brood sizes...")
+
+  compare_clutch_brood_output <- compare_clutch_brood(Brood_data)
+
+  check_list[2,2:3] <- compare_clutch_brood_output$check_list
+
+  # - Compare brood sizes and fledglings numbers
+  message("Brood check 3: Comparing brood sizes and fledgling numbers...")
+
+  compare_brood_fledglings_output <- compare_brood_fledglings(Brood_data)
+
+  check_list[3,2:3] <- compare_brood_fledglings_output$check_list
 }
 
 #' Check format of brood data
@@ -191,7 +220,7 @@ compare_clutch_brood <- function(Brood_data){
 }
 
 
-#' Compare brood sizes and fledglings numbers
+#' Compare brood sizes and fledgling numbers
 #'
 #' Compare brood size and fledgling number per brood. In non-manipulated broods, brood size should be larger or equal to fledgling number. If not, the record will result in an error. In broods with clutch manipulation, brood size might be smaller than fledgling number. If so, the record will result in a warning.
 #'
@@ -208,7 +237,7 @@ compare_brood_fledglings <- function(Brood_data){
 
   # Manipulated broods
   Brood_data_man <- Brood_data %>%
-    filter(BroodSize < NumberFledged)
+    filter(!is.na(ExperimentID) & BroodSize < NumberFledged)
 
   err <- FALSE
   error_output <- NULL
@@ -216,11 +245,11 @@ compare_brood_fledglings <- function(Brood_data){
   if(nrow(Brood_data_non) > 0) {
     err <- TRUE
 
-    error_output <- purrr::pmap(.l = list(Brood_data_non$BroodID,
+    error_output <- purrr::pmap(.l = list(Brood_data_non$Row,
                                           Brood_data_non$BroodSize,
                                           Brood_data_non$NumberFledged),
                                 .f = ~{
-                                  paste0("Record with BroodID ", ..1,
+                                  paste0("Record on row ", ..1,
                                          " has a larger fledgling number (", ..3,
                                          ") than brood size (", ..2,
                                          "), but was not experimentally manipulated.")
@@ -233,11 +262,11 @@ compare_brood_fledglings <- function(Brood_data){
   if(nrow(Brood_data_man) > 0) {
     war <- TRUE
 
-    warning_output <- purrr::pmap(.l = list(Brood_data_man$BroodID,
+    warning_output <- purrr::pmap(.l = list(Brood_data_man$Row,
                                             Brood_data_man$BroodSize,
                                             Brood_data_man$NumberFledged),
                                   .f = ~{
-                                    paste0("Record with BroodID ", ..1,
+                                    paste0("Record on row ", ..1,
                                            " has a larger fledgling number (", ..3,
                                            ") than brood size (", ..2,
                                            "), and was experimentally manipulated.")
