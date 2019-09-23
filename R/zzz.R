@@ -20,6 +20,35 @@
 #'@name pipeline_params
 NULL
 
+
+#' Parameter documentation for brood data checks
+#'
+#' @param Brood_data Data frame. Brood data output from pipeline.
+#'
+#'@name checks_brood_params
+NULL
+
+#' Parameter documentation for capture data checks
+#'
+#' @param Capture_data Data frame. Capture data output from pipeline.
+#'
+#'@name checks_capture_params
+NULL
+
+#' Parameter documentation for individual data checks
+#'
+#' @param Individual_data Data frame. Individual data output from pipeline.
+#'
+#'@name checks_individual_params
+NULL
+
+#' Parameter documentation for location data checks
+#'
+#' @param Location_data Data frame. Location data output from pipeline.
+#'
+#'@name checks_location_params
+NULL
+
 ############################################################################
 
 utils::globalVariables(c(".", "AvgChickTarsus", "AvgChickMass", "AvgTarsus", "PopID",
