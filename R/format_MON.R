@@ -166,15 +166,10 @@ create_capture_MON <- function(db, species_filter){
 
   Full_capture_data <- readxl::read_excel(paste0(db, "//", "SIE MORPH 1976-2018.xlsx"),
                                      col_types = c("text")) %>%
-    #There are two potential coercion issues in the data
-    #1. Numbers are stored as text in the excel sheets. This isn't so problematic, because
-    #they are easily coerced back to numerics, but it causes a lot of warnings which
-    #prevents us from seeing any real coercion errors that cause NAs (e.g. number stored as 10,1).
-    #We read them in as text and coerce them in R instead (where only NA coercion throws a warning).
-    #This also allows us to distinguish between integer and numeric cols.
-    #2. There is one typo in date (03/05/20111). We read dates in and text and then
-    #coerce to date only the first 10 characters.
-    #Firstly, we rename cols so it's easier for users to understand
+    #There is a potential issue in excel that numbers are stored as text in the excel sheets.
+    #These can easily be coerced back to numerics, but this throws many warnings,
+    #which will masks any real problematic coercion issues (e.g. NA introduced by coercion)
+    #Therefore, we read everything as text and coerce individually
     dplyr::mutate_at(.vars = vars(3, 7, 16, 37), as.integer) %>%
     dplyr::mutate_at(.vars = vars(5, 6, 14, 18:24, 26, 27, 35), as.numeric) %>%
     dplyr::mutate(Species = dplyr::case_when(.$espece == "ble" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14620)],
@@ -192,7 +187,7 @@ create_capture_MON <- function(db, species_filter){
                                              .$espece == "non" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14400)])) %>%
     #Filter by species
     dplyr::filter(Species %in% species_filter) %>%
-    dplyr::mutate(CaptureDate = as.Date(substr(date_mesure, start = 1, stop = 10), format = "%d/%m/%Y"),
+    dplyr::mutate(CaptureDate = janitor::excel_numeric_to_date(as.numeric(date_mesure)),
                   BreedingSeason = an, CaptureTime = heure,
                   IndvID = bague, WingLength = aile,
                   BeakLength = becna,
@@ -269,7 +264,7 @@ create_capture_MON <- function(db, species_filter){
     #Filter by species
     #Also remove only the pops we know
     dplyr::filter(Species %in% species_filter & lieu %in% c("cap", "mes", "pir", "tua", "rou")) %>%
-    dplyr::mutate(CaptureDate = as.Date(substr(date_mesure, start = 1, stop = 10), format = "%d/%m/%Y"),
+    dplyr::mutate(CaptureDate = janitor::excel_numeric_to_date(as.numeric(date_mesure)),
                   BreedingSeason = as.integer(an), CaptureTime = heure,
                   IndvID = purrr::pmap_chr(.l = list(bague),
                                            .f = ~{
