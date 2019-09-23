@@ -414,9 +414,24 @@ create_individual_MON <- function(capture_data){
                   PopID = first(CapturePopID),
                   BroodIDLaid = NA_character_, BroodIDFledged = NA_character_,
                   RingSeason = first(BreedingSeason),
-                  RingAge = dplyr::case_when(first(.$Age_observed) <= 3 ~ "chick",
-                                             first(.$Age_observed) > 3 ~ "adult",
-                                             is.na(first(.$Age_observed)) ~ "adult"),
+                  RingAge = purrr::pmap_chr(.l = list(first(Age_observed)),
+                                            .f = ~{
+
+                                              if(is.na(..1)){
+
+                                                return(NA_character_)
+
+                                              } else if(..1 <= 3){
+
+                                                return("chick")
+
+                                              } else if(..1 > 3){
+
+                                                return("adult")
+
+                                              }
+
+                                            }),
                   Sex = purrr::pmap_chr(.l = list(list(unique(ObservedSex)), list(unique(GeneticSex))),
                                         .f = ~{
 
