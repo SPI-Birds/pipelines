@@ -11,6 +11,10 @@
 #'
 #'\strong(LocationID:) For birds caught in boxes. Location is Plot_NextboxNumber.
 #'
+#'\strong(BroodID:) Broods are BreedingSeason_LocationID_day_month = BreedingSeason_Plot_NestboxNumber_day_month.
+#'
+#'\strong(ClutchTypeObserved:) No clutch type recorded, only calculated clutch type is given.
+#'
 #'\strong(Tarsus:) Left and right tarsus are measured. Right generally has more data, so we use this as our
 #'measure of tarsus length. Currently, we assume everything is in Svensson's alternative, but there is supposedly
 #'some change from before 1989. Need to ask Anne about this.
@@ -75,6 +79,66 @@ format_MON <- function(db = utils::choose.dir(),
   message("Compiling capture data....")
 
   Capture_data <- create_capture_MON(db = db, species_filter = species)
+
+  # BROOD DATA
+
+  message("Compiling brood data...")
+
+  Brood_data <- create_brood_MON(db = db, species_filter = species)
+
+  # WRANGLE DATA FOR EXPORT
+
+  #Remove chick rings from brood data
+  #Add NAs for Avg measurements until we add them later
+  Brood_data <- dplyr::select(Brood_data, -pulbag1:-pulbag14) %>%
+    dplyr::mutate(AvgEggMass = NA_real_, NumberEggs = NA_integer_,
+                  AvgChickMass = NA_real_, NumberChicksMass = NA_integer_,
+                  AvgTarsus = NA_real_, NumberChicksTarsus = NA_integer_)
+
+  # GENERATE DEBUG REPORT
+
+  if(debug){
+
+    message("Generating debug report...")
+
+    generate_debug_report(path = path, Pop = "MON", Brood_data = Brood_data,
+                          Capture_data = Capture_data,
+                          Indv_data = Individual_data)
+
+  }
+
+  # EXPORT DATA
+
+  time <- difftime(Sys.time(), start_time, units = "sec")
+
+  message(paste0("All tables generated in ", round(time, 2), " seconds"))
+
+  if(output_type == "csv"){
+
+    message("Saving .csv files...")
+
+    utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_MON.csv"), row.names = F)
+
+    #utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_MON.csv"), row.names = F)
+
+    #utils::write.csv(x = Capture_data %>% select(-Sex, -BroodID), file = paste0(path, "\\Capture_data_MON.csv"), row.names = F)
+
+    #utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_MON.csv"), row.names = F)
+
+    invisible(NULL)
+
+  }
+
+  if(output_type == "R"){
+
+    message("Returning R objects...")
+
+    return(list(Brood_data = Brood_data,
+                Capture_data = data.frame(IndvID = NA, ChickAge = NA),
+                Individual_data = data.frame(IndvID = NA, Sex = NA),
+                Location_data = data.frame(LocationID = NA, Habitat = NA)))
+
+  }
 
 }
 
@@ -172,8 +236,8 @@ create_capture_MON <- function(db, species_filter){
 
   #Do the same for the chick capture data
   #As above, we read all in as text and then coerce afterwards
-  Chick_capture_data <- readxl::read_excel(paste0(db, "//", "SIE POUS 1976-2018.xlsx"),
-                                           col_types = c("text")) %>%
+  Chick_capture_data <- readxl::read_excel(paste0(db, "//SIE POUS 1976-2018.xlsx"),
+                                           col_types = "text") %>%
     dplyr::rename(BreedingSeason = an, CaptureDate = date_mesure, CaptureTime = heure,
                   Species = espece, IndvID = bague,
                   TarsusRight = tarsed, TarsusLeft = tarseg,
@@ -230,6 +294,70 @@ create_capture_MON <- function(db, species_filter){
                   Tarsus = TarsusRight, OriginalTarsusMethod = dplyr::case_when(!is.na(.$TarsusRight) ~ "Alternative"),
                   WingLength = NA_real_)
 
+
+}
+
+
+#' Create brood data table for Montpellier
+#'
+#' @param db Location of primary data from Montpellier.
+#' @param species_filter Species of interest. The 6 letter codes of all the species of
+#'  interest as listed in the
+#'  \href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{standard
+#'  protocol}.
+#'
+#' @return A data frame with Brood data
+
+create_brood_MON <- function(db, species_filter){
+
+  Brood_data <- readxl::read_excel(paste0(db, "//SIE DEMO 1976-2018.xlsx"),
+                                   col_types = "text") %>%
+    dplyr::mutate(Species = dplyr::case_when(.$espece == "ble" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14620)],
+                                             .$espece == "noi" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14610)],
+                                             .$espece == "cha" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14640)],
+                                             .$espece == "eto" ~ "STARLING",
+                                             .$espece == "grp" ~ "UN-IDENTIFIED CREEPER",
+                                             .$espece == "grpj" ~ "SHORT-TOED TREECREEPER",
+                                             .$espece == "grpd" ~ "EURASIAN TREECREEPER",
+                                             .$espece == "hup" ~ "CRESTED TIT",
+                                             .$espece == "sit" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14790)],
+                                             .$espece == "moi" ~ "UN-IDENTIFIED SPARROW",
+                                             .$espece == "moid" ~ "HOUSE SPARROW",
+                                             .$espece == "moif" ~ Species_codes$Code[which(Species_codes$SpeciesID == 15980)],
+                                             .$espece == "non" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14400)]),
+                  Plot = lieu, BoxNumber = nic,
+                  LocationID = paste(Plot, BoxNumber, sep = "_"),
+                  BreedingSeason = as.integer(an),
+                  LayingDate = janitor::excel_numeric_to_date(as.numeric(date_ponte)),
+                  BroodID = paste(BreedingSeason, LocationID,
+                                  stringr::str_pad(lubridate::day(LayingDate), width = 2, pad = "0"),
+                                  stringr::str_pad(lubridate::month(LayingDate), width = 2, pad = "0"), sep = "_"),
+                  ClutchSize = as.integer(grpo),
+                  HatchDate = janitor::excel_numeric_to_date(as.numeric(date_eclo)),
+                  BroodSize = as.integer(pulecl),
+                  NumberFledged = as.integer(pulenv),
+                  CauseFailure = mort, MaleID = mbag,
+                  FemaleID = fbag, ClutchType_observed = NA_character_,
+                  LayingDateError = NA_integer_, ClutchSizeError = NA_integer_,
+                  HatchDateError = NA_integer_, BroodSizeError = NA_integer_,
+                  FledgeDate = as.Date(NA), FledgeDateError = NA_integer_,
+                  NumberFledgedError = NA_integer_, ExperimentID = NA_character_) %>%
+    dplyr::filter(Species %in% species_filter & Plot %in% c("cap", "mes", "pir", "tua", "rou")) %>%
+    #Only include capture pop and plot for now, until we work out how to code translocations
+    dplyr::mutate(PopID = dplyr::case_when(.$lieu %in% c("cap", "mes", "pir", "tua") ~ "COR",
+                                           .$lieu == "rou" ~ "ROU")) %>%
+    dplyr::arrange(BreedingSeason, Species, FemaleID, LayingDate) %>%
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
+    #Keep all chick codes because we will use these for individual data table and remove later
+    dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot,
+                  LocationID, FemaleID, MaleID, ClutchType_observed,
+                  ClutchType_calculated, LayingDate, LayingDateError,
+                  ClutchSize, ClutchSizeError, HatchDate, HatchDateError,
+                  BroodSize, BroodSizeError, FledgeDate, FledgeDateError,
+                  NumberFledged, NumberFledgedError, ExperimentID,
+                  pulbag1:pulbag14)
+
+  return(Brood_data)
 
 }
 
