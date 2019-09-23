@@ -16,7 +16,7 @@
 #' file.remove("Population_map.jpg")
 plot_popmap <- function(scale = 2, filename = NULL){
 
-  pop_locations <- utils::read.csv(system.file("extdata", "pop_locations.csv", package = "HNBStandFormat", mustWork = TRUE))
+  pop_locations <- utils::read.csv(system.file("extdata", "pop_locations.csv", package = "SPIbirds", mustWork = TRUE))
 
   world_map <- map_data("world")
 

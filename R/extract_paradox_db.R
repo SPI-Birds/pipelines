@@ -12,7 +12,7 @@ extract_paradox_db <- function(path, file_name){
 
   reticulate::use_python(python = "C:\\Users\\Liam\\AppData\\Local\\Programs\\Python\\Python37")
 
-  reticulate::py_run_file(system.file("extdata", "paradox_extract.py", package = "HNBStandFormat", mustWork = TRUE))
+  reticulate::py_run_file(system.file("extdata", "paradox_extract.py", package = "SPIbirds", mustWork = TRUE))
 
   output_file <- py$extract_paradox(path = path, file_name = file_name)
 

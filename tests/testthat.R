@@ -1,4 +1,4 @@
 library(testthat)
-library(HNBStandFormat)
+library(SPIbirds)
 
-test_check("HNBStandFormat")
+test_check("SPIbirds")

@@ -110,4 +110,13 @@ utils::globalVariables(c(".", "AvgChickTarsus", "AvgChickMass", "AvgTarsus", "Po
                          "Observer", "RingAgeObsv", "ObserverID",
                          "Age_observed_new", "choose.dir",
                          "pop_species_combos", "pop", "species",
-                         "total_sp"))
+                         "total_sp", "TotalEggWeight",
+                         "lieu", "nic", "BoxNumber", "an", "date_ponte",
+                         "grpo", "date_eclo", "pulecl", "pulenv",
+                         "mort", "mbag", "fbag", "pulbag1", "pulbag14",
+                         "YoungestCatch", "date_mesure", "heure", "espece",
+                         "bague", "aile", "tarsed", "tarseg", "becna",
+                         "poids", "obs", "dest", "orig", "TarsusRight",
+                         "age_plume", "MeanEggWeight", "NEggsWeighted",
+                         "date_of_capture_52", "date_of_capture_57",
+                         "laying_date_minimum", "laying_date_maximum"))

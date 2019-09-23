@@ -17,7 +17,7 @@ HOG_twitter <- function(){
     dplyr::filter(PopID == "HOG")
 
   #Load pop location info
-  pop_locations <- utils::read.csv(system.file("extdata", "pop_locations.csv", package = "HNBStandFormat", mustWork = TRUE))
+  pop_locations <- utils::read.csv(system.file("extdata", "pop_locations.csv", package = "SPIbirds", mustWork = TRUE))
 
   #Load file of world boundaries
   world_map <- map_data("world")
@@ -54,7 +54,7 @@ HOG_twitter <- function(){
                        scale <- bird_locations$scale[grepl(pattern = substr(.x, 1, 6),
                                                            bird_locations$species)]
 
-                       grid::rasterGrob(png::readPNG(source = system.file("extdata", .x, package = "HNBStandFormat", mustWork = TRUE)),
+                       grid::rasterGrob(png::readPNG(source = system.file("extdata", .x, package = "SPIbirds", mustWork = TRUE)),
                                         width = unit(4.5*scale, "cm"), height = unit(3*scale, "cm"))
 
                      })
@@ -109,6 +109,7 @@ HOG_twitter <- function(){
                   width = (5.18 * 2))
 
   timeline <- HOG_data %>%
+    dplyr::filter(Species %in% bird_locations$species) %>%
     dplyr::group_by(Species, BreedingSeason) %>%
     dplyr::count() %>%
     dplyr::filter(BreedingSeason < 2019)

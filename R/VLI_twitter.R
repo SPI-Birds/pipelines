@@ -17,7 +17,7 @@ VLI_twitter <- function(){
     dplyr::filter(PopID == "VLI")
 
   #Load pop location info
-  pop_locations <- utils::read.csv(system.file("extdata", "pop_locations.csv", package = "HNBStandFormat", mustWork = TRUE))
+  pop_locations <- utils::read.csv(system.file("extdata", "pop_locations.csv", package = "SPIbirds", mustWork = TRUE))
 
   #Load file of world boundaries
   world_map <- map_data("world")
@@ -39,7 +39,7 @@ VLI_twitter <- function(){
                                                           bird_png_data$species)]
 
                       tibble::tibble(species = substr(.x, 1, 6),
-                                     grob = list(grid::rasterGrob(png::readPNG(source = system.file("extdata", .x, package = "HNBStandFormat", mustWork = TRUE)),
+                                     grob = list(grid::rasterGrob(png::readPNG(source = system.file("extdata", .x, package = "SPIbirds", mustWork = TRUE)),
                                                              width = unit(4.5*scale*1.25, "cm"), height = unit(3*scale*1.25, "cm"))))
 
                      }), by = "species") %>%
