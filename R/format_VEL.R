@@ -489,6 +489,9 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
                                                    }
 
                                                  }),
+                  CapturePopID = "VEL", ReleasePopID = "VEL",
+                  CapturePlot = Plot, ReleasePlot = Plot,
+                  ObserverID = NA_character_,
                   CaptureDate = purrr::pmap(.l = list(Sex, date_of_capture_52, date_of_capture_57),
                                             .f = ~{
 
@@ -504,17 +507,12 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
 
                                             })) %>%
     tidyr::unnest(cols = c(CaptureDate)) %>%
-                  CapturePlot = Plot, ReleasePlot = Plot,
-                  ObserverID = NA_character_) %>%
-    tidyr::unnest() %>%
     dplyr::mutate(OriginalTarsusMethod = dplyr::case_when(!is.na(.$Tarsus) ~ "Oxford")) %>%
     dplyr::select(Species, BreedingSeason, LocationID, BroodID,
-                  IndvID:CaptureDate, ObserverID, OriginalTarsusMethod, Sex)
+                  Sex:CaptureDate)
 
   FICALB_alldat <- dplyr::bind_rows(FICALB_chicks, FICALB_adults) %>%
     calc_age(ID = IndvID, Age = Age_observed, Date = CaptureDate, Year = BreedingSeason, showpb = TRUE)
-
-
 
   return(FICALB_alldat)
 
