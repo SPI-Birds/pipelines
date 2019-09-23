@@ -7,6 +7,10 @@
 #'this data. For a general description of the standard protocl please see
 #'\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
 #'
+#'\strong{IndvID:} In Capture_data, any individuals given unidentified numbers (i.e. containing 'no-ident') are treated as
+#'NA. These records are still kept as they contain information about broods (e.g. AvgChickMass) but are not integrated into
+#'the individual data table.
+#'
 #'\strong{Sex:} We ignore uncertainty in sex (e.g. category 4 = Male probable but not certain)
 #'
 #'\strong{LocationID:} For birds caught in boxes. Location is Plot_NextboxNumber.
@@ -86,6 +90,12 @@ format_MON <- function(db = utils::choose.dir(),
 
   Brood_data <- create_brood_MON(db = db, species_filter = species)
 
+  # INDIVIDUAL DATA
+
+  message("Compiling individual data...")
+
+  Individual_data <- create_individual_MON(Capture_data)
+
   # WRANGLE DATA FOR EXPORT
 
   #Remove chick rings from brood data
@@ -119,9 +129,9 @@ format_MON <- function(db = utils::choose.dir(),
 
     utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_MON.csv"), row.names = F)
 
-    #utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_MON.csv"), row.names = F)
+    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_MON.csv"), row.names = F)
 
-    #utils::write.csv(x = Capture_data %>% select(-Sex, -BroodID), file = paste0(path, "\\Capture_data_MON.csv"), row.names = F)
+    utils::write.csv(x = Capture_data %>% select(-Sex, -BroodID), file = paste0(path, "\\Capture_data_MON.csv"), row.names = F)
 
     #utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_MON.csv"), row.names = F)
 
@@ -134,8 +144,8 @@ format_MON <- function(db = utils::choose.dir(),
     message("Returning R objects...")
 
     return(list(Brood_data = Brood_data,
-                Capture_data = data.frame(IndvID = NA, ChickAge = NA),
-                Individual_data = data.frame(IndvID = NA, Sex = NA),
+                Capture_data = Capture_data,
+                Individual_data = Individual_data,
                 Location_data = data.frame(LocationID = NA, Habitat = NA)))
 
   }
@@ -165,31 +175,31 @@ create_capture_MON <- function(db, species_filter){
     #2. There is one typo in date (03/05/20111). We read dates in and text and then
     #coerce to date only the first 10 characters.
     #Firstly, we rename cols so it's easier for users to understand
-    dplyr::rename(BreedingSeason = an, CaptureDate = date_mesure, CaptureTime = heure,
-                  Species = espece, IndvID = bague, WingLength = aile,
-                  TarsusRight = tarsed, TarsusLeft = tarseg, BeakLength = becna,
-                  Mass = poids, ObserverID = obs,
-                  Destination_Aviary = dest, BirthPlot = orig) %>%
     dplyr::mutate_at(.vars = vars(3, 7, 16, 37), as.integer) %>%
     dplyr::mutate_at(.vars = vars(5, 6, 14, 18:24, 26, 27, 35), as.numeric) %>%
-    dplyr::mutate(CaptureDate = as.Date(substr(CaptureDate, start = 1, stop = 10), format = "%d/%m/%Y")) %>%
-    #Add standard species codes
-    dplyr::mutate(Species = dplyr::case_when(.$Species == "ble" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14620)],
-                                             .$Species == "noi" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14610)],
-                                             .$Species == "cha" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14640)],
-                                             .$Species == "eto" ~ "STARLING",
-                                             .$Species == "grp" ~ "UN-IDENTIFIED CREEPER",
-                                             .$Species == "grpj" ~ "SHORT-TOED TREECREEPER",
-                                             .$Species == "grpd" ~ "EURASIAN TREECREEPER",
-                                             .$Species == "hup" ~ "CRESTED TIT",
-                                             .$Species == "sit" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14790)],
-                                             .$Species == "moi" ~ "UN-IDENTIFIED SPARROW",
-                                             .$Species == "moid" ~ "HOUSE SPARROW",
-                                             .$Species == "moif" ~ Species_codes$Code[which(Species_codes$SpeciesID == 15980)],
-                                             .$Species == "non" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14400)])) %>%
+    dplyr::mutate(Species = dplyr::case_when(.$espece == "ble" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14620)],
+                                             .$espece == "noi" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14610)],
+                                             .$espece == "cha" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14640)],
+                                             .$espece == "eto" ~ "STARLING",
+                                             .$espece == "grp" ~ "UN-IDENTIFIED CREEPER",
+                                             .$espece == "grpj" ~ "SHORT-TOED TREECREEPER",
+                                             .$espece == "grpd" ~ "EURASIAN TREECREEPER",
+                                             .$espece == "hup" ~ "CRESTED TIT",
+                                             .$espece == "sit" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14790)],
+                                             .$espece == "moi" ~ "UN-IDENTIFIED SPARROW",
+                                             .$espece == "moid" ~ "HOUSE SPARROW",
+                                             .$espece == "moif" ~ Species_codes$Code[which(Species_codes$SpeciesID == 15980)],
+                                             .$espece == "non" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14400)])) %>%
     #Filter by species
     dplyr::filter(Species %in% species_filter) %>%
-    dplyr::mutate(ActionTaken = dplyr::case_when(.$action == "bcj" ~ "Ringed",
+    dplyr::mutate(CaptureDate = as.Date(substr(date_mesure, start = 1, stop = 10), format = "%d/%m/%Y"),
+                  BreedingSeason = an, CaptureTime = heure,
+                  IndvID = bague, WingLength = aile,
+                  BeakLength = becna,
+                  Mass = poids, ObserverID = obs,
+                  Destination_Aviary = dest, BirthPlot = orig,
+                  LocationID = paste(lieu, nic, sep = "_"),
+                  ActionTaken = dplyr::case_when(.$action == "bcj" ~ "Ringed",
                                                  .$action == "mor" ~ "Dead",
                                                  .$action == "nb" ~ "Not_Ringed",
                                                  .$action == "ct" ~ "Caught???"),
@@ -201,7 +211,7 @@ create_capture_MON <- function(db, species_filter){
                                                    .$fil == "1" ~ "Mist net",
                                                    .$fil == "2" ~ "Trap cage and caller",
                                                    .$fil == "3" ~ "Winter roost"),
-                  AgeObserved = dplyr::case_when(.$age == "P0" ~ 1,
+                  Age_observed = dplyr::case_when(.$age == "P0" ~ 1,
                                                  .$age == "J0" ~ 3,
                                                  .$age == "J1" ~ 5,
                                                  .$age == "A0" ~ 4,
@@ -230,7 +240,10 @@ create_capture_MON <- function(db, species_filter){
     dplyr::mutate(CapturePopID = dplyr::case_when(.$lieu %in% c("cap", "mes", "pir", "tua") ~ "COR",
                                            .$lieu == "rou" ~ "ROU"),
                   CapturePlot = toupper(lieu), ReleasePopID = NA_character_, ReleasePlot = NA_character_,
-                  Tarsus = TarsusRight, OriginalTarsusMethod = dplyr::case_when(!is.na(.$TarsusRight) ~ "Alternative"))
+                  Tarsus = as.numeric(tarsed), OriginalTarsusMethod = dplyr::case_when(!is.na(.$tarsed) ~ "Alternative")) %>%
+    dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID,
+                  CapturePopID, CapturePlot, ReleasePopID, ReleasePlot, Mass, Tarsus,
+                  OriginalTarsusMethod, WingLength, Age_observed, ObservedSex, GeneticSex)
 
 
 
@@ -238,39 +251,50 @@ create_capture_MON <- function(db, species_filter){
   #As above, we read all in as text and then coerce afterwards
   Chick_capture_data <- readxl::read_excel(paste0(db, "//SIE POUS 1976-2018.xlsx"),
                                            col_types = "text") %>%
-    dplyr::rename(BreedingSeason = an, CaptureDate = date_mesure, CaptureTime = heure,
-                  Species = espece, IndvID = bague,
-                  TarsusRight = tarsed, TarsusLeft = tarseg,
-                  Mass = poids, ObserverID = obs,
-                  ChickAge = age_plume) %>%
     dplyr::mutate_at(.vars = vars(2, 15), as.integer) %>%
     dplyr::mutate_at(.vars = vars(16, 18:20), as.numeric) %>%
-    dplyr::mutate(CaptureDate = as.Date(substr(CaptureDate, start = 1, stop = 10), format = "%d/%m/%Y")) %>%
-    #Add standard species codes
-    dplyr::mutate(Species = dplyr::case_when(.$Species == "ble" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14620)],
-                                             .$Species == "noi" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14610)],
-                                             .$Species == "cha" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14640)],
-                                             .$Species == "eto" ~ "STARLING",
-                                             .$Species == "grp" ~ "UN-IDENTIFIED CREEPER",
-                                             .$Species == "grpj" ~ "SHORT-TOED TREECREEPER",
-                                             .$Species == "grpd" ~ "EURASIAN TREECREEPER",
-                                             .$Species == "hup" ~ "CRESTED TIT",
-                                             .$Species == "sit" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14790)],
-                                             .$Species == "moi" ~ "UN-IDENTIFIED SPARROW",
-                                             .$Species == "moid" ~ "HOUSE SPARROW",
-                                             .$Species == "moif" ~ Species_codes$Code[which(Species_codes$SpeciesID == 15980)],
-                                             .$Species == "non" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14400)])) %>%
+    dplyr::mutate(Species = dplyr::case_when(.$espece == "ble" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14620)],
+                                             .$espece == "noi" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14610)],
+                                             .$espece == "cha" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14640)],
+                                             .$espece == "eto" ~ "STARLING",
+                                             .$espece == "grp" ~ "UN-IDENTIFIED CREEPER",
+                                             .$espece == "grpj" ~ "SHORT-TOED TREECREEPER",
+                                             .$espece == "grpd" ~ "EURASIAN TREECREEPER",
+                                             .$espece == "hup" ~ "CRESTED TIT",
+                                             .$espece == "sit" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14790)],
+                                             .$espece == "moi" ~ "UN-IDENTIFIED SPARROW",
+                                             .$espece == "moid" ~ "HOUSE SPARROW",
+                                             .$espece == "moif" ~ Species_codes$Code[which(Species_codes$SpeciesID == 15980)],
+                                             .$espece == "non" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14400)])) %>%
     #Filter by species
     #Also remove only the pops we know
     dplyr::filter(Species %in% species_filter & lieu %in% c("cap", "mes", "pir", "tua", "rou")) %>%
-    dplyr::mutate(ActionTaken = dplyr::case_when(.$action == "bcj" ~ "Ringed",
+    dplyr::mutate(CaptureDate = as.Date(substr(date_mesure, start = 1, stop = 10), format = "%d/%m/%Y"),
+                  BreedingSeason = as.integer(an), CaptureTime = heure,
+                  IndvID = purrr::pmap_chr(.l = list(bague),
+                                           .f = ~{
+
+                                             if(grepl(pattern = "no-ident", ..1)){
+
+                                               return(NA_character_)
+
+                                             } else {
+
+                                               return(..1)
+
+                                             }
+
+                                           }),
+                  Mass = as.numeric(poids), ObserverID = obs,
+                  ChickAge = as.integer(age_plume),
+                  ActionTaken = dplyr::case_when(.$action == "bcj" ~ "Ringed",
                                                  .$action == "nb" ~ "Not_Ringed",
                                                  .$action == "ct" ~ "Caught???"),
                   ObservedSex = dplyr::case_when(.$sex %in% c(1, 4) ~ "M",
                                                  .$sex %in% c(2, 5) ~ "F"),
                   GeneticSex = dplyr::case_when(.$sex_g == 1 ~ "M",
                                                 .$sex_g == 2 ~ "F"),
-                  AgeObserved = 1,
+                  Age_observed = 1,
                   ExperimentID = dplyr::case_when(.$exp_p == "alimente" ~ "Supplemental feeding",
                                                   .$exp_p == "poussintron" ~ "Behavioural test",
                                                   .$exp_p == "poussintronfc" ~ "Behavioural test and heart rate",
@@ -289,14 +313,19 @@ create_capture_MON <- function(db, species_filter){
                   #Make CapturePopID and plot. Leave Release NA for now until we work out how to code these
                   CapturePopID = dplyr::case_when(.$lieu %in% c("cap", "mes", "pir", "tua") ~ "COR",
                                                   .$lieu == "rou" ~ "ROU"),
-                  CapturePlot = toupper(lieu),
+                  CapturePlot = lieu,
                   ReleasePopID = NA_character_, ReleasePlot = NA_character_,
-                  Tarsus = TarsusRight, OriginalTarsusMethod = dplyr::case_when(!is.na(.$TarsusRight) ~ "Alternative"),
-                  WingLength = NA_real_)
+                  Tarsus = as.numeric(tarsed), OriginalTarsusMethod = dplyr::case_when(!is.na(.$tarsed) ~ "Alternative"),
+                  WingLength = NA_real_) %>%
+    dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID,
+                  CapturePopID, CapturePlot, ReleasePopID, ReleasePlot, Mass, Tarsus, OriginalTarsusMethod,
+                  WingLength, Age_observed, ChickAge, ObservedSex, GeneticSex)
 
+  Capture_data <- dplyr::bind_rows(Full_capture_data, Chick_capture_data)
+
+  return(Capture_data)
 
 }
-
 
 #' Create brood data table for Montpellier
 #'
