@@ -277,7 +277,9 @@ create_capture_MON <- function(db, species_filter){
                                             .$etat_sante %in% c("M", "MMAN") ~ "Dead",
                                             .$etat_sante == "D" ~ "Chick dead",
                                             .$etat_sante == "E" ~ "Healthy",
-                                            .$etat_sante == "MAL" ~ "Sick"))
+                                            .$etat_sante == "MAL" ~ "Sick"),
+                  FoundDead = dplyr::case_when(.$etat_sante %in% c("M", "MMAN") ~ TRUE,
+                                               .$action == "mor" ~ TRUE))
 
 
   #Format the Capture data to match the standard protocol
@@ -293,9 +295,9 @@ create_capture_MON <- function(db, species_filter){
                                            .$lieu == "rou" ~ "ROU"),
                   CapturePlot = toupper(lieu), ReleasePopID = NA_character_, ReleasePlot = NA_character_,
                   Tarsus = as.numeric(tarsed), OriginalTarsusMethod = dplyr::case_when(!is.na(.$tarsed) ~ "Alternative")) %>%
-    dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID,
+    dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, FoundDead, ObserverID, LocationID,
                   CapturePopID, CapturePlot, ReleasePopID, ReleasePlot, Mass, Tarsus,
-                  OriginalTarsusMethod, WingLength, Age_observed, ObservedSex, GeneticSex)
+                  OriginalTarsusMethod, WingLength, Age_observed, ObservedSex, GeneticSex, ExperimentID)
 
 
 
@@ -342,9 +344,6 @@ create_capture_MON <- function(db, species_filter){
                                            }),
                   Mass = as.numeric(poids), ObserverID = obs,
                   ChickAge = as.integer(age_plume),
-                  ActionTaken = dplyr::case_when(.$action == "bcj" ~ "Ringed",
-                                                 .$action == "nb" ~ "Not_Ringed",
-                                                 .$action == "ct" ~ "Caught???"),
                   ObservedSex = dplyr::case_when(.$sex %in% c(1, 4) ~ "M",
                                                  .$sex %in% c(2, 5) ~ "F"),
                   GeneticSex = dplyr::case_when(.$sex_g == 1 ~ "M",
@@ -363,6 +362,7 @@ create_capture_MON <- function(db, species_filter){
                   Status = dplyr::case_when(.$etat_sante == "M" ~ "Dead",
                                             .$etat_sante == "D" ~ "Chick dead",
                                             .$etat_sante == "E" ~ "Healthy"),
+                  FoundDead = dplyr::case_when(.$etat_sante %in% c("M", "MMAN", "D") ~ TRUE),
                   #Make LocationID Plot_BoxNumber
                   LocationID = paste(lieu, nic, sep = "_"),
                   #Make CapturePopID and plot. Leave Release NA for now until we work out how to code these
@@ -370,13 +370,18 @@ create_capture_MON <- function(db, species_filter){
                                                   .$lieu == "rou" ~ "ROU"),
                   CapturePlot = lieu,
                   ReleasePopID = NA_character_, ReleasePlot = NA_character_,
-                  Tarsus = as.numeric(tarsed), OriginalTarsusMethod = dplyr::case_when(!is.na(.$tarsed) ~ "Alternative"),
+                  Tarsus = as.numeric(tarsed),
+                  OriginalTarsusMethod = dplyr::case_when(!is.na(.$tarsed) ~ "Alternative"),
                   WingLength = NA_real_) %>%
-    dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID,
+    dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, FoundDead, ObserverID, LocationID,
                   CapturePopID, CapturePlot, ReleasePopID, ReleasePlot, Mass, Tarsus, OriginalTarsusMethod,
-                  WingLength, Age_observed, ChickAge, ObservedSex, GeneticSex)
+                  WingLength, Age_observed, ChickAge, ObservedSex, GeneticSex, ExperimentID)
 
-  Capture_data <- dplyr::bind_rows(Full_capture_data, Chick_capture_data)
+  Capture_data <- dplyr::bind_rows(Full_capture_data, Chick_capture_data) %>%
+    calc_age(ID = IndvID, Age = Age_observed, Date = CaptureDate, Year = BreedingSeason) %>%
+    dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, FoundDead, ObserverID, LocationID,
+                  CapturePopID, CapturePlot, ReleasePopID, ReleasePlot, Mass, Tarsus, OriginalTarsusMethod,
+                  WingLength, Age_observed, Age_calculated, ChickAge, ExperimentID, ObservedSex, GeneticSex)
 
   return(Capture_data)
 
