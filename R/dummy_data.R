@@ -8,6 +8,7 @@
 #'   \item Row 2 represents a manipulated brood that violates \sQuote{Brood check 2: Comparing clutch and brood sizes} (see \code{\link{compare_clutch_brood}}).
 #'   \item Row 3 represents a non-manipulated brood that violates \sQuote{Brood check 3: Comparing brood sizes and fledgling numbers} (see \code{\link{compare_brood_fledglings}}).
 #'   \item Row 4 represents a manipulated brood that violates \sQuote{Brood check 3: Comparing brood sizes and fledgling numbers} (see \code{\link{compare_brood_fledglings}}).
+#'   \item Row 5 represents a brood that violates \sQuote{Brood check 4: Comparing laying and hatching dates} (see \code{\link{compare_laying_hatching}}).
 #' }
 #'
 #' \strong{Capture data}:
@@ -127,18 +128,18 @@ tibble::tibble(
 # Non-manipulated brood
 Brood_data %>%
   dplyr::mutate(
-    Row = 1,
-    ClutchSize = 7,
-    BroodSize = 8,
+    Row = as.integer(1),
+    ClutchSize = as.integer(7),
+    BroodSize = as.integer(8),
   ) ->
   Brood_data
 
 # Manipulated brood
 Brood_data %>%
   tibble::add_row(
-    Row = 2,
-    ClutchSize = 7,
-    BroodSize = 8,
+    Row = as.integer(2),
+    ClutchSize = as.integer(7),
+    BroodSize = as.integer(8),
     ExperimentID = "COHORT"
   ) ->
   Brood_data
@@ -149,9 +150,9 @@ Brood_data %>%
 # Non-manipulated brood
 Brood_data %>%
   tibble::add_row(
-    Row = 3,
-    BroodSize = 5,
-    NumberFledged = 6
+    Row = as.integer(3),
+    BroodSize = as.integer(5),
+    NumberFledged = as.integer(6)
   ) ->
   Brood_data
 
@@ -159,10 +160,30 @@ Brood_data %>%
 # Manipulated brood
 Brood_data %>%
   tibble::add_row(
-    Row = 4,
-    BroodSize = 5,
-    NumberFledged = 6,
+    Row = as.integer(4),
+    BroodSize = as.integer(5),
+    NumberFledged = as.integer(6),
     ExperimentID = "COHORT"
+  ) ->
+  Brood_data
+
+# Brood check 4: Comparing laying and hatching dates
+
+Brood_data %>%
+  tibble::add_row(
+    Row = as.integer(5),
+    LayingDate = as.Date(as.character("2019-04-04")),
+    HatchDate = as.Date("2019-04-01")
+  ) ->
+  Brood_data
+
+# Brood check 5: Comparing hatching and fledging dates
+
+Brood_data %>%
+  tibble::add_row(
+    Row = as.integer(6),
+    HatchDate = as.Date("2019-04-04"),
+    FledgeDate = as.Date("2019-04-01")
   ) ->
   Brood_data
 

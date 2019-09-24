@@ -51,17 +51,28 @@ brood_check <- function(Brood_data){
 
   check_list[4,2:3] <- compare_laying_hatching_output$check_list
 
+  # - Compare hatching and fledging dates
+  message("Brood check 5: Comparing hatching and fledging dates...")
+
+  compare_hatching_fledging_output <- compare_hatching_fledging(Brood_data)
+
+  check_list[5,2:3] <- compare_hatching_fledging_output$check_list
+
 
   return(list(CheckList = check_list,
               CheckNames = check_list$Check,
               Warnings = list(
                 Check1 = check_format_brood_output$warning_output,
                 Check2 = compare_clutch_brood_output$warning_output,
-                Check3 = compare_brood_fledglings_output$warning_output),
+                Check3 = compare_brood_fledglings_output$warning_output,
+                Check4 = compare_laying_hatching_output$warning_output,
+                Check5 = compare_hatching_fledging_output$warning_output),
               Errors = list(
                 Check1 = check_format_brood_output$error_output,
                 Check2 = compare_clutch_brood_output$error_output,
-                Check3 = compare_brood_fledglings_output$error_output)
+                Check3 = compare_brood_fledglings_output$error_output,
+                Check4 = compare_laying_hatching_output$error_output,
+                Check5 = compare_hatching_fledging_output$error_output)
               ))
 }
 
@@ -410,11 +421,11 @@ compare_hatching_fledging <- function(Brood_data){
   if(nrow(Brood_data_late) > 0) {
     err <- TRUE
 
-    error_output <- purrr::pmap(.l = list(Brood_data_late$BroodID,
+    error_output <- purrr::pmap(.l = list(Brood_data_late$Row,
                                           Brood_data_late$HatchDate,
                                           Brood_data_late$FledgeDate),
                                 .f = ~{
-                                  paste0("Brood_data record with BroodID ", ..1,
+                                  paste0("Record on row ", ..1,
                                          " has a later hatching date (", ..2,
                                          ") than fledging date (", ..3, ").")
                                 })
@@ -453,42 +464,86 @@ compare_hatching_fledging <- function(Brood_data){
 #'
 #' Check variable values against species-specific reference values in brood data. Implausible values will result in a warning. Impossible values will result in an error. Variables that are checked: LayingDate, ClutchSize, HatchDate, BroodSize, FledgeDate, NumberFledged, AvgEggMass, AvgChickMass, AvgTarsus.
 #'
-#' @param species Six-letter species ID to select species-specific reference values.
 #' @inheritParams checks_brood_params
 #'
 #' @return Check list, warning output, error output.
 #' @export
 
-check_values_brood <- function(Brood_data, species) {
+check_values_brood <- function(Brood_data) {
 
-  # Select species-specific reference values
-  ref <- brood_ref_values_list[[species]]
+  # Select reference values for species present in Brood_data
+  species <- unique(Brood_data$Species)
+  ref <- brood_ref_values_list[which(names(brood_ref_values_list) %in% species)]
 
-  # Select species in data
-  Brood_data <- Brood_data %>%
-    dplyr::filter(Species == species)
+  # Structure data in the same way as reference values: a list of species, where each species is a list of brood variables
+  variables <- c("ClutchSize", "BroodSize", "NumberFledged")
 
-  # Create list of variable-specific dataframes
-  Brood_list <- purrr::map2(.x = Brood_data[, c("ClutchSize", "BroodSize", "NumberFledged")],
-                            .y = ref,
-                            .f = ~{
-                              tibble::tibble(BroodID = Brood_data$BroodID,
-                                             Variable = names(.y)[3],
-                                             .x) %>%
-                                dplyr::filter(!is.na(.x)) %>% # Only non-NA's
-                                dplyr::mutate(Warning = ifelse(.x > as.numeric(.y[2,3]),
-                                                               TRUE, FALSE),
-                                              Error = ifelse(.x < as.numeric(.y[3,3]) | .x > as.numeric(.y[4,3]),
-                                                             TRUE, FALSE))
-                            })
+  Brood_data2 <- split(Brood_data[,c("Row", variables)], Brood_data$Species) # Split per species
+
+  Brood_data2 <- purrr::map2(.x = Brood_data2, # Split per variable
+                             .y = names(Brood_data2),
+                             .f = ~{
+                               data <- .x
+                               purrr::map(variables,
+                                          .f = ~{
+                                            data %>%
+                                              dplyr::select(Row, .x)
+                                          }) -> data2
+                               names(data2) <- variables
+                               return(data2)
+                             })
+
+  split(Brood_data[,c("Row", variables)], Brood_data$Species) %>%
+    purrr::imap(~ dplyr::mutate(., Species = .y))
+  # Now Brood_data2 and ref have the same structure
+  # Brood-specific warning and error checks
+  Brood_list <-  purrr::map2(.x = Brood_data2,
+                             .y = ref,
+                             .f = ~purrr::map2(.x, .y,
+                                               .f = ~{
+                                                 .x %>%
+                                                   dplyr::mutate(
+                                                     Value = dplyr::pull(.x[,2]),
+                                                     Variable = names(.x)[2],
+                                                     Warning = ifelse(.x[,2] > dplyr::pull(.y[2,3]) & .x[,2] <= dplyr::pull(.y[4,3]),
+                                                                      TRUE, FALSE),
+                                                     Error = ifelse(.x[,2] < dplyr::pull(.y[3,3]) | .x[,2] > dplyr::pull(.y[4,3]),
+                                                                    TRUE, FALSE)
+                                                   )
+                                               })
+  )
+
+  # Brood_list <- purrr::map2(.x = Brood_data[, c("ClutchSize", "BroodSize", "NumberFledged")],
+  #                           .y = ref,
+  #                           .f = ~{
+  #                             tibble::tibble(BroodID = Brood_data$BroodID,
+  #                                            Variable = names(.y)[3],
+  #                                            .x) %>%
+  #                               dplyr::filter(!is.na(.x)) %>% # Only non-NA's
+  #                               dplyr::mutate(Warning = ifelse(.x > as.numeric(.y[2,3]),
+  #                                                              TRUE, FALSE),
+  #                                             Error = ifelse(.x < as.numeric(.y[3,3]) | .x > as.numeric(.y[4,3]),
+  #                                                            TRUE, FALSE))
+  #                           })
 
   # Select records with errors (impossible values) from list
   Brood_err <- purrr::map(.x = Brood_list,
-                          .f = ~{
-                            .x %>%
-                              dplyr::filter(Error == TRUE)
-                          }) %>%
-    dplyr::bind_rows()
+                          .f = ~purrr::map(.x,
+                                           .f = ~{
+                                             .x %>%
+                                               dplyr::select(Row, Variable, Value, Error) %>%
+                                               dplyr::filter(Error == TRUE)
+                                           }) %>%
+                            dplyr::bind_rows()
+                ) %>%
+                 dplyr::bind_rows()
+
+  # Brood_err <- purrr::map(.x = Brood_list,
+  #                         .f = ~{
+  #                           .x %>%
+  #                             dplyr::filter(Error == TRUE)
+  #                         }) %>%
+  #   dplyr::bind_rows()
 
   err <- FALSE
   error_output <- NULL
@@ -496,11 +551,12 @@ check_values_brood <- function(Brood_data, species) {
   if(nrow(Brood_err) > 0) {
     err <- TRUE
 
-    error_output <- purrr::pmap(.l = list(Brood_err$BroodID,
+    error_output <- purrr::pmap(.l = list(Brood_err$Row,
                                           Brood_err$Variable,
-                                          Brood_err$.x),
+                                          Brood_err$Value),
                                 .f = ~{
-                                  paste0("Brood_data record with BroodID ", ..1,
+                                  paste0("Record on row ", ..1,
+                                         " (species: ", dplyr::pull(data[data$Row == ..1, "Species"]), ")",
                                          " has an impossible value in ", ..2,
                                          " (", ..3, ").")
                                 })
@@ -508,11 +564,23 @@ check_values_brood <- function(Brood_data, species) {
 
   # Select records with warnings (improbable values) from list
   Brood_war <- purrr::map(.x = Brood_list,
-                          .f = ~{
-                            .x %>%
-                              dplyr::filter(Warning == TRUE)
-                          }) %>%
+                          .f = ~purrr::map(.x,
+                                           .f = ~{
+                                             .x %>%
+                                               dplyr::select(Row, Variable, Value, Warning) %>%
+                                               dplyr::filter(Warning == TRUE)
+                                           }) %>%
+                            dplyr::bind_rows()
+  ) %>%
     dplyr::bind_rows()
+
+
+  # Brood_war <- purrr::map(.x = Brood_list,
+  #                         .f = ~{
+  #                           .x %>%
+  #                             dplyr::filter(Warning == TRUE)
+  #                         }) %>%
+  #   dplyr::bind_rows()
 
   war <- FALSE
   warning_output <- NULL
@@ -520,11 +588,13 @@ check_values_brood <- function(Brood_data, species) {
   if(nrow(Brood_war) > 0) {
     war <- TRUE
 
-    warning_output <- purrr::pmap(.l = list(Brood_war$BroodID,
+    warning_output <- purrr::pmap(.l = list(Brood_war$Row,
                                             Brood_war$Variable,
-                                            Brood_war$.x),
+                                            Brood_war$Value),
                                   .f = ~{
-                                    paste0("Brood_data record with BroodID ", ..1,
+
+                                    paste0("Record on row ", ..1,
+                                           " (species: ", dplyr::pull(data[data$Row == ..1, "Species"]), ")",
                                            " has an improbable value in ", ..2,
                                            " (", ..3, ").")
                                   })
