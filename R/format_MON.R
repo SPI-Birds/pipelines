@@ -216,7 +216,7 @@ create_capture_MON <- function(db, species_filter){
                   ActionTaken = dplyr::case_when(.$action == "bcj" ~ "Ringed",
                                                  .$action == "mor" ~ "Dead",
                                                  .$action == "nb" ~ "Not_Ringed",
-                                                 .$action == "ct" ~ "Caught???"),
+                                                 .$action == "ct" ~ "Caught (already ringed)"),
                   ObservedSex = dplyr::case_when(.$sex %in% c(1, 4) ~ "M",
                                                  .$sex %in% c(2, 5) ~ "F"),
                   GeneticSex = dplyr::case_when(.$sex_g == 1 ~ "M",
@@ -225,11 +225,49 @@ create_capture_MON <- function(db, species_filter){
                                                    .$fil == "1" ~ "Mist net",
                                                    .$fil == "2" ~ "Trap cage and caller",
                                                    .$fil == "3" ~ "Winter roost"),
-                  Age_observed = dplyr::case_when(.$age == "P0" ~ 1,
-                                                 .$age == "J0" ~ 3,
-                                                 .$age == "J1" ~ 5,
-                                                 .$age == "A0" ~ 4,
-                                                 .$age == "A1" ~ 6),
+                  Age_observed = purrr::pmap_int(.l = list(age),
+                                                 .f = ~{
+
+                                                   if(is.na(..1)){
+
+                                                     return(NA_integer_)
+
+                                                   } else {
+
+                                                     split_age <- strsplit(..1, split = "")
+
+                                                     letter <- split_age[[1]][1]
+                                                     number <- as.integer(split_age[[1]][2])
+
+                                                     if(letter == "P"){
+
+                                                       if(number == 0L){
+
+                                                         return(1L)
+
+                                                       } else {
+
+                                                         return(3L + 2L*number)
+
+                                                       }
+
+                                                     } else if(letter == "J"){
+
+                                                       return(3L + 2L*number)
+
+                                                     } else if(letter == "A"){
+
+                                                       return(4L + 2L*number)
+
+                                                     } else if(letter == "I"){
+
+                                                       return(4L + 2L*(number - 1L))
+
+                                                     }
+
+                                                   }
+
+                                                 }),
                   ExperimentID = dplyr::case_when(.$exp_ad == "FMR" ~ "Metabolic measurement",
                                                   .$exp_ad == "VACCIN" ~ "Vaccinated",
                                                   .$exp_ad == "OF" ~ "Openfield??",
@@ -311,7 +349,7 @@ create_capture_MON <- function(db, species_filter){
                                                  .$sex %in% c(2, 5) ~ "F"),
                   GeneticSex = dplyr::case_when(.$sex_g == 1 ~ "M",
                                                 .$sex_g == 2 ~ "F"),
-                  Age_observed = 1,
+                  Age_observed = 1L,
                   ExperimentID = dplyr::case_when(.$exp_p == "alimente" ~ "Supplemental feeding",
                                                   .$exp_p == "poussintron" ~ "Behavioural test",
                                                   .$exp_p == "poussintronfc" ~ "Behavioural test and heart rate",
