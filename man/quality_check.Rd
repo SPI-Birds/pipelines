@@ -4,13 +4,11 @@
 \alias{quality_check}
 \title{A function to perform a quality check on pipeline outputs}
 \usage{
-quality_check(R_data, species, output_format = "both")
+quality_check(R_data, output_format = "both")
 }
 \arguments{
 \item{R_data}{Output of pipeline as an R object. Generated using
-'output_type = R' in run_pipelines.}
-
-\item{species}{Species on which to test (6 letter species code)}
+'output_type = R' in \code{\link{run_pipelines}}.}
 
 \item{output_format}{Format of report: "html", "pdf", or "both" (default).}
 }
