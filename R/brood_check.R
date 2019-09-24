@@ -58,6 +58,13 @@ brood_check <- function(Brood_data){
 
   check_list[5,2:3] <- compare_hatching_fledging_output$check_list
 
+  # - Check brood variable values against reference values
+  message("Brood check 6: Checking brood variable values against reference values...")
+
+  check_values_brood_output <- check_values_brood(Brood_data)
+
+  check_list[6,2:3] <- check_values_brood_output$check_list
+
 
   return(list(CheckList = check_list,
               CheckNames = check_list$Check,
@@ -66,13 +73,15 @@ brood_check <- function(Brood_data){
                 Check2 = compare_clutch_brood_output$warning_output,
                 Check3 = compare_brood_fledglings_output$warning_output,
                 Check4 = compare_laying_hatching_output$warning_output,
-                Check5 = compare_hatching_fledging_output$warning_output),
+                Check5 = compare_hatching_fledging_output$warning_output,
+                Check6 = check_values_brood_output$warning_output),
               Errors = list(
                 Check1 = check_format_brood_output$error_output,
                 Check2 = compare_clutch_brood_output$error_output,
                 Check3 = compare_brood_fledglings_output$error_output,
                 Check4 = compare_laying_hatching_output$error_output,
-                Check5 = compare_hatching_fledging_output$error_output)
+                Check5 = compare_hatching_fledging_output$error_output,
+                Check6 = check_values_brood_output$error_output)
               ))
 }
 
@@ -471,11 +480,11 @@ compare_hatching_fledging <- function(Brood_data){
 
 check_values_brood <- function(Brood_data) {
 
-  # Select reference values for species present in Brood_data
+  # Select reference values for species present in Brood data
   species <- unique(Brood_data$Species)
   ref <- brood_ref_values_list[which(names(brood_ref_values_list) %in% species)]
 
-  # Structure data in the same way as reference values: a list of species, where each species is a list of brood variables
+  # Structure Brood data in the same way as reference values: a list of species;  each species is a list of brood variables
   variables <- c("ClutchSize", "BroodSize", "NumberFledged")
 
   Brood_data2 <- split(Brood_data[,c("Row", variables)], Brood_data$Species) # Split per species
@@ -493,9 +502,6 @@ check_values_brood <- function(Brood_data) {
                                return(data2)
                              })
 
-  split(Brood_data[,c("Row", variables)], Brood_data$Species) %>%
-    purrr::imap(~ dplyr::mutate(., Species = .y))
-  # Now Brood_data2 and ref have the same structure
   # Brood-specific warning and error checks
   Brood_list <-  purrr::map2(.x = Brood_data2,
                              .y = ref,
