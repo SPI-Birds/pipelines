@@ -1,14 +1,20 @@
 #' A wrapper function to perform quality checks on brood data
 #'
-#' A wrapper that runs all single checks related to \sQuote{Brood_data}.
+#' A wrapper that runs all single checks related to `Brood_data`.
+#'
+#' \strong{Brood check 1}: Check if the formats of each column in `Brood_data` match with the standard format using \code{\link{check_format_brood}}.
+#' \strong{Brood check 2}: Compare clutch size and brood size per brood using \code{\link{compare_clutch_brood}}.
+#' \strong{Brood check 3}: Compare brood size and fledgling number per brood using \code{\link{compare_brood_fledglings}}.
 #'
 #' @inheritParams checks_brood_params
+#'
+#' @return A list of 3 items: a summary data frame of all checks, a record-by-record list of warnings, and a record-by-record list of errors.
 #'
 #' @export
 
 brood_check <- function(Brood_data){
 
-  # Create check list with - a summary of warnings and errors per test
+  # Create check list with a summary of warnings and errors per check
   check_list <- tibble::tibble(Check = c("Brood data format", "Clutch and brood sizes",
                                          "Brood sizes and fledgling numbers",
                                          "Laying and hatching dates", "Hatching and fledging dates",
@@ -31,12 +37,32 @@ brood_check <- function(Brood_data){
 
   check_list[2,2:3] <- compare_clutch_brood_output$check_list
 
-  # - Compare brood sizes and fledglings numbers
+  # - Compare brood sizes and fledgling numbers
   message("Brood check 3: Comparing brood sizes and fledgling numbers...")
 
   compare_brood_fledglings_output <- compare_brood_fledglings(Brood_data)
 
   check_list[3,2:3] <- compare_brood_fledglings_output$check_list
+
+  # - Compare laying and hatching dates
+  message("Brood check 4: Comparing laying and hatching dates...")
+
+  compare_laying_hatching_output <- compare_laying_hatching(Brood_data)
+
+  check_list[4,2:3] <- compare_laying_hatching_output$check_list
+
+
+  return(list(CheckList = check_list,
+              CheckNames = check_list$Check,
+              Warnings = list(
+                Check1 = check_format_brood_output$warning_output,
+                Check2 = compare_clutch_brood_output$warning_output,
+                Check3 = compare_brood_fledglings_output$warning_output),
+              Errors = list(
+                Check1 = check_format_brood_output$error_output,
+                Check2 = compare_clutch_brood_output$error_output,
+                Check3 = compare_brood_fledglings_output$error_output)
+              ))
 }
 
 #' Check format of brood data
@@ -145,8 +171,8 @@ check_format_brood <- function(Brood_data){
                                Error = err)
 
   return(list(check_list = check_list,
-              warning_output = warning_output,
-              error_output = error_output))
+              warning_output = unlist(warning_output),
+              error_output = unlist(error_output)))
 
   #Satisfy RCMD Checks
   Format <- Format_standard <- NULL
@@ -211,8 +237,8 @@ compare_clutch_brood <- function(Brood_data){
                                Error = err)
 
   return(list(check_list = check_list,
-              warning_output = warning_output,
-              error_output = error_output))
+              warning_output = unlist(warning_output),
+              error_output = unlist(error_output)))
 
   #Satisfy RCMD Checks
   ExperimentID <- ClutchSize <- BroodSize <- NULL
@@ -277,8 +303,8 @@ compare_brood_fledglings <- function(Brood_data){
                                Error = err)
 
   return(list(check_list = check_list,
-              warning_output = warning_output,
-              error_output = error_output))
+              warning_output = unlist(warning_output),
+              error_output = unlist(error_output)))
 
   #Satisfy RCMD Checks
   ExperimentID <- BroodSize <- NumberFledged <- NULL
@@ -316,11 +342,11 @@ compare_laying_hatching <- function(Brood_data){
   if(nrow(Brood_data_late) > 0) {
     err <- TRUE
 
-    error_output <- purrr::pmap(.l = list(Brood_data_late$BroodID,
+    error_output <- purrr::pmap(.l = list(Brood_data_late$Row,
                                           Brood_data_late$LayingDate,
                                           Brood_data_late$HatchDate),
                                 .f = ~{
-                                  paste0("Record with BroodID ", ..1,
+                                  paste0("Record on row ", ..1,
                                          " has a later laying date (", ..2,
                                          ") than hatching date (", ..3, ").")
                                 })
@@ -346,8 +372,8 @@ compare_laying_hatching <- function(Brood_data){
                                Error = err)
 
   return(list(check_list = check_list,
-              warning_output = warning_output,
-              error_output = error_output))
+              warning_output = unlist(warning_output),
+              error_output = unlist(error_output)))
 
   #Satisfy RCMD Checks
   LayingDate <- HatchDate <- NULL
@@ -414,8 +440,8 @@ compare_hatching_fledging <- function(Brood_data){
                                Error = err)
 
   return(list(check_list = check_list,
-              warning_output = warning_output,
-              error_output = error_output))
+              warning_output = unlist(warning_output),
+              error_output = unlist(error_output)))
 
   #Satisfy RCMD Checks
   HatchDate <- FledgeDate <- NULL
@@ -508,8 +534,8 @@ check_values_brood <- function(Brood_data, species) {
                                Error = err)
 
   return(list(check_list = check_list,
-              warning_output = warning_output,
-              error_output = error_output))
+              warning_output = unlist(warning_output),
+              error_output = unlist(error_output)))
 
   #Satisfy RCMD Checks
   brood_ref_values_list <- Species <- NULL

@@ -1,5 +1,9 @@
 #' A wrapper function to perform a quality check on pipeline outputs
 #'
+#' A wrapper function that performs a quality check and produces a report.
+#'
+#' Combines the four data frame-specific wrappers: \code{\link{brood_check}}, \code{\link{capture_check}}, \code{\link{individual_check}} and \code{\link{location_check}}
+#'
 #' @param R_data Output of pipeline as an R object. Generated using
 #' 'output_type = R' in \code{\link{run_pipelines}}.
 #' @param output_format Format of report: "html", "pdf", or "both" (default).
@@ -22,95 +26,108 @@ quality_check <- function(R_data,
   start_time <- Sys.time()
 
   # Subset each item
-  Individual_data <- R_data$Individual_data
   Brood_data <- R_data$Brood_data
   Capture_data <- R_data$Capture_data
+  Individual_data <- R_data$Individual_data
   Location_data <- R_data$Location_data
 
   # Unique PopIDs and Species
   pop <- unique(R_data$Brood_data$PopID)
   species <- unique(R_data$Brood_data$Species)
 
+  # Run checks
+  Brood_checks <- brood_check(Brood_data)
+  Capture_checks <- capture_check(Capture_data)
+  Individual_checks <- individual_check(Individual_data)
+  Location_checks <- location_check(Location_data)
+
+  # Combine check lists
+  check_list <- dplyr::bind_rows(Brood_checks$CheckList,
+                                 Capture_checks$CheckList,
+                                 Individual_checks$CheckList,
+                                 Location_checks$CheckList)
+
+
   # Create check list with - a summary of warnings and errors per test
-  check_list <- tibble::tibble(Check = c("Individual data format", "Brood data format",
-                                         "Capture data format", "Location data format",
-                                         "Clutch and brood sizes", "Brood sizes and fledgling numbers",
-                                         "Laying and hatching dates", "Hatching and fledging dates",
-                                         "Improbable and impossible values brood data",
-                                         "Improbable and impossible values capture data"),
-                               Warning = NA,
-                               Error = NA)
-
-  # Checks
-  # - Check format individual data
-  message("Check 1: Checking format of individual data...")
-
-  check_format_individual_output <- check_format_individual(Individual_data)
-
-  check_list[1,2:3] <- check_format_individual_output$check_list
-
-  # - Check format brood data
-  message("Check 2: Checking format of brood data...")
-
-  check_format_brood_output <- check_format_brood(Brood_data)
-
-  check_list[2,2:3] <- check_format_brood_output$check_list
-
-  # - Check format capture data
-  message("Check 3: Checking format of capture data...")
-
-  check_format_capture_output <- check_format_capture(Capture_data)
-
-  check_list[3,2:3] <- check_format_capture_output$check_list
-
-  # - Check format location data
-  message("Check 4: Checking format of location data...")
-
-  check_format_location_output <- check_format_location(Location_data)
-
-  check_list[4,2:3] <- check_format_location_output$check_list
-
-  # - Compare clutch and brood sizes
-  message("Check 5: Comparing clutch and brood sizes...")
-
-  compare_clutch_brood_output <- compare_clutch_brood(Brood_data)
-
-  check_list[5,2:3] <- compare_clutch_brood_output$check_list
-
-  # - Compare brood sizes and fledglings numbers
-  message("Check 6: Comparing brood sizes and fledgling numbers...")
-
-  compare_brood_fledglings_output <- compare_brood_fledglings(Brood_data)
-
-  check_list[6,2:3] <- compare_brood_fledglings_output$check_list
-
-  # - Compare laying and hatching dates
-  message("Check 7: Comparing laying and hatching dates...")
-
-  compare_laying_hatching_output <- compare_laying_hatching(Brood_data)
-
-  check_list[7,2:3] <- compare_laying_hatching_output$check_list
-
-  # - Compare hatching and fledging dates
-  message("Check 8: Comparing hatching and fledging dates...")
-
-  compare_hatching_fledging_output <- compare_hatching_fledging(Brood_data)
-
-  check_list[8,2:3] <- compare_hatching_fledging_output$check_list
-
-  # - Check brood variable values against reference values
-  message("Check 9: Checking brood variable values against reference values...")
-
-  check_values_brood_output <- check_values_brood(Brood_data, species)
-
-  check_list[9,2:3] <- check_values_brood_output$check_list
-
-  # - Check capture variable values against reference values
-  message("Check 10: Checking capture variable values against reference values...")
-
-  check_values_capture_output <- check_values_capture(Capture_data, species)
-
-  check_list[10,2:3] <- check_values_capture_output$check_list
+  # check_list <- tibble::tibble(Check = c("Individual data format", "Brood data format",
+  #                                        "Capture data format", "Location data format",
+  #                                        "Clutch and brood sizes", "Brood sizes and fledgling numbers",
+  #                                        "Laying and hatching dates", "Hatching and fledging dates",
+  #                                        "Improbable and impossible values brood data",
+  #                                        "Improbable and impossible values capture data"),
+  #                              Warning = NA,
+  #                              Error = NA)
+  #
+  # # Checks
+  # # - Check format individual data
+  # message("Check 1: Checking format of individual data...")
+  #
+  # check_format_individual_output <- check_format_individual(Individual_data)
+  #
+  # check_list[1,2:3] <- check_format_individual_output$check_list
+  #
+  # # - Check format brood data
+  # message("Check 2: Checking format of brood data...")
+  #
+  # check_format_brood_output <- check_format_brood(Brood_data)
+  #
+  # check_list[2,2:3] <- check_format_brood_output$check_list
+  #
+  # # - Check format capture data
+  # message("Check 3: Checking format of capture data...")
+  #
+  # check_format_capture_output <- check_format_capture(Capture_data)
+  #
+  # check_list[3,2:3] <- check_format_capture_output$check_list
+  #
+  # # - Check format location data
+  # message("Check 4: Checking format of location data...")
+  #
+  # check_format_location_output <- check_format_location(Location_data)
+  #
+  # check_list[4,2:3] <- check_format_location_output$check_list
+  #
+  # # - Compare clutch and brood sizes
+  # message("Check 5: Comparing clutch and brood sizes...")
+  #
+  # compare_clutch_brood_output <- compare_clutch_brood(Brood_data)
+  #
+  # check_list[5,2:3] <- compare_clutch_brood_output$check_list
+  #
+  # # - Compare brood sizes and fledglings numbers
+  # message("Check 6: Comparing brood sizes and fledgling numbers...")
+  #
+  # compare_brood_fledglings_output <- compare_brood_fledglings(Brood_data)
+  #
+  # check_list[6,2:3] <- compare_brood_fledglings_output$check_list
+  #
+  # # - Compare laying and hatching dates
+  # message("Check 7: Comparing laying and hatching dates...")
+  #
+  # compare_laying_hatching_output <- compare_laying_hatching(Brood_data)
+  #
+  # check_list[7,2:3] <- compare_laying_hatching_output$check_list
+  #
+  # # - Compare hatching and fledging dates
+  # message("Check 8: Comparing hatching and fledging dates...")
+  #
+  # compare_hatching_fledging_output <- compare_hatching_fledging(Brood_data)
+  #
+  # check_list[8,2:3] <- compare_hatching_fledging_output$check_list
+  #
+  # # - Check brood variable values against reference values
+  # message("Check 9: Checking brood variable values against reference values...")
+  #
+  # check_values_brood_output <- check_values_brood(Brood_data, species)
+  #
+  # check_list[9,2:3] <- check_values_brood_output$check_list
+  #
+  # # - Check capture variable values against reference values
+  # message("Check 10: Checking capture variable values against reference values...")
+  #
+  # check_values_capture_output <- check_values_capture(Capture_data, species)
+  #
+  # check_list[10,2:3] <- check_values_capture_output$check_list
 
 
   # Check messages
@@ -129,574 +146,131 @@ quality_check <- function(R_data,
   title <- paste0("Quality check report for ", Species_codes[Species_codes$Code == species, "CommonName"],
                   " in ", pop_names[pop_names$code == pop, "name"])
 
-  mark_output <- c('---',
-                   'title: "`r title`"',
-                   'date: "`r Sys.Date()`"',
-                   'geometry: margin=0.5in',
-                   'output:
+  c('---',
+    'title: "`r title`"',
+    'date: "`r Sys.Date()`"',
+    'geometry: margin=0.5in',
+    'output:
                       pdf_document:
                         toc: true
                       html_document:
                         toc: true',
-                   '---',
-                   '',
-                   '\\newpage',
-                   '# Summary',
-                   '',
-                   'All checks performed in `r round(time, 2)` seconds.',
-                   '',
-                   '`r checks_warnings` out of `r nrow(check_list)` checks resulted in warnings.',
-                   '',
-                   '`r checks_errors` out of `r nrow(check_list)` checks resulted in errors.',
-                   '',
-                   '# Warnings',
-                   '',
-                   'Check 1: Individual data format',
-                   '```{r echo=FALSE}',
-                   'cat(unlist(check_format_individual_output$warning_output), sep="\n", "\n")',
-                   '```',
-                   '',
-                   'Check 2: Brood data format',
-                   '```{r echo=FALSE}',
-                   'cat(unlist(check_format_brood_output$warning_output), sep="\n", "\n")',
-                   '```',
-                   '',
-                   'Check 3: Capture data format',
-                   '```{r echo=FALSE}',
-                   'cat(unlist(check_format_capture_output$warning_output), sep="\n", "\n")',
-                   '```',
-                   '',
-                   'Check 4: Location data format',
-                   '```{r echo=FALSE}',
-                   'cat(unlist(check_format_location_output$warning_output), sep="\n", "\n")',
-                   '```',
-                   '',
-                   'Check 5: Clutch and brood sizes',
-                   '```{r echo=FALSE}',
-                   'cat(unlist(compare_clutch_brood_output$warning_output), sep="\n", "\n")',
-                   '```',
-                   '',
-                   'Check 6: Brood sizes and fledgling numbers',
-                   '```{r echo=FALSE}',
-                   'cat(unlist(compare_brood_fledglings_output$warning_output), sep="\n", "\n")',
-                   '```',
-                   '',
-                   'Check 7: Laying and hatching dates',
-                   '```{r echo=FALSE}',
-                   'cat(unlist(compare_laying_hatching_output$warning_output), sep="\n", "\n")',
-                   '```',
-                   '',
-                   'Check 8: Hatching and fledging dates',
-                   '```{r echo=FALSE}',
-                   'cat(unlist(compare_hatching_fledging_output$warning_output), sep="\n", "\n")',
-                   '```',
-                   '',
-                   'Check 9: Improbable and impossible values in brood data',
-                   '```{r echo=FALSE}',
-                   'cat(unlist(check_values_brood_output$warning_output), sep="\n", "\n")',
-                   '```',
-                   '',
-                   'Check 10: Improbable and impossible values in capture data',
-                   '```{r echo=FALSE}',
-                   'cat(unlist(check_values_capture_output$warning_output), sep="\n", "\n")',
-                   '```',
-                   '',
-                   '\\newpage',
-                   '# Errors',
-                   '',
-                   'Check 1: Individual data format',
-                   '```{r echo=FALSE}',
-                   'cat(unlist(check_format_individual_output$error_output), sep="\n", "\n")',
-                   '```',
-                   '',
-                   'Check 2: Brood data format',
-                   '```{r echo=FALSE}',
-                   'cat(unlist(check_format_brood_output$error_output), sep="\n", "\n")',
-                   '```',
-                   '',
-                   'Check 3: Capture data format',
-                   '```{r echo=FALSE}',
-                   'cat(unlist(check_format_capture_output$error_output), sep="\n", "\n")',
-                   '```',
-                   '',
-                   'Check 4: Location data format',
-                   '```{r echo=FALSE}',
-                   'cat(unlist(check_format_location_output$error_output), sep="\n", "\n")',
-                   '```',
-                   '',
-                   'Check 5: Clutch and brood sizes',
-                   '```{r echo=FALSE}',
-                   'cat(unlist(compare_clutch_brood_output$error_output), sep="\n", "\n")',
-                   '```',
-                   '',
-                   'Check 6: Brood sizes and fledgling numbers',
-                   '```{r echo=FALSE}',
-                   'cat(unlist(compare_brood_fledglings_output$error_output), sep="\n", "\n")',
-                   '```',
-                   '',
-                   'Check 7: Laying and hatching dates',
-                   '```{r echo=FALSE}',
-                   'cat(unlist(compare_laying_hatching_output$error_output), sep="\n", "\n")',
-                   '```',
-                   '',
-                   'Check 8: Hatching and fledging dates',
-                   '```{r echo=FALSE}',
-                   'cat(unlist(compare_hatching_fledging_output$error_output), sep="\n", "\n")',
-                   '```',
-                   '',
-                   'Check 9: Improbable and impossible values in brood data',
-                   '```{r echo=FALSE}',
-                   'cat(unlist(check_values_brood_output$error_output), sep="\n", "\n")',
-                   '```',
-                   '',
-                   'Check 10: Improbable and impossible values in capture data',
-                   '```{r echo=FALSE}',
-                   'cat(unlist(check_values_capture_output$error_output), sep="\n", "\n")',
-                   '```')
+    '---',
+    '',
+    '\\newpage',
+    '# Summary',
+    '',
+    'All checks performed in `r round(time, 2)` seconds.',
+    '',
+    '`r checks_warnings` out of `r nrow(check_list)` checks resulted in warnings.',
+    '',
+    '`r checks_errors` out of `r nrow(check_list)` checks resulted in errors.',
+    '',
+    '# Warnings',
+    '',
+    '## Brood data',
+    '',
+    '```{r echo=FALSE}',
+    'purrr::pwalk(.l = list(Brood_checks$Warnings,
+                            1:length(Brood_checks$Warnings),
+                            Brood_checks$CheckNames),
+                  .f = ~{
+                    cat(paste0("Check ", ..2, ": ", ..3), "\n")
+                    cat(..1, sep="\n", "\n")
+                  })',
+    '```',
+    '',
+    '## Capture data',
+    '',
+    '```{r echo=FALSE}',
+    'purrr::pwalk(.l = list(Capture_checks$Warnings,
+                            1:length(Capture_checks$Warnings),
+                            Capture_checks$CheckNames),
+                  .f = ~{
+                    cat(paste0("Check ", ..2, ": ", ..3), "\n")
+                    cat(..1, sep="\n", "\n")
+                  })',
+    '```',
+    '',
+    '## Individual data',
+    '',
+    '```{r echo=FALSE}',
+    'purrr::pwalk(.l = list(Individual_checks$Warnings,
+                            1:length(Individual_checks$Warnings),
+                            Individual_checks$CheckNames),
+                  .f = ~{
+                    cat(paste0("Check ", ..2, ": ", ..3), "\n")
+                    cat(..1, sep="\n", "\n")
+                  })',
+    '```',
+    '',
+    '## Location data',
+    '',
+    '```{r echo=FALSE}',
+    'purrr::pwalk(.l = list(Location_checks$Warnings,
+                            1:length(Location_checks$Warnings),
+                            Location_checks$CheckNames),
+                  .f = ~{
+                    cat(paste0("Check ", ..2, ": ", ..3), "\n")
+                    cat(..1, sep="\n", "\n")
+                  })',
+    '```',
+    '',
+    '\\newpage',
+    '# Errors',
+    '',
+    '## Brood data',
+    '',
+    '```{r echo=FALSE}',
+    'purrr::pwalk(.l = list(Brood_checks$Errors,
+                            1:length(Brood_checks$Errors),
+                            Brood_checks$CheckNames),
+                  .f = ~{
+                    cat(paste0("Check ", ..2, ": ", ..3), "\n")
+                    cat(..1, sep="\n", "\n")
+                  })',
+    '```',
+    '',
+    '## Capture data',
+    '',
+    '```{r echo=FALSE}',
+    'purrr::pwalk(.l = list(Capture_checks$Errors,
+                            1:length(Capture_checks$Errors),
+                            Capture_checks$CheckNames),
+                  .f = ~{
+                    cat(paste0("Check ", ..2, ": ", ..3), "\n")
+                    cat(..1, sep="\n", "\n")
+                  })',
+    '```',
+    '',
+    '## Individual data',
+    '',
+    '```{r echo=FALSE}',
+    'purrr::pwalk(.l = list(Individual_checks$Errors,
+                            1:length(Individual_checks$Errors),
+                            Individual_checks$CheckNames),
+                  .f = ~{
+                    cat(paste0("Check ", ..2, ": ", ..3), "\n")
+                    cat(..1, sep="\n", "\n")
+                  })',
+    '```',
+    '',
+    '## Location data',
+    '',
+    '```{r echo=FALSE}',
+    'purrr::pwalk(.l = list(Location_checks$Errors,
+                            1:length(Location_checks$Errors),
+                            Location_checks$CheckNames),
+                  .f = ~{
+                    cat(paste0("Check ", ..2, ": ", ..3), "\n")
+                    cat(..1, sep="\n", "\n")
+                  })',
+    '```') -> mark_output
 
   knitr::knit(text = mark_output, output = "output-report.md")
 
   if(output_format == "html") rmarkdown::render("output-report.md", output_format = "html_document")
   if(output_format == "pdf") rmarkdown::render("output-report.md", output_format = "pdf_document")
   if(output_format == "both") rmarkdown::render("output-report.md", output_format = "all")
-
-}
-
-
-#' Check format of individual data
-#'
-#' Check if the formats of each column in the individual data match with the standard format
-#' @inheritParams checks_individual_params
-#'
-#' @return Check list, warning output, error output.
-#' @export
-
-check_format_individual <- function(Individual_data){
-
-  ## Data frame with column names and formats according to the standard protocol
-  Individual_data_standard <- tibble::tibble(Variable = c("IndvID", "Species", "PopID",
-                                                          "BroodIDLaid", "BroodIDFledged", "RingSeason",
-                                                          "RingAge", "Sex"),
-                                             Format_standard = c("character", "character", "character",
-                                                                 "character", "character", "integer",
-                                                                 "character", "character"))
-
-  ## Data frame with column names and formats from Individual data
-  Individual_data_col <- tibble::tibble(Variable = names(Individual_data),
-                                        Format = purrr::pmap_chr(.l = list(Individual_data), .f = class))
-
-  ## Mismatches between Individual data and standard protocol
-  ## Column format "logical" refers to unmeasured/undetermined variables (NA)
-  Individual_data_mismatch <- dplyr::left_join(Individual_data_standard, Individual_data_col, by="Variable") %>%
-    filter(Format != "logical" & Format_standard != Format)
-
-  err <- FALSE
-  error_output <- NULL
-
-  if(nrow(Individual_data_mismatch) > 0) {
-    err <- TRUE
-
-    error_output <- purrr::map2(.x = Individual_data_mismatch$Variable,
-                                .y = Individual_data_mismatch$Format_standard,
-                                .f = ~{
-                                  paste0("The format of ", .x, " in Individual_data is not ", .y, ".")
-                                })
-  }
-
-  ## Missing columns
-  # Individual_data_missing <- dplyr::left_join(Individual_data_standard, Individual_data_col, by="Variable") %>%
-  #   filter(Format == "logical")
-  #
-  # war <- FALSE
-  # warning_output <- NULL
-  #
-  # if(nrow(Individual_data_missing) > 0) {
-  #   war <- TRUE
-  #
-  #   warning_output <- purrr::map(.x = Individual_data_missing$Variable,
-  #                                .f = ~{
-  #                                  paste0(.x, " in Individual_data is missing, unmeasured or undetermined (NA).")
-  #                                })
-  # }
-
-  #Test for empty columns by looking at uniques, rather than using data type
-  warning_output <- purrr::pmap(.l = list(as.list(Individual_data), colnames(Individual_data)),
-                                .f = ~{
-
-                                  if(all(is.na(unique(..1)))){
-
-                                    return(paste0(..2, " in Individual_data is missing, unmeasured or undetermined (NA)."))
-
-                                  } else {
-
-                                    return()
-
-                                  }
-
-                                })
-
-
-
-  #Remove all cases that return NULL
-  #Assigning NULL (rather than returning NULL in function) removes the list item
-  warning_output[sapply(warning_output, is.null)] <- NULL
-
-  if(length(warning_output) > 0){
-
-    war <- TRUE
-
-  } else {
-
-    war <- FALSE
-
-  }
-
-  check_list <- tibble::tibble(Warning = war,
-                               Error = err)
-
-  return(list(check_list = check_list,
-              warning_output = warning_output,
-              error_output = error_output))
-
-  #Satisfy RCMD Checks
-  Format <- Format_standard <- NULL
-
-}
-
-#' Check format of capture data
-#'
-#' Check if the formats of each column in the capture data match with the standard format
-#' @inheritParams checks_capture_params
-#'
-#' @return Check list, warning output, error output.
-#' @export
-
-check_format_capture <- function(Capture_data){
-
-  ## Data frame with column names and formats according to the standard protocol
-  Capture_data_standard <- tibble::tibble(Variable = c("IndvID", "Species", "BreedingSeason",
-                                                       "CaptureDate", "CaptureTime", "ObserverID",
-                                                       "LocationID", "CapturePopID", "CapturePlot",
-                                                       "ReleasePopID", "ReleasePlot",
-                                                       "Mass", "Tarsus", "OriginalTarsusMethod",
-                                                       "WingLength", "Age_obsverved", "Age_calculated", "ChickAge"),
-                                          Format_standard = c("character", "character", "integer",
-                                                              "Date", "character", "character",
-                                                              "character", "character", "character",
-                                                              "character", "character",
-                                                              "numeric", "numeric", "character", "numeric",
-                                                              "integer", "integer", "integer"))
-
-  ## Data frame with column names and formats from Capture data
-  Capture_data_col <- tibble::tibble(Variable = names(Capture_data),
-                                     Format = unlist(purrr::pmap(list(Capture_data), class)))
-
-  ## Mismatches between Capture data and standard protocol
-  ## Column format "logical" refers to unmeasured/undetermined variables (NA)
-  Capture_data_mismatch <- dplyr::left_join(Capture_data_standard, Capture_data_col, by="Variable") %>%
-    filter(Format != "logical" & Format_standard != Format)
-
-  err <- FALSE
-  error_output <- NULL
-
-  if(nrow(Capture_data_mismatch) > 0) {
-    err <- TRUE
-
-    error_output <- purrr::map2(.x = Capture_data_mismatch$Variable,
-                                .y = Capture_data_mismatch$Format_standard,
-                                .f = ~{
-                                  paste0("The format of ", .x, " in Capture_data is not ", .y, ".")
-                                })
-  }
-
-  ## Missing columns
-  # Capture_data_missing <- dplyr::left_join(Capture_data_standard, Capture_data_col, by="Variable") %>%
-  #   filter(Format == "logical")
-  #
-  # war <- FALSE
-  # warning_output <- NULL
-  #
-  # if(nrow(Capture_data_missing) > 0) {
-  #   war <- TRUE
-  #
-  #   warning_output <- purrr::map(.x = Capture_data_missing$Variable,
-  #                                .f = ~{
-  #                                  paste0(.x, " in Capture_data is missing, unmeasured or undetermined (NA).")
-  #                                })
-  # }
-
-  #Test for empty columns by looking at uniques, rather than using data type
-  warning_output <- purrr::pmap(.l = list(as.list(Capture_data), colnames(Capture_data)),
-                                .f = ~{
-
-                                  if(all(is.na(unique(..1)))){
-
-                                    return(paste0(..2, " in Capture_data is missing, unmeasured or undetermined (NA)."))
-
-                                  } else {
-
-                                    return()
-
-                                  }
-
-                                })
-
-
-
-  #Remove all cases that return NULL
-  #Assigning NULL (rather than returning NULL in function) removes the list item
-  warning_output[sapply(warning_output, is.null)] <- NULL
-
-  if(length(warning_output) > 0){
-
-    war <- TRUE
-
-  } else {
-
-    war <- FALSE
-
-  }
-
-  check_list <- tibble::tibble(Warning = war,
-                               Error = err)
-
-  return(list(check_list = check_list,
-              warning_output = warning_output,
-              error_output = error_output))
-
-  #Satisfy RCMD Checks
-  Format <- Format_standard <- NULL
-
-}
-
-#' Check format of location data
-#'
-#' Check if the formats of each column in the location data match with the standard format
-#' @inheritParams checks_location_params
-#'
-#' @return Check list, warning output, error output.
-#' @export
-
-check_format_location <- function(Location_data){
-
-  ## Data frame with column names and formats according to the standard protocol
-  Location_data_standard <- tibble::tibble(Variable = c("LocationID", "NestboxID", "LocationType",
-                                                        "PopID", "Latitude", "Longitude",
-                                                        "StartSeason", "EndSeason", "Habitat"),
-                                           Format_standard = c("character", "character", "character",
-                                                               "character", "numeric", "numeric",
-                                                               "integer", "integer", "character"))
-
-  ## Data frame with column names and formats from Location data
-  Location_data_col <- tibble::tibble(Variable = names(Location_data),
-                                      Format = unlist(purrr::pmap(list(Location_data), class)))
-
-  ## Mismatches between Location data and standard protocol
-  ## Column format "logical" refers to unmeasured/undetermined variables (NA)
-  Location_data_mismatch <- dplyr::left_join(Location_data_standard, Location_data_col, by="Variable") %>%
-    filter(Format != "logical" & Format_standard != Format)
-
-  err <- FALSE
-  error_output <- NULL
-
-  if(nrow(Location_data_mismatch) > 0) {
-    err <- TRUE
-
-    error_output <- purrr::map2(.x = Location_data_mismatch$Variable,
-                                .y = Location_data_mismatch$Format_standard,
-                                .f = ~{
-                                  paste0("The format of ", .x, " in Location_data is not ", .y, ".")
-                                })
-  }
-
-  ## Missing columns
-  # Location_data_missing <- dplyr::left_join(Location_data_standard, Location_data_col, by="Variable") %>%
-  #   filter(Format == "logical")
-  #
-  # war <- FALSE
-  # warning_output <- NULL
-  #
-  # if(nrow(Location_data_missing) > 0) {
-  #   war <- TRUE
-  #
-  #   warning_output <- purrr::map(.x = Location_data_missing$Variable,
-  #                                .f = ~{
-  #                                  paste0(.x, " in Location_data is missing, unmeasured or undetermined (NA).")
-  #                                })
-  # }
-
-  #Test for empty columns by looking at uniques, rather than using data type
-  warning_output <- purrr::pmap(.l = list(as.list(Location_data), colnames(Location_data)),
-                                .f = ~{
-
-                                  if(all(is.na(unique(..1)))){
-
-                                    return(paste0(..2, " in Location_data is missing, unmeasured or undetermined (NA)."))
-
-                                  } else {
-
-                                    return()
-
-                                  }
-
-                                })
-
-
-
-  #Remove all cases that return NULL
-  #Assigning NULL (rather than returning NULL in function) removes the list item
-  warning_output[sapply(warning_output, is.null)] <- NULL
-
-  if(length(warning_output) > 0){
-
-    war <- TRUE
-
-  } else {
-
-    war <- FALSE
-
-  }
-
-  check_list <- tibble::tibble(Warning = war,
-                               Error = err)
-
-  return(list(check_list = check_list,
-              warning_output = warning_output,
-              error_output = error_output))
-
-  #Satisfy RCMD Checks
-  Format <- Format_standard <- NULL
-
-}
-
-#' Check capture variable values against reference values
-#'
-#' Check variable values against species-specific reference values in capture data. Implausible values will result in a warning. Impossible values will result in an error. Variables that are checked: Mass, Tarsus, WingLength, Age_obsv, Age_calc, Chick_age.
-#'
-#' @param species Six-letter species ID to select species-specific reference values.
-#' @inheritParams checks_capture_params
-#'
-#' @return Check list, warning output, error output.
-#' @export
-
-check_values_capture <- function(Capture_data, species) {
-
-  # Select species-specific reference values
-  ref_adult <- capture_ref_values_list[[species]]
-  # ref_chick <- cap_chick_ref_values_list[[species]]
-
-  # Add unique row identifier to capture data
-  Capture_data <- Capture_data %>%
-    tibble::rownames_to_column(var = "RowID")
-
-  # Select species in capture data
-  Capture_data <- Capture_data %>%
-    dplyr::filter(Species == species)
-
-  # Separate adults from chicks, as they have different reference values
-  Adult_data <- Capture_data %>%
-    dplyr::filter(Age_calculated > 3)
-
-  Chick_data <- Capture_data %>%
-    dplyr::filter(Age_calculated <= 3)
-
-  # Create warning & error list of variable-specific dataframes for
-  # - adults
-  Capture_list <- purrr::map2(.x = Adult_data[, c("Mass", "Tarsus")],
-                            .y = ref_adult,
-                            .f = ~{
-                              tibble::tibble(IndvID = Adult_data$IndvID,
-                                             RowID = Adult_data$RowID,
-                                             Age = "Adult",
-                                             Variable = names(.y)[3],
-                                             .x) %>%
-                                dplyr::filter(!is.na(.x)) %>% # Only non-NA's
-                                dplyr::mutate(Warning = ifelse(.x > as.numeric(.y[2,3]),
-                                                               TRUE, FALSE),
-                                              Error = ifelse(.x < as.numeric(.y[3,3]) | .x > as.numeric(.y[4,3]),
-                                                             TRUE, FALSE))
-                            })
-  # - and chicks
-  # Chick_list <- purrr::map2(.x = Chick_data[, c("Mass", "Tarsus")],
-  #                           .y = ref_chick,
-  #                           .f = ~{
-  #                             tibble::tibble(IndvID = Chick_data$IndvID,
-  #                                            RowID = Chick_data$RowID,
-  #                                            Age = "Chick",
-  #                                            Variable = names(.y)[3],
-  #                                            .x) %>%
-  #                               dplyr::filter(!is.na(.x)) %>% # Only non-NA's
-  #                               dplyr::mutate(Warning = ifelse(.x > as.numeric(.y[2,3]),
-  #                                                              TRUE, FALSE),
-  #                                             Error = ifelse(.x < as.numeric(.y[3,3]) | .x > as.numeric(.y[4,3]),
-  #                                                            TRUE, FALSE))
-  #                           })
-
-  # Combine adults and chicks
-  # Capture_list <- purrr::map2(.x = Adult_list,
-  #                             .y = Chick_list,
-  #                             .f = ~{
-  #                               dplyr::bind_rows(.x, .y)
-  #                             })
-
-
-  # Select records with errors (impossible values) from list
-  Capture_err <- purrr::map(.x = Capture_list,
-                            .f = ~{
-                              .x %>%
-                                dplyr::filter(Error == TRUE)
-                            }) %>%
-    dplyr::bind_rows()
-
-  err <- FALSE
-  error_output <- NULL
-
-  if(nrow(Capture_err) > 0) {
-    err <- TRUE
-
-    error_output <- purrr::pmap(.l = list(Capture_err$RowID,
-                                          Capture_err$Variable,
-                                          Capture_err$.x),
-                                .f = ~{
-                                  paste0("Capture_data record with RowID ", ..1,
-                                         " has an impossible value in ", ..2,
-                                         " (", ..3, ").")
-                                })
-  }
-
-  # Select records with warnings (improbable values) from list
-  Capture_war <- purrr::map(.x = Capture_list,
-                            .f = ~{
-                              .x %>%
-                                dplyr::filter(Warning == TRUE)
-                            }) %>%
-    dplyr::bind_rows()
-
-  war <- FALSE
-  warning_output <- NULL
-
-  if(nrow(Capture_war) > 0) {
-    war <- TRUE
-
-    error_output <- purrr::pmap(.l = list(Capture_war$RowID,
-                                          Capture_war$Variable,
-                                          Capture_war$.x),
-                                .f = ~{
-                                  paste0("Capture_data record with RowID ", ..1,
-                                         " has an improbable value in ", ..2,
-                                         " (", ..3, ").")
-                                })
-  }
-
-  check_list <- tibble::tibble(Warning = war,
-                               Error = err)
-
-  return(list(check_list = check_list,
-              warning_output = warning_output,
-              error_output = error_output))
-
-  # Satisfy RCMD Checks
-  cap_adult_ref_values_list <- cap_chick_ref_values_list <- NULL
-  Species <- Age_calc <- NULL
 
 }
