@@ -204,6 +204,9 @@ create_capture_MON <- function(db, species_filter){
     #Filter by species
     dplyr::filter(Species %in% species_filter) %>%
     dplyr::mutate(CaptureDate = janitor::excel_numeric_to_date(as.numeric(date_mesure)),
+                  CaptureTime = dplyr::na_if(paste(stringr::str_pad((24*as.numeric(heure)) %/% 1, width = 2, pad = "0"),
+                                      stringr::str_pad(round(((24*as.numeric(heure)) %% 1) * 60), width = 2, pad = "0"),
+                                      sep = ":"), "NA:NA"),
                   BreedingSeason = an, CaptureTime = heure,
                   IndvID = bague, WingLength = aile,
                   BeakLength = becna,
@@ -281,6 +284,9 @@ create_capture_MON <- function(db, species_filter){
     #Also remove only the pops we know
     dplyr::filter(Species %in% species_filter & lieu %in% c("cap", "mes", "pir", "tua", "rou")) %>%
     dplyr::mutate(CaptureDate = janitor::excel_numeric_to_date(as.numeric(date_mesure)),
+                  CaptureTime = dplyr::na_if(paste(stringr::str_pad((24*as.numeric(heure)) %/% 1, width = 2, pad = "0"),
+                                                   stringr::str_pad(round(((24*as.numeric(heure)) %% 1) * 60), width = 2, pad = "0"),
+                                                   sep = ":"), "NA:NA"),
                   BreedingSeason = as.integer(an), CaptureTime = heure,
                   IndvID = purrr::pmap_chr(.l = list(bague),
                                            .f = ~{
