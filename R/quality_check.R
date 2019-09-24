@@ -15,7 +15,7 @@
 #' \dontrun{
 #'
 #' CHO <- run_pipelines(PopID = "CHO", output_type = "R")
-#' quality_check(CHO, species = "PARMAJ")
+#' quality_check(CHO)
 #'
 #' }
 #' @export
@@ -30,10 +30,6 @@ quality_check <- function(R_data,
   Capture_data <- R_data$Capture_data
   Individual_data <- R_data$Individual_data
   Location_data <- R_data$Location_data
-
-  # Unique PopIDs and Species
-  pop <- unique(R_data$Brood_data$PopID)
-  species <- unique(R_data$Brood_data$Species)
 
   # Run checks
   Brood_checks <- brood_check(Brood_data)
@@ -59,7 +55,13 @@ quality_check <- function(R_data,
   cat(crayon::yellow(paste0("\n", checks_warnings, " out of ", nrow(check_list), " checks resulted in warnings.")),
       crayon::red(paste0("\n", checks_errors, " out of ", nrow(check_list), " checks resulted in errors.\n\n")))
 
+
   # Create output file
+  # Unique PopIDs and Species for report title
+  pop <- unique(R_data$Brood_data$PopID)
+  species <- unique(R_data$Brood_data$Species)
+
+  # Title
   title <- paste0("Quality check report for ", Species_codes[Species_codes$Code == species, "CommonName"],
                   " in ", pop_names[pop_names$code == pop, "name"])
 
