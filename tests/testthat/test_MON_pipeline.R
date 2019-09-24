@@ -119,3 +119,59 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(subset(MON_data, IndvID == "8189538")$RingAge, "chick")
 
 })
+
+test_that("Capture data returns an expected outcome...", {
+
+  #We want to run tests for captures as both chicks, males, and females
+  #Currently we have no chick data, so we can only test adults
+
+  #Take a subset of only MON data
+  MON_data <- dplyr::filter(pipeline_output$Capture_data, CapturePopID %in% c("COR", "ROU"))
+
+  #Test 1: Individual ringed as a chick
+  #Test the female has the correct number of capture records
+  expect_equal(nrow(subset(MON_data, IndvID == "2709339")), 6)
+  #Test that the first capture of the female is as expected (01/01/1982)
+  #This will return an error. The chick capture has no date so will currently be NA. We need to estimate
+  #capture date from hatch date.
+  expect_equal(subset(MON_data, IndvID == "2709339")$CaptureDate[1], as.Date("1982-01-01"))
+  #Test that the 6th capture of the female is as expcted (1987-06-08)
+  expect_equal(subset(MON_data, IndvID == "2709339")$CaptureDate[6], as.Date("1987-06-08"))
+  #Test that age observed is as expected on first capture
+  #Test that age observed is as expected on 6th capture
+  expect_equal(subset(MON_data, IndvID == "2709339")$Age_observed[1], 1L)
+  expect_equal(subset(MON_data, IndvID == "2709339")$Age_observed[6], 13L)
+  #Test that age calculated is correct on first capture and last capture
+  expect_equal(subset(MON_data, IndvID == "2709339")$Age_calculated[1], 1L)
+  expect_equal(subset(MON_data, IndvID == "2709339")$Age_calculated[6], 13L)
+
+  #Test 2: Female caught only as adult
+  #Test it has the correct number of capture records
+  expect_equal(nrow(subset(MON_data, IndvID == "3672638")), 16)
+  #Test that the first capture is as expected
+  expect_equal(subset(MON_data, IndvID == "3672638")$CaptureDate[1], as.Date("1992-01-20"))
+  #Test that the 16th capture is as expected
+  expect_equal(subset(MON_data, IndvID == "3672638")$CaptureDate[16], as.Date("1997-01-28"))
+  #Test that first and last age observed is as expected
+  expect_equal(subset(MON_data, IndvID == "3672638")$Age_observed[1], 5L)
+  expect_equal(subset(MON_data, IndvID == "3672638")$Age_observed[16], 15L)
+  #Test that first and last age calculated is as expected
+  expect_equal(subset(MON_data, IndvID == "3672638")$Age_calculated[1], 4L)
+  expect_equal(subset(MON_data, IndvID == "3672638")$Age_calculated[6], 14L)
+
+  #Test 3: Male caught only as adult
+  #Test it has the correct number of capture records
+  expect_equal(nrow(subset(MON_data, IndvID == "4208517")), 15)
+  #Test that the first capture is as expected
+  expect_equal(subset(MON_data, IndvID == "4208517")$CaptureDate[1], as.Date("1993-05-14"))
+  #Test that the 15th capture is as expected
+  expect_equal(subset(MON_data, IndvID == "4208517")$CaptureDate[15], as.Date("1998-01-27"))
+  #Test that first and last age observed is as expected
+  expect_equal(subset(MON_data, IndvID == "4208517")$Age_observed[1], 6L)
+  expect_equal(subset(MON_data, IndvID == "4208517")$Age_observed[16], 16L)
+  #Test that first and last age calculated is as expected
+  expect_equal(subset(MON_data, IndvID == "4208517")$Age_calculated[1], 4L)
+  expect_equal(subset(MON_data, IndvID == "4208517")$Age_calculated[6], 14L)
+
+
+})
