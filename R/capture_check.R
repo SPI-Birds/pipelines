@@ -30,7 +30,7 @@ capture_check <- function(Capture_data){
   # - Check capture variable values against reference values
   message("Capture check 2: Checking capture variable values against reference values...")
 
-  #check_values_capture_output <- check_values_capture(Capture_data, species) ## HOW TO DEAL WITH SPECIES?
+  #check_values_capture_output <- check_values_capture(Capture_data, species) ## HOW TO DEAL WITH SPECIES? SEE CHECK_VALUES_BROOD
 
   #check_list[2,2:3] <- check_values_capture_output$check_list
 

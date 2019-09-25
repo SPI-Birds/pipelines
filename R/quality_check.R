@@ -15,7 +15,7 @@
 #' \dontrun{
 #'
 #' CHO <- run_pipelines(PopID = "CHO", output_type = "R")
-#' quality_check(CHO, species = "PARMAJ")
+#' quality_check(CHO)
 #'
 #' }
 #' @export
@@ -31,10 +31,6 @@ quality_check <- function(R_data,
   Individual_data <- R_data$Individual_data
   Location_data <- R_data$Location_data
 
-  # Unique PopIDs and Species
-  pop <- unique(R_data$Brood_data$PopID)
-  species <- unique(R_data$Brood_data$Species)
-
   # Run checks
   Brood_checks <- brood_check(Brood_data)
   Capture_checks <- capture_check(Capture_data)
@@ -46,89 +42,6 @@ quality_check <- function(R_data,
                                  Capture_checks$CheckList,
                                  Individual_checks$CheckList,
                                  Location_checks$CheckList)
-
-
-  # Create check list with - a summary of warnings and errors per test
-  # check_list <- tibble::tibble(Check = c("Individual data format", "Brood data format",
-  #                                        "Capture data format", "Location data format",
-  #                                        "Clutch and brood sizes", "Brood sizes and fledgling numbers",
-  #                                        "Laying and hatching dates", "Hatching and fledging dates",
-  #                                        "Improbable and impossible values brood data",
-  #                                        "Improbable and impossible values capture data"),
-  #                              Warning = NA,
-  #                              Error = NA)
-  #
-  # # Checks
-  # # - Check format individual data
-  # message("Check 1: Checking format of individual data...")
-  #
-  # check_format_individual_output <- check_format_individual(Individual_data)
-  #
-  # check_list[1,2:3] <- check_format_individual_output$check_list
-  #
-  # # - Check format brood data
-  # message("Check 2: Checking format of brood data...")
-  #
-  # check_format_brood_output <- check_format_brood(Brood_data)
-  #
-  # check_list[2,2:3] <- check_format_brood_output$check_list
-  #
-  # # - Check format capture data
-  # message("Check 3: Checking format of capture data...")
-  #
-  # check_format_capture_output <- check_format_capture(Capture_data)
-  #
-  # check_list[3,2:3] <- check_format_capture_output$check_list
-  #
-  # # - Check format location data
-  # message("Check 4: Checking format of location data...")
-  #
-  # check_format_location_output <- check_format_location(Location_data)
-  #
-  # check_list[4,2:3] <- check_format_location_output$check_list
-  #
-  # # - Compare clutch and brood sizes
-  # message("Check 5: Comparing clutch and brood sizes...")
-  #
-  # compare_clutch_brood_output <- compare_clutch_brood(Brood_data)
-  #
-  # check_list[5,2:3] <- compare_clutch_brood_output$check_list
-  #
-  # # - Compare brood sizes and fledglings numbers
-  # message("Check 6: Comparing brood sizes and fledgling numbers...")
-  #
-  # compare_brood_fledglings_output <- compare_brood_fledglings(Brood_data)
-  #
-  # check_list[6,2:3] <- compare_brood_fledglings_output$check_list
-  #
-  # # - Compare laying and hatching dates
-  # message("Check 7: Comparing laying and hatching dates...")
-  #
-  # compare_laying_hatching_output <- compare_laying_hatching(Brood_data)
-  #
-  # check_list[7,2:3] <- compare_laying_hatching_output$check_list
-  #
-  # # - Compare hatching and fledging dates
-  # message("Check 8: Comparing hatching and fledging dates...")
-  #
-  # compare_hatching_fledging_output <- compare_hatching_fledging(Brood_data)
-  #
-  # check_list[8,2:3] <- compare_hatching_fledging_output$check_list
-  #
-  # # - Check brood variable values against reference values
-  # message("Check 9: Checking brood variable values against reference values...")
-  #
-  # check_values_brood_output <- check_values_brood(Brood_data, species)
-  #
-  # check_list[9,2:3] <- check_values_brood_output$check_list
-  #
-  # # - Check capture variable values against reference values
-  # message("Check 10: Checking capture variable values against reference values...")
-  #
-  # check_values_capture_output <- check_values_capture(Capture_data, species)
-  #
-  # check_list[10,2:3] <- check_values_capture_output$check_list
-
 
   # Check messages
   time <- difftime(Sys.time(), start_time, units = "sec")
@@ -142,7 +55,13 @@ quality_check <- function(R_data,
   cat(crayon::yellow(paste0("\n", checks_warnings, " out of ", nrow(check_list), " checks resulted in warnings.")),
       crayon::red(paste0("\n", checks_errors, " out of ", nrow(check_list), " checks resulted in errors.\n\n")))
 
+
   # Create output file
+  # Unique PopIDs and Species for report title
+  pop <- unique(R_data$Brood_data$PopID)
+  species <- unique(R_data$Brood_data$Species)
+
+  # Title
   title <- paste0("Quality check report for ", Species_codes[Species_codes$Code == species, "CommonName"],
                   " in ", pop_names[pop_names$code == pop, "name"])
 
