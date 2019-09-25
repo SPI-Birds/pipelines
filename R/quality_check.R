@@ -58,12 +58,14 @@ quality_check <- function(R_data,
 
   # Create output file
   # Unique PopIDs and Species for report title
-  pop <- unique(R_data$Brood_data$PopID)
-  species <- unique(R_data$Brood_data$Species)
+  pop <- dplyr::pull(unique(Brood_data[!is.na(Brood_data$PopID), "PopID"]))
+  if(length(pop) == 0) pop <- NA
+  species <- dplyr::pull(unique(Brood_data[!is.na(Brood_data$Species), "Species"]))
 
   # Title
-  title <- paste0("Quality check report for ", Species_codes[Species_codes$Code == species, "CommonName"],
-                  " in ", pop_names[pop_names$code == pop, "name"])
+  title <- paste0("Quality check report")
+  # title <- paste0("Quality check report for ", Species_codes[Species_codes$Code == species, "CommonName"],
+  #                 " in ", pop_names[pop_names$code == pop, "name"])
 
   c('---',
     'title: "`r title`"',
@@ -76,8 +78,26 @@ quality_check <- function(R_data,
                         toc: true',
     '---',
     '',
+    '```{r wrap-hook, include=FALSE}',
+    'library(knitr)
+    hook_output = knit_hooks$get("output")
+    knit_hooks$set(output = function(x, options) {
+      # this hook is used only when the linewidth option is not NULL
+      if (!is.null(n <- options$linewidth)) {
+        x = knitr:::split_lines(x)
+        # any lines wider than n should be wrapped
+        if (any(nchar(x) > n)) x = strwrap(x, width = n)
+        x = paste(x, collapse = "\n")
+      }
+      hook_output(x, options)
+    })',
+    '```',
     '\\newpage',
     '# Summary',
+    '',
+    'Species: `r dplyr::pull(Species_codes[Species_codes$Code == species, "CommonName"])`',
+    '',
+    'Populations: `r dplyr::pull(pop_names[pop_names$code == pop, "name"])`',
     '',
     'All checks performed in `r round(time, 2)` seconds.',
     '',
@@ -89,7 +109,7 @@ quality_check <- function(R_data,
     '',
     '## Brood data',
     '',
-    '```{r echo=FALSE}',
+    '```{r echo=FALSE, linewidth=100}',
     'purrr::pwalk(.l = list(Brood_checks$Warnings,
                             1:length(Brood_checks$Warnings),
                             Brood_checks$CheckNames),
@@ -101,7 +121,7 @@ quality_check <- function(R_data,
     '',
     '## Capture data',
     '',
-    '```{r echo=FALSE}',
+    '```{r echo=FALSE, linewidth=100}',
     'purrr::pwalk(.l = list(Capture_checks$Warnings,
                             1:length(Capture_checks$Warnings),
                             Capture_checks$CheckNames),
@@ -113,7 +133,7 @@ quality_check <- function(R_data,
     '',
     '## Individual data',
     '',
-    '```{r echo=FALSE}',
+    '```{r echo=FALSE, linewidth=100}',
     'purrr::pwalk(.l = list(Individual_checks$Warnings,
                             1:length(Individual_checks$Warnings),
                             Individual_checks$CheckNames),
@@ -125,7 +145,7 @@ quality_check <- function(R_data,
     '',
     '## Location data',
     '',
-    '```{r echo=FALSE}',
+    '```{r echo=FALSE, linewidth=100}',
     'purrr::pwalk(.l = list(Location_checks$Warnings,
                             1:length(Location_checks$Warnings),
                             Location_checks$CheckNames),
@@ -140,7 +160,7 @@ quality_check <- function(R_data,
     '',
     '## Brood data',
     '',
-    '```{r echo=FALSE}',
+    '```{r echo=FALSE, linewidth=100}',
     'purrr::pwalk(.l = list(Brood_checks$Errors,
                             1:length(Brood_checks$Errors),
                             Brood_checks$CheckNames),
@@ -152,7 +172,7 @@ quality_check <- function(R_data,
     '',
     '## Capture data',
     '',
-    '```{r echo=FALSE}',
+    '```{r echo=FALSE, linewidth=100}',
     'purrr::pwalk(.l = list(Capture_checks$Errors,
                             1:length(Capture_checks$Errors),
                             Capture_checks$CheckNames),
@@ -164,7 +184,7 @@ quality_check <- function(R_data,
     '',
     '## Individual data',
     '',
-    '```{r echo=FALSE}',
+    '```{r echo=FALSE, linewidth=100}',
     'purrr::pwalk(.l = list(Individual_checks$Errors,
                             1:length(Individual_checks$Errors),
                             Individual_checks$CheckNames),
@@ -176,7 +196,7 @@ quality_check <- function(R_data,
     '',
     '## Location data',
     '',
-    '```{r echo=FALSE}',
+    '```{r echo=FALSE, linewidth=100}',
     'purrr::pwalk(.l = list(Location_checks$Errors,
                             1:length(Location_checks$Errors),
                             Location_checks$CheckNames),
