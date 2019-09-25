@@ -136,38 +136,37 @@ test_that("Brood_data returns an expected outcome...", {
 test_that("Capture_data returns an expected outcome...", {
 
   #We want to run tests for captures as both chicks, males, and females
-  #Currently we have no chick data, so we can only test adults
 
-  #Take a subset of only NIOO data
-  # NIOO_data <- dplyr::filter(pipeline_output$Capture_data, CapturePopID %in% c("HOG", "OOS", "VLI", "BUU", "LIE", "WAR", "WES"))
-  #
-  # #Test 1: Female caught as adult
-  # #Test the female has the correct number of capture records (6)
-  # expect_equal(nrow(subset(NIOO_data, IndvID == "D534573")), 6)
-  # #Test that the first capture of the female is as expected (02/06/2013)
-  # expect_equal(min(subset(NIOO_data, IndvID == "D534573")$CaptureDate, na.rm = TRUE), as.Date("2013-06-02"))
-  # #Test that the 5th capture of the female is as expcted (2017-05-12) (6th one is NA so no good to test)
-  # expect_equal(subset(NIOO_data, IndvID == "D534573")$CaptureDate[5], as.Date("2017-05-12"))
-  # #Test that age observed is as expected (NA, because we just know it was caught as an adult, that's all)
-  # expect_equal(subset(NIOO_data, IndvID == "D534573")$Age_observed[1], NA_integer_)
-  # #Test that age calculated is correct on first capture (4 because it's an adult of unknown age)
-  # expect_equal(subset(NIOO_data, IndvID == "D534573")$Age_calculated[1], 4L)
-  # #Test that age calculated is correct on 2017 capture (4 + 4*2 = 12 because it's an adult caught 4 years after its first capture)
-  # expect_equal(subset(NIOO_data, IndvID == "D534573")$Age_calculated[6], 12L)
-  #
-  # #Test 1: Male caught as adult
-  # #Test the male has the correct number of capture records (6)
-  # expect_equal(nrow(subset(NIOO_data, IndvID == "D534574")), 6)
-  # #Test that the first capture of the male is as expected (2013-06-02)
-  # expect_equal(min(subset(NIOO_data, IndvID == "D534574")$CaptureDate, na.rm = TRUE), as.Date("2013-06-02"))
-  # #Test that the 6th capture of the male is as expcted (2018-06-08)
-  # expect_equal(subset(NIOO_data, IndvID == "D534574")$CaptureDate[6], as.Date("2018-06-08"))
-  # #Test that age observed is as expected (NA, because we just know it was caught as an adult, that's all)
-  # expect_equal(subset(NIOO_data, IndvID == "D534574")$Age_observed[1], NA_integer_)
-  # #Test that age calculated is correct on first capture (4 because it's an adult of unknown age)
-  # expect_equal(subset(NIOO_data, IndvID == "D534574")$Age_calculated[1], 4L)
-  # #Test that age calculated is correct on 2017 capture (4 + 5*2 = 14 because it's an adult caught 5 years after its first capture)
-  # expect_equal(subset(NIOO_data, IndvID == "D534574")$Age_calculated[6], 14L)
+  # Take a subset of only NIOO data
+  NIOO_data <- dplyr::filter(pipeline_output$Capture_data, CapturePopID %in% c("HOG", "OOS", "VLI", "BUU", "LIE", "WAR", "WES"))
+
+  #Test 1: Caught as chick
+  #Test number of capture records is as expected
+  expect_equal(nrow(subset(NIOO_data, IndvID == "409502")), 10)
+  #Test that the first capture is as expected
+  expect_equal(subset(NIOO_data, IndvID == "409502")$CaptureDate[1], as.Date("2013-06-01"))
+  #Test that the 10th capture is as expected
+  expect_equal(subset(NIOO_data, IndvID == "409502")$CaptureDate[10], as.Date("2018-08-20"))
+  #Test that first and last age observed is as expected
+  expect_equal(subset(NIOO_data, IndvID == "409502")$Age_observed[1], 1L)
+  expect_equal(subset(NIOO_data, IndvID == "409502")$Age_observed[10], 6L)
+  #Test that first and last age calculated is as expected
+  expect_equal(subset(NIOO_data, IndvID == "409502")$Age_calculated[1], 1L)
+  expect_equal(subset(NIOO_data, IndvID == "409502")$Age_calculated[10], 13L)
+
+  #Test 1: Caught as adult
+  #Test number of capture records is as expected
+  expect_equal(nrow(subset(NIOO_data, IndvID == "110438")), 19)
+  #Test that the first capture is as expected
+  expect_equal(subset(NIOO_data, IndvID == "110438")$CaptureDate[1], as.Date("1974-02-13"))
+  #Test that the 15th capture is as expected
+  expect_equal(subset(NIOO_data, IndvID == "110438")$CaptureDate[19], as.Date("1977-05-31"))
+  #Test that first and last age observed is as expected
+  expect_equal(subset(NIOO_data, IndvID == "110438")$Age_observed[1], 5L)
+  expect_equal(subset(NIOO_data, IndvID == "110438")$Age_observed[19], 4L)
+  #Test that first and last age calculated is as expected
+  expect_equal(subset(NIOO_data, IndvID == "110438")$Age_calculated[1], 4L)
+  expect_equal(subset(NIOO_data, IndvID == "110438")$Age_calculated[19], 10L)
 
 })
 

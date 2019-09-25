@@ -111,9 +111,10 @@ test_that("Individual data returns an expected outcome...", {
   #Individual 8189538 should be listed as a female great tit
   expect_equal(subset(MON_data, IndvID == "8189538")$Sex, "F")
   expect_equal(subset(MON_data, IndvID == "8189538")$Species, "PARMAJ")
-  #Should have BroodID Laid and Fledged of XXXX (NOT YET INCLUDED, this should return an error)
+  #Should have BroodID Laid and Fledged of NOT YET INCLUDED
+  #this should return an error so we remember to come back to it
   expect_equal(subset(MON_data, IndvID == "8189538")$BroodIDLaid, "XXX")
-  expect_equal(subset(MON_data, IndvID == "8189538")$BroodIDFledged, "XXX")
+  expect_equal(subset(MON_data, IndvID == "8189538")$BroodIDFledged, NA_character_)
   #Ring season should be 2017 with a RingAge of 'chick'
   expect_equal(subset(MON_data, IndvID == "8189538")$RingSeason, 2017)
   expect_equal(subset(MON_data, IndvID == "8189538")$RingAge, "chick")
