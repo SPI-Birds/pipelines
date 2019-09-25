@@ -318,7 +318,7 @@ create_capture_NIOO <- function(database, Individual_data, location_data, specie
     dplyr::left_join(dplyr::tbl(database, "dbo_vw_MI_CaptureCaptureData") %>%
                        dplyr::select(CaptureID, SpeciesID, Observer, Weight, Tarsus, Wing_Length, Age), by = "CaptureID") %>%
     #Filter target species
-    dplyr::filter(SpeciesID %in% species_filter & AccuracyOfDate == 1 & CaptureType %in% c(1, 2)) %>%
+    dplyr::filter(SpeciesID %in% species_filter & AccuracyOfDate %in% c(0, 1) & CaptureType %in% c(1, 2)) %>%
     #Select only the basic info we need
     # -CaptureID (unique ID of capture event)
     # -CaptureDate
