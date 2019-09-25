@@ -10,9 +10,13 @@
 #'
 #' @param db Directory to save reference values.
 #'
-#' @return An R data object (reference_values.rda)
-#'   with three lists of reference values:
-#'   brood data, adult capture data and chick capture data.
+#' @format
+#' An R data object containing three listst of reference values.
+#' \describe{
+#'   \item{brood_ref_values_list}{Reference values related to brood data.}
+#'   \item{cap_adult_ref_values_list}{Reference values related to capture data of adults.}
+#'   \item{cap_chick_ref_values_list}{Reference values related to capture data of chicks.}
+#' }
 #'
 #' @export
 

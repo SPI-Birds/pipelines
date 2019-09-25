@@ -541,8 +541,9 @@ check_values_brood <- function(Brood_data) {
                                                dplyr::filter(Error == TRUE)
                                            }) %>%
                             dplyr::bind_rows()
-                ) %>%
-                 dplyr::bind_rows()
+  ) %>%
+    dplyr::bind_rows() %>%
+    dplyr::arrange(Row)
 
   # Brood_err <- purrr::map(.x = Brood_list,
   #                         .f = ~{
@@ -562,7 +563,7 @@ check_values_brood <- function(Brood_data) {
                                           Brood_err$Value),
                                 .f = ~{
                                   paste0("Record on row ", ..1,
-                                         " (species: ", dplyr::pull(data[data$Row == ..1, "Species"]), ")",
+                                         " (species: ", dplyr::pull(Brood_data[Brood_data$Row == ..1, "Species"]), ")",
                                          " has an impossible value in ", ..2,
                                          " (", ..3, ").")
                                 })
@@ -578,7 +579,8 @@ check_values_brood <- function(Brood_data) {
                                            }) %>%
                             dplyr::bind_rows()
   ) %>%
-    dplyr::bind_rows()
+    dplyr::bind_rows() %>%
+    dplyr::arrange(Row)
 
 
   # Brood_war <- purrr::map(.x = Brood_list,
@@ -600,7 +602,7 @@ check_values_brood <- function(Brood_data) {
                                   .f = ~{
 
                                     paste0("Record on row ", ..1,
-                                           " (species: ", dplyr::pull(data[data$Row == ..1, "Species"]), ")",
+                                           " (species: ", dplyr::pull(Brood_data[Brood_data$Row == ..1, "Species"]), ")",
                                            " has an improbable value in ", ..2,
                                            " (", ..3, ").")
                                   })
