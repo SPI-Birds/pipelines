@@ -157,7 +157,7 @@ test_that("Capture data returns an expected outcome...", {
   expect_equal(subset(MON_data, IndvID == "3672638")$Age_observed[16], 15L)
   #Test that first and last age calculated is as expected
   expect_equal(subset(MON_data, IndvID == "3672638")$Age_calculated[1], 4L)
-  expect_equal(subset(MON_data, IndvID == "3672638")$Age_calculated[6], 14L)
+  expect_equal(subset(MON_data, IndvID == "3672638")$Age_calculated[16], 14L)
 
   #Test 3: Male caught only as adult
   #Test it has the correct number of capture records
@@ -168,10 +168,10 @@ test_that("Capture data returns an expected outcome...", {
   expect_equal(subset(MON_data, IndvID == "4208517")$CaptureDate[15], as.Date("1998-01-27"))
   #Test that first and last age observed is as expected
   expect_equal(subset(MON_data, IndvID == "4208517")$Age_observed[1], 6L)
-  expect_equal(subset(MON_data, IndvID == "4208517")$Age_observed[16], 16L)
+  expect_equal(subset(MON_data, IndvID == "4208517")$Age_observed[15], 16L)
   #Test that first and last age calculated is as expected
   expect_equal(subset(MON_data, IndvID == "4208517")$Age_calculated[1], 4L)
-  expect_equal(subset(MON_data, IndvID == "4208517")$Age_calculated[6], 14L)
+  expect_equal(subset(MON_data, IndvID == "4208517")$Age_calculated[15], 14L)
 
 
 })
