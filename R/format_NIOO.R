@@ -454,7 +454,7 @@ create_brood_NIOO <- function(database, Individual_data, Capture_data, location_
                        dplyr::filter(Male_ring != ""), by = "Male_ring") %>%
     #Join location info (including site ID and nestbox ID)
     dplyr::left_join(dplyr::select(location_data, BroodLocation = ID, PopID), by = "BroodLocation") %>%
-    dplyr::arrange(PopID, BreedingSeason, Species, FemaleID) %>%
+    dplyr::arrange(PopID, BreedingSeason, Species, FemaleID, LayingDate) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
   #Add extra columns where data was not provided
   #N.B. Need to go through and include experiment ID
