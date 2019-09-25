@@ -15,6 +15,12 @@
 #' }
 #'
 #' \strong{Capture data}:
+#' #' \itemize{
+#'   \item Row 1-8 represent adults with improbable values in Mass and Tarsus (part of \sQuote{Capture check 2: Checking capture variable values against reference values}; see \code{\link{check_capture_values}}).
+#'   \item Row 9-16 represent chicks with improbable values in Mass and Tarsus (part of \sQuote{Capture check 2: Checking capture variable values against reference values}; see \code{\link{check_capture_values}}).
+#'   \item Row 17-24 represent adults with impossible values in Mass and Tarsus (part of \sQuote{Capture check 2: Checking capture variable values against reference values}; see \code{\link{check_capture_values}}).
+#'   \item Row 25- 32 represent chicks with impossible values in Mass and Tarsus (part of \sQuote{Capture check 2: Checking capture variable values against reference values}; see \code{\link{check_capture_values}}).
+#' }
 #'
 #' \strong{Individual data}:
 #'
@@ -130,6 +136,7 @@ create_dummy_data <- function(db = utils::choose.dir()) {
 
 
   # Add rows in which single checks are violated
+  # Brood data
   # Brood check 2: Comparing clutch and brood sizes
 
   # Non-manipulated brood
@@ -218,6 +225,56 @@ create_dummy_data <- function(db = utils::choose.dir()) {
       NumberFledged = as.integer(c(22, 22, 22, 22, 22, 22, 22, 22))
     ) ->
     Brood_data
+
+
+  # Capture data
+  # Capture check 2: Checking capture variable values against reference values
+
+  # - Improbable values adults
+  Capture_data %>%
+    tibble::add_row(
+      Row = as.integer(1:8),
+      Age_calculated = as.integer(5, 5, 5, 5, 5, 5, 5, 5),
+      Species = c("PARMAJ", "CYACAE", "FICHYP", "SITEUR", "PERATE", "PASMON", "FICALB", "POEPAL"),
+      Mass = as.integer(c(7, 7, 7, 7, 7, 7, 7, 7)),
+      Tarsus = as.integer(c(14, 14, 14, 14, 14, 14, 14, 14)),
+    )  %>%
+    dplyr::slice(-1L) ->
+    Capture_data
+
+  # - Improbable values chicks
+  Capture_data %>%
+    tibble::add_row(
+      Row = as.integer(9:16),
+      Age_calculated = as.integer(3, 3, 3, 3, 3, 3, 3, 3),
+      Species = c("PARMAJ", "CYACAE", "FICHYP", "SITEUR", "PERATE", "PASMON", "FICALB", "POEPAL"),
+      Mass = as.integer(c(7, 7, 7, 7, 7, 7, 7, 7)),
+      Tarsus = as.integer(c(14, 14, 14, 14, 14, 14, 14, 14)),
+    ) ->
+    Capture_data
+
+  # - Impossible values adults
+  Capture_data %>%
+    tibble::add_row(
+      Row = as.integer(17:24),
+      Age_calculated = as.integer(5, 5, 5, 5, 5, 5, 5, 5),
+      Species = c("PARMAJ", "CYACAE", "FICHYP", "SITEUR", "PERATE", "PASMON", "FICALB", "POEPAL"),
+      Mass = as.integer(c(3, 3, 3, 3, 3, 3, 3, 3)),
+      Tarsus = as.integer(c(30, 30, 30, 30, 30, 30, 30, 30)),
+    )   ->
+    Capture_data
+
+  # - Impossbile values chicks
+  Capture_data %>%
+    tibble::add_row(
+      Row = as.integer(25:32),
+      Age_calculated = as.integer(3, 3, 3, 3, 3, 3, 3, 3),
+      Species = c("PARMAJ", "CYACAE", "FICHYP", "SITEUR", "PERATE", "PASMON", "FICALB", "POEPAL"),
+      Mass = as.integer(c(3, 3, 3, 3, 3, 3, 3, 3)),
+      Tarsus = as.integer(c(30, 30, 30, 30, 30, 30, 30, 30)),
+    )  ->
+    Capture_data
+
 
   # Combine in list
   dummy_data <- list(Brood_data = Brood_data,
