@@ -198,12 +198,12 @@ create_reference_values <- function(db = utils::choose.dir()) {
 
   ## - Capture data
   ## -- Adult
-  cap_adult_ref_values_list <- purrr::map(mget(setdiff(ls(pattern="^capture_adult_ref"), ls(pattern="list$"))),
+  cap_adult_ref_values_list <- purrr::map(mget(setdiff(ls(pattern="^cap_adult_ref"), ls(pattern="list$"))),
                                           function(x) listV(x))
   names(cap_adult_ref_values_list) <- stringr::str_extract(names(cap_adult_ref_values_list), "[^\\_]+$")
 
   ## -- Chick
-  cap_chick_ref_values_list <- purrr::map(mget(setdiff(ls(pattern="^capture_chick_ref"), ls(pattern="list$"))),
+  cap_chick_ref_values_list <- purrr::map(mget(setdiff(ls(pattern="^cap_chick_ref"), ls(pattern="list$"))),
                                           function(x) listV(x))
   names(cap_chick_ref_values_list) <- stringr::str_extract(names(cap_chick_ref_values_list), "[^\\_]+$")
 
