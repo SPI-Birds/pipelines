@@ -511,7 +511,7 @@ create_location_NIOO <- function(database, location_data, species_filter, pop_fi
     dplyr::collect() %>%
     #Join together information on the nestbox locations (e.g. latitude, longitude, nestbox name) and information on each nestbox that was there (e.g. how long before it was replaced).
     #This is necessary because one nestbox location could have multiple nestboxes erected at it over the study period.
-    dplyr::left_join(dplyr::select(location_data, Location = ID, Latitude, Longitude, PopID),
+    dplyr::right_join(dplyr::select(location_data, Location = ID, Latitude, Longitude, PopID),
                      by = "Location") %>%
     dplyr::select(LocationID = Location, NestboxID = ID, LocationType = NestBoxType, PopID, Latitude, Longitude, StartSeason = StartYear, EndSeason = EndYear) %>%
     dplyr::mutate(LocationID = as.character(LocationID),
@@ -519,7 +519,8 @@ create_location_NIOO <- function(database, location_data, species_filter, pop_fi
                   LocationType = dplyr::case_when(.$LocationType %in% c(0:22, 40:41) ~ "NB",
                                                   .$LocationType %in% c(90, 101) ~ "MN"),
                   Habitat = dplyr::case_when(.$PopID %in% c("VLI", "HOG", "WES", "BUU") ~ "Mixed",
-                                             .$PopID %in% c("OOS", "LIE", "WAR") ~ "Deciduous"))
+                                             .$PopID %in% c("OOS", "LIE", "WAR") ~ "Deciduous")) %>%
+    dplyr::arrange(LocationID, StartSeason)
 
   return(Location_data)
 
