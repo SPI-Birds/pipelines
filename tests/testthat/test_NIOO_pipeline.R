@@ -187,8 +187,8 @@ test_that("Location_data returns an expected outcome...", {
   expect_equal(subset(NIOO_data, LocationID == "47")$StartSeason[1], 1996L)
   expect_equal(subset(NIOO_data, LocationID == "47")$EndSeason[1], 1996L)
   #Expect Start and EndSeason of second box at this location is as expected
-  expect_equal(subset(NIOO_data, LocationID == "47")$StartSeason[3], 1997L)
-  expect_equal(subset(NIOO_data, LocationID == "47")$EndSeason[3], 2006L)
+  expect_equal(subset(NIOO_data, LocationID == "47")$StartSeason[2], 1997L)
+  expect_equal(subset(NIOO_data, LocationID == "47")$EndSeason[2], 2006L)
   #Check that LocationID is in the expected PopID
   expect_equal(subset(NIOO_data, LocationID == "47")$PopID[1], "HOG")
 
