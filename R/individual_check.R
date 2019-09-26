@@ -47,10 +47,10 @@ individual_check <- function(Individual_data){
 check_format_individual <- function(Individual_data){
 
   # Data frame with column names and formats according to the standard protocol
-  Individual_data_standard <- tibble::tibble(Variable = c("IndvID", "Species", "PopID",
+  Individual_data_standard <- tibble::tibble(Variable = c("Row", "IndvID", "Species", "PopID",
                                                           "BroodIDLaid", "BroodIDFledged", "RingSeason",
                                                           "RingAge", "Sex"),
-                                             Format_standard = c("character", "character", "character",
+                                             Format_standard = c("integer", "character", "character", "character",
                                                                  "character", "character", "integer",
                                                                  "character", "character"))
 

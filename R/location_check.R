@@ -47,10 +47,10 @@ location_check <- function(Location_data){
 check_format_location <- function(Location_data){
 
   ## Data frame with column names and formats according to the standard protocol
-  Location_data_standard <- tibble::tibble(Variable = c("LocationID", "NestboxID", "LocationType",
+  Location_data_standard <- tibble::tibble(Variable = c("Row", "LocationID", "NestboxID", "LocationType",
                                                         "PopID", "Latitude", "Longitude",
                                                         "StartSeason", "EndSeason", "Habitat"),
-                                           Format_standard = c("character", "character", "character",
+                                           Format_standard = c("integer", "character", "character", "character",
                                                                "character", "numeric", "numeric",
                                                                "integer", "integer", "character"))
 

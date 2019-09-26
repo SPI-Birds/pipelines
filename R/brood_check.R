@@ -96,7 +96,7 @@ brood_check <- function(Brood_data){
 check_format_brood <- function(Brood_data){
 
   ## Data frame with column names and formats according to the standard protocol
-  Brood_data_standard <- tibble::tibble(Variable = c("BroodID", "PopID", "BreedingSeason", "Species", "Plot",
+  Brood_data_standard <- tibble::tibble(Variable = c("Row", "BroodID", "PopID", "BreedingSeason", "Species", "Plot",
                                                      "LocationID", "FemaleID", "MaleID",
                                                      "ClutchType_observed", "ClutchType_calculated",
                                                      "LayingDate", "LayingDateError", "ClutchSize",
@@ -106,7 +106,7 @@ check_format_brood <- function(Brood_data){
                                                      "NumberFledgedError", "AvgEggMass", "NumberEggs",
                                                      "AvgChickMass", "NumberChicksMass", "AvgTarsus",
                                                      "NumberChicksTarsus", "OriginalTarsusMethod", "ExperimentID"),
-                                        Format_standard = c("character", "character", "integer", "character",
+                                        Format_standard = c("integer", "character", "character", "integer", "character",
                                                             "character", "character", "character", "character",
                                                             "character", "character",
                                                             "Date", "numeric", "integer",
