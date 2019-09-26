@@ -172,4 +172,9 @@ utils::globalVariables(c(".", "AvgChickTarsus", "AvgChickMass", "AvgTarsus", "Po
                          "poids", "obs", "dest", "orig", "TarsusRight",
                          "age_plume", "MeanEggWeight", "NEggsWeighted",
                          "date_of_capture_52", "date_of_capture_57",
-                         "laying_date_minimum", "laying_date_maximum"))
+                         "laying_date_minimum", "laying_date_maximum",
+                         "experience", "explique", "proto",
+                         "age", "FoundDead", "ObservedSex",
+                         "GeneticSex", "ExperimentDescription1",
+                         "ExperimentDescription2", "CaptureMethod",
+                         "ChickNr", "ObservedSex", "GeneticSex"))

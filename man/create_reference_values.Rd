@@ -3,16 +3,17 @@
 \name{create_reference_values}
 \alias{create_reference_values}
 \title{Create biological reference values}
+\format{An R data object containing three listst of reference values.
+\describe{
+  \item{brood_ref_values_list}{Reference values related to brood data.}
+  \item{cap_adult_ref_values_list}{Reference values related to capture data of adults.}
+  \item{cap_chick_ref_values_list}{Reference values related to capture data of chicks.}
+}}
 \usage{
 create_reference_values(db = utils::choose.dir())
 }
 \arguments{
 \item{db}{Directory to save reference values.}
-}
-\value{
-An R data object (reference_values.rda)
-  with three lists of reference values:
-  brood data, adult capture data and chick capture data.
 }
 \description{
 Manually add & edit reference values in the code and run function to

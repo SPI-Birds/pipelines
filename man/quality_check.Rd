@@ -2,7 +2,7 @@
 % Please edit documentation in R/quality_check.R
 \name{quality_check}
 \alias{quality_check}
-\title{A function to perform a quality check on pipeline outputs}
+\title{A wrapper function to perform a quality check on pipeline outputs}
 \usage{
 quality_check(R_data, output_format = "both")
 }
@@ -17,13 +17,16 @@ A summary dataframe of test warnings and errors for use in testthat,
   and a report of the line-by-line list of warnings and errors.
 }
 \description{
-A function to perform a quality check on pipeline outputs
+A wrapper function that performs a quality check and produces a report.
+}
+\details{
+Combines the four data frame-specific wrappers: \code{\link{brood_check}}, \code{\link{capture_check}}, \code{\link{individual_check}} and \code{\link{location_check}}
 }
 \examples{
 \dontrun{
 
 CHO <- run_pipelines(PopID = "CHO", output_type = "R")
-quality_check(CHO, species = "PARMAJ")
+quality_check(CHO)
 
 }
 }
