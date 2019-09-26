@@ -77,12 +77,6 @@ quality_check <- function(R_data,
   #                 " in ", pop_names[pop_names$code == pop, "name"])
 
 
-  return(list(CheckList = check_list,
-              NumberChecks = nrow(check_list),
-              NumberWarnings = checks_warnings,
-              NumberErrors = checks_errors,
-              ElapsedTime = round(time, 2)))
-
   # Produce report
   if(output == TRUE) {
     c('---',
@@ -235,4 +229,10 @@ quality_check <- function(R_data,
     if(output_format == "pdf") rmarkdown::render("output-report.md", output_format = "pdf_document")
     if(output_format == "both") rmarkdown::render("output-report.md", output_format = "all")
   }
+
+  return(list(CheckList = check_list,
+              NumberChecks = nrow(check_list),
+              NumberWarnings = checks_warnings,
+              NumberErrors = checks_errors,
+              ElapsedTime = round(time, 2)))
 }
