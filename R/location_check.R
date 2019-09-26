@@ -1,12 +1,19 @@
-#' A wrapper function to perform quality checks on location data
+#' Perform quality checks on location data
 #'
-#' A wrapper that runs all single checks related to `Location_data`.
+#' A wrapper that runs all single checks related to \code{Location_data}.
 #'
-#' \strong{Location check 1}: Check if the formats of each column in `Location_data` match with the standard format using \code{\link{check_format_location}}.
+#' The following location data checks are performed:
+#' \itemize{
+#' \item \strong{L1}: Check if the formats of each column in \code{Location_data} match with the standard format using \code{\link{check_format_location}}.
+#' }
 #'
 #' @inheritParams checks_location_params
 #'
-#' @return A list of 3 items: a summary data frame of all checks, a record-by-record list of warnings, and a record-by-record list of errors.
+#' @return
+#' A list of:
+#' \item{CheckList}{A summary dataframe of check warnings and errors.}
+#' \item{Warnings}{A list of row-by-row warnings.}
+#' \item{Errors}{A list of row-by-row errors.}
 #'
 #' @export
 
@@ -26,16 +33,14 @@ location_check <- function(Location_data){
 
   check_format_location_output <- check_format_location(Location_data)
 
-  check_list[1,3:4] <- check_format_location_output$check_list
+  check_list[1,3:4] <- check_format_location_output$CheckList
 
 
   return(list(CheckList = check_list,
-              CheckIDs = check_list$CheckID,
-              CheckDescriptions = check_list$CheckDescription,
               Warnings = list(
-                Check1 = check_format_location_output$warning_output),
+                Check1 = check_format_location_output$WarningOutput),
               Errors = list(
-                Check1 = check_format_location_output$error_output)
+                Check1 = check_format_location_output$ErrorOutput)
   ))
 }
 
@@ -45,7 +50,12 @@ location_check <- function(Location_data){
 #' Check if the formats of each column in the location data match with the standard format
 #' @inheritParams checks_location_params
 #'
-#' @return Check list, warning output, error output.
+#' @return
+#' A list of:
+#' \item{CheckList}{A summary dataframe of whether the check resulted in any warnings or errors.}
+#' \item{WarningOutput}{A list of row-by-row warnings.}
+#' \item{ErrorOutput}{A list of row-by-row errors.}
+#'
 #' @export
 
 check_format_location <- function(Location_data){
@@ -131,9 +141,9 @@ check_format_location <- function(Location_data){
   check_list <- tibble::tibble(Warning = war,
                                Error = err)
 
-  return(list(check_list = check_list,
-              warning_output = unlist(warning_output),
-              error_output = unlist(error_output)))
+  return(list(CheckList = check_list,
+              WarningOutput = unlist(warning_output),
+              ErrorOutput = unlist(error_output)))
 
   #Satisfy RCMD Checks
   Format <- Format_standard <- NULL

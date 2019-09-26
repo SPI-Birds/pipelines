@@ -2,7 +2,7 @@
 % Please edit documentation in R/capture_check.R
 \name{capture_check}
 \alias{capture_check}
-\title{A wrapper function to perform quality checks on capture data}
+\title{Perform quality checks on capture data}
 \usage{
 capture_check(Capture_data)
 }
@@ -10,12 +10,18 @@ capture_check(Capture_data)
 \item{Capture_data}{Data frame. Capture data output from pipeline.}
 }
 \value{
-A list of 3 items: a summary data frame of all checks, a record-by-record list of warnings, and a record-by-record list of errors.
+A list of:
+\item{CheckList}{A summary dataframe of check warnings and errors.}
+\item{Warnings}{A list of row-by-row warnings.}
+\item{Errors}{A list of row-by-row errors.}
 }
 \description{
-A wrapper that runs all single checks related to `Capture_data`.
+A wrapper that runs all single checks related to \code{Capture_data}.
 }
 \details{
-\strong{Capture check 1}: Check if the formats of each column in `Capture_data` match with the standard format using \code{\link{check_format_capture}}.
-\strong{Capture check 2}: Check capture variable values against reference values using \code{\link{check_values_capture}}.
+The following capture data checks are performed:
+\itemize{
+\item \strong{C1}: Check if the formats of each column in \code{Capture_data} match with the standard format using \code{\link{check_format_capture}}.
+\item \strong{C2}: Check capture variable values against reference values using \code{\link{check_values_capture}}.
+}
 }

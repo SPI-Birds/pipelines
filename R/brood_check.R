@@ -1,14 +1,21 @@
-#' A wrapper function to perform quality checks on brood data
+#' Perform quality checks on brood data
 #'
-#' A wrapper that runs all single checks related to `Brood_data`.
+#' A wrapper that runs all single checks related to \code{Brood_data}.
 #'
-#' \strong{Brood check 1}: Check if the formats of each column in `Brood_data` match with the standard format using \code{\link{check_format_brood}}.
-#' \strong{Brood check 2}: Compare clutch size and brood size per brood using \code{\link{compare_clutch_brood}}.
-#' \strong{Brood check 3}: Compare brood size and fledgling number per brood using \code{\link{compare_brood_fledglings}}.
+#' The following brood data checks are performed:
+#' \itemize{
+#' \item \strong{B1}: Check if the formats of each column in \code{Brood_data} match with the standard format using \code{\link{check_format_brood}}.
+#' \item \strong{B2}: Compare clutch size and brood size per brood using \code{\link{compare_clutch_brood}}.
+#' \item \strong{B3}: Compare brood size and fledgling number per brood using \code{\link{compare_brood_fledglings}}.
+#' }
 #'
 #' @inheritParams checks_brood_params
 #'
-#' @return A list of 3 items: a summary data frame of all checks, a record-by-record list of warnings, and a record-by-record list of errors.
+#' @return
+#' A list of:
+#' \item{CheckList}{A summary dataframe of check warnings and errors.}
+#' \item{Warnings}{A list of row-by-row warnings.}
+#' \item{Errors}{A list of row-by-row errors.}
 #'
 #' @export
 
@@ -33,70 +40,73 @@ brood_check <- function(Brood_data){
 
   check_format_brood_output <- check_format_brood(Brood_data)
 
-  check_list[1,3:4] <- check_format_brood_output$check_list
+  check_list[1,3:4] <- check_format_brood_output$CheckList
 
   # - Compare clutch and brood sizes
   message("B2: Comparing clutch and brood sizes...")
 
   compare_clutch_brood_output <- compare_clutch_brood(Brood_data)
 
-  check_list[2,3:4] <- compare_clutch_brood_output$check_list
+  check_list[2,3:4] <- compare_clutch_brood_output$CheckList
 
   # - Compare brood sizes and fledgling numbers
   message("B3: Comparing brood sizes and fledgling numbers...")
 
   compare_brood_fledglings_output <- compare_brood_fledglings(Brood_data)
 
-  check_list[3,3:4] <- compare_brood_fledglings_output$check_list
+  check_list[3,3:4] <- compare_brood_fledglings_output$CheckList
 
   # - Compare laying and hatching dates
   message("B4: Comparing laying and hatching dates...")
 
   compare_laying_hatching_output <- compare_laying_hatching(Brood_data)
 
-  check_list[4,3:4] <- compare_laying_hatching_output$check_list
+  check_list[4,3:4] <- compare_laying_hatching_output$CheckList
 
   # - Compare hatching and fledging dates
   message("B5: Comparing hatching and fledging dates...")
 
   compare_hatching_fledging_output <- compare_hatching_fledging(Brood_data)
 
-  check_list[5,3:4] <- compare_hatching_fledging_output$check_list
+  check_list[5,3:4] <- compare_hatching_fledging_output$CheckList
 
   # - Check brood variable values against reference values
   message("B6: Checking brood variable values against reference values...")
 
   check_values_brood_output <- check_values_brood(Brood_data)
 
-  check_list[6,3:4] <- check_values_brood_output$check_list
+  check_list[6,3:4] <- check_values_brood_output$CheckList
 
 
   return(list(CheckList = check_list,
-              CheckIDs = check_list$CheckID,
-              CheckDescriptions = check_list$CheckDescription,
               Warnings = list(
-                Check1 = check_format_brood_output$warning_output,
-                Check2 = compare_clutch_brood_output$warning_output,
-                Check3 = compare_brood_fledglings_output$warning_output,
-                Check4 = compare_laying_hatching_output$warning_output,
-                Check5 = compare_hatching_fledging_output$warning_output,
-                Check6 = check_values_brood_output$warning_output),
+                Check1 = check_format_brood_output$WarningOutput,
+                Check2 = compare_clutch_brood_output$WarningOutput,
+                Check3 = compare_brood_fledglings_output$WarningOutput,
+                Check4 = compare_laying_hatching_output$WarningOutput,
+                Check5 = compare_hatching_fledging_output$WarningOutput,
+                Check6 = check_values_brood_output$WarningOutput),
               Errors = list(
-                Check1 = check_format_brood_output$error_output,
-                Check2 = compare_clutch_brood_output$error_output,
-                Check3 = compare_brood_fledglings_output$error_output,
-                Check4 = compare_laying_hatching_output$error_output,
-                Check5 = compare_hatching_fledging_output$error_output,
-                Check6 = check_values_brood_output$error_output)
+                Check1 = check_format_brood_output$ErrorOutput,
+                Check2 = compare_clutch_brood_output$ErrorOutput,
+                Check3 = compare_brood_fledglings_output$ErrorOutput,
+                Check4 = compare_laying_hatching_output$ErrorOutput,
+                Check5 = compare_hatching_fledging_output$ErrorOutput,
+                Check6 = check_values_brood_output$ErrorOutput)
               ))
 }
 
 #' Check format of brood data
 #'
-#' Check if the formats of each column in the brood data match with the standard format
+#' Check if the formats of each column in the brood data match with the standard format.
 #' @inheritParams checks_brood_params
 #'
-#' @return Check list, warning output, error output.
+#' @return
+#' A list of:
+#' \item{CheckList}{A summary dataframe of whether the check resulted in any warnings or errors.}
+#' \item{WarningOutput}{A list of row-by-row warnings.}
+#' \item{ErrorOutput}{A list of row-by-row errors.}
+#'
 #' @export
 
 check_format_brood <- function(Brood_data){
@@ -196,9 +206,9 @@ check_format_brood <- function(Brood_data){
   check_list <- tibble::tibble(Warning = war,
                                Error = err)
 
-  return(list(check_list = check_list,
-              warning_output = unlist(warning_output),
-              error_output = unlist(error_output)))
+  return(list(CheckList = check_list,
+              WarningOutput = unlist(warning_output),
+              ErrorOutput = unlist(error_output)))
 
   #Satisfy RCMD Checks
   Format <- Format_standard <- NULL
@@ -212,7 +222,12 @@ check_format_brood <- function(Brood_data){
 #'
 #' @inheritParams checks_brood_params
 #'
-#' @return Check list, warning output, error output.
+#' @return
+#' A list of:
+#' \item{CheckList}{A summary dataframe of whether the check resulted in any warnings or errors.}
+#' \item{WarningOutput}{A list of row-by-row warnings.}
+#' \item{ErrorOutput}{A list of row-by-row errors.}
+#'
 #' @export
 
 compare_clutch_brood <- function(Brood_data){
@@ -262,9 +277,9 @@ compare_clutch_brood <- function(Brood_data){
   check_list <- tibble::tibble(Warning = war,
                                Error = err)
 
-  return(list(check_list = check_list,
-              warning_output = unlist(warning_output),
-              error_output = unlist(error_output)))
+  return(list(CheckList = check_list,
+              WarningOutput = unlist(warning_output),
+              ErrorOutput = unlist(error_output)))
 
   #Satisfy RCMD Checks
   ExperimentID <- ClutchSize <- BroodSize <- NULL
@@ -278,7 +293,12 @@ compare_clutch_brood <- function(Brood_data){
 #'
 #' @inheritParams checks_brood_params
 #'
-#' @return Check list, warning output, error output.
+#' @return
+#' A list of:
+#' \item{CheckList}{A summary dataframe of whether the check resulted in any warnings or errors.}
+#' \item{WarningOutput}{A list of row-by-row warnings.}
+#' \item{ErrorOutput}{A list of row-by-row errors.}
+#'
 #' @export
 
 compare_brood_fledglings <- function(Brood_data){
@@ -328,9 +348,9 @@ compare_brood_fledglings <- function(Brood_data){
   check_list <- tibble::tibble(Warning = war,
                                Error = err)
 
-  return(list(check_list = check_list,
-              warning_output = unlist(warning_output),
-              error_output = unlist(error_output)))
+  return(list(CheckList = check_list,
+              WarningOutput = unlist(warning_output),
+              ErrorOutput = unlist(error_output)))
 
   #Satisfy RCMD Checks
   ExperimentID <- BroodSize <- NumberFledged <- NULL
@@ -345,7 +365,12 @@ compare_brood_fledglings <- function(Brood_data){
 #'
 #' @inheritParams checks_brood_params
 #'
-#' @return Check list, warning output, error output.
+#' @return
+#' A list of:
+#' \item{CheckList}{A summary dataframe of whether the check resulted in any warnings or errors.}
+#' \item{WarningOutput}{A list of row-by-row warnings.}
+#' \item{ErrorOutput}{A list of row-by-row errors.}
+#'
 #' @export
 
 compare_laying_hatching <- function(Brood_data){
@@ -397,9 +422,9 @@ compare_laying_hatching <- function(Brood_data){
   check_list <- tibble::tibble(Warning = war,
                                Error = err)
 
-  return(list(check_list = check_list,
-              warning_output = unlist(warning_output),
-              error_output = unlist(error_output)))
+  return(list(CheckList = check_list,
+              WarningOutput = unlist(warning_output),
+              ErrorOutput = unlist(error_output)))
 
   #Satisfy RCMD Checks
   LayingDate <- HatchDate <- NULL
@@ -413,7 +438,12 @@ compare_laying_hatching <- function(Brood_data){
 #'
 #' @inheritParams checks_brood_params
 #'
-#' @return Check list, warning output, error output.
+#' @return
+#' A list of:
+#' \item{CheckList}{A summary dataframe of whether the check resulted in any warnings or errors.}
+#' \item{WarningOutput}{A list of row-by-row warnings.}
+#' \item{ErrorOutput}{A list of row-by-row errors.}
+#'
 #' @export
 
 compare_hatching_fledging <- function(Brood_data){
@@ -465,9 +495,9 @@ compare_hatching_fledging <- function(Brood_data){
   check_list <- tibble::tibble(Warning = war,
                                Error = err)
 
-  return(list(check_list = check_list,
-              warning_output = unlist(warning_output),
-              error_output = unlist(error_output)))
+  return(list(CheckList = check_list,
+              WarningOutput = unlist(warning_output),
+              ErrorOutput = unlist(error_output)))
 
   #Satisfy RCMD Checks
   HatchDate <- FledgeDate <- NULL
@@ -481,7 +511,12 @@ compare_hatching_fledging <- function(Brood_data){
 #'
 #' @inheritParams checks_brood_params
 #'
-#' @return Check list, warning output, error output.
+#' @return
+#' A list of:
+#' \item{CheckList}{A summary dataframe of whether the check resulted in any warnings or errors.}
+#' \item{WarningOutput}{A list of row-by-row warnings.}
+#' \item{ErrorOutput}{A list of row-by-row errors.}
+#'
 #' @export
 
 check_values_brood <- function(Brood_data) {
@@ -617,9 +652,9 @@ check_values_brood <- function(Brood_data) {
   check_list <- tibble::tibble(Warning = war,
                                Error = err)
 
-  return(list(check_list = check_list,
-              warning_output = unlist(warning_output),
-              error_output = unlist(error_output)))
+  return(list(CheckList = check_list,
+              WarningOutput = unlist(warning_output),
+              ErrorOutput = unlist(error_output)))
 
   #Satisfy RCMD Checks
   brood_ref_values_list <- Species <- NULL

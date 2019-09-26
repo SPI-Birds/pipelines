@@ -1,13 +1,20 @@
-#' A wrapper function to perform quality checks on capture data
+#' Perform quality checks on capture data
 #'
-#' A wrapper that runs all single checks related to `Capture_data`.
+#' A wrapper that runs all single checks related to \code{Capture_data}.
 #'
-#' \strong{Capture check 1}: Check if the formats of each column in `Capture_data` match with the standard format using \code{\link{check_format_capture}}.
-#' \strong{Capture check 2}: Check capture variable values against reference values using \code{\link{check_values_capture}}.
+#' The following capture data checks are performed:
+#' \itemize{
+#' \item \strong{C1}: Check if the formats of each column in \code{Capture_data} match with the standard format using \code{\link{check_format_capture}}.
+#' \item \strong{C2}: Check capture variable values against reference values using \code{\link{check_values_capture}}.
+#' }
 #'
 #' @inheritParams checks_capture_params
 #'
-#' @return A list of 3 items: a summary data frame of all checks, a record-by-record list of warnings, and a record-by-record list of errors.
+#' @return
+#' A list of:
+#' \item{CheckList}{A summary dataframe of check warnings and errors.}
+#' \item{Warnings}{A list of row-by-row warnings.}
+#' \item{Errors}{A list of row-by-row errors.}
 #'
 #' @export
 
@@ -28,34 +35,37 @@ capture_check <- function(Capture_data){
 
   check_format_capture_output <- check_format_capture(Capture_data)
 
-  check_list[1,3:4] <- check_format_capture_output$check_list
+  check_list[1,3:4] <- check_format_capture_output$CheckList
 
   # - Check capture variable values against reference values
   message("C2: Checking capture variable values against reference values...")
 
   check_values_capture_output <- check_values_capture(Capture_data)
 
-  check_list[2,3:4] <- check_values_capture_output$check_list
+  check_list[2,3:4] <- check_values_capture_output$CheckList
 
 
   return(list(CheckList = check_list,
-              CheckIDs = check_list$CheckID,
-              CheckDescriptions = check_list$CheckDescription,
               Warnings = list(
-                Check1 = check_format_capture_output$warning_output,
-                Check2 = check_values_capture_output$warning_output),
+                Check1 = check_format_capture_output$WarningOutput,
+                Check2 = check_values_capture_output$WarningOutput),
               Errors = list(
-                Check1 = check_format_capture_output$error_output,
-                Check2 = check_values_capture_output$error_output)
+                Check1 = check_format_capture_output$ErrorOutput,
+                Check2 = check_values_capture_output$ErrorOutput)
   ))
 }
 
 #' Check format of capture data
 #'
-#' Check if the formats of each column in the capture data match with the standard format
+#' Check if the formats of each column in the capture data match with the standard format.
 #' @inheritParams checks_capture_params
 #'
-#' @return Check list, warning output, error output.
+#' @return
+#' A list of:
+#' \item{CheckList}{A summary dataframe of whether the check resulted in any warnings or errors.}
+#' \item{WarningOutput}{A list of row-by-row warnings.}
+#' \item{ErrorOutput}{A list of row-by-row errors.}
+#'
 #' @export
 
 check_format_capture <- function(Capture_data){
@@ -147,9 +157,9 @@ check_format_capture <- function(Capture_data){
   check_list <- tibble::tibble(Warning = war,
                                Error = err)
 
-  return(list(check_list = check_list,
-              warning_output = unlist(warning_output),
-              error_output = unlist(error_output)))
+  return(list(CheckList = check_list,
+              WarningOutput = unlist(warning_output),
+              ErrorOutput = unlist(error_output)))
 
   #Satisfy RCMD Checks
   Format <- Format_standard <- NULL
@@ -163,7 +173,12 @@ check_format_capture <- function(Capture_data){
 #'
 #' @inheritParams checks_capture_params
 #'
-#' @return Check list, warning output, error output.
+#' @return
+#' A list of:
+#' \item{CheckList}{A summary dataframe of whether the check resulted in any warnings or errors.}
+#' \item{WarningOutput}{A list of row-by-row warnings.}
+#' \item{ErrorOutput}{A list of row-by-row errors.}
+#'
 #' @export
 
 check_values_capture <- function(Capture_data) {
@@ -392,9 +407,9 @@ check_values_capture <- function(Capture_data) {
   check_list <- tibble::tibble(Warning = war,
                                Error = err)
 
-  return(list(check_list = check_list,
-              warning_output = unlist(warning_output),
-              error_output = unlist(error_output)))
+  return(list(CheckList = check_list,
+              WarningOutput = unlist(warning_output),
+              ErrorOutput = unlist(error_output)))
 
   # Satisfy RCMD Checks
   cap_adult_ref_values_list <- cap_chick_ref_values_list <- NULL

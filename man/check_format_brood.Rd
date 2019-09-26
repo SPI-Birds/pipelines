@@ -10,8 +10,11 @@ check_format_brood(Brood_data)
 \item{Brood_data}{Data frame. Brood data output from pipeline.}
 }
 \value{
-Check list, warning output, error output.
+A list of:
+\item{CheckList}{A summary dataframe of whether the check resulted in any warnings or errors.}
+\item{WarningOutput}{A list of row-by-row warnings.}
+\item{ErrorOutput}{A list of row-by-row errors.}
 }
 \description{
-Check if the formats of each column in the brood data match with the standard format
+Check if the formats of each column in the brood data match with the standard format.
 }

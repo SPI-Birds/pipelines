@@ -10,7 +10,10 @@ compare_hatching_fledging(Brood_data)
 \item{Brood_data}{Data frame. Brood data output from pipeline.}
 }
 \value{
-Check list, warning output, error output.
+A list of:
+\item{CheckList}{A summary dataframe of whether the check resulted in any warnings or errors.}
+\item{WarningOutput}{A list of row-by-row warnings.}
+\item{ErrorOutput}{A list of row-by-row errors.}
 }
 \description{
 Compare hatching and fledging date per brood. Broods with hatching date later than fledging date will result in an error. Broods with hatching date earlier than fledging date but the difference in number of days is smaller than breeding time will result in a warning.

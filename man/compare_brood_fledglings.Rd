@@ -10,7 +10,10 @@ compare_brood_fledglings(Brood_data)
 \item{Brood_data}{Data frame. Brood data output from pipeline.}
 }
 \value{
-Check list, warning output, error output.
+A list of:
+\item{CheckList}{A summary dataframe of whether the check resulted in any warnings or errors.}
+\item{WarningOutput}{A list of row-by-row warnings.}
+\item{ErrorOutput}{A list of row-by-row errors.}
 }
 \description{
 Compare brood size and fledgling number per brood. In non-manipulated broods, brood size should be larger or equal to fledgling number. If not, the record will result in an error. In broods with clutch manipulation, brood size might be smaller than fledgling number. If so, the record will result in a warning.

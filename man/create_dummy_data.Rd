@@ -3,41 +3,43 @@
 \name{create_dummy_data}
 \alias{create_dummy_data}
 \title{Quality check dummy data}
-\format{List of 4 dataframes.
-\describe{
-  \item{Brood_data}{Dummy brood data.}
-  \item{Capture_data}{Dummy capture data.}
-  \item{Individual_data}{Dummy individual data.}
-  \item{Location_data}{Dummy location data.}
-}}
 \usage{
 create_dummy_data(db = utils::choose.dir())
 }
 \arguments{
-\item{db}{Directory to save dummy data.}
+\item{db}{File path. Location to save dummy data.}
+}
+\value{
+List of 4 dataframes:
+\item{Brood_data}{Dummy brood data.}
+\item{Capture_data}{Dummy capture data.}
+\item{Individual_data}{Dummy individual data.}
+\item{Location_data}{Dummy location data.}
 }
 \description{
-Quality check dummy data
+Create dummy pipeline output (\code{dummy_data}) to be tested in \code{\link{quality_check}}.
+In each data frame, rows are specifically created to violate single checks from \code{\link{quality_check}}.
+See a detailed description of which rows correspond to which checks in 'Details'.
 }
 \details{
 \strong{Brood data}:
 \itemize{
-  \item Row 1 represents a non-manipulated brood that violates \sQuote{Brood check 2: Comparing clutch and brood sizes} (see \code{\link{compare_clutch_brood}}).
-  \item Row 2 represents a manipulated brood that violates \sQuote{Brood check 2: Comparing clutch and brood sizes} (see \code{\link{compare_clutch_brood}}).
-  \item Row 3 represents a non-manipulated brood that violates \sQuote{Brood check 3: Comparing brood sizes and fledgling numbers} (see \code{\link{compare_brood_fledglings}}).
-  \item Row 4 represents a manipulated brood that violates \sQuote{Brood check 3: Comparing brood sizes and fledgling numbers} (see \code{\link{compare_brood_fledglings}}).
-  \item Row 5 represents a brood that violates \sQuote{Brood check 4: Comparing laying and hatching dates} (see \code{\link{compare_laying_hatching}}).
-  \item Row 6 represents a brood that violates \sQuote{Brood check 5: Comparing hatching and fledging dates} (see \code{\link{compare_hatching_fledging}}).
-  \item Row 7-14 represent broods with improbable values in ClutchSize, BroodSize and NumberFledged per species (part of: \sQuote{Brood check 6: Checking brood variable values against reference values}; see \code{\link{check_brood_values}}).
-  \item Row 15-22 represent broods with impossible values in ClutchSize, BroodSize and NumberFledged per species (part of: \sQuote{Brood check 6: Checking brood variable values against reference values}; see \code{\link{check_brood_values}}).
+  \item Row 1 represents a non-manipulated brood that violates 'Brood check 2: Comparing clutch and brood sizes' (see \code{\link{compare_clutch_brood}}).
+  \item Row 2 represents a manipulated brood that violates 'Brood check 2: Comparing clutch and brood sizes' (see \code{\link{compare_clutch_brood}}).
+  \item Row 3 represents a non-manipulated brood that violates 'Brood check 3: Comparing brood sizes and fledgling numbers' (see \code{\link{compare_brood_fledglings}}).
+  \item Row 4 represents a manipulated brood that violates 'Brood check 3: Comparing brood sizes and fledgling numbers' (see \code{\link{compare_brood_fledglings}}).
+  \item Row 5 represents a brood that violates 'Brood check 4: Comparing laying and hatching dates' (see \code{\link{compare_laying_hatching}}).
+  \item Row 6 represents a brood that violates 'Brood check 5: Comparing hatching and fledging dates' (see \code{\link{compare_hatching_fledging}}).
+  \item Row 7-14 represent broods with improbable values in ClutchSize, BroodSize and NumberFledged per species (part of: 'Brood check 6: Checking brood variable values against reference values'; see \code{\link{check_brood_values}}).
+  \item Row 15-22 represent broods with impossible values in ClutchSize, BroodSize and NumberFledged per species (part of: 'Brood check 6: Checking brood variable values against reference values'; see \code{\link{check_brood_values}}).
 }
 
 \strong{Capture data}:
-#' \itemize{
-  \item Row 1-8 represent adults with improbable values in Mass and Tarsus (part of \sQuote{Capture check 2: Checking capture variable values against reference values}; see \code{\link{check_capture_values}}).
-  \item Row 9-16 represent chicks with improbable values in Mass and Tarsus (part of \sQuote{Capture check 2: Checking capture variable values against reference values}; see \code{\link{check_capture_values}}).
-  \item Row 17-24 represent adults with impossible values in Mass and Tarsus (part of \sQuote{Capture check 2: Checking capture variable values against reference values}; see \code{\link{check_capture_values}}).
-  \item Row 25- 32 represent chicks with impossible values in Mass and Tarsus (part of \sQuote{Capture check 2: Checking capture variable values against reference values}; see \code{\link{check_capture_values}}).
+\itemize{
+  \item Row 1-8 represent adults with improbable values in Mass and Tarsus (part of 'Capture check 2: Checking capture variable values against reference values'; see \code{\link{check_capture_values}}).
+  \item Row 9-16 represent chicks with improbable values in Mass and Tarsus (part of 'Capture check 2: Checking capture variable values against reference values'; see \code{\link{check_capture_values}}).
+  \item Row 17-24 represent adults with impossible values in Mass and Tarsus (part of 'Capture check 2: Checking capture variable values against reference values'; see \code{\link{check_capture_values}}).
+  \item Row 25- 32 represent chicks with impossible values in Mass and Tarsus (part of 'Capture check 2: Checking capture variable values against reference values'; see \code{\link{check_capture_values}}).
 }
 
 \strong{Individual data}:

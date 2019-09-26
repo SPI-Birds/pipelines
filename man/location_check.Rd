@@ -2,7 +2,7 @@
 % Please edit documentation in R/location_check.R
 \name{location_check}
 \alias{location_check}
-\title{A wrapper function to perform quality checks on location data}
+\title{Perform quality checks on location data}
 \usage{
 location_check(Location_data)
 }
@@ -10,11 +10,17 @@ location_check(Location_data)
 \item{Location_data}{Data frame. Location data output from pipeline.}
 }
 \value{
-A list of 3 items: a summary data frame of all checks, a record-by-record list of warnings, and a record-by-record list of errors.
+A list of:
+\item{CheckList}{A summary dataframe of check warnings and errors.}
+\item{Warnings}{A list of row-by-row warnings.}
+\item{Errors}{A list of row-by-row errors.}
 }
 \description{
-A wrapper that runs all single checks related to `Location_data`.
+A wrapper that runs all single checks related to \code{Location_data}.
 }
 \details{
-\strong{Location check 1}: Check if the formats of each column in `Location_data` match with the standard format using \code{\link{check_format_location}}.
+The following location data checks are performed:
+\itemize{
+\item \strong{L1}: Check if the formats of each column in \code{Location_data} match with the standard format using \code{\link{check_format_location}}.
+}
 }

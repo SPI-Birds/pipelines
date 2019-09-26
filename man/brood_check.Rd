@@ -2,7 +2,7 @@
 % Please edit documentation in R/brood_check.R
 \name{brood_check}
 \alias{brood_check}
-\title{A wrapper function to perform quality checks on brood data}
+\title{Perform quality checks on brood data}
 \usage{
 brood_check(Brood_data)
 }
@@ -10,13 +10,19 @@ brood_check(Brood_data)
 \item{Brood_data}{Data frame. Brood data output from pipeline.}
 }
 \value{
-A list of 3 items: a summary data frame of all checks, a record-by-record list of warnings, and a record-by-record list of errors.
+A list of:
+\item{CheckList}{A summary dataframe of check warnings and errors.}
+\item{Warnings}{A list of row-by-row warnings.}
+\item{Errors}{A list of row-by-row errors.}
 }
 \description{
-A wrapper that runs all single checks related to `Brood_data`.
+A wrapper that runs all single checks related to \code{Brood_data}.
 }
 \details{
-\strong{Brood check 1}: Check if the formats of each column in `Brood_data` match with the standard format using \code{\link{check_format_brood}}.
-\strong{Brood check 2}: Compare clutch size and brood size per brood using \code{\link{compare_clutch_brood}}.
-\strong{Brood check 3}: Compare brood size and fledgling number per brood using \code{\link{compare_brood_fledglings}}.
+The following brood data checks are performed:
+\itemize{
+\item \strong{B1}: Check if the formats of each column in \code{Brood_data} match with the standard format using \code{\link{check_format_brood}}.
+\item \strong{B2}: Compare clutch size and brood size per brood using \code{\link{compare_clutch_brood}}.
+\item \strong{B3}: Compare brood size and fledgling number per brood using \code{\link{compare_brood_fledglings}}.
+}
 }

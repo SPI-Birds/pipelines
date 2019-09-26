@@ -2,7 +2,7 @@
 % Please edit documentation in R/individual_check.R
 \name{individual_check}
 \alias{individual_check}
-\title{A wrapper function to perform quality checks on individual data}
+\title{Perform quality checks on individual data}
 \usage{
 individual_check(Individual_data)
 }
@@ -10,11 +10,17 @@ individual_check(Individual_data)
 \item{Individual_data}{Data frame. Individual data output from pipeline.}
 }
 \value{
-A list of 3 items: a summary data frame of all checks, a record-by-record list of warnings, and a record-by-record list of errors.
+A list of:
+\item{CheckList}{A summary dataframe of check warnings and errors.}
+\item{Warnings}{A list of row-by-row warnings.}
+\item{Errors}{A list of row-by-row errors.}
 }
 \description{
-A wrapper that runs all single checks related to `Individual_data`.
+A wrapper that runs all single checks related to \code{Individual_data}.
 }
 \details{
-\strong{Individual check 1}: Check if the formats of each column in `Individual_data` match with the standard format using \code{\link{check_format_individual}}.
+The following individual data checks are performed:
+\itemize{
+\item \strong{I1}: Check if the formats of each column in \code{Individual_data} match with the standard format using \code{\link{check_format_individual}}.
+}
 }

@@ -10,7 +10,10 @@ compare_clutch_brood(Brood_data)
 \item{Brood_data}{Data frame. Brood data output from pipeline.}
 }
 \value{
-Check list, warning output, error output.
+A list of:
+\item{CheckList}{A summary dataframe of whether the check resulted in any warnings or errors.}
+\item{WarningOutput}{A list of row-by-row warnings.}
+\item{ErrorOutput}{A list of row-by-row errors.}
 }
 \description{
 Compare clutch size and brood size per brood. In non-manipulated broods, clutch size should be larger or equal to brood size. If not, the record will result in an error. In broods with clutch manipulation, clutch size might be smaller than brood size. If so, the record will result in a warning.

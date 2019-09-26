@@ -10,7 +10,10 @@ check_format_location(Location_data)
 \item{Location_data}{Data frame. Location data output from pipeline.}
 }
 \value{
-Check list, warning output, error output.
+A list of:
+\item{CheckList}{A summary dataframe of whether the check resulted in any warnings or errors.}
+\item{WarningOutput}{A list of row-by-row warnings.}
+\item{ErrorOutput}{A list of row-by-row errors.}
 }
 \description{
 Check if the formats of each column in the location data match with the standard format

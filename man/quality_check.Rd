@@ -2,25 +2,33 @@
 % Please edit documentation in R/quality_check.R
 \name{quality_check}
 \alias{quality_check}
-\title{A wrapper function to perform a quality check on pipeline outputs}
+\title{Perform a quality check on pipeline outputs}
 \usage{
-quality_check(R_data, output_format = "both")
+quality_check(R_data, output = TRUE, output_format = "both")
 }
 \arguments{
 \item{R_data}{Output of pipeline as an R object. Generated using
-'output_type = R' in \code{\link{run_pipelines}}.}
+\code{output_type = R} in \code{\link{run_pipelines}}.}
 
-\item{output_format}{Format of report: "html", "pdf", or "both" (default).}
+\item{output}{\code{TRUE} or \code{FALSE}. If \code{TRUE}, a report is produced. Default: \code{TRUE}.}
+
+\item{output_format}{A character. Format of output report. Options: \code{"html"}, \code{"pdf"}, or \code{"both"}. Default: \code{"both"}.}
 }
 \value{
-A summary dataframe of test warnings and errors for use in testthat,
-  and a report of the line-by-line list of warnings and errors.
+A list of:
+\item{CheckList}{A summary dataframe of check warnings and errors.}
+\item{NumberChecks}{Number of checks performed.}
+\item{NumberWarnings}{Number of checks resulted in warnings.}
+\item{NumberErrors}{Number of checks resulted in errors.}
+\item{ElapsedTime}{Elapsed time in seconds.}
+
+and a report (pdf, html or both) of row-by-row list of warnings and errors if \code{output_format = TRUE}.
 }
 \description{
 A wrapper function that performs a quality check and produces a report.
 }
 \details{
-Combines the four data frame-specific wrappers: \code{\link{brood_check}}, \code{\link{capture_check}}, \code{\link{individual_check}} and \code{\link{location_check}}
+Combines the four data frame-specific wrappers: \code{\link{brood_check}}, \code{\link{capture_check}}, \code{\link{individual_check}} and \code{\link{location_check}}.
 }
 \examples{
 \dontrun{
