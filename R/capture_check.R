@@ -14,29 +14,33 @@
 capture_check <- function(Capture_data){
 
   # Create check list with a summary of warnings and errors per check
-  check_list <- tibble::tibble(Check = c("Capture data format",
-                                         "Improbable and impossible values capture data"),
+  check_list <- tibble::tibble(CheckID = purrr::map_chr(1:2, ~paste0("C", .)),
+                               CheckDescription = c("Capture data format",
+                                                    "Improbable and impossible values capture data"),
                                Warning = NA,
                                Error = NA)
 
   # Checks
+  message("Capture checks")
+
   # - Check format capture data
-  message("Capture check 1: Checking format of capture data...")
+  message("C1: Checking format of capture data...")
 
   check_format_capture_output <- check_format_capture(Capture_data)
 
-  check_list[1,2:3] <- check_format_capture_output$check_list
+  check_list[1,3:4] <- check_format_capture_output$check_list
 
   # - Check capture variable values against reference values
-  message("Capture check 2: Checking capture variable values against reference values...")
+  message("C2: Checking capture variable values against reference values...")
 
   check_values_capture_output <- check_values_capture(Capture_data)
 
-  check_list[2,2:3] <- check_values_capture_output$check_list
+  check_list[2,3:4] <- check_values_capture_output$check_list
 
 
   return(list(CheckList = check_list,
-              CheckNames = check_list$Check,
+              CheckIDs = check_list$CheckID,
+              CheckDescriptions = check_list$CheckDescription,
               Warnings = list(
                 Check1 = check_format_capture_output$warning_output,
                 Check2 = check_values_capture_output$warning_output),

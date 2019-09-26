@@ -13,21 +13,25 @@
 individual_check <- function(Individual_data){
 
   # Create check list with a summary of warnings and errors per check
-  check_list <- tibble::tibble(Check = c("Individual data format"),
+  check_list <- tibble::tibble(CheckID = purrr::map_chr(1, ~paste0("I", .)),
+                               CheckDescription = c("Individual data format"),
                                Warning = NA,
                                Error = NA)
 
   # Checks
+  message("Individual checks")
+
   # - Check format individual data
-  message("Individual check 1: Checking format of individual data...")
+  message("I1: Checking format of individual data...")
 
   check_format_individual_output <- check_format_individual(Individual_data)
 
-  check_list[1,2:3] <- check_format_individual_output$check_list
+  check_list[1, 3:4] <- check_format_individual_output$check_list
 
 
   return(list(CheckList = check_list,
-              CheckNames = check_list$Check,
+              CheckIDs = check_list$CheckID,
+              CheckDescriptions = check_list$CheckDescription,
               Warnings = list(
                 Check1 = check_format_individual_output$warning_output),
               Errors = list(
