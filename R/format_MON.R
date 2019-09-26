@@ -277,7 +277,7 @@ create_capture_MON <- function(db, species_filter){
                                                    }
 
                                                  }),
-                  ExperimentID = dplyr::case_when(.$exp_ad == "FMR" ~ "Metabolic measurement",
+                  ExperimentDescription1 = dplyr::case_when(.$exp_ad == "FMR" ~ "Metabolic measurement",
                                                   .$exp_ad == "VACCIN" ~ "Vaccinated",
                                                   .$exp_ad == "OF" ~ "Openfield??",
                                                   .$exp_ad == "TRANSFERT" ~ "Translocation",
@@ -306,7 +306,7 @@ create_capture_MON <- function(db, species_filter){
                   Tarsus = as.numeric(tarsed), OriginalTarsusMethod = dplyr::case_when(!is.na(.$tarsed) ~ "Alternative")) %>%
     dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, FoundDead, ObserverID, LocationID,
                   CapturePopID, CapturePlot, ReleasePopID, ReleasePlot, Mass, Tarsus,
-                  OriginalTarsusMethod, WingLength, Age_observed, ObservedSex, GeneticSex, ExperimentID, latitude, longitude, CaptureMethod)
+                  OriginalTarsusMethod, WingLength, Age_observed, ObservedSex, GeneticSex, ExperimentDescription1, latitude, longitude, CaptureMethod)
 
 
 
@@ -358,9 +358,9 @@ create_capture_MON <- function(db, species_filter){
                   GeneticSex = dplyr::case_when(.$sex_g == 1 ~ "M",
                                                 .$sex_g == 2 ~ "F"),
                   Age_observed = 1L,
-                  ExperimentID = dplyr::case_when(.$expou == "1" ~ "Manipulation affect selective value (e.g. cross foster)",
+                  ExperimentDescription1 = dplyr::case_when(.$expou == "1" ~ "Manipulation affect selective value (e.g. cross foster)",
                                                   .$expou == "2" ~ "No manipulation that affects selective value (e.g. weighing)"),
-                  ExperimentDescription = dplyr::case_when(.$exp_p == "alimente" ~ "Supplemental feeding",
+                  ExperimentDescription2 = dplyr::case_when(.$exp_p == "alimente" ~ "Supplemental feeding",
                                                   .$exp_p == "poussintron" ~ "Behavioural test",
                                                   .$exp_p == "poussintronfc" ~ "Behavioural test and heart rate",
                                                   .$exp_p == "transf" ~ "Translocation",
@@ -418,14 +418,14 @@ create_capture_MON <- function(db, species_filter){
                                                    })) %>%
     dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, FoundDead, ObserverID, LocationID,
                   CapturePopID, CapturePlot, ReleasePopID, ReleasePlot, Mass, Tarsus, OriginalTarsusMethod,
-                  WingLength, Age_observed, ChickAge, ObservedSex, GeneticSex, ExperimentID, BroodIDLaid, BroodIDFledged)
+                  WingLength, Age_observed, ChickAge, ObservedSex, GeneticSex, ExperimentDescription1, ExperimentDescription2, BroodIDLaid, BroodIDFledged)
 
   Capture_data <- dplyr::bind_rows(Full_capture_data, Chick_capture_data) %>%
     calc_age(ID = IndvID, Age = Age_observed, Date = CaptureDate, Year = BreedingSeason) %>%
     dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, FoundDead, ObserverID, LocationID,
                   CapturePopID, CapturePlot, ReleasePopID, ReleasePlot, Mass, Tarsus, OriginalTarsusMethod,
-                  WingLength, Age_observed, Age_calculated, ChickAge, ExperimentID, ObservedSex, GeneticSex,
-                  BroodIDLaid, BroodIDFledged, latitude, longitude, CaptureMethod)
+                  WingLength, Age_observed, Age_calculated, ChickAge, ObservedSex, GeneticSex,
+                  BroodIDLaid, BroodIDFledged, latitude, longitude, CaptureMethod, ExperimentDescription1, ExperimentDescription2)
 
   return(Capture_data)
 
@@ -477,12 +477,12 @@ create_brood_MON <- function(db, species_filter){
                   FemaleID = fbag,
                   ParasiteTreatment = dplyr::case_when(.$extnt == "1" ~ "Protected",
                                                        .$extnt == "2" ~ "Unprotected"),
-                  ExperimentID = dplyr::case_when(.$expou == "1" ~ "No intervention that will affect breeding success",
+                  Brood_ExperimentDescription1 = dplyr::case_when(.$expou == "1" ~ "No intervention that will affect breeding success",
                                                   .$expou == "2" ~ "Intervention that can influence number of eggs or quality of chicks"),
-                  ExperimentDescription = experience,
+                  Brood_ExperimentDescription2 = experience,
                   Crossfostering_treatment = explique,
                   NumberParasites = proto,
-                  FailureCasue = dplyr::case_when(.$mort == "ABA" ~ "Abandoned",
+                  FailureCause = dplyr::case_when(.$mort == "ABA" ~ "Abandoned",
                                                   .$mort == "MAN" ~ "Manipulated by researchers",
                                                   .$mort == "PRE" ~ "Predation",
                                                   .$mort == "CLI" ~ "Climatic event (e.g. storm)",
@@ -498,6 +498,8 @@ create_brood_MON <- function(db, species_filter){
                                            .$lieu == "rou" ~ "ROU")) %>%
     dplyr::arrange(BreedingSeason, Species, FemaleID, LayingDate) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
+    dplyr::mutate(ExperimentID = dplyr::case_when((!is.na(.$Crossfostering_treatment) | !is.na(.$Brood_ExperimentDescription2) | .$ParasiteTreatment == "Treated" | .$expou == "2") ~ TRUE,
+                                                  (is.na(.$Crossfostering_treatment) & is.na(.$Brood_ExperimentDescription2) & .$ParasiteTreatment != "Treated" & .$expou != "2") ~ FALSE)) %>%
     #Keep all chick codes because we will use these for individual data table and remove later
     #Keep box number to link to Capture data
     dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot,
