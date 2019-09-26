@@ -498,8 +498,8 @@ create_brood_MON <- function(db, species_filter){
                                            .$lieu == "rou" ~ "ROU")) %>%
     dplyr::arrange(BreedingSeason, Species, FemaleID, LayingDate) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
-    dplyr::mutate(ExperimentID = dplyr::case_when((!is.na(.$Crossfostering_treatment) | !is.na(.$Brood_ExperimentDescription2) | .$ParasiteTreatment == "Treated" | .$expou == "2") ~ TRUE,
-                                                  (is.na(.$Crossfostering_treatment) & is.na(.$Brood_ExperimentDescription2) & .$ParasiteTreatment != "Treated" & .$expou != "2") ~ FALSE)) %>%
+    dplyr::mutate(ExperimentID = dplyr::case_when((!is.na(.$Crossfostering_treatment) | !is.na(.$Brood_ExperimentDescription2) | .$ParasiteTreatment == "Treated" | .$expou == "2") ~ "TRUE",
+                                                  (is.na(.$Crossfostering_treatment) & is.na(.$Brood_ExperimentDescription2) & .$ParasiteTreatment != "Treated" & .$expou != "2") ~ "FALSE")) %>%
     #Keep all chick codes because we will use these for individual data table and remove later
     #Keep box number to link to Capture data
     dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot,
