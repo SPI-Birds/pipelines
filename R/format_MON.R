@@ -112,14 +112,23 @@ format_MON <- function(db = utils::choose.dir(),
 
   Individual_data <- create_individual_MON(Capture_data, Brood_data)
 
+  # LOCATION DATA
+
+  message("Compiling location data...")
+
+  Location_data <- create_location_MON(Capture_data)
+
   # WRANGLE DATA FOR EXPORT
+
+  Capture_data <- Capture_data %>% dplyr::select(IndvID:ChickAge)
 
   #Remove chick rings from brood data
   #Add NAs for Avg measurements until we add them later
   Brood_data <- dplyr::select(Brood_data, -pulbag1:-pulbag14) %>%
     dplyr::mutate(AvgEggMass = NA_real_, NumberEggs = NA_integer_,
                   AvgChickMass = NA_real_, NumberChicksMass = NA_integer_,
-                  AvgTarsus = NA_real_, NumberChicksTarsus = NA_integer_)
+                  AvgTarsus = NA_real_, NumberChicksTarsus = NA_integer_) %>%
+    dplyr::select(BroodID:NumberFledgedError, AvgEggMass:NumberChicksTarsus, ExperimentID)
 
   # GENERATE DEBUG REPORT
 
@@ -149,7 +158,7 @@ format_MON <- function(db = utils::choose.dir(),
 
     utils::write.csv(x = Capture_data %>% select(-Sex, -BroodID), file = paste0(path, "\\Capture_data_MON.csv"), row.names = F)
 
-    #utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_MON.csv"), row.names = F)
+    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_MON.csv"), row.names = F)
 
     invisible(NULL)
 
@@ -162,7 +171,7 @@ format_MON <- function(db = utils::choose.dir(),
     return(list(Brood_data = Brood_data,
                 Capture_data = Capture_data,
                 Individual_data = Individual_data,
-                Location_data = data.frame(LocationID = NA, Habitat = NA)))
+                Location_data = Location_data))
 
   }
 
@@ -637,9 +646,9 @@ create_location_MON <- function(capture_data){
   #Currently give not LocationType, I have no idea how to determine this
   Location_data <- capture_data %>%
     dplyr::group_by(LocationID) %>%
-    dplyr::summarise(NestboxID = LocationID,
+    dplyr::summarise(NestboxID = unique(LocationID),
                      LocationType = NA_character_,
-                     PopID = unique(PopID),
+                     PopID = unique(CapturePopID),
                      Latitude = as.numeric(first(latitude)),
                      Longitude = as.numeric(first(longitude)),
                      StartSeason = min(BreedingSeason),
