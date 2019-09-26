@@ -62,6 +62,7 @@
 #'\item IN (where N > 1): An adult not captured as a chick or juvenile.
 #'We give EURING code 4 + 2*1-N (i.e. of unknown age because it was not caught
 #'when it could be accurately aged).
+#'}
 #'
 #'\strong{Age_calculated:} We strictly say that we canot accurately know the age of an individual
 #'unless they were caught in their first year. Therefore, although birds classified as J1

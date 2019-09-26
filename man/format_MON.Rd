@@ -38,3 +38,69 @@ A pipeline to produce the standard format for the hole nesting bird population
 in Montpellier, France, administered by CNRS Montpellier (Anne Charmantier and
 colleagues).
 }
+\details{
+This section provides details on data management choices that are unique to
+this data. For a general description of the standard protocl please see
+\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
+
+\strong{IndvID:} In Capture_data, any individuals given unidentified numbers
+(i.e. containing 'no-ident') are treated as NA. These records are still kept
+as they contain information about broods (e.g. AvgChickMass) but are not
+integrated into the individual data table.
+
+\strong{Sex:} We ignore uncertainty in sex (e.g. category 4 = Male probable
+but not certain)
+
+\strong{LocationID:} For birds caught in boxes. Location is
+Plot_NextboxNumber.
+
+\strong{BroodID:} Broods are BreedingSeason_LocationID_day_month =
+BreedingSeason_Plot_NestboxNumber_day_month.
+
+\strong{ClutchTypeObserved:} No clutch type recorded, only calculated clutch
+type is given.
+
+\strong{Tarsus:} Left and right tarsus are measured. Right generally has more
+data, so we use this as our measure of tarsus length. Currently, we assume
+everything is in Svensson's alternative, but there is supposedly some change
+from before 1989. Need to ask Anne about this.
+
+\strong{Age:} We translate observed age codes into EURING codes as follows:
+\itemize{
+
+\item P0 (Poussin bagué au nichoir ou en cavité naturelle/chick banded in box
+or natural cavity): We give EURING code 1: Nestling or chick unable to fly
+freely.
+
+\item J0 (Juvénile (oiseau de l’année) capturé entre le moment où il s’est
+envolé du nichoir et le 31 décembre) (Juvenile (of this year) captured between
+fledging and Dec 31st of that year) We give EURING code 3: First-year:
+full-grown bird hatched in the breeding season of this calendar year.
+
+\item PN (where N > 0) Individuals caught as chick and caught again N seasons
+later We give EURING code 3 + 2*N (i.e. of known age because it was caught
+when it could be accurately aged)
+
+\item J1 (Juvénile (oiseau de l’année dernière) capturé après le 1er janvier
+et avant la mue post reproduction (juillet-août)) (Juvenile (of last year)
+capture between Jan 1st and July-Aug) We give EURING code 5: 2nd year: a bird
+hatched last calendar year and now in its second calendar year.
+
+\item JN (where N > 1) Individuals caught as juvenile and caught again N
+season later We give EURING code 3 + 2*N: Nestling or chick unable to fly
+freely.
+
+\item AN (where N >= 0) An adult not captured as a chick or juvenile.
+We give EURING code 4 + 2*N (i.e. of unknown age because it was not caught
+when it could be accurately aged).
+
+\item IN (where N > 1): An adult not captured as a chick or juvenile.
+We give EURING code 4 + 2*1-N (i.e. of unknown age because it was not caught
+when it could be accurately aged).
+}
+
+\strong{Age_calculated:} We strictly say that we canot accurately know the age of an individual
+unless they were caught in their first year. Therefore, although birds classified as J1
+can be aged very accurately, we still treat these as having age uncertain
+because they weren't caught as chicks.
+}
