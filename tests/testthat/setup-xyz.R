@@ -14,3 +14,8 @@ if(file.exists("../../inst/extdata/test_data.RDS")){
                                    output_type = "R")
 
 }
+
+
+# Run quality check for dummy data and produce no report
+dummy_check <- quality_check(R_data = dummy_data,
+                             output = FALSE)

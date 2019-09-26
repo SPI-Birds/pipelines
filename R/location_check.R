@@ -13,21 +13,25 @@
 location_check <- function(Location_data){
 
   # Create check list with a summary of warnings and errors per check
-  check_list <- tibble::tibble(Check = c("Location data format"),
+  check_list <- tibble::tibble(CheckID = purrr::map_chr(1, ~paste0("L", .)),
+                               CheckDescription = c("Location data format"),
                                Warning = NA,
                                Error = NA)
 
   # Checks
+  message("Location checks")
+
   # - Check format location data
-  message("Location check 1: Checking format of location data...")
+  message("L1: Checking format of location data...")
 
   check_format_location_output <- check_format_location(Location_data)
 
-  check_list[1,2:3] <- check_format_location_output$check_list
+  check_list[1,3:4] <- check_format_location_output$check_list
 
 
   return(list(CheckList = check_list,
-              CheckNames = check_list$Check,
+              CheckIDs = check_list$CheckID,
+              CheckDescriptions = check_list$CheckDescription,
               Warnings = list(
                 Check1 = check_format_location_output$warning_output),
               Errors = list(
@@ -47,10 +51,10 @@ location_check <- function(Location_data){
 check_format_location <- function(Location_data){
 
   ## Data frame with column names and formats according to the standard protocol
-  Location_data_standard <- tibble::tibble(Variable = c("LocationID", "NestboxID", "LocationType",
+  Location_data_standard <- tibble::tibble(Variable = c("Row", "LocationID", "NestboxID", "LocationType",
                                                         "PopID", "Latitude", "Longitude",
                                                         "StartSeason", "EndSeason", "Habitat"),
-                                           Format_standard = c("character", "character", "character",
+                                           Format_standard = c("integer", "character", "character", "character",
                                                                "character", "numeric", "numeric",
                                                                "integer", "integer", "character"))
 

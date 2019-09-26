@@ -15,59 +15,65 @@
 brood_check <- function(Brood_data){
 
   # Create check list with a summary of warnings and errors per check
-  check_list <- tibble::tibble(Check = c("Brood data format", "Clutch and brood sizes",
-                                         "Brood sizes and fledgling numbers",
-                                         "Laying and hatching dates", "Hatching and fledging dates",
-                                         "Improbable and impossible values brood data"),
+  check_list <- tibble::tibble(CheckID = purrr::map_chr(1:6, ~paste0("B", .)),
+                               CheckDescription = c("Brood data format",
+                                                    "Clutch and brood sizes",
+                                                    "Brood sizes and fledgling numbers",
+                                                    "Laying and hatching dates",
+                                                    "Hatching and fledging dates",
+                                                    "Improbable and impossible values brood data"),
                                Warning = NA,
                                Error = NA)
 
   # Checks
+  message("Brood checks")
+
   # - Check format brood data
-  message("Brood check 1: Checking format of brood data...")
+  message("B1: Checking format of brood data...")
 
   check_format_brood_output <- check_format_brood(Brood_data)
 
-  check_list[1,2:3] <- check_format_brood_output$check_list
+  check_list[1,3:4] <- check_format_brood_output$check_list
 
   # - Compare clutch and brood sizes
-  message("Brood check 2: Comparing clutch and brood sizes...")
+  message("B2: Comparing clutch and brood sizes...")
 
   compare_clutch_brood_output <- compare_clutch_brood(Brood_data)
 
-  check_list[2,2:3] <- compare_clutch_brood_output$check_list
+  check_list[2,3:4] <- compare_clutch_brood_output$check_list
 
   # - Compare brood sizes and fledgling numbers
-  message("Brood check 3: Comparing brood sizes and fledgling numbers...")
+  message("B3: Comparing brood sizes and fledgling numbers...")
 
   compare_brood_fledglings_output <- compare_brood_fledglings(Brood_data)
 
-  check_list[3,2:3] <- compare_brood_fledglings_output$check_list
+  check_list[3,3:4] <- compare_brood_fledglings_output$check_list
 
   # - Compare laying and hatching dates
-  message("Brood check 4: Comparing laying and hatching dates...")
+  message("B4: Comparing laying and hatching dates...")
 
   compare_laying_hatching_output <- compare_laying_hatching(Brood_data)
 
-  check_list[4,2:3] <- compare_laying_hatching_output$check_list
+  check_list[4,3:4] <- compare_laying_hatching_output$check_list
 
   # - Compare hatching and fledging dates
-  message("Brood check 5: Comparing hatching and fledging dates...")
+  message("B5: Comparing hatching and fledging dates...")
 
   compare_hatching_fledging_output <- compare_hatching_fledging(Brood_data)
 
-  check_list[5,2:3] <- compare_hatching_fledging_output$check_list
+  check_list[5,3:4] <- compare_hatching_fledging_output$check_list
 
   # - Check brood variable values against reference values
-  message("Brood check 6: Checking brood variable values against reference values...")
+  message("B6: Checking brood variable values against reference values...")
 
   check_values_brood_output <- check_values_brood(Brood_data)
 
-  check_list[6,2:3] <- check_values_brood_output$check_list
+  check_list[6,3:4] <- check_values_brood_output$check_list
 
 
   return(list(CheckList = check_list,
-              CheckNames = check_list$Check,
+              CheckIDs = check_list$CheckID,
+              CheckDescriptions = check_list$CheckDescription,
               Warnings = list(
                 Check1 = check_format_brood_output$warning_output,
                 Check2 = compare_clutch_brood_output$warning_output,
@@ -96,7 +102,7 @@ brood_check <- function(Brood_data){
 check_format_brood <- function(Brood_data){
 
   ## Data frame with column names and formats according to the standard protocol
-  Brood_data_standard <- tibble::tibble(Variable = c("BroodID", "PopID", "BreedingSeason", "Species", "Plot",
+  Brood_data_standard <- tibble::tibble(Variable = c("Row", "BroodID", "PopID", "BreedingSeason", "Species", "Plot",
                                                      "LocationID", "FemaleID", "MaleID",
                                                      "ClutchType_observed", "ClutchType_calculated",
                                                      "LayingDate", "LayingDateError", "ClutchSize",
@@ -106,7 +112,7 @@ check_format_brood <- function(Brood_data){
                                                      "NumberFledgedError", "AvgEggMass", "NumberEggs",
                                                      "AvgChickMass", "NumberChicksMass", "AvgTarsus",
                                                      "NumberChicksTarsus", "OriginalTarsusMethod", "ExperimentID"),
-                                        Format_standard = c("character", "character", "integer", "character",
+                                        Format_standard = c("integer", "character", "character", "integer", "character",
                                                             "character", "character", "character", "character",
                                                             "character", "character",
                                                             "Date", "numeric", "integer",
