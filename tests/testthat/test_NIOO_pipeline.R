@@ -175,12 +175,32 @@ test_that("Location_data returns an expected outcome...", {
   #We want to run tests for nest boxes (there are no mistnets)
 
   #Take a subset of only NIOO data
-  # NIOO_data <- dplyr::filter(pipeline_output$Location_data, PopID %in% c("HOG", "OOS", "VLI", "BUU", "LIE", "WAR", "WES"))
-  #
-  # #Test 1: Nestbox check
-  # #Nestbox BP_001 should be type "NB"
-  # expect_equal(subset(NIOO_data, LocationID == "BP_001")$LocationType, "NB")
-  # #Nest boxes are not moved during the study, so LocationID and NestboxID should be identical
-  # expect_equal(subset(NIOO_data, LocationID == "BP_001")$LocationID, subset(NIOO_data, LocationID == "BP_001")$NestboxID)
+  NIOO_data <- dplyr::filter(pipeline_output$Location_data, PopID %in% c("HOG", "OOS", "VLI", "BUU", "LIE", "WAR", "WES"))
+
+  #Test 1: Nestbox check
+  #Location has multiple records (it had multiple nestboxes over time)
+  expect_equal(nrow(subset(NIOO_data, LocationID == "47")), 3)
+  #All records have expected LocationType
+  #THIS RETURNS AN ERROR BECAUSE ONE OF THEM IS LISTED AS 'OUT OF USE'. This is a mistake in the database
+  expect_true(all(subset(NIOO_data, LocationID == "47")$LocationType == "NB"))
+  #Expect Start and EndSeason of first box at this location is as expected
+  expect_equal(subset(NIOO_data, LocationID == "47")$StartSeason[1], 1996L)
+  expect_equal(subset(NIOO_data, LocationID == "47")$EndSeason[1], 1996L)
+  #Expect Start and EndSeason of second box at this location is as expected
+  expect_equal(subset(NIOO_data, LocationID == "47")$StartSeason[3], 1997L)
+  expect_equal(subset(NIOO_data, LocationID == "47")$EndSeason[3], 2006L)
+  #Check that LocationID is in the expected PopID
+  expect_equal(subset(NIOO_data, LocationID == "47")$PopID[1], "HOG")
+
+  #Test 1: Mistnet check
+  #Location has only one record
+  expect_equal(nrow(subset(NIOO_data, LocationID == "1841")), 1)
+  #All records have expected LocationType
+  expect_true(all(subset(NIOO_data, LocationID == "1841")$LocationType == "MN"))
+  #Expect Start and EndSeason of first box at this location is as expected
+  expect_equal(subset(NIOO_data, LocationID == "1841")$StartSeason, 1977L)
+  expect_equal(subset(NIOO_data, LocationID == "1841")$EndSeason, NA_integer_)
+  #Check that LocationID is in the expected PopID
+  expect_equal(subset(NIOO_data, LocationID == "1841")$PopID, "OOS")
 
 })
