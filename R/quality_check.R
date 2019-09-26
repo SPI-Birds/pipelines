@@ -9,8 +9,15 @@
 #' @param output If `TRUE`, a report is produced.
 #' @param output_format Format of report: "html", "pdf", or "both" (default).
 #'
-#' @return A summary dataframe of test warnings and errors for use in testthat,
-#'   and a report of the line-by-line list of warnings and errors.
+#' @return
+#' A list of:
+#' \item{CheckList}{A summary dataframe of check warnings and errors.}
+#' \item{NumberChecks}{Number of checks performed.}
+#' \item{NumberWarnings}{Number of checks resulted in warnings.}
+#' \item{NumberErrors}{Number of checks resulted in errors.}
+#' \item{ElapsedTime}{Elapsed time in seconds.}
+#'
+#' and a report (pdf or html) of the line-by-line list of warnings and errors.
 #'
 #' @examples
 #' \dontrun{
@@ -69,6 +76,13 @@ quality_check <- function(R_data,
   # title <- paste0("Quality check report for ", Species_codes[Species_codes$Code == species, "CommonName"],
   #                 " in ", pop_names[pop_names$code == pop, "name"])
 
+
+  return(list(CheckList = check_list,
+              NumberChecks = nrow(check_list),
+              NumberWarnings = checks_warnings,
+              NumberErrors = checks_errors,
+              ElapsedTime = round(time, 2)))
+
   # Produce report
   if(output == TRUE) {
     c('---',
@@ -120,7 +134,7 @@ quality_check <- function(R_data,
       '```{r echo=FALSE}',
       'purrr::pwalk(.l = list(Brood_checks$Warnings,
                             1:length(Brood_checks$Warnings),
-                            Brood_checks$CheckNames),
+                            Brood_checks$CheckDescriptions),
                   .f = ~{
                     cat(paste0("Check ", ..2, ": ", ..3), "\n")
                     cat(..1, sep="\n", "\n")
@@ -132,7 +146,7 @@ quality_check <- function(R_data,
       '```{r echo=FALSE}',
       'purrr::pwalk(.l = list(Capture_checks$Warnings,
                             1:length(Capture_checks$Warnings),
-                            Capture_checks$CheckNames),
+                            Capture_checks$CheckDescriptions),
                   .f = ~{
                     cat(paste0("Check ", ..2, ": ", ..3), "\n")
                     cat(..1, sep="\n", "\n")
@@ -144,7 +158,7 @@ quality_check <- function(R_data,
       '```{r echo=FALSE}',
       'purrr::pwalk(.l = list(Individual_checks$Warnings,
                             1:length(Individual_checks$Warnings),
-                            Individual_checks$CheckNames),
+                            Individual_checks$CheckDescriptions),
                   .f = ~{
                     cat(paste0("Check ", ..2, ": ", ..3), "\n")
                     cat(..1, sep="\n", "\n")
@@ -156,7 +170,7 @@ quality_check <- function(R_data,
       '```{r echo=FALSE}',
       'purrr::pwalk(.l = list(Location_checks$Warnings,
                             1:length(Location_checks$Warnings),
-                            Location_checks$CheckNames),
+                            Location_checks$CheckDescriptions),
                   .f = ~{
                     cat(paste0("Check ", ..2, ": ", ..3), "\n")
                     cat(..1, sep="\n", "\n")
@@ -171,7 +185,7 @@ quality_check <- function(R_data,
       '```{r echo=FALSE, linewidth=100}',
       'purrr::pwalk(.l = list(Brood_checks$Errors,
                             1:length(Brood_checks$Errors),
-                            Brood_checks$CheckNames),
+                            Brood_checks$CheckDescriptions),
                   .f = ~{
                     cat(paste0("Check ", ..2, ": ", ..3), "\n")
                     cat(..1, sep="\n", "\n")
@@ -183,7 +197,7 @@ quality_check <- function(R_data,
       '```{r echo=FALSE}',
       'purrr::pwalk(.l = list(Capture_checks$Errors,
                             1:length(Capture_checks$Errors),
-                            Capture_checks$CheckNames),
+                            Capture_checks$CheckDescriptions),
                   .f = ~{
                     cat(paste0("Check ", ..2, ": ", ..3), "\n")
                     cat(..1, sep="\n", "\n")
@@ -195,7 +209,7 @@ quality_check <- function(R_data,
       '```{r echo=FALSE}',
       'purrr::pwalk(.l = list(Individual_checks$Errors,
                             1:length(Individual_checks$Errors),
-                            Individual_checks$CheckNames),
+                            Individual_checks$CheckDescriptions),
                   .f = ~{
                     cat(paste0("Check ", ..2, ": ", ..3), "\n")
                     cat(..1, sep="\n", "\n")
@@ -207,12 +221,13 @@ quality_check <- function(R_data,
       '```{r echo=FALSE}',
       'purrr::pwalk(.l = list(Location_checks$Errors,
                             1:length(Location_checks$Errors),
-                            Location_checks$CheckNames),
+                            Location_checks$CheckDescriptions),
                   .f = ~{
                     cat(paste0("Check ", ..2, ": ", ..3), "\n")
                     cat(..1, sep="\n", "\n")
                   })',
       '```') -> mark_output
+
 
     knitr::knit(text = mark_output, output = "output-report.md")
 
