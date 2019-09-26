@@ -12,11 +12,11 @@ test_that("All quality check summary items are returned...", {
 
 test_that("CheckList returns an expected outcome...", {
 
-  expect_true(all(c("tbl_df", "tbl", "data.frame")) %in% class(dummy_check$CheckList))
+  expect_true(all(c("tbl_df", "tbl", "data.frame") %in% class(dummy_check$CheckList)))
   expect_equal(dummy_check$CheckList[1,]$CheckID, "B1")
   expect_equal(dummy_check$CheckList[1,]$CheckDescription, "Brood data format")
-  expect_equal(dummy_check$CheckList[1,]$Warning, "TRUE")
-  expect_equal(dummy_check$CheckList[1,]$Error, "FALSE")
+  expect_equal(dummy_check$CheckList[1,]$Warning, TRUE)
+  expect_equal(dummy_check$CheckList[1,]$Error, FALSE)
 
 })
 
@@ -50,10 +50,6 @@ test_that("ElapsedTime returns an expected outcome...", {
 })
 
 test_that("Output reports are not created...", {
-
-  # expect_false(file.exists(system.file("tests/testthat/output-report.md", package = "SPIbirds")))
-  # expect_false(file.exists(system.file("tests/testthat/output-report.pdf", package = "SPIbirds")))
-  # expect_false(file.exists(system.file("tests/testthat/output-report.html", package = "SPIbirds")))
 
   expect_false(file.exists("output-report.md"))
   expect_false(file.exists("output-report.pdf"))
