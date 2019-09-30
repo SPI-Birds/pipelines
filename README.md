@@ -35,15 +35,15 @@ You can check if this driver is installed and recognised by R using the function
 
 #### Python 3
 
-To install Python, we recommend using the [Anaconda distribution](https://www.anaconda.com/distribution/). ***Make sure to download the 3.X version of Python***. The Anaconda distribution comes with some libraries (including *pandas* pre-loaded).
+To install Python, we recommend using the [Anaconda distribution](https://www.anaconda.com/distribution/). ***Make sure to download the 3.X version of Python***. The Anaconda distribution comes with some libraries (including *pandas*) pre-loaded.
 
-Once installed open the 'Anaconda prompt' and type:
+Once installed, open the 'Anaconda prompt' and type:
 
 `pip install pypxlib`
 
 This will install the *pypxlib* library on your system.
 
-***RESTART YOUR COMPUTER BEFORE RUNNING THE PIPELINES***
+Restart your computer before running the pipelines.
 
 ### Mac
 
