@@ -81,7 +81,7 @@ format_BAN <- function(db = utils::choose.dir(),
 
   #Warnings arise when we coerce records like 'UNKNOWN' into numeric (making NA by coercion)
   #We want this behaviour, so we hide the warnings.
-  all_data <- suppressWarnings(readxl::read_excel(paste0(db, "/MasterBreedingDataAllYears password protected.xlsx")) %>%
+  all_data <- suppressWarnings(readxl::read_excel(paste0(db, "/BAN_PrimaryData.xlsx")) %>%
                                  #Convert all cols to snake_case
                                  janitor::clean_names() %>%
                                  dplyr::mutate_all(.funs = na_if, y = "NA") %>%

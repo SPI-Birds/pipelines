@@ -66,7 +66,7 @@ format_VEL <- function(db = utils::choose.dir(),
   ## - Adult wing and forhead patch measures
   ## - Picture and geolocator info
   ## - Info on which eggs were transferred in cross foster
-  FICALB_data <- suppressMessages(readxl::read_excel(paste0(db, "/Velky_Kosir_flycatchers.xlsx"),
+  FICALB_data <- suppressMessages(readxl::read_excel(paste0(db, "/VEL_PrimaryData_flycatchers.xlsx"),
                                     col_types = c("skip", "numeric", "text",
                                                   "text", "list",
                                                   "text", "text",
@@ -138,7 +138,7 @@ format_VEL <- function(db = utils::choose.dir(),
   ## Dates are dealt with the same way as flycatchers
   ## We only use data on GT and BT. There is a small number of clutches
   ## for other species, but all < 40.
-  TIT_data <- readxl::read_excel(paste0(db, "/Velky_Kosir_tits.xls"),
+  TIT_data <- readxl::read_excel(paste0(db, "/VEL_PrimaryData_tits.xls"),
                                     col_types = c("skip", "numeric", "text", "text",
                                                   "text", "text", "list",
                                                   "list", "list", "text",

@@ -62,7 +62,7 @@ format_NIOO <- function(db = utils::choose.dir(),
   #Force user to select directory
   force(db)
 
-  db <- paste0(db, "\\NIOO_database.accdb")
+  db <- paste0(db, "\\NIOO_PrimaryData.accdb")
 
   #Record start time to estimate processing time.
   start_time <- Sys.time()

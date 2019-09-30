@@ -190,7 +190,7 @@ format_MON <- function(db = utils::choose.dir(),
 
 create_capture_MON <- function(db, species_filter){
 
-  Full_capture_data <- readxl::read_excel(paste0(db, "//", "SIE MORPH 1976-2018.xlsx"),
+  Full_capture_data <- readxl::read_excel(paste0(db, "//MON_PrimaryData_MORPH.xlsx"),
                                      col_types = c("text")) %>%
     #There is a potential issue in excel that numbers are stored as text in the excel sheets.
     #These can easily be coerced back to numerics, but this throws many warnings,
@@ -313,7 +313,7 @@ create_capture_MON <- function(db, species_filter){
 
   #Do the same for the chick capture data
   #As above, we read all in as text and then coerce afterwards
-  Chick_capture_data <- readxl::read_excel(paste0(db, "//SIE POUS 1976-2018.xlsx"),
+  Chick_capture_data <- readxl::read_excel(paste0(db, "//MON_PrimaryData_POUS.xlsx"),
                                            col_types = "text") %>%
     dplyr::mutate_at(.vars = vars(2, 15), as.integer) %>%
     dplyr::mutate_at(.vars = vars(16, 18:20), as.numeric) %>%
@@ -444,7 +444,7 @@ create_capture_MON <- function(db, species_filter){
 
 create_brood_MON <- function(db, species_filter){
 
-  Brood_data <- readxl::read_excel(paste0(db, "//SIE DEMO 1976-2018.xlsx"),
+  Brood_data <- readxl::read_excel(paste0(db, "//MON_PrimaryData_DEMO.xlsx"),
                                    col_types = "text") %>%
     dplyr::mutate(Species = dplyr::case_when(.$espece == "ble" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14620)],
                                              .$espece == "noi" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14610)],

@@ -50,7 +50,7 @@ format_WYT <- function(db = utils::choose.dir(),
 
   message("Importing primary data...")
 
-  WYT_data <- utils::read.csv(paste0(db, "/Wytham breeding data.csv"), header = T, sep = ",", stringsAsFactors = FALSE) %>%
+  WYT_data <- utils::read.csv(paste0(db, "/WYT_PrimaryData.csv"), header = T, sep = ",", stringsAsFactors = FALSE) %>%
     janitor::clean_names()
 
   pb <- dplyr::progress_estimated(n = nrow(WYT_data)*3)

@@ -240,7 +240,7 @@ create_brood_HAR <- function(db, species_filter){
   message("Extracting brood data from paradox database")
 
   #Extract table "Pesat.db" which contains brood data
-  Brood_data <- extract_paradox_db(path = db, file_name = "Pesat.DB")
+  Brood_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Nests.DB")
 
   #Rename columns to English (based on description provided by Tapio Eeva)
   #Many of these are subsequently removed, but it makes it easier for non-Finnish speakers to
@@ -325,7 +325,7 @@ create_nestling_HAR <- function(db, Brood_data){
   message("Extracting nestling ringing data from paradox database")
 
   #Extract table "Pullit.db" which contains brood data
-  Nestling_data <- extract_paradox_db(path = db, file_name = "Pullit.DB")
+  Nestling_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Nestlings.DB")
 
   #Rename into English to make data management more readable
   colnames(Nestling_data) <- c("BreedingSeason", "LocationID", "BroodID",
@@ -380,7 +380,7 @@ create_capture_HAR    <- function(db, Brood_data, species_filter){
   message("Extracting capture data from paradox database")
 
   #Extract table "Pullit.db" which contains brood data
-  Capture_data <- extract_paradox_db(path = db, file_name = "Rengas.DB")
+  Capture_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Ringings.DB")
 
   #Change colnames to English to make data management more understandable
   ##N.B. LastRingNumber_Brood = the end of the ringing series when ringing chicks
@@ -670,7 +670,7 @@ create_location_HAR <- function(db){
   message("Extracting location data from paradox database")
 
   #Extract table "Pullit.db" which contains brood data
-  Location_data <- extract_paradox_db(path = db, file_name = "Paikat.DB")
+  Location_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Locations.DB")
 
   #Remove last 2 cols that have no info
   Location_data <- Location_data %>%
