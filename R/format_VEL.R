@@ -439,6 +439,7 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
                                                        ReleasePopID = "VEL", ReleasePlot = Plot, Age_observed = 1L, Age_calculated = NA_integer_,
                                                        #Convert tarsus to Svennson's alternative
                                                        Tarsus = convert_tarsus(Tarsus, method = "Oxford")) %>%
+                                         #dplyr::filter(!all(is.na(Tarsus) & is.na(WingLength) & is.na(Mass))) %>%
                                          tidyr::unnest(CaptureDate) %>%
                                          dplyr::select(IndvID, Species, BreedingSeason, LocationID, CaptureDate, CaptureTime, CapturePopID, CapturePlot,
                                                        ReleasePopID, ReleasePlot, Mass, Tarsus, WingLength, Age_observed,
