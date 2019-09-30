@@ -19,7 +19,7 @@
 #'small number of cases where nest attempt number is uncertain (e.g.
 #'`2(MAYBE)`). This uncertainty is ignored.
 #'
-#'\strong{LayingDate, HatchDate, NumberFledged}: There are some cases where
+#'\strong{LayDate, HatchDate, NumberFledged}: There are some cases where
 #'values are given with uncertainty (e.g. 97+, 95?). We don't know how much
 #'uncertainty is involved here, it is ignored.
 #'
@@ -39,7 +39,7 @@
 #'\strong{Age_observed}: There is no recorded capture age. This is left as NA.
 #'
 #'\strong{AvgEggMass}: Currently we only include records where the day of egg
-#'weighing is <= LayingDate + ClutchSize. This should be an estimate of the date
+#'weighing is <= LayDate + ClutchSize. This should be an estimate of the date
 #'that incubation began. Once incubation starts, egg weight is not easily
 #'comparable because it changes with chick development.
 #'
@@ -101,23 +101,23 @@ format_BAN <- function(db = utils::choose.dir(),
                                                                                Year = BreedingSeason),
                                                                     format = "%Y-%m-%d"),
                                                #Ignore uncertainty in laying date (e.g. 97? or 97+)
-                                               #Laying date is calculated where LayingDate 1 = March 1st
+                                               #Laying date is calculated where LayDate 1 = March 1st
                                                #We need to do March 1st - 1 + Laying date to get corresponding calendar date
                                                #(can't use end of Feb + Laying date because of leap years)
-                                               LayingDate = March1Date - 1 + as.numeric(gsub(pattern = "\\?|\\+",
+                                               LayDate = March1Date - 1 + as.numeric(gsub(pattern = "\\?|\\+",
                                                                                          replacement = "",
                                                                                          x = first_egg_lay_date)),
                                                #Create a unique BroodID from Year_Plot_BoxNumber_LayingDay_LayingMonth
                                                BroodID = paste(BreedingSeason, LocationID,
-                                                               stringr::str_pad(lubridate::day(LayingDate), width = 2, pad = "0"),
-                                                               stringr::str_pad(lubridate::month(LayingDate), width = 2, pad = "0"), sep = "_"),
+                                                               stringr::str_pad(lubridate::day(LayDate), width = 2, pad = "0"),
+                                                               stringr::str_pad(lubridate::month(LayDate), width = 2, pad = "0"), sep = "_"),
                                                AvgEggMass = as.numeric(egg_weight), NumberEggs = as.integer(number_eggs_weighed),
                                                ClutchSize = as.integer(final_clutch_size),
                                                #Assume incubation begins immediately after the last egg is laid.
-                                               StartIncubation = LayingDate + ClutchSize,
+                                               StartIncubation = LayDate + ClutchSize,
                                                EggWeighDate = (March1Date - 1 + as.numeric(weigh_date)),
                                                #Distinguish whether egg was being incubated when weighed.
-                                               EggWasIncubated = (March1Date - 1 + as.numeric(weigh_date)) > (LayingDate + ClutchSize),
+                                               EggWasIncubated = (March1Date - 1 + as.numeric(weigh_date)) > (LayDate + ClutchSize),
                                                #Ignore uncertainty in hatch date (e.g. 97?)
                                                HatchDate = March1Date - 1 + as.numeric(gsub(pattern = "\\?",
                                                                                         replacement = "",
@@ -219,7 +219,7 @@ create_brood_BAN   <- function(data) {
 
   Brood_data <- data %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(., na.rm = FALSE),
-                  LayingDateError = NA_real_,
+                  LayDateError = NA_real_,
                   ClutchSizeError = NA_real_,
                   HatchDateError = NA_real_,
                   BroodSize = NA_integer_, BroodSizeError = NA_real_,
@@ -237,7 +237,7 @@ create_brood_BAN   <- function(data) {
                   FemaleID, MaleID,
                   ClutchType_observed,
                   ClutchType_calculated,
-                  LayingDate, LayingDateError,
+                  LayDate, LayDateError,
                   ClutchSize, ClutchSizeError,
                   HatchDate, HatchDateError,
                   BroodSize, BroodSizeError,
@@ -254,7 +254,7 @@ create_brood_BAN   <- function(data) {
   `.` <- AvgEggMass <- BroodID <- NULL
   PopID <- BreedingSeason <- Species <- Plot <- LocationID <- NULL
   FemaleID <- MaleID <- ClutchType_observed <- ClutchType_calculated <- NULL
-  LayingDate <- LayingDateError <- ClutchSize <- ClutchSizeError <- NULL
+  LayDate <- LayDateError <- ClutchSize <- ClutchSizeError <- NULL
   HatchDate <- HatchDateError <- BroodSize <- BroodSizeError <- NULL
   FledgeDate <- FledgeDateError <- NumberFledged <- NumberFledgedError <- NULL
   NumberEggs <- AvgChickMass <- NumberChicksMass <- AvgTarsus <- NumberChicksTarsus <- NULL

@@ -44,7 +44,7 @@ this data. For a general description of the standard format please see
 \href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
 
 \strong{BroodID}: Unique BroodID is constructed using:
-BreedingSeason_LocationID_LayingDate (April days)
+BreedingSeason_LocationID_LayDate (April days)
 
 \strong{Species}: In the individual data, there are some cases where an
 IndvID is associated with >1 species. I assume these are just typos and I

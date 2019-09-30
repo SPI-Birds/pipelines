@@ -34,7 +34,7 @@ generate_debug_report <- function(path, Pop, Brood_data, Capture_data, Indv_data
     }))
 
   #Create a list of all histograms for continuous variables
-  Brood_plots <- purrr::map(.x = c("LayingDate", "ClutchSize", "HatchDate", "BroodSize", "FledgeDate", "NumberFledged", "AvgEggMass", "AvgChickMass", "AvgTarsus"),
+  Brood_plots <- purrr::map(.x = c("LayDate", "ClutchSize", "HatchDate", "BroodSize", "FledgeDate", "NumberFledged", "AvgEggMass", "AvgChickMass", "AvgTarsus"),
                              .f = ~plot_debug_hist(table = Brood_data, variable = .x))
 
   utils::write.csv(Brood_data_summary, file = paste0(path, "\\debug_report\\Brood_summary", Pop, ".csv"))

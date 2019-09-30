@@ -56,8 +56,8 @@ create_dummy_data <- function(db = utils::choose.dir()) {
     MaleID = NA_character_,
     ClutchType_observed  = NA_character_,
     ClutchType_calculated  = NA_character_,
-    LayingDate = as.Date(NA_character_),
-    LayingDateError = NA_real_,
+    LayDate = as.Date(NA_character_),
+    LayDateError = NA_real_,
     ClutchSize = NA_integer_,
     ClutchSizeError = NA_real_,
     HatchDate = as.Date(NA_character_),
@@ -187,7 +187,7 @@ create_dummy_data <- function(db = utils::choose.dir()) {
   Brood_data %>%
     tibble::add_row(
       Row = as.integer(5),
-      LayingDate = as.Date(as.character("2019-04-04")),
+      LayDate = as.Date(as.character("2019-04-04")),
       HatchDate = as.Date("2019-04-01")
     ) ->
     Brood_data

@@ -462,10 +462,10 @@ create_brood_MON <- function(db, species_filter){
                   Plot = lieu, BoxNumber = nic,
                   LocationID = paste(Plot, BoxNumber, sep = "_"),
                   BreedingSeason = as.integer(an),
-                  LayingDate = janitor::excel_numeric_to_date(as.numeric(date_ponte)),
+                  LayDate = janitor::excel_numeric_to_date(as.numeric(date_ponte)),
                   BroodID = paste(BreedingSeason, LocationID,
-                                  #stringr::str_pad(lubridate::day(LayingDate), width = 2, pad = "0"),
-                                  #stringr::str_pad(lubridate::month(LayingDate), width = 2, pad = "0"),
+                                  #stringr::str_pad(lubridate::day(LayDate), width = 2, pad = "0"),
+                                  #stringr::str_pad(lubridate::month(LayDate), width = 2, pad = "0"),
                                   sep = "_"),
                   ClutchType_observed = dplyr::case_when(.$np == "1" ~ "first",
                                                          .$np == "2" ~ "second",
@@ -489,7 +489,7 @@ create_brood_MON <- function(db, species_filter){
                                                   .$mort == "CLI" ~ "Climatic event (e.g. storm)",
                                                   .$mort == "MAL" ~ "Sickness",
                                                   .$mort == "NCT" ~ "Not checked??"),
-                  LayingDateError = NA_integer_, ClutchSizeError = NA_integer_,
+                  LayDateError = NA_integer_, ClutchSizeError = NA_integer_,
                   HatchDateError = NA_integer_, BroodSizeError = NA_integer_,
                   FledgeDate = as.Date(NA), FledgeDateError = NA_integer_,
                   NumberFledgedError = NA_integer_) %>%
@@ -497,7 +497,7 @@ create_brood_MON <- function(db, species_filter){
     #Only include capture pop and plot for now, until we work out how to code translocations
     dplyr::mutate(PopID = dplyr::case_when(.$lieu %in% c("cap", "mes", "pir", "tua") ~ "COR",
                                            .$lieu == "rou" ~ "ROU")) %>%
-    dplyr::arrange(BreedingSeason, Species, FemaleID, LayingDate) %>%
+    dplyr::arrange(BreedingSeason, Species, FemaleID, LayDate) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
     dplyr::mutate(ExperimentID = dplyr::case_when((!is.na(.$Crossfostering_treatment) | !is.na(.$Brood_ExperimentDescription2) | .$ParasiteTreatment == "Treated" | .$expou == "2") ~ "TRUE",
                                                   (is.na(.$Crossfostering_treatment) & is.na(.$Brood_ExperimentDescription2) & .$ParasiteTreatment != "Treated" & .$expou != "2") ~ "FALSE")) %>%
@@ -505,7 +505,7 @@ create_brood_MON <- function(db, species_filter){
     #Keep box number to link to Capture data
     dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot,
                   LocationID, FemaleID, MaleID, ClutchType_observed,
-                  ClutchType_calculated, LayingDate, LayingDateError,
+                  ClutchType_calculated, LayDate, LayDateError,
                   ClutchSize, ClutchSizeError, HatchDate, HatchDateError,
                   BroodSize, BroodSizeError, FledgeDate, FledgeDateError,
                   NumberFledged, NumberFledgedError, ExperimentID,

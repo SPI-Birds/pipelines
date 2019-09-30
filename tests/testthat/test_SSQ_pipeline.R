@@ -77,7 +77,7 @@ test_that("Brood_data returns an expected outcome...", {
   #BroodID 2010_005_046 should have clutch type calculated 'first'
   expect_equal(subset(SSQ_data, BroodID == "2010_005_046")$ClutchType_calculated, "first")
   #Laying date should be "2010-04-15"
-  expect_equal(subset(SSQ_data, BroodID == "2010_005_046")$LayingDate, as.Date("2010-04-15"))
+  expect_equal(subset(SSQ_data, BroodID == "2010_005_046")$LayDate, as.Date("2010-04-15"))
   #Clutch size should be 8, BroodSize should be 0, NumberFledged should be 0
   expect_equal(subset(SSQ_data, BroodID == "2010_005_046")$ClutchSize, 8)
   expect_equal(subset(SSQ_data, BroodID == "2010_005_046")$BroodSize, 0)
@@ -92,7 +92,7 @@ test_that("Brood_data returns an expected outcome...", {
   #BroodID 2010_005_046 should have clutch type calculated 'first'
   expect_equal(subset(SSQ_data, BroodID == "2010_006_061")$ClutchType_calculated, "replacement")
   #Laying date should be "2010-04-15"
-  expect_equal(subset(SSQ_data, BroodID == "2010_006_061")$LayingDate, as.Date("2010-04-30"))
+  expect_equal(subset(SSQ_data, BroodID == "2010_006_061")$LayDate, as.Date("2010-04-30"))
   #Clutch size should be 8, BroodSize should be 5, NumberFledged should be 5
   expect_equal(subset(SSQ_data, BroodID == "2010_006_061")$ClutchSize, 8)
   expect_equal(subset(SSQ_data, BroodID == "2010_006_061")$BroodSize, 7)
@@ -107,7 +107,7 @@ test_that("Brood_data returns an expected outcome...", {
   #BroodID 2010_005_046 should have clutch type calculated 'first'
   expect_equal(subset(SSQ_data, BroodID == "2012_00X_044")$ClutchType_calculated, "first")
   #Laying date should be "2010-04-15"
-  expect_equal(subset(SSQ_data, BroodID == "2012_00X_044")$LayingDate, as.Date("2012-04-13"))
+  expect_equal(subset(SSQ_data, BroodID == "2012_00X_044")$LayDate, as.Date("2012-04-13"))
   #Clutch size should be 8, BroodSize should be 0, NumberFledged should be 0
   expect_equal(subset(SSQ_data, BroodID == "2012_00X_044")$ClutchSize, 8)
   expect_equal(subset(SSQ_data, BroodID == "2012_00X_044")$BroodSize, 0)
@@ -122,7 +122,7 @@ test_that("Brood_data returns an expected outcome...", {
   #BroodID 2010_005_046 should have clutch type calculated 'first'
   expect_equal(subset(SSQ_data, BroodID == "2012_004_059")$ClutchType_calculated, "replacement")
   #Laying date should be "2010-04-15"
-  expect_equal(subset(SSQ_data, BroodID == "2012_004_059")$LayingDate, as.Date("2012-04-28"))
+  expect_equal(subset(SSQ_data, BroodID == "2012_004_059")$LayDate, as.Date("2012-04-28"))
   #Clutch size should be 8, BroodSize should be 8, NumberFledged should be 8
   expect_equal(subset(SSQ_data, BroodID == "2012_004_059")$ClutchSize, 8)
   expect_equal(subset(SSQ_data, BroodID == "2012_004_059")$BroodSize, 8)

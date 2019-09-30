@@ -115,7 +115,7 @@ check_format_brood <- function(Brood_data){
   Brood_data_standard <- tibble::tibble(Variable = c("Row", "BroodID", "PopID", "BreedingSeason", "Species", "Plot",
                                                      "LocationID", "FemaleID", "MaleID",
                                                      "ClutchType_observed", "ClutchType_calculated",
-                                                     "LayingDate", "LayingDateError", "ClutchSize",
+                                                     "LayDate", "LayDateError", "ClutchSize",
                                                      "ClutchSizeError", "HatchDate", "HatchDateError",
                                                      "BroodSize", "BroodSizeError", "FledgeDate",
                                                      "FledgeDateError", "NumberFledged",
@@ -377,7 +377,7 @@ compare_laying_hatching <- function(Brood_data){
 
   # Broods with laying date later than hatching date
   Brood_data_late <- Brood_data %>%
-    filter(LayingDate >= HatchDate)
+    filter(LayDate >= HatchDate)
 
   # Broods with laying date earlier than hatching date but the difference
   # in number of days is smaller than incubation time
@@ -385,7 +385,7 @@ compare_laying_hatching <- function(Brood_data){
   ## PERHAPS THIS WILL BE DETERMINED AND CHECKED IN ANOTHER CHECK (NOT NOW)
 
   # Brood_data_late <- Brood_data %>%
-  #   filter(LayingDate < HatchDate & (HatchDate-LayingDate) >= )
+  #   filter(LayDate < HatchDate & (HatchDate-LayDate) >= )
 
   err <- FALSE
   error_output <- NULL
@@ -394,7 +394,7 @@ compare_laying_hatching <- function(Brood_data){
     err <- TRUE
 
     error_output <- purrr::pmap(.l = list(Brood_data_late$Row,
-                                          Brood_data_late$LayingDate,
+                                          Brood_data_late$LayDate,
                                           Brood_data_late$HatchDate),
                                 .f = ~{
                                   paste0("Record on row ", ..1,
@@ -427,7 +427,7 @@ compare_laying_hatching <- function(Brood_data){
               ErrorOutput = unlist(error_output)))
 
   #Satisfy RCMD Checks
-  LayingDate <- HatchDate <- NULL
+  LayDate <- HatchDate <- NULL
 
 }
 
@@ -507,7 +507,7 @@ compare_hatching_fledging <- function(Brood_data){
 
 #' Check brood variable values against reference values
 #'
-#' Check variable values against species-specific reference values in brood data. Implausible values will result in a warning. Impossible values will result in an error. Variables that are checked: LayingDate, ClutchSize, HatchDate, BroodSize, FledgeDate, NumberFledged, AvgEggMass, AvgChickMass, AvgTarsus.
+#' Check variable values against species-specific reference values in brood data. Implausible values will result in a warning. Impossible values will result in an error. Variables that are checked: LayDate, ClutchSize, HatchDate, BroodSize, FledgeDate, NumberFledged, AvgEggMass, AvgChickMass, AvgTarsus.
 #'
 #' @inheritParams checks_brood_params
 #'

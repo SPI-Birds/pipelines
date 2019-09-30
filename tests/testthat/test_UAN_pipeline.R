@@ -77,7 +77,7 @@
 #   #BroodID 2017_BP_010_16_04 should have clutch type calculated 'first'
 #   expect_equal(subset(UAN_data, BroodID == "2017_BP_010_16_04")$ClutchType_calculated, "first")
 #   #Laying date should be "2010-04-15"
-#   expect_equal(subset(UAN_data, BroodID == "2017_BP_010_16_04")$LayingDate, as.Date("2017-04-16"))
+#   expect_equal(subset(UAN_data, BroodID == "2017_BP_010_16_04")$LayDate, as.Date("2017-04-16"))
 #   #Clutch size should be 8, BroodSize should be 0, NumberFledged should be 0
 #   expect_equal(subset(UAN_data, BroodID == "2017_BP_010_16_04")$ClutchSize, 6)
 #   expect_equal(subset(UAN_data, BroodID == "2017_BP_010_16_04")$BroodSize, NA_integer_)
@@ -92,7 +92,7 @@
 #   #BroodID 2017_BP_010_16_04 should have clutch type calculated 'second' (clutch tested above was successful)
 #   expect_equal(subset(UAN_data, BroodID == "2017_BP_027_13_05")$ClutchType_calculated, "second")
 #   #Laying date should be "2010-04-15"
-#   expect_equal(subset(UAN_data, BroodID == "2017_BP_027_13_05")$LayingDate, as.Date("2017-05-13"))
+#   expect_equal(subset(UAN_data, BroodID == "2017_BP_027_13_05")$LayDate, as.Date("2017-05-13"))
 #   #Clutch size should be 8, BroodSize should be 0, NumberFledged should be 0
 #   expect_equal(subset(UAN_data, BroodID == "2017_BP_027_13_05")$ClutchSize, 7)
 #   expect_equal(subset(UAN_data, BroodID == "2017_BP_027_13_05")$BroodSize, NA_integer_)
@@ -107,7 +107,7 @@
 #   #BroodID 2017_BP_010_16_04 should have clutch type calculated 'replacement' (clutch 2015_BC_026_24_04 had no fledlings)
 #   expect_equal(subset(UAN_data, BroodID == "2015_BC_024_05_06")$ClutchType_calculated, "replacement")
 #   #Laying date should be "2010-04-15"
-#   expect_equal(subset(UAN_data, BroodID == "2015_BC_024_05_06")$LayingDate, as.Date("2015-06-05"))
+#   expect_equal(subset(UAN_data, BroodID == "2015_BC_024_05_06")$LayDate, as.Date("2015-06-05"))
 #   #Clutch size should be 8, BroodSize should be 0, NumberFledged should be 0
 #   expect_equal(subset(UAN_data, BroodID == "2015_BC_024_05_06")$ClutchSize, 5)
 #   expect_equal(subset(UAN_data, BroodID == "2015_BC_024_05_06")$BroodSize, NA_integer_)
@@ -122,7 +122,7 @@
 #   #BroodID 2017_BP_010_16_04 should have clutch type calculated 'replacement' (laying date is > cutoff)
 #   expect_equal(subset(UAN_data, BroodID == "2014_KB_028_14_06")$ClutchType_calculated, "replacement")
 #   #Laying date should be "2010-04-15"
-#   expect_equal(subset(UAN_data, BroodID == "2014_KB_028_14_06")$LayingDate, as.Date("2014-06-14"))
+#   expect_equal(subset(UAN_data, BroodID == "2014_KB_028_14_06")$LayDate, as.Date("2014-06-14"))
 #   #Clutch size should be 8, BroodSize should be 0, NumberFledged should be 0
 #   expect_equal(subset(UAN_data, BroodID == "2014_KB_028_14_06")$ClutchSize, 4)
 #   expect_equal(subset(UAN_data, BroodID == "2014_KB_028_14_06")$BroodSize, NA_integer_)

@@ -242,21 +242,21 @@ create_brood_CHO <- function(data){
     reshape2::dcast(BroodID + Species + Year + Site + Box + FemaleID + MaleID ~ ...,
                     fun.aggregate = first) %>%
     #Add in population/plot info
-    #Convert LayingDate and HatchDate to date objects
+    #Convert LayDate and HatchDate to date objects
     dplyr::mutate(FledgeDate = as.Date(NA),
                   HatchDate = lubridate::ymd(paste0(Year, "-01-01")) + as.numeric(HatchingDateJulian),
-                  LayingDate = lubridate::ymd(paste0(Year, "-01-01")) + as.numeric(LayingDateJulian),
-                  LayingDateError = NA_real_, ClutchSizeError = NA_real_,
+                  LayDate = lubridate::ymd(paste0(Year, "-01-01")) + as.numeric(LayingDateJulian),
+                  LayDateError = NA_real_, ClutchSizeError = NA_real_,
                   HatchDateError = NA_real_, BroodSizeError = NA_real_,
                   FledgeDateError = NA_real_, NumberFledgedError = NA_real_, NumberFledged = NoChicksOlder14D) %>%
     #Arrange data chronologically for each female for clutchtype caculation
-    dplyr::arrange(Year, FemaleID, LayingDate) %>%
+    dplyr::arrange(Year, FemaleID, LayDate) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
     #Select relevant columns and rename
     dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot,
                   LocationID, FemaleID, MaleID,
                   ClutchType_observed, ClutchType_calculated,
-                  LayingDate, LayingDateError,
+                  LayDate, LayDateError,
                   ClutchSize = FinalClutchSize, ClutchSizeError,
                   HatchDate, HatchDateError,
                   BroodSize = NoChicksHatched, BroodSizeError,
@@ -280,7 +280,7 @@ create_brood_CHO <- function(data){
   `.` <- AvgEggMass <- BroodID <- NULL
   PopID <- BreedingSeason <- Species <- Plot <- LocationID <- NULL
   FemaleID <- MaleID <- ClutchType_observed <- ClutchType_calculated <- NULL
-  LayingDate <- LayingDateError <- ClutchSize <- ClutchSizeError <- NULL
+  LayDate <- LayDateError <- ClutchSize <- ClutchSizeError <- NULL
   HatchDate <- HatchDateError <- BroodSize <- BroodSizeError <- NULL
   FledgeDate <- FledgeDateError <- NumberFledged <- NumberFledgedError <- NULL
   NumberEggs <- AvgChickMass <- AvgTarsus <- NumberChicksTarsus <- NULL

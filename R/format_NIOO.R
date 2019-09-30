@@ -407,16 +407,16 @@ create_brood_NIOO <- function(database, Individual_data, Capture_data, location_
   # - FledgeDate
   # - NumberFledged
   dplyr::select(BreedingSeason = BroodYear, BroodID = ID, BroodSpecies, BroodLocation = BroodLocationID, Female_ring = RingNumberFemale, Male_ring = RingNumberMale,
-                ClutchType_observed = Description, LayingDate = LayDate, LayingDateError = LayDateDeviation,
+                ClutchType_observed = Description, LayDate = LayDate, LayDateError = LayDateDeviation,
                 ClutchSize, HatchDate, BroodSize = NumberHatched, BroodSizeError = NumberHatchedDeviation,
                 FledgeDate, NumberFledged, NumberFledgedError = NumberFledgedDeviation) %>%
     dplyr::collect() %>%
     #Account for error in brood size
     dplyr::mutate(BroodSizeError = BroodSizeError/2, NumberFledgedError = NumberFledgedError/2,
-                  LayingDateError = LayingDateError/2,
+                  LayDateError = LayDateError/2,
                   BroodSize = as.integer(BroodSize + BroodSizeError),
                   NumberFledged = as.integer(NumberFledged + NumberFledgedError),
-                  LayingDate = lubridate::ymd(LayingDate) + LayingDateError,
+                  LayDate = lubridate::ymd(LayDate) + LayDateError,
                   HatchDate = lubridate::ymd(HatchDate),
                   FledgeDate = lubridate::ymd(FledgeDate)) %>%
     #Include species letter codes for all species
@@ -451,7 +451,7 @@ create_brood_NIOO <- function(database, Individual_data, Capture_data, location_
                        dplyr::filter(Male_ring != ""), by = "Male_ring") %>%
     #Join location info (including site ID and nestbox ID)
     dplyr::left_join(dplyr::select(location_data, BroodLocation = ID, PopID), by = "BroodLocation") %>%
-    dplyr::arrange(PopID, BreedingSeason, Species, FemaleID, LayingDate) %>%
+    dplyr::arrange(PopID, BreedingSeason, Species, FemaleID, LayDate) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
   #Add extra columns where data was not provided
   #N.B. Need to go through and include experiment ID
@@ -483,7 +483,7 @@ create_brood_NIOO <- function(database, Individual_data, Capture_data, location_
   #Join this average mass/tarsus data back into the brood data table
   Brood_data <- Brood_data %>%
     dplyr::left_join(avg_mass, by = "BroodID")  %>%
-    dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot, LocationID = BroodLocation, FemaleID, MaleID, ClutchType_observed, ClutchType_calculated, LayingDate, LayingDateError,
+    dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot, LocationID = BroodLocation, FemaleID, MaleID, ClutchType_observed, ClutchType_calculated, LayDate, LayDateError,
                   ClutchSize, ClutchSizeError, HatchDate, HatchDateError, BroodSize, BroodSizeError, FledgeDate, FledgeDateError, NumberFledged, NumberFledgedError,
                   AvgEggMass, NumberEggs, AvgChickMass, NumberChicksMass, AvgTarsus, NumberChicksTarsus, OriginalTarsusMethod, ExperimentID)
 

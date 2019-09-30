@@ -123,7 +123,7 @@ format_VEL <- function(db = utils::choose.dir(),
                                                    pad = "0"), sep = "_"),
                   FemaleID = female_ring, MaleID = male_ring,
                   ClutchType_observed = NA_character_,
-                  LayingDate = laying_date, LayingDateError = NA_real_,
+                  LayDate = laying_date, LayDateError = NA_real_,
                   ClutchSize = as.integer(gsub(pattern = "\\+|\\-", replacement = "", clutch_size)), ClutchSizeError = NA,
                   HatchDate = hatching_date, HatchDateError = NA_real_,
                   BroodSize = as.integer(gsub(pattern = "\\+|\\-", replacement = "", number_hatched)), BroodSizeError = NA,
@@ -175,15 +175,15 @@ format_VEL <- function(db = utils::choose.dir(),
 
                                     if(!is.na(..1)){
 
-                                      return(tibble::tibble(LayingDate = ..1,
-                                                            LayingDateError = NA_real_))
+                                      return(tibble::tibble(LayDate = ..1,
+                                                            LayDateError = NA_real_))
 
                                     } else {
 
                                       ## THERE ARE CASES WHERE THERE IS A MAXIMUM BUT NO MINIMUM
                                       ## WE TREAT THESE AS NAs
-                                      return(tibble::tibble(LayingDate = mean(c(..2, ..3)),
-                                                            LayingDateError = as.numeric((..2 - ..3)/2)))
+                                      return(tibble::tibble(LayDate = mean(c(..2, ..3)),
+                                                            LayDateError = as.numeric((..2 - ..3)/2)))
 
                                     }
 
@@ -198,8 +198,8 @@ format_VEL <- function(db = utils::choose.dir(),
                   LocationID = stringr::str_pad(nest_box, 3, pad = "0"),
                   FemaleID = female_ring, MaleID = NA_character_,
                   ClutchType_observed = NA_character_,
-                  LayingDate = TIT_LD_error$LayingDate,
-                  LayingDateError = TIT_LD_error$LayingDateError,
+                  LayDate = TIT_LD_error$LayDate,
+                  LayDateError = TIT_LD_error$LayDateError,
                   ##FOR NOW, I'M JUST ASSUMING THAT 11+ CLUTCH SIZE
                   ##MEANS CLUTCH 11 THAT WAS ARTIFIICALLY INCREASED
                   ##THEREFORE, I JUST REMOVE THE + AND ADD THAT IT WAS AN EXPERIMENTAL NEST
@@ -216,13 +216,13 @@ format_VEL <- function(db = utils::choose.dir(),
                   ##ADD EMPTY EGG DATA COLS.
                   AvgEggMass = NA_real_, NumberEggs = NA_integer_,
                   ExperimentID = experiment,
-                  ## Estimate broodID last because it requires us to estimate LayingDate first
+                  ## Estimate broodID last because it requires us to estimate LayDate first
                   BroodID = paste(year, stringr::str_pad(string = nest_box,
                                                          width = 3, pad = "0"),
-                                  stringr::str_pad(string = lubridate::day(LayingDate),
+                                  stringr::str_pad(string = lubridate::day(LayDate),
                                                                    width = 2,
                                                                    pad = "0"),
-                                  stringr::str_pad(string = lubridate::month(LayingDate),
+                                  stringr::str_pad(string = lubridate::month(LayDate),
                                                    width = 2,
                                                    pad = "0"), sep = "_"),
                   Habitat = dplyr::case_when(.$habitat == "oak" ~ "deciduous",
@@ -339,22 +339,22 @@ format_VEL <- function(db = utils::choose.dir(),
 create_brood_VEL <- function(FICALB_data, TIT_data) {
 
   FICALB_broods <- FICALB_data %>%
-    dplyr::arrange(BreedingSeason, Species, FemaleID, LayingDate) %>%
+    dplyr::arrange(BreedingSeason, Species, FemaleID, LayDate) %>%
     #Calculate clutchtype
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
     dplyr::select(BroodID, PopID, BreedingSeason,
                   Species, Plot, LocationID, FemaleID, MaleID,
                   ClutchType_observed, ClutchType_calculated,
-                  LayingDate:ExperimentID)
+                  LayDate:ExperimentID)
 
   TIT_broods <- TIT_data %>%
-    dplyr::arrange(BreedingSeason, Species, FemaleID, LayingDate) %>%
+    dplyr::arrange(BreedingSeason, Species, FemaleID, LayDate) %>%
     #Calculate clutchtype
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
     dplyr::select(BroodID, PopID, BreedingSeason,
                   Species, Plot, LocationID, FemaleID, MaleID,
                   ClutchType_observed, ClutchType_calculated,
-                  LayingDate:ExperimentID)
+                  LayDate:ExperimentID)
 
   return(dplyr::bind_rows(FICALB_broods, TIT_broods))
 
@@ -362,7 +362,7 @@ create_brood_VEL <- function(FICALB_data, TIT_data) {
   `.` <- AvgEggMass <- BroodID <- NULL
   PopID <- BreedingSeason <- Species <- Plot <- LocationID <- NULL
   FemaleID <- MaleID <- ClutchType_observed <- ClutchType_calculated <- NULL
-  LayingDate <- LayingDateError <- ClutchSize <- ClutchSizeError <- NULL
+  LayDate <- LayDateError <- ClutchSize <- ClutchSizeError <- NULL
   HatchDate <- HatchDateError <- BroodSize <- BroodSizeError <- NULL
   FledgeDate <- FledgeDateError <- NumberFledged <- NumberFledgedError <- NULL
   NumberEggs <- AvgChickMass <- AvgTarsus <- NumberChicksTarsus <- NULL
@@ -382,7 +382,7 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
 
   ## First create a table for flycatcher chick captures on the nest
   FICALB_chicks <- FICALB_data %>%
-    dplyr::select(BreedingSeason, Species, Plot, BroodID, LocationID, LayingDate, ClutchSize, HatchDate, x1_young_ring:x8y_wing) %>%
+    dplyr::select(BreedingSeason, Species, Plot, BroodID, LocationID, LayDate, ClutchSize, HatchDate, x1_young_ring:x8y_wing) %>%
     reshape2::melt(measure.vars = c("x1_young_ring", "x2_young_ring",
                                     "x3_young_ring", "x4_young_ring",
                                     "x5_young_ring", "x6_young_ring",
@@ -414,7 +414,7 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
                                                        ## If no hatch date is known then use laying date + clutch size + incubation + chick age
                                                        ## We assume incubation of 15 days, but need to check with Milos.
                                                        ## If there is no hatch date OR laying date then just use NA
-                                                       CaptureDate = purrr::pmap(.l = list(LayingDate, ClutchSize, HatchDate, ChickAge),
+                                                       CaptureDate = purrr::pmap(.l = list(LayDate, ClutchSize, HatchDate, ChickAge),
                                                                                  .f = ~{
 
                                                                                    pb$print()$tick()
@@ -459,7 +459,7 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
 
   #Then create capture info for every adult.
   FICALB_adults <- FICALB_data %>%
-    dplyr::select(BreedingSeason, Species, Plot, LocationID, LayingDate, BroodID, LayingDate, FemaleID, date_of_capture_52, tarsus_53:wing_55,
+    dplyr::select(BreedingSeason, Species, Plot, LocationID, LayDate, BroodID, LayDate, FemaleID, date_of_capture_52, tarsus_53:wing_55,
                   MaleID, date_of_capture_57, age:wing_61) %>%
     reshape2::melt(measure.vars = c("FemaleID", "MaleID"), value.name = "IndvID", variable.name = "Sex") %>%
     dplyr::filter(!is.na(IndvID))
@@ -543,7 +543,7 @@ create_capture_VEL_TIT    <- function(TIT_data) {
     dplyr::mutate(Species = dplyr::case_when(.$species == "blue tit" ~ Species_codes[which(Species_codes$SpeciesID == 14620), ]$Code,
                                              .$species == "great tit" ~ Species_codes[which(Species_codes$SpeciesID == 14640), ]$Code),
                   ## Make the capture date the date that incubation would start (laying date + clutch size)
-                  CaptureDate = LayingDate + ClutchSize,
+                  CaptureDate = LayDate + ClutchSize,
                   IndvID = FemaleID,
                   CapturePopID = PopID, CapturePlot = Plot,
                   ReleasePopID = PopID, ReleasePlot = Plot,
@@ -565,7 +565,7 @@ create_capture_VEL_TIT    <- function(TIT_data) {
   Species <- IndvID <- BreedingSeason <- LocationID <- Plot <- Sex <- Age_observed <- NULL
   CaptureDate <- CaptureTime <- ObserverID <- CapturePopID <- ReleasePopID <- Mass <- Tarsus <- NULL
   OriginalTarsusMethod <- WingLength <- Age_calculated <- ChickAge <- NULL
-  FemaleID <- LayingDate <- ClutchSize <- NULL
+  FemaleID <- LayDate <- ClutchSize <- NULL
 
 }
 

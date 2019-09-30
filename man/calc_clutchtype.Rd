@@ -28,7 +28,7 @@ FemaleID = sample(LETTERS[1:7], size = 100, replace = TRUE),
 NumberFledged = rpois(n = 100, lambda = 1),
 #Create 100 fake broods
 BreedingSeason = sample(c(seq(2000, 2012, 1)), size = 100, replace = TRUE),
-LayingDate = as.Date(paste(BreedingSeason,
+LayDate = as.Date(paste(BreedingSeason,
                            sample(c(4, 5, 6), size = 100, replace = TRUE),
                            sample(seq(1, 31, 1), size = 100, replace = TRUE), sep = "-"),
                            format = "\%Y-\%m-\%d"))

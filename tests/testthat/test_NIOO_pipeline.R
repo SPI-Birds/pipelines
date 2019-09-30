@@ -77,7 +77,7 @@ test_that("Brood_data returns an expected outcome...", {
   #Check clutch type is first
   expect_equal(subset(NIOO_data, BroodID == "64088")$ClutchType_calculated, "first")
   #Laying date is as expected
-  expect_equal(subset(NIOO_data, BroodID == "64088")$LayingDate, as.Date("2016-04-15"))
+  expect_equal(subset(NIOO_data, BroodID == "64088")$LayDate, as.Date("2016-04-15"))
   #Clutch size, brood size and numberfledged is as expected
   expect_equal(subset(NIOO_data, BroodID == "64088")$ClutchSize, 10L)
   expect_equal(subset(NIOO_data, BroodID == "64088")$BroodSize, 3L)
@@ -92,7 +92,7 @@ test_that("Brood_data returns an expected outcome...", {
   #Check clutch type is first
   expect_equal(subset(NIOO_data, BroodID == "65073")$ClutchType_calculated, "second")
   #Laying date is as expected
-  expect_equal(subset(NIOO_data, BroodID == "65073")$LayingDate, as.Date("2016-05-30"))
+  expect_equal(subset(NIOO_data, BroodID == "65073")$LayDate, as.Date("2016-05-30"))
   #Clutch size, brood size and numberfledged is as expected
   expect_equal(subset(NIOO_data, BroodID == "65073")$ClutchSize, 5L)
   expect_equal(subset(NIOO_data, BroodID == "65073")$BroodSize, 5L)
@@ -107,7 +107,7 @@ test_that("Brood_data returns an expected outcome...", {
   #Check clutch type is first
   expect_equal(subset(NIOO_data, BroodID == "64597")$ClutchType_calculated, "replacement")
   #Laying date is as expected
-  expect_equal(subset(NIOO_data, BroodID == "64597")$LayingDate, as.Date("2016-05-14"))
+  expect_equal(subset(NIOO_data, BroodID == "64597")$LayDate, as.Date("2016-05-14"))
   #Clutch size, brood size and numberfledged is as expected
   expect_equal(subset(NIOO_data, BroodID == "64597")$ClutchSize, 9L)
   expect_equal(subset(NIOO_data, BroodID == "64597")$BroodSize, 0L)
@@ -122,7 +122,7 @@ test_that("Brood_data returns an expected outcome...", {
   #Check clutch type is first
   expect_equal(subset(NIOO_data, BroodID == "64825")$ClutchType_calculated, "replacement")
   #Laying date is as expected
-  expect_equal(subset(NIOO_data, BroodID == "64825")$LayingDate, as.Date("2016-06-01"))
+  expect_equal(subset(NIOO_data, BroodID == "64825")$LayDate, as.Date("2016-06-01"))
   #Clutch size, brood size and numberfledged is as expected
   expect_equal(subset(NIOO_data, BroodID == "64825")$ClutchSize, 7L)
   expect_equal(subset(NIOO_data, BroodID == "64825")$BroodSize, 0L)

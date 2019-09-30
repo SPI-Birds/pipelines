@@ -56,7 +56,7 @@ counted as being caught as chicks (i.e. with exact hatching year known),
 everything else is assumed to be an estimate. This does mean that we have some
 cases where the Age_calculated is 1 and the Age_observed is >= 5.
 
-\strong{LayingDateError & HatchDateError}: Accuracy of laying and hatch date
+\strong{LayDateError & HatchDateError}: Accuracy of laying and hatch date
 are given as categories: 0-1; 1-2; 2-3; >3 (N.B. Need to check this with
 Tapio). More conservative error is used (i.e. 0-1 is recorded as 1). For now
 >3 is recorded as 4. N.B. Need to check this with Tapio!!

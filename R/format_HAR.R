@@ -21,7 +21,7 @@
 #'everything else is assumed to be an estimate. This does mean that we have some
 #'cases where the Age_calculated is 1 and the Age_observed is >= 5.
 #'
-#'\strong{LayingDateError & HatchDateError}: Accuracy of laying and hatch date
+#'\strong{LayDateError & HatchDateError}: Accuracy of laying and hatch date
 #'are given as categories: 0-1; 1-2; 2-3; >3 (N.B. Need to check this with
 #'Tapio). More conservative error is used (i.e. 0-1 is recorded as 1). For now
 #'>3 is recorded as 4. N.B. Need to check this with Tapio!!
@@ -246,8 +246,8 @@ create_brood_HAR <- function(db, species_filter){
   #Many of these are subsequently removed, but it makes it easier for non-Finnish speakers to
   #see what is being removed.
   colnames(Brood_data) <- c("BreedingSeason", "LocationID", "BroodID", "Species", "ClutchType_observed",
-                            "FemaleID", "MaleID", "LayingDate_day", "LayingDate_month",
-                            "LayingDateError", "HatchDate_day",
+                            "FemaleID", "MaleID", "LayDate_day", "LayDate_month",
+                            "LayDateError", "HatchDate_day",
                             "HatchDate_month",
                             "HatchDateError", "Incubation",
                             "ClutchSize", "BroodSize",
@@ -276,20 +276,20 @@ create_brood_HAR <- function(db, species_filter){
                                                   ClutchType_observed %in% c(2, 3, 6) ~ "replacement",
                                                   ClutchType_observed == 5 ~ "second")) %>%
     #Create calendar date for laying date and hatch date
-    dplyr::mutate(LayingDate = as.Date(paste(LayingDate_day, LayingDate_month, BreedingSeason, sep = "/"), format = "%d/%m/%Y"),
+    dplyr::mutate(LayDate = as.Date(paste(LayDate_day, LayDate_month, BreedingSeason, sep = "/"), format = "%d/%m/%Y"),
            HatchDate  = as.Date(paste(HatchDate_day, HatchDate_month, BreedingSeason, sep = "/"), format = "%d/%m/%Y")) %>%
     #Treat all NAs as true unknowns (check with Tapio that these are NAs and not 0s)
     dplyr::arrange(BreedingSeason, Species, FemaleID) %>%
     #Calculate clutchtype
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
-    dplyr::mutate(LayingDateError = as.numeric(LayingDateError),
+    dplyr::mutate(LayDateError = as.numeric(LayDateError),
                   HatchDateError = as.numeric(HatchDateError),
                   FledgeDate = as.Date(NA), ClutchSizeError = NA_real_, BroodSizeError = NA_real_,
                   FledgeDateError = NA_real_, NumberFledgedError = NA_real_,
                   BroodSize = as.integer(BroodSize)) %>%
     #Arrange columns correctly
     dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot, LocationID, FemaleID, MaleID,
-           ClutchType_observed, ClutchType_calculated, LayingDate, LayingDateError,
+           ClutchType_observed, ClutchType_calculated, LayDate, LayDateError,
            ClutchSize, ClutchSizeError, HatchDate, HatchDateError,
            BroodSize, BroodSizeError, FledgeDate, FledgeDateError, NumberFledged, NumberFledgedError,
            ExperimentID)
@@ -300,13 +300,13 @@ create_brood_HAR <- function(db, species_filter){
   `.` <- AvgEggMass <- BroodID <- NULL
   PopID <- BreedingSeason <- Species <- Plot <- LocationID <- NULL
   FemaleID <- MaleID <- ClutchType_observed <- ClutchType_calculated <- NULL
-  LayingDate <- LayingDateError <- ClutchSize <- ClutchSizeError <- NULL
+  LayDate <- LayDateError <- ClutchSize <- ClutchSizeError <- NULL
   HatchDate <- HatchDateError <- BroodSize <- BroodSizeError <- NULL
   FledgeDate <- FledgeDateError <- NumberFledged <- NumberFledgedError <- NULL
   NumberEggs <- AvgChickMass <- AvgTarsus <- NumberChicksTarsus <- NULL
   OriginalTarsusMethod <- ExperimentID <- NULL
   ReasonFailed <- MalePresent <- ExpData1 <- TempCode2 <- NULL
-  LayingDate_day <- LayingDate_month <- HatchDate_day <- HatchDate_month <- NULL
+  LayDate_day <- LayDate_month <- HatchDate_day <- HatchDate_month <- NULL
 
 }
 

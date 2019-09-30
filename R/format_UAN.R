@@ -128,7 +128,7 @@ format_UAN <- function(db = utils::choose.dir(),
 
   ## Rename columns
   BROOD_info <- dplyr::mutate(BROOD_info, BroodID = NN, Species = SOORT, Plot = GB, NestboxNumber = PL,
-                              LayingDate = LD, ClutchSizeError = JAE,
+                              LayDate = LD, ClutchSizeError = JAE,
                               ClutchSize = as.integer(AE), NrUnhatchedChicks = AEN,
                               BroodSize = as.integer(NP), NrDeadChicks = PD,
                               NumberFledged = as.integer(PU), LDInterruption = LO,
@@ -304,8 +304,8 @@ create_brood_UAN <- function(data, CAPTURE_info, species_filter){
     #Remove only species chosen.
     dplyr::filter(Species %in% species_filter) %>%
     #Add NA columns and convert dates
-    dplyr::mutate(LayingDate = lubridate::ymd(LayingDate),
-                  LayingDateError = NA_real_,
+    dplyr::mutate(LayDate = lubridate::ymd(LayDate),
+                  LayDateError = NA_real_,
                   HatchDate = as.Date(NA), HatchDateError = NA_real_,
                   BroodSizeError = NA_real_,
                   FledgeDate = as.Date(NA), FledgeDateError = NA_real_,
@@ -319,7 +319,7 @@ create_brood_UAN <- function(data, CAPTURE_info, species_filter){
     dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot,
                   LocationID, FemaleID, MaleID, ClutchType_observed,
                   ClutchType_calculated,
-                  LayingDate, LayingDateError,
+                  LayDate, LayDateError,
                   ClutchSize, ClutchSizeError,
                   HatchDate, HatchDateError,
                   BroodSize, BroodSizeError,
@@ -338,7 +338,7 @@ create_brood_UAN <- function(data, CAPTURE_info, species_filter){
   `.` <- AvgEggMass <- BroodID <- NULL
   PopID <- BreedingSeason <- Species <- Plot <- LocationID <- NULL
   FemaleID <- MaleID <- ClutchType_observed <- ClutchType_calculated <- NULL
-  LayingDate <- LayingDateError <- ClutchSize <- ClutchSizeError <- NULL
+  LayDate <- LayDateError <- ClutchSize <- ClutchSizeError <- NULL
   HatchDate <- HatchDateError <- BroodSize <- BroodSizeError <- NULL
   FledgeDate <- FledgeDateError <- NumberFledged <- NumberFledgedError <- NULL
   NumberEggs <- AvgChickMass <- NumberChicksMass <- AvgTarsus <- NumberChicksTarsus <- NULL

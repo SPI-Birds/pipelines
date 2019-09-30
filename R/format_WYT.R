@@ -64,7 +64,7 @@ format_WYT <- function(db = utils::choose.dir(),
                                              .$species == "c" ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code,
                                              .$species == "n" ~ Species_codes[Species_codes$SpeciesID == 14790, ]$Code,
                                              .$species == "m" ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code),
-                  LayingDate = as.Date(lay_date, format = "%d/%m/%Y"),
+                  LayDate = as.Date(lay_date, format = "%d/%m/%Y"),
                   HatchDate = purrr::pmap_chr(.l = list(hatch_date, legacy_april_hatch_date),
                                               .f = ~{
 
@@ -163,7 +163,7 @@ create_brood_WYT <- function(data){
   Brood_data <- data %>%
     dplyr::mutate(ClutchType_observed = NA,
                   ClutchType_calc = calc_clutchtype(data = ., na.rm = FALSE),
-                  LayingDateError = NA,
+                  LayDateError = NA,
                   ClutchSizeError = NA,
                   HatchDateError = NA,
                   BroodSizeError = NA,
@@ -178,7 +178,7 @@ create_brood_WYT <- function(data){
                   FemaleID, MaleID,
                   ClutchType_observed,
                   ClutchType_calc,
-                  LayingDate, LayingDateError,
+                  LayDate, LayDateError,
                   ClutchSize, ClutchSizeError,
                   HatchDate, HatchDateError,
                   BroodSize, BroodSizeError,
@@ -195,7 +195,7 @@ create_brood_WYT <- function(data){
   `.` <- AvgEggMass <- BroodID <- NULL
   PopID <- BreedingSeason <- Species <- Plot <- LocationID <- NULL
   FemaleID <- MaleID <- ClutchType_observed <- ClutchType_calc <- NULL
-  LayingDate <- LayingDateError <- ClutchSize <- ClutchSizeError <- NULL
+  LayDate <- LayDateError <- ClutchSize <- ClutchSizeError <- NULL
   HatchDate <- HatchDateError <- BroodSize <- BroodSizeError <- NULL
   FledgeDate <- FledgeDateError <- NumberFledged <- NumberFledgedError <- NULL
   NumberEggs <- AvgChickMass <- NumberChicksMass <- AvgTarsus <- NumberChicksTarsus <- NULL
