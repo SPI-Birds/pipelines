@@ -17,7 +17,7 @@ Pipelines for some populations require additional software and software drivers.
 
 Firstly, you must check that you are running a 64-bit version of R. Open an R session and see whether you have 64-bit or 32-bit installation.
 
-![](https://github.com/LiamDBailey/TidyTuesday/blob/master/inst/extdata/README_imgs/R_version.jpg)
+![](https://github.com/LiamDBailey/SPIbirds/blob/master/inst/extdata/README_imgs/R_version.jpg)
 
 If you do not have a 64-bit version you will need to install one [here](https://www.r-project.org/).
 
@@ -25,11 +25,11 @@ In the taskbar, search for 'ODBC'. There will be two version (32-bit and 64-bit)
 
 Click 'Add' to install a new driver on your system.
 
-![](https://github.com/LiamDBailey/TidyTuesday/blob/master/inst/extdata/README_imgs/ODBC_driver.jpg)
+![](https://github.com/LiamDBailey/SPIbirds/blob/master/inst/extdata/README_imgs/ODBC_driver.jpg)
 
 Select 'Microsoft Access Driver (/*.mdb, /*.accdb)' and click finish. In the next window, you ***must*** add a 'Data Source Name'. Leave everything else blank.  
 
-![](https://github.com/LiamDBailey/TidyTuesday/blob/master/inst/extdata/README_imgs/Add_name.jpg)
+![](https://github.com/LiamDBailey/SPIbirds/blob/master/inst/extdata/README_imgs/Add_name.jpg)
 
 You can check if this driver is installed and recognised by R using the function `odbcListDrivers()` in the `odbc` package. Note that you will need to open a new session of R before the driver will appear.
 
