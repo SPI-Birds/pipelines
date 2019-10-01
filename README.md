@@ -11,6 +11,8 @@ Pipelines for some populations require additional software and software drivers.
 - Python 3
 - Python libraries *pandas* and *pypxlib*
 
+---
+
 ### Windows 10 64-bit
 
 #### Microsoft Access Driver
@@ -21,17 +23,27 @@ Firstly, you must check that you are running a 64-bit version of R. Open an R se
 
 If you do not have a 64-bit version you will need to install one [here](https://www.r-project.org/).
 
-In the taskbar, search for 'ODBC'. There will be two version (32-bit and 64-bit) ***select the 64-bit version***. This will open the 'ODBC Data Source Administrator (64-bit)' window.
+---
 
-Click 'Add' to install a new driver on your system.
+Once you have a 64-bit version of R, search for 'ODBC' in the Windows taskbar. There will be two version (32-bit and 64-bit) ***select the 64-bit version***. This will open the 'ODBC Data Source Administrator (64-bit)' window.
+
+In the new window check for 'Microsoft Access Driver'. If this already exists you can skip to the Python stage.
+
+If 'Microsoft Access Driver' does not exist click 'Add' to install a new driver on your system.
 
 ![](https://github.com/LiamDBailey/SPIbirds/blob/master/inst/extdata/README_imgs/ODBC_driver.jpg)
 
-Select 'Microsoft Access Driver (/*.mdb, /*.accdb)' and click finish. In the next window, you ***must*** add a 'Data Source Name'. Leave everything else blank.  
+---
+
+Select 'Microsoft Access Driver (/*.mdb, /*.accdb)' and click finish.
+
+***If 'Microsoft Access Driver (/*.mdb, /*.accdb)' does not appear, you will need to download the 64-bit driver [here](https://www.microsoft.com/en-US/download/details.aspx?id=13255)***
+
+In the next window, you ***must*** add a 'Data Source Name'. Everything else can be left blank.
 
 ![](https://github.com/LiamDBailey/SPIbirds/blob/master/inst/extdata/README_imgs/Add_name.jpg)
 
-You can check if this driver is installed and recognised by R using the function `odbcListDrivers()` in the `odbc` package. Note that you will need to open a new session of R before the driver will appear.
+Check if this driver is installed and recognised by R using the function `odbcListDrivers()` in the `odbc` package. Note that you will need to open a new session of R before the driver will appear.
 
 #### Python 3
 
@@ -48,6 +60,16 @@ Restart your computer before running the pipelines.
 ### Mac
 
 Work in progress..
+
+### Troubleshooting
+
+If you are still unable to run the pipelines following these setup instructions try these troubleshooting techniques:
+
+- Restart your computer before running pipelines to ensure R recognises the newly installed software and drivers.
+
+- Download the newest version of R [here](https://www.r-project.org/).
+
+- Update all R packages.
 
 ## Storing the data
 
