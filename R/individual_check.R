@@ -8,6 +8,7 @@
 #' }
 #'
 #' @inheritParams checks_individual_params
+#' @param check_format \code{TRUE} or \code{FALSE}. If \code{TRUE}, the check on variable format (i.e. \code{\link{check_format_individual}}) is included in the quality check. Default: \code{TRUE}.
 #'
 #' @return
 #' A list of:
@@ -17,7 +18,7 @@
 #'
 #' @export
 
-individual_check <- function(Individual_data){
+individual_check <- function(Individual_data, check_format=TRUE){
 
   # Create check list with a summary of warnings and errors per check
   check_list <- tibble::tibble(CheckID = purrr::map_chr(1, ~paste0("I", .)),
@@ -29,19 +30,33 @@ individual_check <- function(Individual_data){
   message("Individual checks")
 
   # - Check format individual data
-  message("I1: Checking format of individual data...")
+  if(check_format) {
+    message("I1: Checking format of individual data...")
 
-  check_format_individual_output <- check_format_individual(Individual_data)
+    check_format_individual_output <- check_format_individual(Individual_data)
 
-  check_list[1, 3:4] <- check_format_individual_output$CheckList
+    check_list[1, 3:4] <- check_format_individual_output$CheckList
+  }
 
+  if(check_format) {
+    # Warning list
+    warning_list <- list(Check1 = check_format_individual_output$WarningOutput)
+
+    # Error list
+    error_list <- list(Check1 = check_format_individual_output$ErrorOutput)
+  } else {
+    # Warning list
+    warning_list <- NULL
+
+    # Error list
+    error_list <- NULL
+
+    check_list <- NULL
+  }
 
   return(list(CheckList = check_list,
-              Warnings = list(
-                Check1 = check_format_individual_output$WarningOutput),
-              Errors = list(
-                Check1 = check_format_individual_output$ErrorOutput)
-  ))
+              Warnings = warning_list,
+              Errors = error_list))
 }
 
 
