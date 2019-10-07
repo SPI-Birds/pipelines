@@ -34,6 +34,12 @@ quality_check <- function(R_data,
 
   start_time <- Sys.time()
 
+  if(output_format == "both"){
+
+    output_format <- c("html", "pdf")
+
+  }
+
   # Subset each item
   Brood_data <- R_data$Brood_data
   Capture_data <- R_data$Capture_data
@@ -76,22 +82,13 @@ quality_check <- function(R_data,
   # title <- paste0("Quality check report for ", Species_codes[Species_codes$Code == species, "CommonName"],
   #                 " in ", pop_names[pop_names$code == pop, "name"])
 
-
   # Produce report
   if(output == TRUE) {
-    c('---',
-      'title: "`r title`"',
-      'date: "`r Sys.Date()`"',
-      'geometry: margin=0.5in',
-      'output:
-                      pdf_document:
-                        toc: true
-                      html_document:
-                        toc: true',
-      '---',
-      '',
-      '```{r wrap-hook, include=FALSE}',
-      'library(knitr)
+
+    #Create body of the Rmd file
+    #This is the same for both html and pdf
+    body <- c('```{r wrap-hook, include=FALSE}',
+    'library(knitr)
       hook_output = knit_hooks$get("output")
       knit_hooks$set(output = function(x, options) {
       if (!is.null(n <- options$linewidth)) {
@@ -102,132 +99,178 @@ quality_check <- function(R_data,
       }
       hook_output(x, options)
       })',
-      '```',
-      '',
-      '```{r, include=FALSE}',
-      'knitr::opts_chunk$set(linewidth=100)',
-      '```',
-      '',
-      '\\newpage',
-      '# Summary',
-      '',
-      'Species: `r dplyr::pull(Species_codes[Species_codes$Code == species, "CommonName"])`',
-      '',
-      'Populations: `r dplyr::pull(pop_names[pop_names$code == pop, "name"])`',
-      '',
-      'All checks performed in `r round(time, 2)` seconds.',
-      '',
-      '`r checks_warnings` out of `r nrow(check_list)` checks resulted in warnings.',
-      '',
-      '`r checks_errors` out of `r nrow(check_list)` checks resulted in errors.',
-      '',
-      '# Warnings',
-      '',
-      '## Brood data',
-      '',
-      '```{r echo=FALSE}',
-      'purrr::pwalk(.l = list(Brood_checks$Warnings,
+    '```',
+    '',
+    '```{r, include=FALSE}',
+    'knitr::opts_chunk$set(linewidth=100)',
+    '```',
+    '',
+    '\\newpage',
+    '# Summary',
+    '',
+    'Species: `r dplyr::pull(Species_codes[Species_codes$Code == species, "CommonName"])`',
+    '',
+    'Populations: `r dplyr::pull(pop_names[pop_names$code == pop, "name"])`',
+    '',
+    'All checks performed in `r round(time, 2)` seconds.',
+    '',
+    '`r checks_warnings` out of `r nrow(check_list)` checks resulted in warnings.',
+    '',
+    '`r checks_errors` out of `r nrow(check_list)` checks resulted in errors.',
+    '',
+    '# Warnings',
+    '',
+    '## Brood data',
+    '',
+    '```{r, echo=FALSE}',
+    'purrr::pwalk(.l = list(Brood_checks$Warnings,
                             1:length(Brood_checks$Warnings),
                             Brood_checks$CheckList$CheckDescription),
                   .f = ~{
                     cat(paste0("Check ", ..2, ": ", ..3), "\n")
                     cat(..1, sep="\n", "\n")
                   })',
-      '```',
-      '',
-      '## Capture data',
-      '',
-      '```{r echo=FALSE}',
-      'purrr::pwalk(.l = list(Capture_checks$Warnings,
+    '```',
+    '',
+    '## Capture data',
+    '',
+    '```{r, echo=FALSE}',
+    'purrr::pwalk(.l = list(Capture_checks$Warnings,
                             1:length(Capture_checks$Warnings),
                             Capture_checks$CheckList$CheckDescription),
                   .f = ~{
                     cat(paste0("Check ", ..2, ": ", ..3), "\n")
                     cat(..1, sep="\n", "\n")
                   })',
-      '```',
-      '',
-      '## Individual data',
-      '',
-      '```{r echo=FALSE}',
-      'purrr::pwalk(.l = list(Individual_checks$Warnings,
+    '```',
+    '',
+    '## Individual data',
+    '',
+    '```{r, echo=FALSE}',
+    'purrr::pwalk(.l = list(Individual_checks$Warnings,
                             1:length(Individual_checks$Warnings),
                             Individual_checks$CheckList$CheckDescription),
                   .f = ~{
                     cat(paste0("Check ", ..2, ": ", ..3), "\n")
                     cat(..1, sep="\n", "\n")
                   })',
-      '```',
-      '',
-      '## Location data',
-      '',
-      '```{r echo=FALSE}',
-      'purrr::pwalk(.l = list(Location_checks$Warnings,
+    '```',
+    '',
+    '## Location data',
+    '',
+    '```{r, echo=FALSE}',
+    'purrr::pwalk(.l = list(Location_checks$Warnings,
                             1:length(Location_checks$Warnings),
                             Location_checks$CheckList$CheckDescription),
                   .f = ~{
                     cat(paste0("Check ", ..2, ": ", ..3), "\n")
                     cat(..1, sep="\n", "\n")
                   })',
-      '```',
-      '',
-      '\\newpage',
-      '# Errors',
-      '',
-      '## Brood data',
-      '',
-      '```{r echo=FALSE, linewidth=100}',
-      'purrr::pwalk(.l = list(Brood_checks$Errors,
+    '```',
+    '',
+    '\\newpage',
+    '# Errors',
+    '',
+    '## Brood data',
+    '',
+    '```{r, echo=FALSE, linewidth=100}',
+    'purrr::pwalk(.l = list(Brood_checks$Errors,
                             1:length(Brood_checks$Errors),
                             Brood_checks$CheckList$CheckDescription),
                   .f = ~{
                     cat(paste0("Check ", ..2, ": ", ..3), "\n")
                     cat(..1, sep="\n", "\n")
                   })',
-      '```',
-      '',
-      '## Capture data',
-      '',
-      '```{r echo=FALSE}',
-      'purrr::pwalk(.l = list(Capture_checks$Errors,
+    '```',
+    '',
+    '## Capture data',
+    '',
+    '```{r, echo=FALSE}',
+    'purrr::pwalk(.l = list(Capture_checks$Errors,
                             1:length(Capture_checks$Errors),
                             Capture_checks$CheckList$CheckDescription),
                   .f = ~{
                     cat(paste0("Check ", ..2, ": ", ..3), "\n")
                     cat(..1, sep="\n", "\n")
                   })',
-      '```',
-      '',
-      '## Individual data',
-      '',
-      '```{r echo=FALSE}',
-      'purrr::pwalk(.l = list(Individual_checks$Errors,
+    '```',
+    '',
+    '## Individual data',
+    '',
+    '```{r, echo=FALSE}',
+    'purrr::pwalk(.l = list(Individual_checks$Errors,
                             1:length(Individual_checks$Errors),
                             Individual_checks$CheckList$CheckDescription),
                   .f = ~{
                     cat(paste0("Check ", ..2, ": ", ..3), "\n")
                     cat(..1, sep="\n", "\n")
                   })',
-      '```',
-      '',
-      '## Location data',
-      '',
-      '```{r echo=FALSE}',
-      'purrr::pwalk(.l = list(Location_checks$Errors,
+    '```',
+    '',
+    '## Location data',
+    '',
+    '```{r, echo=FALSE}',
+    'purrr::pwalk(.l = list(Location_checks$Errors,
                             1:length(Location_checks$Errors),
                             Location_checks$CheckList$CheckDescription),
                   .f = ~{
                     cat(paste0("Check ", ..2, ": ", ..3), "\n")
                     cat(..1, sep="\n", "\n")
                   })',
-      '```') -> mark_output
+    '```')
 
+    #For the different output formats, create specific yaml and
+    #output the file
+    purrr::pwalk(.l = list(output_format),
+                 .f = ~{
 
-    knitr::knit(text = mark_output, output = "output-report.md")
+                   if("html" %in% output_format){
 
-    if(output_format == "html") rmarkdown::render("output-report.md", output_format = "html_document")
-    if(output_format == "pdf") rmarkdown::render("output-report.md", output_format = "pdf_document")
-    if(output_format == "both") rmarkdown::render("output-report.md", output_format = "all")
+                      mark_output <- c('---',
+                                    'title: "`r title`"',
+                                    'date: "`r Sys.Date()`"',
+                                    'geometry: margin=0.5in',
+                                    'output:
+                                      html_document:
+                                        css: ./inst/css/quality_check.css
+                                        keep_md: false
+                                        number_sections: true
+                                        theme: cosmo
+                                        toc: true
+                                        toc_depth: 3
+                                        toc_float:
+                                          collapsed: false
+                                          smooth_scroll: true
+                                      mainfont: Arial',
+                                    '---', body)
+
+                     knitr::knit(text = mark_output, output = "output-report.md")
+
+                     rmarkdown::render("output-report.md", output_format = "html_document")
+
+                   }
+
+                   if("pdf" %in% output_format){
+
+                     mark_output <- c('---',
+                                      'title: "`r title`"',
+                                      'date: "`r Sys.Date()`"',
+                                      'geometry: margin=0.5in',
+                                      'output:
+                                        pdf_document:
+                                          toc: true
+                                          number_sections: true
+                                        mainfont: Arial',
+                                      '---',
+                                      body)
+
+                     knitr::knit(text = mark_output, output = "output-report.md")
+
+                     rmarkdown::render("output-report.md", output_format = "pdf_document")
+
+                   }
+
+                   })
   }
 
   return(list(CheckList = check_list,
