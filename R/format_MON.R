@@ -55,19 +55,25 @@
 #'season later We give EURING code 3 + 2*N: Nestling or chick unable to fly
 #'freely.
 #'
-#'\item AN (where N >= 0) An adult not captured as a chick or juvenile.
-#'We give EURING code 4 + 2*N (i.e. of unknown age because it was not caught
-#'when it could be accurately aged).
+#'\item AN (where N >= 0) An adult not captured as a chick or juvenile. We give
+#'EURING code 4 + 2*N (i.e. of unknown age because it was not caught when it
+#'could be accurately aged).
 #'
-#'\item IN (where N > 1): An adult not captured as a chick or juvenile.
-#'We give EURING code 4 + 2*1-N (i.e. of unknown age because it was not caught
-#'when it could be accurately aged).
-#'}
+#'\item IN (where N > 1): An adult not captured as a chick or juvenile. We give
+#'EURING code 4 + 2*1-N (i.e. of unknown age because it was not caught when it
+#'could be accurately aged). }
 #'
-#'\strong{Age_calculated:} We strictly say that we canot accurately know the age of an individual
-#'unless they were caught in their first year. Therefore, although birds classified as J1
-#'can be aged very accurately, we still treat these as having age uncertain
-#'because they weren't caught as chicks.
+#'\strong{Age_calculated:} We strictly say that we canot accurately know the age
+#'of an individual unless they were caught in their first year. Therefore,
+#'although birds classified as J1 can be aged very accurately, we still treat
+#'these as having age uncertain because they weren't caught as chicks.
+#'
+#'\strong{BroodIDLaid/Fledged:} BroodIDLaid is the brood in which an individual
+#'was listed in one of the chick columns. The BroodIDFledged is the same as BroodIDLaid
+#'unless a destination brood is listed. In any cases where multiple broods are associated
+#'with an individual (e.g. they are listed as a chick twice) we currently select the
+#'first record and return a warning. We assume the first nest recorded is more likely to
+#'be the 'true' nest until these are corrected.
 #'
 #'@inheritParams pipeline_params
 #'
@@ -525,9 +531,73 @@ create_brood_MON <- function(db, species_filter){
 create_individual_MON <- function(capture_data, brood_data){
 
   BroodAssignment <- brood_data %>%
-    dplyr::select(BroodIDLaid_fromBrood = BroodID, pulbag1:pulbag14) %>%
+    dplyr::select(BroodIDLaid = BroodID, pulbag1:pulbag14) %>%
     tidyr::pivot_longer(cols = pulbag1:pulbag14, names_to = "ChickNr", values_to = "IndvID") %>%
     dplyr::select(-ChickNr)
+
+  #Identify any cases where a individual was cross-fostered
+  #It had info in the orig and/or dest column
+  Cross_foster <- capture_data %>%
+    dplyr::filter(!is.na(BroodIDLaid) | !is.na(BroodIDFledged))
+
+  #Create progress bar to track cross-foster assignment
+  pb <- dplyr::progress_estimated(n = nrow(Cross_foster))
+
+ Cross_foster  <- Cross_foster %>%
+    dplyr::select(IndvID, LocationID, CaptureDate, BroodIDLaid, BroodIDFledged) %>%
+    #Run through each example and determine the destination
+    #There are three possible situations
+    #1. Individual caught in the genetic brood where the destionation brood is listed
+    #2. Individual caught in the foster brood where the origin brood is listed
+    #3. Individual with both origin and desination brood listed
+    #Use apply because it doesn't coerce dates to numbers!!!!!
+    apply(1, function(x, brood_data){
+
+      pb$tick()$print()
+
+      #If the destination brood has been given
+      if(!is.na(x["BroodIDFledged"])){
+
+        split_info <- unlist(stringr::str_split(x["BroodIDFledged"], pattern = "_"))
+        CaptureDate <- as.Date(x["CaptureDate"])
+
+        #Find the nest that was active in the period of capture
+        possible_nest <- brood_data %>%
+          dplyr::filter(BreedingSeason == split_info[1],
+                        Plot == split_info[2],
+                        BoxNumber == split_info[3],
+                        LayDate < CaptureDate)
+
+        if(nrow(possible_nest) > 1){
+
+          stop("MORE THAN ONE POSSIBLE NEST IDENTIFIED FOR CROSS-FOSTERING (MON DATA)")
+
+        }
+
+      } else if(!is.na(x["BroodIDLaid"])){
+
+        split_info <- unlist(stringr::str_split(x["LocationID"], pattern = "_"))
+        CaptureDate <- as.Date(x["CaptureDate"])
+
+        #Find the nest that was active in the period of capture
+        possible_nest <- brood_data %>%
+          dplyr::filter(BreedingSeason == lubridate::year(CaptureDate),
+                        Plot == split_info[1],
+                        BoxNumber == split_info[2],
+                        LayDate < CaptureDate)
+
+        if(nrow(possible_nest) > 1){
+
+          stop("MORE THAN ONE POSSIBLE NEST IDENTIFIED FOR CROSS-FOSTERING (MON DATA)")
+
+        }
+
+      }
+
+      return(tibble::tibble(IndvID = x["IndvID"], BroodIDFledged = possible_nest$BroodID))
+
+    }, brood_data) %>%
+   dplyr::bind_rows()
 
   Individual_data <- capture_data %>%
     dplyr::arrange(IndvID, CaptureDate) %>%
@@ -622,15 +692,39 @@ create_individual_MON <- function(capture_data, brood_data){
 
                                           }
 
-                                        }),
-                  BroodIDLaid = NA_character_,
-                  BroodIDFledged = NA_character_,
-                  BroodIDcaught = first(LocationID))
+                                        }))
 
   #Join in Brood data for all individuals
   Individual_data <- dplyr::left_join(Individual_data, BroodAssignment, by = "IndvID") %>%
-    #For now, we just make BroodIDLaid and Fledged as NA. We need to talk to Anne to understand how the cross-foster works.
+    #Join in cross-fostering info
+    dplyr::left_join(Cross_foster, by = "IndvID") %>%
+    #If no BroodIDFledged is listed, make it the same as BroodIDLaid
+    dplyr::mutate(n = 1:n()) %>%
+    dplyr::group_by(n) %>%
+    dplyr::mutate(BroodIDFledged = ifelse(is.na(BroodIDFledged), BroodIDLaid, BroodIDFledged)) %>%
+    dplyr::ungroup() %>%
     dplyr::select(IndvID, Species, PopID, BroodIDLaid, BroodIDFledged, RingSeason, RingAge, Sex)
+
+  #Identify those cases where an individual has multiple records in individual data
+  duplicates <- Individual_data %>%
+    dplyr::group_by(IndvID) %>%
+    dplyr::summarise(n = n()) %>%
+    dplyr::filter(n > 1) %>%
+    dplyr::pull(IndvID)
+
+  purrr::pwalk(.l = list(duplicates),
+               ~{
+
+                 warning(glue::glue("Individual {duplicate} has more than one potential BroodID", duplicate = ..1))
+
+               })
+
+
+
+  #For any duplicate cases, we just take the first, which should be the most recent one
+  Individual_data <- Individual_data %>%
+    dplyr::group_by(IndvID) %>%
+    dplyr::slice(1)
 
   return(Individual_data)
 

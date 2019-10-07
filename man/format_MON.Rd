@@ -90,17 +90,23 @@ hatched last calendar year and now in its second calendar year.
 season later We give EURING code 3 + 2*N: Nestling or chick unable to fly
 freely.
 
-\item AN (where N >= 0) An adult not captured as a chick or juvenile.
-We give EURING code 4 + 2*N (i.e. of unknown age because it was not caught
-when it could be accurately aged).
+\item AN (where N >= 0) An adult not captured as a chick or juvenile. We give
+EURING code 4 + 2*N (i.e. of unknown age because it was not caught when it
+could be accurately aged).
 
-\item IN (where N > 1): An adult not captured as a chick or juvenile.
-We give EURING code 4 + 2*1-N (i.e. of unknown age because it was not caught
-when it could be accurately aged).
-}
+\item IN (where N > 1): An adult not captured as a chick or juvenile. We give
+EURING code 4 + 2*1-N (i.e. of unknown age because it was not caught when it
+could be accurately aged). }
 
-\strong{Age_calculated:} We strictly say that we canot accurately know the age of an individual
-unless they were caught in their first year. Therefore, although birds classified as J1
-can be aged very accurately, we still treat these as having age uncertain
-because they weren't caught as chicks.
+\strong{Age_calculated:} We strictly say that we canot accurately know the age
+of an individual unless they were caught in their first year. Therefore,
+although birds classified as J1 can be aged very accurately, we still treat
+these as having age uncertain because they weren't caught as chicks.
+
+\strong{BroodIDLaid/Fledged:} BroodIDLaid is the brood in which an individual
+was listed in one of the chick columns. The BroodIDFledged is the same as BroodIDLaid
+unless a destination brood is listed. In any cases where multiple broods are associated
+with an individual (e.g. they are listed as a chick twice) we currently select the
+first record and return a warning. We assume the first nest recorded is more likely to
+be the 'true' nest until these are corrected.
 }
