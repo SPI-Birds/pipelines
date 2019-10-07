@@ -526,8 +526,7 @@ create_individual_MON <- function(capture_data, brood_data){
 
   BroodAssignment <- brood_data %>%
     dplyr::select(BroodIDLaid_fromBrood = BroodID, pulbag1:pulbag14) %>%
-    reshape2::melt(id.vars = "BroodIDLaid_fromBrood",
-                   variable.name = "ChickNr", value.name = "IndvID") %>%
+    tidyr::pivot_longer(cols = pulbag1:pulbag14, names_to = "ChickNr", values_to = "IndvID") %>%
     dplyr::select(-ChickNr)
 
   Individual_data <- capture_data %>%
