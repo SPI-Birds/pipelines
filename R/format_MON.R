@@ -19,8 +19,8 @@
 #'\strong{LocationID:} For birds caught in boxes. Location is
 #'Plot_NextboxNumber.
 #'
-#'\strong{BroodID:} Broods are BreedingSeason_LocationID_day_month =
-#'BreedingSeason_Plot_NestboxNumber_day_month.
+#'\strong{BroodID:} Broods are BreedingSeason_LocationID_ClutchTypeObserved =
+#'BreedingSeason_Plot_NestboxNumber_ClutchTypeObserved.
 #'
 #'\strong{ClutchTypeObserved:} No clutch type recorded, only calculated clutch
 #'type is given.
@@ -463,7 +463,7 @@ create_brood_MON <- function(db, species_filter){
                   LocationID = paste(Plot, BoxNumber, sep = "_"),
                   BreedingSeason = as.integer(an),
                   LayDate = janitor::excel_numeric_to_date(as.numeric(date_ponte)),
-                  BroodID = paste(BreedingSeason, LocationID,
+                  BroodID = paste(BreedingSeason, LocationID, BoxNumber, np,
                                   #stringr::str_pad(lubridate::day(LayDate), width = 2, pad = "0"),
                                   #stringr::str_pad(lubridate::month(LayDate), width = 2, pad = "0"),
                                   sep = "_"),

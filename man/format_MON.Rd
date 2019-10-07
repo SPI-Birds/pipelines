@@ -54,8 +54,8 @@ but not certain)
 \strong{LocationID:} For birds caught in boxes. Location is
 Plot_NextboxNumber.
 
-\strong{BroodID:} Broods are BreedingSeason_LocationID_day_month =
-BreedingSeason_Plot_NestboxNumber_day_month.
+\strong{BroodID:} Broods are BreedingSeason_LocationID_ClutchTypeObserved =
+BreedingSeason_Plot_NestboxNumber_ClutchTypeObserved.
 
 \strong{ClutchTypeObserved:} No clutch type recorded, only calculated clutch
 type is given.
