@@ -17,64 +17,44 @@ test_that("Brood_data returns an expected outcome...", {
   MON_data <- dplyr::filter(pipeline_output$Brood_data, PopID %in% c("COR", "ROU"))
 
   #Test 1: Brood where clutch type = first
-  #BroodID 1984_pir_35_02_05 should be CYACAE
-  expect_equal(subset(MON_data, BroodID == "1984_pir_35")$Species, "CYACAE")
-  #BroodID 1984_pir_35_02_05 should have clutch type calculated 'first'
-  expect_equal(subset(MON_data, BroodID == "1984_pir_35")$ClutchType_calculated, "first")
-  #Check laying date is as expected
-  expect_equal(subset(MON_data, BroodID == "1984_pir_35")$LayDate, as.Date("1984-05-02"))
-  #Check clutch size, brood size, and number fledged is as expected
-  expect_equal(subset(MON_data, BroodID == "1984_pir_35")$ClutchSize, 5)
-  expect_equal(subset(MON_data, BroodID == "1984_pir_35")$BroodSize, 4)
-  expect_equal(subset(MON_data, BroodID == "1984_pir_35")$NumberFledged, 0)
-  #AvgChickMass and AvgTarsus should be NA, these have not been included yet
-  expect_equal(subset(MON_data, BroodID == "1984_pir_35")$AvgChickMass, NA_real_)
-  expect_equal(subset(MON_data, BroodID == "1984_pir_35")$AvgTarsus, NA_real_)
+  expect_equal(subset(MON_data, BroodID == "1984_pir_35_1")$Species, "CYACAE")
+  expect_equal(subset(MON_data, BroodID == "1984_pir_35_1")$ClutchType_calculated, "first")
+  expect_equal(subset(MON_data, BroodID == "1984_pir_35_1")$LayDate, as.Date("1984-05-02"))
+  expect_equal(subset(MON_data, BroodID == "1984_pir_35_1")$ClutchSize, 5)
+  expect_equal(subset(MON_data, BroodID == "1984_pir_35_1")$BroodSize, 4)
+  expect_equal(subset(MON_data, BroodID == "1984_pir_35_1")$NumberFledged, 0)
+  expect_equal(subset(MON_data, BroodID == "1984_pir_35_1")$AvgChickMass, NA_real_)
+  expect_equal(subset(MON_data, BroodID == "1984_pir_35_1")$AvgTarsus, NA_real_)
 
   #Test 2: Brood where clutch type = replacement (because first is known to have failed)
-  #BroodID 1980_pir_36_30_05 should be CYACAE
-  expect_equal(subset(MON_data, BroodID == "1980_pir_36")$Species, "CYACAE")
-  #BroodID 1980_pir_36_30_05 should have clutch type calculated 'first'
-  expect_equal(subset(MON_data, BroodID == "1980_pir_36")$ClutchType_calculated, "replacement")
-  #Check laying date is as expected
-  expect_equal(subset(MON_data, BroodID == "1980_pir_36")$LayDate, as.Date("1980-05-30"))
-  #Check clutch size, brood size, and number fledged is as expected
-  expect_equal(subset(MON_data, BroodID == "1980_pir_36")$ClutchSize, 5)
-  expect_equal(subset(MON_data, BroodID == "1980_pir_36")$BroodSize, 5)
-  expect_equal(subset(MON_data, BroodID == "1980_pir_36")$NumberFledged, 5)
-  #AvgChickMass and AvgTarsus should be NA, these have not been included yet
-  expect_equal(subset(MON_data, BroodID == "1980_pir_36")$AvgChickMass, NA_real_)
-  expect_equal(subset(MON_data, BroodID == "1980_pir_36")$AvgTarsus, NA_real_)
+  expect_equal(subset(MON_data, BroodID == "1980_pir_36_3")$Species, "CYACAE")
+  expect_equal(subset(MON_data, BroodID == "1980_pir_36_3")$ClutchType_calculated, "replacement")
+  expect_equal(subset(MON_data, BroodID == "1980_pir_36_3")$LayDate, as.Date("1980-05-30"))
+  expect_equal(subset(MON_data, BroodID == "1980_pir_36_3")$ClutchSize, 5)
+  expect_equal(subset(MON_data, BroodID == "1980_pir_36_3")$BroodSize, 5)
+  expect_equal(subset(MON_data, BroodID == "1980_pir_36_3")$NumberFledged, 5)
+  expect_equal(subset(MON_data, BroodID == "1980_pir_36_3")$AvgChickMass, NA_real_)
+  expect_equal(subset(MON_data, BroodID == "1980_pir_36_3")$AvgTarsus, NA_real_)
 
   #Test 3: Brood where clutch type = replacement (past the cutoff)
-  #BroodID 1984_pir_47_10_06 should be CYACAE
-  expect_equal(subset(MON_data, BroodID == "1984_pir_47")$Species, "CYACAE")
-  #BroodID 1984_pir_47_10_06 should have clutch type calculated 'first'
-  expect_equal(subset(MON_data, BroodID == "1984_pir_47")$ClutchType_calculated, "replacement")
-  #Check laying date is as expected
-  expect_equal(subset(MON_data, BroodID == "1984_pir_47")$LayDate, as.Date("1984-06-10"))
-  #Check clutch size, brood size, and number fledged is as expected
-  expect_equal(subset(MON_data, BroodID == "1984_pir_47")$ClutchSize, 7)
-  expect_equal(subset(MON_data, BroodID == "1984_pir_47")$BroodSize, 7)
-  expect_equal(subset(MON_data, BroodID == "1984_pir_47")$NumberFledged, 7)
-  #AvgChickMass and AvgTarsus should be NA, these have not been included yet
-  expect_equal(subset(MON_data, BroodID == "1984_pir_47")$AvgChickMass, NA_real_)
-  expect_equal(subset(MON_data, BroodID == "1984_pir_47")$AvgTarsus, NA_real_)
+  expect_equal(subset(MON_data, BroodID == "1984_pir_47_3")$Species, "CYACAE")
+  expect_equal(subset(MON_data, BroodID == "1984_pir_47_3")$ClutchType_calculated, "replacement")
+  expect_equal(subset(MON_data, BroodID == "1984_pir_47_3")$LayDate, as.Date("1984-06-10"))
+  expect_equal(subset(MON_data, BroodID == "1984_pir_47_3")$ClutchSize, 7)
+  expect_equal(subset(MON_data, BroodID == "1984_pir_47_3")$BroodSize, 7)
+  expect_equal(subset(MON_data, BroodID == "1984_pir_47_3")$NumberFledged, 7)
+  expect_equal(subset(MON_data, BroodID == "1984_pir_47_3")$AvgChickMass, NA_real_)
+  expect_equal(subset(MON_data, BroodID == "1984_pir_47_3")$AvgTarsus, NA_real_)
 
   #Test 4: Brood where clutch type = second
-  #BroodID 1984_pir_47_10_06 should be CYACAE
-  expect_equal(subset(MON_data, BroodID == "1984_pir_47")$Species, "CYACAE")
-  #BroodID 1984_pir_47_10_06 should have clutch type calculated 'first'
-  expect_equal(subset(MON_data, BroodID == "1984_pir_47")$ClutchType_calculated, "replacement")
-  #Check laying date is as expected
-  expect_equal(subset(MON_data, BroodID == "1984_pir_47")$LayDate, as.Date("1984-06-10"))
-  #Check clutch size, brood size, and number fledged is as expected
-  expect_equal(subset(MON_data, BroodID == "1984_pir_47")$ClutchSize, 7)
-  expect_equal(subset(MON_data, BroodID == "1984_pir_47")$BroodSize, 7)
-  expect_equal(subset(MON_data, BroodID == "1984_pir_47")$NumberFledged, 7)
-  #AvgChickMass and AvgTarsus should be NA, these have not been included yet
-  expect_equal(subset(MON_data, BroodID == "1984_pir_47")$AvgChickMass, NA_real_)
-  expect_equal(subset(MON_data, BroodID == "1984_pir_47")$AvgTarsus, NA_real_)
+  expect_equal(subset(MON_data, BroodID == "1992_rou_90_2")$Species, "PARMAJ")
+  expect_equal(subset(MON_data, BroodID == "1992_rou_90_2")$ClutchType_calculated, "second")
+  expect_equal(subset(MON_data, BroodID == "1992_rou_90_2")$LayDate, as.Date("1992-05-20"))
+  expect_equal(subset(MON_data, BroodID == "1992_rou_90_2")$ClutchSize, 8)
+  expect_equal(subset(MON_data, BroodID == "1992_rou_90_2")$BroodSize, 2)
+  expect_equal(subset(MON_data, BroodID == "1992_rou_90_2")$NumberFledged, 1)
+  expect_equal(subset(MON_data, BroodID == "1992_rou_90_2")$AvgChickMass, NA_real_)
+  expect_equal(subset(MON_data, BroodID == "1992_rou_90_2")$AvgTarsus, NA_real_)
 
 })
 
