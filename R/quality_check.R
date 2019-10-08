@@ -259,6 +259,8 @@ quality_check <- function(R_data,
                                       'date: "`r Sys.Date()`"',
                                       'geometry: margin=0.5in',
                                       'output:
+                                        header-includes:
+                                          - \\linespread{1.2}
                                         pdf_document:
                                           toc: true
                                           number_sections: true
