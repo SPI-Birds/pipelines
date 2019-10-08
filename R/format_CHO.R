@@ -273,7 +273,8 @@ create_brood_CHO <- function(data){
                   BroodSize = as.integer(BroodSize),
                   NumberFledged = as.integer(NumberFledged),
                   AvgEggMass = as.numeric(AvgEggMass),
-                  NumberEggs = as.integer(NumberEggs))
+                  NumberEggs = as.integer(NumberEggs)) %>%
+    dplyr::as_tibble()
 
   return(Brood_data)
 
