@@ -387,9 +387,11 @@ create_capture_NIOO <- function(database, Individual_data, location_data, specie
 
 create_brood_NIOO <- function(database, Individual_data, Capture_data, location_data, species_filter, pop_filter){
 
+  target_locations <- dplyr::filter(location_data, PopID %in% pop_filter)
+
   Brood_data  <- dplyr::tbl(database, "dbo_tbl_Brood") %>%
-    #Subset only broods of designated species in main areas
-    dplyr::filter(BroodSpecies %in% species_filter & BroodLocationID %in% !!location_data$ID) %>%
+    #Subset only broods of designated species in designated populato
+    dplyr::filter(BroodSpecies %in% species_filter & BroodLocationID %in% !!target_locations$ID) %>%
     #Link the ClutchType description (e.g. first, second, replacement)
     dplyr::left_join(dplyr::tbl(database, "dbo_tl_BroodType") %>%
                        dplyr::select(BroodType = ID, Description), by = "BroodType") %>%
@@ -412,6 +414,8 @@ create_brood_NIOO <- function(database, Individual_data, Capture_data, location_
                 ClutchSize, HatchDate, BroodSize = NumberHatched, BroodSizeError = NumberHatchedDeviation,
                 FledgeDate, NumberFledged, NumberFledgedError = NumberFledgedDeviation) %>%
     dplyr::collect() %>%
+    #Join PopID (including site ID and nestbox ID) and filter only the pop(s) of interest
+    dplyr::left_join(dplyr::select(location_data, BroodLocation = ID, PopID), by = "BroodLocation") %>%
     #Account for error in brood size
     dplyr::mutate(BroodSizeError = BroodSizeError/2, NumberFledgedError = NumberFledgedError/2,
                   LayDateError = LayDateError/2,
@@ -450,8 +454,6 @@ create_brood_NIOO <- function(database, Individual_data, Capture_data, location_
                        dplyr::filter(Female_ring != ""), by = "Female_ring") %>%
     dplyr::left_join(select(Individual_data, Male_ring = RingNumber, MaleID = IndvID) %>%
                        dplyr::filter(Male_ring != ""), by = "Male_ring") %>%
-    #Join location info (including site ID and nestbox ID)
-    dplyr::left_join(dplyr::select(location_data, BroodLocation = ID, PopID), by = "BroodLocation") %>%
     dplyr::arrange(PopID, BreedingSeason, Species, FemaleID, LayDate) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
   #Add extra columns where data was not provided
@@ -514,6 +516,7 @@ create_location_NIOO <- function(database, location_data, species_filter, pop_fi
     #This is necessary because one nestbox location could have multiple nestboxes erected at it over the study period.
     dplyr::right_join(dplyr::select(location_data, Location = ID, Latitude, Longitude, PopID),
                      by = "Location") %>%
+    dplyr::filter(PopID %in% pop_filter) %>%
     dplyr::select(LocationID = Location, NestboxID = ID, LocationType = NestBoxType, PopID, Latitude, Longitude, StartSeason = StartYear, EndSeason = EndYear) %>%
     dplyr::mutate(LocationID = as.character(LocationID),
                   NestboxID = as.character(NestboxID),
