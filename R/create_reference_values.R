@@ -10,6 +10,11 @@
 #' NB: Manually add & edit reference values in the code and run function to
 #' create the necessary files to be used in \code{\link{quality_check}}.
 #'
+#' \strong{PARMAJ/CYACAE values:} For great tit and blue tit the improbable and impossible values
+#' are calculated as the 1%/99% percentiles and min/max for each of the variables taken from
+#' data at Hoge Veluwe between the years 2015-2018. We treat chicks as only those listed as Age 1 (i.e. in nest).
+#' Adults are anything >1 (i.e. also first year fledglings). This is not ideal and needs to be updated.
+#'
 #' @param db File path. Location to save reference values.
 #'
 #' @return
@@ -26,16 +31,16 @@ create_reference_values <- function(db = utils::choose.dir()) {
   ## -- Parus major (Great tit)
   brood_ref_values_PARMAJ <- tibble::tibble(Species = "PARMAJ",
                                             Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-                                            ClutchSize = c(NA, 15, 0, 20),
-                                            BroodSize = c(NA, 15, 0, 20),
-                                            NumberFledged = c(NA, 15, 0, 20))
+                                            ClutchSize = c(NA, 12, 0, 14),
+                                            BroodSize = c(NA, 10, 0, 14),
+                                            NumberFledged = c(NA, 9, 0, 14))
 
   ## -- Cyanistes caeruleus (Blue tit)
   brood_ref_values_CYACAE <- tibble::tibble(Species = "CYACAE",
                                             Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-                                            ClutchSize = c(NA, 15, 0, 20),
-                                            BroodSize = c(NA, 15, 0, 20),
-                                            NumberFledged = c(NA, 15, 0, 20))
+                                            ClutchSize = c(NA, 13, 0, 14),
+                                            BroodSize = c(NA, 13, 0, 14),
+                                            NumberFledged = c(NA, 13, 0, 14))
 
   ## -- Ficedula hypoleuca (Pied flycatcher)
   brood_ref_values_FICHYP <- tibble::tibble(Species = "FICHYP",
@@ -84,14 +89,14 @@ create_reference_values <- function(db = utils::choose.dir()) {
   ## --- Parus major (Great tit)
   cap_adult_ref_values_PARMAJ <- tibble::tibble(Species = "PARMAJ",
                                                 Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-                                                Mass = c(10, 20, 5, 25),
-                                                Tarsus = c(15, 22, 12, 25))
+                                                Mass = c(14, 21, 10.95, 25),
+                                                Tarsus = c(16, 21, 13.3, 22))
 
   ## --- Cyanistes caeruleus (Blue tit)
   cap_adult_ref_values_CYACAE <- tibble::tibble(Species = "CYACAE",
                                                 Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-                                                Mass = c(10, 20, 5, 25),
-                                                Tarsus = c(15, 22, 12, 25))
+                                                Mass = c(9, 17, 9.5, 20.1),
+                                                Tarsus = c(11, 19, 10.1, 10.8))
 
   ## --- Ficedula hypoleuca (Pied flycatcher)
   cap_adult_ref_values_FICHYP <- tibble::tibble(Species = "FICHYP",
@@ -134,14 +139,14 @@ create_reference_values <- function(db = utils::choose.dir()) {
   ## --- Parus major (Great tit)
   cap_chick_ref_values_PARMAJ <- tibble::tibble(Species = "PARMAJ",
                                                 Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-                                                Mass = c(10, 20, 5, 25),
-                                                Tarsus = c(15, 22, 12, 25))
+                                                Mass = c(7, 20, 3.5, 21.6),
+                                                Tarsus = c(16, 21, 11.9, 21.3))
 
   ## --- Cyanistes caeruleus (Blue tit)
   cap_chick_ref_values_CYACAE <- tibble::tibble(Species = "CYACAE",
                                                 Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-                                                Mass = c(10, 20, 5, 25),
-                                                Tarsus = c(15, 22, 12, 25))
+                                                Mass = c(6, 13, 5, 16.9),
+                                                Tarsus = c(14.6, 20, 14.6, 26))
 
   ## --- Ficedula hypoleuca (Pied flycatcher)
   cap_chick_ref_values_FICHYP <- tibble::tibble(Species = "FICHYP",
