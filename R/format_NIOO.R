@@ -358,11 +358,11 @@ create_capture_NIOO <- function(database, Individual_data, location_data, specie
     dplyr::left_join(dplyr::select(location_data, ReleaseLocation = ID, ReleasePopID = PopID), by = "ReleaseLocation") %>%
     dplyr::filter(CapturePopID %in% pop_filter) %>%
     #Make mass and tarsus into g and mm
-    dplyr::mutate(LocationID = CaptureLocation, Mass = Mass/100, Tarsus = Tarsus/100) %>%
+    dplyr::mutate(LocationID = CaptureLocation, Mass = dplyr::na_if(Weight/100, y = 0), Tarsus = dplyr::na_if(Tarsus/10, 0)) %>%
     #Arrange columns
     dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, CapturePopID, CapturePlot = CaptureLocation,
                   ReleasePopID, ReleasePlot = ReleaseLocation,
-                  Mass = Weight, Tarsus, OriginalTarsusMethod, WingLength, Age_observed, Age_calculated, ChickAge)
+                  Mass, Tarsus, OriginalTarsusMethod, WingLength, Age_observed, Age_calculated, ChickAge)
 
   return(Capture_data)
 
