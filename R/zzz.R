@@ -1,3 +1,80 @@
+quality_check_description_pdf <- "
+
+\\section{Introduction}
+
+Welcome to the SPI-Birds quality check report. This report shows the results of a number of standard data quality tests that are
+run on data stored in the format described in the \\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{SPI-Birds Standard Protocol}.
+
+\\subsection{How to use this report}
+
+All tests either look for 'warnings' (values that we consider to be uncommon or unusual) and 'potential errors' (values that we consider to be impossible).
+Tests are run on each of the four tables described in the SPI-Birds Standard Protocol: Brood data, Capture data, Individual data, and Location data.
+These tests generally work on individual rows (but see the list of tests below).
+When a 'warning' or 'potential error' is identified a line will be included in the report will information on the type of test that was violated
+and the \\emph{row number} of the corresponding record. The \\emph{row number} refers to the column \\emph{Row} in the corresponding
+table output in the standard format. It does \\textbf{not} refer to row numbers in the primary data.
+
+\\subsection{Types of tests}
+
+The tests include:
+\\begin{itemize}
+  \\item Test for missing data. Identify any columns where no data is available (i.e. only NA records).
+  \\item Test of data format. Identify any columns where the format of the data (e.g. date, integer) is not as expected.
+  \\item Test for uexpected clutch/brood/fledgling number differences. We assume that clutch size >= brood size >= number fledged. Identify any columns where this assumption is not met.
+  \\item Test for uexpected lay/hatch/fledge date differences. We assume that lay date < hatch date < fledge date. Identify any rows where this assumption is not met.
+  \\item Test for unexpected clutch/brood/fledgling number values. Identify any rows where clutch size, brood size, or number fledged are larger than expected.
+  \\item Test for unexpected mass/tarsus values. In Capture data, identify any rows where mass or tarsus are larger or smaller than expected for
+  a given species. 'warning' and 'potential error' values are currently the 95% and 99.5% quantiles of mass and tarsus from data collected at Hoge Veluwe for each species.
+\\end{itemize}"
+
+quality_check_titlepage_pdf <- "\\renewcommand{\\familydefault}{\\sfdefault}
+\\begin{titlepage}
+	\\centering % Center everything on the title page
+	\\scshape % Use small caps for all text on the title page
+	\\vspace*{1.5\\baselineskip} % White space at the top of the page
+% ===================
+%	Title Section
+% ===================
+
+	\\rule{13cm}{1.6pt}\\vspace*{-\\baselineskip}\\vspace*{2pt} % Thick horizontal rule
+	\\rule{13cm}{0.4pt} % Thin horizontal rule
+
+		\\vspace{0.75\\baselineskip} % Whitespace above the title
+% ========== Title ===============
+	{	\\Huge SPI-Birds Quality Check\\\\}
+% ======================================
+		\\vspace{0.75\\baselineskip} % Whitespace below the title
+	\\rule{13cm}{0.4pt}\\vspace*{-\\baselineskip}\\vspace{3.2pt} % Thin horizontal rule
+	\\rule{13cm}{1.6pt} % Thick horizontal rule
+
+		\\vspace{0.75\\baselineskip} % Whitespace after the title block
+
+% =================
+%	Version number
+% =================
+
+    \\vspace{3mm}
+
+    \\today
+
+    \\vspace{1.25\\baselineskip}
+
+% =================
+%	Information
+% =================
+	{\\large Produced by: SPI-Birds team (Antica Culina, Liam D. Bailey, Stefan Vriend \\& Marcel E. Visser)} \\\\
+	\\vfill
+\\end{titlepage}"
+
+quality_check_description_html <- "
+
+
+
+"
+
+
+##############################################################################
+
 find_box <- function(string, position = 1){
 
   if(is.na(string) | position == (nchar(string) + 1)){

@@ -91,6 +91,7 @@ quality_check <- function(R_data,
     #This is the same for both html and pdf
     body <- c('```{r wrap-hook, include=FALSE}',
     'library(knitr)
+      knitr::opts_chunk$set(comment = NA, linewidth=100)
       hook_output = knit_hooks$get("output")
       knit_hooks$set(output = function(x, options) {
       if (!is.null(n <- options$linewidth)) {
@@ -103,11 +104,6 @@ quality_check <- function(R_data,
       })',
     '```',
     '',
-    '```{r, include=FALSE}',
-    'knitr::opts_chunk$set(linewidth=100)',
-    '```',
-    '',
-    '\\newpage',
     '# Summary',
     '',
     'Species: `r dplyr::pull(Species_codes[Species_codes$Code %in% species, "CommonName"])`',
@@ -171,7 +167,7 @@ quality_check <- function(R_data,
     '```',
     '',
     '\\newpage',
-    '# Errors',
+    '# Potential Errors',
     '',
     '## Brood data',
     '',
@@ -255,18 +251,17 @@ quality_check <- function(R_data,
                    if("pdf" %in% output_format){
 
                      mark_output <- c('---',
-                                      'title: "`r title`"',
-                                      'date: "`r Sys.Date()`"',
-                                      'geometry: margin=0.5in',
                                       'output:
                                         header-includes:
                                           - \\linespread{1.2}
+                                          - \\newgeometry{left=29mm, right=29mm, top=20mm, bottom=15mm}
                                         pdf_document:
-                                          toc: true
-                                          number_sections: true
-                                        mainfont: Arial',
+                                          toc: false',
                                       '---',
-                                      body)
+                                      quality_check_titlepage_pdf,
+                                      '\\tableofcontents
+                                      \\newpage',
+                                      quality_check_description_pdf, body)
 
                      knitr::knit(text = mark_output, output = "output-report.md")
 
