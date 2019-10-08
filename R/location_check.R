@@ -8,6 +8,7 @@
 #' }
 #'
 #' @inheritParams checks_location_params
+#' @param check_format \code{TRUE} or \code{FALSE}. If \code{TRUE}, the check on variable format (i.e. \code{\link{check_format_location}}) is included in the quality check. Default: \code{TRUE}.
 #'
 #' @return
 #' A list of:
@@ -17,7 +18,7 @@
 #'
 #' @export
 
-location_check <- function(Location_data){
+location_check <- function(Location_data, check_format=TRUE){
 
   # Create check list with a summary of warnings and errors per check
   check_list <- tibble::tibble(CheckID = purrr::map_chr(1, ~paste0("L", .)),
@@ -29,19 +30,33 @@ location_check <- function(Location_data){
   message("Location checks")
 
   # - Check format location data
-  message("L1: Checking format of location data...")
+  if(check_format) {
+    message("L1: Checking format of location data...")
 
-  check_format_location_output <- check_format_location(Location_data)
+    check_format_location_output <- check_format_location(Location_data)
 
-  check_list[1,3:4] <- check_format_location_output$CheckList
+    check_list[1,3:4] <- check_format_location_output$CheckList
+  }
 
+  if(check_format) {
+    # Warning list
+    warning_list <- list(Check1 = check_format_location_output$WarningOutput)
+
+    # Error list
+    error_list <- list(Check1 = check_format_location_output$ErrorOutput)
+  } else {
+    # Warning list
+    warning_list <- NULL
+
+    # Error list
+    error_list <- NULL
+
+    check_list <- NULL
+  }
 
   return(list(CheckList = check_list,
-              Warnings = list(
-                Check1 = check_format_location_output$WarningOutput),
-              Errors = list(
-                Check1 = check_format_location_output$ErrorOutput)
-  ))
+              Warnings = warning_list,
+              Errors = error_list))
 }
 
 

@@ -10,6 +10,7 @@
 #' }
 #'
 #' @inheritParams checks_brood_params
+#' @param check_format \code{TRUE} or \code{FALSE}. If \code{TRUE}, the check on variable format (i.e. \code{\link{check_format_brood}}) is included in the quality check. Default: \code{TRUE}.
 #'
 #' @return
 #' A list of:
@@ -19,7 +20,7 @@
 #'
 #' @export
 
-brood_check <- function(Brood_data){
+brood_check <- function(Brood_data, check_format=TRUE){
 
   # Create check list with a summary of warnings and errors per check
   check_list <- tibble::tibble(CheckID = purrr::map_chr(1:6, ~paste0("B", .)),
@@ -36,11 +37,14 @@ brood_check <- function(Brood_data){
   message("Brood checks")
 
   # - Check format brood data
-  message("B1: Checking format of brood data...")
+  if(check_format) {
+    message("B1: Checking format of brood data...")
 
-  check_format_brood_output <- check_format_brood(Brood_data)
+    check_format_brood_output <- check_format_brood(Brood_data)
 
-  check_list[1,3:4] <- check_format_brood_output$CheckList
+    check_list[1,3:4] <- check_format_brood_output$CheckList
+
+  }
 
   # - Compare clutch and brood sizes
   message("B2: Comparing clutch and brood sizes...")
@@ -78,22 +82,43 @@ brood_check <- function(Brood_data){
   check_list[6,3:4] <- check_values_brood_output$CheckList
 
 
+  if(check_format) {
+    # Warning list
+    warning_list <- list(Check1 = check_format_brood_output$WarningOutput,
+                         Check2 = compare_clutch_brood_output$WarningOutput,
+                         Check3 = compare_brood_fledglings_output$WarningOutput,
+                         Check4 = compare_laying_hatching_output$WarningOutput,
+                         Check5 = compare_hatching_fledging_output$WarningOutput,
+                         Check6 = check_values_brood_output$WarningOutput)
+
+    # Error list
+    error_list <- list(Check1 = check_format_brood_output$ErrorOutput,
+                       Check2 = compare_clutch_brood_output$ErrorOutput,
+                       Check3 = compare_brood_fledglings_output$ErrorOutput,
+                       Check4 = compare_laying_hatching_output$ErrorOutput,
+                       Check5 = compare_hatching_fledging_output$ErrorOutput,
+                       Check6 = check_values_brood_output$ErrorOutput)
+  } else {
+    # Warning list
+    warning_list <- list(Check2 = compare_clutch_brood_output$WarningOutput,
+                         Check3 = compare_brood_fledglings_output$WarningOutput,
+                         Check4 = compare_laying_hatching_output$WarningOutput,
+                         Check5 = compare_hatching_fledging_output$WarningOutput,
+                         Check6 = check_values_brood_output$WarningOutput)
+
+    # Error list
+    error_list <- list(Check2 = compare_clutch_brood_output$ErrorOutput,
+                       Check3 = compare_brood_fledglings_output$ErrorOutput,
+                       Check4 = compare_laying_hatching_output$ErrorOutput,
+                       Check5 = compare_hatching_fledging_output$ErrorOutput,
+                       Check6 = check_values_brood_output$ErrorOutput)
+
+    check_list <- check_list[-1,]
+  }
+
   return(list(CheckList = check_list,
-              Warnings = list(
-                Check1 = check_format_brood_output$WarningOutput,
-                Check2 = compare_clutch_brood_output$WarningOutput,
-                Check3 = compare_brood_fledglings_output$WarningOutput,
-                Check4 = compare_laying_hatching_output$WarningOutput,
-                Check5 = compare_hatching_fledging_output$WarningOutput,
-                Check6 = check_values_brood_output$WarningOutput),
-              Errors = list(
-                Check1 = check_format_brood_output$ErrorOutput,
-                Check2 = compare_clutch_brood_output$ErrorOutput,
-                Check3 = compare_brood_fledglings_output$ErrorOutput,
-                Check4 = compare_laying_hatching_output$ErrorOutput,
-                Check5 = compare_hatching_fledging_output$ErrorOutput,
-                Check6 = check_values_brood_output$ErrorOutput)
-              ))
+              Warnings = warning_list,
+              Errors = error_list))
 }
 
 #' Check format of brood data

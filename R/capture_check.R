@@ -9,6 +9,7 @@
 #' }
 #'
 #' @inheritParams checks_capture_params
+#' @param check_format \code{TRUE} or \code{FALSE}. If \code{TRUE}, the check on variable format (i.e. \code{\link{check_format_capture}}) is included in the quality check. Default: \code{TRUE}.
 #'
 #' @return
 #' A list of:
@@ -18,7 +19,7 @@
 #'
 #' @export
 
-capture_check <- function(Capture_data){
+capture_check <- function(Capture_data, check_format=TRUE){
 
   # Create check list with a summary of warnings and errors per check
   check_list <- tibble::tibble(CheckID = purrr::map_chr(1:2, ~paste0("C", .)),
@@ -31,11 +32,13 @@ capture_check <- function(Capture_data){
   message("Capture checks")
 
   # - Check format capture data
-  message("C1: Checking format of capture data...")
+  if(check_format) {
+    message("C1: Checking format of capture data...")
 
-  check_format_capture_output <- check_format_capture(Capture_data)
+    check_format_capture_output <- check_format_capture(Capture_data)
 
-  check_list[1,3:4] <- check_format_capture_output$CheckList
+    check_list[1,3:4] <- check_format_capture_output$CheckList
+  }
 
   # - Check capture variable values against reference values
   message("C2: Checking capture variable values against reference values...")
@@ -45,14 +48,27 @@ capture_check <- function(Capture_data){
   check_list[2,3:4] <- check_values_capture_output$CheckList
 
 
+  if(check_format) {
+    # Warning list
+    warning_list <- list(Check1 = check_format_capture_output$WarningOutput,
+                         Check2 = check_values_capture_output$WarningOutput)
+
+    # Error list
+    error_list <- list(Check1 = check_format_capture_output$ErrorOutput,
+                       Check2 = check_values_capture_output$ErrorOutput)
+  } else {
+    # Warning list
+    warning_list <- list(Check2 = check_values_capture_output$WarningOutput)
+
+    # Error list
+    error_list <- list(Check2 = check_values_capture_output$ErrorOutput)
+
+    check_list <- check_list[-1,]
+  }
+
   return(list(CheckList = check_list,
-              Warnings = list(
-                Check1 = check_format_capture_output$WarningOutput,
-                Check2 = check_values_capture_output$WarningOutput),
-              Errors = list(
-                Check1 = check_format_capture_output$ErrorOutput,
-                Check2 = check_values_capture_output$ErrorOutput)
-  ))
+              Warnings = warning_list,
+              Errors = error_list))
 }
 
 #' Check format of capture data
