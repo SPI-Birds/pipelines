@@ -45,6 +45,12 @@ run_pipelines <- function(path = utils::choose.dir(),
 
   }
 
+  if(all(!Species %in% Species_codes$Code)){
+
+    stop("Species provided are not included in the pipelines. Please select from species listed in Species_codes")
+
+  }
+
   #Assign species for filtering
   if(is.null(Species)){
 
