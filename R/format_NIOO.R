@@ -43,6 +43,10 @@
 #'because they aren't associated with a given brood (they can be weighed before and after a cross fostering). For now,
 #'we don't include this data, but we hope to in the future. Therefore, AvgEggMass is currently just NA.
 #'
+#'\strong{ChickAge:} For every capture, we estimate the age of a chick as the difference between the hatch date
+#'taken from BroodIDFledged (in Individual_data) and the CaptureDate. We include chick ages for all individuals
+#'up until 30 days post hatching to accomodate possible late fledging.
+#'
 #'
 #'@inheritParams pipeline_params
 #'
@@ -133,25 +137,50 @@ format_NIOO <- function(db = utils::choose.dir(),
 
   Individual_data <- create_individual_NIOO(connection, Locations, species_filter, pop_filter)
 
-  # CAPTURE DATA
-
-  message("Compiling capture information...")
-
-  Capture_data <- create_capture_NIOO(connection, Individual_data, Locations, species_filter, pop_filter)
-
   # BROOD DATA
 
   #This data will include 1 row for every recorded brood.
 
   message("Compiling brood information...")
 
-  Brood_data <- create_brood_NIOO(connection, Individual_data, Capture_data, Locations, species_filter, pop_filter)
+  Brood_data <- create_brood_NIOO(connection, Individual_data, Locations, species_filter, pop_filter)
+
+  # CAPTURE DATA
+
+  message("Compiling capture information...")
+
+  Capture_data <- create_capture_NIOO(connection, Brood_data, Individual_data, Locations, species_filter, pop_filter)
 
   # NESTBOX DATA
 
   message("Compiling nestbox information...")
 
   Location_data <- create_location_NIOO(connection, Locations, species_filter, pop_filter)
+
+  # WRANGLE DATA FOR SAVING
+
+  #Calculate mean mass, tarsus for all chicks in the brood
+  #AT 14-16 DAYS POST HATCHING!!!
+  avg_mass <- Brood_data %>%
+    #Join mass and tarsus data for chicks by linking to the brood in which they were born
+    dplyr::left_join(dplyr::left_join(dplyr::select(Capture_data, CaptureDate, IndvID, Mass, Tarsus),
+                                      dplyr::select(Individual_data, IndvID, BroodID = BroodIDFledged), by = "IndvID"), by = "BroodID") %>%
+    #Filter those that were not caught at 14 - 16 days
+    dplyr::mutate(CaptureDate = lubridate::ymd(CaptureDate)) %>%
+    dplyr::filter(CaptureDate >= (HatchDate + 14) & CaptureDate <= (HatchDate + 16)) %>%
+    dplyr::group_by(BroodID) %>%
+    dplyr::summarise(AvgEggMass = NA_real_, NumberEggs = NA_integer_, AvgChickMass = mean(Mass, na.rm = TRUE),
+                     NumberChicksMass = length(stats::na.omit(Mass)),
+                     AvgTarsus = mean(Tarsus, na.rm = TRUE),
+                     NumberChicksTarsus = length(stats::na.omit(Tarsus)),
+                     OriginalTarsusMethod = "Alternative")
+
+  #Join this average mass/tarsus data back into the brood data table
+  Brood_data <- Brood_data %>%
+    dplyr::left_join(avg_mass, by = "BroodID")  %>%
+    dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot, LocationID = BroodLocation, FemaleID, MaleID, ClutchType_observed, ClutchType_calculated, LayDate, LayDateError,
+                  ClutchSize, ClutchSizeError, HatchDate, HatchDateError, BroodSize, BroodSizeError, FledgeDate, FledgeDateError, NumberFledged, NumberFledgedError,
+                  AvgEggMass, NumberEggs, AvgChickMass, NumberChicksMass, AvgTarsus, NumberChicksTarsus, OriginalTarsusMethod, ExperimentID)
 
   # REMOVE UNWANTED COLUMNS AND CHANGE FORMATS
   Individual_data <- Individual_data %>%
@@ -307,7 +336,7 @@ create_individual_NIOO <- function(database, location_data, species_filter, pop_
 #'
 #' @return A data frame.
 
-create_capture_NIOO <- function(database, Individual_data, location_data, species_filter, pop_filter){
+create_capture_NIOO <- function(database, Brood_data, Individual_data, location_data, species_filter, pop_filter){
 
   #Capture data includes all times an individual was captured (with measurements like mass, tarsus etc.).
   #This will include first capture as nestling
@@ -337,6 +366,7 @@ create_capture_NIOO <- function(database, Individual_data, location_data, specie
     #This is used to determine the age of each individual (EURING) at the time of capture
     dplyr::left_join(dplyr::select(Individual_data, IndvID, RingSeason), by = "IndvID") %>%
     dplyr::mutate(Age_observed = as.integer(Age),
+                  CaptureDate = as.Date(CaptureDate),
                   BreedingSeason = as.integer(lubridate::year(CaptureDate))) %>%
     calc_age(ID = IndvID, Age = Age_observed, Date = CaptureDate, Year = BreedingSeason, showpb = TRUE) %>%
     #Include species letter codes for all species
@@ -350,7 +380,7 @@ create_capture_NIOO <- function(database, Individual_data, location_data, specie
                                              .$SpeciesID == 14610 ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code),
                   #Add original tarsus method
                   OriginalTarsusMethod = dplyr::case_when(!is.na(.$Tarsus) ~ "Alternative"),
-                  ChickAge = NA_integer_, ObserverID = as.character(Observer)) %>%
+                  ObserverID = as.character(Observer)) %>%
     #Arrange by species, indv and date/time
     dplyr::arrange(Species, IndvID, CaptureDate, CaptureTime) %>%
     #Include three letter population codes for both the capture and release location (some individuals may have been translocated e.g. cross-fostering)
@@ -358,7 +388,30 @@ create_capture_NIOO <- function(database, Individual_data, location_data, specie
     dplyr::left_join(dplyr::select(location_data, ReleaseLocation = ID, ReleasePopID = PopID), by = "ReleaseLocation") %>%
     dplyr::filter(CapturePopID %in% pop_filter) %>%
     #Make mass and tarsus into g and mm
-    dplyr::mutate(LocationID = CaptureLocation, Mass = dplyr::na_if(Weight/100, y = 0), Tarsus = dplyr::na_if(Tarsus/10, 0)) %>%
+    dplyr::mutate(LocationID = CaptureLocation, Mass = dplyr::na_if(Weight/100, y = 0), Tarsus = dplyr::na_if(Tarsus/10, 0))
+
+  #Join in hatch date for each brood where an individual fledged
+  Capture_data <- Capture_data %>%
+    dplyr::left_join(dplyr::select(Individual_data, IndvID, BroodID = BroodIDFledged), by = "IndvID") %>%
+    dplyr::left_join(dplyr::select(Brood_data, BroodID, HatchDate), by = "BroodID") %>%
+    #Determine difference between hatch and capture date for all individuals
+    #that were ~before fledging (we'll say up until 30 days because this covers all possibilites)
+    dplyr::mutate(ChickAge = purrr::pmap_int(.l = list(HatchDate, CaptureDate, IndvID),
+                                             .f = ~{
+
+                                               x <- as.integer(difftime(..2, ..1))
+
+                                               if(!is.na(x) && between(x, 0, 30)){
+
+                                                 return(x)
+
+                                               } else {
+
+                                                 return(NA_integer_)
+
+                                               }
+
+                                             })) %>%
     #Arrange columns
     dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, CapturePopID, CapturePlot = CaptureLocation,
                   ReleasePopID, ReleasePlot = ReleaseLocation,
@@ -385,7 +438,7 @@ create_capture_NIOO <- function(database, Individual_data, location_data, specie
 #'
 #' @return A data frame.
 
-create_brood_NIOO <- function(database, Individual_data, Capture_data, location_data, species_filter, pop_filter){
+create_brood_NIOO <- function(database, Individual_data, location_data, species_filter, pop_filter){
 
   target_locations <- dplyr::filter(location_data, PopID %in% pop_filter)
 
@@ -461,34 +514,6 @@ create_brood_NIOO <- function(database, Individual_data, Capture_data, location_
   dplyr::mutate(ClutchSizeError = NA_real_, HatchDateError = NA_real_, FledgeDateError = NA_real_, ExperimentID = NA_character_,
                 BroodLocation = as.character(BroodLocation), BroodID = as.character(BroodID),
                 FemaleID = as.character(FemaleID), MaleID = as.character(MaleID))
-
-  #Next, we calculate mean mass, tarsus for all chicks in the brood
-  #AT 14-16 DAYS POST HATCHING!!!
-  #IF THEY ARE NOT CAUGHT DURING THIS TIME, THEN LEAVE AS NA.
-  #WE EXCLUDE EGG MASS CAPTURES AT THE MOMENT BECAUSE THIS IS A BIT DIFFICULT
-  #WE KNOW THE 'LOCATIONID' WHERE EGGS WERE WEIGHED, BUT THIS DOESN'T TELL US THE BROOD
-  #TO DETERMINE THE BROOD, WE WOULD NEED TO IDENTIFY THE LOCATION OF THE BROOD IN THE SAME YEAR
-  #THIS SHOULD BE POSSIBLE, BUT CURRENTLY WE JUST NEED TO GET THE PIPELINE WORKING
-  avg_mass <- Brood_data %>%
-    #Join mass and tarsus data for chicks by linking to the brood in which they were born
-    dplyr::left_join(dplyr::left_join(dplyr::select(Capture_data, CaptureDate, IndvID, Mass, Tarsus),
-                                      dplyr::select(Individual_data, IndvID, BroodID = BroodIDFledged), by = "IndvID"), by = "BroodID") %>%
-    #Filter those that were not caught at 14 - 16 days
-    dplyr::mutate(CaptureDate = lubridate::ymd(CaptureDate)) %>%
-    dplyr::filter(CaptureDate >= (HatchDate + 14) & CaptureDate <= (HatchDate + 16)) %>%
-    dplyr::group_by(BroodID) %>%
-    dplyr::summarise(AvgEggMass = NA_real_, NumberEggs = NA_integer_, AvgChickMass = mean(Mass, na.rm = TRUE),
-                     NumberChicksMass = length(stats::na.omit(Mass)),
-                     AvgTarsus = mean(Tarsus, na.rm = TRUE),
-                     NumberChicksTarsus = length(stats::na.omit(Tarsus)),
-                     OriginalTarsusMethod = "Alternative")
-
-  #Join this average mass/tarsus data back into the brood data table
-  Brood_data <- Brood_data %>%
-    dplyr::left_join(avg_mass, by = "BroodID")  %>%
-    dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot, LocationID = BroodLocation, FemaleID, MaleID, ClutchType_observed, ClutchType_calculated, LayDate, LayDateError,
-                  ClutchSize, ClutchSizeError, HatchDate, HatchDateError, BroodSize, BroodSizeError, FledgeDate, FledgeDateError, NumberFledged, NumberFledgedError,
-                  AvgEggMass, NumberEggs, AvgChickMass, NumberChicksMass, AvgTarsus, NumberChicksTarsus, OriginalTarsusMethod, ExperimentID)
 
   return(Brood_data)
 
