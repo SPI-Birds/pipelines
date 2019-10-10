@@ -227,7 +227,7 @@ create_capture_MON <- function(db, species_filter){
                   IndvID = bague, WingLength = aile,
                   BeakLength = becna,
                   Mass = poids, ObserverID = obs,
-                  Destination_Aviary = dest,
+                  Destination = dest,
                   LocationID = paste(lieu, nic, sep = "_"),
                   ActionTaken = dplyr::case_when(.$action == "bcj" ~ "Ringed",
                                                  .$action == "mor" ~ "Dead",
@@ -307,9 +307,9 @@ create_capture_MON <- function(db, species_filter){
   Full_capture_data <- Full_capture_data %>%
     dplyr::filter(lieu %in% c("cap", "mes", "pir", "tua", "rou")) %>%
     #Only include capture pop and plot for now, until we work out how to code translocations
-    dplyr::mutate(CapturePopID = dplyr::case_when(.$lieu %in% c("cap", "mes", "pir", "tua") ~ "COR",
-                                           .$lieu == "rou" ~ "ROU"),
-                  CapturePlot = lieu, ReleasePopID = NA_character_, ReleasePlot = NA_character_,
+    dplyr::mutate(CapturePopID = identify_PopID_MON(lieu),
+                  ReleasePopID = identify_PopID_MON(ReleasePlot),
+                  CapturePlot = lieu,
                   Tarsus = as.numeric(tarsed), OriginalTarsusMethod = dplyr::case_when(!is.na(.$tarsed) ~ "Alternative")) %>%
     dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, FoundDead, ObserverID, LocationID,
                   CapturePopID, CapturePlot, ReleasePopID, ReleasePlot, Mass, Tarsus,
@@ -383,7 +383,7 @@ create_capture_MON <- function(db, species_filter){
                   FoundDead = dplyr::case_when(.$etat_sante %in% c("M", "MMAN", "D") ~ TRUE),
                   #Make LocationID Plot_BoxNumber
                   LocationID = paste(lieu, nic, sep = "_"),
-                  #Make CapturePopID and plot. Leave Release NA for now until we work out how to code these
+                  CapturePopID = identify_PopID_MON(lieu),
                   CapturePopID = dplyr::case_when(.$lieu %in% c("cap", "mes", "pir", "tua") ~ "COR",
                                                   .$lieu == "rou" ~ "ROU"),
                   CapturePlot = lieu,
@@ -499,7 +499,7 @@ create_brood_MON <- function(db, species_filter){
                   NumberFledgedError = NA_integer_) %>%
     dplyr::filter(Species %in% species_filter & Plot %in% c("cap", "mes", "pir", "tua", "rou")) %>%
     #Only include capture pop and plot for now, until we work out how to code translocations
-    dplyr::mutate(PopID = dplyr::case_when(.$lieu %in% c("cap", "mes", "pir", "tua") ~ "COR",
+    dplyr::mutate(PopID = identify_PopID_MON(lieu)) %>%
                                            .$lieu == "rou" ~ "ROU")) %>%
     dplyr::arrange(BreedingSeason, Species, FemaleID, LayDate) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
@@ -748,6 +748,43 @@ create_location_MON <- function(capture_data){
                      StartSeason = min(BreedingSeason),
                      EndSeason = NA_integer_,
                      Habitat = NA_character_)
+
+}
+
+identify_PopID_MON <- function(variable){
+
+  dplyr::case_when(variable %in% c("ava", "fel", "mur", "fil", "ari", "gra") ~ "MUR",
+                   variable %in% c("pir", "tua") ~ "PIR",
+                   variable == "rou" ~ "ROU",
+                   variable %in% c("bot", "cef", "fac", "font",
+                                 "gram", "mas", "mos", "val", "vol", "zoo") ~ "MON",
+                   variable == "ven" ~ "MTV",
+                   variable %in% c("hs", "aul", "mes", "aig", "bon", "cap", "crt", "gen", "mal",
+                                 "mau", "mrt", "olm", "pac", "pie", "pog", "pon",
+                                 "pre", "pue", "sfl", "stb", "tcb", "tcv", "vic") ~ "MIS",
+                   grepl(x = variable, pattern = "voliére|volière|aviary") ~ "aviary")
+
+}
+
+find_box <- function(string, position = 1){
+
+  if(is.na(string) | position == (nchar(string) + 1)){
+
+    return(NA_character_)
+
+  }
+
+  split_string <- strsplit(string, "")[[1]]
+
+  if(is.na(suppressWarnings(as.numeric(split_string[position])))){
+
+    return(find_box(string = string, position = position + 1))
+
+  } else {
+
+    return(paste(split_string[position:nchar(string)], collapse = ""))
+
+  }
 
 }
 
