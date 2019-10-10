@@ -72,31 +72,6 @@ quality_check_description_html <- "
 
 "
 
-
-##############################################################################
-
-find_box <- function(string, position = 1){
-
-  if(is.na(string) | position == (nchar(string) + 1)){
-
-    return(NA_character_)
-
-  }
-
-  split_string <- strsplit(string, "")[[1]]
-
-  if(is.na(suppressWarnings(as.numeric(split_string[position])))){
-
-    return(find_box(string = string, position = position + 1))
-
-  } else {
-
-    return(paste(split_string[position:nchar(string)], collapse = ""))
-
-  }
-
-}
-
 ############################################################################
 
 #' Parameter documentation for all pipelines
