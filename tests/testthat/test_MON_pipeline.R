@@ -177,5 +177,22 @@ test_that("Capture data returns an expected outcome...", {
   expect_equal(subset(MON_data, IndvID == "4208517")$Age_calculated[1], 4L)
   expect_equal(subset(MON_data, IndvID == "4208517")$Age_calculated[15], 14L)
 
+  #Test 4: Adult
+  #Test it has the correct number of capture records
+  expect_equal(nrow(subset(MON_data, IndvID == "4486371")), 8)
+  #Test that the first capture is as expected
+  expect_equal(subset(MON_data, IndvID == "4486371")$CaptureDate[1], as.Date("2002-04-26"))
+  #Test that the 8th capture is as expected
+  expect_equal(subset(MON_data, IndvID == "4486371")$CaptureDate[8], as.Date("2007-04-30"))
+  #Test that first and last age observed is as expected
+  expect_equal(subset(MON_data, IndvID == "4486371")$Age_observed[1], 1L)
+  expect_equal(subset(MON_data, IndvID == "4486371")$Age_observed[8], 13L)
+  #Test that first and last age calculated is as expected
+  expect_equal(subset(MON_data, IndvID == "4486371")$Age_calculated[1], 1L)
+  expect_equal(subset(MON_data, IndvID == "4486371")$Age_calculated[8], 13L)
+  #Test that capture and release are different
+  expect_equal(subset(MON_data, IndvID == "4486371")$CapturePlot[7], "mur")
+  expect_equal(subset(MON_data, IndvID == "4486371")$ReleasePlot[7], "aul")
+
 
 })
