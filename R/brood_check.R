@@ -546,48 +546,28 @@ compare_hatching_fledging <- function(Brood_data){
 
 check_values_brood <- function(Brood_data) {
 
-  # Names of reference values
+  # Reference values
   ref_names <- stringr::str_split(names(brood_ref_values), pattern="_")
 
   # Progress bar
-  pb <- dplyr::progress_estimated(length(brood_ref_values))
+  pb <- dplyr::progress_estimated(2*length(brood_ref_values))
 
-  # Brood-specific warnings and errors
-  Brood_list <- purrr::map2(.x = brood_ref_values,
-                            .y = ref_names,
-                            .f = ~{
-                              pb$tick()$print()
-                              sel_war <- which(Brood_data$Species == .y[1]
-                                               & Brood_data[,which(colnames(Brood_data) == .y[2])] > .x$Value[2]
-                                               & Brood_data[,which(colnames(Brood_data) == .y[2])] <= .x$Value[4])
+  # Brood-specific errors
+  Brood_err <- purrr::map2(.x = brood_ref_values,
+                           .y = ref_names,
+                           .f = ~{
+                             pb$tick()$print()
+                             sel <- which(Brood_data$Species == .y[1]
+                                          & (Brood_data[,which(colnames(Brood_data) == .y[2])] < .x$Value[3]
+                                             | Brood_data[,which(colnames(Brood_data) == .y[2])] > .x$Value[4]))
 
-                              sel_err <- which(Brood_data$Species == .y[1]
-                                               & (Brood_data[,which(colnames(Brood_data) == .y[2])] < .x$Value[3]
-                                                  | Brood_data[,which(colnames(Brood_data) == .y[2])] > .x$Value[4]))
-
-                              Brood_data[sel_war,] %>%
-                                dplyr::select(Row, Value = !!.y[2]) %>%
-                                dplyr::mutate(Species = .y[1],
-                                              Variable = .y[2],
-                                              Check = "Warning") ->
-                                Brood_war
-
-                              Brood_data[sel_err,] %>%
-                                dplyr::select(Row, Value = !!.y[2]) %>%
-                                dplyr::mutate(Species = .y[1],
-                                              Variable = .y[2],
-                                              Check ="Error") ->
-                                Brood_err
-
-                              dplyr::bind_rows(Brood_war, Brood_err)
-
-                            }) %>%
+                             Brood_data[sel,] %>%
+                               dplyr::select(Row, Value = !!.y[2]) %>%
+                               dplyr::mutate(Species = .y[1],
+                                             Variable = .y[2])
+                           }) %>%
     dplyr::bind_rows() %>%
-    dplyr::mutate(Species = Species_codes$CommonName[match(Species, Species_codes$Code)]) %>%
     dplyr::arrange(Species, Variable)
-
-  # Errors
-  Brood_err <- Brood_list %>% dplyr::filter(Check == "Error")
 
   err <- FALSE
   error_output <- NULL
@@ -598,13 +578,27 @@ check_values_brood <- function(Brood_data) {
     error_output <- purrr::pmap(.l = Brood_err,
                                 .f = ~{
                                   paste0("Record on row ", ..1,
-                                         " (species: ", ..3, ")",
+                                         " (", Species_codes[Species_codes$Code == ..3, "CommonName"], ")",
                                          " has an impossible value in ", ..4, " (", ..2, ").")
                                 })
   }
 
-  # Warnings
-  Brood_war <- Brood_list %>% dplyr::filter(Check == "Warning")
+  # Brood-specific warnings
+  Brood_war <- purrr::map2(.x = brood_ref_values,
+                           .y = ref_names,
+                           .f = ~{
+                             pb$tick()$print()
+                             sel <- which(Brood_data$Species == .y[1]
+                                          & Brood_data[,which(colnames(Brood_data) == .y[2])] > .x$Value[2]
+                                          & Brood_data[,which(colnames(Brood_data) == .y[2])] <= .x$Value[4])
+
+                             Brood_data[sel,] %>%
+                               dplyr::select(Row, Value = !!.y[2]) %>%
+                               dplyr::mutate(Species = .y[1],
+                                             Variable = .y[2])
+                           }) %>%
+    dplyr::bind_rows() %>%
+    dplyr::arrange(Species, Variable)
 
   war <- FALSE
   warning_output <- NULL
@@ -615,8 +609,9 @@ check_values_brood <- function(Brood_data) {
     warning_output <- purrr::pmap(.l = Brood_war,
                                   .f = ~{
                                     paste0("Record on row ", ..1,
-                                           " (species: ", ..3, ")",
-                                           " has an unusual value in ", ..4, " (", ..2, ")")
+                                           " (", Species_codes[Species_codes$Code == ..3, "CommonName"], ")",
+                                           " has an unusually high value in ", ..4, " (", ..2, " > ",
+                                           brood_ref_values[[paste(..3, ..4, sep="_")]]$Value[2],")")
                                   })
   }
 
@@ -628,5 +623,5 @@ check_values_brood <- function(Brood_data) {
               ErrorOutput = unlist(error_output)))
 
   #Satisfy RCMD Checks
-  brood_ref_values_list <- Species <- NULL
+  brood_ref_values <- Species <- NULL
 }
