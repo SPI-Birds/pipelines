@@ -24,12 +24,12 @@ brood_check <- function(Brood_data, check_format=TRUE){
 
   # Create check list with a summary of warnings and errors per check
   check_list <- tibble::tibble(CheckID = purrr::map_chr(1:6, ~paste0("B", .)),
-                               CheckDescription = c("Brood data format",
-                                                    "Clutch and brood sizes",
-                                                    "Brood sizes and fledgling numbers",
-                                                    "Laying and hatching dates",
-                                                    "Hatching and fledging dates",
-                                                    "Improbable and impossible values brood data"),
+                               CheckDescription = c("Check format of brood data",
+                                                    "Compare clutch and brood sizes",
+                                                    "Compare brood sizes and fledgling numbers",
+                                                    "Compare laying and hatching dates",
+                                                    "Compare hatching and fledging dates",
+                                                    "Check brood variable values against reference values"),
                                Warning = NA,
                                Error = NA)
 
