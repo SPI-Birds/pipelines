@@ -299,13 +299,37 @@ create_capture_MON <- function(db, species_filter){
 
 
   #Format the Capture data to match the standard protocol
-  #For now I'm just going to work with the data collected around Rouviere and Pirio (Corsica)
-  #These are the areas I know there are long term populations
-  #Will ask Anne about the other populations over Skype
-  #Give them PopID COR (Corsica) and ROU (Rouviere)
-  #Use the codes from within each population as Plot
+  #There are multiple populations within this dataset these are
+  # Muro (Corsica), including a deciduous and evergreen sub-population
+  # Pirio (Corsica), evergreen only
+  # Rouviere (mainly deciduous)
+  # Montpellier city (urban habitat)
+  # Mont Ventoux (only laying date and clutch size recorded)
+  # Remnant populations <- these are not one biological population but are grouped together
+
   Full_capture_data <- Full_capture_data %>%
-    dplyr::filter(lieu %in% c("cap", "mes", "pir", "tua", "rou")) %>%
+    #If there is information in the 'Destination' column, add a different value for ReleasePopID/Plot
+    dplyr::mutate(ReleasePlot = purrr::map2_chr(Destination, lieu, .f = ~{
+
+      if(is.na(..1)){
+
+        return(..2)
+
+      } else {
+
+        if(grepl(x = ..1, pattern = "voliére|volière")){
+
+          return("aviary")
+
+        } else {
+
+          return(..1)
+
+        }
+
+      }
+
+    })) %>%
     #Only include capture pop and plot for now, until we work out how to code translocations
     dplyr::mutate(CapturePopID = identify_PopID_MON(lieu),
                   ReleasePopID = identify_PopID_MON(ReleasePlot),
