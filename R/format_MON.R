@@ -421,8 +421,7 @@ create_capture_MON <- function(db, species_filter, pop_filter){
                   Tarsus = as.numeric(tarsed),
                   OriginalTarsusMethod = dplyr::case_when(!is.na(.$tarsed) ~ "Alternative"),
                   WingLength = NA_real_,
-                  OrigBoxNumber = find_box(orig), DestBoxNumber = find_box(dest),
-                  #This information is needed to determine cross fostering later
+                  OrigBoxNumber = purrr::map(orig, find_box), DestBoxNumber = purrr::map(dest, find_box),
                   BroodIDLaid = purrr::pmap_chr(.l = list(BreedingSeason, lieu, OrigBoxNumber),
                                                 .f = ~{
 
@@ -584,7 +583,7 @@ create_brood_MON <- function(db, species_filter, pop_filter){
 #'
 #' @return A data frame with Individual data
 
-create_individual_MON <- function(capture_data, brood_data){
+create_individual_MON <- function(capture_data, brood_data, verbose){
 
   BroodAssignment <- brood_data %>%
     dplyr::select(BroodIDLaid = BroodID, pulbag1:pulbag14) %>%
