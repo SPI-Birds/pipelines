@@ -85,7 +85,8 @@ format_MON <- function(db = utils::choose.dir(),
                        pop = NULL,
                        path = ".",
                        debug = FALSE,
-                       output_type = "csv"){
+                       output_type = "csv",
+                       verbose = FALSE){
 
   #Force user to select directory
   force(db)
@@ -413,39 +414,66 @@ create_capture_MON <- function(db, species_filter){
                   Tarsus = as.numeric(tarsed),
                   OriginalTarsusMethod = dplyr::case_when(!is.na(.$tarsed) ~ "Alternative"),
                   WingLength = NA_real_,
+                  OrigBoxNumber = find_box(orig), DestBoxNumber = find_box(dest),
                   #This information is needed to determine cross fostering later
-                  BroodIDLaid = purrr::pmap_chr(.l = list(BreedingSeason, lieu, orig),
+                  BroodIDLaid = purrr::pmap_chr(.l = list(BreedingSeason, lieu, OrigBoxNumber),
                                                 .f = ~{
 
-                                                  BoxNumber <- find_box(..3)
-
-                                                  if(is.na(BoxNumber)){
+                                                  if(length(..3) == 1 && is.na(..3)){
 
                                                     return(NA_character_)
 
                                                   } else {
 
-                                                    return(paste(..1, ..2, find_box(..3), sep = "_"))
+                                                    if(length(..3) > 1){
+
+                                                      return(paste(..1, ..3[1], ..3[2], sep = "_"))
+
+                                                    } else {
+
+                                                      return(paste(..1, ..2, ..3, sep = "_"))
+
+                                                    }
 
                                                   }
 
                                                 }),
-                  BroodIDFledged = purrr::pmap_chr(.l = list(BreedingSeason, lieu, dest),
+                  BroodIDFledged = purrr::pmap_chr(.l = list(BreedingSeason, lieu, DestBoxNumber),
                                                    .f = ~{
 
-                                                     BoxNumber <- find_box(..3)
-
-                                                     if(is.na(BoxNumber)){
+                                                     if(length(..3) == 1 && is.na(..3)){
 
                                                        return(NA_character_)
 
                                                      } else {
 
-                                                       return(paste(..1, ..2, find_box(..3), sep = "_"))
+                                                       if(length(..3) == 2){
+
+                                                         return(paste(..1, ..3[1], ..3[2], sep = "_"))
+
+                                                       } else {
+
+                                                         return(paste(..1, ..2, ..3, sep = "_"))
+
+                                                       }
 
                                                      }
 
                                                    })) %>%
+    #If there is a destination box, give it a different ReleasePlot/PopID
+    dplyr::mutate(ReleasePlot = purrr::map2_chr(.x = DestBoxNumber, .y = CapturePlot, ~{
+
+      if(length(..1) == 2){
+
+        return(..1[1])
+
+      } else {
+
+        return(..2)
+
+      }
+
+    }), ReleasePopID = identify_PopID_MON(ReleasePlot)) %>%
     dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, FoundDead, ObserverID, LocationID,
                   CapturePopID, CapturePlot, ReleasePopID, ReleasePlot, Mass, Tarsus, OriginalTarsusMethod,
                   WingLength, Age_observed, ChickAge, ObservedSex, GeneticSex, ExperimentDescription1, ExperimentDescription2, BroodIDLaid, BroodIDFledged)
@@ -565,7 +593,7 @@ create_individual_MON <- function(capture_data, brood_data){
   #Create progress bar to track cross-foster assignment
   pb <- dplyr::progress_estimated(n = nrow(Cross_foster))
 
- Cross_foster  <- Cross_foster %>%
+  Cross_foster  <- Cross_foster %>%
     dplyr::select(IndvID, LocationID, CaptureDate, BroodIDLaid, BroodIDFledged) %>%
     #Run through each example and determine the destination
     #There are three possible situations
@@ -608,12 +636,17 @@ create_individual_MON <- function(capture_data, brood_data){
 
         } else {
 
-          print(CaptureDate)
-          print(split_info)
-          print(possible_nest, width = Inf)
+          if(verbose){
 
-          message("CROSS-FOSTERING DESTINATION RETURNS ERROR (MON DATA). This may be because more than one cross-fostering event
+            print(x["IndvID"])
+            print(CaptureDate)
+            print(split_info)
+            print(possible_nest, width = Inf)
+
+            message("CROSS-FOSTERING DESTINATION RETURNS ERROR (MON DATA). This may be because more than one cross-fostering event
                is listed, or the destination nest doesn't exist. This record is skipped")
+
+          }
 
           return(NULL)
 
@@ -643,18 +676,16 @@ create_individual_MON <- function(capture_data, brood_data){
 
       }
 
-      return(tibble::tibble(IndvID = x["IndvID"], BroodIDFledged = possible_nest$BroodID))
-
     }, brood_data) %>%
    dplyr::bind_rows()
 
   Individual_data <- capture_data %>%
     dplyr::arrange(IndvID, CaptureDate) %>%
     dplyr::group_by(IndvID) %>%
-    dplyr::summarise(Species = purrr::pmap_chr(.l = list(unique(Species)),
+    dplyr::summarise(Species = purrr::map_chr(.x = list(na.omit(unique(Species))),
                                             .f = ~{
 
-                                              if(length(na.omit(..1)) == 1){
+                                              if(length(..1) == 1){
 
                                                 return(..1)
 
@@ -746,12 +777,14 @@ create_individual_MON <- function(capture_data, brood_data){
   #Join in Brood data for all individuals
   Individual_data <- dplyr::left_join(Individual_data, BroodAssignment, by = "IndvID") %>%
     #Join in cross-fostering info
-    dplyr::left_join(Cross_foster, by = "IndvID") %>%
+    dplyr::left_join(dplyr::select(Cross_foster, IndvID, BroodIDFledged), by = "IndvID") %>%
     #If no BroodIDFledged is listed, make it the same as BroodIDLaid
     dplyr::mutate(n = 1:n()) %>%
     dplyr::group_by(n) %>%
     dplyr::mutate(BroodIDFledged = ifelse(is.na(BroodIDFledged), BroodIDLaid, BroodIDFledged)) %>%
     dplyr::ungroup() %>%
+    #Remove duplicates that will occur due to multiple values being in dest/orig
+    dplyr::filter(!duplicated(.)) %>%
     dplyr::select(IndvID, Species, PopID, BroodIDLaid, BroodIDFledged, RingSeason, RingAge, Sex)
 
   #Identify those cases where an individual has multiple records in individual data
@@ -833,7 +866,16 @@ find_box <- function(string, position = 1){
 
   } else {
 
-    return(paste(split_string[position:nchar(string)], collapse = ""))
+    if(position == 1){
+
+      return(paste(split_string[position:nchar(string)], collapse = ""))
+
+    } else {
+
+      return(c(paste(split_string[1:(position-1)], collapse = ""),
+               paste(split_string[position:nchar(string)], collapse = "")))
+
+    }
 
   }
 
