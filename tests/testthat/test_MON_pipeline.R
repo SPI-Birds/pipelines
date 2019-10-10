@@ -99,7 +99,7 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(subset(MON_data, IndvID == "8189538")$RingSeason, 2017)
   expect_equal(subset(MON_data, IndvID == "8189538")$RingAge, "chick")
 
-  #Test 4: Caught as chick and cross-fostered
+  #Test 4: Caught as chick and cross-fostered in same population
   #Check sex and species are as expected
   #Sex should be NA because it was never caught as an adult
   expect_equal(subset(MON_data, IndvID == "2221172")$Sex, NA_character_)
@@ -110,6 +110,17 @@ test_that("Individual data returns an expected outcome...", {
   #RingSeason and Age are as expected
   expect_equal(subset(MON_data, IndvID == "2221172")$RingSeason, 1991)
   expect_equal(subset(MON_data, IndvID == "2221172")$RingAge, "chick")
+
+  #Test 5: Caught as chick and cross-fostered to different population
+  #Check sex and species are as expected
+  expect_equal(subset(MON_data, IndvID == "7207569")$Sex, "M")
+  expect_equal(subset(MON_data, IndvID == "7207569")$Species, "CYACAE")
+  #Check that BroodIDLaid/Fledged are as expected
+  expect_equal(subset(MON_data, IndvID == "7207569")$BroodIDLaid, "2014_fil_11_1")
+  expect_equal(subset(MON_data, IndvID == "7207569")$BroodIDFledged, "2014_ava_13_1")
+  #RingSeason and Age are as expected
+  expect_equal(subset(MON_data, IndvID == "7207569")$RingSeason, 2014)
+  expect_equal(subset(MON_data, IndvID == "7207569")$RingAge, "chick")
 
 })
 
