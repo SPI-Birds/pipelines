@@ -362,16 +362,16 @@ create_capture_MON <- function(db, species_filter){
                                              .$espece == "non" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14400)])) %>%
     #Filter by species
     #Also remove only the pops we know
-    dplyr::filter(Species %in% species_filter & lieu %in% c("cap", "mes", "pir", "tua", "rou")) %>%
+    dplyr::filter(Species %in% species_filter) %>%
     dplyr::mutate(CaptureDate = janitor::excel_numeric_to_date(as.numeric(date_mesure)),
                   CaptureTime = dplyr::na_if(paste(stringr::str_pad((24*as.numeric(heure)) %/% 1, width = 2, pad = "0"),
                                                    stringr::str_pad(round(((24*as.numeric(heure)) %% 1) * 60), width = 2, pad = "0"),
                                                    sep = ":"), "NA:NA"),
-                  BreedingSeason = as.integer(an), CaptureTime = heure,
+                  BreedingSeason = an, CaptureTime = heure,
                   IndvID = purrr::pmap_chr(.l = list(bague),
                                            .f = ~{
 
-                                             if(grepl(pattern = "no-ident", ..1)){
+                                             if(grepl(pattern = "no-ident", x = ..1)){
 
                                                return(NA_character_)
 
@@ -382,7 +382,7 @@ create_capture_MON <- function(db, species_filter){
                                              }
 
                                            }),
-                  Mass = as.numeric(poids), ObserverID = obs,
+                  Mass = poids, ObserverID = obs,
                   ChickAge = as.integer(age_plume),
                   ObservedSex = dplyr::case_when(.$sex %in% c(1, 4) ~ "M",
                                                  .$sex %in% c(2, 5) ~ "F"),
@@ -405,16 +405,15 @@ create_capture_MON <- function(db, species_filter){
                                             .$etat_sante == "D" ~ "Chick dead",
                                             .$etat_sante == "E" ~ "Healthy"),
                   FoundDead = dplyr::case_when(.$etat_sante %in% c("M", "MMAN", "D") ~ TRUE),
-                  #Make LocationID Plot_BoxNumber
                   LocationID = paste(lieu, nic, sep = "_"),
                   CapturePopID = identify_PopID_MON(lieu),
-                  CapturePopID = dplyr::case_when(.$lieu %in% c("cap", "mes", "pir", "tua") ~ "COR",
-                                                  .$lieu == "rou" ~ "ROU"),
                   CapturePlot = lieu,
+                  #ReleasePopID/Plot are NA for now until we work out how to include cross-foster
                   ReleasePopID = NA_character_, ReleasePlot = NA_character_,
                   Tarsus = as.numeric(tarsed),
                   OriginalTarsusMethod = dplyr::case_when(!is.na(.$tarsed) ~ "Alternative"),
                   WingLength = NA_real_,
+                  #This information is needed to determine cross fostering later
                   BroodIDLaid = purrr::pmap_chr(.l = list(BreedingSeason, lieu, orig),
                                                 .f = ~{
 
@@ -521,10 +520,9 @@ create_brood_MON <- function(db, species_filter){
                   HatchDateError = NA_integer_, BroodSizeError = NA_integer_,
                   FledgeDate = as.Date(NA), FledgeDateError = NA_integer_,
                   NumberFledgedError = NA_integer_) %>%
-    dplyr::filter(Species %in% species_filter & Plot %in% c("cap", "mes", "pir", "tua", "rou")) %>%
+    dplyr::filter(Species %in% species_filter) %>%
     #Only include capture pop and plot for now, until we work out how to code translocations
     dplyr::mutate(PopID = identify_PopID_MON(lieu)) %>%
-                                           .$lieu == "rou" ~ "ROU")) %>%
     dplyr::arrange(BreedingSeason, Species, FemaleID, LayDate) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
     dplyr::mutate(ExperimentID = dplyr::case_when((!is.na(.$Crossfostering_treatment) | !is.na(.$Brood_ExperimentDescription2) | .$ParasiteTreatment == "Treated" | .$expou == "2") ~ "TRUE",
@@ -555,7 +553,9 @@ create_individual_MON <- function(capture_data, brood_data){
   BroodAssignment <- brood_data %>%
     dplyr::select(BroodIDLaid = BroodID, pulbag1:pulbag14) %>%
     tidyr::pivot_longer(cols = pulbag1:pulbag14, names_to = "ChickNr", values_to = "IndvID") %>%
-    dplyr::select(-ChickNr)
+    dplyr::select(-ChickNr) %>%
+    #Remove broods where there were no ringed chicks
+    dplyr::filter(!is.na(IndvID))
 
   #Identify any cases where a individual was cross-fostered
   #It had info in the orig and/or dest column
@@ -583,6 +583,13 @@ create_individual_MON <- function(capture_data, brood_data){
         split_info <- unlist(stringr::str_split(x["BroodIDFledged"], pattern = "_"))
         CaptureDate <- as.Date(x["CaptureDate"])
 
+        #If it has been transferred to an aviary, list this
+        if(split_info[1] == "volièreMontpellier"){
+
+          return(tibble(IndvID = x["IndvID"], BroodIDFledged = "aviary"))
+
+        }
+
         #Find the nest that was active in the period of capture
         possible_nest <- brood_data %>%
           dplyr::filter(BreedingSeason == split_info[1],
@@ -590,9 +597,25 @@ create_individual_MON <- function(capture_data, brood_data){
                         BoxNumber == split_info[3],
                         LayDate < CaptureDate)
 
-        if(nrow(possible_nest) > 1){
+        if(nrow(possible_nest) == 1){
 
-          stop("MORE THAN ONE POSSIBLE NEST IDENTIFIED FOR CROSS-FOSTERING (MON DATA)")
+          return(tibble::tibble(IndvID = x["IndvID"], BroodIDFledged = possible_nest$BroodID))
+
+        } else if(nrow(possible_nest) > 1 & length(unique(possible_nest$BoxNumber)) == 1){
+
+          possible_nest <- possible_nest %>%
+            dplyr::slice(n())
+
+        } else {
+
+          print(CaptureDate)
+          print(split_info)
+          print(possible_nest, width = Inf)
+
+          message("CROSS-FOSTERING DESTINATION RETURNS ERROR (MON DATA). This may be because more than one cross-fostering event
+               is listed, or the destination nest doesn't exist. This record is skipped")
+
+          return(NULL)
 
         }
 
@@ -611,6 +634,10 @@ create_individual_MON <- function(capture_data, brood_data){
         if(nrow(possible_nest) > 1){
 
           stop("MORE THAN ONE POSSIBLE NEST IDENTIFIED FOR CROSS-FOSTERING (MON DATA)")
+
+        } else {
+
+          return(tibble::tibble(IndvID = x["IndvID"], BroodIDFledged = possible_nest$BroodID))
 
         }
 
