@@ -22,7 +22,7 @@ individual_check <- function(Individual_data, check_format=TRUE){
 
   # Create check list with a summary of warnings and errors per check
   check_list <- tibble::tibble(CheckID = purrr::map_chr(1, ~paste0("I", .)),
-                               CheckDescription = c("Individual data format"),
+                               CheckDescription = c("Check format of individual data"),
                                Warning = NA,
                                Error = NA)
 

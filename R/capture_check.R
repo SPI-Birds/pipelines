@@ -23,8 +23,8 @@ capture_check <- function(Capture_data, check_format=TRUE){
 
   # Create check list with a summary of warnings and errors per check
   check_list <- tibble::tibble(CheckID = purrr::map_chr(1:2, ~paste0("C", .)),
-                               CheckDescription = c("Capture data format",
-                                                    "Improbable and impossible values capture data"),
+                               CheckDescription = c("Check format of capture data",
+                                                    "Check capture variable values against reference values"),
                                Warning = NA,
                                Error = NA)
 
@@ -33,7 +33,7 @@ capture_check <- function(Capture_data, check_format=TRUE){
 
   # - Check format capture data
   if(check_format) {
-    message("C1: Checking format of capture data...")
+    message("C1: Checking format of capture variables...")
 
     check_format_capture_output <- check_format_capture(Capture_data)
 
@@ -185,7 +185,7 @@ check_format_capture <- function(Capture_data){
 
 #' Check capture variable values against reference values
 #'
-#' Check variable values against species-specific reference values in capture data. Implausible values will result in a warning. Impossible values will result in an error. Variables that are checked: Mass, Tarsus, WingLength, Age_obsv, Age_calc, Chick_age.
+#' Check variable values against species-specific reference values in capture data. Unusual values will result in a warning. Impossible values will result in an error. Variables that are checked: Mass, Tarsus, WingLength, Age_obsv, Age_calc, Chick_age.
 #'
 #' @inheritParams checks_capture_params
 #'
@@ -199,177 +199,39 @@ check_format_capture <- function(Capture_data){
 
 check_values_capture <- function(Capture_data) {
 
-  # Separate adults and chicks, because they have different reference values
-  Adult_data <- Capture_data %>%
-    dplyr::filter(Age_calculated > 3)
+  # Reference values
+  ref_names <- stringr::str_split(names(capture_ref_values), pattern="_")
 
-  Chick_data <- Capture_data %>%
-    dplyr::filter(Age_calculated <= 3)
+  # Progress bar
+  pb <- dplyr::progress_estimated(2*length(capture_ref_values))
 
-  # Select reference values for species present in Adult_data and Chick_data
-  species_adult <- unique(Adult_data$Species)
-  ref_adult <- cap_adult_ref_values_list[which(names(cap_adult_ref_values_list) %in% species_adult)]
-
-  species_chick <- unique(Chick_data$Species)
-  ref_chick <- cap_chick_ref_values_list[which(names(cap_chick_ref_values_list) %in% species_chick)]
-
-  # Structure Adult & Chick data in the same way as reference values: a list of species;  each species is a list of capture variables
-  variables <- c("Mass", "Tarsus")
-
-  ## Split per species
-  Adult_data2 <- split(Adult_data[,c("Row", variables)], Adult_data$Species)
-  Chick_data2 <- split(Chick_data[,c("Row", variables)], Chick_data$Species)
-
-  ## Split per variable
-  Adult_data2 <- purrr::map2(.x = Adult_data2,
-                             .y = names(Adult_data2),
+  # Capture-specific errors
+  Capture_err <- purrr::map2(.x = capture_ref_values,
+                             .y = ref_names,
                              .f = ~{
-                               data <- .x
-                               purrr::map(variables,
-                                          .f = ~{
-                                            data %>%
-                                              dplyr::select(Row, .x)
-                                          }) -> data2
-                               names(data2) <- variables
-                               return(data2)
-                             })
+                               pb$tick()$print()
 
-  Chick_data2 <- purrr::map2(.x = Chick_data2,
-                             .y = names(Chick_data2),
-                             .f = ~{
-                               data <- .x
-                               purrr::map(variables,
-                                          .f = ~{
-                                            data %>%
-                                              dplyr::select(Row, .x)
-                                          }) -> data2
-                               names(data2) <- variables
-                               return(data2)
-                             })
+                               if(.y[2] == "Adult") {
+                                 Capture_data %>%
+                                   dplyr::filter(Age_calculated > 3) ->
+                                   Capture_data2
+                               } else if(.y[2] == "Chick") {
+                                 Capture_data %>%
+                                   dplyr::filter(Age_calculated <= 3) ->
+                                   Capture_data2
+                               }
+                               sel <- which(Capture_data2$Species == .y[1]
+                                            & (Capture_data2[,which(colnames(Capture_data2) == .y[3])] < .x$Value[3]
+                                               | Capture_data2[,which(colnames(Capture_data2) == .y[3])] > .x$Value[4]))
 
-  # # Add unique row identifier to capture data
-  # Capture_data <- Capture_data %>%
-  #   tibble::rownames_to_column(var = "RowID")
-  #
-  # # Select species in capture data
-  # Capture_data <- Capture_data %>%
-  #   dplyr::filter(Species == species)
-  #
-  # # Separate adults from chicks, as they have different reference values
-  # Adult_data <- Capture_data %>%
-  #   dplyr::filter(Age_calculated > 3)
-  #
-  # Chick_data <- Capture_data %>%
-  #   dplyr::filter(Age_calculated <= 3)
-
-  # Create warning & error list of variable-specific dataframes for
-  # - adults
-
-  # Capture-specific warning and error checks
-  Adult_list <-  purrr::map2(.x = Adult_data2,
-                             .y = ref_adult,
-                             .f = ~purrr::map2(.x, .y,
-                                               .f = ~{
-                                                 .x %>%
-                                                   dplyr::mutate(
-                                                     Value = dplyr::pull(.x[,2]),
-                                                     Variable = names(.x)[2],
-                                                     Warning = ifelse((.x[,2] < dplyr::pull(.y[1,3])
-                                                                        & .x[,2] >= dplyr::pull(.y[3,3])) # Lower bound
-                                                                      | (.x[,2] > dplyr::pull(.y[2,3])
-                                                                         & .x[,2] <= dplyr::pull(.y[4,3])), # Upper bound
-                                                                      TRUE, FALSE),
-                                                     Error = ifelse(.x[,2] < dplyr::pull(.y[3,3]) | .x[,2] > dplyr::pull(.y[4,3]),
-                                                                    TRUE, FALSE)
-                                                   )
-                                               })
-  )
-
-  Chick_list <-  purrr::map2(.x = Chick_data2,
-                             .y = ref_chick,
-                             .f = ~purrr::map2(.x, .y,
-                                               .f = ~{
-                                                 .x %>%
-                                                   dplyr::mutate(
-                                                     Value = dplyr::pull(.x[,2]),
-                                                     Variable = names(.x)[2],
-                                                     Warning = ifelse((.x[,2] < dplyr::pull(.y[1,3])
-                                                                       & .x[,2] >= dplyr::pull(.y[3,3])) # Lower bound
-                                                                      | (.x[,2] > dplyr::pull(.y[2,3])
-                                                                         & .x[,2] <= dplyr::pull(.y[4,3])), # Upper bound
-                                                                      TRUE, FALSE),
-                                                     Error = ifelse(.x[,2] < dplyr::pull(.y[3,3]) | .x[,2] > dplyr::pull(.y[4,3]),
-                                                                    TRUE, FALSE)
-                                                   )
-                                               })
-  )
-
-  # Capture_list <- purrr::map2(.x = Adult_data[, c("Mass", "Tarsus")],
-  #                             .y = ref_adult,
-  #                             .f = ~{
-  #                               tibble::tibble(IndvID = Adult_data$IndvID,
-  #                                              RowID = Adult_data$RowID,
-  #                                              Age = "Adult",
-  #                                              Variable = names(.y)[3],
-  #                                              .x) %>%
-  #                                 dplyr::filter(!is.na(.x)) %>% # Only non-NA's
-  #                                 dplyr::mutate(Warning = ifelse(.x > as.numeric(.y[2,3]),
-  #                                                                TRUE, FALSE),
-  #                                               Error = ifelse(.x < as.numeric(.y[3,3]) | .x > as.numeric(.y[4,3]),
-  #                                                              TRUE, FALSE))
-  #                             })
-  # - and chicks
-  # Chick_list <- purrr::map2(.x = Chick_data[, c("Mass", "Tarsus")],
-  #                           .y = ref_chick,
-  #                           .f = ~{
-  #                             tibble::tibble(IndvID = Chick_data$IndvID,
-  #                                            RowID = Chick_data$RowID,
-  #                                            Age = "Chick",
-  #                                            Variable = names(.y)[3],
-  #                                            .x) %>%
-  #                               dplyr::filter(!is.na(.x)) %>% # Only non-NA's
-  #                               dplyr::mutate(Warning = ifelse(.x > as.numeric(.y[2,3]),
-  #                                                              TRUE, FALSE),
-  #                                             Error = ifelse(.x < as.numeric(.y[3,3]) | .x > as.numeric(.y[4,3]),
-  #                                                            TRUE, FALSE))
-  #                           })
-
-  #Combine adults and chicks
-  Capture_list <- purrr::map2(.x = Adult_list,
-                              .y = Chick_list,
-                              .f = ~purrr::map2(
-                                .x,
-                                .y,
-                                .f = ~{
-                                  dplyr::bind_rows(.x, .y)
-                                }
-                              ))
-
-  # Capture_list <- purrr::map2(.x = Adult_list,
-  #                             .y = Chick_list,
-  #                             .f = ~{
-  #                               dplyr::bind_rows(.x, .y)
-  #                             })
-
-  # Select records with errors (impossible values) from list
-  Capture_err <- purrr::map(.x = Capture_list,
-                            .f = ~purrr::map(.x,
-                                             .f = ~{
-                                               .x %>%
-                                                 dplyr::select(Row, Variable, Value, Error) %>%
-                                                 dplyr::filter(Error == TRUE)
-                                             }) %>%
-                              dplyr::bind_rows()
-  ) %>%
+                               Capture_data2[sel,] %>%
+                                 dplyr::select(Row, Value = !!.y[3]) %>%
+                                 dplyr::mutate(Species = .y[1],
+                                               Age = .y[2],
+                                               Variable = .y[3])
+                             }) %>%
     dplyr::bind_rows() %>%
-    dplyr::arrange(Row)
-
-  # Capture_err <- purrr::map(.x = Capture_list,
-  #                           .f = ~{
-  #                             .x %>%
-  #                               dplyr::filter(Error == TRUE)
-  #                           }) %>%
-  #   dplyr::bind_rows()
+    dplyr::arrange(Species, Age, Variable)
 
   err <- FALSE
   error_output <- NULL
@@ -377,30 +239,44 @@ check_values_capture <- function(Capture_data) {
   if(nrow(Capture_err) > 0) {
     err <- TRUE
 
-    error_output <- purrr::pmap(.l = list(Capture_err$Row,
-                                          Capture_err$Variable,
-                                          Capture_err$Value),
+    error_output <- purrr::pmap(.l = Capture_err,
                                 .f = ~{
                                   paste0("Record on row ", ..1,
-                                         " (species: ", dplyr::pull(Capture_data[Capture_data$Row == ..1, "Species"]), ", ",
-                                         "age: ", dplyr::pull(Capture_data[Capture_data$Row == ..1, "Age_calculated"]) ,")",
-                                         " has an impossible value in ", ..2,
-                                         " (", ..3, ").")
+                                         " (", Species_codes[Species_codes$Code == ..3, "CommonName"], " ",
+                                         ..4, ")",
+                                         " has an impossible value in ", ..5, " (", ..2, ").")
                                 })
   }
 
-  # Select records with warnings (improbable values) from list
-  Capture_war <- purrr::map(.x = Capture_list,
-                            .f = ~purrr::map(.x,
-                                             .f = ~{
-                                               .x %>%
-                                                 dplyr::select(Row, Variable, Value, Warning) %>%
-                                                 dplyr::filter(Warning == TRUE)
-                                             }) %>%
-                              dplyr::bind_rows()
-  ) %>%
+  # Capture-specific warnings
+  Capture_war <- purrr::map2(.x = capture_ref_values,
+                             .y = ref_names,
+                             .f = ~{
+                               #pb$tick()$print()
+
+                               if(.y[2] == "Adult") {
+                                 Capture_data %>%
+                                   dplyr::filter(Age_calculated > 3) ->
+                                   Capture_data2
+                               } else if(.y[2] == "Chick") {
+                                 Capture_data %>%
+                                   dplyr::filter(Age_calculated <= 3) ->
+                                   Capture_data2
+                               }
+                               sel <- which(Capture_data2$Species == .y[1]
+                                            & ((Capture_data2[,which(colnames(Capture_data2) == .y[3])] < .x$Value[1]
+                                                & Capture_data2[,which(colnames(Capture_data2) == .y[3])] >= .x$Value[3])
+                                               | (Capture_data2[,which(colnames(Capture_data2) == .y[3])] > .x$Value[2]
+                                                  & Capture_data2[,which(colnames(Capture_data2) == .y[3])] <= .x$Value[4])))
+
+                               Capture_data2[sel,] %>%
+                                 dplyr::select(Row, Value = !!.y[3]) %>%
+                                 dplyr::mutate(Species = .y[1],
+                                               Age = .y[2],
+                                               Variable = .y[3])
+                             }) %>%
     dplyr::bind_rows() %>%
-    dplyr::arrange(Row)
+    dplyr::arrange(Species, Age, Variable)
 
   war <- FALSE
   warning_output <- NULL
@@ -408,15 +284,19 @@ check_values_capture <- function(Capture_data) {
   if(nrow(Capture_war) > 0) {
     war <- TRUE
 
-    warning_output <- purrr::pmap(.l = list(Capture_war$Row,
-                                            Capture_war$Variable,
-                                            Capture_war$Value),
+    warning_output <- purrr::pmap(.l = Capture_war,
                                   .f = ~{
                                     paste0("Record on row ", ..1,
-                                           " (species: ", dplyr::pull(Capture_data[Capture_data$Row == ..1, "Species"]), ", ",
-                                           "age: ", dplyr::pull(Capture_data[Capture_data$Row == ..1, "Age_calculated"]) ,")",
-                                           " has an improbable value in ", ..2,
-                                           " (", ..3, ").")
+                                           " (", Species_codes[Species_codes$Code == ..3, "CommonName"], " ",
+                                           ..4, ")",
+                                           " has an unusually ",
+                                           ifelse(..2 < capture_ref_values[[paste(..3, ..4, ..5, sep="_")]]$Value[1],
+                                                  paste0("low value in ", ..5, " (", ..2, " < ",
+                                                         capture_ref_values[[paste(..3, ..4, ..5, sep="_")]]$Value[1],
+                                                         ")"),
+                                                  paste0("high value in ", ..5, " (", ..2, " > ",
+                                                         capture_ref_values[[paste(..3, ..4, ..5, sep="_")]]$Value[2],
+                                                         ")")))
                                   })
   }
 
@@ -428,7 +308,6 @@ check_values_capture <- function(Capture_data) {
               ErrorOutput = unlist(error_output)))
 
   # Satisfy RCMD Checks
-  cap_adult_ref_values_list <- cap_chick_ref_values_list <- NULL
+  capture_ref_values <- NULL
   Species <- Age_calc <- NULL
-
 }
