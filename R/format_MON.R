@@ -98,6 +98,12 @@ format_MON <- function(db = utils::choose.dir(),
 
   }
 
+  if(is.null(pop)){
+
+    pop <- c("MUR", "PIR", "ROU", "MON", "MTV", "MIS", "aviary")
+
+  }
+
 
   #Record start time to estimate processing time.
   start_time <- Sys.time()
@@ -106,19 +112,19 @@ format_MON <- function(db = utils::choose.dir(),
 
   message("Compiling capture data....")
 
-  Capture_data <- create_capture_MON(db = db, species_filter = species)
+  Capture_data <- create_capture_MON(db = db, species_filter = species, pop_filter = pop)
 
   # BROOD DATA
 
   message("Compiling brood data...")
 
-  Brood_data <- create_brood_MON(db = db, species_filter = species)
+  Brood_data <- create_brood_MON(db = db, species_filter = species, pop_filter = pop)
 
   # INDIVIDUAL DATA
 
   message("Compiling individual data...")
 
-  Individual_data <- create_individual_MON(Capture_data, Brood_data)
+  Individual_data <- create_individual_MON(Capture_data, Brood_data, verbose)
 
   # LOCATION DATA
 
@@ -195,7 +201,7 @@ format_MON <- function(db = utils::choose.dir(),
 #'
 #' @return A data frame with capture data
 
-create_capture_MON <- function(db, species_filter){
+create_capture_MON <- function(db, species_filter, pop_filter){
 
   Full_capture_data <- readxl::read_excel(paste0(db, "//MON_PrimaryData_MORPH.xlsx"),
                                      col_types = c("text")) %>%
@@ -336,6 +342,7 @@ create_capture_MON <- function(db, species_filter){
                   ReleasePopID = identify_PopID_MON(ReleasePlot),
                   CapturePlot = lieu,
                   Tarsus = as.numeric(tarsed), OriginalTarsusMethod = dplyr::case_when(!is.na(.$tarsed) ~ "Alternative")) %>%
+    dplyr::filter(CapturePopID %in% pop_filter) %>%
     dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, FoundDead, ObserverID, LocationID,
                   CapturePopID, CapturePlot, ReleasePopID, ReleasePlot, Mass, Tarsus,
                   OriginalTarsusMethod, WingLength, Age_observed, ObservedSex, GeneticSex, ExperimentDescription1, latitude, longitude, CaptureMethod)
@@ -499,7 +506,7 @@ create_capture_MON <- function(db, species_filter){
 #'
 #' @return A data frame with Brood data
 
-create_brood_MON <- function(db, species_filter){
+create_brood_MON <- function(db, species_filter, pop_filter){
 
   Brood_data <- readxl::read_excel(paste0(db, "//MON_PrimaryData_DEMO.xlsx"),
                                    col_types = "text") %>%
@@ -555,6 +562,7 @@ create_brood_MON <- function(db, species_filter){
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
     dplyr::mutate(ExperimentID = dplyr::case_when((!is.na(.$Crossfostering_treatment) | !is.na(.$Brood_ExperimentDescription2) | .$ParasiteTreatment == "Treated" | .$expou == "2") ~ "TRUE",
                                                   (is.na(.$Crossfostering_treatment) & is.na(.$Brood_ExperimentDescription2) & .$ParasiteTreatment != "Treated" & .$expou != "2") ~ "FALSE")) %>%
+    dplyr::filter(PopID %in% pop_filter) %>%
     #Keep all chick codes because we will use these for individual data table and remove later
     #Keep box number to link to Capture data
     dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot,
