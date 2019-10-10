@@ -2,10 +2,10 @@ context("Run data quality check on Montpellier pipeline output")
 
 test_that("MON outputs all files...", {
 
-  expect_true(all(c("COR", "ROU") %in% pipeline_output$Brood_data$PopID))
-  expect_true(all(c("COR", "ROU") %in% pipeline_output$Capture_data$CapturePopID))
-  expect_true(all(c("COR", "ROU") %in% pipeline_output$Individual_data$PopID))
-  expect_true(all(c("COR", "ROU") %in% pipeline_output$Location_data$PopID))
+  expect_true(all(c("MUR", "PIR", "ROU", "MON", "MTV", "MIS") %in% pipeline_output$Brood_data$PopID))
+  expect_true(all(c("MUR", "PIR", "ROU", "MON", "MTV", "MIS") %in% pipeline_output$Capture_data$CapturePopID))
+  expect_true(all(c("MUR", "PIR", "ROU", "MON", "MTV", "MIS") %in% pipeline_output$Individual_data$PopID))
+  expect_true(all(c("MUR", "PIR", "ROU", "MON", "MTV", "MIS") %in% pipeline_output$Location_data$PopID))
 
 })
 
@@ -14,7 +14,7 @@ test_that("Brood_data returns an expected outcome...", {
   #We want to run tests for all possible outcomes of ClutchType_calculated
 
   #Take a subset of only MON data
-  MON_data <- dplyr::filter(pipeline_output$Brood_data, PopID %in% c("COR", "ROU"))
+  MON_data <- dplyr::filter(pipeline_output$Brood_data, PopID %in% c("MUR", "PIR", "ROU", "MON", "MTV", "MIS"))
 
   #Test 1: Brood where clutch type = first
   expect_equal(subset(MON_data, BroodID == "1984_pir_35_1")$Species, "CYACAE")
@@ -63,7 +63,7 @@ test_that("Individual data returns an expected outcome...", {
   #We want to run a test for each sex for individuals caught as adults and chicks
 
   #Take a subset of only MON data
-  MON_data <- dplyr::filter(pipeline_output$Individual_data, PopID %in% c("COR", "ROU"))
+  MON_data <- dplyr::filter(pipeline_output$Individual_data, PopID %in% c("MUR", "PIR", "ROU", "MON", "MTV", "MIS"))
 
   #Test 1: Male caught first as adult
   #Individual C044309 should be listed as a male coal tit
@@ -119,7 +119,7 @@ test_that("Capture data returns an expected outcome...", {
   #Currently we have no chick data, so we can only test adults
 
   #Take a subset of only MON data
-  MON_data <- dplyr::filter(pipeline_output$Capture_data, CapturePopID %in% c("COR", "ROU"))
+  MON_data <- dplyr::filter(pipeline_output$Capture_data, CapturePopID %in% c("MUR", "PIR", "ROU", "MON", "MTV", "MIS"))
 
   #Test 1: Individual ringed as a chick
   #Test the female has the correct number of capture records
