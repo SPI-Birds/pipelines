@@ -4,10 +4,12 @@
 \alias{brood_check}
 \title{Perform quality checks on brood data}
 \usage{
-brood_check(Brood_data, check_format = TRUE)
+brood_check(Brood_data, Individual_data, check_format = TRUE)
 }
 \arguments{
 \item{Brood_data}{Data frame. Brood data output from pipeline.}
+
+\item{Individual_data}{Data frame. Individual data output from pipeline.}
 
 \item{check_format}{\code{TRUE} or \code{FALSE}. If \code{TRUE}, the check on variable format (i.e. \code{\link{check_format_brood}}) is included in the quality check. Default: \code{TRUE}.}
 }

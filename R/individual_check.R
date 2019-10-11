@@ -8,6 +8,8 @@
 #' }
 #'
 #' @inheritParams checks_individual_params
+#' @inheritParams checks_capture_params
+#' @inheritParams checks_location_params
 #' @param check_format \code{TRUE} or \code{FALSE}. If \code{TRUE}, the check on variable format (i.e. \code{\link{check_format_individual}}) is included in the quality check. Default: \code{TRUE}.
 #'
 #' @return
@@ -18,11 +20,14 @@
 #'
 #' @export
 
-individual_check <- function(Individual_data, check_format=TRUE){
+individual_check <- function(Individual_data, Capture_data, Location_data, check_format=TRUE){
 
   # Create check list with a summary of warnings and errors per check
-  check_list <- tibble::tibble(CheckID = purrr::map_chr(1, ~paste0("I", .)),
-                               CheckDescription = c("Check format of individual data"),
+  check_list <- tibble::tibble(CheckID = purrr::map_chr(1:4, ~paste0("I", .)),
+                               CheckDescription = c("Check format of individual data",
+                                                    "Check that individual IDs are unique",
+                                                    "Check that chicks have BroodIDs",
+                                                    "Check that individuals have no conflicting sex"),
                                Warning = NA,
                                Error = NA)
 
@@ -38,20 +43,52 @@ individual_check <- function(Individual_data, check_format=TRUE){
     check_list[1, 3:4] <- check_format_individual_output$CheckList
   }
 
+  # - Check unique individual IDs
+  message("I2: Checking that individual IDs are unique...")
+
+  check_unique_IndvID_output <- check_unique_IndvID(Individual_data)
+
+  check_list[2, 3:4] <- check_unique_IndvID_output$CheckList
+
+  # - Check that chicks have BroodIDs
+  message("I3: Checking that chicks have BroodIDs...")
+
+  check_BroodID_chicks_output <- check_BroodID_chicks(Individual_data, Capture_data, Location_data)
+
+  check_list[3, 3:4] <- check_BroodID_chicks_output$CheckList
+
+  # - Check that individuals have no conflicting sex
+  message("I4: Checking that individuals have no conflicting sex...")
+
+  check_conflicting_sex_output <- check_conflicting_sex(Individual_data)
+
+  check_list[4, 3:4] <- check_conflicting_sex_output$CheckList
+
+
   if(check_format) {
     # Warning list
-    warning_list <- list(Check1 = check_format_individual_output$WarningOutput)
+    warning_list <- list(Check1 = check_format_individual_output$WarningOutput,
+                         Check2 = check_unique_IndvID_output$WarningOutput,
+                         Check3 = check_BroodID_chicks_output$WarningOutput,
+                         Check4 = check_conflicting_sex_output$WarningOutput)
 
     # Error list
-    error_list <- list(Check1 = check_format_individual_output$ErrorOutput)
+    error_list <- list(Check1 = check_format_individual_output$ErrorOutput,
+                       Check2 = check_unique_IndvID_output$ErrorOutput,
+                       Check3 = check_BroodID_chicks_output$ErrorOutput,
+                       Check4 = check_conflicting_sex_output$ErrorOutput)
   } else {
     # Warning list
-    warning_list <- NULL
+    warning_list <- list(Check2 = check_unique_IndvID_output$WarningOutput,
+                         Check3 = check_BroodID_chicks_output$WarningOutput,
+                         Check4 = check_conflicting_sex_output$WarningOutput)
 
     # Error list
-    error_list <- NULL
+    error_list <- list(Check2 = check_unique_IndvID_output$ErrorOutput,
+                       Check3 = check_BroodID_chicks_output$ErrorOutput,
+                       Check4 = check_conflicting_sex_output$ErrorOutput)
 
-    check_list <- NULL
+    check_list <- check_list[-1,]
   }
 
   return(list(CheckList = check_list,
@@ -62,7 +99,7 @@ individual_check <- function(Individual_data, check_format=TRUE){
 
 #' Check format of individual data
 #'
-#' Check if the formats of each column in the individual data match with the standard format
+#' Check that the format of each column in the individual data match with the standard format
 #' @inheritParams checks_individual_params
 #'
 #' @return
@@ -163,4 +200,163 @@ check_format_individual <- function(Individual_data){
   # Satisfy RCMD Checks
   Format <- Format_standard <- NULL
 
+}
+
+
+#' Check unique individual identifiers
+#'
+#' Check that the individual identifiers (IndvID) are unique within populations.
+#' @inheritParams checks_individual_params
+#'
+#' @return
+#' A list of:
+#' \item{CheckList}{A summary dataframe of check warnings and errors.}
+#' \item{Warnings}{A list of row-by-row warnings.}
+#' \item{Errors}{A list of row-by-row errors.}
+#'
+#' @export
+
+check_unique_IndvID <- function(Individual_data){
+
+  # Select IndvIDs that are duplicated
+  Duplicated_individuals <- Individual_data %>%
+    dplyr::group_by(PopID, IndvID) %>%
+    filter(n() > 1)
+
+  err <- FALSE
+  error_output <- NULL
+
+  if(nrow(Duplicated_individuals) > 0) {
+    err <- TRUE
+
+    error_output <- purrr::map(.x = unique(Duplicated_individuals$IndvID),
+                                .f = ~{
+                                  paste0("Record on row ",
+                                         # Duplicated rows
+                                         Duplicated_individuals[Duplicated_individuals$IndvID == .x, "Row"][1,],
+                                         " (IndvID: ", .x, ")",
+                                         " is duplicated in row(s) ",
+                                         # Duplicates (if 1, else more)
+                                         ifelse(nrow(Duplicated_individuals[Duplicated_individuals$IndvID == .x, "Row"][-1,]) == 1,
+                                                Duplicated_individuals[Duplicated_individuals$IndvID == .x, "Row"][-1,],
+                                                gsub("^c\\(|\\)$", "",
+                                                     Duplicated_individuals[Duplicated_individuals$IndvID == .x, "Row"][-1,])),
+                                         ".")
+                                })
+  }
+
+  war <- FALSE
+  warning_output <- NULL
+
+  check_list <- tibble::tibble(Warning = war,
+                               Error = err)
+
+  return(list(CheckList = check_list,
+              WarningOutput = unlist(warning_output),
+              ErrorOutput = unlist(error_output)))
+}
+
+
+#' Check that chicks have BroodID
+#'
+#' Check that all chicks in Individual_data that are caught and ringed in a nest box have a BroodID. Individuals just ringed after fledging are regarded as chicks but are not associated with a BroodID.
+#'
+#' @inheritParams checks_individual_params
+#' @inheritParams checks_capture_params
+#' @inheritParams checks_location_params
+#'
+#' @return
+#' A list of:
+#' \item{CheckList}{A summary dataframe of whether the check resulted in any warnings or errors.}
+#' \item{WarningOutput}{A list of row-by-row warnings.}
+#' \item{ErrorOutput}{A list of row-by-row errors.}
+#'
+#' @export
+
+check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data) {
+
+  # Select first captures and link to the information of their locations
+  First_captures <- Capture_data %>%
+    dplyr::group_by(IndvID) %>%
+    dplyr::filter(CaptureDate == dplyr::first(CaptureDate)) %>%
+    dplyr::ungroup() %>%
+    dplyr::left_join(Location_data, by=c("CapturePopID" = "PopID", "LocationID"))
+
+  # Join with individual data
+  Ind_cap_loc_data <- Individual_data %>%
+    dplyr::left_join(First_captures, by="IndvID")
+
+  # Select chicks caught in a nest box but not associated with a BroodID
+  No_BroodID_nest <- Ind_cap_loc_data %>%
+    dplyr::filter(RingAge == "chick" & (is.na(BroodIDLaid) | is.na(BroodIDFledged)) & LocationType == "NB")
+
+  err <- FALSE
+  error_output <- NULL
+
+  if(nrow(No_BroodID_nest) > 0) {
+    err <- TRUE
+
+    error_output <- purrr::pmap(.l = No_BroodID_nest,
+                                .f = ~{
+                                  paste0("Record on row ", ..1,
+                                         " has no BroodID.")
+                                })
+  }
+
+
+  war <- FALSE
+  warning_output <- NULL
+
+  check_list <- tibble::tibble(Warning = war,
+                               Error = err)
+
+  return(list(CheckList = check_list,
+              WarningOutput = unlist(warning_output),
+              ErrorOutput = unlist(error_output)))
+
+}
+
+
+#' Check conflicting sex
+#'
+#' Check that the sex of individuals in Individual_data is recorded consistently. Individuals who have been recorded as both male ('M') and female ('F') will have conflicting sex ('C') in Individual_data.
+#'
+#' @inheritParams checks_individual_params
+#'
+#' @return
+#' A list of:
+#' \item{CheckList}{A summary dataframe of whether the check resulted in any warnings or errors.}
+#' \item{WarningOutput}{A list of row-by-row warnings.}
+#' \item{ErrorOutput}{A list of row-by-row errors.}
+#'
+#' @export
+
+check_conflicting_sex <- function(Individual_data) {
+
+  # Select individuals with conflicting sex
+  Conflicting_sex <- Individual_data %>%
+    dplyr::filter(Sex == "C")
+
+  war <- FALSE
+  warning_output <- NULL
+
+  if(nrow(Conflicting_sex) > 0) {
+    war <- TRUE
+
+    warning_output <- purrr::pmap(.l = Conflicting_sex,
+                                  .f = ~{
+                                    paste0("Record on row ", ..1,
+                                           " has conflicting sex.")
+                                  })
+  }
+
+  err <- FALSE
+  error_output <- NULL
+
+  check_list <- tibble::tibble(Warning = war,
+                               Error = err)
+
+  return(list(CheckList = check_list,
+              WarningOutput = unlist(warning_output),
+              ErrorOutput = unlist(error_output)))
 }

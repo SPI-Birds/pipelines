@@ -49,9 +49,9 @@ quality_check <- function(R_data,
   Location_data <- R_data$Location_data
 
   # Run checks
-  Brood_checks <- brood_check(Brood_data, check_format)
+  Brood_checks <- brood_check(Brood_data, Individual_data, check_format)
   Capture_checks <- capture_check(Capture_data, check_format)
-  Individual_checks <- individual_check(Individual_data, check_format)
+  Individual_checks <- individual_check(Individual_data, Capture_data, Location_data, check_format)
   Location_checks <- location_check(Location_data, check_format)
 
   # Combine check lists
@@ -106,9 +106,9 @@ quality_check <- function(R_data,
     '',
     '# Summary',
     '',
-    'Species: `r dplyr::pull(Species_codes[Species_codes$Code %in% species, "CommonName"])`',
+    'Species: `r Species_codes[Species_codes$Code %in% species,]$CommonName`',
     '',
-    'Populations: `r dplyr::pull(pop_names[pop_names$code %in% pop, "name"])`',
+    'Populations: `r pop_names[pop_names$code %in% pop,]$name`',
     '',
     'All checks performed in `r round(time, 2)` seconds.',
     '',

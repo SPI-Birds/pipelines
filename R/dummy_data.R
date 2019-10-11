@@ -7,27 +7,38 @@
 #' @details
 #' \strong{Brood data}:
 #' \itemize{
-#'   \item Row 1 represents a non-manipulated brood that violates 'Brood check 2: Comparing clutch and brood sizes' (see \code{\link{compare_clutch_brood}}).
-#'   \item Row 2 represents a manipulated brood that violates 'Brood check 2: Comparing clutch and brood sizes' (see \code{\link{compare_clutch_brood}}).
-#'   \item Row 3 represents a non-manipulated brood that violates 'Brood check 3: Comparing brood sizes and fledgling numbers' (see \code{\link{compare_brood_fledglings}}).
-#'   \item Row 4 represents a manipulated brood that violates 'Brood check 3: Comparing brood sizes and fledgling numbers' (see \code{\link{compare_brood_fledglings}}).
-#'   \item Row 5 represents a brood that violates 'Brood check 4: Comparing laying and hatching dates' (see \code{\link{compare_laying_hatching}}).
-#'   \item Row 6 represents a brood that violates 'Brood check 5: Comparing hatching and fledging dates' (see \code{\link{compare_hatching_fledging}}).
-#'   \item Row 7-14 represent broods with improbable values in ClutchSize, BroodSize and NumberFledged per species (part of: 'Brood check 6: Checking brood variable values against reference values'; see \code{\link{check_brood_values}}).
-#'   \item Row 15-22 represent broods with impossible values in ClutchSize, BroodSize and NumberFledged per species (part of: 'Brood check 6: Checking brood variable values against reference values'; see \code{\link{check_brood_values}}).
+#'   \item Row 1 represents a non-manipulated brood with larger brood size than clutch size (part of 'B2: Comparing clutch and brood sizes'; see \code{\link{compare_clutch_brood}}).
+#'   \item Row 2 represents a manipulated brood with larger brood size than clutch size (part of 'B2: Comparing clutch and brood sizes'; see \code{\link{compare_clutch_brood}}).
+#'   \item Row 3 represents a non-manipulated brood with larger fledgling number than brood size (part of 'B3: Comparing brood sizes and fledgling numbers'; see \code{\link{compare_brood_fledglings}}).
+#'   \item Row 4 represents a manipulated brood with larger fledgling number than brood size (part of 'B3: Comparing brood sizes and fledgling numbers'; see \code{\link{compare_brood_fledglings}}).
+#'   \item Row 5 represents a brood with an earlier hatching than laying date (part of 'B4: Comparing laying and hatching dates'; see \code{\link{compare_laying_hatching}}).
+#'   \item Row 6 represents a brood with an earlier fledging than hatching date (part of 'B5: Comparing hatching and fledging dates'; see \code{\link{compare_hatching_fledging}}).
+#'   \item Row 7-14 represent broods with improbable values in ClutchSize, BroodSize and NumberFledged per species (part of: 'B6: Checking brood variable values against reference values'; see \code{\link{check_values_brood}}).
+#'   \item Row 15-22 represent broods with impossible values in ClutchSize, BroodSize and NumberFledged per species (part of: 'B6: Checking brood variable values against reference values'; see \code{\link{check_values_brood}}).
+#'   \item Row 23 represents a brood with parents of different species (part of: 'B7: Checking parent species'; see \code{\link{check_parent_species}}).
 #' }
 #'
 #' \strong{Capture data}:
 #' \itemize{
-#'   \item Row 1-8 represent adults with improbable values in Mass and Tarsus (part of 'Capture check 2: Checking capture variable values against reference values'; see \code{\link{check_capture_values}}).
-#'   \item Row 9-16 represent chicks with improbable values in Mass and Tarsus (part of 'Capture check 2: Checking capture variable values against reference values'; see \code{\link{check_capture_values}}).
-#'   \item Row 17-24 represent adults with impossible values in Mass and Tarsus (part of 'Capture check 2: Checking capture variable values against reference values'; see \code{\link{check_capture_values}}).
-#'   \item Row 25- 32 represent chicks with impossible values in Mass and Tarsus (part of 'Capture check 2: Checking capture variable values against reference values'; see \code{\link{check_capture_values}}).
+#'   \item Row 1-8 represent adults with improbable values in Mass and Tarsus (part of 'C2: Checking capture variable values against reference values'; see \code{\link{check_values_capture}}).
+#'   \item Row 9-16 represent chicks with improbable values in Mass and Tarsus (part of 'C2: Checking capture variable values against reference values'; see \code{\link{check_values_capture}}).
+#'   \item Row 17-24 represent adults with impossible values in Mass and Tarsus (part of 'C2: Checking capture variable values against reference values'; see \code{\link{check_values_capture}}).
+#'   \item Row 25- 32 represent chicks with impossible values in Mass and Tarsus (part of 'C2: Checking capture variable values against reference values'; see \code{\link{check_values_capture}}).
+#'   \item Row 33 represents a chick caught in a nest box, but without a BroodID (part of 'I3: Checking that chicks have BroodIDs'; see \code{\link{check_BroodID_chicks}}).
 #' }
 #'
 #' \strong{Individual data}:
+#' \itemize{
+#'   \item Row 1-2 represent duplicated individual identifiers (part of 'I2: Checking unique individual IDs'; see \code{\link{check_unique_IndvID}}).
+#'   \item Row 3 represents a chick caught in a nest box, but without a BroodID (part of 'I3: Checking that chicks have BroodIDs'; see \code{\link{check_BroodID_chicks}}).
+#'   \item Row 4 represents an individual with conflicting sex (part of 'I4: Checking that individuals have no conflicting sex'; see \code{\link{check_conflicting_sex}}).
+#'   \item Rows 5-6 represent the parents of a brood (a female and male, respectively) of different species (part of: 'B7: Checking parent species'; see \code{\link{check_parent_species}}).
+#' }
 #'
 #' \strong{Location data}:
+#' \itemize{
+#'   \item Row 1 represents a nest box location corresponding to a chick without a BroodID (part of 'I3: Checking that chicks have BroodIDs'; see \code{\link{check_BroodID_chicks}}).
+#' }
 #'
 #' @param db File path. Location to save dummy data.
 #'
@@ -137,10 +148,10 @@ create_dummy_data <- function(db = utils::choose.dir()) {
 
 
   # Add rows in which single checks are violated
-  # Brood data
-  # Brood check 2: Comparing clutch and brood sizes
+  # The code is ordered by the time at which the checks are made
 
-  # Non-manipulated brood
+  # B2: Comparing clutch and brood sizes
+  # - Non-manipulated brood
   Brood_data %>%
     dplyr::mutate(
       Row = as.integer(1),
@@ -149,7 +160,7 @@ create_dummy_data <- function(db = utils::choose.dir()) {
     ) ->
     Brood_data
 
-  # Manipulated brood
+  # - Manipulated brood
   Brood_data %>%
     tibble::add_row(
       Row = as.integer(2),
@@ -159,10 +170,8 @@ create_dummy_data <- function(db = utils::choose.dir()) {
     ) ->
     Brood_data
 
-
-  # Brood check 3: Comparing brood sizes and fledgling numbers
-
-  # Non-manipulated brood
+  # B3: Comparing brood sizes and fledgling numbers
+  # - Non-manipulated brood
   Brood_data %>%
     tibble::add_row(
       Row = as.integer(3),
@@ -171,8 +180,7 @@ create_dummy_data <- function(db = utils::choose.dir()) {
     ) ->
     Brood_data
 
-
-  # Manipulated brood
+  # - Manipulated brood
   Brood_data %>%
     tibble::add_row(
       Row = as.integer(4),
@@ -182,8 +190,7 @@ create_dummy_data <- function(db = utils::choose.dir()) {
     ) ->
     Brood_data
 
-  # Brood check 4: Comparing laying and hatching dates
-
+  # B4: Comparing laying and hatching dates
   Brood_data %>%
     tibble::add_row(
       Row = as.integer(5),
@@ -192,8 +199,7 @@ create_dummy_data <- function(db = utils::choose.dir()) {
     ) ->
     Brood_data
 
-  # Brood check 5: Comparing hatching and fledging dates
-
+  # B5: Comparing hatching and fledging dates
   Brood_data %>%
     tibble::add_row(
       Row = as.integer(6),
@@ -203,9 +209,8 @@ create_dummy_data <- function(db = utils::choose.dir()) {
     Brood_data
 
 
-  # Brood check 6: Checking brood variable values against reference values
-
-  # - Improbable values
+  # B6: Checking brood variable values against reference values
+  # - Unusual values
   Brood_data %>%
     tibble::add_row(
       Row = as.integer(7:14),
@@ -227,11 +232,8 @@ create_dummy_data <- function(db = utils::choose.dir()) {
     ) ->
     Brood_data
 
-
-  # Capture data
-  # Capture check 2: Checking capture variable values against reference values
-
-  # - Improbable values adults
+  # C2: Checking capture variable values against reference values
+  # - Unusual values adults
   Capture_data %>%
     tibble::add_row(
       Row = as.integer(1:8),
@@ -254,7 +256,7 @@ create_dummy_data <- function(db = utils::choose.dir()) {
     ) ->
     Capture_data
 
-  # - Impossible values adults
+  # - Unusual values adults
   Capture_data %>%
     tibble::add_row(
       Row = as.integer(17:24),
@@ -275,6 +277,71 @@ create_dummy_data <- function(db = utils::choose.dir()) {
       Tarsus = as.integer(c(30, 30, 30, 30, 30, 30, 30, 30)),
     )  ->
     Capture_data
+
+  # I2: Checking unique individual IDs
+  Individual_data %>%
+    tibble::add_row(
+      Row = as.integer(1:2),
+      IndvID = as.character(c("A0001", "A0001")),
+      PopID = as.character(c("AAA", "AAA"))
+    )  %>%
+    dplyr::slice(-1L) ->
+    Individual_data
+
+  # I3: Checking that chicks have BroodIDs
+  Individual_data %>%
+    tibble::add_row(
+      Row = as.integer(3),
+      IndvID = as.character("B0001"),
+      PopID = as.character("BBB"),
+      RingAge = as.character("chick"),
+    )  ->
+    Individual_data
+
+  Capture_data %>%
+    tibble::add_row(
+      Row = as.integer(33),
+      IndvID = as.character("B0001"),
+      CaptureDate = as.Date("2019-04-01"),
+      CapturePopID = as.character("BBB"),
+      LocationID = as.character("BBB_001")
+    )   ->
+    Capture_data
+
+  Location_data %>%
+    tibble::add_row(
+      Row = as.integer(1),
+      LocationID = as.character("BBB_001"),
+      LocationType = as.character("NB"),
+      PopID = as.character("BBB")
+    )  %>%
+    dplyr::slice(-1L) ->
+    Location_data
+
+  # I4: Checking that individuals have no conflicting sex
+  Individual_data %>%
+    tibble::add_row(
+      Row = as.integer(4),
+      Sex = as.character("C"),
+    )  ->
+    Individual_data
+
+  # B7: Checking parent species
+  Brood_data %>%
+    tibble::add_row(
+      Row = as.integer(23),
+      FemaleID = as.character("F0001"),
+      MaleID = as.character("M0001")
+    ) ->
+    Brood_data
+
+  Individual_data %>%
+    tibble::add_row(
+      Row = as.integer(5:6),
+      IndvID = as.character(c("F0001", "M0001")),
+      Species = as.character(c("PARMAJ", "CYACAE"))
+    )  ->
+    Individual_data
 
 
   # Combine in list

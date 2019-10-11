@@ -73,7 +73,7 @@ capture_check <- function(Capture_data, check_format=TRUE){
 
 #' Check format of capture data
 #'
-#' Check if the formats of each column in the capture data match with the standard format.
+#' Check that the format of each column in the capture data match with the standard format.
 #' @inheritParams checks_capture_params
 #'
 #' @return
