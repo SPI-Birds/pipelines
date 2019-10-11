@@ -4,7 +4,7 @@
 \alias{create_capture_MON}
 \title{Create capture data table for Montpellier}
 \usage{
-create_capture_MON(db, species_filter)
+create_capture_MON(db, species_filter, pop_filter)
 }
 \arguments{
 \item{db}{Location of primary data from Montpellier.}
