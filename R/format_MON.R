@@ -144,7 +144,7 @@ format_MON <- function(db = utils::choose.dir(),
 
   message("Compiling location data...")
 
-  Location_data <- create_location_MON(Capture_data, Brood_data)
+  Location_data <- create_location_MON(db = db, Capture_data, Brood_data)
 
   # WRANGLE DATA FOR EXPORT
 
@@ -904,7 +904,7 @@ create_individual_MON <- function(capture_data, brood_data, verbose){
 #'
 #' @return A data frame with Individual data
 
-create_location_MON <- function(capture_data, brood_data){
+create_location_MON <- function(db, capture_data, brood_data){
 
   #Load lat/long for nest boxes
   nestbox_latlong <- readxl::read_excel(paste0(db, "//MON_PrimaryData_NestBoxLocation.xlsx"), sheet = "dico_station") %>%

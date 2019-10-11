@@ -223,12 +223,12 @@ test_that("Location_data returns an expected outcome...", {
   #Record has expected LocationType
   expect_true(subset(MON_data, LocationID == "mau_1_NB")$LocationType == "NB")
   #Expect LocationID and NestboxID are the same
-  expect_true(subset(MON_data, LocationID == "mau_1_NB")$NestboxType == "mau_1_NB")
+  expect_true(subset(MON_data, LocationID == "mau_1_NB")$NestboxID == "mau_1_NB")
   #Expect Start and EndSeason is as expected
   expect_equal(subset(MON_data, LocationID == "mau_1_NB")$StartSeason, 1987L)
   expect_equal(subset(MON_data, LocationID == "mau_1_NB")$EndSeason, NA_integer_)
   #Check that LocationID is in the expected PopID
-  expect_equal(subset(NIOO_data, LocationID == "mau_1_NB")$PopID, "MIS")
+  expect_equal(subset(MON_data, LocationID == "mau_1_NB")$PopID, "MIS")
   #Check that latitude and longitude are as expected
   expect_equal(subset(MON_data, LocationID == "mau_1_NB")$Latitude, NA_real_)
   expect_equal(subset(MON_data, LocationID == "mau_1_NB")$Longitude, NA_real_)
@@ -237,12 +237,12 @@ test_that("Location_data returns an expected outcome...", {
   #LocationType is as expected
   expect_true(subset(MON_data, LocationID == "hs_1")$LocationType == "MN")
   #Expect no NestboxID
-  expect_equal(subset(MON_data, LocationID == "hs_1")$NestboxType, NA_character_)
+  expect_equal(subset(MON_data, LocationID == "hs_1")$NestboxID, NA_character_)
   #Expect Start and EndSeason is as expected
   expect_equal(subset(MON_data, LocationID == "hs_1")$StartSeason, 2009L)
   expect_equal(subset(MON_data, LocationID == "hs_1")$EndSeason, NA_integer_)
   #Check that LocationID is in the expected PopID
-  expect_equal(subset(NIOO_data, LocationID == "hs_1")$PopID, "MIS")
+  expect_equal(subset(MON_data, LocationID == "hs_1")$PopID, "MIS")
   #Check that latitude and longitude are as expected
   expect_equal(round(subset(MON_data, LocationID == "hs_1")$Latitude, 2), 41.4)
   expect_equal(round(subset(MON_data, LocationID == "hs_1")$Longitude, 2), 9.19)
@@ -251,12 +251,12 @@ test_that("Location_data returns an expected outcome...", {
   #LocationType is as expected
   expect_true(subset(MON_data, LocationID == "pir_14_MN")$LocationType == "MN")
   #Expect no NestboxID
-  expect_equal(subset(MON_data, LocationID == "pir_14_MN")$NestboxType, NA_character_)
+  expect_equal(subset(MON_data, LocationID == "pir_14_MN")$NestboxID, NA_character_)
   #Expect Start and EndSeason is as expected
   expect_equal(subset(MON_data, LocationID == "pir_14_MN")$StartSeason, 1985L)
   expect_equal(subset(MON_data, LocationID == "pir_14_MN")$EndSeason, NA_integer_)
   #Check that LocationID is in the expected PopID
-  expect_equal(subset(NIOO_data, LocationID == "pir_14_MN")$PopID, "PIR")
+  expect_equal(subset(MON_data, LocationID == "pir_14_MN")$PopID, "PIR")
   #Check that latitude and longitude are as expected
   expect_equal(round(subset(MON_data, LocationID == "pir_14_MN")$Latitude, 2), 42.38)
   expect_equal(round(subset(MON_data, LocationID == "pir_14_MN")$Longitude, 2), 8.75)
