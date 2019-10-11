@@ -5,7 +5,7 @@
 \title{Construct standard format for data from Montpellier, France.}
 \usage{
 format_MON(db = utils::choose.dir(), species = NULL, pop = NULL,
-  path = ".", debug = FALSE, output_type = "csv")
+  path = ".", debug = FALSE, output_type = "csv", verbose = FALSE)
 }
 \arguments{
 \item{db}{Location of database file.}
@@ -34,9 +34,9 @@ variables.}
 Generates either 4 .csv files or 4 data frames in the standard format.
 }
 \description{
-A pipeline to produce the standard format for the hole nesting bird population
-in Montpellier, France, administered by CNRS Montpellier (Anne Charmantier and
-colleagues).
+A pipeline to produce the standard format for the hole nesting bird
+populations in Southern France (Rouviere, Montpellier, Corsica etc.),
+administered by CNRS Montpellier (Anne Charmantier and colleagues).
 }
 \details{
 This section provides details on data management choices that are unique to
@@ -44,40 +44,40 @@ this data. For a general description of the standard protocl please see
 \href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
 
 \strong{IndvID:} In Capture_data, any individuals given unidentified numbers
-(i.e. containing 'no-ident') are treated as NA. These records are still kept
+(i.e. containing 'no-ident') are given an IndvID = NA. These records are still kept
 as they contain information about broods (e.g. AvgChickMass) but are not
 integrated into the individual data table.
 
 \strong{Sex:} We ignore uncertainty in sex (e.g. category 4 = Male probable
-but not certain)
+but not certain is just treated as M).
 
 \strong{LocationID:} For birds caught in boxes. Location is
 Plot_NextboxNumber.
 
-\strong{BroodID:} Broods are BreedingSeason_LocationID_ClutchTypeObserved =
-BreedingSeason_Plot_NestboxNumber_ClutchTypeObserved.
+\strong{BroodID:} Broods are BreedingSeason_LocationID_ClutchType_observed =
+BreedingSeason_Plot_NestboxNumber_ClutchType_observed.
 
-\strong{ClutchTypeObserved:} No clutch type recorded, only calculated clutch
-type is given.
-
-\strong{Tarsus:} Left and right tarsus are measured. Right generally has more
-data, so we use this as our measure of tarsus length. Currently, we assume
-everything is in Svensson's alternative, but there is supposedly some change
-from before 1989. Need to ask Anne about this.
+\strong{Tarsus:} Left and right tarsus are measured. Right tarsus is
+used where available. Left tarsus measures are only used where right
+is missing. All tarsus is measured with Svensson's Alternative method;
+however, be aware that there was a change in the technique used in 1989.
+Pre-1989, tarsus was measured using a compass and ruler. 1989+ used
+standard callipers. This can affect tarsus measurements and should be
+accounted for in any analysis.
 
 \strong{Age:} We translate observed age codes into EURING codes as follows:
 \itemize{
 
 \item P0 (Poussin bagué au nichoir ou en cavité naturelle/chick banded in box
 or natural cavity): We give EURING code 1: Nestling or chick unable to fly
-freely.
+freely. Any individual in the chick capture table is given Age 1.
 
 \item J0 (Juvénile (oiseau de l’année) capturé entre le moment où il s’est
 envolé du nichoir et le 31 décembre) (Juvenile (of this year) captured between
 fledging and Dec 31st of that year) We give EURING code 3: First-year:
 full-grown bird hatched in the breeding season of this calendar year.
 
-\item PN (where N > 0) Individuals caught as chick and caught again N seasons
+\item PN (where N > 0) Individuals caught first as chick and caught again N seasons
 later We give EURING code 3 + 2*N (i.e. of known age because it was caught
 when it could be accurately aged)
 
@@ -87,8 +87,7 @@ capture between Jan 1st and July-Aug) We give EURING code 5: 2nd year: a bird
 hatched last calendar year and now in its second calendar year.
 
 \item JN (where N > 1) Individuals caught as juvenile and caught again N
-season later We give EURING code 3 + 2*N: Nestling or chick unable to fly
-freely.
+season later We give EURING code 3 + 2*N, as above.
 
 \item AN (where N >= 0) An adult not captured as a chick or juvenile. We give
 EURING code 4 + 2*N (i.e. of unknown age because it was not caught when it
@@ -104,9 +103,17 @@ although birds classified as J1 can be aged very accurately, we still treat
 these as having age uncertain because they weren't caught as chicks.
 
 \strong{BroodIDLaid/Fledged:} BroodIDLaid is the brood in which an individual
-was listed in one of the chick columns. The BroodIDFledged is the same as BroodIDLaid
-unless a destination brood is listed. In any cases where multiple broods are associated
-with an individual (e.g. they are listed as a chick twice) we currently select the
-first record and return a warning. We assume the first nest recorded is more likely to
-be the 'true' nest until these are corrected.
+was listed as a chick in the brood data table. The BroodIDFledged is the same as
+BroodIDLaid unless origin and/or destination information is listed. In this case,
+cross-fostering has occurred. BroodIDFledged is then the brood active at the destination
+nest box at the time of capture. In any cases where multiple
+broods are associated with an individual we currently select the first record and return a warning. We assume
+the first nest recorded is more likely to be the 'true' nest until these are
+corrected.
+
+\strong{ReleasePlot/PopID}: Individuals transferred to aviaries are given ReleasePlot/PopID
+'aviary'.
+
+\strong{ExperimentID:} Currently, broods are given an ExperimentID TRUE or FALSE.
+Experiments will be expanded to include exact experimental details at a later stage.
 }
