@@ -239,24 +239,23 @@ create_brood_HAR <- function(db, species_filter){
 
   message("Extracting brood data from paradox database")
 
-  #Extract table "Pesat.db" which contains brood data
-  Brood_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Nests.DB")
-
+  #Extract brood data
   #Rename columns to English (based on description provided by Tapio Eeva)
   #Many of these are subsequently removed, but it makes it easier for non-Finnish speakers to
   #see what is being removed.
-  colnames(Brood_data) <- c("BreedingSeason", "LocationID", "BroodID", "Species", "ClutchType_observed",
-                            "FemaleID", "MaleID", "LayDate_day", "LayDate_month",
-                            "LayDateError", "HatchDate_day",
-                            "HatchDate_month",
-                            "HatchDateError", "Incubation",
-                            "ClutchSize", "BroodSize",
-                            "NumberFledged", "ReasonFailed",
-                            "NestlingInjuries", "MalePresent",
-                            "ExperimentID", "ExpData1",
-                            "ExpData2", "DeadParent",
-                            "EggShells", "TempCode1",
-                            "TempCode2")
+  Brood_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Nests.DB") %>%
+    dplyr::rename(BreedingSeason = Vuos, LocationID = Nuro,
+                  BroodID = Anro, Species = Laji,
+                  ClutchType_observed = Pesa, FemaleID = Naaras, MaleID = Koiras,
+                  LayDate_day = Mpv, LayDate_month = Mkk, LayDateError = Mtar,
+                  HatchDate_day = Kpv, HatchDate_month = Kkk, HatchDateError = Ktar,
+                  Incubation = Halku, ClutchSize = Mulu, BroodSize = Kuor,
+                  NumberFledged = Lent, ReasonFailed = Tsyy,
+                  NestlingInjuries = Jalat, MalePresent = Koir,
+                  ExperimentID = Koe, ExpData1 = Olent,
+                  ExpData2 = Vlent, DeadParent = Delfh,
+                  EggShells = Mkuor, TempCode1 = Tark,
+                  TempCode2 = Tark2)
 
   Brood_data <- Brood_data %>%
     #Remove unwanted columns
@@ -279,7 +278,7 @@ create_brood_HAR <- function(db, species_filter){
     dplyr::mutate(LayDate = as.Date(paste(LayDate_day, LayDate_month, BreedingSeason, sep = "/"), format = "%d/%m/%Y"),
            HatchDate  = as.Date(paste(HatchDate_day, HatchDate_month, BreedingSeason, sep = "/"), format = "%d/%m/%Y")) %>%
     #Treat all NAs as true unknowns (check with Tapio that these are NAs and not 0s)
-    dplyr::arrange(BreedingSeason, Species, FemaleID) %>%
+    dplyr::arrange(BreedingSeason, Species, FemaleID, LayDate) %>%
     #Calculate clutchtype
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
     dplyr::mutate(LayDateError = as.numeric(LayDateError),
@@ -326,6 +325,18 @@ create_nestling_HAR <- function(db, Brood_data){
 
   #Extract table "Pullit.db" which contains brood data
   Nestling_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Nestlings.DB")
+  # %>%
+  #   dplyr::rename(BreedingSeason = Vuos, LocationID = Nuro, BroodID = Anro,
+  #                 CaptureType = Tunnus, RingSeries = Sarja,
+  #                 RingNumber = Mista, LastRingNumber = Mihin,
+  #                  Month = Kk, Day = Pv, Time = Klo,
+  #                 ObserverID = Havno, ,
+  #                 Species = Laji, Sex = Suku, Sex_method = Sp,
+  #                 Age = Ika, Age_method = Ip, Condition = Kunto,
+  #                 BirdStatus = Tila, CaptureMethod = Ptapa,
+  #                 NrNestlings = Poik, WingLength = Siipi,
+  #                 Mass = Paino, Moult = Sulsat,
+  #                 FatScore = Rasika)
 
   #Rename into English to make data management more readable
   colnames(Nestling_data) <- c("BreedingSeason", "LocationID", "BroodID",
