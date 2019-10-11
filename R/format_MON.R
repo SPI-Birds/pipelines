@@ -883,9 +883,25 @@ create_individual_MON <- function(capture_data, brood_data, verbose){
 
 create_location_MON <- function(capture_data){
 
-  #Take all unique locations where a capture of a chick or adult occurred
-  #Currently give not LocationType, I have no idea how to determine this
-  Location_data <- capture_data %>%
+  #For captures that have a latitude and longitude,
+  #Identify unique locations (rounded lat and long are identical)
+  #And give them a unique LocationID (hs_n).
+  #Use PopID MIS, because these are captures outside
+  #of any main study area.
+  outside_locations <- capture_data %>%
+    dplyr::filter(!is.na(longitude)) %>%
+    dplyr::select(BreedingSeason, latitude, longitude) %>%
+    dplyr::group_by(latitude, longitude) %>%
+    dplyr::summarise(StartSeason = min(BreedingSeason), EndSeason = NA_integer_,
+                     PopID = "MIS", NestboxID = NA_character_,
+                     LocationType = "MN", Habitat = NA_character_) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(LocationID = paste("hs", 1:n(), sep = "_")) %>%
+    dplyr::select(LocationID, NestboxID, LocationType, PopID, Latitude, Longitude, StartSeason, EndSeason, Habitat)
+
+  #For cases where no lat/long are available
+  inside_location <- capture_data %>%
+    dplyr::filter(is.na(longitude)) %>%
     dplyr::group_by(LocationID) %>%
     dplyr::summarise(NestboxID = unique(LocationID),
                      LocationType = NA_character_,
@@ -895,6 +911,8 @@ create_location_MON <- function(capture_data){
                      StartSeason = min(BreedingSeason),
                      EndSeason = NA_integer_,
                      Habitat = NA_character_)
+
+  return(dplyr::bind_rows(outside_locations, inside_location))
 
 }
 
