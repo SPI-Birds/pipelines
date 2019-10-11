@@ -724,7 +724,19 @@ create_individual_MON <- function(capture_data, brood_data, verbose){
 
         } else {
 
-          return(tibble::tibble(IndvID = x["IndvID"], BroodIDFledged = possible_nest$BroodID))
+          if(verbose){
+
+            print(x["IndvID"])
+            print(CaptureDate)
+            print(split_info)
+            print(possible_nest, width = Inf)
+
+            message("CROSS-FOSTERING DESTINATION RETURNS ERROR (MON DATA). This may be because more than one cross-fostering event
+               is listed, or the destination nest doesn't exist. This record is skipped")
+
+          }
+
+          return(NULL)
 
         }
 
@@ -829,20 +841,19 @@ create_individual_MON <- function(capture_data, brood_data, verbose){
                                         }))
 
   #Join in Brood data for all individuals
-  Individual_data <- dplyr::left_join(Individual_data, BroodAssignment, by = "IndvID") %>%
+  Individual_data_single_records <- dplyr::left_join(Individual_data, BroodAssignment, by = "IndvID") %>%
     #Join in cross-fostering info
     dplyr::left_join(dplyr::select(Cross_foster, IndvID, BroodIDFledged), by = "IndvID") %>%
     #If no BroodIDFledged is listed, make it the same as BroodIDLaid
-    dplyr::mutate(n = 1:n()) %>%
-    dplyr::group_by(n) %>%
+    dplyr::rowwise() %>%
     dplyr::mutate(BroodIDFledged = ifelse(is.na(BroodIDFledged), BroodIDLaid, BroodIDFledged)) %>%
     dplyr::ungroup() %>%
     #Remove duplicates that will occur due to multiple values being in dest/orig
-    dplyr::filter(!duplicated(.)) %>%
+    dplyr::distinct() %>%
     dplyr::select(IndvID, Species, PopID, BroodIDLaid, BroodIDFledged, RingSeason, RingAge, Sex)
 
   #Identify those cases where an individual has multiple records in individual data
-  duplicates <- Individual_data %>%
+  duplicates <- Individual_data_single_records %>%
     dplyr::group_by(IndvID) %>%
     dplyr::summarise(n = n()) %>%
     dplyr::filter(n > 1) %>%
@@ -855,10 +866,8 @@ create_individual_MON <- function(capture_data, brood_data, verbose){
 
                })
 
-
-
   #For any duplicate cases, we just take the first, which should be the most recent one
-  Individual_data <- Individual_data %>%
+  Individual_data <- Individual_data_single_records %>%
     dplyr::group_by(IndvID) %>%
     dplyr::slice(1)
 
