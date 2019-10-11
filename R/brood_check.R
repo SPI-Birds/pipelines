@@ -10,6 +10,7 @@
 #' }
 #'
 #' @inheritParams checks_brood_params
+#' @inheritParams checks_individual_params
 #' @param check_format \code{TRUE} or \code{FALSE}. If \code{TRUE}, the check on variable format (i.e. \code{\link{check_format_brood}}) is included in the quality check. Default: \code{TRUE}.
 #'
 #' @return
@@ -20,16 +21,17 @@
 #'
 #' @export
 
-brood_check <- function(Brood_data, check_format=TRUE){
+brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
 
   # Create check list with a summary of warnings and errors per check
-  check_list <- tibble::tibble(CheckID = purrr::map_chr(1:6, ~paste0("B", .)),
+  check_list <- tibble::tibble(CheckID = purrr::map_chr(1:7, ~paste0("B", .)),
                                CheckDescription = c("Check format of brood data",
                                                     "Compare clutch and brood sizes",
                                                     "Compare brood sizes and fledgling numbers",
                                                     "Compare laying and hatching dates",
                                                     "Compare hatching and fledging dates",
-                                                    "Check brood variable values against reference values"),
+                                                    "Check brood variable values against reference values",
+                                                    "Check that parents are the same species"),
                                Warning = NA,
                                Error = NA)
 
@@ -81,6 +83,13 @@ brood_check <- function(Brood_data, check_format=TRUE){
 
   check_list[6,3:4] <- check_values_brood_output$CheckList
 
+  # - Check parents of broods are the same species
+  message("B7: Checking that parents are the same species...")
+
+  check_parent_species_output <- check_parent_species(Brood_data, Individual_data)
+
+  check_list[7,3:4] <- check_parent_species_output$CheckList
+
 
   if(check_format) {
     # Warning list
@@ -89,7 +98,8 @@ brood_check <- function(Brood_data, check_format=TRUE){
                          Check3 = compare_brood_fledglings_output$WarningOutput,
                          Check4 = compare_laying_hatching_output$WarningOutput,
                          Check5 = compare_hatching_fledging_output$WarningOutput,
-                         Check6 = check_values_brood_output$WarningOutput)
+                         Check6 = check_values_brood_output$WarningOutput,
+                         Check7 = check_parent_species_output$WarningOutput)
 
     # Error list
     error_list <- list(Check1 = check_format_brood_output$ErrorOutput,
@@ -97,21 +107,24 @@ brood_check <- function(Brood_data, check_format=TRUE){
                        Check3 = compare_brood_fledglings_output$ErrorOutput,
                        Check4 = compare_laying_hatching_output$ErrorOutput,
                        Check5 = compare_hatching_fledging_output$ErrorOutput,
-                       Check6 = check_values_brood_output$ErrorOutput)
+                       Check6 = check_values_brood_output$ErrorOutput,
+                       Check7 = check_parent_species_output$ErrorOutput)
   } else {
     # Warning list
     warning_list <- list(Check2 = compare_clutch_brood_output$WarningOutput,
                          Check3 = compare_brood_fledglings_output$WarningOutput,
                          Check4 = compare_laying_hatching_output$WarningOutput,
                          Check5 = compare_hatching_fledging_output$WarningOutput,
-                         Check6 = check_values_brood_output$WarningOutput)
+                         Check6 = check_values_brood_output$WarningOutput,
+                         Check7 = check_parent_species_output$WarningOutput)
 
     # Error list
     error_list <- list(Check2 = compare_clutch_brood_output$ErrorOutput,
                        Check3 = compare_brood_fledglings_output$ErrorOutput,
                        Check4 = compare_laying_hatching_output$ErrorOutput,
                        Check5 = compare_hatching_fledging_output$ErrorOutput,
-                       Check6 = check_values_brood_output$ErrorOutput)
+                       Check6 = check_values_brood_output$ErrorOutput,
+                       Check7 = check_parent_species_output$ErrorOutput)
 
     check_list <- check_list[-1,]
   }
@@ -624,4 +637,67 @@ check_values_brood <- function(Brood_data) {
 
   #Satisfy RCMD Checks
   brood_ref_values <- Species <- NULL
+}
+
+
+#' Check parent species
+#'
+#' Check that the parents of broods are the same species.
+#'
+#' @inheritParams checks_brood_params
+#' @inheritParams checks_individual_params
+#'
+#' @return
+#' A list of:
+#' \item{CheckList}{A summary dataframe of whether the check resulted in any warnings or errors.}
+#' \item{WarningOutput}{A list of row-by-row warnings.}
+#' \item{ErrorOutput}{A list of row-by-row errors.}
+#'
+#' @export
+
+check_parent_species <- function(Brood_data, Individual_data) {
+
+  # Find species information of mothers
+  Females <- Brood_data %>%
+    dplyr::filter(!is.na(FemaleID) & !is.na(MaleID)) %>%
+    dplyr::select(Row, FemaleID) %>%
+    dplyr::left_join(Individual_data[,c("IndvID", "Species")], by=c("FemaleID" = "IndvID")) %>%
+    dplyr::rename(FemaleSpecies = Species)
+
+  # Find species information of fathers
+  Males <- Brood_data %>%
+    dplyr::filter(!is.na(FemaleID) & !is.na(MaleID)) %>%
+    dplyr::select(MaleID) %>%
+    dplyr::left_join(Individual_data[,c("IndvID", "Species")], by=c("MaleID" = "IndvID")) %>%
+    dplyr::rename(MaleSpecies = Species)
+
+  # Join and select broods where parents are different species
+  Interspecific_broods <- dplyr::bind_cols(Females, Males) %>%
+    dplyr::filter(FemaleSpecies != MaleSpecies)
+
+  err <- FALSE
+  error_output <- NULL
+
+  if(nrow(Interspecific_broods) > 0) {
+    err <- TRUE
+
+    error_output <- purrr::pmap(.l = Interspecific_broods,
+                                .f = ~{
+                                  paste0("Record on row ", ..1,
+                                         " has parents of different species",
+                                         " (Mother: ", Species_codes[Species_codes$Code == ..3, "CommonName"],
+                                         ", father: ", Species_codes[Species_codes$Code == ..5, "CommonName"], ").")
+                                })
+  }
+
+  war <- FALSE
+  warning_output <- NULL
+
+  check_list <- tibble::tibble(Warning = war,
+                               Error = err)
+
+  return(list(CheckList = check_list,
+              WarningOutput = unlist(warning_output),
+              ErrorOutput = unlist(error_output)))
+
 }
