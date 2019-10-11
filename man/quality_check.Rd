@@ -4,7 +4,8 @@
 \alias{quality_check}
 \title{Perform a quality check on pipeline outputs}
 \usage{
-quality_check(R_data, output = TRUE, output_format = "both")
+quality_check(R_data, output = TRUE, output_format = "both",
+  check_format = TRUE)
 }
 \arguments{
 \item{R_data}{Output of pipeline as an R object. Generated using
@@ -13,6 +14,8 @@ quality_check(R_data, output = TRUE, output_format = "both")
 \item{output}{\code{TRUE} or \code{FALSE}. If \code{TRUE}, a report is produced. Default: \code{TRUE}.}
 
 \item{output_format}{A character. Format of output report. Options: \code{"html"}, \code{"pdf"}, or \code{"both"}. Default: \code{"both"}.}
+
+\item{check_format}{\code{TRUE} or \code{FALSE}. If \code{TRUE}, the checks on variable format (i.e. \code{\link{check_format_brood}}, \code{\link{check_format_capture}}, \code{\link{check_format_individual}} and \code{\link{check_format_location}}) are included in the quality check. Default: \code{TRUE}.}
 }
 \value{
 A list of:

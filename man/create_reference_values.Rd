@@ -10,19 +10,15 @@ create_reference_values(db = utils::choose.dir())
 \item{db}{File path. Location to save reference values.}
 }
 \value{
-An R data object containing three lists of reference values:
-\item{brood_ref_values_list}{Reference values related to brood data.}
-\item{cap_adult_ref_values_list}{Reference values related to capture data of adults.}
-\item{cap_chick_ref_values_list}{Reference values related to capture data of chicks.}
+An R data object containing two lists of reference values:
+\item{brood_ref_values}{Reference values related to brood data.}
+\item{capture_ref_values}{Reference values related to capture data.}
 }
 \description{
 Species-specific biological reference values to check whether the data in the pipeline outputs have biologically reasonable values.
 }
 \details{
-For each species-specific variable a distinction is made between
-improbable values and impossible values. For each, a minimum
-and a maximum is provided. Thus, in total, each species-specific variable
-corresponds to 4 reference values.
+For each species-specific variable a distinction is made between uncommon or unusual values (which result in a "warning") and impossible values (which result in a "potential error"). For each, a minimum and a maximum is provided. Thus, in total, each species-specific variable corresponds to 4 reference values.
 
 NB: Manually add & edit reference values in the code and run function to
 create the necessary files to be used in \code{\link{quality_check}}.

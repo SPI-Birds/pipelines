@@ -4,10 +4,12 @@
 \alias{location_check}
 \title{Perform quality checks on location data}
 \usage{
-location_check(Location_data)
+location_check(Location_data, check_format = TRUE)
 }
 \arguments{
 \item{Location_data}{Data frame. Location data output from pipeline.}
+
+\item{check_format}{\code{TRUE} or \code{FALSE}. If \code{TRUE}, the check on variable format (i.e. \code{\link{check_format_location}}) is included in the quality check. Default: \code{TRUE}.}
 }
 \value{
 A list of:

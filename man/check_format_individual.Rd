@@ -16,5 +16,5 @@ A list of:
 \item{ErrorOutput}{A list of row-by-row errors.}
 }
 \description{
-Check if the formats of each column in the individual data match with the standard format
+Check that the format of each column in the individual data match with the standard format
 }

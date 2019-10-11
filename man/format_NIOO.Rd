@@ -77,4 +77,8 @@ during capture.
 \strong{AvgEggMass} Egg measurements are included in the NIOO database, but these are a bit more difficult to include
 because they aren't associated with a given brood (they can be weighed before and after a cross fostering). For now,
 we don't include this data, but we hope to in the future. Therefore, AvgEggMass is currently just NA.
+
+\strong{ChickAge:} For every capture, we estimate the age of a chick as the difference between the hatch date
+taken from BroodIDFledged (in Individual_data) and the CaptureDate. We include chick ages for all individuals
+up until 30 days post hatching to accomodate possible late fledging.
 }

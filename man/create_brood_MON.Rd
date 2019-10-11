@@ -4,7 +4,7 @@
 \alias{create_brood_MON}
 \title{Create brood data table for Montpellier}
 \usage{
-create_brood_MON(db, species_filter)
+create_brood_MON(db, species_filter, pop_filter)
 }
 \arguments{
 \item{db}{Location of primary data from Montpellier.}

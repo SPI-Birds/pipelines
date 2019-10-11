@@ -40,9 +40,17 @@ See a detailed description of which rows correspond to which checks in 'Details'
   \item Row 9-16 represent chicks with improbable values in Mass and Tarsus (part of 'Capture check 2: Checking capture variable values against reference values'; see \code{\link{check_capture_values}}).
   \item Row 17-24 represent adults with impossible values in Mass and Tarsus (part of 'Capture check 2: Checking capture variable values against reference values'; see \code{\link{check_capture_values}}).
   \item Row 25- 32 represent chicks with impossible values in Mass and Tarsus (part of 'Capture check 2: Checking capture variable values against reference values'; see \code{\link{check_capture_values}}).
+  \item Row 33 represents a chick caught in a nest box, but without a BroodID (part of 'Individual check 3: Checking that chicks have BroodIDs'; see \code{\link{check_BroodID_chicks}}).
 }
 
 \strong{Individual data}:
+\itemize{
+  \item Row 1-2 represent duplicated individual identifiers (part of 'Individual check 2: Checking unique individual IDs'; see \code{\link{check_unique_IndvID}}).
+  \item Row 3 represents a chick caught in a nest box, but without a BroodID (part of 'Individual check 3: Checking that chicks have BroodIDs'; see \code{\link{check_BroodID_chicks}}).
+}
 
 \strong{Location data}:
+\itemize{
+  \item Row 1 represents a nest box location corresponding to a chick without a BroodID (part of 'Individual check 3: Checking that chicks have BroodIDs'; see \code{\link{check_BroodID_chicks}}).
+}
 }

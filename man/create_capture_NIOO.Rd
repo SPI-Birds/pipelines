@@ -4,7 +4,7 @@
 \alias{create_capture_NIOO}
 \title{Create capture data table for NIOO pipeline.}
 \usage{
-create_capture_NIOO(database, Individual_data, location_data,
+create_capture_NIOO(database, Brood_data, Individual_data, location_data,
   species_filter, pop_filter)
 }
 \arguments{
