@@ -23,14 +23,19 @@
 #'   \item Row 9-16 represent chicks with improbable values in Mass and Tarsus (part of 'Capture check 2: Checking capture variable values against reference values'; see \code{\link{check_capture_values}}).
 #'   \item Row 17-24 represent adults with impossible values in Mass and Tarsus (part of 'Capture check 2: Checking capture variable values against reference values'; see \code{\link{check_capture_values}}).
 #'   \item Row 25- 32 represent chicks with impossible values in Mass and Tarsus (part of 'Capture check 2: Checking capture variable values against reference values'; see \code{\link{check_capture_values}}).
+#'   \item Row 33 represents a chick caught in a nest box, but without a BroodID (part of 'Individual check 3: Checking that chicks have BroodIDs'; see \code{\link{check_BroodID_chicks}}).
 #' }
 #'
 #' \strong{Individual data}:
 #' \itemize{
 #'   \item Row 1-2 represent duplicated individual identifiers (part of 'Individual check 2: Checking unique individual IDs'; see \code{\link{check_unique_IndvID}}).
+#'   \item Row 3 represents a chick caught in a nest box, but without a BroodID (part of 'Individual check 3: Checking that chicks have BroodIDs'; see \code{\link{check_BroodID_chicks}}).
 #' }
 #'
 #' \strong{Location data}:
+#' \itemize{
+#'   \item Row 1 represents a nest box location corresponding to a chick without a BroodID (part of 'Individual check 3: Checking that chicks have BroodIDs'; see \code{\link{check_BroodID_chicks}}).
+#' }
 #'
 #' @param db File path. Location to save dummy data.
 #'
@@ -282,7 +287,6 @@ create_dummy_data <- function(db = utils::choose.dir()) {
 
   # Individual data
   # Individual check 2: Checking unique individual IDs
-
   Individual_data %>%
     tibble::add_row(
       Row = as.integer(1:2),
@@ -291,6 +295,36 @@ create_dummy_data <- function(db = utils::choose.dir()) {
     )  %>%
     dplyr::slice(-1L) ->
     Individual_data
+
+  # Individual check 3: Checking that chicks have BroodIDs
+  Individual_data %>%
+    tibble::add_row(
+      Row = as.integer(3),
+      IndvID = as.character("B1234"),
+      PopID = as.character("BBB"),
+      RingAge = as.character("chick"),
+    )  ->
+    Individual_data
+
+  Capture_data %>%
+    tibble::add_row(
+      Row = as.integer(33),
+      IndvID = as.character("B1234"),
+      CaptureDate = as.Date("2019-04-01"),
+      CapturePopID = as.character("BBB"),
+      LocationID = as.character("BBB_001")
+    )   ->
+    Capture_data
+
+  Location_data %>%
+    tibble::add_row(
+      Row = as.integer(1),
+      LocationID = as.character("BBB_001"),
+      LocationType = as.character("NB"),
+      PopID = as.character("BBB")
+    )  %>%
+    dplyr::slice(-1L) ->
+    Location_data
 
   # Combine in list
   dummy_data <- list(Brood_data = Brood_data,

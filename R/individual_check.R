@@ -8,6 +8,8 @@
 #' }
 #'
 #' @inheritParams checks_individual_params
+#' @inheritParams checks_capture_params
+#' @inheritParams checks_location_params
 #' @param check_format \code{TRUE} or \code{FALSE}. If \code{TRUE}, the check on variable format (i.e. \code{\link{check_format_individual}}) is included in the quality check. Default: \code{TRUE}.
 #'
 #' @return
@@ -18,12 +20,13 @@
 #'
 #' @export
 
-individual_check <- function(Individual_data, check_format=TRUE){
+individual_check <- function(Individual_data, Capture_data, Location_data, check_format=TRUE){
 
   # Create check list with a summary of warnings and errors per check
-  check_list <- tibble::tibble(CheckID = purrr::map_chr(1:2, ~paste0("I", .)),
+  check_list <- tibble::tibble(CheckID = purrr::map_chr(1:3, ~paste0("I", .)),
                                CheckDescription = c("Check format of individual data",
-                                                    "Check unique individual IDs"),
+                                                    "Check unique individual IDs",
+                                                    "Check that chicks have BroodIDs"),
                                Warning = NA,
                                Error = NA)
 
@@ -46,20 +49,32 @@ individual_check <- function(Individual_data, check_format=TRUE){
 
   check_list[2, 3:4] <- check_unique_IndvID_output$CheckList
 
+  # - Check that chicks have BroodIDs
+  message("I3: Checking that chicks have BroodIDs...")
+
+  check_BroodID_chicks_output <- check_BroodID_chicks(Individual_data, Capture_data, Location_data)
+
+  check_list[3, 3:4] <- check_BroodID_chicks_output$CheckList
+
+
   if(check_format) {
     # Warning list
     warning_list <- list(Check1 = check_format_individual_output$WarningOutput,
-                         Check2 = check_unique_IndvID_output$WarningOutput)
+                         Check2 = check_unique_IndvID_output$WarningOutput,
+                         Check3 = check_BroodID_chicks_output$WarningOutput)
 
     # Error list
     error_list <- list(Check1 = check_format_individual_output$ErrorOutput,
-                       Check2 = check_unique_IndvID_output$ErrorOutput)
+                       Check2 = check_unique_IndvID_output$ErrorOutput,
+                       Check3 = check_BroodID_chicks_output$ErrorOutput)
   } else {
     # Warning list
-    warning_list <- list(Check2 = check_unique_IndvID_output$WarningOutput)
+    warning_list <- list(Check2 = check_unique_IndvID_output$WarningOutput,
+                         Check3 = check_BroodID_chicks_output$WarningOutput)
 
     # Error list
-    error_list <- list(Check2 = check_unique_IndvID_output$ErrorOutput)
+    error_list <- list(Check2 = check_unique_IndvID_output$ErrorOutput,
+                       Check3 = check_BroodID_chicks_output$ErrorOutput)
 
     check_list <- check_list[-1,]
   }
@@ -225,3 +240,62 @@ check_unique_IndvID <- function(Individual_data){
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 }
+
+
+#' Check that chicks have BroodID
+#'
+#' Check that all chicks in Individual_data that are caught and ringed in a nest box have a BroodID. Individuals just ringed after fledging are regarded as chicks but are not associated with a BroodID.
+#'
+#' @inheritParams checks_individual_params
+#' @inheritParams checks_capture_params
+#' @inheritParams checks_location_params
+#'
+#' @return
+#' A list of:
+#' \item{CheckList}{A summary dataframe of whether the check resulted in any warnings or errors.}
+#' \item{WarningOutput}{A list of row-by-row warnings.}
+#' \item{ErrorOutput}{A list of row-by-row errors.}
+#'
+#' @export
+
+check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data) {
+
+  First_captures <- Capture_data %>%
+    dplyr::group_by(IndvID) %>%
+    dplyr::filter(CaptureDate == dplyr::first(CaptureDate)) %>%
+    dplyr::ungroup() %>%
+    dplyr::left_join(Location_data, by=c("CapturePopID" = "PopID", "LocationID"))
+
+  Ind_cap_loc_data <- Individual_data %>%
+    dplyr::left_join(First_captures, by="IndvID")
+
+  No_BroodID_nest <- Ind_cap_loc_data %>%
+    dplyr::filter(RingAge == "chick" & (is.na(BroodIDLaid) | is.na(BroodIDFledged)) & LocationType == "NB")
+
+  err <- FALSE
+  error_output <- NULL
+
+  if(nrow(No_BroodID_nest) > 0) {
+    err <- TRUE
+
+    error_output <- purrr::pmap(.l = No_BroodID_nest,
+                                .f = ~{
+                                  paste0("Record on row ", ..1,
+                                         " has no BroodID.")
+                                })
+  }
+
+
+  war <- FALSE
+  warning_output <- NULL
+
+  check_list <- tibble::tibble(Warning = war,
+                               Error = err)
+
+  return(list(CheckList = check_list,
+              WarningOutput = unlist(warning_output),
+              ErrorOutput = unlist(error_output)))
+
+}
+
+
