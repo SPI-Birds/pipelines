@@ -52,8 +52,7 @@
 #'hatched last calendar year and now in its second calendar year.
 #'
 #'\item JN (where N > 1) Individuals caught as juvenile and caught again N
-#'season later We give EURING code 3 + 2*N: Nestling or chick unable to fly
-#'freely.
+#'season later We give EURING code 3 + 2*N, as above.
 #'
 #'\item AN (where N >= 0) An adult not captured as a chick or juvenile. We give
 #'EURING code 4 + 2*N (i.e. of unknown age because it was not caught when it
@@ -69,11 +68,19 @@
 #'these as having age uncertain because they weren't caught as chicks.
 #'
 #'\strong{BroodIDLaid/Fledged:} BroodIDLaid is the brood in which an individual
-#'was listed in one of the chick columns. The BroodIDFledged is the same as BroodIDLaid
-#'unless a destination brood is listed. In any cases where multiple broods are associated
-#'with an individual (e.g. they are listed as a chick twice) we currently select the
-#'first record and return a warning. We assume the first nest recorded is more likely to
-#'be the 'true' nest until these are corrected.
+#'was listed as a chick in the brood data table. The BroodIDFledged is the same as
+#'BroodIDLaid unless origin and/or destination information is listed. In this case,
+#'cross-fostering has occurred. BroodIDFledged is then the brood active at the destination
+#'nest box at the time of capture. In any cases where multiple
+#'broods are associated with an individual we currently select the first record and return a warning. We assume
+#'the first nest recorded is more likely to be the 'true' nest until these are
+#'corrected.
+#'
+#'\strong{ReleasePlot/PopID}: Individuals transferred to aviaries are given ReleasePlot/PopID
+#''aviary'.
+#'
+#'\strong{ExperimentID:} Currently, broods are given an ExperimentID TRUE or FALSE.
+#'Experiments will be expanded to include exact experimental details at a later stage.
 #'
 #'@inheritParams pipeline_params
 #'
@@ -337,11 +344,32 @@ create_capture_MON <- function(db, species_filter, pop_filter){
       }
 
     })) %>%
-    #Only include capture pop and plot for now, until we work out how to code translocations
     dplyr::mutate(CapturePopID = identify_PopID_MON(lieu),
                   ReleasePopID = identify_PopID_MON(ReleasePlot),
                   CapturePlot = lieu,
-                  Tarsus = as.numeric(tarsed), OriginalTarsusMethod = dplyr::case_when(!is.na(.$tarsed) ~ "Alternative")) %>%
+                  Tarsus = purrr::map2_dbl(.x = tarsed, .y = tarseg,
+                                           .f = ~{
+
+                                             if(is.na(..1)){
+
+                                               if(!is.na(..2)){
+
+                                                 return(as.numeric(..2))
+
+                                               } else {
+
+                                                 return(NA_real_)
+
+                                               }
+
+                                             } else {
+
+                                               return(as.numeric(..1))
+
+                                             }
+
+                                           })) %>%
+    dplyr::mutate(OriginalTarsusMethod = dplyr::case_when(!is.na(Tarsus) ~ "Alternative")) %>%
     dplyr::filter(CapturePopID %in% pop_filter) %>%
     dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, FoundDead, ObserverID, LocationID,
                   CapturePopID, CapturePlot, ReleasePopID, ReleasePlot, Mass, Tarsus,
@@ -416,10 +444,29 @@ create_capture_MON <- function(db, species_filter, pop_filter){
                   LocationID = paste(lieu, nic, sep = "_"),
                   CapturePopID = identify_PopID_MON(lieu),
                   CapturePlot = lieu,
-                  #ReleasePopID/Plot are NA for now until we work out how to include cross-foster
-                  ReleasePopID = NA_character_, ReleasePlot = NA_character_,
-                  Tarsus = as.numeric(tarsed),
-                  OriginalTarsusMethod = dplyr::case_when(!is.na(.$tarsed) ~ "Alternative"),
+                  Tarsus = purrr::map2_dbl(.x = tarsed, .y = tarseg,
+                                           .f = ~{
+
+                                             if(is.na(..1)){
+
+                                               if(!is.na(..2)){
+
+                                                 return(as.numeric(..2))
+
+                                               } else {
+
+                                                 return(NA_real_)
+
+                                               }
+
+                                             } else {
+
+                                               return(as.numeric(..1))
+
+                                             }
+
+                                           })) %>%
+    dplyr::mutate(OriginalTarsusMethod = dplyr::case_when(!is.na(.$tarsed) ~ "Alternative"),
                   WingLength = NA_real_,
                   OrigBoxNumber = purrr::map(orig, find_box), DestBoxNumber = purrr::map(dest, find_box),
                   BroodIDLaid = purrr::pmap_chr(.l = list(BreedingSeason, lieu, OrigBoxNumber),
@@ -842,6 +889,19 @@ create_location_MON <- function(capture_data){
 
 }
 
+#' Translate plots into corresponding study populations.
+#'
+#' Plots in MON are translated into one of 7 populations, including
+#' 'aviary' (for birds transferred to aviaries) and "MIS" for
+#' miscellaneous populations.
+#'
+#' @param variable Plot name.
+#'
+#' @return Three letter PopID or 'aviary'
+#' @export
+#'
+#' @examples
+#' identify_PopID_MON("ava")
 identify_PopID_MON <- function(variable){
 
   dplyr::case_when(variable %in% c("ava", "fel", "mur", "fil", "ari", "gra") ~ "MUR",
@@ -857,6 +917,36 @@ identify_PopID_MON <- function(variable){
 
 }
 
+#' Cut origin/destination box information into plot/box number
+#'
+#' In MON primary data, the origin/destination of a cross-fostering or
+#' translocation can have different formats:
+#'
+#' - Box number only. This can be numeric (11) or alpha-numeric (11bis). - Plot
+#' and box number. This is alpha numeric (ava13) - No information (NA)
+#'
+#' We need to identify when the box number starts (the first numeric) and
+#' separate plot and box number if both are present.
+#'
+#' @param string A vector. The origin/destination column.
+#' @param position Start position to search along the character string.
+#'
+#' @return A vector of length 1 (for box number only) or 2 (for plot and box
+#'   number respectively).
+#' @export
+#'
+#' @examples
+#' #Return box number if only box number is provided
+#' find_box("11")
+#'
+#' #Return separate plot and box number if both provided
+#' find_box("ava11")
+#'
+#' #Still return box number of it is alpha-numeric
+#' find_box("ava11bis")
+#'
+#' #Return NA if no information is provided
+#' find_box(NA)
 find_box <- function(string, position = 1){
 
   if(is.na(string) | position == (nchar(string) + 1)){
