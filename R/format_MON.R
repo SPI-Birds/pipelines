@@ -76,11 +76,18 @@
 #'the first nest recorded is more likely to be the 'true' nest until these are
 #'corrected.
 #'
-#'\strong{ReleasePlot/PopID}: Individuals transferred to aviaries are given ReleasePlot/PopID
+#'\strong{ReleasePlot/PopID:} Individuals transferred to aviaries are given ReleasePlot/PopID
 #''aviary'.
 #'
 #'\strong{ExperimentID:} Currently, broods are given an ExperimentID TRUE or FALSE.
 #'Experiments will be expanded to include exact experimental details at a later stage.
+#'
+#'\strong{LocationID:} When individual is captured as chick or in nest the LocationID
+#'is Plot_BoxNumber_NB. For non-chick captures, if there is no BoxNumber listed
+#'we return LocationID NA. Even if it wasn't a capture in a nestbox, we have no
+#'way of defining the location. If a BoxNumber is provided the LocationID is
+#'Plot_BoxNumber_X where X is NB for nest box/winter roost captures and MN for
+#'mist net or trap cage and caller captures.
 #'
 #'@inheritParams pipeline_params
 #'
@@ -242,7 +249,6 @@ create_capture_MON <- function(db, species_filter, pop_filter){
                   BeakLength = becna,
                   Mass = poids, ObserverID = obs,
                   Destination = dest,
-                  LocationID = paste(lieu, nic, sep = "_"),
                   ActionTaken = dplyr::case_when(.$action == "bcj" ~ "Ringed",
                                                  .$action == "mor" ~ "Dead",
                                                  .$action == "nb" ~ "Not_Ringed",
@@ -254,8 +260,25 @@ create_capture_MON <- function(db, species_filter, pop_filter){
                   CaptureMethod = dplyr::case_when(.$fil == "0" ~ "Nest box",
                                                    .$fil == "1" ~ "Mist net",
                                                    .$fil == "2" ~ "Trap cage and caller",
-                                                   .$fil == "3" ~ "Winter roost"),
-                  Age_observed = purrr::pmap_int(.l = list(age),
+                                                   .$fil == "3" ~ "Winter roost")) %>%
+    dplyr::mutate(LocationID = purrr::pmap_chr(.l = list(lieu, nic, CaptureMethod), .f = ~{
+
+      if(is.na(..2)){
+
+        return(NA_character_)
+
+      } else if(is.na(..3) || ..3 %in% c("Nest box", "Winter roost")){
+
+        return(paste(..1, ..2, "NB", sep = "_"))
+
+      } else if(..3 %in% c("Mist net", "Trap cage and caller")){
+
+        return(paste(..1, ..2, "MN", sep = "_"))
+
+      }
+
+    }),
+    Age_observed = purrr::pmap_int(.l = list(age),
                                                  .f = ~{
 
                                                    if(is.na(..1)){
@@ -441,7 +464,7 @@ create_capture_MON <- function(db, species_filter, pop_filter){
                                             .$etat_sante == "D" ~ "Chick dead",
                                             .$etat_sante == "E" ~ "Healthy"),
                   FoundDead = dplyr::case_when(.$etat_sante %in% c("M", "MMAN", "D") ~ TRUE),
-                  LocationID = paste(lieu, nic, sep = "_"),
+                  LocationID = paste(lieu, nic, "NB", sep = "_"),
                   CapturePopID = identify_PopID_MON(lieu),
                   CapturePlot = lieu,
                   Tarsus = purrr::map2_dbl(.x = tarsed, .y = tarseg,
@@ -570,7 +593,7 @@ create_brood_MON <- function(db, species_filter, pop_filter){
                                              .$espece == "moif" ~ Species_codes$Code[which(Species_codes$SpeciesID == 15980)],
                                              .$espece == "non" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14400)]),
                   Plot = lieu, BoxNumber = nic,
-                  LocationID = paste(Plot, BoxNumber, sep = "_"),
+                  LocationID = paste(Plot, BoxNumber, "NB", sep = "_"),
                   BreedingSeason = as.integer(an),
                   LayDate = janitor::excel_numeric_to_date(as.numeric(date_ponte)),
                   BroodID = paste(BreedingSeason, Plot, BoxNumber, np,
@@ -883,6 +906,13 @@ create_individual_MON <- function(capture_data, brood_data, verbose){
 
 create_location_MON <- function(capture_data){
 
+  #Load lat/long for nest boxes
+  nestbox_latlong <- readxl::read_excel(paste0(db, "//MON_PrimaryData_NestBoxLocation.xlsx"), sheet = "dico_station") %>%
+    dplyr::filter(!is.na(latitude)) %>%
+    dplyr::mutate(LocationID = paste(abr_station, nichoir, "NB", sep = "_")) %>%
+    dplyr::select(LocationID, latitude, longitude) %>%
+    dplyr::mutate_at(.vars = vars(latitude:longitude), as.numeric)
+
   #For captures that have a latitude and longitude,
   #Identify unique locations (rounded lat and long are identical)
   #And give them a unique LocationID (hs_n).
@@ -897,20 +927,55 @@ create_location_MON <- function(capture_data){
                      LocationType = "MN", Habitat = NA_character_) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(LocationID = paste("hs", 1:n(), sep = "_")) %>%
-    dplyr::select(LocationID, NestboxID, LocationType, PopID, Latitude, Longitude, StartSeason, EndSeason, Habitat)
+    dplyr::select(LocationID, NestboxID, LocationType, PopID, Latitude = latitude, Longitude = longitude, StartSeason, EndSeason, Habitat)
 
   #For cases where no lat/long are available
   inside_location <- capture_data %>%
-    dplyr::filter(is.na(longitude)) %>%
+    dplyr::filter(is.na(longitude) & !is.na(LocationID)) %>%
+    dplyr::select(-longitude, -latitude) %>%
+    dplyr::left_join(nestbox_latlong, by = "LocationID") %>%
     dplyr::group_by(LocationID) %>%
-    dplyr::summarise(NestboxID = unique(LocationID),
-                     LocationType = NA_character_,
-                     PopID = unique(CapturePopID),
-                     Latitude = as.numeric(first(latitude)),
-                     Longitude = as.numeric(first(longitude)),
-                     StartSeason = min(BreedingSeason),
-                     EndSeason = NA_integer_,
-                     Habitat = NA_character_)
+    dplyr::summarise(NestboxID = purrr::map_chr(.x = unique(LocationID), .f = ~{
+
+      if(grepl(..1, pattern = "NB")){
+
+        return(..1)
+
+      } else {
+
+        return(NA_character_)
+
+      }
+
+    }), LocationType = str_split(unique(LocationID), pattern = "_", simplify = TRUE)[3],
+    PopID = unique(CapturePopID),
+    Latitude = first(latitude),
+    Longitude = first(longitude),
+    StartSeason = min(BreedingSeason),
+    EndSeason = NA_integer_,
+    Habitat = purrr::map_chr(.x = unique(LocationID), .f = ~{
+
+      plot <- str_split(LocationID, pattern = "_", simplify = TRUE)[1]
+
+      if(plot %in% c("ava", "fel", "mur", "rou")){
+
+        return("deciduous")
+
+      } else if(plot %in% c("fil", "ari", "gra", "pir", "tua")){
+
+        return("evergreen")
+
+      } else if(plot %in% c("bot", "cef", "fac", "font", "gram", "mas", "mos", "val", "zoo")){
+
+        return("urban")
+
+      } else {
+
+        return(NA_character_)
+
+      }
+
+    }))
 
   return(dplyr::bind_rows(outside_locations, inside_location))
 
