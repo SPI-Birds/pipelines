@@ -195,3 +195,70 @@ test_that("Capture data returns an expected outcome...", {
 
 
 })
+
+test_that("Location_data returns an expected outcome...", {
+
+  #We want to run tests for nest boxes (there are no mistnets)
+
+  #Take a subset of only NIOO data
+  MON_data <- dplyr::filter(pipeline_output$Capture_data, CapturePopID %in% c("MUR", "PIR", "ROU", "MON", "MTV", "MIS"))
+
+  #Test 1: Nestbox check
+  #Location listed as a nest box that has lat/long from separate file
+  #Record has expected LocationType
+  expect_true(subset(MON_data, LocationID == "rou_314_NB")$LocationType == "NB")
+  #Expect LocationID and NestboxID are the same
+  expect_true(subset(MON_data, LocationID == "rou_314_NB")$NestboxType == "rou_314_NB")
+  #Expect Start and EndSeason is as expected
+  expect_equal(subset(MON_data, LocationID == "rou_314_NB")$StartSeason, 2002L)
+  expect_equal(subset(MON_data, LocationID == "rou_314_NB")$EndSeason, NA_integer_)
+  #Check that LocationID is in the expected PopID
+  expect_equal(subset(NIOO_data, LocationID == "rou_314_NB")$PopID, "ROU")
+  #Check that latitude and longitude are as expected
+  expect_equal(round(subset(MON_data, LocationID == "rou_314_NB")$Latitude, 2), 43.66)
+  expect_equal(round(subset(MON_data, LocationID == "rou_314_NB")$Longitude, 2), 3.67)
+
+  #Test 2: Nestbox check
+  #Location with no lat/long info
+  #Record has expected LocationType
+  expect_true(subset(MON_data, LocationID == "mau_1_NB")$LocationType == "NB")
+  #Expect LocationID and NestboxID are the same
+  expect_true(subset(MON_data, LocationID == "mau_1_NB")$NestboxType == "mau_1_NB")
+  #Expect Start and EndSeason is as expected
+  expect_equal(subset(MON_data, LocationID == "mau_1_NB")$StartSeason, 1987L)
+  expect_equal(subset(MON_data, LocationID == "mau_1_NB")$EndSeason, NA_integer_)
+  #Check that LocationID is in the expected PopID
+  expect_equal(subset(NIOO_data, LocationID == "mau_1_NB")$PopID, "MIS")
+  #Check that latitude and longitude are as expected
+  expect_equal(subset(MON_data, LocationID == "mau_1_NB")$Latitude, NA_real_)
+  expect_equal(subset(MON_data, LocationID == "mau_1_NB")$Longitude, NA_real_)
+
+  #Test 3: Mistnet check (location outside main study area)
+  #LocationType is as expected
+  expect_true(subset(MON_data, LocationID == "hs_1")$LocationType == "MN")
+  #Expect no NestboxID
+  expect_equal(subset(MON_data, LocationID == "hs_1")$NestboxType, NA_character_)
+  #Expect Start and EndSeason is as expected
+  expect_equal(subset(MON_data, LocationID == "hs_1")$StartSeason, 2009L)
+  expect_equal(subset(MON_data, LocationID == "hs_1")$EndSeason, NA_integer_)
+  #Check that LocationID is in the expected PopID
+  expect_equal(subset(NIOO_data, LocationID == "hs_1")$PopID, "MIS")
+  #Check that latitude and longitude are as expected
+  expect_equal(round(subset(MON_data, LocationID == "hs_1")$Latitude, 2), 41.4)
+  expect_equal(round(subset(MON_data, LocationID == "hs_1")$Longitude, 2), 9.19)
+
+  #Test 4: Mistnet check (caught at a nest box)
+  #LocationType is as expected
+  expect_true(subset(MON_data, LocationID == "pir_14_MN")$LocationType == "MN")
+  #Expect no NestboxID
+  expect_equal(subset(MON_data, LocationID == "pir_14_MN")$NestboxType, NA_character_)
+  #Expect Start and EndSeason is as expected
+  expect_equal(subset(MON_data, LocationID == "pir_14_MN")$StartSeason, 1985L)
+  expect_equal(subset(MON_data, LocationID == "pir_14_MN")$EndSeason, NA_integer_)
+  #Check that LocationID is in the expected PopID
+  expect_equal(subset(NIOO_data, LocationID == "pir_14_MN")$PopID, "PIR")
+  #Check that latitude and longitude are as expected
+  expect_equal(round(subset(MON_data, LocationID == "pir_14_MN")$Latitude, 2), 42.38)
+  expect_equal(round(subset(MON_data, LocationID == "pir_14_MN")$Longitude, 2), 8.75)
+
+})
