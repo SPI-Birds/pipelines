@@ -218,6 +218,7 @@ check_format_individual <- function(Individual_data){
 
 check_unique_IndvID <- function(Individual_data){
 
+  # Select IndvIDs that are duplicated
   Duplicated_individuals <- Individual_data %>%
     dplyr::group_by(PopID, IndvID) %>%
     filter(n() > 1)
@@ -231,9 +232,11 @@ check_unique_IndvID <- function(Individual_data){
     error_output <- purrr::map(.x = unique(Duplicated_individuals$IndvID),
                                 .f = ~{
                                   paste0("Record on row ",
+                                         # Duplicated rows
                                          Duplicated_individuals[Duplicated_individuals$IndvID == .x, "Row"][1,],
                                          " (IndvID: ", .x, ")",
                                          " is duplicated in row(s) ",
+                                         # Duplicates (if 1, else more)
                                          ifelse(nrow(Duplicated_individuals[Duplicated_individuals$IndvID == .x, "Row"][-1,]) == 1,
                                                 Duplicated_individuals[Duplicated_individuals$IndvID == .x, "Row"][-1,],
                                                 gsub("^c\\(|\\)$", "",
@@ -272,15 +275,18 @@ check_unique_IndvID <- function(Individual_data){
 
 check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data) {
 
+  # Select first captures and link to the information of their locations
   First_captures <- Capture_data %>%
     dplyr::group_by(IndvID) %>%
     dplyr::filter(CaptureDate == dplyr::first(CaptureDate)) %>%
     dplyr::ungroup() %>%
     dplyr::left_join(Location_data, by=c("CapturePopID" = "PopID", "LocationID"))
 
+  # Join with individual data
   Ind_cap_loc_data <- Individual_data %>%
     dplyr::left_join(First_captures, by="IndvID")
 
+  # Select chicks caught in a nest box but not associated with a BroodID
   No_BroodID_nest <- Ind_cap_loc_data %>%
     dplyr::filter(RingAge == "chick" & (is.na(BroodIDLaid) | is.na(BroodIDFledged)) & LocationType == "NB")
 
@@ -326,6 +332,8 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data) {
 #' @export
 
 check_conflicting_sex <- function(Individual_data) {
+
+  # Select individuals with conflicting sex
   Conflicting_sex <- Individual_data %>%
     dplyr::filter(Sex == "C")
 
