@@ -26,6 +26,9 @@
 #' }
 #'
 #' \strong{Individual data}:
+#' \itemize{
+#'   \item Row 1-2 represent duplicated individual identifiers (part of 'Individual check 2: Checking unique individual IDs'; see \code{\link{check_unique_IndvID}}).
+#' }
 #'
 #' \strong{Location data}:
 #'
@@ -205,7 +208,7 @@ create_dummy_data <- function(db = utils::choose.dir()) {
 
   # Brood check 6: Checking brood variable values against reference values
 
-  # - Improbable values
+  # - Unusual values
   Brood_data %>%
     tibble::add_row(
       Row = as.integer(7:14),
@@ -231,7 +234,7 @@ create_dummy_data <- function(db = utils::choose.dir()) {
   # Capture data
   # Capture check 2: Checking capture variable values against reference values
 
-  # - Improbable values adults
+  # - Unusual values adults
   Capture_data %>%
     tibble::add_row(
       Row = as.integer(1:8),
@@ -254,7 +257,7 @@ create_dummy_data <- function(db = utils::choose.dir()) {
     ) ->
     Capture_data
 
-  # - Impossible values adults
+  # - Unusual values adults
   Capture_data %>%
     tibble::add_row(
       Row = as.integer(17:24),
@@ -276,6 +279,18 @@ create_dummy_data <- function(db = utils::choose.dir()) {
     )  ->
     Capture_data
 
+
+  # Individual data
+  # Individual check 2: Checking unique individual IDs
+
+  Individual_data %>%
+    tibble::add_row(
+      Row = as.integer(1:2),
+      IndvID = as.character("A1234", "A1234"),
+      PopID = as.character("AAA", "AAA")
+    )  %>%
+    dplyr::slice(-1L) ->
+    Individual_data
 
   # Combine in list
   dummy_data <- list(Brood_data = Brood_data,

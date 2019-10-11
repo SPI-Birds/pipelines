@@ -21,8 +21,9 @@
 individual_check <- function(Individual_data, check_format=TRUE){
 
   # Create check list with a summary of warnings and errors per check
-  check_list <- tibble::tibble(CheckID = purrr::map_chr(1, ~paste0("I", .)),
-                               CheckDescription = c("Check format of individual data"),
+  check_list <- tibble::tibble(CheckID = purrr::map_chr(1:2, ~paste0("I", .)),
+                               CheckDescription = c("Check format of individual data",
+                                                    "Check unique individual IDs"),
                                Warning = NA,
                                Error = NA)
 
@@ -38,20 +39,29 @@ individual_check <- function(Individual_data, check_format=TRUE){
     check_list[1, 3:4] <- check_format_individual_output$CheckList
   }
 
+  # - Check unique individual IDs
+  message("I2: Checking unique individual IDs...")
+
+  check_unique_IndvID_output <- check_unique_IndvID(Individual_data)
+
+  check_list[2, 3:4] <- check_unique_IndvID_output$CheckList
+
   if(check_format) {
     # Warning list
-    warning_list <- list(Check1 = check_format_individual_output$WarningOutput)
+    warning_list <- list(Check1 = check_format_individual_output$WarningOutput,
+                         Check2 = check_unique_IndvID_output$WarningOutput)
 
     # Error list
-    error_list <- list(Check1 = check_format_individual_output$ErrorOutput)
+    error_list <- list(Check1 = check_format_individual_output$ErrorOutput,
+                       Check2 = check_unique_IndvID_output$ErrorOutput)
   } else {
     # Warning list
-    warning_list <- NULL
+    warning_list <- list(Check2 = check_unique_IndvID_output$WarningOutput)
 
     # Error list
-    error_list <- NULL
+    error_list <- list(Check2 = check_unique_IndvID_output$ErrorOutput)
 
-    check_list <- NULL
+    check_list <- check_list[-1,]
   }
 
   return(list(CheckList = check_list,
@@ -62,7 +72,7 @@ individual_check <- function(Individual_data, check_format=TRUE){
 
 #' Check format of individual data
 #'
-#' Check if the formats of each column in the individual data match with the standard format
+#' Check that the format of each column in the individual data match with the standard format
 #' @inheritParams checks_individual_params
 #'
 #' @return
@@ -163,4 +173,55 @@ check_format_individual <- function(Individual_data){
   # Satisfy RCMD Checks
   Format <- Format_standard <- NULL
 
+}
+
+
+#' Check unique individual identifiers
+#'
+#' Check that the individual identifiers (IndvID) are unique within populations.
+#' @inheritParams checks_individual_params
+#'
+#' @return
+#' A list of:
+#' \item{CheckList}{A summary dataframe of check warnings and errors.}
+#' \item{Warnings}{A list of row-by-row warnings.}
+#' \item{Errors}{A list of row-by-row errors.}
+#'
+#' @export
+
+check_unique_IndvID <- function(Individual_data){
+
+  Duplicated_individuals <- Individual_data %>%
+    dplyr::group_by(PopID, IndvID) %>%
+    filter(n() > 1)
+
+  err <- FALSE
+  error_output <- NULL
+
+  if(nrow(Duplicated_individuals) > 0) {
+    err <- TRUE
+
+    error_output <- purrr::map(.x = unique(Duplicated_individuals$IndvID),
+                                .f = ~{
+                                  paste0("Record on row ",
+                                         Duplicated_individuals[Duplicated_individuals$IndvID == .x, "Row"][1,],
+                                         " (IndvID: ", .x, ")",
+                                         " is duplicated in row(s) ",
+                                         ifelse(nrow(Duplicated_individuals[Duplicated_individuals$IndvID == .x, "Row"][-1,]) == 1,
+                                                Duplicated_individuals[Duplicated_individuals$IndvID == .x, "Row"][-1,],
+                                                gsub("^c\\(|\\)$", "",
+                                                     Duplicated_individuals[Duplicated_individuals$IndvID == .x, "Row"][-1,])),
+                                         ".")
+                                })
+  }
+
+  war <- FALSE
+  warning_output <- NULL
+
+  check_list <- tibble::tibble(Warning = war,
+                               Error = err)
+
+  return(list(CheckList = check_list,
+              WarningOutput = unlist(warning_output),
+              ErrorOutput = unlist(error_output)))
 }
