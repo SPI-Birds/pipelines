@@ -135,10 +135,9 @@ test_that("Capture data returns an expected outcome...", {
   #Test 1: Individual ringed as a chick
   #Test the female has the correct number of capture records
   expect_equal(nrow(subset(MON_data, IndvID == "2709339")), 6)
-  #Test that the first capture of the female is as expected (01/01/1982)
-  #This will return an error. The chick capture has no date so will currently be NA. We need to estimate
-  #capture date from hatch date.
-  expect_equal(subset(MON_data, IndvID == "2709339")$CaptureDate[1], as.Date("1982-01-01"))
+  #Test that the first capture is as expected
+  #This should be NA because no date was recorded for first capture.
+  expect_equal(subset(MON_data, IndvID == "2709339")$CaptureDate[1], as.Date(NA))
   #Test that the 6th capture of the female is as expcted (1987-06-08)
   expect_equal(subset(MON_data, IndvID == "2709339")$CaptureDate[6], as.Date("1987-06-08"))
   #Test that age observed is as expected on first capture
