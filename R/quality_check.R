@@ -51,7 +51,7 @@ quality_check <- function(R_data,
   # Run checks
   Brood_checks <- brood_check(Brood_data, check_format)
   Capture_checks <- capture_check(Capture_data, check_format)
-  Individual_checks <- individual_check(Individual_data, check_format)
+  Individual_checks <- individual_check(Individual_data, Capture_data, Location_data, check_format)
   Location_checks <- location_check(Location_data, check_format)
 
   # Combine check lists
