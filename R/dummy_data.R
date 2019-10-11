@@ -13,16 +13,16 @@
 #'   \item Row 4 represents a manipulated brood that violates 'Brood check 3: Comparing brood sizes and fledgling numbers' (see \code{\link{compare_brood_fledglings}}).
 #'   \item Row 5 represents a brood that violates 'Brood check 4: Comparing laying and hatching dates' (see \code{\link{compare_laying_hatching}}).
 #'   \item Row 6 represents a brood that violates 'Brood check 5: Comparing hatching and fledging dates' (see \code{\link{compare_hatching_fledging}}).
-#'   \item Row 7-14 represent broods with improbable values in ClutchSize, BroodSize and NumberFledged per species (part of: 'Brood check 6: Checking brood variable values against reference values'; see \code{\link{check_brood_values}}).
-#'   \item Row 15-22 represent broods with impossible values in ClutchSize, BroodSize and NumberFledged per species (part of: 'Brood check 6: Checking brood variable values against reference values'; see \code{\link{check_brood_values}}).
+#'   \item Row 7-14 represent broods with improbable values in ClutchSize, BroodSize and NumberFledged per species (part of: 'Brood check 6: Checking brood variable values against reference values'; see \code{\link{check_values_brood}}).
+#'   \item Row 15-22 represent broods with impossible values in ClutchSize, BroodSize and NumberFledged per species (part of: 'Brood check 6: Checking brood variable values against reference values'; see \code{\link{check_values_brood}}).
 #' }
 #'
 #' \strong{Capture data}:
 #' \itemize{
-#'   \item Row 1-8 represent adults with improbable values in Mass and Tarsus (part of 'Capture check 2: Checking capture variable values against reference values'; see \code{\link{check_capture_values}}).
-#'   \item Row 9-16 represent chicks with improbable values in Mass and Tarsus (part of 'Capture check 2: Checking capture variable values against reference values'; see \code{\link{check_capture_values}}).
-#'   \item Row 17-24 represent adults with impossible values in Mass and Tarsus (part of 'Capture check 2: Checking capture variable values against reference values'; see \code{\link{check_capture_values}}).
-#'   \item Row 25- 32 represent chicks with impossible values in Mass and Tarsus (part of 'Capture check 2: Checking capture variable values against reference values'; see \code{\link{check_capture_values}}).
+#'   \item Row 1-8 represent adults with improbable values in Mass and Tarsus (part of 'Capture check 2: Checking capture variable values against reference values'; see \code{\link{check_values_capture}}).
+#'   \item Row 9-16 represent chicks with improbable values in Mass and Tarsus (part of 'Capture check 2: Checking capture variable values against reference values'; see \code{\link{check_values_capture}}).
+#'   \item Row 17-24 represent adults with impossible values in Mass and Tarsus (part of 'Capture check 2: Checking capture variable values against reference values'; see \code{\link{check_values_capture}}).
+#'   \item Row 25- 32 represent chicks with impossible values in Mass and Tarsus (part of 'Capture check 2: Checking capture variable values against reference values'; see \code{\link{check_values_capture}}).
 #'   \item Row 33 represents a chick caught in a nest box, but without a BroodID (part of 'Individual check 3: Checking that chicks have BroodIDs'; see \code{\link{check_BroodID_chicks}}).
 #' }
 #'
