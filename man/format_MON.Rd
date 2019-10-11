@@ -111,9 +111,16 @@ broods are associated with an individual we currently select the first record an
 the first nest recorded is more likely to be the 'true' nest until these are
 corrected.
 
-\strong{ReleasePlot/PopID}: Individuals transferred to aviaries are given ReleasePlot/PopID
+\strong{ReleasePlot/PopID:} Individuals transferred to aviaries are given ReleasePlot/PopID
 'aviary'.
 
 \strong{ExperimentID:} Currently, broods are given an ExperimentID TRUE or FALSE.
 Experiments will be expanded to include exact experimental details at a later stage.
+
+\strong{LocationID:} When individual is captured as chick or in nest the LocationID
+is Plot_BoxNumber_NB. For non-chick captures, if there is no BoxNumber listed
+we return LocationID NA. Even if it wasn't a capture in a nestbox, we have no
+way of defining the location. If a BoxNumber is provided the LocationID is
+Plot_BoxNumber_X where X is NB for nest box/winter roost captures and MN for
+mist net or trap cage and caller captures.
 }

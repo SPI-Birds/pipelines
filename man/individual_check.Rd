@@ -4,10 +4,12 @@
 \alias{individual_check}
 \title{Perform quality checks on individual data}
 \usage{
-individual_check(Individual_data)
+individual_check(Individual_data, check_format = TRUE)
 }
 \arguments{
 \item{Individual_data}{Data frame. Individual data output from pipeline.}
+
+\item{check_format}{\code{TRUE} or \code{FALSE}. If \code{TRUE}, the check on variable format (i.e. \code{\link{check_format_individual}}) is included in the quality check. Default: \code{TRUE}.}
 }
 \value{
 A list of:
