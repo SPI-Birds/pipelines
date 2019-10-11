@@ -123,7 +123,7 @@ brood_check <- function(Brood_data, check_format=TRUE){
 
 #' Check format of brood data
 #'
-#' Check if the formats of each column in the brood data match with the standard format.
+#' Check that the format of each column in the brood data match with the standard format.
 #' @inheritParams checks_brood_params
 #'
 #' @return

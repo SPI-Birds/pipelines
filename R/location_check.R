@@ -62,7 +62,7 @@ location_check <- function(Location_data, check_format=TRUE){
 
 #' Check format of location data
 #'
-#' Check if the formats of each column in the location data match with the standard format
+#' Check that the format of each column in the location data match with the standard format
 #' @inheritParams checks_location_params
 #'
 #' @return
