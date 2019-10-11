@@ -23,10 +23,11 @@
 individual_check <- function(Individual_data, Capture_data, Location_data, check_format=TRUE){
 
   # Create check list with a summary of warnings and errors per check
-  check_list <- tibble::tibble(CheckID = purrr::map_chr(1:3, ~paste0("I", .)),
+  check_list <- tibble::tibble(CheckID = purrr::map_chr(1:4, ~paste0("I", .)),
                                CheckDescription = c("Check format of individual data",
-                                                    "Check unique individual IDs",
-                                                    "Check that chicks have BroodIDs"),
+                                                    "Check that individual IDs are unique",
+                                                    "Check that chicks have BroodIDs",
+                                                    "Check that individuals have no conflicting sex"),
                                Warning = NA,
                                Error = NA)
 
@@ -43,7 +44,7 @@ individual_check <- function(Individual_data, Capture_data, Location_data, check
   }
 
   # - Check unique individual IDs
-  message("I2: Checking unique individual IDs...")
+  message("I2: Checking that individual IDs are unique...")
 
   check_unique_IndvID_output <- check_unique_IndvID(Individual_data)
 
@@ -56,25 +57,36 @@ individual_check <- function(Individual_data, Capture_data, Location_data, check
 
   check_list[3, 3:4] <- check_BroodID_chicks_output$CheckList
 
+  # - Check that individuals have no conflicting sex
+  message("I4: Checking that individuals have no conflicting sex...")
+
+  check_conflicting_sex_output <- check_conflicting_sex(Individual_data)
+
+  check_list[4, 3:4] <- check_conflicting_sex_output$CheckList
+
 
   if(check_format) {
     # Warning list
     warning_list <- list(Check1 = check_format_individual_output$WarningOutput,
                          Check2 = check_unique_IndvID_output$WarningOutput,
-                         Check3 = check_BroodID_chicks_output$WarningOutput)
+                         Check3 = check_BroodID_chicks_output$WarningOutput,
+                         Check4 = check_conflicting_sex_output$WarningOutput)
 
     # Error list
     error_list <- list(Check1 = check_format_individual_output$ErrorOutput,
                        Check2 = check_unique_IndvID_output$ErrorOutput,
-                       Check3 = check_BroodID_chicks_output$ErrorOutput)
+                       Check3 = check_BroodID_chicks_output$ErrorOutput,
+                       Check4 = check_conflicting_sex_output$ErrorOutput)
   } else {
     # Warning list
     warning_list <- list(Check2 = check_unique_IndvID_output$WarningOutput,
-                         Check3 = check_BroodID_chicks_output$WarningOutput)
+                         Check3 = check_BroodID_chicks_output$WarningOutput,
+                         Check4 = check_conflicting_sex_output$WarningOutput)
 
     # Error list
     error_list <- list(Check2 = check_unique_IndvID_output$ErrorOutput,
-                       Check3 = check_BroodID_chicks_output$ErrorOutput)
+                       Check3 = check_BroodID_chicks_output$ErrorOutput,
+                       Check4 = check_conflicting_sex_output$ErrorOutput)
 
     check_list <- check_list[-1,]
   }
@@ -299,3 +311,44 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data) {
 }
 
 
+#' Check conflicting sex
+#'
+#' Check that the sex of individuals in Individual_data is recorded consistently. Individuals who have been recorded as both male ('M') and female ('F') will have conflicting sex ('C') in Individual_data.
+#'
+#' @inheritParams checks_individual_params
+#'
+#' @return
+#' A list of:
+#' \item{CheckList}{A summary dataframe of whether the check resulted in any warnings or errors.}
+#' \item{WarningOutput}{A list of row-by-row warnings.}
+#' \item{ErrorOutput}{A list of row-by-row errors.}
+#'
+#' @export
+
+check_conflicting_sex <- function(Individual_data) {
+  Conflicting_sex <- Individual_data %>%
+    dplyr::filter(Sex == "C")
+
+  war <- FALSE
+  warning_output <- NULL
+
+  if(nrow(Conflicting_sex) > 0) {
+    war <- TRUE
+
+    warning_output <- purrr::pmap(.l = Conflicting_sex,
+                                  .f = ~{
+                                    paste0("Record on row ", ..1,
+                                           " has conflicting sex.")
+                                  })
+  }
+
+  err <- FALSE
+  error_output <- NULL
+
+  check_list <- tibble::tibble(Warning = war,
+                               Error = err)
+
+  return(list(CheckList = check_list,
+              WarningOutput = unlist(warning_output),
+              ErrorOutput = unlist(error_output)))
+}
