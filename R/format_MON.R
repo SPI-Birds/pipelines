@@ -144,7 +144,7 @@ format_MON <- function(db = utils::choose.dir(),
 
   message("Compiling location data...")
 
-  Location_data <- create_location_MON(Capture_data)
+  Location_data <- create_location_MON(Capture_data, Brood_data)
 
   # WRANGLE DATA FOR EXPORT
 
@@ -904,7 +904,7 @@ create_individual_MON <- function(capture_data, brood_data, verbose){
 #'
 #' @return A data frame with Individual data
 
-create_location_MON <- function(capture_data){
+create_location_MON <- function(capture_data, brood_data){
 
   #Load lat/long for nest boxes
   nestbox_latlong <- readxl::read_excel(paste0(db, "//MON_PrimaryData_NestBoxLocation.xlsx"), sheet = "dico_station") %>%
@@ -913,8 +913,17 @@ create_location_MON <- function(capture_data){
     dplyr::select(LocationID, latitude, longitude) %>%
     dplyr::mutate_at(.vars = vars(latitude:longitude), as.numeric)
 
-  #For captures that have a latitude and longitude,
-  #Identify unique locations (rounded lat and long are identical)
+  #There are some nestboxes outside the study area
+  nestbox_latlong_outside <- readxl::read_excel(paste0(db, "//MON_PrimaryData_NestBoxLocation.xlsx"), sheet = "Feuil1") %>%
+    dplyr::filter(!is.na(la)) %>%
+    dplyr::mutate(LocationID = paste(st, ni, "NB", sep = "_"), latitude = la, longitude = lo) %>%
+    dplyr::select(LocationID, latitude, longitude) %>%
+    dplyr::mutate_at(.vars = vars(latitude:longitude), as.numeric)
+
+  all_nestbox_latlong <- dplyr::bind_rows(nestbox_latlong, nestbox_latlong_outside)
+
+  #Captures that have a latitude and longitude are mist netting outside of study areas
+  #Identify unique locations
   #And give them a unique LocationID (hs_n).
   #Use PopID MIS, because these are captures outside
   #of any main study area.
@@ -930,10 +939,18 @@ create_location_MON <- function(capture_data){
     dplyr::select(LocationID, NestboxID, LocationType, PopID, Latitude = latitude, Longitude = longitude, StartSeason, EndSeason, Habitat)
 
   #For cases where no lat/long are available
-  inside_location <- capture_data %>%
+  #We need to link the lat/long from separate file
+  inside_locations <- capture_data %>%
     dplyr::filter(is.na(longitude) & !is.na(LocationID)) %>%
-    dplyr::select(-longitude, -latitude) %>%
-    dplyr::left_join(nestbox_latlong, by = "LocationID") %>%
+    dplyr::select(BreedingSeason, LocationID, PopID = CapturePopID)
+
+  #Also for broods only identified in the brood data table
+  nest_locations <- brood_data %>%
+    dplyr::select(BreedingSeason, LocationID, PopID)
+
+  #Combine to have all locations without lat/long
+  non_latlong_locations <- dplyr::bind_rows(inside_locations, nest_locations) %>%
+    dplyr::left_join(all_nestbox_latlong, by = "LocationID") %>%
     dplyr::group_by(LocationID) %>%
     dplyr::summarise(NestboxID = purrr::map_chr(.x = unique(LocationID), .f = ~{
 
@@ -948,7 +965,7 @@ create_location_MON <- function(capture_data){
       }
 
     }), LocationType = str_split(unique(LocationID), pattern = "_", simplify = TRUE)[3],
-    PopID = unique(CapturePopID),
+    PopID = unique(PopID),
     Latitude = first(latitude),
     Longitude = first(longitude),
     StartSeason = min(BreedingSeason),
@@ -977,7 +994,8 @@ create_location_MON <- function(capture_data){
 
     }))
 
-  return(dplyr::bind_rows(outside_locations, inside_location))
+
+  return(dplyr::bind_rows(outside_locations, non_latlong_locations))
 
 }
 
