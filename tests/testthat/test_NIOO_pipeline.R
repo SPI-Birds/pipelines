@@ -83,7 +83,7 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(NIOO_data, BroodID == "64088")$BroodSize, 3L)
   expect_equal(subset(NIOO_data, BroodID == "64088")$NumberFledged, 3L)
   #AvgChickMass and AvgTarsus are as expected
-  expect_equal(subset(NIOO_data, BroodID == "64088")$AvgChickMass, 1170)
+  expect_equal(subset(NIOO_data, BroodID == "64088")$AvgChickMass, 11.70)
   expect_equal(subset(NIOO_data, BroodID == "64088")$AvgTarsus, NA_real_)
 
   #Test 2: clutch type = second
