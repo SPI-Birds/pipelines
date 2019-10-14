@@ -324,40 +324,26 @@ create_nestling_HAR <- function(db, Brood_data){
   message("Extracting nestling ringing data from paradox database")
 
   #Extract table "Pullit.db" which contains brood data
-  Nestling_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Nestlings.DB")
-  # %>%
-  #   dplyr::rename(BreedingSeason = Vuos, LocationID = Nuro, BroodID = Anro,
-  #                 CaptureType = Tunnus, RingSeries = Sarja,
-  #                 RingNumber = Mista, LastRingNumber = Mihin,
-  #                  Month = Kk, Day = Pv, Time = Klo,
-  #                 ObserverID = Havno, ,
-  #                 Species = Laji, Sex = Suku, Sex_method = Sp,
-  #                 Age = Ika, Age_method = Ip, Condition = Kunto,
-  #                 BirdStatus = Tila, CaptureMethod = Ptapa,
-  #                 NrNestlings = Poik, WingLength = Siipi,
-  #                 Mass = Paino, Moult = Sulsat,
-  #                 FatScore = Rasika)
-
-  #Rename into English to make data management more readable
-  colnames(Nestling_data) <- c("BreedingSeason", "LocationID", "BroodID",
-                               "Month", "Day", "Time", "NrNestlings",
-                               "Last2DigitsRingNr", "Dead",
-                               "Wing", "Mass", "LeftLegAbnormal",
-                               "RightLegAbnormal", "Left3Primary",
-                               "Right3Primary", "LeftRectrix",
-                               "RightRectrix", "LeftTarsusLength",
-                               "RightTarsusLength", "LeftTarsusWidth",
-                               "RightTarsusWidth", "GTBreastYellow",
-                               "Lutein", "BloodSample",
-                               "ColLengthBlood", "LengthBlood",
-                               "BreastFeatherLutein",
-                               "NailClipping", "Sex",
-                               "HeadLength", "Feces1", "Feces2")
+  Nestling_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Nestlings.DB") %>%
+    dplyr::rename(BreedingSeason = Vuos, LocationID = Nuro, BroodID = Anro,
+                  Month = Kk, Day = Pv, Time = Klo,
+                  NrNestlings = Poik, Last2DigitsRingNr = Reng,
+                  Dead = Dead, Wing = Siipi,
+                  Mass = Paino, LeftLegAbnormal = Vjalka,
+                  RightLegAbnormal = Ojalka, Left3Primary = Vkas,
+                  Right3Primary = Okas, LeftRectrix = Vpys,
+                  RightRectrix = Opys, LeftTarsusLength = Vnil,
+                  RightTarsusLength = Onil, LeftTarsusWidth = Vpak,
+                  RightTarsusWidth = Opak, GTBreastYellow = Vari,
+                  Lutein = Lkoe, BloodSample = Wb,
+                  ColLengthBlood = Tot, LengthBlood = Pun,
+                  BreastFeatherLutein = FetLut,
+                  NailClipping = Varpaat, Sex = Sp,
+                  HeadLength = Head)
 
   #Remove unwanted columns
   Nestling_data <- Nestling_data %>%
-    dplyr::select(BreedingSeason:Mass, LeftTarsusLength,
-           Sex) %>%
+    dplyr::select(BreedingSeason:Mass, LeftTarsusLength, Sex) %>%
     #Create unique broodID (BreedingSeason_LocationID_BroodID)
     dplyr::mutate(BroodID = paste(BreedingSeason, LocationID, BroodID, sep = "_")) %>%
     #Create a date object for time of measurement
@@ -391,29 +377,27 @@ create_capture_HAR    <- function(db, Brood_data, species_filter){
   message("Extracting capture data from paradox database")
 
   #Extract table "Pullit.db" which contains brood data
-  Capture_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Ringings.DB")
-
-  #Change colnames to English to make data management more understandable
   ##N.B. LastRingNumber_Brood = the end of the ringing series when ringing chicks
   #e.g. a record with RingNumber = 662470 and LastRingNumber_Brood = 662473 had three ringed chicks:
   # 662470, 662471, 662472, 662473
   # The number of nestlings ringed is stored in NrNestlings.
-  colnames(Capture_data) <- c("RingSeries", "RingNumber",
-                              "FirstRing", "BreedingSeason",
-                              "Month", "Day", "Time",
-                              "LocationID", "BroodID",
-                              "ObserverID", "LastRingNumber_Brood",
-                              "Species", "Sex",
-                              "Sex_method", "Age",
-                              "Age_method", "RingType",
-                              "Condition", "BirdStatus",
-                              "CaptureMethod", "NrNestlings",
-                              "WingLength", "Mass", "Moult",
-                              "FatScore", "ExtraInfo",
-                              "Plumage", "TailFeather",
-                              "ColLengthBlood",
-                              "LengthBlood", "Tarsus", "BreastMuscle",
-                              "HeadLength", "Tick")
+  Capture_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Ringings.DB") %>%
+    dplyr::rename(RingSeries = Sarja, RingNumber = Mistä,
+                  FirstRing = Tunnus, BreedingSeason = Vuos,
+                  Month = Kk, Day = Pv, Time = Klo,
+                  LocationID = Nuro, BroodID = Anro,
+                  ObserverID = Havno, LastRingNumber_Brood = Mihin,
+                  Species = Laji, Sex = Suku,
+                  Sex_method = Sp, Age = Ika,
+                  Age_method = Ip, RingType = Rtapa,
+                  Condition = Kunto, BirdStatus = Tila,
+                  CaptureMethod = Ptapa, NrNestlings = Poik,
+                  WingLength = Siipi, Mass = Paino, Moult = Sulsat,
+                  FatScore = Rasik, ExtraInfo = Lisa,
+                  Plumage = Vari, TailFeather = Psulka,
+                  ColLengthBlood = Tot,
+                  LengthBlood = Pun, BreastMuscle = Lihas,
+                  HeadLength = Head)
 
   Capture_data <- Capture_data %>%
     #Create unique broodID
@@ -681,26 +665,22 @@ create_location_HAR <- function(db){
   message("Extracting location data from paradox database")
 
   #Extract table "Pullit.db" which contains brood data
-  Location_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Locations.DB")
-
-  #Remove last 2 cols that have no info
-  Location_data <- Location_data %>%
-    dplyr::select(-Aukko, -Malli)
-
-  #Rename columns to make data management more understandable
-  colnames(Location_data) <- c("BreedingSeason", "LocationID",
-                              "ForestType", "PinusSylvestris",
-                              "PiceaAbies", "Betulasp",
-                              "PopulusTremula",
-                              "SorbusAcuparia",
-                              "Salixsp", "JuniperusCommunis",
-                              "Alnussp", "PrunusPadas",
-                              "TreeHeight", "BasalArea",
-                              "PineHeight", "SpruceHeight",
-                              "BirchHeight", "PineBasalArea",
-                              "SpruceBasalArea", "BirchBasalArea",
-                              "Latitude", "Longitude", "Municipality",
-                              "LocationName")
+  Location_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Locations.DB") %>%
+    #Remove last 2 cols that have no info
+    dplyr::select(-Aukko, -Malli) %>%
+    dplyr::rename(BreedingSeason = Vuos, LocationID = Nuro,
+                  ForestType = Mety, PinusSylvestris = Manty,
+                  PiceaAbies = Kuusi, Betulasp = Koivu,
+                  PopulusTremula = Haapa,
+                  SorbusAcuparia = Pihlaja,
+                  Salixsp = Kataja, JuniperusCommunis = Leppä,
+                  Alnussp = Tuomi, PrunusPadas = Puusto,
+                  TreeHeight = Kork, BasalArea = Totrel,
+                  PineHeight = Makor, SpruceHeight = Kukor,
+                  BirchHeight = Kokor, PineBasalArea = Marel,
+                  SpruceBasalArea = Kurel, BirchBasalArea = Korel,
+                  Latitude = Leve, Longitude = Pitu, Municipality = Kunta,
+                  LocationName = Paikka)
 
   Location_data <- Location_data %>%
     dplyr::mutate(NestboxID = LocationID, PopID = "HAR",
