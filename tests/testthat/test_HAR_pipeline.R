@@ -59,3 +59,34 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(HAR_data, BroodID == "1991_0113_1")$AvgTarsus, NA_real_)
 
 })
+
+test_that("Individual data returns an expected outcome...", {
+
+  #We want to run a test for each sex for individuals caught as adults and chicks
+
+  #Take a subset of only HAR data
+  HAR_data <- dplyr::filter(pipeline_output$Individual_data, PopID %in% "HAR")
+
+  #Test 1: Never caught as chick
+  #Individual V-675839 should be listed as a great tit female
+  expect_equal(subset(HAR_data, IndvID == "V-675839")$Sex, "F")
+  expect_equal(subset(HAR_data, IndvID == "V-675839")$Species, "PARMAJ")
+  #They should have no BroodIDLaid or Fledged because she was never caught as a chick
+  expect_equal(subset(HAR_data, IndvID == "V-675839")$BroodIDLaid, NA_character_)
+  expect_equal(subset(HAR_data, IndvID == "V-675839")$BroodIDFledged, NA_character_)
+  #Her ring season should be 1991 with a RingAge of 'adult'
+  expect_equal(subset(HAR_data, IndvID == "V-675839")$RingSeason, 1991)
+  expect_equal(subset(HAR_data, IndvID == "V-675839")$RingAge, "adult")
+
+  #Test 2: First caught as chick
+  #Individual HL-010189 should be listed as a female flycatcher
+  expect_equal(subset(HAR_data, IndvID == "HL-010189")$Sex, "F")
+  expect_equal(subset(HAR_data, IndvID == "HL-010189")$Species, "FICHYP")
+  #She should have no BroodIDLaid or Fledged because this individual was caught as an adult
+  expect_equal(subset(HAR_data, IndvID == "HL-010189")$BroodIDLaid, "2005_1617_1")
+  expect_equal(subset(HAR_data, IndvID == "HL-010189")$BroodIDFledged, "2005_1617_1")
+  #Her ring season should be 2003 with a RingAge of 'chick'
+  expect_equal(subset(HAR_data, IndvID == "HL-010189")$RingSeason, 2005)
+  expect_equal(subset(HAR_data, IndvID == "HL-010189")$RingAge, "chick")
+
+})
