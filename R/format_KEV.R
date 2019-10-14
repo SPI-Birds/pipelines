@@ -281,9 +281,7 @@ create_capture_KEV    <- function(db, Brood_data, species_filter){
                   BirdStatus = Tila, CaptureMethod = Ptapa,
                   NrNestlings = Poik, WingLength = Siipi,
                   Mass = Paino, Moult = Sulsat,
-                  FatScore = Rasika)
-
-  Capture_data <- Capture_data %>%
+                  FatScore = Rasika) %>%
     #Create unique broodID
     dplyr::mutate(BroodID = paste(BreedingSeason, LocationID, BroodID, sep = "_"),
                   CaptureDate = as.Date(paste(Day, Month, BreedingSeason, sep = "/"), format = "%d/%m/%Y"),
@@ -293,13 +291,13 @@ create_capture_KEV    <- function(db, Brood_data, species_filter){
                                              Species == "PARCAE" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14620)],
                                              Species == "PARMAJ" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14640)],
                                              Species == "PARATE" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14610)])) %>%
-    dplyr::filter(!is.na(Species) & Species %in% species_filter) %>%
+    dplyr::filter(!is.na(Species) && Species %in% species_filter) %>%
     dplyr::mutate(Sex = dplyr::case_when(Sex %in% c("N", "O") ~ "F",
                                          Sex %in% c("K", "L") ~ "M"),
                   Mass = dplyr::na_if(Mass, 0),
                   WingLength = dplyr::na_if(WingLength, 0))
 
-  #We have four scenarios we need to deal with in the capture data:
+  #We have six scenarios we need to deal with in the capture data:
   #1.
   #Individual adult captures (Age is NA or != PP/PM). In this case, all the data
   #is in Capture_data
