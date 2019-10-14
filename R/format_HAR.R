@@ -162,9 +162,9 @@ format_HAR <- function(db = utils::choose.dir(),
                   Tarsus = dplyr::na_if(Tarsus, 0)) %>%
     dplyr::group_by(BroodID) %>%
     dplyr::summarise(AvgEggMass = NA, NumberEggs = NA,
-                     AvgChickMass = mean(Mass, na.rm = T)/10,
+                     AvgChickMass = mean(Mass, na.rm = TRUE),
                      NumberChicksMass = n(),
-                     AvgTarsus = mean(Tarsus, na.rm = T),
+                     AvgTarsus = mean(Tarsus, na.rm = TRUE),
                      NumberChicksTarsus = n(),
                      OriginalTarsusMethod = "Alternative")
 
@@ -255,9 +255,7 @@ create_brood_HAR <- function(db, species_filter){
                   ExperimentID = Koe, ExpData1 = Olent,
                   ExpData2 = Vlent, DeadParent = Delfh,
                   EggShells = Mkuor, TempCode1 = Tark,
-                  TempCode2 = Tark2)
-
-  Brood_data <- Brood_data %>%
+                  TempCode2 = Tark2) %>%
     #Remove unwanted columns
     dplyr::select(-ReasonFailed:-MalePresent, -ExpData1:-TempCode2) %>%
     #Create unique BroodID with year_locationID_BroodID
@@ -267,7 +265,7 @@ create_brood_HAR <- function(db, species_filter){
                                       Species == "PARCAE" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14620)],
                                       Species == "PARMAJ" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14640)],
                                       Species == "PARATE" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14610)])) %>%
-    dplyr::filter(!is.na(Species) && Species %in% species_filter) %>%
+    dplyr::filter(!is.na(Species) & Species %in% species_filter) %>%
     #Add pop and plot id
     dplyr::mutate(PopID = "HAR", Plot = NA) %>%
     #Adjust clutch type observed to meet our wording
@@ -745,8 +743,8 @@ create_location_HAR <- function(db){
                   PiceaAbies = Kuusi, Betulasp = Koivu,
                   PopulusTremula = Haapa,
                   SorbusAcuparia = Pihlaja,
-                  Salixsp = Kataja, JuniperusCommunis = Leppa,
-                  Alnussp = Tuomi, PrunusPadas = Puusto,
+                  Salixsp = Pajut, JuniperusCommunis = Kataja,
+                  Alnussp = Leppa, PrunusPadas = Tuomi,
                   TreeHeight = Kork, BasalArea = Totrel,
                   PineHeight = Makor, SpruceHeight = Kukor,
                   BirchHeight = Kokor, PineBasalArea = Marel,
