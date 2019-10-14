@@ -141,3 +141,27 @@ test_that("Capture data returns an expected outcome...", {
   expect_equal(subset(HAR_data, IndvID == "00-829590")$Age_calculated[5], 8L)
 
 })
+
+test_that("Location_data returns an expected outcome...", {
+
+  #We want to run tests for nest boxes (there are no mistnets)
+
+  #Take a subset of HAR data
+  HAR_data <- dplyr::filter(pipeline_output$Location_data, PopID %in% "HAR")
+
+  #Test 1: Nestbox check
+  #Location listed as a nest box that has lat/long from separate file
+  #Record has expected LocationType
+  expect_true(subset(HAR_data, LocationID == "Kaarleinen_0018")$LocationType == "NB")
+  #Expect LocationID and NestboxID are the same
+  expect_true(subset(HAR_data, LocationID == "Kaarleinen_0018")$NestboxID == "Kaarleinen_0018")
+  #Expect Start and EndSeason is as expected
+  expect_equal(subset(HAR_data, LocationID == "Kaarleinen_0018")$StartSeason, 1981L)
+  expect_equal(subset(HAR_data, LocationID == "Kaarleinen_0018")$EndSeason, 1983L)
+  #Check that LocationID is in the expected PopID
+  expect_equal(subset(HAR_data, LocationID == "Kaarleinen_0018")$PopID, "HAR")
+  #Check that latitude and longitude are as expected
+  expect_equal(round(subset(HAR_data, LocationID == "Kaarleinen_0018")$Latitude, 1), 58.8)
+  expect_equal(round(subset(HAR_data, LocationID == "Kaarleinen_0018")$Longitude, 2), 7.62)
+
+})
