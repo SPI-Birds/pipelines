@@ -345,13 +345,13 @@ create_nestling_HAR <- function(db, Brood_data){
   Nestling_data <- Nestling_data %>%
     dplyr::select(BreedingSeason:Mass, LeftTarsusLength, Sex) %>%
     #Create unique broodID (BreedingSeason_LocationID_BroodID)
-    dplyr::mutate(BroodID = paste(BreedingSeason, LocationID, BroodID, sep = "_")) %>%
-    #Create a date object for time of measurement
-    dplyr::mutate(CatchDate = as.Date(paste(Day, Month, BreedingSeason, sep = "/"), format = "%d/%m/%Y")) %>%
+    dplyr::mutate(BroodID = paste(BreedingSeason, LocationID, BroodID, sep = "_"),
+                  CaptureDate = as.Date(paste(Day, Month, BreedingSeason, sep = "/"), format = "%d/%m/%Y"),
+                  CaptureTime = dplyr::na_if(paste0(Time, ":00"), "NA:00")) %>%
     #Join hatch date data from brood data table
     dplyr::left_join(select(Brood_data, BroodID, HatchDate), by = "BroodID") %>%
     #Determine age at capture
-    dplyr::mutate(ChickAge = as.integer(CatchDate - HatchDate))
+    dplyr::mutate(ChickAge = as.integer(CaptureDate - HatchDate))
 
   return(Nestling_data)
 
