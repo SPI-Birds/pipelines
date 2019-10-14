@@ -201,21 +201,21 @@ test_that("Location_data returns an expected outcome...", {
   #We want to run tests for nest boxes (there are no mistnets)
 
   #Take a subset of only NIOO data
-  MON_data <- dplyr::filter(pipeline_output$Capture_data, CapturePopID %in% c("MUR", "PIR", "ROU", "MON", "MTV", "MIS"))
+  MON_data <- dplyr::filter(pipeline_output$Location_data, PopID %in% c("MUR", "PIR", "ROU", "MON", "MTV", "MIS"))
 
   #Test 1: Nestbox check
   #Location listed as a nest box that has lat/long from separate file
   #Record has expected LocationType
   expect_true(subset(MON_data, LocationID == "rou_314_NB")$LocationType == "NB")
   #Expect LocationID and NestboxID are the same
-  expect_true(subset(MON_data, LocationID == "rou_314_NB")$NestboxType == "rou_314_NB")
+  expect_true(subset(MON_data, LocationID == "rou_314_NB")$NestboxID == "rou_314_NB")
   #Expect Start and EndSeason is as expected
   expect_equal(subset(MON_data, LocationID == "rou_314_NB")$StartSeason, 2002L)
   expect_equal(subset(MON_data, LocationID == "rou_314_NB")$EndSeason, NA_integer_)
   #Check that LocationID is in the expected PopID
-  expect_equal(subset(NIOO_data, LocationID == "rou_314_NB")$PopID, "ROU")
+  expect_equal(subset(MON_data, LocationID == "rou_314_NB")$PopID, "ROU")
   #Check that latitude and longitude are as expected
-  expect_equal(round(subset(MON_data, LocationID == "rou_314_NB")$Latitude, 2), 43.66)
+  expect_equal(round(subset(MON_data, LocationID == "rou_314_NB")$Latitude, 2), 43.67)
   expect_equal(round(subset(MON_data, LocationID == "rou_314_NB")$Longitude, 2), 3.67)
 
   #Test 2: Nestbox check
@@ -244,7 +244,7 @@ test_that("Location_data returns an expected outcome...", {
   #Check that LocationID is in the expected PopID
   expect_equal(subset(MON_data, LocationID == "hs_1")$PopID, "MIS")
   #Check that latitude and longitude are as expected
-  expect_equal(round(subset(MON_data, LocationID == "hs_1")$Latitude, 2), 41.4)
+  expect_equal(round(subset(MON_data, LocationID == "hs_1")$Latitude, 2), 41.44)
   expect_equal(round(subset(MON_data, LocationID == "hs_1")$Longitude, 2), 9.19)
 
   #Test 4: Mistnet check (caught at a nest box)

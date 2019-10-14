@@ -909,16 +909,19 @@ create_location_MON <- function(db, capture_data, brood_data){
   #Load lat/long for nest boxes
   nestbox_latlong <- readxl::read_excel(paste0(db, "//MON_PrimaryData_NestBoxLocation.xlsx"), sheet = "dico_station") %>%
     dplyr::filter(!is.na(latitude)) %>%
-    dplyr::mutate(LocationID = paste(abr_station, nichoir, "NB", sep = "_")) %>%
-    dplyr::select(LocationID, latitude, longitude) %>%
+    dplyr::mutate(LocationID_join = paste(abr_station, nichoir, sep = "_")) %>%
+    dplyr::select(LocationID_join, latitude, longitude) %>%
     dplyr::mutate_at(.vars = vars(latitude:longitude), as.numeric)
 
   #There are some nestboxes outside the study area
   nestbox_latlong_outside <- readxl::read_excel(paste0(db, "//MON_PrimaryData_NestBoxLocation.xlsx"), sheet = "Feuil1") %>%
     dplyr::filter(!is.na(la)) %>%
-    dplyr::mutate(LocationID = paste(st, ni, "NB", sep = "_"), latitude = la, longitude = lo) %>%
-    dplyr::select(LocationID, latitude, longitude) %>%
-    dplyr::mutate_at(.vars = vars(latitude:longitude), as.numeric)
+    dplyr::mutate(LocationID_join = paste(st, ni, sep = "_"), latitude = la, longitude = lo) %>%
+    dplyr::select(LocationID_join, latitude, longitude) %>%
+    dplyr::mutate_at(.vars = vars(latitude:longitude), as.numeric) %>%
+    #There are some replicate groups, compress them to one record per location
+    dplyr::group_by(LocationID_join) %>%
+    dplyr::slice(1)
 
   all_nestbox_latlong <- dplyr::bind_rows(nestbox_latlong, nestbox_latlong_outside)
 
@@ -939,18 +942,24 @@ create_location_MON <- function(db, capture_data, brood_data){
     dplyr::select(LocationID, NestboxID, LocationType, PopID, Latitude = latitude, Longitude = longitude, StartSeason, EndSeason, Habitat)
 
   #For cases where no lat/long are available
-  #We need to link the lat/long from separate file
+  #We need to link the lat/long from separate file (nestbox_latlong above)
   inside_locations <- capture_data %>%
     dplyr::filter(is.na(longitude) & !is.na(LocationID)) %>%
-    dplyr::select(BreedingSeason, LocationID, PopID = CapturePopID)
+    dplyr::rowwise() %>%
+    dplyr::mutate(LocationID_join = paste(str_split(LocationID, pattern = "_", simplify = TRUE)[1:2], collapse = "_")) %>%
+    dplyr::ungroup() %>%
+    dplyr::select(BreedingSeason, LocationID, LocationID_join, PopID = CapturePopID)
 
   #Also for broods only identified in the brood data table
   nest_locations <- brood_data %>%
-    dplyr::select(BreedingSeason, LocationID, PopID)
+    dplyr::rowwise() %>%
+    dplyr::mutate(LocationID_join = paste(str_split(LocationID, pattern = "_", simplify = TRUE)[1:2], collapse = "_")) %>%
+    dplyr::ungroup() %>%
+    dplyr::select(BreedingSeason, LocationID, LocationID_join, PopID)
 
   #Combine to have all locations without lat/long
   non_latlong_locations <- dplyr::bind_rows(inside_locations, nest_locations) %>%
-    dplyr::left_join(all_nestbox_latlong, by = "LocationID") %>%
+    dplyr::left_join(all_nestbox_latlong, by = "LocationID_join") %>%
     dplyr::group_by(LocationID) %>%
     dplyr::summarise(NestboxID = purrr::map_chr(.x = unique(LocationID), .f = ~{
 
