@@ -705,7 +705,7 @@ create_individual_HAR <- function(Capture_data){
     dplyr::summarise(Species = first(Species), PopID = "HAR",
               BroodIDLaid = first(BroodID),
               BroodIDFledged = BroodIDLaid,
-              RingSeason = as.integer(first(lubridate::year(CaptureDate))),
+              RingSeason = first(BreedingSeason),
               RingAge = ifelse(any(Age_calculated %in% c(1, 3)), "chick", "adult"),
               Sex = first(Sex)) %>%
     dplyr::rowwise() %>%
