@@ -46,55 +46,40 @@ format_KEV <- function(db = utils::choose.dir(),
 
   # INDIVIDUAL DATA
 
-  # message("Compiling individual data...")
+  message("Compiling individual data...")
 
-  # Individual_data <- create_individual_HAR(Capture_data = Capture_data)
+  Individual_data <- create_individual_KEV(Capture_data = Capture_data)
 
   # LOCATION DATA
 
-  # message("Compiling location data...")
+  message("Compiling location data...")
 
-  # Location_data <- create_location_HAR(db = db)
-
-  #CURRENTLY ASSUMING THAT EACH LOCATION AND NEST BOX ARE IDENTICAL
-  #GO THROUGH AND CHECK MORE THOROUGHLY
+  Location_data <- create_location_KEV(db = db)
 
   # WRANGLE DATA FOR EXPORT
 
   ## Add average chick mass and tarsus to brood data
 
-  # Chick_avg <- Capture_data %>%
-  #   dplyr::filter(dplyr::between(ChickAge, 14, 16)) %>%
-  #   #Remove cases where tarsus or weight are 0 (make them NA)
-  #   dplyr::mutate(Mass = dplyr::na_if(Mass, 0),
-  #                 Tarsus = dplyr::na_if(Tarsus, 0)) %>%
-  #   dplyr::group_by(BroodID) %>%
-  #   dplyr::summarise(AvgEggMass = NA, NumberEggs = NA,
-  #                    AvgChickMass = mean(Mass, na.rm = T)/10,
-  #                    NumberChicksMass = n(),
-  #                    AvgTarsus = mean(Tarsus, na.rm = T),
-  #                    NumberChicksTarsus = n(),
-  #                    OriginalTarsusMethod = "Alternative")
+  Chick_avg <- Capture_data %>%
+    dplyr::filter(dplyr::between(ChickAge, 14, 16)) %>%
+    #Remove cases where tarsus or weight are 0 (make them NA)
+    dplyr::mutate(Mass = dplyr::na_if(Mass, 0),
+                  Tarsus = dplyr::na_if(Tarsus, 0)) %>%
+    dplyr::group_by(BroodID) %>%
+    dplyr::summarise(AvgEggMass = NA, NumberEggs = NA,
+                     AvgChickMass = mean(Mass, na.rm = T)/10,
+                     NumberChicksMass = n(),
+                     AvgTarsus = mean(Tarsus, na.rm = T),
+                     NumberChicksTarsus = n(),
+                     OriginalTarsusMethod = "Alternative")
 
   #Join these into Brood_data
   #Only existing broods will be used.
-  # Brood_data <- left_join(Brood_data, Chick_avg, by = "BroodID") %>%
-  #   dplyr::select(BroodID:NumberFledgedError, AvgEggMass:OriginalTarsusMethod, ExperimentID)
+  Brood_data <- left_join(Brood_data, Chick_avg, by = "BroodID") %>%
+    dplyr::select(BroodID:NumberFledgedError, AvgEggMass:OriginalTarsusMethod, ExperimentID)
 
-  # Capture_data <- Capture_data %>%
-  #   dplyr::select(-Sex, -BroodID)
-
-  # GENERATE DEBUG REPORT
-
-  # if(debug){
-  #
-  #   message("Generating debug report...")
-  #
-  #   generate_debug_report(path = path, Pop = "HAR", Brood_data = Brood_data,
-  #                         Capture_data = Capture_data,
-  #                         Indv_data = Individual_data)
-  #
-  # }
+  Capture_data <- Capture_data %>%
+    dplyr::select(-Sex, -BroodID)
 
   # EXPORT DATA
 
@@ -108,11 +93,11 @@ format_KEV <- function(db = utils::choose.dir(),
 
     utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_KEV.csv"), row.names = F)
 
-    # utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_HAR.csv"), row.names = F)
+    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_HAR.csv"), row.names = F)
 
     utils::write.csv(x = Capture_data %>% select(-Sex, -BroodID), file = paste0(path, "\\Capture_data_KEV.csv"), row.names = F)
 
-    # utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_HAR.csv"), row.names = F)
+    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_HAR.csv"), row.names = F)
 
     invisible(NULL)
 
@@ -124,8 +109,8 @@ format_KEV <- function(db = utils::choose.dir(),
 
     return(list(Brood_data = Brood_data,
                 Capture_data = Capture_data,
-                Individual_data = NULL,
-                Location_data = NULL))
+                Individual_data = Individual_data,
+                Location_data = Location_data))
 
   }
 
@@ -177,16 +162,20 @@ create_brood_KEV <- function(db, species_filter){
                                                          ClutchType_observed == 5 ~ "second")) %>%
     #Create calendar date for laying date and hatch date
     dplyr::mutate(LayDate = as.Date(paste(LayDate_day, LayDate_month, BreedingSeason, sep = "/"), format = "%d/%m/%Y"),
-                  HatchDate  = as.Date(paste(HatchDate_day, HatchDate_month, BreedingSeason, sep = "/"), format = "%d/%m/%Y")) %>%
-    #Can't currently determine ClutchType_calculated because we don't know FemaleID, do this later.
+                  HatchDate  = as.Date(paste(HatchDate_day, HatchDate_month, BreedingSeason, sep = "/"), format = "%d/%m/%Y"),
+                  FemaleID = NA_character_, MaleID = NA_character_) %>%
+    #ClutchType_calculated will only be first or replacement because we don't know FemaleID.
+    #Need to ask Tapio about this
+    dplyr::arrange(BreedingSeason, FemaleID, LayDate) %>%
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
     dplyr::mutate(LayDateError = as.numeric(LayDateError),
                   HatchDateError = as.numeric(HatchDateError),
                   FledgeDate = as.Date(NA), ClutchSizeError = NA_real_, BroodSizeError = NA_real_,
                   FledgeDateError = NA_real_, NumberFledgedError = NA_real_,
                   BroodSize = as.integer(BroodSize), ExperimentID = NA_character_) %>%
     #Arrange columns correctly
-    dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot, LocationID,
-                  ClutchType_observed, LayDate, LayDateError,
+    dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot, LocationID, FemaleID, MaleID,
+                  ClutchType_observed, ClutchType_calculated, LayDate, LayDateError,
                   ClutchSize, ClutchSizeError, HatchDate, HatchDateError,
                   BroodSize, BroodSizeError, FledgeDate, FledgeDateError, NumberFledged, NumberFledgedError,
                   ExperimentID)
@@ -554,9 +543,9 @@ create_capture_KEV    <- function(db, Brood_data, species_filter){
     dplyr::mutate(Age_observed = dplyr::case_when(Age %in% c("PM", "FL") ~ 3,
                                                   Age == "PP" ~ 1,
                                                   Age == "1" ~ 5,
-                                                  Age == "1+" ~ 4,
+                                                  Age == "+1" ~ 4,
                                                   Age == "2" ~ 7,
-                                                  Age == "2+" ~ 6),
+                                                  Age == "+2" ~ 6),
                   Tarsus = NA_real_, OriginalTarsusMethod = NA_character_) %>%
     dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, CapturePopID, CapturePlot,
                   ReleasePopID, ReleasePlot, Mass, Tarsus, OriginalTarsusMethod, WingLength, Age_observed, Age_calculated, ChickAge, Sex, BroodID, CaptureType, BirdStatus)
@@ -570,5 +559,117 @@ create_capture_KEV    <- function(db, Brood_data, species_filter){
   LastRingNumber_Brood <- Age <- NrNestlings <- RingNumber <- NULL
   Capture_type <- Last2DigitsRingNr <- Month <- Wing <- LeftTarsusLength <- NULL
   `.` <- Ring_Time <- Final_BreedingSeason <- Final_Month <- Final_Day <- Final_Time <- Day <- ischick <- NULL
+
+}
+
+#' Create individual table for Kevo, Finland.
+#'
+#' Create full individual data table in standard format for data from Kevo, Finland.
+#'
+#' @param Capture_data Output of \code{\link{create_capture_HAR}}.
+#'
+#' @return A data frame.
+
+create_individual_KEV <- function(Capture_data){
+
+  #Take capture data and determine summary data for each individual
+  Indv_data <- Capture_data %>%
+    dplyr::filter(!is.na(IndvID)) %>%
+    dplyr::arrange(IndvID, BreedingSeason, CaptureDate, CaptureTime) %>%
+    dplyr::group_by(IndvID) %>%
+    dplyr::summarise(Species = purrr::map_chr(.x = list(unique(na.omit(Species))), .f = ~{
+
+      if(length(..1) == 0){
+
+        return(NA_character_)
+
+      } else if(length(..1) == 1){
+
+        return(..1)
+
+      } else {
+
+        return("CONFLICTED")
+
+      }
+
+    }), PopID = "KEV",
+    BroodIDLaid = first(BroodID), BroodIDFledged = BroodIDLaid,
+    RingSeason = first(BreedingSeason), RingAge = ifelse(any(Age_calculated %in% c(1, 3)), "chick", "adult"),
+    Sex = purrr::map_chr(.x = list(unique(na.omit(Sex))), .f = ~{
+
+      if(length(..1) == 0){
+
+        return(NA_character_)
+
+      } else if(length(..1) == 1){
+
+        return(..1)
+
+      } else {
+
+        return("C")
+
+      }
+
+    })) %>%
+    dplyr::rowwise() %>%
+    #For each individual, if their ring age was 1 or 3 (caught in first breeding year)
+    #Then we take their first BroodID, otherwise it is NA
+    dplyr::mutate(BroodIDLaid = ifelse(RingAge == "chick", BroodIDLaid, NA_character_),
+                  BroodIDFledged = BroodIDLaid) %>%
+    #Ungroup to prevent warnings in debug report
+    dplyr::ungroup() %>%
+    dplyr::arrange(RingSeason, IndvID)
+
+  return(Indv_data)
+
+}
+
+#' Create location table for Kevo, Finland.
+#'
+#' Create full location data table in standard format for data from Kevo, Finland.
+#'
+#' @param db Location of primary data from Kevo.
+#'
+#' @return A data frame.
+#' @export
+
+create_location_KEV <- function(db){
+
+  message("Extracting location data from paradox database")
+
+  #Extract table "Pullit.db" which contains brood data
+  Location_data <- extract_paradox_db(path = db, file_name = "KEV_PrimaryData_Locations.DB") %>%
+    dplyr::rename(BreedingSeason = Vuos, LocationID = Nuro,
+                  Latitude = Leve, Longitude = Pitu,
+                  BoxMaterial = Pontlaji,
+                  NestboxTree = Puulaji,
+                  NestboxCavityArea = Pohja,
+                  NestboxHoleDiameter = Aukko,
+                  Municipality = Kunta,
+                  Plot = Paikka)
+
+  #Read location data with coordinates as sf object in Finnish Coordinate system
+  #We use zone 4 for now, because it seems to get the German point in the right place...but this really doesn't work!!
+  Location_data_sf_zone4 <- sf::st_as_sf(Location_data,
+                                         coords = c("Longitude", "Latitude"),
+                                         crs = 2394) %>%
+    sf::st_transform(crs = 4326)
+
+  Location_full <- dplyr::bind_cols(dplyr::select(Location_data, -Longitude, -Latitude),
+                                                     tibble(Longitude = sf::st_coordinates(Location_data_sf_zone4)[, 1]),
+                                                     tibble(Latitude = sf::st_coordinates(Location_data_sf_zone4)[, 2]))
+
+  #In Kevo, it seems each row is a record of a nestbox in a given year
+  #This should tell us about nest box changes over time and Start/EndSeason
+  #Need to check with Tapio.
+  Location_data <- Location_full %>%
+    dplyr::group_by(LocationID) %>%
+    dplyr::summarise(NestboxID = unique(LocationID), PopID = "KEV", Latitude = as.numeric(first(Latitude)), Longitude = as.numeric(first(Longitude)),
+                     LocationType = "NB", StartSeason = min(BreedingSeason), EndSeason = max(BreedingSeason), Habitat = "Mixed") %>%
+    dplyr::select(LocationID, NestboxID, LocationType, PopID, Latitude, Longitude, StartSeason, EndSeason, Habitat)
+
+  return(Location_data)
 
 }
