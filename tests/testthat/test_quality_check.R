@@ -13,10 +13,10 @@ test_that("All quality check summary items are returned...", {
 test_that("CheckList returns an expected outcome...", {
 
   expect_true(all(c("tbl_df", "tbl", "data.frame") %in% class(dummy_check$CheckList)))
-  expect_equal(dummy_check$CheckList[1,]$CheckID, "B1")
-  expect_equal(dummy_check$CheckList[1,]$CheckDescription, "Brood data format")
+  expect_equal(dummy_check$CheckList[1,]$CheckID, "B2")
+  expect_equal(dummy_check$CheckList[1,]$CheckDescription, "Compare clutch and brood sizes")
   expect_equal(dummy_check$CheckList[1,]$Warning, TRUE)
-  expect_equal(dummy_check$CheckList[1,]$Error, FALSE)
+  expect_equal(dummy_check$CheckList[1,]$Error, TRUE)
 
 })
 
