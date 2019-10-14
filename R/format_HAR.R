@@ -267,7 +267,7 @@ create_brood_HAR <- function(db, species_filter){
                                       Species == "PARCAE" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14620)],
                                       Species == "PARMAJ" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14640)],
                                       Species == "PARATE" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14610)])) %>%
-    dplyr::filter(!is.na(Species) & Species %in% species_filter) %>%
+    dplyr::filter(!is.na(Species) && Species %in% species_filter) %>%
     #Add pop and plot id
     dplyr::mutate(PopID = "HAR", Plot = NA) %>%
     #Adjust clutch type observed to meet our wording
