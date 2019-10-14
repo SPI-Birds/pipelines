@@ -29,10 +29,11 @@
 #'
 #' \strong{Individual data}:
 #' \itemize{
-#'   \item Row 1-2 represent duplicated individual identifiers (part of 'I2: Checking unique individual IDs'; see \code{\link{check_unique_IndvID}}).
-#'   \item Row 3 represents a chick caught in a nest box, but without a BroodID (part of 'I3: Checking that chicks have BroodIDs'; see \code{\link{check_BroodID_chicks}}).
-#'   \item Row 4 represents an individual with conflicting sex (part of 'I4: Checking that individuals have no conflicting sex'; see \code{\link{check_conflicting_sex}}).
-#'   \item Rows 5-6 represent the parents of a brood (a female and male, respectively) of different species (part of: 'B7: Checking parent species'; see \code{\link{check_parent_species}}).
+#'   \item Row 1-2 represent duplicated individuals within a population (part of 'I2: Checking unique individual IDs'; see \code{\link{check_unique_IndvID}}).
+#'   \item Row 3-4 represent duplicated individuals among populations (part of 'I2: Checking unique individual IDs'; see \code{\link{check_unique_IndvID}}).
+#'   \item Row 5 represents a chick caught in a nest box, but without a BroodID (part of 'I3: Checking that chicks have BroodIDs'; see \code{\link{check_BroodID_chicks}}).
+#'   \item Row 6 represents an individual with conflicting sex (part of 'I4: Checking that individuals have no conflicting sex'; see \code{\link{check_conflicting_sex}}).
+#'   \item Rows 7-8 represent the parents of a brood (a female and male, respectively) of different species (part of: 'B7: Checking parent species'; see \code{\link{check_parent_species}}).
 #' }
 #'
 #' \strong{Location data}:
@@ -281,9 +282,9 @@ create_dummy_data <- function(db = utils::choose.dir()) {
   # I2: Checking unique individual IDs
   Individual_data %>%
     tibble::add_row(
-      Row = as.integer(1:2),
-      IndvID = as.character(c("A0001", "A0001")),
-      PopID = as.character(c("AAA", "AAA"))
+      Row = as.integer(1:4),
+      IndvID = as.character(c("A0001", "A0001", "A0002", "A0002")),
+      PopID = as.character(c("AAA", "AAA", "AAA", "BBB"))
     )  %>%
     dplyr::slice(-1L) ->
     Individual_data
@@ -291,7 +292,7 @@ create_dummy_data <- function(db = utils::choose.dir()) {
   # I3: Checking that chicks have BroodIDs
   Individual_data %>%
     tibble::add_row(
-      Row = as.integer(3),
+      Row = as.integer(5),
       IndvID = as.character("B0001"),
       PopID = as.character("BBB"),
       RingAge = as.character("chick"),
@@ -321,7 +322,7 @@ create_dummy_data <- function(db = utils::choose.dir()) {
   # I4: Checking that individuals have no conflicting sex
   Individual_data %>%
     tibble::add_row(
-      Row = as.integer(4),
+      Row = as.integer(6),
       Sex = as.character("C"),
     )  ->
     Individual_data
@@ -337,7 +338,7 @@ create_dummy_data <- function(db = utils::choose.dir()) {
 
   Individual_data %>%
     tibble::add_row(
-      Row = as.integer(5:6),
+      Row = as.integer(7:8),
       IndvID = as.character(c("F0001", "M0001")),
       Species = as.character(c("PARMAJ", "CYACAE"))
     )  ->

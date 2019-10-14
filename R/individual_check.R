@@ -205,7 +205,8 @@ check_format_individual <- function(Individual_data){
 
 #' Check unique individual identifiers
 #'
-#' Check that the individual identifiers (IndvID) are unique within populations.
+#' Check that the individual identifiers (IndvID) are unique. Records with individual identifiers that are not unique among populations will result in a warning. Records with individual identifiers that are not unique within populations will result in an error.
+#'
 #' @inheritParams checks_individual_params
 #'
 #' @return
@@ -218,35 +219,63 @@ check_format_individual <- function(Individual_data){
 
 check_unique_IndvID <- function(Individual_data){
 
-  # Select IndvIDs that are duplicated
-  Duplicated_individuals <- Individual_data %>%
+  # Errors
+  # Select IndvIDs that are duplicated within populations
+  Duplicated_within <- Individual_data %>%
     dplyr::group_by(PopID, IndvID) %>%
-    filter(n() > 1)
+    dplyr::filter(n() > 1)
 
   err <- FALSE
   error_output <- NULL
 
-  if(nrow(Duplicated_individuals) > 0) {
+  if(nrow(Duplicated_within) > 0) {
     err <- TRUE
 
-    error_output <- purrr::map(.x = unique(Duplicated_individuals$IndvID),
-                                .f = ~{
-                                  paste0("Record on row ",
-                                         # Duplicated rows
-                                         Duplicated_individuals[Duplicated_individuals$IndvID == .x, "Row"][1,],
-                                         " (IndvID: ", .x, ")",
-                                         " is duplicated in row(s) ",
-                                         # Duplicates (if 1, else more)
-                                         ifelse(nrow(Duplicated_individuals[Duplicated_individuals$IndvID == .x, "Row"][-1,]) == 1,
-                                                Duplicated_individuals[Duplicated_individuals$IndvID == .x, "Row"][-1,],
-                                                gsub("^c\\(|\\)$", "",
-                                                     Duplicated_individuals[Duplicated_individuals$IndvID == .x, "Row"][-1,])),
-                                         ".")
-                                })
+    error_output <- purrr::map(.x = unique(Duplicated_within$IndvID),
+                               .f = ~{
+                                 paste0("Record on row ",
+                                        # Duplicated rows
+                                        Duplicated_within[Duplicated_within$IndvID == .x, "Row"][1,],
+                                        " (IndvID: ", .x, ")",
+                                        " has the same IndvID as row(s) ",
+                                        # Duplicates (if 1, else more)
+                                        ifelse(nrow(Duplicated_within[Duplicated_within$IndvID == .x, "Row"][-1,]) == 1,
+                                               Duplicated_within[Duplicated_within$IndvID == .x, "Row"][-1,],
+                                               gsub("^c\\(|\\)$", "",
+                                                    Duplicated_within[Duplicated_within$IndvID == .x, "Row"][-1,])),
+                                        ".")
+                               })
   }
+
+  # Warnings
+  # Select IndvIDs that are duplicated among populations
+  Duplicated_among <- Individual_data %>%
+    dplyr::group_by(IndvID) %>%
+    dplyr::filter(!duplicated(PopID) & n() > 1) %>%
+    dplyr::filter(n() > 1)
 
   war <- FALSE
   warning_output <- NULL
+
+  if(nrow(Duplicated_among) > 0) {
+    war <- TRUE
+
+    warning_output <- purrr::map(.x = unique(Duplicated_among$IndvID),
+                                 .f = ~{
+                                   paste0("Record on row ",
+                                          # Duplicated rows
+                                          Duplicated_among[Duplicated_among$IndvID == .x, "Row"][1,],
+                                          " (IndvID: ", .x, ", ", "PopID: ",
+                                          Duplicated_among[Duplicated_among$IndvID == .x, "PopID"][1,],")",
+                                          " has the same IndvID as row(s) ",
+                                          # Duplicates (if 1, else more)
+                                          ifelse(nrow(Duplicated_among[Duplicated_among$IndvID == .x, "Row"][-1,]) == 1,
+                                                 Duplicated_among[Duplicated_among$IndvID == .x, "Row"][-1,],
+                                                 gsub("^c\\(|\\)$", "",
+                                                      Duplicated_among[Duplicated_among$IndvID == .x, "Row"][-1,])),
+                                          " (PopID: ", Duplicated_among[Duplicated_among$IndvID == .x, "PopID"][-1,],").")
+                                 })
+  }
 
   check_list <- tibble::tibble(Warning = war,
                                Error = err)
