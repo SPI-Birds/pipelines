@@ -344,6 +344,22 @@ create_dummy_data <- function(db = utils::choose.dir()) {
     )  ->
     Individual_data
 
+  # B8: Comparing brood size and number of chicks captured
+  Individual_data %>%
+    tibble::add_row(
+      Row = as.integer(8:9),
+      IndvID = as.character("C0001", "C0002"),
+      BroodIDLaid = as.character("2019_CCC001", "2019_CCC001")
+    )
+  Capture_data %>%
+    tibble::add_row(
+      Row = as.integer(34:35),
+      IndvID = as.character("C0001", "C0002"),
+
+
+    )
+
+
 
   # Combine in list
   dummy_data <- list(Brood_data = Brood_data,

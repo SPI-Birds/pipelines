@@ -10,6 +10,7 @@
 #' }
 #'
 #' @inheritParams checks_brood_params
+#' @inheritParams checks_capture_params
 #' @inheritParams checks_individual_params
 #' @param check_format \code{TRUE} or \code{FALSE}. If \code{TRUE}, the check on variable format (i.e. \code{\link{check_format_brood}}) is included in the quality check. Default: \code{TRUE}.
 #'
@@ -21,17 +22,18 @@
 #'
 #' @export
 
-brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
+brood_check <- function(Brood_data, Capture_data, Individual_data, check_format=TRUE){
 
   # Create check list with a summary of warnings and errors per check
-  check_list <- tibble::tibble(CheckID = purrr::map_chr(1:7, ~paste0("B", .)),
+  check_list <- tibble::tibble(CheckID = purrr::map_chr(1:8, ~paste0("B", .)),
                                CheckDescription = c("Check format of brood data",
                                                     "Compare clutch and brood sizes",
                                                     "Compare brood sizes and fledgling numbers",
                                                     "Compare laying and hatching dates",
                                                     "Compare hatching and fledging dates",
                                                     "Check brood variable values against reference values",
-                                                    "Check that parents are the same species"),
+                                                    "Check that parents are the same species",
+                                                    "Compare brood size with number of chicks captured"),
                                Warning = NA,
                                Error = NA)
 
@@ -90,6 +92,13 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
 
   check_list[7,3:4] <- check_parent_species_output$CheckList
 
+  # - Compare brood size and number of chicks captured
+  message("B8: Comparing brood size and number of chicks captured...")
+
+  compare_broodsize_chicknumber_output <- compare_broodsize_chicknumber(Brood_data, Capture_data, Individual_data)
+
+  check_list[8,3:4] <- compare_broodsize_chicknumber_output$CheckList
+
 
   if(check_format) {
     # Warning list
@@ -99,7 +108,8 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
                          Check4 = compare_laying_hatching_output$WarningOutput,
                          Check5 = compare_hatching_fledging_output$WarningOutput,
                          Check6 = check_values_brood_output$WarningOutput,
-                         Check7 = check_parent_species_output$WarningOutput)
+                         Check7 = check_parent_species_output$WarningOutput,
+                         Check8 = compare_broodsize_chicknumber_output$WarningOutput)
 
     # Error list
     error_list <- list(Check1 = check_format_brood_output$ErrorOutput,
@@ -108,7 +118,8 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
                        Check4 = compare_laying_hatching_output$ErrorOutput,
                        Check5 = compare_hatching_fledging_output$ErrorOutput,
                        Check6 = check_values_brood_output$ErrorOutput,
-                       Check7 = check_parent_species_output$ErrorOutput)
+                       Check7 = check_parent_species_output$ErrorOutput,
+                       Check8 = compare_broodsize_chicknumber_output$ErrorOutput)
   } else {
     # Warning list
     warning_list <- list(Check2 = compare_clutch_brood_output$WarningOutput,
@@ -116,7 +127,8 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
                          Check4 = compare_laying_hatching_output$WarningOutput,
                          Check5 = compare_hatching_fledging_output$WarningOutput,
                          Check6 = check_values_brood_output$WarningOutput,
-                         Check7 = check_parent_species_output$WarningOutput)
+                         Check7 = check_parent_species_output$WarningOutput,
+                         Check8 = compare_broodsize_chicknumber_output$WarningOutput)
 
     # Error list
     error_list <- list(Check2 = compare_clutch_brood_output$ErrorOutput,
@@ -124,7 +136,8 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
                        Check4 = compare_laying_hatching_output$ErrorOutput,
                        Check5 = compare_hatching_fledging_output$ErrorOutput,
                        Check6 = check_values_brood_output$ErrorOutput,
-                       Check7 = check_parent_species_output$ErrorOutput)
+                       Check7 = check_parent_species_output$ErrorOutput,
+                       Check8 = compare_broodsize_chicknumber_output$ErrorOutput)
 
     check_list <- check_list[-1,]
   }
@@ -703,4 +716,85 @@ check_parent_species <- function(Brood_data, Individual_data) {
 
   # Satisfy RCMD Checks
   FemaleSpecies <- MaleSpecies <- NULL
+}
+
+
+#' Compare brood size with number of chicks captured
+#'
+#' Compare BroodSize in Brood_data with the number of chicks captured in Capture_data. We expect these numbers to be equal. Records where BroodSize is larger than the number of chicks captured results in a warning, because chicks might have died before ringing and measuring. Records where BroodSize is smaller than the number of chicks captured results in an error, because this should not be possible.
+#'
+#' @inheritParams checks_brood_params
+#' @inheritParams checks_capture_params
+#' @inheritParams checks_individual_params
+#'
+#' @return
+#' A list of:
+#' \item{CheckList}{A summary dataframe of whether the check resulted in any warnings or errors.}
+#' \item{WarningOutput}{A list of row-by-row warnings.}
+#' \item{ErrorOutput}{A list of row-by-row errors.}
+#'
+#' @export
+
+compare_broodsize_chicknumber <- function(Brood_data, Capture_data, Individual_data) {
+
+  # Link BroodID from Individual_data to each capture in Capture_data
+  Chicks_captured <- Capture_data %>%
+    dplyr::left_join(Individual_data[, c("IndvID", "BroodIDLaid")], by="IndvID") %>%
+    dplyr::select(IndvID, BroodIDLaid) %>%
+    dplyr::distinct() %>%
+    dplyr::group_by(BroodIDLaid) %>%
+    # Per BroodID, count number of unique individuals captured
+    dplyr::summarise(Chicks = n_distinct(IndvID))
+
+  # Error if number of chicks in Capture_data > brood size in Brood_data
+  # (this should not be possible)
+  Brood_err <- Brood_data %>%
+    dplyr::left_join(Chicks_captured, by=c("BroodID" = "BroodIDLaid")) %>%
+    dplyr::filter(BroodSize < Chicks) %>%
+    dplyr::select(Row, BroodID, BroodSize, Chicks)
+
+  err <- FALSE
+  error_output <- NULL
+
+  if(nrow(Brood_err) > 0) {
+    err <- TRUE
+
+    error_output <- purrr::pmap(.l = Brood_err,
+                                .f = ~{
+                                  paste0("Record on row ", ..1, " (BroodID: ", ..2, ")",
+                                         " has a smaller BroodSize (", ..3, ")",
+                                         " than the number of chicks in Capture_data (",
+                                         ..4, ").")
+                                })
+  }
+
+  # Warning if number of chicks in Capture_data < brood size in Brood_data
+  # (chicks might have died before measuring/ringing)
+  Brood_war <- Brood_data %>%
+    dplyr::left_join(Chicks_captured, by=c("BroodID" = "BroodIDLaid")) %>%
+    dplyr::filter(BroodSize > Chicks) %>%
+    dplyr::select(Row, BroodID, BroodSize, Chicks)
+
+
+  war <- FALSE
+  warning_output <- NULL
+
+  if(nrow(Brood_war) > 0) {
+    war <- TRUE
+
+    warning_output <- purrr::pmap(.l = Brood_war,
+                                  .f = ~{
+                                    paste0("Record on row ", ..1, " (BroodID: ", ..2, ")",
+                                           " has a larger BroodSize (", ..3, ")",
+                                           " than the number of chicks in Capture_data (",
+                                           ..4, ").")
+                                  })
+  }
+
+  check_list <- tibble::tibble(Warning = war,
+                               Error = err)
+
+  return(list(CheckList = check_list,
+              WarningOutput = unlist(warning_output),
+              ErrorOutput = unlist(error_output)))
 }
