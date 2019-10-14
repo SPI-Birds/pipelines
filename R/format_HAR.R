@@ -668,9 +668,9 @@ create_capture_HAR    <- function(db, Brood_data, species_filter){
     dplyr::mutate(Age_observed = dplyr::case_when(Age %in% c("PM", "FL") ~ 3,
                                                   Age == "PP" ~ 1,
                                                   Age == "1" ~ 5,
-                                                  Age == "1+" ~ 4,
+                                                  Age == "+1" ~ 4,
                                                   Age == "2" ~ 7,
-                                                  Age == "2+" ~ 6),
+                                                  Age == "+2" ~ 6),
                   Tarsus = NA_real_, OriginalTarsusMethod = NA_character_) %>%
     dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, CapturePopID, CapturePlot,
                   ReleasePopID, ReleasePlot, Mass, Tarsus, OriginalTarsusMethod, WingLength, Age_observed, Age_calculated, ChickAge, Sex, BroodID, CaptureType, BirdStatus)
