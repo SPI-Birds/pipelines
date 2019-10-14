@@ -328,7 +328,7 @@ create_nestling_HAR <- function(db, Brood_data){
     dplyr::rename(BreedingSeason = Vuos, LocationID = Nuro, BroodID = Anro,
                   Month = Kk, Day = Pv, Time = Klo,
                   NrNestlings = Poik, Last2DigitsRingNr = Reng,
-                  Dead = Dead, Wing = Siipi,
+                  Dead = Dead, WingLength = Siipi,
                   Mass = Paino, LeftLegAbnormal = Vjalka,
                   RightLegAbnormal = Ojalka, Left3Primary = Vkas,
                   Right3Primary = Okas, LeftRectrix = Vpys,
@@ -382,11 +382,11 @@ create_capture_HAR    <- function(db, Brood_data, species_filter){
   # 662470, 662471, 662472, 662473
   # The number of nestlings ringed is stored in NrNestlings.
   Capture_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Ringings.DB") %>%
-    dplyr::rename(RingSeries = Sarja, RingNumber = Mistä,
-                  FirstRing = Tunnus, BreedingSeason = Vuos,
+    dplyr::rename(RingSeries = Sarja, RingNumber = Mista,
+                  CaptureType = Tunnus, BreedingSeason = Vuos,
                   Month = Kk, Day = Pv, Time = Klo,
                   LocationID = Nuro, BroodID = Anro,
-                  ObserverID = Havno, LastRingNumber_Brood = Mihin,
+                  ObserverID = Havno, LastRingNumber = Mihin,
                   Species = Laji, Sex = Suku,
                   Sex_method = Sp, Age = Ika,
                   Age_method = Ip, RingType = Rtapa,
