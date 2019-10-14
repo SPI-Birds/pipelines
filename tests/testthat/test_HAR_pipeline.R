@@ -75,7 +75,7 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(subset(HAR_data, IndvID == "V-675839")$BroodIDLaid, NA_character_)
   expect_equal(subset(HAR_data, IndvID == "V-675839")$BroodIDFledged, NA_character_)
   #Her ring season should be 1991 with a RingAge of 'adult'
-  expect_equal(subset(HAR_data, IndvID == "V-675839")$RingSeason, 1991)
+  expect_equal(subset(HAR_data, IndvID == "V-675839")$RingSeason, 1991L)
   expect_equal(subset(HAR_data, IndvID == "V-675839")$RingAge, "adult")
 
   #Test 2: First caught as chick
@@ -86,7 +86,7 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(subset(HAR_data, IndvID == "HL-010189")$BroodIDLaid, "2005_1617_1")
   expect_equal(subset(HAR_data, IndvID == "HL-010189")$BroodIDFledged, "2005_1617_1")
   #Her ring season should be 2003 with a RingAge of 'chick'
-  expect_equal(subset(HAR_data, IndvID == "HL-010189")$RingSeason, 2005)
+  expect_equal(subset(HAR_data, IndvID == "HL-010189")$RingSeason, 2005L)
   expect_equal(subset(HAR_data, IndvID == "HL-010189")$RingAge, "chick")
 
 })
