@@ -310,4 +310,5 @@ check_values_capture <- function(Capture_data) {
   # Satisfy RCMD Checks
   capture_ref_values <- NULL
   Species <- Age_calc <- NULL
+  Variable <- NULL
 }

@@ -16,5 +16,5 @@ A list of:
 \item{Errors}{A list of row-by-row errors.}
 }
 \description{
-Check that the individual identifiers (IndvID) are unique within populations.
+Check that the individual identifiers (IndvID) are unique. Records with individual identifiers that are not unique among populations will result in a warning. Records with individual identifiers that are not unique within populations will result in an error.
 }

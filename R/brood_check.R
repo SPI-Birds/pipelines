@@ -637,6 +637,7 @@ check_values_brood <- function(Brood_data) {
 
   #Satisfy RCMD Checks
   brood_ref_values <- Species <- NULL
+  Variable <- NULL
 }
 
 
@@ -700,4 +701,6 @@ check_parent_species <- function(Brood_data, Individual_data) {
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 
+  # Satisfy RCMD Checks
+  FemaleSpecies <- MaleSpecies <- NULL
 }
