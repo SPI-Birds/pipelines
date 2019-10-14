@@ -700,7 +700,7 @@ create_individual_HAR <- function(Capture_data){
   #Take capture data and determine summary data for each individual
   Indv_data <- Capture_data %>%
     dplyr::filter(!is.na(IndvID)) %>%
-    dplyr::arrange(IndvID, CaptureDate, CaptureTime) %>%
+    dplyr::arrange(IndvID, BreedingSeason, CaptureDate, CaptureTime) %>%
     dplyr::group_by(IndvID) %>%
     dplyr::summarise(Species = first(Species), PopID = "HAR",
               BroodIDLaid = first(BroodID),
