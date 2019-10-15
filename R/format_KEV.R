@@ -7,10 +7,83 @@
 #'this data. For a general description of the standard protocl please see
 #'\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
 #'
-#' @inheritParams pipeline_params
+#'\strong{Species:} We only include records for great tit, pied flycatcher,
+#'Siberan tit (Parus cinctus), and Common redstart (Phoenicurus phoenicurus).
+#'All these species have at least 350 capture records. There are also records of
+#'blue tits, spotted flycatcher (Muscicapa striata), willow tit (Parus
+#'montanus), and Eurasian wryneck (Jynx torquilla); however, these species are
+#'captured at most 13 times over >30 years. Therefore, they are excluded.
 #'
-#' @return Generates either 4 .csv files or 4 data frames in the standard format.
-#' @export
+#'\strong{Capture data:} As with Harjavalta, linking nestling and adult capture
+#'data can be difficult. There are eight different scenarios we need to
+#'consider. Each of these is described below, with our solution: \itemize{ \item
+#'#1. Individual captured as adult (Age is NA or not PM/PP) (e.g. HL-137181).
+#'
+#'In this case, we assume that there is only information in Capture_data, and we
+#'do not search for any information in Nestling_data.
+#'
+#'\item #2. Record of chick (Age is PM/PP) with no information in the last ring
+#'number column AND no corresponding record in Nestling_data (i.e. no record
+#'where BroodID and last 2 digits of the ring number were the same) (e.g.
+#'HL-568201).
+#'
+#'In this case, we assume that the information in Capture_data is the correct
+#'capture information.
+#'
+#'\item #3.	Record of chick (Age is PM/PP) with no information in the last ring
+#'number column, with corresponding record in Nestling_data, BUT where the
+#'capture dates in Nestling_data and Capture_data do not match (e.g. V-478577)
+#'
+#'In this case, we assume that the individual was captured multiple times and
+#'the records in Nestling_data and Capture_data are both true capture records.
+#'All information from both tables is kept.
+#'
+#'\item #4.	Record of chick (Age is PM/PP) with no information in the last ring
+#'number column, corresponding record in Nestling_data that was taken at exactly
+#'the same capture date (e.g. JL-112052)
+#'
+#'Where there are measurements (e.g. mass, tarsus) in both Nestling_data and
+#'Capture_data, we give precedence to the data from Capture_data. We only use
+#'data from Nestling_data when there is no data in Capture_data
+#'
+#'\item #5.	Record of chick (Age is PM/PP) with information in the last ring
+#'number column which matches data in Nestling_data (e.g. HL-26103 - 26107)
+#'
+#'We assume that there is a continuous ring series used (e.g. 26103, 26104,
+#'26105, 26106, 26107) and link all corresponding records from Nestling_data
+#'where the BroodID and last 2 digits of the ring number match.
+#'
+#'\item #6.	Record of chick (Age is PM/PP) with information in the last ring
+#'number column but no matches to data in Nestling_data (e.g. HL-364911 -
+#'364916).
+#'
+#'We assume the individuals were captured and ringed, but there was no data
+#'collected on them (e.g. Mass). We give them an 'empty' record in Capture_data
+#'(e.g. only IndvID, CaptureDate, CaptureTime).
+#'
+#'\item #7. Record in Nestling_data that has no ring number information (e.g. A,
+#'B, C, D) (e.g. Brood 2011_0003_1)
+#'
+#'We assume these were chicks captured before they were old enough to be ringed.
+#'We keep these as a legitimate capture record as they can tell us something
+#'about chick growth.
+#'
+#'\item #8.	Record in Nestling_data that has ring number information, but there
+#'is no corresponding record of chicks with those rings being captured from that
+#'brood in Capture_data (e.g. Brood 1985_2081_1 with individuals 71, 72, 73,
+#'74).
+#'
+#'We cannot determine the identity of the captured individual without a matching
+#'record in Capture_data because we only know the last 2 digits of the ring
+#'number. Currently, we include them as captures with IndvID = NA. These can
+#'still be used to estimate AvgChickMass, AvgTarsus for a given BroodID even
+#'though the individual cannot be identified; however, we suspect these are
+#'mistakes in the primary data.}
+#'
+#'@inheritParams pipeline_params
+#'
+#'@return Generates either 4 .csv files or 4 data frames in the standard format.
+#'@export
 
 format_KEV <- function(db = utils::choose.dir(),
                        species = NULL,
@@ -286,36 +359,8 @@ create_capture_KEV    <- function(db, Brood_data, species_filter){
                   Mass = dplyr::na_if(Mass, 0),
                   WingLength = dplyr::na_if(WingLength, 0))
 
-  #We have six scenarios we need to deal with in the capture data:
-  #1.
-  #Individual adult captures (Age is NA or != PP/PM). In this case, all the data
-  #is in Capture_data
-
-  #2.
-  #Individual chick captures (Age == PP/PM and there is no
-  #last ring number, Mass/WingLength are recorded ONLY in capture data). In this case, all the
-  #data is in Capture_data
-
-  #3.
-  #Individual chick capture with separate record in nestling data (Age == PP/PM and there is no
-  #last ring number. Mass/WingLength are recorded in both Capture_data and Nestling_data but the capture date is different).
-  #Need to take a record from both Capture_data and Nestling_data
-
-  #4.
-  #Individual chick capture with conflicting record in nestling data (Age == PP/PM and there is no
-  #last ring number. Mass/WingLength are recorded in both Capture_data and Nestling_data and the capture date is identical).
-  #Records from Capture_data take precedence
-
-  #5.
-  #Multi-chick captures (Age == PP/PM where there is
-  #a last ring number). In this case, part of the data is in Nestling_data.
-
-  #6.
-  #Records in nestling data that have no associated information in capture data.
-  #This falls into two categories
-
-  #6a. Nestling captured but not ringed. In this case, the ring number is listed as e.g. A
-  #6b. Nestling captured and ringed, but no infomation in capture data.
+  #We have eight scenarios we need to deal with in the capture data.
+  #See an explanation in the help documentation:
 
   ####
 
@@ -433,7 +478,7 @@ create_capture_KEV    <- function(db, Brood_data, species_filter){
 
   ####
 
-  #5. Cases where the record in capture is for multiple chicks
+  #5 - 6. Cases where the record in capture is for multiple chicks
   #The individual data is stored in nestling data
   flat_multi_chick_capture <- chick_data %>%
     dplyr::filter(!is.na(LastRingNumber))
@@ -483,7 +528,7 @@ create_capture_KEV    <- function(db, Brood_data, species_filter){
 
   ####
 
-  #6. Nestling records that don't correspond to any capture data
+  #7 - 8. Nestling records that don't correspond to any capture data
   #Brood/RingNumber combos from individual captures
   single_capture_records <- indv_chick_capture %>%
     dplyr::mutate(Brood_RingNr = paste(BroodID, stringr::str_sub(RingNumber, start = -2), sep = "_")) %>%
@@ -498,7 +543,7 @@ create_capture_KEV    <- function(db, Brood_data, species_filter){
     dplyr::mutate(Brood_RingNr = paste(BroodID, Last2DigitsRingNr, sep = "_")) %>%
     dplyr::filter(!Brood_RingNr %in% c(single_capture_records, multi_capture_records))
 
-  #6a. Filter unringed individuals. These are just given records associated with a brood where the individual ID is unknown.
+  #7. Filter unringed individuals. These are just given records associated with a brood where the individual ID is unknown.
   unringed_chicks <- nocapture_nestlings %>%
     dplyr::filter(toupper(Last2DigitsRingNr) %in% LETTERS) %>%
     dplyr::mutate(IndvID = NA_character_, ObserverID = NA_character_, Sex = NA_character_, Age = "PP", CaptureType = NA_character_) %>%
@@ -506,6 +551,7 @@ create_capture_KEV    <- function(db, Brood_data, species_filter){
     dplyr::left_join(select(Brood_data, BroodID, Species), by = "BroodID") %>%
     dplyr::select(IndvID, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, BroodID, Species, Sex, Age, WingLength, Mass, CaptureType, ChickAge)
 
+  #8. Filter ringed individuals with no capture records.
   ringed_chicks_nocapture <- nocapture_nestlings %>%
     dplyr::filter(!toupper(Last2DigitsRingNr) %in% LETTERS) %>%
     dplyr::mutate(IndvID = NA_character_, ObserverID = NA_character_, Sex = NA_character_, Age = "PP", CaptureType = NA_character_) %>%
