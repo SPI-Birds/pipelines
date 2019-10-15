@@ -12,78 +12,84 @@
 #'pied flycatcher) have >100 nest records. Only data from these 4 species is
 #'considered.
 #'
-#'\strong{Age}: Chick age is listed as: PP (nestling), PM (fledgling), 1, 1+, 2,
-#'2+. The numbers are said to follow the EURING system. I'm not sure which
+#'\strong{Age}: Chick age is listed as: PP (nestling), PM (fledgling), 1, +1, 2,
+#'+2. The numbers are said to follow the EURING system. I'm not sure which
 #'version of the EURING code this would be. I assume that 1 = first year bird,
-#'1+ = >first year bird, 2 = second year bird, 2+ = >second year bird. It's not
+#'+1 = >first year bird, 2 = second year bird, +2 = >second year bird. It's not
 #'clear to me the distinction between PP, PM, and 1. For now, only PP and PM are
 #'counted as being caught as chicks (i.e. with exact hatching year known),
-#'everything else is assumed to be an estimate. This does mean that we have some
-#'cases where the Age_calculated is 1 and the Age_observed is >= 5.
+#'everything else is assumed to be an estimate.
 #'
 #'\strong{LayDateError & HatchDateError}: Accuracy of laying and hatch date
 #'are given as categories: 0-1; 1-2; 2-3; >3 (N.B. Need to check this with
 #'Tapio). More conservative error is used (i.e. 0-1 is recorded as 1). For now
 #'>3 is recorded as 4. N.B. Need to check this with Tapio!!
 #'
-#'\strong{Capture_data}: Combining capture data is fairly difficult with this
-#'dataset: \itemize{ \item All data from adults when first ringed and recaptured
-#'are stored in the 'Ringing' table (Rengas.db). This is regular capture data
-#'that we can use without adjustment.
+#'\strong{Capture data:} Linking nestling and adult capture
+#'data can be difficult. There are eight different scenarios we need to
+#'consider. Each of these is described below, with our solution: \itemize{ \item
+#'#1. Individual captured as adult (Age is NA or not PM/PP) (e.g. 00-829590).
 #'
-#'\item All data from chick captures are stored in the 'Nestling' table
-#'(Pullit.db). HOWEVER, the 'Nestling' table does not include information on the
-#'ring number nor the species of each individual, only the BroodID and the last
-#'2 digits of the ring number.
+#'In this case, we assume that there is only information in Capture_data, and we
+#'do not search for any information in Nestling_data.
 #'
-#'\item When chicks were ringed for the first time, the ringing of ALL the
-#'chicks is recorded as one entry in 'Ringing'. The first and last ring number
-#'of the chicks ringed in the nest is given. Therefore, to determine the
-#'individual ID of every chick capture from 'Nestling' we need to link it to the
-#'correct BroodID and determine its ring number by taking the first x-2
-#'characters of the given ring numbers and adding the last 2 digits from the
-#''Nestling' table.
+#'\item #2. Record of chick (Age is PM/PP) with no information in the last ring
+#'number column AND no corresponding record in Nestling_data (i.e. no record
+#'where BroodID and last 2 digits of the ring number were the same) (e.g.
+#'HL-025681).
 #'
-#'\item Some chicks in 'Nestling' were captured and measured, but no last 2
-#'digits of ring number is provided, I assume these were not ringed (e.g. too
-#'young). These data can be associated with a Brood and species, but not with an
-#'individual.
+#'In this case, we assume that the information in Capture_data is the correct
+#'capture information.
 #'
-#'\item HOWEVER, the 'Nestling' and 'Ringing' tables don't always match. In some
-#'cases (>5000), there is a record of chicks being ringed in the 'Ringing'
-#'table, but no record of these chicks in the 'Nestling' table (e.g. BroodID:
-#'2005_1908_1 or 2018_1216_1).
+#'\item #3.	Record of chick (Age is PM/PP) with no information in the last ring
+#'number column, with corresponding record in Nestling_data, BUT where the
+#'capture dates in Nestling_data and Capture_data do not match (e.g. HA-30262)
 #'
-#'\item In some cases (~50), there is information on chicks being captured and
-#'given a ring number in the 'Nestling' table, but no record of this capture in
-#'the 'Ringing' table (e.g. BroodID: 2008_0222_1 or 2018_1378_2).
+#'In this case, we assume that the individual was captured multiple times and
+#'the records in Nestling_data and Capture_data are both true capture records.
+#'All information from both tables is kept.
 #'
-#'\item In some cases, there is a record of chicks being ringed in 'Ringing',
-#'but many of these chicks are missing in the 'Nestling' table (e.g. BroodID:
-#'2007_1714_1).
+#'\item #4.	Record of chick (Age is PM/PP) with no information in the last ring
+#'number column, corresponding record in Nestling_data that was taken at exactly
+#'the same capture date (e.g. HA-30103)
 #'
-#'\item In some cases, chicks were recorded in 'Ringing' but have no matching
-#'BroodID in Brood_data (e.g. 2004_1012_0).
+#'Where there are measurements (e.g. mass, tarsus) in both Nestling_data and
+#'Capture_data, we give precedence to the data from Capture_data. We only use
+#'data from Nestling_data when there is no data in Capture_data
 #'
-#'\item In some cases, one BroodID is used in the 'Ringing' table and another in
-#'the 'Nestling' table even though the ring numbers are the same (e.g.
-#'2018_0323_1/2). I think this conflict of BroodID is what causes most of the
-#'problems above.
+#'\item #5.	Record of chick (Age is PM/PP) with information in the last ring
+#'number column which matches data in Nestling_data (e.g. HL-26103 - 26107)
 #'
-#'}
+#'We assume that there is a continuous ring series used (e.g. 26103, 26104,
+#'26105, 26106, 26107) and link all corresponding records from Nestling_data
+#'where the BroodID and last 2 digits of the ring number match.
 #'
-#'How do we deal with all these conflicts? For now, if a chick was listed in the
-#''Ringing' table but has no record in the 'Nestlings' table, we assume it was
-#'ringed but no measurements were taken (e.g. tarsus) or the measurements were
-#'not found because the BroodID was entered incorrectly. If a chick was captured
-#'in 'Nestlings' but is not recorded in 'Ringing' for now these will be excluded
-#'because they won't join to any corresponding data in 'Ringing'. These cases
-#'are the most problematic because to give these chicks a true ring number we
-#'need to know the rest of the ring number (not just last 2 digits). If they
-#'have no record in the Ringing table, it is impossible to include this
-#'information! For records where no ring number is given (e.g. A), we include
-#'only those where the BroodID is in either the 'Ringing' table or the 'Brood'
-#'table. This ensures that the unringed chick is of the right species.
+#'\item #6.	Record of chick (Age is PM/PP) with information in the last ring
+#'number column but no matches to data in Nestling_data (e.g. HL-364911 -
+#'364916).
+#'
+#'We assume the individuals were captured and ringed, but there was no data
+#'collected on them (e.g. Mass). We give them an 'empty' record in Capture_data
+#'(e.g. only IndvID, CaptureDate, CaptureTime).
+#'
+#'\item #7. Record in Nestling_data that has no ring number information (e.g. A,
+#'B, C, D) (e.g. Brood 2011_0003_1)
+#'
+#'We assume these were chicks captured before they were old enough to be ringed.
+#'We keep these as a legitimate capture record as they can tell us something
+#'about chick growth.
+#'
+#'\item #8.	Record in Nestling_data that has ring number information, but there
+#'is no corresponding record of chicks with those rings being captured from that
+#'brood in Capture_data (e.g. Brood 1985_2081_1 with individuals 71, 72, 73,
+#'74).
+#'
+#'We cannot determine the identity of the captured individual without a matching
+#'record in Capture_data because we only know the last 2 digits of the ring
+#'number. Currently, we include them as captures with IndvID = NA. These can
+#'still be used to estimate AvgChickMass, AvgTarsus for a given BroodID even
+#'though the individual cannot be identified; however, we suspect these are
+#'mistakes in the primary data.}
 #'
 #'\strong{Mass}: Mass of birds is measured in mg. This is converted
 #'to grams to match other populations.
@@ -395,7 +401,9 @@ create_capture_HAR    <- function(db, Brood_data, species_filter){
                   Plumage = Vari, TailFeather = Psulka,
                   ColLengthBlood = Tot,
                   LengthBlood = Pun, BreastMuscle = Lihas,
-                  HeadLength = Head) %>%
+                  HeadLength = Head)
+
+  Capture_data <- Capture_data %>%
     #Create unique broodID
     dplyr::mutate(BroodID = paste(BreedingSeason, LocationID, BroodID, sep = "_"),
                   CaptureDate = as.Date(paste(Day, Month, BreedingSeason, sep = "/"), format = "%d/%m/%Y"),
@@ -411,42 +419,14 @@ create_capture_HAR    <- function(db, Brood_data, species_filter){
                   Mass = dplyr::na_if(Mass, 0),
                   WingLength = dplyr::na_if(WingLength, 0))
 
-  #We have six scenarios we need to deal with in the capture data:
-  #1.
-  #Individual adult captures (Age is NA or != PP/PM). In this case, all the data
-  #is in Capture_data
-
-  #2.
-  #Individual chick captures (Age == PP/PM and there is no
-  #last ring number, Mass/WingLength are recorded ONLY in capture data). In this case, all the
-  #data is in Capture_data
-
-  #3.
-  #Individual chick capture with separate record in nestling data (Age == PP/PM and there is no
-  #last ring number. Mass/WingLength are recorded in both Capture_data and Nestling_data but the capture date is different).
-  #Need to take a record from both Capture_data and Nestling_data
-
-  #4.
-  #Individual chick capture with conflicting record in nestling data (Age == PP/PM and there is no
-  #last ring number. Mass/WingLength are recorded in both Capture_data and Nestling_data and the capture date is identical).
-  #Records from Capture_data take precedence
-
-  #5.
-  #Multi-chick captures (Age == PP/PM where there is
-  #a last ring number). In this case, part of the data is in Nestling_data.
-
-  #6.
-  #Records in nestling data that have no associated information in capture data.
-  #This falls into two categories
-
-  #6a. Nestling captured but not ringed. In this case, the ring number is listed as e.g. A
-  #6b. Nestling captured and ringed, but no infomation in capture data.
+  #We have eight scenarios we need to deal with in the capture data.
+  #See an explanation in the help documentation:
 
   ####
 
   #1. Individual adult captures
   Adult_capture    <- Capture_data %>%
-    dplyr::filter(!Age %in% c("PP", "PM") | is.na(Age)) %>%
+    dplyr::filter(!Age %in% c("PP", "PM", "FL") | is.na(Age)) %>%
     dplyr::mutate(Capture_type = "Adult", Last2DigitsRingNr = NA, ChickAge = NA) %>%
     dplyr::mutate(IndvID = paste(RingSeries, RingNumber, sep = "-")) %>%
     dplyr::select(IndvID, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, BroodID, Species, Sex, Age, WingLength, Mass, CaptureType, BirdStatus, Last2DigitsRingNr, ChickAge)
@@ -456,7 +436,7 @@ create_capture_HAR    <- function(db, Brood_data, species_filter){
   message("Determining chick ring numbers...")
 
   #Isolate only chick captures
-  chick_data <- filter(Capture_data, Age %in% c("PP", "PM"))
+  chick_data <- filter(Capture_data, Age %in% c("PP", "PM", "FL"))
 
   #2-4. Individual chick captures
   indv_chick_capture <- chick_data %>%
