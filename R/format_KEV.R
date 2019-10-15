@@ -223,9 +223,9 @@ create_brood_KEV <- function(db, species_filter){
     dplyr::mutate(BroodID = paste(BreedingSeason, LocationID, BroodID, sep = "_")) %>%
     #Convert species codes to letter codes
     dplyr::mutate(Species = dplyr::case_when(Species == "FICHYP" ~ Species_codes$Code[which(Species_codes$SpeciesID == 13490)],
-                                             Species == "PARCAE" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14620)],
                                              Species == "PARMAJ" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14640)],
-                                             Species == "PARATE" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14610)])) %>%
+                                             Species == "PARCIN" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14480)],
+                                             Species == "PHOPHO" ~ Species_codes$Code[which(Species_codes$SpeciesID == 11220)])) %>%
     dplyr::filter(!is.na(Species) & Species %in% species_filter) %>%
     #Add pop and plot id
     dplyr::mutate(PopID = "KEV", Plot = NA) %>%
@@ -343,16 +343,18 @@ create_capture_KEV    <- function(db, Brood_data, species_filter){
                   BirdStatus = Tila, CaptureMethod = Ptapa,
                   NrNestlings = Poik, WingLength = Siipi,
                   Mass = Paino, Moult = Sulsat,
-                  FatScore = Rasika) %>%
+                  FatScore = Rasika)
+
+  Capture_data <- Capture_data %>%
     #Create unique broodID
     dplyr::mutate(BroodID = paste(BreedingSeason, LocationID, BroodID, sep = "_"),
                   CaptureDate = as.Date(paste(Day, Month, BreedingSeason, sep = "/"), format = "%d/%m/%Y"),
                   CaptureTime = dplyr::na_if(paste0(Time, ":00"), "NA:00")) %>%
     #Convert species codes to EURING codes and then remove only the major species
     dplyr::mutate(Species = dplyr::case_when(Species == "FICHYP" ~ Species_codes$Code[which(Species_codes$SpeciesID == 13490)],
-                                             Species == "PARCAE" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14620)],
                                              Species == "PARMAJ" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14640)],
-                                             Species == "PARATE" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14610)])) %>%
+                                             Species == "PARCIN" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14480)],
+                                             Species == "PHOPHO" ~ Species_codes$Code[which(Species_codes$SpeciesID == 11220)])) %>%
     dplyr::filter(!is.na(Species) & Species %in% species_filter) %>%
     dplyr::mutate(Sex = dplyr::case_when(Sex %in% c("N", "O") ~ "F",
                                          Sex %in% c("K", "L") ~ "M"),
