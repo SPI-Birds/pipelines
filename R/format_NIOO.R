@@ -401,7 +401,7 @@ create_capture_NIOO <- function(database, Brood_data, Individual_data, location_
 
                                                x <- as.integer(difftime(..2, ..1))
 
-                                               if(!is.na(x) && between(x, 0, 30)){
+                                               if(!is.na(x) & between(x, 0, 30)){
 
                                                  return(x)
 

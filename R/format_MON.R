@@ -495,7 +495,7 @@ create_capture_MON <- function(db, species_filter, pop_filter){
                   BroodIDLaid = purrr::pmap_chr(.l = list(BreedingSeason, lieu, OrigBoxNumber),
                                                 .f = ~{
 
-                                                  if(length(..3) == 1 && is.na(..3)){
+                                                  if(length(..3) == 1 & is.na(..3)){
 
                                                     return(NA_character_)
 
@@ -517,7 +517,7 @@ create_capture_MON <- function(db, species_filter, pop_filter){
                   BroodIDFledged = purrr::pmap_chr(.l = list(BreedingSeason, lieu, DestBoxNumber),
                                                    .f = ~{
 
-                                                     if(length(..3) == 1 && is.na(..3)){
+                                                     if(length(..3) == 1 & is.na(..3)){
 
                                                        return(NA_character_)
 
