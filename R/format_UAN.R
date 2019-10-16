@@ -577,8 +577,9 @@ create_individual_UAN <- function(data, CAPTURE_info, species_filter){
 create_location_UAN <- function(data){
 
   Location_data <- data %>%
-    dplyr::transmute(LocationID = GBPL, NestboxID = GBPL,
-                     PopID = dplyr::case_when(.$SA == "FR" ~ "BOS",
+    dplyr::mutate(LocationID = GBPL, LocationType = dplyr::case_when(TYPE %in% c("pc", "pm", "cb") | is.na(TYPE) ~ "NB",
+                                                                        TYPE == "FPT" ~ "FD",
+                                                                        TYPE %in% c("PMO", "&") ~ "MN")) %>%
                                               .$SA == "PB" ~ "PEE"),
                      Latitude = Y_deg, Longitude = X_deg,
                      StartSeason = as.integer(YEARFIRST), EndSeason = as.integer(YEARLAST),
