@@ -4,13 +4,10 @@
 \alias{brood_check}
 \title{Perform quality checks on brood data}
 \usage{
-brood_check(Brood_data, Capture_data, Individual_data,
-  check_format = TRUE)
+brood_check(Brood_data, Individual_data, check_format = TRUE)
 }
 \arguments{
 \item{Brood_data}{Data frame. Brood data output from pipeline.}
-
-\item{Capture_data}{Data frame. Capture data output from pipeline.}
 
 \item{Individual_data}{Data frame. Individual data output from pipeline.}
 

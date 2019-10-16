@@ -4,12 +4,10 @@
 \alias{compare_broodsize_chicknumber}
 \title{Compare brood size with number of chicks captured}
 \usage{
-compare_broodsize_chicknumber(Brood_data, Capture_data, Individual_data)
+compare_broodsize_chicknumber(Brood_data, Individual_data)
 }
 \arguments{
 \item{Brood_data}{Data frame. Brood data output from pipeline.}
-
-\item{Capture_data}{Data frame. Capture data output from pipeline.}
 
 \item{Individual_data}{Data frame. Individual data output from pipeline.}
 }

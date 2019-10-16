@@ -47,21 +47,20 @@ hole nesting species; however, only 4 of these (great tit, blue tit, coal tit,
 pied flycatcher) have >100 nest records. Only data from these 4 species is
 considered.
 
-\strong{Age}: Chick age is listed as: PP (nestling), PM (fledgling), 1, 1+, 2,
-2+. The numbers are said to follow the EURING system. I'm not sure which
+\strong{Age}: Chick age is listed as: PP (nestling), PM (fledgling), 1, +1, 2,
++2. The numbers are said to follow the EURING system. I'm not sure which
 version of the EURING code this would be. I assume that 1 = first year bird,
-1+ = >first year bird, 2 = second year bird, 2+ = >second year bird. It's not
++1 = >first year bird, 2 = second year bird, +2 = >second year bird. It's not
 clear to me the distinction between PP, PM, and 1. For now, only PP and PM are
 counted as being caught as chicks (i.e. with exact hatching year known),
-everything else is assumed to be an estimate. This does mean that we have some
-cases where the Age_calculated is 1 and the Age_observed is >= 5.
+everything else is assumed to be an estimate.
 
 \strong{LayDateError & HatchDateError}: Accuracy of laying and hatch date
 are given as categories: 0-1; 1-2; 2-3; >3 (N.B. Need to check this with
 Tapio). More conservative error is used (i.e. 0-1 is recorded as 1). For now
 >3 is recorded as 4. N.B. Need to check this with Tapio!!
 
-\strong{Capture data:} As with Harjavalta, linking nestling and adult capture
+\strong{Capture data:} Linking nestling and adult capture
 data can be difficult. There are eight different scenarios we need to
 consider. Each of these is described below, with our solution: \itemize{ \item
 #1. Individual captured as adult (Age is NA or not PM/PP) (e.g. 00-829590).
@@ -72,14 +71,14 @@ do not search for any information in Nestling_data.
 \item #2. Record of chick (Age is PM/PP) with no information in the last ring
 number column AND no corresponding record in Nestling_data (i.e. no record
 where BroodID and last 2 digits of the ring number were the same) (e.g.
-HL-568201).
+HL-025681).
 
 In this case, we assume that the information in Capture_data is the correct
 capture information.
 
 \item #3.	Record of chick (Age is PM/PP) with no information in the last ring
 number column, with corresponding record in Nestling_data, BUT where the
-capture dates in Nestling_data and Capture_data do not match (e.g. V-478577)
+capture dates in Nestling_data and Capture_data do not match (e.g. HA-30262)
 
 In this case, we assume that the individual was captured multiple times and
 the records in Nestling_data and Capture_data are both true capture records.
@@ -87,7 +86,7 @@ All information from both tables is kept.
 
 \item #4.	Record of chick (Age is PM/PP) with no information in the last ring
 number column, corresponding record in Nestling_data that was taken at exactly
-the same capture date (e.g. JL-112052)
+the same capture date (e.g. HA-30103)
 
 Where there are measurements (e.g. mass, tarsus) in both Nestling_data and
 Capture_data, we give precedence to the data from Capture_data. We only use

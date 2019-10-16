@@ -10,7 +10,6 @@
 #' }
 #'
 #' @inheritParams checks_brood_params
-#' @inheritParams checks_capture_params
 #' @inheritParams checks_individual_params
 #' @param check_format \code{TRUE} or \code{FALSE}. If \code{TRUE}, the check on variable format (i.e. \code{\link{check_format_brood}}) is included in the quality check. Default: \code{TRUE}.
 #'
@@ -22,7 +21,7 @@
 #'
 #' @export
 
-brood_check <- function(Brood_data, Capture_data, Individual_data, check_format=TRUE){
+brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
 
   # Create check list with a summary of warnings and errors per check
   check_list <- tibble::tibble(CheckID = purrr::map_chr(1:8, ~paste0("B", .)),
@@ -95,7 +94,7 @@ brood_check <- function(Brood_data, Capture_data, Individual_data, check_format=
   # - Compare brood size and number of chicks captured
   message("B8: Comparing brood size and number of chicks captured...")
 
-  compare_broodsize_chicknumber_output <- compare_broodsize_chicknumber(Brood_data, Capture_data, Individual_data)
+  compare_broodsize_chicknumber_output <- compare_broodsize_chicknumber(Brood_data, Individual_data)
 
   check_list[8,3:4] <- compare_broodsize_chicknumber_output$CheckList
 
@@ -724,7 +723,6 @@ check_parent_species <- function(Brood_data, Individual_data) {
 #' Compare BroodSize in Brood_data with the number of chicks captured in Capture_data. We expect these numbers to be equal. Records where BroodSize is larger than the number of chicks captured results in a warning, because chicks might have died before ringing and measuring. Records where BroodSize is smaller than the number of chicks captured results in an error, because this should not be possible.
 #'
 #' @inheritParams checks_brood_params
-#' @inheritParams checks_capture_params
 #' @inheritParams checks_individual_params
 #'
 #' @return
@@ -735,15 +733,12 @@ check_parent_species <- function(Brood_data, Individual_data) {
 #'
 #' @export
 
-compare_broodsize_chicknumber <- function(Brood_data, Capture_data, Individual_data) {
+compare_broodsize_chicknumber <- function(Brood_data, Individual_data) {
 
   # Link BroodID from Individual_data to each capture in Capture_data
-  Chicks_captured <- Capture_data %>%
-    dplyr::left_join(Individual_data[, c("IndvID", "BroodIDLaid")], by="IndvID") %>%
+  Chicks_captured <- Individual_data %>%
     dplyr::select(IndvID, BroodIDLaid) %>%
-    dplyr::distinct() %>%
     dplyr::group_by(BroodIDLaid) %>%
-    # Per BroodID, count number of unique individuals captured
     dplyr::summarise(Chicks = n_distinct(IndvID))
 
   # Error if number of chicks in Capture_data > brood size in Brood_data
@@ -763,7 +758,7 @@ compare_broodsize_chicknumber <- function(Brood_data, Capture_data, Individual_d
                                 .f = ~{
                                   paste0("Record on row ", ..1, " (BroodID: ", ..2, ")",
                                          " has a smaller BroodSize (", ..3, ")",
-                                         " than the number of chicks in Capture_data (",
+                                         " than the number of chicks in Individual_data (",
                                          ..4, ").")
                                 })
   }
@@ -786,7 +781,7 @@ compare_broodsize_chicknumber <- function(Brood_data, Capture_data, Individual_d
                                   .f = ~{
                                     paste0("Record on row ", ..1, " (BroodID: ", ..2, ")",
                                            " has a larger BroodSize (", ..3, ")",
-                                           " than the number of chicks in Capture_data (",
+                                           " than the number of chicks in Individual_data (",
                                            ..4, ").")
                                   })
   }
