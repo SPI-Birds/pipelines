@@ -240,6 +240,24 @@ format_UAN <- function(db = utils::choose.dir(),
 
   }
 
+  #WRANGLE DATA FOR EXPORT
+
+  #We need to check that AvgChickMass and AvgTarsus are correct (i.e. it only uses chicks 14 - 16 days)
+  avg_chick_data <- Capture_data %>%
+    dplyr::filter(between(ChickAge, 14, 16)) %>%
+    dplyr::group_by(BroodID) %>%
+    dplyr::summarise(AvgChickMass_capture = mean(Mass, na.rm = TRUE), AvgTarsus_capture = mean(Tarsus, na.rm = TRUE))
+
+  Brood_data <- Brood_data %>%
+    dplyr::left_join(avg_chick_data, by = "BroodID") %>%
+    dplyr::rowwise() %>%
+    dplyr::mutate(AvgChickMass = ifelse(!is.na(AvgChickMass_capture), AvgChickMass_capture, AvgChickMass),
+                  AvgTarsus = ifelse(!is.na(AvgTarsus_capture), AvgTarsus_capture, AvgTarsus)) %>%
+    dplyr::select(-AvgChickMass_capture, -AvgTarsus_capture)
+
+  Capture_data <- Capture_data %>%
+    dplyr::select(-BroodID)
+
   # EXPORT DATA
 
   time <- difftime(Sys.time(), start_time, units = "sec")
@@ -480,7 +498,7 @@ create_capture_UAN <- function(data, species_filter){
     dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime,
                   ObserverID, LocationID, CapturePopID, CapturePlot,
                   ReleasePopID, ReleasePlot, Mass, Tarsus, OriginalTarsusMethod,
-                  WingLength, Age_observed = Age_observed_new, Age_calculated, ChickAge)
+                  WingLength, Age_observed = Age_observed_new, Age_calculated, ChickAge, BroodID)
 
   return(Capture_data)
 
