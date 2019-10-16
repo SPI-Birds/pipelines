@@ -580,18 +580,23 @@ create_location_UAN <- function(data){
     dplyr::mutate(LocationID = GBPL, LocationType = dplyr::case_when(TYPE %in% c("pc", "pm", "cb") | is.na(TYPE) ~ "NB",
                                                                         TYPE == "FPT" ~ "FD",
                                                                         TYPE %in% c("PMO", "&") ~ "MN")) %>%
-                                              .$SA == "PB" ~ "PEE"),
-                     Latitude = Y_deg, Longitude = X_deg,
-                     StartSeason = as.integer(YEARFIRST), EndSeason = as.integer(YEARLAST),
-                     Habitat = "deciduous",
-                     HasCoords = as.factor(!is.na(Latitude))) %>%
+    dplyr::rowwise() %>%
+    dplyr::mutate(NestboxID = ifelse(LocationType == "NB", LocationID, NA_character_)) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(PopID = dplyr::case_when(.$SA == "FR" ~ "BOS",
+                                           .$SA == "PB" ~ "PEE"),
+                  Latitude = Y_deg, Longitude = X_deg,
+                  Latitude_Lambert = Y, Longitude_Lambert = X,
+                  StartSeason = as.integer(YEARFIRST), EndSeason = as.integer(YEARLAST),
+                  Habitat = "deciduous",
+                  HasCoords = as.factor(!is.na(Latitude_Lambert))) %>%
     #Split into two groups whether they have coordinates or not
     split(f = .$HasCoords)
 
-  #For the group with coordinates, turn it into an sf object
-  #and change the CRS to be WGS84
+  #For the group without coordinates in degrees but with Lambert, we use Lambert coordinates instead.
+  #Turn it into an sf object and change the CRS to be WGS84
   true_coords <- sf::st_as_sf(Location_data$'TRUE',
-                              coords = c("Longitude", "Latitude"),
+                              coords = c("Longitude_Lambert", "Latitude_Lambert"),
                               crs = 31370) %>%
     sf::st_transform(crs = 4326) %>%
     sf::st_coordinates()
@@ -600,7 +605,7 @@ create_location_UAN <- function(data){
   Location_data$'TRUE'$Latitude <- true_coords[, 2]
 
   Location_data <- dplyr::bind_rows(Location_data) %>%
-    dplyr::select(-HasCoords)
+    dplyr::select(-HasCoords, -Latitude_Lambert, -Longitude_Lambert)
 
   return(Location_data)
 
