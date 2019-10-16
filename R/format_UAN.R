@@ -88,35 +88,47 @@ format_UAN <- function(db = utils::choose.dir(),
                                                "numeric", "numeric", "text",
                                                "text", "text", "text", "numeric",
                                                "numeric"))
+
   BROOD_info <- readxl::read_excel(all_files[grepl("BR", all_files)],
                                    col_types = c("text", "text", "text",
-                                                 "text", "list", "text",
+                                                 "text", "text", "text",
                                                  "numeric", "numeric",
                                                  "numeric", "numeric",
                                                  "numeric", "numeric",
                                                  "text", "text", "text",
-                                                 "text", "list", "numeric", "text",
+                                                 "text", "text", "numeric", "text",
                                                  "numeric", "numeric", "numeric",
                                                  "numeric", "text", "text", "text",
                                                  "text", "text", "text", "text", "text",
                                                  "numeric", "numeric", "text", "numeric",
                                                  "text")) %>%
-    tidyr::unnest()
+    dplyr::mutate_at(.vars = vars(LD, WD), function(x){
+
+      janitor::excel_numeric_to_date(as.numeric(x))
+
+    })
+
   INDV_info <- readxl::read_excel(all_files[grepl("IND", all_files)],
                                   col_types = c("text", "text", "text",
                                                 "numeric", "text", "text",
-                                                "text", "list", "text",
+                                                "text", "text", "text",
                                                 "numeric", rep("text", 3),
                                                 "list", "text", "list", "text",
                                                 "list", "text", "list", "text",
                                                 rep("numeric", 8), "text")) %>%
-    tidyr::unnest()
+    dplyr::mutate_at(.vars = vars(vd, klr1date, klr2date, klr3date, klr4date), function(x){
+
+      janitor::excel_numeric_to_date(as.numeric(x))
+
+    })
+
   PLOT_info <- readxl::read_excel(all_files[grepl("PL", all_files)],
                                   col_types = c(rep("text", 4),
                                                 rep("numeric", 6),
                                                 rep("text", 3)))
+
   CAPTURE_info <- readxl::read_excel(all_files[grepl("VG", all_files)],
-                                     col_types = c(rep("text", 10), "list",
+                                     col_types = c(rep("text", 11),
                                                    "numeric", "text",
                                                    rep("text", 3),
                                                    rep("numeric", 6),
@@ -124,7 +136,7 @@ format_UAN <- function(db = utils::choose.dir(),
                                                    rep("numeric", 3),
                                                    "text", "numeric",
                                                    rep("text", 3))) %>%
-    tidyr::unnest()
+    dplyr::mutate(VD = janitor::excel_numeric_to_date(as.numeric(VD)))
 
   ## Rename columns
   BROOD_info <- dplyr::mutate(BROOD_info, BroodID = NN, Species = SOORT, Plot = GB, NestboxNumber = PL,
