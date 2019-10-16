@@ -526,21 +526,21 @@ create_individual_UAN <- function(data, CAPTURE_info, species_filter){
   #This is a summary of each individual and general lifetime information (e.g. sex, resident/immigrant)
 
   #To determine which brood an individual is from, we subset the CAPTURE_info table
-  #and include only those records where an individual was caught as a nestling (i.e. Age_observed == 1).
+  #and include only those records where an individual was caught as a nestling (i.e. Age_observed > 5 where age is in days).
   #We then take the nest that this nestling was in when it was caught.
   Indv_broods <- CAPTURE_info %>%
     dplyr::arrange(IndvID, CaptureDate, CaptureTime) %>%
     dplyr::group_by(IndvID) %>%
-    dplyr::filter(!is.na(BroodID) & Age_observed == 1) %>%
+    dplyr::filter(!is.na(BroodID) & (Age_observed > 5 | Age_observed == 1)) %>%
     dplyr::summarise(BroodIDLaid = as.character(first(BroodID)))
 
   #Do this for PopID, capture age and first year as well
   Indv_Pop <- CAPTURE_info %>%
     dplyr::filter(!is.na(CapturePopID)) %>%
     dplyr::group_by(IndvID) %>%
+    dplyr::arrange(CaptureDate, .by_group = TRUE) %>%
     dplyr::summarise(PopID = first(CapturePopID),
-                     FirstAge = tryCatch(min(Age_observed, na.rm = T),
-                                         warning = function(...) return(NA)),
+                     FirstAge = first(Age_observed),
                      FirstYear = as.integer(min(lubridate::year(CaptureDate))))
 
   #There were no translocations, so BroodIDLaid/Fledged are the same
@@ -558,7 +558,7 @@ create_individual_UAN <- function(data, CAPTURE_info, species_filter){
     dplyr::mutate(BroodIDFledged = BroodIDLaid,
                   RingSeason = FirstYear,
                   RingAge = dplyr::case_when(.$FirstAge > 5 | .$FirstAge == 1 ~ "chick",
-                                             is.infinite(.$FirstAge) | .$FirstAge <= 5 ~ "adult")) %>%
+                                             is.na(.$FirstAge) | .$FirstAge <= 5 ~ "adult")) %>%
     select(IndvID, Species, PopID, BroodIDLaid, BroodIDFledged, RingSeason, RingAge, Sex)
 
   return(Indv_data)
