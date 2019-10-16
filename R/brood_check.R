@@ -94,7 +94,7 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
   # - Compare brood size and number of chicks captured
   message("B8: Comparing brood size and number of chicks captured...")
 
-  compare_broodsize_chicknumber_output <- compare_broodsize_chicknumber(Brood_data, Capture_data, Individual_data)
+  compare_broodsize_chicknumber_output <- compare_broodsize_chicknumber(Brood_data, Individual_data)
 
   check_list[8,3:4] <- compare_broodsize_chicknumber_output$CheckList
 

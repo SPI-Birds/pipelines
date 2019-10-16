@@ -16,6 +16,7 @@
 #'   \item Row 7-14 represent broods with improbable values in ClutchSize, BroodSize and NumberFledged per species (part of: 'B6: Checking brood variable values against reference values'; see \code{\link{check_values_brood}}).
 #'   \item Row 15-22 represent broods with impossible values in ClutchSize, BroodSize and NumberFledged per species (part of: 'B6: Checking brood variable values against reference values'; see \code{\link{check_values_brood}}).
 #'   \item Row 23 represents a brood with parents of different species (part of: 'B7: Checking parent species'; see \code{\link{check_parent_species}}).
+#'   \item Rows 24-25 represent broods with, respectively, a larger and smaller BroodSize than number of chicks in Individual_data (part of: 'B8: Comparing brood size and number of chicks captured'; see \code{\link{compare_broodsize_chicknumber}}).
 #' }
 #'
 #' \strong{Capture data}:
@@ -34,6 +35,7 @@
 #'   \item Row 5 represents a chick caught in a nest box, but without a BroodID (part of 'I3: Checking that chicks have BroodIDs'; see \code{\link{check_BroodID_chicks}}).
 #'   \item Row 6 represents an individual with conflicting sex (part of 'I4: Checking that individuals have no conflicting sex'; see \code{\link{check_conflicting_sex}}).
 #'   \item Rows 7-8 represent the parents of a brood (a female and male, respectively) of different species (part of: 'B7: Checking parent species'; see \code{\link{check_parent_species}}).
+#'   \item Rows 9-12 represent chicks of two broods (part of: 'B8: Comparing brood size and number of chicks captured'; see \code{\link{compare_broodsize_chicknumber}}).
 #' }
 #'
 #' \strong{Location data}:
@@ -347,19 +349,19 @@ create_dummy_data <- function(db = utils::choose.dir()) {
   # B8: Comparing brood size and number of chicks captured
   Individual_data %>%
     tibble::add_row(
-      Row = as.integer(8:9),
-      IndvID = as.character("C0001", "C0002"),
-      BroodIDLaid = as.character("2019_CCC001", "2019_CCC001")
-    )
-  Capture_data %>%
+      Row = as.integer(9:12),
+      IndvID = as.character(c("C0001", "C0002", "C0003", "C0004")),
+      BroodIDLaid = as.character(c("2019_CCC001", "2019_CCC001", "2019_CCC002", "2019_CCC002"))
+    ) ->
+    Individual_data
+
+  Brood_data %>%
     tibble::add_row(
-      Row = as.integer(34:35),
-      IndvID = as.character("C0001", "C0002"),
-
-
-    )
-
-
+      Row = as.integer(24:25),
+      BroodID = as.character(c("2019_CCC001", "2019_CCC002")),
+      BroodSize = as.integer(c(3, 1))
+    ) ->
+    Brood_data
 
   # Combine in list
   dummy_data <- list(Brood_data = Brood_data,
