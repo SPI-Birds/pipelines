@@ -93,7 +93,13 @@ individual_check <- function(Individual_data, Capture_data, Location_data, check
 
   return(list(CheckList = check_list,
               Warnings = warning_list,
-              Errors = error_list))
+              Errors = error_list,
+              Warning_Rows = unique(c(check_unique_IndvID_output$WarningRows,
+                                      check_BroodID_chicks_output$WarningRows,
+                                      check_conflicting_sex_output$WarningRows)),
+              Error_Rows = unique(c(check_unique_IndvID_output$ErrorRows,
+                                    check_BroodID_chicks_output$ErrorRows,
+                                    check_conflicting_sex_output$ErrorRows))))
 }
 
 
@@ -281,6 +287,8 @@ check_unique_IndvID <- function(Individual_data){
                                Error = err)
 
   return(list(CheckList = check_list,
+              WarningRows = Duplicated_among$Row,
+              ErrorRows = Duplicated_within$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 }
@@ -340,6 +348,8 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data) {
                                Error = err)
 
   return(list(CheckList = check_list,
+              WarningRows = NULL,
+              ErrorRows = No_BroodID_nest$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 
@@ -386,6 +396,8 @@ check_conflicting_sex <- function(Individual_data) {
                                Error = err)
 
   return(list(CheckList = check_list,
+              WarningRow = Conflicting_sex$Row,
+              ErrorRow = NULL,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 }

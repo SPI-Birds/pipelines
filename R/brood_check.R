@@ -143,7 +143,21 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
 
   return(list(CheckList = check_list,
               Warnings = warning_list,
-              Errors = error_list))
+              Errors = error_list,
+              Warning_Rows = unique(c(compare_clutch_brood_output$WarningRows,
+                                    compare_brood_fledglings_output$WarningRows,
+                                    compare_laying_hatching_output$WarningRows,
+                                    compare_hatching_fledging_output$WarningRows,
+                                    check_values_brood_output$WarningRows,
+                                    check_parent_species_output$WarningRows,
+                                    compare_broodsize_chicknumber_output$WarningRows)),
+              Error_Rows = unique(c(compare_clutch_brood_output$ErrorRows,
+                                    compare_brood_fledglings_output$ErrorRows,
+                                    compare_laying_hatching_output$ErrorRows,
+                                    compare_hatching_fledging_output$ErrorRows,
+                                    check_values_brood_output$ErrorRows,
+                                    check_parent_species_output$ErrorRows,
+                                    compare_broodsize_chicknumber_output$ErrorRows))))
 }
 
 #' Check format of brood data
@@ -328,6 +342,8 @@ compare_clutch_brood <- function(Brood_data){
                                Error = err)
 
   return(list(CheckList = check_list,
+              WarningRows = Brood_data_man$Row,
+              ErrorRows = Brood_data_non$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 
@@ -399,6 +415,8 @@ compare_brood_fledglings <- function(Brood_data){
                                Error = err)
 
   return(list(CheckList = check_list,
+              WarningRows = Brood_data_man$Row,
+              ErrorRows = Brood_data_non$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 
@@ -473,6 +491,8 @@ compare_laying_hatching <- function(Brood_data){
                                Error = err)
 
   return(list(CheckList = check_list,
+              WarningRows = NULL,
+              ErrorRows = Brood_data_late$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 
@@ -546,6 +566,8 @@ compare_hatching_fledging <- function(Brood_data){
                                Error = err)
 
   return(list(CheckList = check_list,
+              WarningRows = NULL,
+              ErrorRows = Brood_data_late$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 
@@ -644,6 +666,8 @@ check_values_brood <- function(Brood_data) {
                                Error = err)
 
   return(list(CheckList = check_list,
+              WarningRows = Brood_war$Row,
+              ErrorRows = Brood_err$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 
@@ -710,6 +734,8 @@ check_parent_species <- function(Brood_data, Individual_data) {
                                Error = err)
 
   return(list(CheckList = check_list,
+              WarningRows = NULL,
+              ErrorRows = Interspecific_broods$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 
@@ -790,6 +816,8 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data) {
                                Error = err)
 
   return(list(CheckList = check_list,
+              WarningRows = Brood_war$Row,
+              ErrorRows = Brood_err$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 }

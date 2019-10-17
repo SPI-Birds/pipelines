@@ -68,7 +68,9 @@ capture_check <- function(Capture_data, check_format=TRUE){
 
   return(list(CheckList = check_list,
               Warnings = warning_list,
-              Errors = error_list))
+              Errors = error_list,
+              Warning_Rows = unique(c(check_values_capture_output$WarningRows)),
+              Error_Rows = unique(c(check_values_capture_output$ErrorRows))))
 }
 
 #' Check format of capture data
@@ -422,6 +424,8 @@ check_values_capture <- function(Capture_data) {
                                Error = err)
 
   return(list(CheckList = check_list,
+              WarningRows = Capture_war$Row,
+              ErrorRows = Capture_err$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 

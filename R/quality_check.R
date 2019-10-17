@@ -54,6 +54,23 @@ quality_check <- function(R_data,
   Individual_checks <- individual_check(Individual_data, Capture_data, Location_data, check_format)
   Location_checks <- location_check(Location_data, check_format)
 
+  #Add warning and error columns to each data frame
+  #We don't do this for location because there are currently now rowwise checks
+  Brood_data$Warning <- NA
+  Brood_data$Error <- NA
+  Brood_data[Brood_data$Row %in% Brood_checks$Warning_Rows, "Warning"] <- TRUE
+  Brood_data[Brood_data$Row %in% Brood_checks$Error_Rows, "Error"] <- TRUE
+
+  Capture_data$Warning <- NA
+  Capture_data$Error <- NA
+  Capture_data[Capture_data$Row %in% Capture_checks$Warning_Rows, "Warning"] <- TRUE
+  Capture_data[Capture_data$Row %in% Capture_checks$Error_Rows, "Error"] <- TRUE
+
+  Individual_data$Warning <- NA
+  Individual_data$Error <- NA
+  Individual_data[Individual_data$Row %in% Individual_checks$Warning_Rows, "Warning"] <- TRUE
+  Individual_data[Individual_data$Row %in% Individual_checks$Error_Rows, "Error"] <- TRUE
+
   # Combine check lists
   check_list <- dplyr::bind_rows(Brood_checks$CheckList,
                                  Capture_checks$CheckList,
@@ -276,5 +293,9 @@ quality_check <- function(R_data,
               NumberChecks = nrow(check_list),
               NumberWarnings = checks_warnings,
               NumberErrors = checks_errors,
-              ElapsedTime = round(time, 2)))
+              ElapsedTime = round(time, 2),
+              R_data = list(Brood_data = Brood_data,
+                            Capture_data = Capture_data,
+                            Individual_data = Individual_data,
+                            Location_data = Location_data)))
 }

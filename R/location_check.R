@@ -56,7 +56,9 @@ location_check <- function(Location_data, check_format=TRUE){
 
   return(list(CheckList = check_list,
               Warnings = warning_list,
-              Errors = error_list))
+              Errors = error_list,
+              Warning_Rows = NULL,
+              Error_Rows = NULL))
 }
 
 
