@@ -78,6 +78,10 @@ create_reference_values <- function(db = utils::choose.dir()) {
                                           Value = c(NA, 15, 0, 20))
   )
 
+  ##For PARMAJ and CYACAE chicks, we include age specific capture data for chicks
+  #based on chick growth curves calculated from Hoge Veluwe
+  #See calculate_chick_mass_cutoffs.R for details.
+
   ## - Capture data
   capture_ref_values <- list(
     ## --- Parus major (Great tit)
@@ -85,8 +89,9 @@ create_reference_values <- function(db = utils::choose.dir()) {
                                         Value = c(10.95, 25, 5.5, 50)),
     PARMAJ_Adult_Tarsus = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
                                           Value = c(13.3, 22, 6.5, 44)),
-    PARMAJ_Chick_Mass = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-                                        Value = c(3.5, 21.6, 1.5, 40)),
+    PARMAJ_Chick_Mass  = chick_mass_cutoffs %>%
+      dplyr::filter(Species == "PARMAJ") %>%
+      dplyr::select(Reference, Value, ChickAge),
     PARMAJ_Chick_Tarsus = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
                                           Value = c(11.9, 21.3, 5, 40)),
     ## --- Cyanistes caeruleus (Blue tit)
@@ -94,8 +99,9 @@ create_reference_values <- function(db = utils::choose.dir()) {
                                         Value = c(9.5, 20.1, 5, 40)),
     CYACAE_Adult_Tarsus = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
                                           Value = c(10.1, 20.8, 5, 40)),
-    CYACAE_Chick_Mass = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-                                        Value = c(5, 16.9, 2.5, 30)),
+    CYACAE_Chick_Mass = chick_mass_cutoffs %>%
+      dplyr::filter(Species == "CYACAE") %>%
+      dplyr::select(Reference, Value, ChickAge),
     CYACAE_Chick_Tarsus = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
                                           Value = c(14.6, 26, 7, 52)),
     ## --- Ficedula hypoleuca (Pied flycatcher)

@@ -212,23 +212,81 @@ check_values_capture <- function(Capture_data) {
                                pb$tick()$print()
 
                                if(.y[2] == "Adult") {
+
                                  Capture_data %>%
                                    dplyr::filter(Age_calculated > 3) ->
                                    Capture_data2
-                               } else if(.y[2] == "Chick") {
-                                 Capture_data %>%
+
+                                 sel <- which(Capture_data2$Species == .y[1]
+                                              & (Capture_data2[,which(colnames(Capture_data2) == .y[3])] < .x$Value[3]
+                                                 | Capture_data2[,which(colnames(Capture_data2) == .y[3])] > .x$Value[4]))
+
+                                 Capture_data2[sel,] %>%
+                                   dplyr::select(Row, Value = !!.y[3]) %>%
+                                   dplyr::mutate(Species = .y[1],
+                                                 Age = .y[2],
+                                                 Variable = .y[3])
+
+                                 } else if(.y[2] == "Chick") {
+
+                                  Capture_data %>%
                                    dplyr::filter(Age_calculated <= 3) ->
                                    Capture_data2
-                               }
-                               sel <- which(Capture_data2$Species == .y[1]
-                                            & (Capture_data2[,which(colnames(Capture_data2) == .y[3])] < .x$Value[3]
-                                               | Capture_data2[,which(colnames(Capture_data2) == .y[3])] > .x$Value[4]))
 
-                               Capture_data2[sel,] %>%
-                                 dplyr::select(Row, Value = !!.y[3]) %>%
-                                 dplyr::mutate(Species = .y[1],
-                                               Age = .y[2],
-                                               Variable = .y[3])
+                                   if(.y[3] == "Mass" & .y[1] %in% c("PARMAJ", "CYACAE")){
+
+                                     sel <- Capture_data2 %>%
+                                       dplyr::filter(Species == .y[1]) %>%
+                                       dplyr::mutate(error = purrr::pmap_lgl(.l = list(Mass, ChickAge, Age_calculated),
+                                                                             .f = function(Mass, ChickAge, Age_calculated, Ref_values){
+
+                                         if(Age_calculated == 3){
+
+                                           current_chick_age <- 30
+
+                                         } else {
+
+                                           if(is.na(ChickAge)){
+
+                                             current_chick_age <- 14
+
+                                           } else {
+
+                                             current_chick_age <- ChickAge
+
+                                           }
+
+                                         }
+
+                                         return(Mass < Ref_values$Value[which(Ref_values$ChickAge == current_chick_age & Ref_values$Reference == "Error_min")] |
+                                                  Mass > Ref_values$Value[which(Ref_values$ChickAge == current_chick_age & Ref_values$Reference == "Error_max")])
+
+                                       }, .x)) %>%
+                                       pull(error) %>%
+                                       which()
+
+                                     Capture_data2[sel,] %>%
+                                       dplyr::select(Row, Value = !!.y[3]) %>%
+                                       dplyr::mutate(Species = .y[1],
+                                                     Age = .y[2],
+                                                     Variable = .y[3])
+
+                                   } else {
+
+                                     sel <- which(Capture_data2$Species == .y[1]
+                                                  & (Capture_data2[,which(colnames(Capture_data2) == .y[3])] < .x$Value[3]
+                                                     | Capture_data2[,which(colnames(Capture_data2) == .y[3])] > .x$Value[4]))
+
+                                     Capture_data2[sel,] %>%
+                                       dplyr::select(Row, Value = !!.y[3]) %>%
+                                       dplyr::mutate(Species = .y[1],
+                                                     Age = .y[2],
+                                                     Variable = .y[3])
+
+
+                                   }
+
+                               }
                              }) %>%
     dplyr::bind_rows() %>%
     dplyr::arrange(Species, Age, Variable)
@@ -252,28 +310,88 @@ check_values_capture <- function(Capture_data) {
   Capture_war <- purrr::map2(.x = capture_ref_values,
                              .y = ref_names,
                              .f = ~{
-                               #pb$tick()$print()
+                               pb$tick()$print()
 
                                if(.y[2] == "Adult") {
+
                                  Capture_data %>%
                                    dplyr::filter(Age_calculated > 3) ->
                                    Capture_data2
+
+                                 sel <- which(Capture_data2$Species == .y[1]
+                                              & ((Capture_data2[,which(colnames(Capture_data2) == .y[3])] < .x$Value[1]
+                                                  & Capture_data2[,which(colnames(Capture_data2) == .y[3])] >= .x$Value[3])
+                                                 | (Capture_data2[,which(colnames(Capture_data2) == .y[3])] > .x$Value[2]
+                                                    & Capture_data2[,which(colnames(Capture_data2) == .y[3])] <= .x$Value[4])))
+
+                                 Capture_data2[sel,] %>%
+                                   dplyr::select(Row, Value = !!.y[3]) %>%
+                                   dplyr::mutate(Species = .y[1],
+                                                 Age = .y[2],
+                                                 Variable = .y[3])
+
                                } else if(.y[2] == "Chick") {
+
                                  Capture_data %>%
                                    dplyr::filter(Age_calculated <= 3) ->
                                    Capture_data2
-                               }
-                               sel <- which(Capture_data2$Species == .y[1]
-                                            & ((Capture_data2[,which(colnames(Capture_data2) == .y[3])] < .x$Value[1]
-                                                & Capture_data2[,which(colnames(Capture_data2) == .y[3])] >= .x$Value[3])
-                                               | (Capture_data2[,which(colnames(Capture_data2) == .y[3])] > .x$Value[2]
-                                                  & Capture_data2[,which(colnames(Capture_data2) == .y[3])] <= .x$Value[4])))
 
-                               Capture_data2[sel,] %>%
-                                 dplyr::select(Row, Value = !!.y[3]) %>%
-                                 dplyr::mutate(Species = .y[1],
-                                               Age = .y[2],
-                                               Variable = .y[3])
+                                 if(.y[3] == "Mass" & .y[1] %in% c("PARMAJ", "CYACAE")){
+
+                                   sel <- Capture_data2 %>%
+                                     dplyr::filter(Species == .y[1]) %>%
+                                     dplyr::mutate(warning = purrr::pmap_lgl(.l = list(Mass, ChickAge, Age_calculated),
+                                                                           .f = function(Mass, ChickAge, Age_calculated, Ref_values){
+
+                                                                             if(Age_calculated == 3){
+
+                                                                               current_chick_age <- 30
+
+                                                                             } else {
+
+                                                                               if(is.na(ChickAge)){
+
+                                                                                 current_chick_age <- 14
+
+                                                                               } else {
+
+                                                                                 current_chick_age <- ChickAge
+
+                                                                               }
+
+                                                                             }
+
+                                                                             return((Mass < Ref_values$Value[which(Ref_values$ChickAge == current_chick_age & Ref_values$Reference == "Warning_min")] & Mass >= Ref_values$Value[which(Ref_values$ChickAge == current_chick_age & Ref_values$Reference == "Error_min")]) |
+                                                                                      (Mass > Ref_values$Value[which(Ref_values$ChickAge == current_chick_age & Ref_values$Reference == "Warning_max")] & Mass <= Ref_values$Value[which(Ref_values$ChickAge == current_chick_age & Ref_values$Reference == "Error_max")]))
+
+                                                                           }, .x)) %>%
+                                     pull(warning) %>%
+                                     which()
+
+                                   Capture_data2[sel,] %>%
+                                     dplyr::select(Row, Value = !!.y[3]) %>%
+                                     dplyr::mutate(Species = .y[1],
+                                                   Age = .y[2],
+                                                   Variable = .y[3])
+
+                                 } else {
+
+                                   sel <- which(Capture_data2$Species == .y[1]
+                                                & ((Capture_data2[,which(colnames(Capture_data2) == .y[3])] < .x$Value[1]
+                                                    & Capture_data2[,which(colnames(Capture_data2) == .y[3])] >= .x$Value[3])
+                                                   | (Capture_data2[,which(colnames(Capture_data2) == .y[3])] > .x$Value[2]
+                                                      & Capture_data2[,which(colnames(Capture_data2) == .y[3])] <= .x$Value[4])))
+
+                                   Capture_data2[sel,] %>%
+                                     dplyr::select(Row, Value = !!.y[3]) %>%
+                                     dplyr::mutate(Species = .y[1],
+                                                   Age = .y[2],
+                                                   Variable = .y[3])
+
+                                 }
+
+                               }
+
                              }) %>%
     dplyr::bind_rows() %>%
     dplyr::arrange(Species, Age, Variable)
