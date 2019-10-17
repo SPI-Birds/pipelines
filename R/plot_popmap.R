@@ -16,14 +16,14 @@
 #' file.remove("Population_map.jpg")
 plot_popmap <- function(scale = 2, filename = NULL){
 
-  pop_locations <- utils::read.csv(system.file("extdata", "pop_locations.csv", package = "SPIbirds", mustWork = TRUE))
+  pop_locations <- utils::read.csv(system.file("extdata", "pop_locations.csv", package = "pipelines", mustWork = TRUE))
 
   world_map <- map_data("world")
 
   ggplot()+
     geom_polygon(data = GT_dist_gg, aes(x = long, y = lat, group = group), fill = "light grey") +
-    geom_polygon(data = world_map, aes(x = long, y = lat, group = group), color = "black", fill = NA) +
-    coord_cartesian(xlim = c(-20, 145), ylim = c(-10, 70)) +
+    geom_polygon(data = map_data("world"), aes(x = long, y = lat, group = group), color = "black", fill = NA) +
+    coord_cartesian(xlim = c(-20, 145), ylim = c(10, 70)) +
     geom_point(data = pop_locations, aes(x = longitude, y = latitude, fill = data), shape = 21, size = 4) +
     #Add a second time to make sure that green points are always on top.
     #These are the ones we want people to see.
@@ -38,14 +38,14 @@ plot_popmap <- function(scale = 2, filename = NULL){
           axis.text = element_blank(),
           axis.title = element_blank(),
           axis.ticks = element_blank(),
-          legend.position = c(0.275, 0.35),
+          legend.position = c(0.265, 0.25),
           legend.background = element_rect(colour = "black", fill = "white", size = 1),
           legend.title = element_blank(),
           legend.text = element_text(size = 14))
 
   ggplot2::ggsave(filename = ifelse(is.null(filename), "Population_map.jpg", filename),
                   height = (3.58 * scale),
-                  width = (5.18 * scale))
+                  width = (8.18 * scale))
 
 }
 
