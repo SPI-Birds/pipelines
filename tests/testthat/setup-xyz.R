@@ -3,7 +3,7 @@
 # #Do not save to github repo as it contains primary data
 if(file.exists("../../inst/extdata/test_data.RDS")){
 
-  pipeline_output <- readRDS(system.file("extdata", "test_data.RDS", package = "SPIbirds", mustWork = TRUE))
+  pipeline_output <- readRDS(system.file("extdata", "test_data.RDS", package = "pipelines", mustWork = TRUE))
 
 } else {
 

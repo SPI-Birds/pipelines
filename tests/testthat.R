@@ -1,4 +1,4 @@
 library(testthat)
-library(SPIbirds)
+library(pipelines)
 
-test_check("SPIbirds")
+test_check("pipelines")
