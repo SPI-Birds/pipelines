@@ -939,16 +939,27 @@ create_location_MON <- function(db, capture_data, brood_data){
   #And give them a unique LocationID (hs_n).
   #Use PopID MIS, because these are captures outside
   #of any main study area.
-  outside_locations <- capture_data %>%
-    dplyr::filter(!is.na(longitude)) %>%
-    dplyr::select(BreedingSeason, latitude, longitude) %>%
-    dplyr::group_by(latitude, longitude) %>%
-    dplyr::summarise(StartSeason = min(BreedingSeason), EndSeason = NA_integer_,
-                     PopID = "MIS", NestboxID = NA_character_,
-                     LocationType = "MN", Habitat = NA_character_) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(LocationID = paste("hs", 1:n(), sep = "_")) %>%
-    dplyr::select(LocationID, NestboxID, LocationType, PopID, Latitude = latitude, Longitude = longitude, StartSeason, EndSeason, Habitat)
+
+  #If we don't include "MIS" as a population, we will never have these. So we need to check that outside locations exist
+  #Otherwise we will get errors trying to manipulate data with no rows
+  if(any(!is.na(capture_data$longitude))){
+
+    outside_locations <- capture_data %>%
+      dplyr::filter(!is.na(longitude)) %>%
+      dplyr::select(BreedingSeason, latitude, longitude) %>%
+      dplyr::group_by(latitude, longitude) %>%
+      dplyr::summarise(StartSeason = min(BreedingSeason), EndSeason = NA_integer_,
+                       PopID = "MIS", NestboxID = NA_character_,
+                       LocationType = "MN", Habitat = NA_character_) %>%
+      dplyr::ungroup() %>%
+      dplyr::mutate(LocationID = paste("hs", 1:n(), sep = "_")) %>%
+      dplyr::select(LocationID, NestboxID, LocationType, PopID, Latitude = latitude, Longitude = longitude, StartSeason, EndSeason, Habitat)
+
+  } else {
+
+    outside_locations <- NULL
+
+  }
 
   #For cases where no lat/long are available
   #We need to link the lat/long from separate file (nestbox_latlong above)
