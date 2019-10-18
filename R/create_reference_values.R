@@ -7,8 +7,6 @@
 #' NB: Manually add & edit reference values in the code and run function to
 #' create the necessary files to be used in \code{\link{quality_check}}.
 #'
-#' @param db File path. Location to save reference values.
-#'
 #' @return
 #' An R data object containing two lists of reference values:
 #' \item{brood_ref_values}{Reference values related to brood data.}
@@ -16,7 +14,7 @@
 #'
 #' @export
 
-create_reference_values <- function(db = utils::choose.dir()) {
+create_reference_values <- function() {
 
   ## - Brood data
   brood_ref_values <- list(
@@ -146,7 +144,7 @@ create_reference_values <- function(db = utils::choose.dir()) {
     PERATE_Chick_Mass = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
                                         Value = c(2, 25, 0, 50)),
     PERATE_Chick_Tarsus = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-                                          Value = cc(3, 23, 0, 46)),
+                                          Value = c(3, 23, 0, 46)),
     ## --- Passer montanus (Eurasian tree sparrow)
     PASMON_Adult_Mass = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
                                         Value = c(3.5, 25, 0, 50)),
@@ -191,10 +189,10 @@ create_reference_values <- function(db = utils::choose.dir()) {
     PHOPHO_Chick_Mass = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
                                        Value = c(2, 25, 0, 50)),
     PHOPHO_Chick_Tarsus = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-                                         Value = c(3, 23, 0, 46)),
+                                         Value = c(3, 23, 0, 46))
   )
 
-  ## Save as .rda
-  save(brood_ref_values, capture_ref_values,
-       file = paste0(db, "\\reference_values.rda"))
+  ## Save as lists in /data folder
+  usethis::use_data(brood_ref_values, overwrite=TRUE)
+  usethis::use_data(capture_ref_values, overwrite=TRUE)
 }
