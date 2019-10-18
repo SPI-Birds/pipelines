@@ -1047,11 +1047,11 @@ identify_PopID_MON <- function(variable){
                    variable %in% c("pir", "tua") ~ "PIR",
                    variable == "rou" ~ "ROU",
                    variable %in% c("bot", "cef", "fac", "font",
-                                 "gram", "mas", "mos", "val", "vol", "zoo") ~ "MON",
+                                 "gram", "mas", "mos", "val", "zoo") ~ "MON",
                    variable == "ven" ~ "MTV",
                    variable %in% c("hs", "aul", "mes", "aig", "bon", "cap", "crt", "gen", "mal",
                                  "mau", "mrt", "olm", "pac", "pie", "pog", "pon",
-                                 "pre", "pue", "sfl", "stb", "tcb", "tcv", "vic") ~ "MIS",
+                                 "pre", "pue", "sfl", "stb", "tcb", "tcv", "vic", "vol") ~ "MIS",
                    grepl(x = variable, pattern = "voliére|volière|aviary") ~ "aviary")
 
 }
