@@ -29,6 +29,8 @@ continuous variables with mean/SD b) unique values of all categorical
 variables.}
 
 \item{output_type}{Should the pipeline generate .csv files ('csv') or R objects ('R').}
+
+\item{verbose}{Should messages be printed during the pipeline?}
 }
 \value{
 Generates either 4 .csv files or 4 data frames in the standard format.

@@ -13,6 +13,9 @@ create_brood_MON(db, species_filter, pop_filter)
 interest as listed in the
 \href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{standard
 protocol}.}
+
+\item{pop_filter}{Population three letter codes from the standard protocol.
+Used to filter the data.}
 }
 \value{
 A data frame with Brood data

@@ -33,6 +33,7 @@ See a detailed description of which rows correspond to which checks in 'Details'
   \item Row 7-14 represent broods with improbable values in ClutchSize, BroodSize and NumberFledged per species (part of: 'B6: Checking brood variable values against reference values'; see \code{\link{check_values_brood}}).
   \item Row 15-22 represent broods with impossible values in ClutchSize, BroodSize and NumberFledged per species (part of: 'B6: Checking brood variable values against reference values'; see \code{\link{check_values_brood}}).
   \item Row 23 represents a brood with parents of different species (part of: 'B7: Checking parent species'; see \code{\link{check_parent_species}}).
+  \item Rows 24-25 represent broods with, respectively, a larger and smaller BroodSize than number of chicks in Individual_data (part of: 'B8: Comparing brood size and number of chicks captured'; see \code{\link{compare_broodsize_chicknumber}}).
 }
 
 \strong{Capture data}:
@@ -51,6 +52,7 @@ See a detailed description of which rows correspond to which checks in 'Details'
   \item Row 5 represents a chick caught in a nest box, but without a BroodID (part of 'I3: Checking that chicks have BroodIDs'; see \code{\link{check_BroodID_chicks}}).
   \item Row 6 represents an individual with conflicting sex (part of 'I4: Checking that individuals have no conflicting sex'; see \code{\link{check_conflicting_sex}}).
   \item Rows 7-8 represent the parents of a brood (a female and male, respectively) of different species (part of: 'B7: Checking parent species'; see \code{\link{check_parent_species}}).
+  \item Rows 9-12 represent chicks of two broods (part of: 'B8: Comparing brood size and number of chicks captured'; see \code{\link{compare_broodsize_chicknumber}}).
 }
 
 \strong{Location data}:
