@@ -553,6 +553,7 @@ create_capture_MON <- function(db, species_filter, pop_filter){
       }
 
     }), ReleasePopID = identify_PopID_MON(ReleasePlot)) %>%
+    dplyr::filter(CapturePopID %in% pop_filter) %>%
     dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, FoundDead, ObserverID, LocationID,
                   CapturePopID, CapturePlot, ReleasePopID, ReleasePlot, Mass, Tarsus, OriginalTarsusMethod,
                   WingLength, Age_observed, ChickAge, ObservedSex, GeneticSex, ExperimentDescription1, ExperimentDescription2, BroodIDLaid, BroodIDFledged)
