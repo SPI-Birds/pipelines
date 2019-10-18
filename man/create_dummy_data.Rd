@@ -2,7 +2,7 @@
 % Please edit documentation in R/dummy_data.R
 \name{create_dummy_data}
 \alias{create_dummy_data}
-\title{Quality check dummy data}
+\title{Create quality check dummy data}
 \usage{
 create_dummy_data(db = utils::choose.dir())
 }
@@ -18,45 +18,6 @@ List of 4 dataframes:
 }
 \description{
 Create dummy pipeline output (\code{dummy_data}) to be tested in \code{\link{quality_check}}.
-In each data frame, rows are specifically created to violate single checks from \code{\link{quality_check}}.
-See a detailed description of which rows correspond to which checks in 'Details'.
-}
-\details{
-\strong{Brood data}:
-\itemize{
-  \item Row 1 represents a non-manipulated brood with larger brood size than clutch size (part of 'B2: Comparing clutch and brood sizes'; see \code{\link{compare_clutch_brood}}).
-  \item Row 2 represents a manipulated brood with larger brood size than clutch size (part of 'B2: Comparing clutch and brood sizes'; see \code{\link{compare_clutch_brood}}).
-  \item Row 3 represents a non-manipulated brood with larger fledgling number than brood size (part of 'B3: Comparing brood sizes and fledgling numbers'; see \code{\link{compare_brood_fledglings}}).
-  \item Row 4 represents a manipulated brood with larger fledgling number than brood size (part of 'B3: Comparing brood sizes and fledgling numbers'; see \code{\link{compare_brood_fledglings}}).
-  \item Row 5 represents a brood with an earlier hatching than laying date (part of 'B4: Comparing laying and hatching dates'; see \code{\link{compare_laying_hatching}}).
-  \item Row 6 represents a brood with an earlier fledging than hatching date (part of 'B5: Comparing hatching and fledging dates'; see \code{\link{compare_hatching_fledging}}).
-  \item Row 7-14 represent broods with improbable values in ClutchSize, BroodSize and NumberFledged per species (part of: 'B6: Checking brood variable values against reference values'; see \code{\link{check_values_brood}}).
-  \item Row 15-22 represent broods with impossible values in ClutchSize, BroodSize and NumberFledged per species (part of: 'B6: Checking brood variable values against reference values'; see \code{\link{check_values_brood}}).
-  \item Row 23 represents a brood with parents of different species (part of: 'B7: Checking parent species'; see \code{\link{check_parent_species}}).
-  \item Rows 24-25 represent broods with, respectively, a larger and smaller BroodSize than number of chicks in Individual_data (part of: 'B8: Comparing brood size and number of chicks captured'; see \code{\link{compare_broodsize_chicknumber}}).
-}
-
-\strong{Capture data}:
-\itemize{
-  \item Row 1-8 represent adults with improbable values in Mass and Tarsus (part of 'C2: Checking capture variable values against reference values'; see \code{\link{check_values_capture}}).
-  \item Row 9-16 represent chicks with improbable values in Mass and Tarsus (part of 'C2: Checking capture variable values against reference values'; see \code{\link{check_values_capture}}).
-  \item Row 17-24 represent adults with impossible values in Mass and Tarsus (part of 'C2: Checking capture variable values against reference values'; see \code{\link{check_values_capture}}).
-  \item Row 25- 32 represent chicks with impossible values in Mass and Tarsus (part of 'C2: Checking capture variable values against reference values'; see \code{\link{check_values_capture}}).
-  \item Row 33 represents a chick caught in a nest box, but without a BroodID (part of 'I3: Checking that chicks have BroodIDs'; see \code{\link{check_BroodID_chicks}}).
-}
-
-\strong{Individual data}:
-\itemize{
-  \item Row 1-2 represent duplicated individuals within a population (part of 'I2: Checking unique individual IDs'; see \code{\link{check_unique_IndvID}}).
-  \item Row 3-4 represent duplicated individuals among populations (part of 'I2: Checking unique individual IDs'; see \code{\link{check_unique_IndvID}}).
-  \item Row 5 represents a chick caught in a nest box, but without a BroodID (part of 'I3: Checking that chicks have BroodIDs'; see \code{\link{check_BroodID_chicks}}).
-  \item Row 6 represents an individual with conflicting sex (part of 'I4: Checking that individuals have no conflicting sex'; see \code{\link{check_conflicting_sex}}).
-  \item Rows 7-8 represent the parents of a brood (a female and male, respectively) of different species (part of: 'B7: Checking parent species'; see \code{\link{check_parent_species}}).
-  \item Rows 9-12 represent chicks of two broods (part of: 'B8: Comparing brood size and number of chicks captured'; see \code{\link{compare_broodsize_chicknumber}}).
-}
-
-\strong{Location data}:
-\itemize{
-  \item Row 1 represents a nest box location corresponding to a chick without a BroodID (part of 'I3: Checking that chicks have BroodIDs'; see \code{\link{check_BroodID_chicks}}).
-}
+In each data frame, rows are specifically created to test single checks from \code{\link{quality_check}}.
+See a detailed description of which rows correspond to which checks in \code{\link{dummy_data}}.
 }
