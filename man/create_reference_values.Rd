@@ -4,10 +4,7 @@
 \alias{create_reference_values}
 \title{Create biological reference values}
 \usage{
-create_reference_values(db = utils::choose.dir())
-}
-\arguments{
-\item{db}{File path. Location to save reference values.}
+create_reference_values()
 }
 \value{
 An R data object containing two lists of reference values:

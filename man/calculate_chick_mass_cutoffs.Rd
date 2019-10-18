@@ -25,8 +25,8 @@ We fit this using data from Hoge Veluwe. See example for data extraction.
 HOG <- run_pipelines(PopID = "HOG", Species = c("PARMAJ", "CYACAE"), output_type = "R")
 
 Subset relevant columns
-HOG_chick_data <- HOG \%>\%
-dplyr::filter(!is.na(ChickAge) & !is.na(Mass)) \%>\%
+HOG_chick_data <- HOG$Capture_data \%>\%
+dplyr::filter(!is.na(ChickAge) & !is.na(Mass), BreedingSeason <= 2019) \%>\%
 dplyr::select(ChickAge, Mass, Species)
 
 calculate_chick_mass_cutoffs(HOG_chick_data)
