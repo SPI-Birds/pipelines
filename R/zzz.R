@@ -2,29 +2,43 @@ quality_check_description_pdf <- "
 
 \\section{Introduction}
 
-Welcome to the SPI-Birds quality check report. This report shows the results of a number of standard data quality tests that are
-run on data stored in the format described in the \\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{SPI-Birds Standard Protocol}.
+Welcome to the SPI-Birds quality check report. This report shows the results of a number of standard data quality checks that can be
+used on any data that have been created following the \\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{SPI-Birds Standard Protocol}.
 
 \\subsection{How to use this report}
 
-All tests either look for 'warnings' (values that we consider to be uncommon or unusual) and 'potential errors' (values that we consider to be impossible).
-Tests are run on each of the four tables described in the SPI-Birds Standard Protocol: Brood data, Capture data, Individual data, and Location data.
-These tests generally work on individual rows (but see the list of tests below).
-When a 'warning' or 'potential error' is identified a line will be included in the report will information on the type of test that was violated
+All checks either look for 'potential errors' (values that we believe are impossible e.g. negative values) or 'warnings' (values that we believe are unlikely).
+Checks are run on the four tables described in the SPI-Birds Standard Protocol: Brood data, Capture data, Individual data, and Location data.
+These checks generally work on individual rows (but see the list of checks below).
+When a 'warning' or 'potential error' is identified a line will be included in the report with information on the type of check that was violated
 and the \\emph{row number} of the corresponding record. The \\emph{row number} refers to the column \\emph{Row} in the corresponding
-table output in the standard format. It does \\textbf{not} refer to row numbers in the primary data.
+table output in the standard format. It does \\textbf{not} refer to row numbers in the primary data. In addition, during the process of the quality
+check two new columns ('warning' and 'error') will be added to each of the four data tables to allow potentially spurious records
+to be easily identified.
 
-\\subsection{Types of tests}
+\\subsection{Types of checks}
 
-The tests include:
+The checks include:
 \\begin{itemize}
-  \\item Test for missing data. Identify any columns where no data is available (i.e. only NA records).
-  \\item Test of data format. Identify any columns where the format of the data (e.g. date, integer) is not as expected.
-  \\item Test for uexpected clutch/brood/fledgling number differences. We assume that clutch size >= brood size >= number fledged. Identify any columns where this assumption is not met.
-  \\item Test for uexpected lay/hatch/fledge date differences. We assume that lay date < hatch date < fledge date. Identify any rows where this assumption is not met.
-  \\item Test for unexpected clutch/brood/fledgling number values. Identify any rows where clutch size, brood size, or number fledged are larger than expected.
-  \\item Test for unexpected mass/tarsus values. In Capture data, identify any rows where mass or tarsus are larger or smaller than expected for
-  a given species. 'warning' and 'potential error' values are currently the 95% and 99.5% quantiles of mass and tarsus from data collected at Hoge Veluwe for each species.
+  \\item \\textbf{Check for missing data}. Identify any empty columns (i.e. where all records are NA) and return a 'warning'.
+  It is possible for empty columns to occur and this check will simply flag these empty columns so they can easily be identified by users.
+  \\item \\textbf{Check of data format}. Identify any columns where the format of the data is not as expected (e.g. date, integer) and return a 'potential error'.
+  All columns (even empty columns) should be of an expected class. When this does not occur, it is an indiciation of problems in the underlying pipelines.
+  \\item \\textbf{Check for discrepencies in clutch size/brood size/fledgling numbers}. We assume that clutch size >= brood size >= number fledged. Identify any rows where this assumption is not met.
+  Where a brood has not been experimentally manipulated a 'potential error' will be returned. Where a brood has been experimentally manipulated a 'warning' is returned, as the discrepency may be explained by the experimental procedure.
+  \\item \\textbf{Check for discrepencies in unexpected lay/hatch/fledge dates}. We assume that lay date < hatch date < fledge date. Identify any rows where this assumption is not met and return a 'potential error'.
+  \\item \\textbf{Check for unusual clutch/brood/fledgling numbers}. Identify any rows where clutch size, brood size, or number fledged are larger than expected and return a 'warning'. Expected values will differ between species.
+  \\item \\textbf{Check for impossible clutch/brood/fledgling numbers}. Identify any rows where clutch size, brood size, or number fledged are negative and return a 'potential error'.
+  \\item \\textbf{Check for unexpected mass/tarsus values}. In Capture data, identify any rows where mass or tarsus are larger or smaller than expected for
+  a given species. 'warning' values for adults are currently drawn from the data validation values used at the NIOO.
+  'warning' values for chicks are the 95% confidence interval of a chick growth curve (logistic model) applied to data from Hoge Veluwe.
+  \\item \\textbf{Check for multi-species broods}. Currently, we identify any rows where the species of the male and female parent differ and return a 'potential error'.
+  In the future, we will also check for discrepencies between the species of parents and chicks and also within a brood.
+  \\item \\textbf{Check for discrepencies between brood size and capture records}. Identify any rows where the number of chicks captured at a brood in Capture data is different to the brood size listed in Brood data.
+  Where the number of chick captures in a brood is less than the brood size we return a 'warning'. This may occur if not all chicks in a brood are ringed.
+  Where the number of chick captures in a brood is more than the brood size we return
+  \\item \\textbf{Check that brood and individual ID are unique}. Identify any rows where the IndvID column in Individual data or the BroodID column in Brood data are
+  duplicated and return a 'potential error'. These identity variables should be unique within a population.
 \\end{itemize}"
 
 quality_check_titlepage_pdf <- "\\renewcommand{\\familydefault}{\\sfdefault}
