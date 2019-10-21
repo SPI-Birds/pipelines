@@ -19,11 +19,6 @@ this argument can be ignored.}
 
 \item{path}{Location where output csv files will be saved.}
 
-\item{debug}{For internal use when editing pipelines. If TRUE, pipeline
-generates a summary of pipeline data. This includes: a) Histogram of
-continuous variables with mean/SD b) unique values of all categorical
-variables.}
-
 \item{output_type}{Should the pipeline generate .csv files ('csv') or R objects ('R').}
 }
 \description{

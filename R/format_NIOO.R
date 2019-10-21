@@ -60,7 +60,6 @@ format_NIOO <- function(db = utils::choose.dir(),
                         species = NULL,
                         pop = NULL,
                         path = ".",
-                        debug = FALSE,
                         output_type = "csv"){
 
   #Force user to select directory
@@ -194,16 +193,6 @@ format_NIOO <- function(db = utils::choose.dir(),
                   CapturePlot = as.character(CapturePlot),
                   ReleasePlot = as.character(ReleasePlot),
                   CaptureDate = lubridate::ymd(CaptureDate))
-
-  # CREATE DEBUG REPORT
-
-  if(debug){
-
-    message("Generating debug report...")
-
-    generate_debug_report(path = path, Pop = "NIOO", Brood_data = Brood_data, Capture_data = Capture_data, Indv_data = Individual_data)
-
-  }
 
   # EXPORT DATA
 

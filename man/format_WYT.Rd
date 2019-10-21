@@ -5,7 +5,7 @@
 \title{Construct standard summary for data from Wytham Woods, UK.}
 \usage{
 format_WYT(db = utils::choose.dir(), path = ".", species = NULL,
-  pop = NULL, debug = FALSE)
+  pop = NULL)
 }
 \arguments{
 \item{db}{Location of database file.}
@@ -22,11 +22,6 @@ protocol}. For data owners with multiple populations (e.g. NIOO, UAN) where a si
 pipeline is used for many populations this argument is used to extract data from
 individual populations. For other pipelines that contain only one population
 this argument can be ignored.}
-
-\item{debug}{For internal use when editing pipelines. If TRUE, pipeline
-generates a summary of pipeline data. This includes: a) Histogram of
-continuous variables with mean/SD b) unique values of all categorical
-variables.}
 }
 \value{
 Generates 4 .csv files with data in a standard format.

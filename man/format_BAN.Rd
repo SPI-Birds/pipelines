@@ -5,7 +5,7 @@
 \title{Construct standard format for data from Bandon Valley, Ireland.}
 \usage{
 format_BAN(db = utils::choose.dir(), path = ".", species = NULL,
-  pop = NULL, debug = FALSE, output_type = "csv")
+  pop = NULL, output_type = "csv")
 }
 \arguments{
 \item{db}{Location of database file.}
@@ -22,11 +22,6 @@ protocol}. For data owners with multiple populations (e.g. NIOO, UAN) where a si
 pipeline is used for many populations this argument is used to extract data from
 individual populations. For other pipelines that contain only one population
 this argument can be ignored.}
-
-\item{debug}{For internal use when editing pipelines. If TRUE, pipeline
-generates a summary of pipeline data. This includes: a) Histogram of
-continuous variables with mean/SD b) unique values of all categorical
-variables.}
 
 \item{output_type}{Should the pipeline generate .csv files ('csv') or R objects ('R').}
 }

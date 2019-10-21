@@ -40,8 +40,7 @@
 format_WYT <- function(db = utils::choose.dir(),
                        path = ".",
                        species = NULL,
-                       pop = NULL,
-                       debug = FALSE){
+                       pop = NULL){
 
   #Force user to select directory
   force(db)

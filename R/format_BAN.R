@@ -57,7 +57,6 @@ format_BAN <- function(db = utils::choose.dir(),
                        path = ".",
                        species = NULL,
                        pop = NULL,
-                       debug = FALSE,
                        output_type = 'csv'){
 
   #Force choose.dir() if used
@@ -156,16 +155,6 @@ format_BAN <- function(db = utils::choose.dir(),
   message("Compiling location information...")
 
   Location_data <- create_location_BAN(all_data)
-
-  # CREATE DEBUG REPORT
-
-  if(debug){
-
-    message("Generating debug report...")
-
-    generate_debug_report(path = path, Pop = "BAN", Brood_data = Brood_data, Capture_data = Capture_data, Indv_data = Individual_data)
-
-  }
 
   # WRANGLE DATA FOR EXPORT
 

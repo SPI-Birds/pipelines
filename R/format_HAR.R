@@ -113,7 +113,6 @@ format_HAR <- function(db = utils::choose.dir(),
                        species = NULL,
                        pop = NULL,
                        path = ".",
-                       debug = FALSE,
                        output_type = "csv"){
 
   #Force user to select directory
@@ -181,18 +180,6 @@ format_HAR <- function(db = utils::choose.dir(),
 
   Capture_data <- Capture_data %>%
     dplyr::select(-Sex, -BroodID)
-
-  # GENERATE DEBUG REPORT
-
-  if(debug){
-
-    message("Generating debug report...")
-
-    generate_debug_report(path = path, Pop = "HAR", Brood_data = Brood_data,
-                          Capture_data = Capture_data,
-                          Indv_data = Individual_data)
-
-  }
 
   # EXPORT DATA
 

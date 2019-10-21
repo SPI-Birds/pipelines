@@ -99,7 +99,6 @@ format_MON <- function(db = utils::choose.dir(),
                        species = NULL,
                        pop = NULL,
                        path = ".",
-                       debug = FALSE,
                        output_type = "csv",
                        verbose = FALSE){
 
@@ -158,18 +157,6 @@ format_MON <- function(db = utils::choose.dir(),
                   AvgChickMass = NA_real_, NumberChicksMass = NA_integer_,
                   AvgTarsus = NA_real_, NumberChicksTarsus = NA_integer_) %>%
     dplyr::select(BroodID:NumberFledgedError, AvgEggMass:NumberChicksTarsus, ExperimentID)
-
-  # GENERATE DEBUG REPORT
-
-  if(debug){
-
-    message("Generating debug report...")
-
-    generate_debug_report(path = path, Pop = "MON", Brood_data = Brood_data,
-                          Capture_data = Capture_data,
-                          Indv_data = Individual_data)
-
-  }
 
   # EXPORT DATA
 

@@ -89,7 +89,6 @@ format_KEV <- function(db = utils::choose.dir(),
                        species = NULL,
                          pop = NULL,
                          path = ".",
-                         debug = FALSE,
                          output_type = "csv"){
 
   #Force user to select directory

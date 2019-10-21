@@ -64,7 +64,6 @@ format_UAN <- function(db = utils::choose.dir(),
                        species = NULL,
                        pop = NULL,
                        path = ".",
-                       debug = FALSE,
                        output_type = "csv"){
 
   #Force choose.dir() if used
@@ -229,16 +228,6 @@ format_UAN <- function(db = utils::choose.dir(),
   message("\n Compiling location information...")
 
   Location_data <- create_location_UAN(BOX_info)
-
-  # GENERATE DEBUG REPORT
-
-  if(debug){
-
-    message("\n Generating debug report...")
-
-    generate_debug_report(path = path, Pop = "UAN", Brood_data = Brood_data, Capture_data = Capture_data, Indv_data = Individual_data)
-
-  }
 
   #WRANGLE DATA FOR EXPORT
 

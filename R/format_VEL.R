@@ -41,7 +41,6 @@ format_VEL <- function(db = utils::choose.dir(),
                        species = NULL,
                        pop = NULL,
                        path = ".",
-                       debug = FALSE,
                        output_type = "csv") {
 
   #Force user to select directory
@@ -281,16 +280,6 @@ format_VEL <- function(db = utils::choose.dir(),
     dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime,
                   ObserverID, LocationID, CapturePopID:Tarsus, OriginalTarsusMethod,
                   WingLength, Age_observed, Age_calculated, ChickAge)
-
-  # GENERATE DEBUG REPORT
-
-  if(debug){
-
-    message("Generating debug report...")
-
-    generate_debug_report(path = path, Pop = "VEL", Brood_data = Brood_data, Capture_data = Capture_data, Indv_data = Individual_data)
-
-  }
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 

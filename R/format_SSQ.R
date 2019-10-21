@@ -42,7 +42,6 @@ format_SSQ <- function(db = utils::choose.dir(),
                        species = NULL,
                        pop = NULL,
                        path = ".",
-                       debug = FALSE,
                        output_type = "csv"){
 
   #Force user to select directory
@@ -118,16 +117,6 @@ format_SSQ <- function(db = utils::choose.dir(),
   message("Compiling nestbox information...")
 
   Location_data <- create_location_SSQ(all_data)
-
-  # GENERATE DEBUG REPORT
-
-  if(debug){
-
-    message("Generating debug report...")
-
-    generate_debug_report(path = path, Pop = "SSQ", Brood_data = Brood_data, Capture_data = Capture_data, Indv_data = Individual_data)
-
-  }
 
   # EXPORT DATA
 

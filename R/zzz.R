@@ -101,10 +101,6 @@ quality_check_description_html <- "
 #'  individual populations. For other pipelines that contain only one population
 #'  this argument can be ignored.
 #'@param path Location where output csv files will be saved.
-#'@param debug For internal use when editing pipelines. If TRUE, pipeline
-#'  generates a summary of pipeline data. This includes: a) Histogram of
-#'  continuous variables with mean/SD b) unique values of all categorical
-#'  variables.
 #'@param output_type Should the pipeline generate .csv files ('csv') or R objects ('R').
 #'
 #'@name pipeline_params
