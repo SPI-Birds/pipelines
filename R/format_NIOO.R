@@ -465,7 +465,7 @@ create_brood_NIOO <- function(database, Individual_data, location_data, species_
   dplyr::select(BreedingSeason = BroodYear, BroodID = ID, BroodSpecies, BroodLocation = BroodLocationID, Female_ring = RingNumberFemale, Male_ring = RingNumberMale,
                 ClutchType_observed = Description, LayDate = LayDate, LayDateError = LayDateDeviation,
                 ClutchSize, HatchDate, BroodSize = NumberHatched, BroodSizeError = NumberHatchedDeviation,
-                FledgeDate, NumberFledged, NumberFledgedError = NumberFledgedDeviation) %>%
+                FledgeDate, NumberFledged, NumberFledgedError = NumberFledgedDeviation, ExperimentID = ExperimentCode) %>%
     dplyr::collect() %>%
     #Join PopID (including site ID and nestbox ID) and filter only the pop(s) of interest
     dplyr::left_join(dplyr::select(location_data, BroodLocation = ID, PopID), by = "BroodLocation") %>%
@@ -476,7 +476,8 @@ create_brood_NIOO <- function(database, Individual_data, location_data, species_
                   NumberFledged = as.integer(NumberFledged + NumberFledgedError),
                   LayDate = lubridate::ymd(LayDate) + LayDateError,
                   HatchDate = lubridate::ymd(HatchDate),
-                  FledgeDate = lubridate::ymd(FledgeDate)) %>%
+                  FledgeDate = lubridate::ymd(FledgeDate),
+                  ExperimentID = !is.na(dplyr::na_if(ExperimentID, ""))) %>%
     #Include species letter codes for all species
     dplyr::mutate(Species = dplyr::case_when(.$BroodSpecies == 14400 ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code,
                                              .$BroodSpecies == 14640 ~ Species_codes[Species_codes$SpeciesID == 14640, ]$Code,
@@ -510,8 +511,7 @@ create_brood_NIOO <- function(database, Individual_data, location_data, species_
     dplyr::arrange(PopID, BreedingSeason, Species, FemaleID, LayDate) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = TRUE)) %>%
   #Add extra columns where data was not provided
-  #N.B. Need to go through and include experiment ID
-  dplyr::mutate(ClutchSizeError = NA_real_, HatchDateError = NA_real_, FledgeDateError = NA_real_, ExperimentID = NA_character_,
+  dplyr::mutate(ClutchSizeError = NA_real_, HatchDateError = NA_real_, FledgeDateError = NA_real_,
                 BroodLocation = as.character(BroodLocation), BroodID = as.character(BroodID),
                 FemaleID = as.character(FemaleID), MaleID = as.character(MaleID))
 
