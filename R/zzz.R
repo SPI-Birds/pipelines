@@ -251,4 +251,9 @@ utils::globalVariables(c(".", "AvgChickTarsus", "AvgChickMass", "AvgTarsus", "Po
                          "Toumi", "Value", "Vari", "Varpaat", "Vart",
                          "Vjalka", "Vkas", "Vlent", "Vnil", "Vpak", "Vpys", "Vuos", "Wb",
                          "WingLengthNestling", "X", "Y", "abr_station",
-                         "chick_mass_cutoffs"))
+                         "chick_mass_cutoffs", "ChickAgeNestling", "Mihin",
+                         "Mista", "Mkk", "Mkuor", "Mpv", "Mpy", "Mtar",
+                         "Mulu", "Naaras", "Nuro", "Ojalka", "Okas", "Olent",
+                         "Pajut", "Pesa", "Pihlaja", "Pitu", "Pohja",
+                         "Poik", "Pontlaji", "Psulka", "Ptapa", "Tuomi",
+                         "la", "lo", "ni", "nichoir"))
