@@ -85,6 +85,8 @@ test_that("Brood_data returns an expected outcome...", {
   #AvgChickMass and AvgTarsus are as expected
   expect_equal(subset(NIOO_data, BroodID == "64088")$AvgChickMass, 11.70)
   expect_equal(subset(NIOO_data, BroodID == "64088")$AvgTarsus, NA_real_)
+  #Test ExperimentID is as expected
+  expect_equal(subset(NIOO_data, BroodID == "64088")$ExperimentID, FALSE)
 
   #Test 2: clutch type = second
   #Check species is as expected
@@ -100,6 +102,8 @@ test_that("Brood_data returns an expected outcome...", {
   #AvgChickMass and AvgTarsus are as expected
   expect_equal(subset(NIOO_data, BroodID == "65073")$AvgChickMass, NA_real_)
   expect_equal(subset(NIOO_data, BroodID == "65073")$AvgTarsus, NA_real_)
+  #Test ExperimentID is as expected
+  expect_equal(subset(NIOO_data, BroodID == "65073")$ExperimentID, FALSE)
 
   #Test 3: clutch type = replacement, where replacement is known (i.e. previous clutch was seen)
   #Check species is as expected
@@ -115,6 +119,8 @@ test_that("Brood_data returns an expected outcome...", {
   #AvgChickMass and AvgTarsus are as expected
   expect_equal(subset(NIOO_data, BroodID == "64597")$AvgChickMass, NA_real_)
   expect_equal(subset(NIOO_data, BroodID == "64597")$AvgTarsus, NA_real_)
+  #Test ExperimentID is as expected
+  expect_equal(subset(NIOO_data, BroodID == "64597")$ExperimentID, TRUE)
 
   #Test 4: clutch type = replacement, where replacement calculated from cutoff
   #Check species is as expected
@@ -130,6 +136,8 @@ test_that("Brood_data returns an expected outcome...", {
   #AvgChickMass and AvgTarsus are as expected
   expect_equal(round(subset(NIOO_data, BroodID == "64825")$AvgChickMass, 1), NA_real_)
   expect_equal(round(subset(NIOO_data, BroodID == "64825")$AvgTarsus, 1), NA_real_)
+  #Test ExperimentID is as expected
+  expect_equal(subset(NIOO_data, BroodID == "64825")$ExperimentID, FALSE)
 
 })
 
