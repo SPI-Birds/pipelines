@@ -52,7 +52,7 @@ Each set of primary data is in a slightly different format. Therefore, to run al
 
 ### Setup your computer to run pipelines
 
-Pipelines for some populations require additional software and software drivers. These setup instructions describe how to install the required software for a Windows 10 64-bit operating system (on which the pipelines were built). The setup procedure should be similar for other Windows 64-bit systems, but will differ for non-Windows operating systems. If you are unsure which version of Windows is running on your computer, check 'System Type' in the 'System Information'. To run the pipelines for all populations a users system must have:
+Pipelines for some populations require additional software and software drivers. These setup instructions describe how to install the required software for a Windows 10 64-bit operating system (on which the pipelines were built). The setup procedure should be similar for other Windows 64-bit systems, but will differ for non-Windows operating systems. If you are unsure which version of Windows is running on your computer, check 'System Type' in 'System Information'. To run the pipelines for all populations a users system must have:
 
 - Microsoft Access Driver (/*.mdb, /*.accdb)
 - Python 3
