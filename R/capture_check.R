@@ -237,7 +237,10 @@ check_values_capture <- function(Capture_data) {
 
                                    if(.y[3] == "Mass" & .y[1] %in% c("PARMAJ", "CYACAE")){
 
-                                     sel <- Capture_data2 %>%
+                                     Capture_data3 <- Capture_data2 %>%
+                                       dplyr::filter(Species == .y[1])
+
+                                     sel <- Capture_data3 %>%
                                        dplyr::filter(Species == .y[1]) %>%
                                        dplyr::mutate(error = purrr::pmap_lgl(.l = list(Mass, ChickAge, Age_calculated),
                                                                              .f = function(Mass, ChickAge, Age_calculated, Ref_values){
@@ -267,7 +270,7 @@ check_values_capture <- function(Capture_data) {
                                        pull(error) %>%
                                        which()
 
-                                     Capture_data2[sel,] %>%
+                                     Capture_data3[sel,] %>%
                                        dplyr::select(Row, Value = !!.y[3]) %>%
                                        dplyr::mutate(Species = .y[1],
                                                      Age = .y[2],
@@ -340,8 +343,10 @@ check_values_capture <- function(Capture_data) {
 
                                  if(.y[3] == "Mass" & .y[1] %in% c("PARMAJ", "CYACAE")){
 
-                                   sel <- Capture_data2 %>%
-                                     dplyr::filter(Species == .y[1]) %>%
+                                   Capture_data3 <- Capture_data2 %>%
+                                     dplyr::filter(Species == .y[1])
+
+                                   sel <- Capture_data3 %>%
                                      dplyr::mutate(warning = purrr::pmap_lgl(.l = list(Mass, ChickAge, Age_calculated),
                                                                            .f = function(Mass, ChickAge, Age_calculated, Ref_values){
 
@@ -370,7 +375,7 @@ check_values_capture <- function(Capture_data) {
                                      pull(warning) %>%
                                      which()
 
-                                   Capture_data2[sel,] %>%
+                                   Capture_data3[sel,] %>%
                                      dplyr::select(Row, Value = !!.y[3]) %>%
                                      dplyr::mutate(Species = .y[1],
                                                    Age = .y[2],
@@ -406,17 +411,45 @@ check_values_capture <- function(Capture_data) {
 
     warning_output <- purrr::pmap(.l = Capture_war,
                                   .f = ~{
-                                    paste0("Record on row ", ..1,
-                                           " (", Species_codes[Species_codes$Code == ..3, "CommonName"], " ",
-                                           ..4, ")",
-                                           " has an unusually ",
-                                           ifelse(..2 < capture_ref_values[[paste(..3, ..4, ..5, sep="_")]]$Value[1],
-                                                  paste0("low value in ", ..5, " (", ..2, " < ",
-                                                         capture_ref_values[[paste(..3, ..4, ..5, sep="_")]]$Value[1],
-                                                         ")"),
-                                                  paste0("high value in ", ..5, " (", ..2, " > ",
-                                                         capture_ref_values[[paste(..3, ..4, ..5, sep="_")]]$Value[2],
-                                                         ")")))
+
+                                    #This doesn't work for chick growth curve because we also need to know chick age
+                                    #in days. Need to fix this later.
+
+                                    # paste0("Record on row ", ..1,
+                                    #        " (", Species_codes[Species_codes$Code == ..3, "CommonName"], " ",
+                                    #        ..4, ")",
+                                    #        " has an unusually ",
+                                    #        ifelse(..2 < capture_ref_values[[paste(..3, ..4, ..5, sep="_")]]$Value[1],
+                                    #               paste0("low value in ", ..5, " (", ..2, " < ",
+                                    #                      capture_ref_values[[paste(..3, ..4, ..5, sep="_")]]$Value[1],
+                                    #                      ")"),
+                                    #               paste0("high value in ", ..5, " (", ..2, " > ",
+                                    #                      capture_ref_values[[paste(..3, ..4, ..5, sep="_")]]$Value[2],
+                                    #                      ")")))
+
+                                    if(..4 == "Chick" & ..5 == "Mass"){
+
+                                      paste0("Record on row ", ..1,
+                                             " (", Species_codes[Species_codes$Code == ..3, "CommonName"], " ",
+                                             ..4, ")",
+                                             " has an unusual mass value for its age (", ..2, ")")
+
+                                    } else {
+
+                                      paste0("Record on row ", ..1,
+                                             " (", Species_codes[Species_codes$Code == ..3, "CommonName"], " ",
+                                             ..4, ")",
+                                             " has an unusually ",
+                                             ifelse(..2 < capture_ref_values[[paste(..3, ..4, ..5, sep="_")]]$Value[1],
+                                                    paste0("low value in ", ..5, " (", ..2, " < ",
+                                                           capture_ref_values[[paste(..3, ..4, ..5, sep="_")]]$Value[1],
+                                                           ")"),
+                                                    paste0("high value in ", ..5, " (", ..2, " > ",
+                                                           capture_ref_values[[paste(..3, ..4, ..5, sep="_")]]$Value[2],
+                                                           ")")))
+
+                                    }
+
                                   })
   }
 
