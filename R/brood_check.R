@@ -334,7 +334,7 @@ compare_clutch_brood <- function(Brood_data){
                                     paste0("Record on row ", ..1,
                                            " has a larger brood size (", ..3,
                                            ") than clutch size (", ..2,
-                                           "), and was experimentally manipulated.")
+                                           "), but was experimentally manipulated.")
                                   })
   }
 
@@ -697,7 +697,7 @@ check_parent_species <- function(Brood_data, Individual_data) {
   # Find species information of mothers
   Females <- Brood_data %>%
     dplyr::filter(!is.na(FemaleID) & !is.na(MaleID)) %>%
-    dplyr::select(Row, FemaleID) %>%
+    dplyr::select(Row, BroodID, FemaleID) %>%
     dplyr::left_join(Individual_data[,c("IndvID", "Species")], by=c("FemaleID" = "IndvID")) %>%
     dplyr::rename(FemaleSpecies = Species)
 
@@ -720,10 +720,10 @@ check_parent_species <- function(Brood_data, Individual_data) {
 
     error_output <- purrr::pmap(.l = Interspecific_broods,
                                 .f = ~{
-                                  paste0("Record on row ", ..1,
+                                  paste0("Record on row ", ..1, " (BroodID: ", ..2, ")",
                                          " has parents of different species",
-                                         " (Mother: ", Species_codes[Species_codes$Code == ..3, "CommonName"],
-                                         ", father: ", Species_codes[Species_codes$Code == ..5, "CommonName"], ").")
+                                         " (Mother: ", Species_codes[Species_codes$Code == ..4, "CommonName"],
+                                         ", father: ", Species_codes[Species_codes$Code == ..6, "CommonName"], ").")
                                 })
   }
 
