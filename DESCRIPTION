@@ -39,7 +39,8 @@ Imports: dplyr,
          janitor,
          reshape2,
          magrittr,
-         maps
+         maps,
+         stats
 RoxygenNote: 6.1.1
 Suggests: 
     knitr,
