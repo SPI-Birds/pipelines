@@ -133,6 +133,56 @@ quality_check <- function(R_data,
     '',
     '`r checks_errors` out of `r nrow(check_list)` checks resulted in errors.',
     '',
+    '# Potential Errors',
+    '',
+    '## Brood data',
+    '',
+    '```{r, echo=FALSE, linewidth=100}',
+    'purrr::pwalk(.l = list(Brood_checks$Errors,
+                            Brood_checks$CheckList$CheckID,
+                            Brood_checks$CheckList$CheckDescription),
+                  .f = ~{
+                    cat(paste0("Check ", ..2, ": ", ..3), "\n")
+                    cat(..1, sep="\n", "\n")
+                  })',
+    '```',
+    '',
+    '## Capture data',
+    '',
+    '```{r, echo=FALSE}',
+    'purrr::pwalk(.l = list(Capture_checks$Errors,
+                            Capture_checks$CheckList$CheckID,
+                            Capture_checks$CheckList$CheckDescription),
+                  .f = ~{
+                    cat(paste0("Check ", ..2, ": ", ..3), "\n")
+                    cat(..1, sep="\n", "\n")
+                  })',
+    '```',
+    '',
+    '## Individual data',
+    '',
+    '```{r, echo=FALSE}',
+    'purrr::pwalk(.l = list(Individual_checks$Errors,
+                            Individual_checks$CheckList$CheckID,
+                            Individual_checks$CheckList$CheckDescription),
+                  .f = ~{
+                    cat(paste0("Check ", ..2, ": ", ..3), "\n")
+                    cat(..1, sep="\n", "\n")
+                  })',
+    '```',
+    '',
+    '## Location data',
+    '',
+    '```{r, echo=FALSE}',
+    'purrr::pwalk(.l = list(Location_checks$Errors,
+                            Location_checks$CheckList$CheckID,
+                            Location_checks$CheckList$CheckDescription),
+                  .f = ~{
+                    cat(paste0("Check ", ..2, ": ", ..3), "\n")
+                    cat(..1, sep="\n", "\n")
+                  })',
+    '```',
+    '\\newpage',
     '# Warnings',
     '',
     '## Brood data',
@@ -182,57 +232,7 @@ quality_check <- function(R_data,
                     cat(..1, sep="\n", "\n")
                   })',
     '```',
-    '',
-    '\\newpage',
-    '# Potential Errors',
-    '',
-    '## Brood data',
-    '',
-    '```{r, echo=FALSE, linewidth=100}',
-    'purrr::pwalk(.l = list(Brood_checks$Errors,
-                            Brood_checks$CheckList$CheckID,
-                            Brood_checks$CheckList$CheckDescription),
-                  .f = ~{
-                    cat(paste0("Check ", ..2, ": ", ..3), "\n")
-                    cat(..1, sep="\n", "\n")
-                  })',
-    '```',
-    '',
-    '## Capture data',
-    '',
-    '```{r, echo=FALSE}',
-    'purrr::pwalk(.l = list(Capture_checks$Errors,
-                            Capture_checks$CheckList$CheckID,
-                            Capture_checks$CheckList$CheckDescription),
-                  .f = ~{
-                    cat(paste0("Check ", ..2, ": ", ..3), "\n")
-                    cat(..1, sep="\n", "\n")
-                  })',
-    '```',
-    '',
-    '## Individual data',
-    '',
-    '```{r, echo=FALSE}',
-    'purrr::pwalk(.l = list(Individual_checks$Errors,
-                            Individual_checks$CheckList$CheckID,
-                            Individual_checks$CheckList$CheckDescription),
-                  .f = ~{
-                    cat(paste0("Check ", ..2, ": ", ..3), "\n")
-                    cat(..1, sep="\n", "\n")
-                  })',
-    '```',
-    '',
-    '## Location data',
-    '',
-    '```{r, echo=FALSE}',
-    'purrr::pwalk(.l = list(Location_checks$Errors,
-                            Location_checks$CheckList$CheckID,
-                            Location_checks$CheckList$CheckDescription),
-                  .f = ~{
-                    cat(paste0("Check ", ..2, ": ", ..3), "\n")
-                    cat(..1, sep="\n", "\n")
-                  })',
-    '```')
+    '')
 
     #For the different output formats, create specific yaml and
     #output the file
