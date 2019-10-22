@@ -769,65 +769,22 @@ create_location_HAR <- function(db){
     dplyr::filter(!is.na(Longitude))
 
   #Read location data with coordinates as sf object in Finnish Coordinate system
-  #We use zone 4 for now, because it seems to get the German point in the right place...but this really doesn't work!!
+  #Coordinates are in Finland Uniform Coordinate System (EPSG 2393)
 
-  # Location_data_sf_zone0 <- sf::st_as_sf(Location_wcoord,
-  #              coords = c("Longitude", "Latitude"),
-  #              crs = 3386) %>%
-  #   sf::st_transform(crs = 4326)
-  #
-  # Location_data_sf_zone1 <- sf::st_as_sf(Location_wcoord,
-  #                                        coords = c("Longitude", "Latitude"),
-  #                                        crs = 2391) %>%
-  #   sf::st_transform(crs = 4326)
-  #
-  # Location_data_sf_zone2 <- sf::st_as_sf(Location_wcoord,
-  #                                        coords = c("Longitude", "Latitude"),
-  #                                        crs = 2392) %>%
-  #   sf::st_transform(crs = 4326)
-  #   # sf::st_coordinates()
-  #
-  # Location_data_sf_nozone <- sf::st_as_sf(Location_wcoord,
-  #                                        coords = c("Longitude", "Latitude"),
-  #                                        crs = 2393) %>%
-  #   sf::st_transform(crs = 4326)
-  #
-  Location_data_sf_zone4 <- sf::st_as_sf(Location_wcoord,
+  Location_data_sf <- sf::st_as_sf(Location_wcoord,
                                          coords = c("Longitude", "Latitude"),
-                                         crs = 2394) %>%
+                                         crs = 2393) %>%
     sf::st_transform(crs = 4326)
-  #
-  # Location_data_sf_zone5 <- sf::st_as_sf(Location_wcoord,
-  #                                        coords = c("Longitude", "Latitude"),
-  #                                        crs = 3387) %>%
-  #   sf::st_transform(crs = 4326)
-  #
-  # Location_data_sf_other <- sf::st_as_sf(Location_wcoord,
-  #                                        coords = c("Longitude", "Latitude"),
-  #                                        crs = 4123) %>%
-  #   sf::st_transform(crs = 4326)
-
-  # ggplot() +
-  #   geom_polygon(data = subset(map_data("world"), region %in% c("Morocco", "France", "Algeria", "Finland", "Sweden", "Denmark", "Germany", "Poland", "Lithuania") | (region == "Russia" & subregion == "32")), aes(group = group, x = long, y = lat), fill = "white", colour = "black") +
-  #   geom_sf(data = filter(Location_data_sf_zone0, LocationName %in% c("Tanska", "Ranska", "Germany", "Marokko"))) +
-  #   geom_sf(data = filter(Location_data_sf_zone1, LocationName %in% c("Tanska", "Ranska", "Germany", "Marokko")), colour = "red") +
-  #   geom_sf(data = filter(Location_data_sf_zone2, LocationName %in% c("Tanska", "Ranska", "Germany", "Marokko")), colour = "blue") +
-  #   geom_sf(data = filter(Location_data_sf_nozone,LocationName %in% c("Tanska", "Ranska", "Germany", "Marokko")), colour = "orange") +
-  #   geom_sf(data = filter(Location_data_sf_zone4, LocationName %in% c("Tanska", "Ranska", "Germany", "Marokko")), colour = "green") +
-  #   geom_sf(data = filter(Location_data_sf_zone5, LocationName %in% c("Tanska", "Ranska", "Germany", "Marokko")), colour = "grey") +
-  #   geom_sf(data = filter(Location_data_sf_other, LocationName %in% c("Tanska", "Ranska", "Germany", "Marokko")), colour = "yellow")
 
   Location_full <- dplyr::bind_rows(dplyr::bind_cols(dplyr::select(Location_wcoord, -Longitude, -Latitude),
-                                    tibble(Longitude = sf::st_coordinates(Location_data_sf_zone4)[, 1]),
-                                    tibble(Latitude = sf::st_coordinates(Location_data_sf_zone4)[, 2])),
+                                    tibble(Longitude = sf::st_coordinates(Location_data_sf)[, 1]),
+                                    tibble(Latitude = sf::st_coordinates(Location_data_sf)[, 2])),
                                     Location_nocoord)
 
-  #For now, I give each LocationID_LocationName a unique record
-  #These DO NOT link to Brood_data or Capture_data, need to ask Tapio how this should be done.
-  #Where a location has multiple years of data, take these to be the Start/EndSeason
+  #The records of each Location should show the start/end season
   Location_data <- Location_full %>%
-    dplyr::mutate(LocationID = paste(LocationName, LocationID, sep = "_")) %>%
     dplyr::group_by(LocationID) %>%
+    dplyr::arrange(BreedingSeason, .by_group = TRUE) %>%
     dplyr::summarise(NestboxID = unique(LocationID), PopID = "HAR", Latitude = as.numeric(first(Latitude)), Longitude = as.numeric(first(Longitude)),
                      LocationType = "NB", StartSeason = min(BreedingSeason), EndSeason = max(BreedingSeason), Habitat = "Evergreen") %>%
     dplyr::select(LocationID, NestboxID, LocationType, PopID, Latitude, Longitude, StartSeason, EndSeason, Habitat)

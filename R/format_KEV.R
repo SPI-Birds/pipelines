@@ -715,15 +715,15 @@ create_location_KEV <- function(db){
                   Plot = Paikka)
 
   #Read location data with coordinates as sf object in Finnish Coordinate system
-  #We use zone 4 for now, because it seems to get the German point in the right place...but this really doesn't work!!
-  Location_data_sf_zone4 <- sf::st_as_sf(Location_data,
+  #Coordinates are in Finland Uniform Coordinate System (EPSG 2393)
+  Location_data_sf <- sf::st_as_sf(Location_data,
                                          coords = c("Longitude", "Latitude"),
-                                         crs = 2394) %>%
+                                         crs = 2393) %>%
     sf::st_transform(crs = 4326)
 
   Location_full <- dplyr::bind_cols(dplyr::select(Location_data, -Longitude, -Latitude),
-                                                     tibble(Longitude = sf::st_coordinates(Location_data_sf_zone4)[, 1]),
-                                                     tibble(Latitude = sf::st_coordinates(Location_data_sf_zone4)[, 2]))
+                                                     tibble(Longitude = sf::st_coordinates(Location_data_sf)[, 1]),
+                                                     tibble(Latitude = sf::st_coordinates(Location_data_sf)[, 2]))
 
   #In Kevo, it seems each row is a record of a nestbox in a given year
   #This should tell us about nest box changes over time and Start/EndSeason
