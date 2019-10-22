@@ -456,7 +456,9 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
     tidyr::unnest(data) %>%
     dplyr::mutate(ObserverID = NA_character_,
                   OriginalTarsusMethod = dplyr::case_when(!is.na(.$Tarsus) ~ "Oxford")) %>%
-    dplyr::select(-ChickNr)
+    dplyr::select(-ChickNr) %>%
+    #For records at 13 days, if there was no mass/tarsus we assume that it was not caught at 13 days
+    dplyr::filter(ChickAge == 6 | (ChickAge == 13 & (!is.na(Tarsus) | !is.na(WingLength) | !is.na(Mass))))
 
   #Then create capture info for every adult.
   FICALB_adults <- FICALB_data %>%
