@@ -296,7 +296,7 @@ test_that("Location_data returns an expected outcome...", {
   expect_equal(round(subset(VEL_data, LocationID == "B1")$Latitude, 3), 49.552)
   expect_equal(round(subset(VEL_data, LocationID == "B1")$Longitude, 3), 17.044)
 
-  #Test 1: Nestbox evergreen
+  #Test 2: Nestbox evergreen
   #LocationType is as expected
   expect_equal(subset(VEL_data, LocationID == "E9")$LocationType, "NB")
   #Habitat is as expected
@@ -306,6 +306,13 @@ test_that("Location_data returns an expected outcome...", {
   expect_equal(round(subset(VEL_data, LocationID == "E9")$Latitude, 3), 49.552)
   expect_equal(round(subset(VEL_data, LocationID == "E9")$Longitude, 3), 17.067)
 
-
+  #Test 3: Nestbox with no coordinates
+  #LocationType is as expected
+  expect_equal(subset(VEL_data, LocationID == "T2")$LocationType, "NB")
+  #Habitat is as expected
+  expect_equal(subset(VEL_data, LocationID == "T2")$Habitat, "evergreen")
+  #Latitude and longitude are as expected
+  expect_equal(subset(VEL_data, LocationID == "T2")$Latitude, NA_real_)
+  expect_equal(subset(VEL_data, LocationID == "T2")$Longitude, NA_real_)
 
 })

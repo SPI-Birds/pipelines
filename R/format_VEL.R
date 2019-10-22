@@ -265,7 +265,7 @@ format_VEL <- function(db = utils::choose.dir(),
 
   message("Compiling location information...")
 
-  Location_data <- create_location_VEL(db, TIT_data)
+  Location_data <- create_location_VEL(db, Brood_data, TIT_data)
 
   # WRANGLE DATA FOR EXPORT
 
@@ -652,9 +652,9 @@ create_individual_VEL     <- function(Capture_data){
 #'
 #' @return A data frame.
 
-create_location_VEL       <- function(db, TIT_data){
+create_location_VEL       <- function(db, Brood_data, TIT_data){
 
-  Location_data <- readxl::read_excel(paste0(db, "/VEL_PrimaryData_locations.xls"),
+  location_data_excel <- readxl::read_excel(paste0(db, "/VEL_PrimaryData_locations.xls"),
                                       col_types = c("text")) %>%
     janitor::clean_names() %>%
     #There is date time info in here. I assume this is date of measurement of XYZ
@@ -671,18 +671,20 @@ create_location_VEL       <- function(db, TIT_data){
     dplyr::left_join(TIT_data %>% dplyr::group_by(LocationID) %>% dplyr::summarise(Habitat = first(Habitat)), by = "LocationID") %>%
     dplyr::select(LocationID, NestboxID, LocationType, PopID, Latitude, Longitude, StartSeason, EndSeason, Habitat)
 
-  return(Location_data)
+  #Some nest locations were not recorded in the Location data excel file. We still include these locations
+  #but they will have no lat/long info
+  location_data_nocoords <- tibble::tibble(LocationID = as.character(stats::na.omit(unique(Brood_data$LocationID))),
+                                           NestboxID = LocationID,
+                                           LocationType = "NB",
+                                           PopID = "VEL",
+                                           Latitude = NA_real_,
+                                           Longitude = NA_real_,
+                                           StartSeason = 1997L, EndSeason = NA_integer_) %>%
+    ## Join in habitat data from TIT_data table
+    dplyr::left_join(TIT_data %>% dplyr::group_by(LocationID) %>% dplyr::summarise(Habitat = first(Habitat)), by = "LocationID") %>%
+    ## Exclude locations that were already in the location data excel file.
+    dplyr::filter(!LocationID %in% location_data_excel$LocationID)
 
-  ## Determine all used LocationIDs in Brood_data. These should be all locations.
-  ## Assume that nestboxes are the same for Tits and Flycatchers.
-  # location_data <- tibble::tibble(LocationID = as.character(stats::na.omit(unique(Brood_data$LocationID))),
-  #                                 NestboxID = LocationID,
-  #                                 LocationType = "NB",
-  #                                 PopID = "VEL",
-  #                                 Latitude = NA_real_,
-  #                                 Longitude = NA_real_,
-  #                                 StartSeason = 1997L, EndSeason = NA_integer_) %>%
-  #   ## Join in habitat data from TIT_data table
-  #   dplyr::left_join(TIT_data %>% dplyr::group_by(LocationID) %>% dplyr::summarise(Habitat = first(Habitat)), by = "LocationID")
+  return(dplyr::bind_rows(location_data_excel, location_data_nocoords))
 
 }
