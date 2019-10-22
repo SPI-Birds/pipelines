@@ -373,8 +373,8 @@ create_capture_NIOO <- function(database, Brood_data, Individual_data, location_
     #Arrange by species, indv and date/time
     dplyr::arrange(Species, IndvID, CaptureDate, CaptureTime) %>%
     #Include three letter population codes for both the capture and release location (some individuals may have been translocated e.g. cross-fostering)
-    dplyr::left_join(dplyr::select(location_data, CaptureLocation = ID, CapturePopID = PopID), by = "CaptureLocation") %>%
-    dplyr::left_join(dplyr::select(location_data, ReleaseLocation = ID, ReleasePopID = PopID), by = "ReleaseLocation") %>%
+    dplyr::left_join(dplyr::select(location_data, CapturePlot = AreaID, CaptureLocation = ID, CapturePopID = PopID), by = "CaptureLocation") %>%
+    dplyr::left_join(dplyr::select(location_data, ReleasePlot = AreaID, ReleaseLocation = ID, ReleasePopID = PopID), by = "ReleaseLocation") %>%
     dplyr::filter(CapturePopID %in% pop_filter) %>%
     #Make mass and tarsus into g and mm
     dplyr::mutate(LocationID = CaptureLocation, Mass = dplyr::na_if(Weight/100, y = 0), Tarsus = dplyr::na_if(Tarsus/10, 0))
@@ -402,8 +402,8 @@ create_capture_NIOO <- function(database, Brood_data, Individual_data, location_
 
                                              })) %>%
     #Arrange columns
-    dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, CapturePopID, CapturePlot = CaptureLocation,
-                  ReleasePopID, ReleasePlot = ReleaseLocation,
+    dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, CapturePopID, CapturePlot,
+                  ReleasePopID, ReleasePlot,
                   Mass, Tarsus, OriginalTarsusMethod, WingLength, Age_observed, Age_calculated, ChickAge)
 
   return(Capture_data)
@@ -430,7 +430,7 @@ create_brood_NIOO <- function(database, Individual_data, location_data, species_
   target_locations <- dplyr::filter(location_data, PopID %in% pop_filter)
 
   Brood_data  <- dplyr::tbl(database, "dbo_tbl_Brood") %>%
-    #Subset only broods of designated species in designated populato
+    #Subset only broods of designated species in designated population
     dplyr::filter(BroodSpecies %in% species_filter & BroodLocationID %in% !!target_locations$ID) %>%
     #Link the ClutchType description (e.g. first, second, replacement)
     dplyr::left_join(dplyr::tbl(database, "dbo_tl_BroodType") %>%
@@ -455,7 +455,7 @@ create_brood_NIOO <- function(database, Individual_data, location_data, species_
                 FledgeDate, NumberFledged, NumberFledgedError = NumberFledgedDeviation, ExperimentID = ExperimentCode) %>%
     dplyr::collect() %>%
     #Join PopID (including site ID and nestbox ID) and filter only the pop(s) of interest
-    dplyr::left_join(dplyr::select(location_data, BroodLocation = ID, PopID), by = "BroodLocation") %>%
+    dplyr::left_join(dplyr::select(location_data, Plot = AreaID, BroodLocation = ID, PopID), by = "BroodLocation") %>%
     #Account for error in brood size
     dplyr::mutate(BroodSizeError = BroodSizeError/2, NumberFledgedError = NumberFledgedError/2,
                   LayDateError = LayDateError/2,
@@ -473,7 +473,6 @@ create_brood_NIOO <- function(database, Individual_data, location_data, species_
                                              .$BroodSpecies == 14790 ~ Species_codes[Species_codes$SpeciesID == 14790, ]$Code,
                                              .$BroodSpecies == 15980 ~ Species_codes[Species_codes$SpeciesID == 15980, ]$Code,
                                              .$BroodSpecies == 14610 ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code),
-                  Plot = NA_character_,
                   #Adjust ClutchType names to fit "first", "second", "replacement".
                   #We ignore any uncertainty (e.g. "probably second" is just listed as "second")
                   #ClutchTypes like 'different species inside one clutch' are listed as NA.
