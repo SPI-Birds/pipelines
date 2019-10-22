@@ -21,9 +21,12 @@
 #'everything else is assumed to be an estimate.
 #'
 #'\strong{LayDateError & HatchDateError}: Accuracy of laying and hatch date
-#'are given as categories: 0-1; 1-2; 2-3; >3 (N.B. Need to check this with
-#'Tapio). More conservative error is used (i.e. 0-1 is recorded as 1). For now
-#'>3 is recorded as 4. N.B. Need to check this with Tapio!!
+#'are given as categories: 0-1; 1-2; 2-3; 'inaccurate'. Where error is a range,
+#'the more conservative error is used (i.e. 0-1 is recorded as 1).
+#'Cases listed as 'inaccurate' have an error of at least a week.
+#'Therefore, these ones are given Lay/HatchDateError of 7. Dates in these
+#'cases are highly inaccurate and shouldn't be considered for any phenology
+#'analysis.
 #'
 #'\strong{Capture data:} Linking nestling and adult capture
 #'data can be difficult. There are eight different scenarios we need to
@@ -268,12 +271,17 @@ create_brood_HAR <- function(db, species_filter){
     #Create calendar date for laying date and hatch date
     dplyr::mutate(LayDate = as.Date(paste(LayDate_day, LayDate_month, BreedingSeason, sep = "/"), format = "%d/%m/%Y"),
            HatchDate  = as.Date(paste(HatchDate_day, HatchDate_month, BreedingSeason, sep = "/"), format = "%d/%m/%Y")) %>%
-    #Treat all NAs as true unknowns (check with Tapio that these are NAs and not 0s)
     dplyr::arrange(BreedingSeason, Species, FemaleID, LayDate) %>%
     #Calculate clutchtype
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
-    dplyr::mutate(LayDateError = as.numeric(LayDateError),
-                  HatchDateError = as.numeric(HatchDateError),
+    dplyr::mutate(LayDateError = dplyr::case_when(LayDateError == "1" ~ 1L,
+                                                  LayDateError == "2" ~ 2L,
+                                                  LayDateError == "3" ~ 3L,
+                                                  LayDateError == "4" ~ 7L),
+                  HatchDateError = dplyr::case_when(HatchDateError == "1" ~ 1L,
+                                                    HatchDateError == "2" ~ 2L,
+                                                    HatchDateError == "3" ~ 3L,
+                                                    HatchDateError == "4" ~ 7L),
                   FledgeDate = as.Date(NA), ClutchSizeError = NA_real_, BroodSizeError = NA_real_,
                   FledgeDateError = NA_real_, NumberFledgedError = NA_real_,
                   BroodSize = as.integer(BroodSize)) %>%

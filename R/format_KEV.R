@@ -14,6 +14,14 @@
 #'montanus), and Eurasian wryneck (Jynx torquilla); however, these species are
 #'captured at most 13 times over >30 years. Therefore, they are excluded.
 #'
+#'\strong{LayDateError & HatchDateError}: Accuracy of laying and hatch date
+#'are given as categories: 0-1; 1-2; 2-3; 'inaccurate'. Where error is a range,
+#'the more conservative error is used (i.e. 0-1 is recorded as 1).
+#'Cases listed as 'inaccurate' have an error of at least a week.
+#'Therefore, these ones are given Lay/HatchDateError of 7. Dates in these
+#'cases are highly inaccurate and shouldn't be considered for any phenology
+#'analysis.
+#'
 #'\strong{Capture data:} As with Harjavalta, linking nestling and adult capture
 #'data can be difficult. There are eight different scenarios we need to
 #'consider. Each of these is described below, with our solution: \itemize{ \item
@@ -240,8 +248,14 @@ create_brood_KEV <- function(db, species_filter){
     #Need to ask Tapio about this
     dplyr::arrange(BreedingSeason, FemaleID, LayDate) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
-    dplyr::mutate(LayDateError = as.numeric(LayDateError),
-                  HatchDateError = as.numeric(HatchDateError),
+    dplyr::mutate(LayDateError = dplyr::case_when(LayDateError == "1" ~ 1L,
+                                                  LayDateError == "2" ~ 2L,
+                                                  LayDateError == "3" ~ 3L,
+                                                  LayDateError == "4" ~ 7L),
+                  HatchDateError = dplyr::case_when(HatchDateError == "1" ~ 1L,
+                                                    HatchDateError == "2" ~ 2L,
+                                                    HatchDateError == "3" ~ 3L,
+                                                    HatchDateError == "4" ~ 7L),
                   FledgeDate = as.Date(NA), ClutchSizeError = NA_real_, BroodSizeError = NA_real_,
                   FledgeDateError = NA_real_, NumberFledgedError = NA_real_,
                   BroodSize = as.integer(BroodSize), ExperimentID = NA_character_) %>%

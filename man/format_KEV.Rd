@@ -44,6 +44,14 @@ blue tits, spotted flycatcher (Muscicapa striata), willow tit (Parus
 montanus), and Eurasian wryneck (Jynx torquilla); however, these species are
 captured at most 13 times over >30 years. Therefore, they are excluded.
 
+\strong{LayDateError & HatchDateError}: Accuracy of laying and hatch date
+are given as categories: 0-1; 1-2; 2-3; 'inaccurate'. Where error is a range,
+the more conservative error is used (i.e. 0-1 is recorded as 1).
+Cases listed as 'inaccurate' have an error of at least a week.
+Therefore, these ones are given Lay/HatchDateError of 7. Dates in these
+cases are highly inaccurate and shouldn't be considered for any phenology
+analysis.
+
 \strong{Capture data:} As with Harjavalta, linking nestling and adult capture
 data can be difficult. There are eight different scenarios we need to
 consider. Each of these is described below, with our solution: \itemize{ \item
