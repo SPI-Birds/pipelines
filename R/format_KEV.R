@@ -14,6 +14,15 @@
 #'montanus), and Eurasian wryneck (Jynx torquilla); however, these species are
 #'captured at most 13 times over >30 years. Therefore, they are excluded.
 #'
+#'\strong{Age}: Chick age is listed as: PP (nestling), PM (fledgling), FL(unknown),
+#'1, +1, 2, +2. Translation from field notebook would translate PP/PM into
+#'EURING 1. PP are chicks in the nest. PM are chick left the nest but caught by
+#'hand (i.e. still not able to fly). 1 = 3 (i.e. fully grown in first year).
+#'2 = 5 (i.e. fully grown and known to be born last year).
+#'+1/+2 are 4/6 respectively, at least 1/2 years old.
+#'FL is unknown. We can't even attribute it to chick or adult.
+#'For this we use EURING 2 (able to fly freely but otherwise unknown).
+#'
 #'\strong{LayDateError & HatchDateError}: Accuracy of laying and hatch date
 #'are given as categories: 0-1; 1-2; 2-3; 'inaccurate'. Where error is a range,
 #'the more conservative error is used (i.e. 0-1 is recorded as 1).
@@ -590,24 +599,18 @@ create_capture_KEV    <- function(db, Brood_data, species_filter){
     dplyr::mutate(Mass = Mass/10,
                   CapturePopID = "KEV", CapturePlot = NA_character_,
                   ReleasePopID = "KEV", ReleasePlot = NA_character_,
-                  ischick = dplyr::case_when(Age == "PP" ~ 1L,
-                                             Age %in% c("PM", "FL") ~ 3L)) %>%
+                  Age_observed = dplyr::case_when(Age %in% c("PM", "PP") ~ 1L,
+                                                  Age == "FL" ~ 2L,
+                                                  Age == "1" ~ 3L,
+                                                  Age == "+1" ~ 4L,
+                                                  Age == "2" ~ 5L,
+                                                  Age == "+2" ~ 6L)) %>%
     #Determine age at first capture for every individual
     #First arrange the data chronologically within each individual
     dplyr::arrange(IndvID, CaptureDate, CaptureTime) %>%
     #Calculate age at each capture based on first capture
-    calc_age(ID = IndvID, Age = ischick, Date = CaptureDate, Year = BreedingSeason) %>%
-    #Make Age_observed, that doesn't require any calculation, just uses observations at the time of capture
-    #Assume that PP = 1, PM/FL = 3 (known to hatch this year), 1 = 5 (known to hatch last year),
-    #1+ = 4 (hatched atleast 1 year ago), 2 = 7 (known to hatch 2 years ago),
-    #2+ = 6 (hatched at least 2 years ago)
-    dplyr::mutate(Age_observed = dplyr::case_when(Age %in% c("PM", "FL") ~ 3,
-                                                  Age == "PP" ~ 1,
-                                                  Age == "1" ~ 5,
-                                                  Age == "+1" ~ 4,
-                                                  Age == "2" ~ 7,
-                                                  Age == "+2" ~ 6),
-                  Tarsus = NA_real_, OriginalTarsusMethod = NA_character_) %>%
+    calc_age(ID = IndvID, Age = Age_observed, Date = CaptureDate, Year = BreedingSeason) %>%
+    dplyr::mutate(Tarsus = NA_real_, OriginalTarsusMethod = NA_character_) %>%
     dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, CapturePopID, CapturePlot,
                   ReleasePopID, ReleasePlot, Mass, Tarsus, OriginalTarsusMethod, WingLength, Age_observed, Age_calculated, ChickAge, Sex, BroodID, CaptureType, BirdStatus)
 
@@ -656,7 +659,7 @@ create_individual_KEV <- function(Capture_data){
 
     }), PopID = "KEV",
     BroodIDLaid = first(BroodID), BroodIDFledged = BroodIDLaid,
-    RingSeason = first(BreedingSeason), RingAge = ifelse(any(Age_calculated %in% c(1, 3)), "chick", "adult"),
+    RingSeason = first(BreedingSeason), RingAge = ifelse(any(Age_calculated %in% c(1, 3)), "chick", ifelse(min(Age_calculated) == 2, NA_character_, "adult")),
     Sex = purrr::map_chr(.x = list(unique(na.omit(Sex))), .f = ~{
 
       if(length(..1) == 0){

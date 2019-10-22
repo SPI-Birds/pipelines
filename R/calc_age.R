@@ -68,6 +68,12 @@ calc_age <- function(data, ID, Age, Date, Year, showpb = TRUE){
                                                  #Give an age which is at least >1yo
                                                  return(4L + 2L*..2)
 
+                                               #If the age is 2 (i.e. can't even tell if it's a chick/adult)...
+                                               } else if(..1 == 2){
+
+                                                 #Start at 2 instead of 4
+                                                 return(2L + 2L*..2)
+
                                                } else {
 
                                                  #Otherwise, if it was first caught as a chick

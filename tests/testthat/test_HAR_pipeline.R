@@ -78,7 +78,7 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(subset(HAR_data, IndvID == "V-675839")$RingSeason, 1991L)
   expect_equal(subset(HAR_data, IndvID == "V-675839")$RingAge, "adult")
 
-  #Test 2: First caught as chick
+  #Test 2: First caught as chick (individual record)
   #Individual HL-010189 should be listed as a female flycatcher
   expect_equal(subset(HAR_data, IndvID == "HL-010189")$Sex, "F")
   expect_equal(subset(HAR_data, IndvID == "HL-010189")$Species, "FICHYP")
@@ -89,17 +89,24 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(subset(HAR_data, IndvID == "HL-010189")$RingSeason, 2005L)
   expect_equal(subset(HAR_data, IndvID == "HL-010189")$RingAge, "chick")
 
+  #Test 3: First caught as chick (multi-chick record)
+  expect_equal(subset(HAR_data, IndvID == "X-127548")$Sex, NA_character_)
+  expect_equal(subset(HAR_data, IndvID == "X-127548")$Species, "CYACAE")
+  #She should have no BroodIDLaid or Fledged because this individual was caught as an adult
+  expect_equal(subset(HAR_data, IndvID == "X-127548")$BroodIDLaid, "1991_0102_1")
+  expect_equal(subset(HAR_data, IndvID == "X-127548")$BroodIDFledged, "1991_0102_1")
+  #Her ring season should be 2003 with a RingAge of 'chick'
+  expect_equal(subset(HAR_data, IndvID == "X-127548")$RingSeason, 1991L)
+  expect_equal(subset(HAR_data, IndvID == "X-127548")$RingAge, "chick")
+
 })
 
 test_that("Capture data returns an expected outcome...", {
 
-  #We want to run tests for captures as both chicks, males, and females
-  #Currently we have no chick data, so we can only test adults
-
   #Take a subset of only HAR data
   HAR_data <- dplyr::filter(pipeline_output$Capture_data, CapturePopID %in% "HAR")
 
-  #Test 1: Individual ringed as a chick
+  #Test 1: Individual ringed as a chick (single record)
   #Test for the expected number of captures
   expect_equal(nrow(subset(HAR_data, IndvID == "HL-010189")), 3)
   #Test that the first capture is as expected
@@ -111,7 +118,7 @@ test_that("Capture data returns an expected outcome...", {
   #Test that age observed is as expected on first capture
   #Test that age observed is as expected on 3rd capture
   expect_equal(subset(HAR_data, IndvID == "HL-010189")$Age_observed[1], 1L)
-  expect_equal(subset(HAR_data, IndvID == "HL-010189")$Age_observed[3], 7L)
+  expect_equal(subset(HAR_data, IndvID == "HL-010189")$Age_observed[3], 5L)
   #Test that age calculated is correct on first capture and last capture
   expect_equal(subset(HAR_data, IndvID == "HL-010189")$Age_calculated[1], 1L)
   expect_equal(subset(HAR_data, IndvID == "HL-010189")$Age_calculated[3], 9L)
@@ -122,7 +129,7 @@ test_that("Capture data returns an expected outcome...", {
   #Test that the first capture is as expected
   expect_equal(subset(HAR_data, IndvID == "V-675839")$CaptureDate[1], as.Date("1991-05-19"))
   #Test that first and last age observed is as expected
-  expect_equal(subset(HAR_data, IndvID == "V-675839")$Age_observed[1], 7L)
+  expect_equal(subset(HAR_data, IndvID == "V-675839")$Age_observed[1], 5L)
   #Test that first and last age calculated is as expected
   expect_equal(subset(HAR_data, IndvID == "V-675839")$Age_calculated[1], 4L)
 
@@ -134,11 +141,25 @@ test_that("Capture data returns an expected outcome...", {
   #Test that the 5th capture is as expected
   expect_equal(subset(HAR_data, IndvID == "00-829590")$CaptureDate[5], as.Date("1998-7-3"))
   #Test that first and last age observed is as expected
-  expect_equal(subset(HAR_data, IndvID == "00-829590")$Age_observed[1], 5L)
+  expect_equal(subset(HAR_data, IndvID == "00-829590")$Age_observed[1], 3L)
   expect_equal(subset(HAR_data, IndvID == "00-829590")$Age_observed[5], 6L)
   #Test that first and last age calculated is as expected
-  expect_equal(subset(HAR_data, IndvID == "00-829590")$Age_calculated[1], 4L)
-  expect_equal(subset(HAR_data, IndvID == "00-829590")$Age_calculated[5], 8L)
+  expect_equal(subset(HAR_data, IndvID == "00-829590")$Age_calculated[1], 3L)
+  expect_equal(subset(HAR_data, IndvID == "00-829590")$Age_calculated[5], 7L)
+
+  #Test 4: Caught with unknown age (FL)
+  #Test it has the correct number of capture records
+  expect_equal(nrow(subset(HAR_data, IndvID == "X-103571")), 4)
+  #Test that the first capture is as expected
+  expect_equal(subset(HAR_data, IndvID == "X-103571")$CaptureDate[1], as.Date("1991-12-15"))
+  #Test that the 5th capture is as expected
+  expect_equal(subset(HAR_data, IndvID == "X-103571")$CaptureDate[4], as.Date("1992-12-30"))
+  #Test that first and last age observed is as expected
+  expect_equal(subset(HAR_data, IndvID == "X-103571")$Age_observed[1], 2L)
+  expect_equal(subset(HAR_data, IndvID == "X-103571")$Age_observed[4], 4L)
+  #Test that first and last age calculated is as expected
+  expect_equal(subset(HAR_data, IndvID == "X-103571")$Age_calculated[1], 2L)
+  expect_equal(subset(HAR_data, IndvID == "X-103571")$Age_calculated[4], 4L)
 
 })
 
