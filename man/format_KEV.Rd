@@ -44,6 +44,15 @@ blue tits, spotted flycatcher (Muscicapa striata), willow tit (Parus
 montanus), and Eurasian wryneck (Jynx torquilla); however, these species are
 captured at most 13 times over >30 years. Therefore, they are excluded.
 
+\strong{Age}: Chick age is listed as: PP (nestling), PM (fledgling), FL(unknown),
+1, +1, 2, +2. Translation from field notebook would translate PP/PM into
+EURING 1. PP are chicks in the nest. PM are chick left the nest but caught by
+hand (i.e. still not able to fly). 1 = 3 (i.e. fully grown in first year).
+2 = 5 (i.e. fully grown and known to be born last year).
++1/+2 are 4/6 respectively, at least 1/2 years old.
+FL is unknown. We can't even attribute it to chick or adult.
+For this we use EURING 2 (able to fly freely but otherwise unknown).
+
 \strong{LayDateError & HatchDateError}: Accuracy of laying and hatch date
 are given as categories: 0-1; 1-2; 2-3; 'inaccurate'. Where error is a range,
 the more conservative error is used (i.e. 0-1 is recorded as 1).

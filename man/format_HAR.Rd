@@ -42,13 +42,14 @@ hole nesting species; however, only 4 of these (great tit, blue tit, coal tit,
 pied flycatcher) have >100 nest records. Only data from these 4 species is
 considered.
 
-\strong{Age}: Chick age is listed as: PP (nestling), PM (fledgling), 1, +1, 2,
-+2. The numbers are said to follow the EURING system. I'm not sure which
-version of the EURING code this would be. I assume that 1 = first year bird,
-+1 = >first year bird, 2 = second year bird, +2 = >second year bird. It's not
-clear to me the distinction between PP, PM, and 1. For now, only PP and PM are
-counted as being caught as chicks (i.e. with exact hatching year known),
-everything else is assumed to be an estimate.
+\strong{Age}: Chick age is listed as: PP (nestling), PM (fledgling), FL(unknown),
+1, +1, 2, +2. Translation from field notebook would translate PP/PM into
+EURING 1. PP are chicks in the nest. PM are chick left the nest but caught by
+hand (i.e. still not able to fly). 1 = 3 (i.e. fully grown in first year).
+2 = 5 (i.e. fully grown and known to be born last year).
++1/+2 are 4/6 respectively, at least 1/2 years old.
+FL is unknown. We can't even attribute it to chick or adult.
+For this we use EURING 2 (able to fly freely but otherwise unknown).
 
 \strong{LayDateError & HatchDateError}: Accuracy of laying and hatch date
 are given as categories: 0-1; 1-2; 2-3; 'inaccurate'. Where error is a range,

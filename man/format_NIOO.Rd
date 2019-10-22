@@ -59,12 +59,10 @@ estimate.
 
 \strong{CapturePlot, ReleasePlot, LocationID}: NIOO data gives CaptureLocation
 and ReleaseLocation (e.g. which nest box was a check transfered to during crossfoster).
-Currently, we use these as the Capture/ReleasePlot. In Capture_data
-we specify the LocationID as the same as the CapturePlot. We need to fix
-this to distinguish between Location (the smallest scale), Plot (middle scale),
-and PopID (largest scale).
+Each box is within an plot specified by AreaID. We use this for the Capture/ReleasePlot
+information.
 
-\strong{Capture_data}Capture_data has information on the accuracy of capture dates.
+\strong{Capture_data}: Capture_data has information on the accuracy of capture dates.
 For now, I am only including those individuals where capture date is known with
 100% accuracy, otherwise this might affect the calculated age of individuals
 during capture.
