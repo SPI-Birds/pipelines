@@ -34,8 +34,8 @@ Kosir, Czechia, administered by Milos Krist.
 }
 \details{
 This section provides details on data management choices that are unique to
-this data. For a general description of the standard format please see XXXXX
-PLACE HOLDER!
+this data. For a general description of the standard format please see see
+\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
 
 \strong{Species}: There are a small number of records for species other than
 great tit, blue tit and collared flycatcher. These are currently excluded.

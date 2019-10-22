@@ -4,13 +4,13 @@
 \alias{create_location_VEL}
 \title{Create location data table for Velky Kosir.}
 \usage{
-create_location_VEL(Brood_data, TIT_data)
+create_location_VEL(db, TIT_data)
 }
 \arguments{
-\item{Brood_data}{Data frame. Output of \code{\link{create_brood_VEL}}}
-
 \item{TIT_data}{Data frame. Data frame. Tit data from Velky Kosir. This is
 needed to include habitat type information.}
+
+\item{Brood_data}{Data frame. Output of \code{\link{create_brood_VEL}}}
 }
 \value{
 A data frame.
