@@ -262,11 +262,8 @@ test_that("Capture_data returns an expected outcome...", {
   expect_equal(subset(VEL_data, IndvID == "f17690")$Age_calculated[3], 8L)
 
   #Test 4: Indvidual caught as chick
-  #Test the individual has the correct number of capture records (2)
-  #THIS GIVES AN ERROR BECAUSE WE ARE COUNTING EVERY CHICK AS HAVING BEEN CAUGHT AT DAY 6 AND 13
-  #HOWEVER (AS IN THIS CASE) WE SHOULD ONLY BE COUNTING A CAPTURE WHERE THERE IS MASS/TARSUS RECORDED
-  #THIS ALSO CAUSES ERRORS IN THE DATE ETC.
-  expect_equal(nrow(subset(VEL_data, IndvID == "s754396")), 2)
+  #Test the individual has the correct number of capture records (3)
+  expect_equal(nrow(subset(VEL_data, IndvID == "s754396")), 3)
   #Test that the first capture is as expected (2016-05-28) <- caught 6 days after hatching date
   expect_equal(min(subset(VEL_data, IndvID == "s754396")$CaptureDate, na.rm = TRUE), as.Date("2016-05-28"))
   #Test that the 2nd capture is as expected (2018-05-30)
@@ -289,10 +286,26 @@ test_that("Location_data returns an expected outcome...", {
   #Take a subset of only VEL data
   VEL_data <- dplyr::filter(pipeline_output$Location_data, PopID == "VEL")
 
-  #Test 1: Nestbox check
-  #Nestbox BP_001 should be type "NB"
-  expect_equal(subset(VEL_data, LocationID == "094")$LocationType, "NB")
-  #Nest boxes are not moved during the study, so LocationID and NestboxID should be identical
-  expect_equal(subset(VEL_data, LocationID == "094")$LocationID, subset(VEL_data, LocationID == "094")$NestboxID)
+  #Test 1: Nestbox deciduous
+  #LocationType is as expected
+  expect_equal(subset(VEL_data, LocationID == "B1")$LocationType, "NB")
+  #Habitat is as expected
+  expect_equal(subset(VEL_data, LocationID == "B1")$Habitat, "deciduous")
+  #Latitude and Longitude are as expected
+  #We use 3 decimal places to clearly distinguish close nest boxes
+  expect_equal(round(subset(VEL_data, LocationID == "B1")$Latitude, 3), 49.552)
+  expect_equal(round(subset(VEL_data, LocationID == "B1")$Longitude, 3), 17.044)
+
+  #Test 1: Nestbox evergreen
+  #LocationType is as expected
+  expect_equal(subset(VEL_data, LocationID == "E9")$LocationType, "NB")
+  #Habitat is as expected
+  expect_equal(subset(VEL_data, LocationID == "E9")$Habitat, "evergreen")
+  #Latitude and Longitude are as expected
+  #We use 3 decimal places to clearly distinguish close nest boxes
+  expect_equal(round(subset(VEL_data, LocationID == "E9")$Latitude, 3), 49.552)
+  expect_equal(round(subset(VEL_data, LocationID == "E9")$Longitude, 3), 17.067)
+
+
 
 })

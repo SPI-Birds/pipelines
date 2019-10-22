@@ -255,7 +255,7 @@ format_VEL <- function(db = utils::choose.dir(),
 
   message("Compiling location information...")
 
-  Location_data <- create_location_VEL(Brood_data, TIT_data)
+  Location_data <- create_location_VEL(db, TIT_data)
 
   # WRANGLE DATA FOR EXPORT
 
@@ -640,18 +640,37 @@ create_individual_VEL     <- function(Capture_data){
 #'
 #' @return A data frame.
 
-create_location_VEL       <- function(Brood_data, TIT_data){
+create_location_VEL       <- function(db, TIT_data){
+
+  Location_data <- readxl::read_excel(paste0(db, "/VEL_PrimaryData_locations.xls"),
+                                      col_types = c("text")) %>%
+    janitor::clean_names() %>%
+    #There is date time info in here. I assume this is date of measurement of XYZ
+    #Not relevant for Start/EndSeason
+    dplyr::rename(LocationID = budka,
+                  Coordinates = sirka_delka_hddd_mm_mmm,
+                  Altitude = nadmorska_vyska) %>%
+    #Separate coordinates into lat and long
+    #Currently in degrees, minutes, seconds. Needs to be converted to decimal degrees.
+    dplyr::mutate(Latitude = as.numeric(stringr::str_sub(Coordinates, start = 2, end = 3)) + as.numeric(stringr::str_sub(Coordinates, start = 5, end = 10))/60,
+                  Longitude = as.numeric(stringr::str_sub(Coordinates, start = 13, end = 14)) + as.numeric(stringr::str_sub(Coordinates, start = 16, end = 21))/60,
+                  NestboxID = LocationID, LocationType = "NB", PopID = "VEL", StartSeason = 1997L, EndSeason = NA_integer_) %>%
+    ## Join in habitat data from TIT_data table
+    dplyr::left_join(TIT_data %>% dplyr::group_by(LocationID) %>% dplyr::summarise(Habitat = first(Habitat)), by = "LocationID") %>%
+    dplyr::select(LocationID, NestboxID, LocationType, PopID, Latitude, Longitude, StartSeason, EndSeason, Habitat)
+
+  return(Location_data)
 
   ## Determine all used LocationIDs in Brood_data. These should be all locations.
   ## Assume that nestboxes are the same for Tits and Flycatchers.
-  location_data <- tibble::tibble(LocationID = as.character(stats::na.omit(unique(Brood_data$LocationID))),
-                                  NestboxID = LocationID,
-                                  LocationType = "NB",
-                                  PopID = "VEL",
-                                  Latitude = NA_real_,
-                                  Longitude = NA_real_,
-                                  StartSeason = 1997L, EndSeason = NA_integer_) %>%
-    ## Join in habitat data from TIT_data table
-    dplyr::left_join(TIT_data %>% dplyr::group_by(LocationID) %>% dplyr::summarise(Habitat = first(Habitat)), by = "LocationID")
+  # location_data <- tibble::tibble(LocationID = as.character(stats::na.omit(unique(Brood_data$LocationID))),
+  #                                 NestboxID = LocationID,
+  #                                 LocationType = "NB",
+  #                                 PopID = "VEL",
+  #                                 Latitude = NA_real_,
+  #                                 Longitude = NA_real_,
+  #                                 StartSeason = 1997L, EndSeason = NA_integer_) %>%
+  #   ## Join in habitat data from TIT_data table
+  #   dplyr::left_join(TIT_data %>% dplyr::group_by(LocationID) %>% dplyr::summarise(Habitat = first(Habitat)), by = "LocationID")
 
 }
