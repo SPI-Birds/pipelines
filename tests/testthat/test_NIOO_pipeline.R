@@ -85,8 +85,10 @@ test_that("Brood_data returns an expected outcome...", {
   #AvgChickMass and AvgTarsus are as expected
   expect_equal(subset(NIOO_data, BroodID == "64088")$AvgChickMass, 11.70)
   expect_equal(subset(NIOO_data, BroodID == "64088")$AvgTarsus, NA_real_)
-  #Test ExperimentID is as expected
+  #Check ExperimentID is as expected
   expect_equal(subset(NIOO_data, BroodID == "64088")$ExperimentID, FALSE)
+  #Check that Plot is as expected
+  expect_equal(subset(NIOO_data, BroodID == "64088")$Plot, 7L)
 
   #Test 2: clutch type = second
   #Check species is as expected
@@ -104,6 +106,8 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(NIOO_data, BroodID == "65073")$AvgTarsus, NA_real_)
   #Test ExperimentID is as expected
   expect_equal(subset(NIOO_data, BroodID == "65073")$ExperimentID, FALSE)
+  #Check that Plot is as expected
+  expect_equal(subset(NIOO_data, BroodID == "65073")$Plot, 57L)
 
   #Test 3: clutch type = replacement, where replacement is known (i.e. previous clutch was seen)
   #Check species is as expected
@@ -121,6 +125,8 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(NIOO_data, BroodID == "64597")$AvgTarsus, NA_real_)
   #Test ExperimentID is as expected
   expect_equal(subset(NIOO_data, BroodID == "64597")$ExperimentID, TRUE)
+  #Check that Plot is as expected
+  expect_equal(subset(NIOO_data, BroodID == "64597")$Plot, 41L)
 
   #Test 4: clutch type = replacement, where replacement calculated from cutoff
   #Check species is as expected
@@ -138,6 +144,8 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(round(subset(NIOO_data, BroodID == "64825")$AvgTarsus, 1), NA_real_)
   #Test ExperimentID is as expected
   expect_equal(subset(NIOO_data, BroodID == "64825")$ExperimentID, FALSE)
+  #Check that Plot is as expected
+  expect_equal(subset(NIOO_data, BroodID == "64825")$Plot, 4L)
 
 })
 
@@ -162,7 +170,7 @@ test_that("Capture_data returns an expected outcome...", {
   expect_equal(subset(NIOO_data, IndvID == "409502")$Age_calculated[1], 1L)
   expect_equal(subset(NIOO_data, IndvID == "409502")$Age_calculated[10], 13L)
 
-  #Test 1: Caught as adult
+  #Test 2: Caught as adult
   #Test number of capture records is as expected
   expect_equal(nrow(subset(NIOO_data, IndvID == "110438")), 19)
   #Test that the first capture is as expected
@@ -175,6 +183,25 @@ test_that("Capture_data returns an expected outcome...", {
   #Test that first and last age calculated is as expected
   expect_equal(subset(NIOO_data, IndvID == "110438")$Age_calculated[1], 4L)
   expect_equal(subset(NIOO_data, IndvID == "110438")$Age_calculated[19], 10L)
+
+  #Test 3: Translocation
+  #Test number of capture records is as expected
+  expect_equal(nrow(subset(NIOO_data, IndvID == "97175")), 2)
+  #Test that the first capture is as expected
+  expect_equal(subset(NIOO_data, IndvID == "97175")$CaptureDate[1], as.Date("1981-05-22"))
+  #Test that the 15th capture is as expected
+  expect_equal(subset(NIOO_data, IndvID == "97175")$CaptureDate[2], as.Date("1981-05-29"))
+  #Test that first and last age observed is as expected
+  expect_equal(subset(NIOO_data, IndvID == "97175")$Age_observed[1], 1L)
+  expect_equal(subset(NIOO_data, IndvID == "97175")$Age_observed[2], 1L)
+  #Test that first and last age calculated is as expected
+  expect_equal(subset(NIOO_data, IndvID == "97175")$Age_calculated[1], 1L)
+  expect_equal(subset(NIOO_data, IndvID == "97175")$Age_calculated[2], 1L)
+  #Test for cross-fostering in second record
+  expect_equal(subset(NIOO_data, IndvID == "97175")$CapturePopID[2], "HOG")
+  expect_equal(subset(NIOO_data, IndvID == "97175")$CapturePlot[2], "7")
+  expect_equal(subset(NIOO_data, IndvID == "97175")$ReleasePopID[2], NA_character_)
+  expect_equal(subset(NIOO_data, IndvID == "97175")$ReleasePlot[2], NA_character_)
 
 })
 
