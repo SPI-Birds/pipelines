@@ -209,6 +209,37 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(round(subset(VEL_data, BroodID == "2000_jedna_021_08_05")$AvgChickMass, 1), 15.9)
   expect_equal(round(subset(VEL_data, BroodID == "2000_jedna_021_08_05")$AvgTarsus, 1), 18.1)
 
+  #Test 10: Tit brood where laying date is estimated from max/min
+  #BroodID 2013_043_27_04 should be PARMAJ
+  expect_equal(subset(VEL_data, BroodID == "1999_jedna_005_18_04")$Species, "PARMAJ")
+  #BroodID 2013_004_14_06 should have clutch type calculated 'replacement'
+  expect_equal(subset(VEL_data, BroodID == "1999_jedna_005_18_04")$ClutchType_calculated, "first")
+  #Check laying date and error is as expected
+  expect_equal(subset(VEL_data, BroodID == "1999_jedna_005_18_04")$LayDate, as.Date("1999-04-18"))
+  expect_equal(subset(VEL_data, BroodID == "1999_jedna_005_18_04")$LayDateError, 6L)
+  #Check clutch size, brood size, and number fledged is as expected
+  expect_equal(subset(VEL_data, BroodID == "1999_jedna_005_18_04")$ClutchSize, 9L)
+  expect_equal(subset(VEL_data, BroodID == "1999_jedna_005_18_04")$BroodSize, NA_integer_)
+  expect_equal(subset(VEL_data, BroodID == "1999_jedna_005_18_04")$NumberFledged, 7L)
+  #AvgChickMass and AvgTarsus should be NA, there were no chicks measured
+  expect_equal(subset(VEL_data, BroodID == "1999_jedna_005_18_04")$AvgChickMass, NA_real_)
+  expect_equal(subset(VEL_data, BroodID == "1999_jedna_005_18_04")$AvgTarsus, NA_real_)
+
+  #Test 11: Tit brood where laying date is NA because no min is provided
+  #BroodID 2013_043_27_04 should be PARMAJ
+  expect_equal(subset(VEL_data, BroodID == "2002_karel_080_NA_NA")$Species, "PARMAJ")
+  #BroodID 2013_004_14_06 should have clutch type calculated 'replacement'
+  expect_equal(subset(VEL_data, BroodID == "2002_karel_080_NA_NA")$ClutchType_calculated, NA_character_)
+  #Check laying date is as expected (2013-04-27)
+  expect_equal(subset(VEL_data, BroodID == "2002_karel_080_NA_NA")$LayDate, as.Date(NA))
+  #Check clutch size, brood size, and number fledged is as expected
+  expect_equal(subset(VEL_data, BroodID == "2002_karel_080_NA_NA")$ClutchSize, 3)
+  expect_equal(subset(VEL_data, BroodID == "2002_karel_080_NA_NA")$BroodSize, NA_integer_)
+  expect_equal(subset(VEL_data, BroodID == "2002_karel_080_NA_NA")$NumberFledged, 0)
+  #AvgChickMass and AvgTarsus should be NA, there were no chicks measured
+  expect_equal(subset(VEL_data, BroodID == "2002_karel_080_NA_NA")$AvgChickMass, NA_real_)
+  expect_equal(subset(VEL_data, BroodID == "2002_karel_080_NA_NA")$AvgTarsus, NA_real_)
+
 })
 
 test_that("Capture_data returns an expected outcome...", {
