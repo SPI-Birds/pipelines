@@ -4,8 +4,8 @@
 #' Kosir, Czechia, administered by Milos Krist.
 #'
 #' This section provides details on data management choices that are unique to
-#' this data. For a general description of the standard format please see XXXXX
-#' PLACE HOLDER!
+#' this data. For a general description of the standard format please see see
+#'\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
 #'
 #' \strong{Species}: There are a small number of records for species other than
 #' great tit, blue tit and collared flycatcher. These are currently excluded.
@@ -27,9 +27,19 @@
 #' method. We convert this to Svensson's Alternative method using formula
 #' described in the standard format.
 #'
-#' \strong{ClutchSize, BroodSize, NumberFledged}: Some records have uncertainty
+#' \strong{ClutchSize, BroodSize, NumberFledged:} Some records have uncertainty
 #' (e.g. 11+). We're unsure how large this uncertainty is. It's currently
 #' ignored, but will talk with data owner to incorporate this.
+#'
+#' \strong{CaptureDate:} In the raw data for flycatchers there are columns for
+#' measurements taken at 6 days and at 13 days. Sometimes, no measurements are
+#' recorded (i.e. columns are NA) and we need to decide how to deal with these.
+#' In discussion with the data owner we know that chicks are generally ringed at 6 days;
+#' therefore, we assume that any ringed chick was captured at 6 days old, even if
+#' they have no other measurements. We only include a further capture at 13 days
+#' old if some measurements were taken. Those individuals with no mass/tarsus/wing length
+#' measures recorded at 13 days were assumed to have not been captured at this time.
+#'
 #'
 #' @inheritParams pipeline_params
 #'
