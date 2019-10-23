@@ -14,7 +14,7 @@
 #'    protocol}. Note, this argument takes precedence over argument PopID (i.e.
 #'   if a population doesn't have the requested species it will not be
 #'   formatted.)
-#' @param output_type Should the pipeline generate .csv files ('csv') or R objects ('R').
+#' @param output_type Should the pipeline generate .csv files ('csv') or R objects ('R'). Default: R.
 #'
 #' @return Generate .csv files or return an R list object with 4 items
 #' @export
@@ -30,7 +30,7 @@
 run_pipelines <- function(path = utils::choose.dir(),
                           PopID = NULL,
                           Species = NULL,
-                          output_type = "csv"){
+                          output_type = "R"){
 
   #Force choose.dir()
   force(path)
