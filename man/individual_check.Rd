@@ -19,6 +19,8 @@ individual_check(Individual_data, Capture_data, Location_data,
 \value{
 A list of:
 \item{CheckList}{A summary dataframe of check warnings and errors.}
+\item{WarningRows}{A vector of rows with warnings.}
+\item{ErrorRows}{A vector of rows with errors.}
 \item{Warnings}{A list of row-by-row warnings.}
 \item{Errors}{A list of row-by-row errors.}
 }
@@ -29,5 +31,8 @@ A wrapper that runs all single checks related to \code{Individual_data}.
 The following individual data checks are performed:
 \itemize{
 \item \strong{I1}: Check if the formats of each column in \code{Individual_data} match with the standard format using \code{\link{check_format_individual}}.
+\item \strong{I2}: Check if the IDs of individuals are unique using \code{\link{check_unique_IndvID}}.
+\item \strong{I3}: Check if all chicks have BroodID using \code{\link{check_BroodID_chicks}}.
+\item \strong{I4}: Check if individuals have no conflicting sex using \code{\link{check_conflicting_sex}}.
 }
 }

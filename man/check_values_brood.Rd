@@ -11,9 +11,11 @@ check_values_brood(Brood_data)
 }
 \value{
 A list of:
-\item{CheckList}{A summary dataframe of whether the check resulted in any warnings or errors.}
-\item{WarningOutput}{A list of row-by-row warnings.}
-\item{ErrorOutput}{A list of row-by-row errors.}
+\item{CheckList}{A summary dataframe of check warnings and errors.}
+\item{WarningRows}{A vector of rows with warnings.}
+\item{ErrorRows}{A vector of rows with errors.}
+\item{Warnings}{A list of row-by-row warnings.}
+\item{Errors}{A list of row-by-row errors.}
 }
 \description{
 Check variable values against species-specific reference values in brood data. Unusual values will result in a warning. Impossible values will result in an error. Variables that are checked: LayDate, ClutchSize, HatchDate, BroodSize, FledgeDate, NumberFledged, AvgEggMass, AvgChickMass, AvgTarsus.

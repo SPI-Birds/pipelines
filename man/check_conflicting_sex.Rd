@@ -11,9 +11,11 @@ check_conflicting_sex(Individual_data)
 }
 \value{
 A list of:
-\item{CheckList}{A summary dataframe of whether the check resulted in any warnings or errors.}
-\item{WarningOutput}{A list of row-by-row warnings.}
-\item{ErrorOutput}{A list of row-by-row errors.}
+\item{CheckList}{A summary dataframe of check warnings and errors.}
+\item{WarningRows}{A vector of rows with warnings.}
+\item{ErrorRows}{A vector of rows with errors.}
+\item{Warnings}{A list of row-by-row warnings.}
+\item{Errors}{A list of row-by-row errors.}
 }
 \description{
 Check that the sex of individuals in Individual_data is recorded consistently. Individuals who have been recorded as both male ('M') and female ('F') will have conflicting sex ('C') in Individual_data.

@@ -11,11 +11,7 @@
 #' @inheritParams checks_capture_params
 #' @param check_format \code{TRUE} or \code{FALSE}. If \code{TRUE}, the check on variable format (i.e. \code{\link{check_format_capture}}) is included in the quality check. Default: \code{TRUE}.
 #'
-#' @return
-#' A list of:
-#' \item{CheckList}{A summary dataframe of check warnings and errors.}
-#' \item{Warnings}{A list of row-by-row warnings.}
-#' \item{Errors}{A list of row-by-row errors.}
+#' @inherit checks_return return
 #'
 #' @export
 
@@ -67,10 +63,10 @@ capture_check <- function(Capture_data, check_format=TRUE){
   }
 
   return(list(CheckList = check_list,
+              WarningRows = unique(c(check_values_capture_output$WarningRows)),
+              ErrorRows = unique(c(check_values_capture_output$ErrorRows)),
               Warnings = warning_list,
-              Errors = error_list,
-              Warning_Rows = unique(c(check_values_capture_output$WarningRows)),
-              Error_Rows = unique(c(check_values_capture_output$ErrorRows))))
+              Errors = error_list))
 }
 
 #' Check format of capture data
@@ -78,11 +74,7 @@ capture_check <- function(Capture_data, check_format=TRUE){
 #' Check that the format of each column in the capture data match with the standard format.
 #' @inheritParams checks_capture_params
 #'
-#' @return
-#' A list of:
-#' \item{CheckList}{A summary dataframe of whether the check resulted in any warnings or errors.}
-#' \item{WarningOutput}{A list of row-by-row warnings.}
-#' \item{ErrorOutput}{A list of row-by-row errors.}
+#' @inherit checks_return return
 #'
 #' @export
 
@@ -191,11 +183,7 @@ check_format_capture <- function(Capture_data){
 #'
 #' @inheritParams checks_capture_params
 #'
-#' @return
-#' A list of:
-#' \item{CheckList}{A summary dataframe of whether the check resulted in any warnings or errors.}
-#' \item{WarningOutput}{A list of row-by-row warnings.}
-#' \item{ErrorOutput}{A list of row-by-row errors.}
+#' @inherit checks_return return
 #'
 #' @export
 
@@ -224,7 +212,7 @@ check_values_capture <- function(Capture_data) {
                                                  | Capture_data2[,which(colnames(Capture_data2) == .y[3])] > .x$Value[4]))
 
                                  Capture_data2[sel,] %>%
-                                   dplyr::select(Row, Value = !!.y[3]) %>%
+                                   dplyr::select(Row, Value = !!.y[3], ChickAge) %>%
                                    dplyr::mutate(Species = .y[1],
                                                  Age = .y[2],
                                                  Variable = .y[3])
@@ -271,7 +259,7 @@ check_values_capture <- function(Capture_data) {
                                        which()
 
                                      Capture_data3[sel,] %>%
-                                       dplyr::select(Row, Value = !!.y[3]) %>%
+                                       dplyr::select(Row, Value = !!.y[3], ChickAge) %>%
                                        dplyr::mutate(Species = .y[1],
                                                      Age = .y[2],
                                                      Variable = .y[3])
@@ -283,7 +271,7 @@ check_values_capture <- function(Capture_data) {
                                                      | Capture_data2[,which(colnames(Capture_data2) == .y[3])] > .x$Value[4]))
 
                                      Capture_data2[sel,] %>%
-                                       dplyr::select(Row, Value = !!.y[3]) %>%
+                                       dplyr::select(Row, Value = !!.y[3], ChickAge) %>%
                                        dplyr::mutate(Species = .y[1],
                                                      Age = .y[2],
                                                      Variable = .y[3])
@@ -294,7 +282,7 @@ check_values_capture <- function(Capture_data) {
                                }
                              }) %>%
     dplyr::bind_rows() %>%
-    dplyr::arrange(Species, Age, Variable)
+    dplyr::arrange(Species, Age, ChickAge, Variable)
 
   err <- FALSE
   error_output <- NULL
@@ -309,13 +297,14 @@ check_values_capture <- function(Capture_data) {
                                          ..4, ")",
                                          " has an impossible value in ", ..5, " (", ..2, ").")
                                 })
+
   }
 
   # Capture-specific warnings
   Capture_war <- purrr::map2(.x = capture_ref_values,
                              .y = ref_names,
                              .f = ~{
-                               pb$tick()$print()
+                               #pb$tick()$print()
 
                                if(.y[2] == "Adult") {
 
@@ -330,7 +319,7 @@ check_values_capture <- function(Capture_data) {
                                                     & Capture_data2[,which(colnames(Capture_data2) == .y[3])] <= .x$Value[4])))
 
                                  Capture_data2[sel,] %>%
-                                   dplyr::select(Row, Value = !!.y[3]) %>%
+                                   dplyr::select(Row, Value = !!.y[3], ChickAge) %>%
                                    dplyr::mutate(Species = .y[1],
                                                  Age = .y[2],
                                                  Variable = .y[3])
@@ -348,35 +337,35 @@ check_values_capture <- function(Capture_data) {
 
                                    sel <- Capture_data3 %>%
                                      dplyr::mutate(warning = purrr::pmap_lgl(.l = list(Mass, ChickAge, Age_calculated),
-                                                                           .f = function(Mass, ChickAge, Age_calculated, Ref_values){
+                                                                             .f = function(Mass, ChickAge, Age_calculated, Ref_values){
 
-                                                                             if(Age_calculated == 3){
+                                                                               if(Age_calculated == 3){
 
-                                                                               current_chick_age <- 30
-
-                                                                             } else {
-
-                                                                               if(is.na(ChickAge)){
-
-                                                                                 current_chick_age <- 14
+                                                                                 current_chick_age <- 30
 
                                                                                } else {
 
-                                                                                 current_chick_age <- ChickAge
+                                                                                 if(is.na(ChickAge)){
+
+                                                                                   current_chick_age <- 14
+
+                                                                                 } else {
+
+                                                                                   current_chick_age <- ChickAge
+
+                                                                                 }
 
                                                                                }
 
-                                                                             }
+                                                                               return((Mass < Ref_values$Value[which(Ref_values$ChickAge == current_chick_age & Ref_values$Reference == "Warning_min")] & Mass >= Ref_values$Value[which(Ref_values$ChickAge == current_chick_age & Ref_values$Reference == "Error_min")]) |
+                                                                                        (Mass > Ref_values$Value[which(Ref_values$ChickAge == current_chick_age & Ref_values$Reference == "Warning_max")] & Mass <= Ref_values$Value[which(Ref_values$ChickAge == current_chick_age & Ref_values$Reference == "Error_max")]))
 
-                                                                             return((Mass < Ref_values$Value[which(Ref_values$ChickAge == current_chick_age & Ref_values$Reference == "Warning_min")] & Mass >= Ref_values$Value[which(Ref_values$ChickAge == current_chick_age & Ref_values$Reference == "Error_min")]) |
-                                                                                      (Mass > Ref_values$Value[which(Ref_values$ChickAge == current_chick_age & Ref_values$Reference == "Warning_max")] & Mass <= Ref_values$Value[which(Ref_values$ChickAge == current_chick_age & Ref_values$Reference == "Error_max")]))
-
-                                                                           }, .x)) %>%
+                                                                             }, .x)) %>%
                                      pull(warning) %>%
                                      which()
 
                                    Capture_data3[sel,] %>%
-                                     dplyr::select(Row, Value = !!.y[3]) %>%
+                                     dplyr::select(Row, Value = !!.y[3], ChickAge) %>%
                                      dplyr::mutate(Species = .y[1],
                                                    Age = .y[2],
                                                    Variable = .y[3])
@@ -390,7 +379,7 @@ check_values_capture <- function(Capture_data) {
                                                       & Capture_data2[,which(colnames(Capture_data2) == .y[3])] <= .x$Value[4])))
 
                                    Capture_data2[sel,] %>%
-                                     dplyr::select(Row, Value = !!.y[3]) %>%
+                                     dplyr::select(Row, Value = !!.y[3], ChickAge) %>%
                                      dplyr::mutate(Species = .y[1],
                                                    Age = .y[2],
                                                    Variable = .y[3])
@@ -401,7 +390,7 @@ check_values_capture <- function(Capture_data) {
 
                              }) %>%
     dplyr::bind_rows() %>%
-    dplyr::arrange(Species, Age, Variable)
+    dplyr::arrange(Species, Age, ChickAge, Variable)
 
   war <- FALSE
   warning_output <- NULL
@@ -412,41 +401,37 @@ check_values_capture <- function(Capture_data) {
     warning_output <- purrr::pmap(.l = Capture_war,
                                   .f = ~{
 
-                                    #This doesn't work for chick growth curve because we also need to know chick age
-                                    #in days. Need to fix this later.
+                                    if(..4 %in% c("PARMAJ", "CYACAE") & ..5 == "Chick" & ..6 == "Mass"){
 
-                                    # paste0("Record on row ", ..1,
-                                    #        " (", Species_codes[Species_codes$Code == ..3, "CommonName"], " ",
-                                    #        ..4, ")",
-                                    #        " has an unusually ",
-                                    #        ifelse(..2 < capture_ref_values[[paste(..3, ..4, ..5, sep="_")]]$Value[1],
-                                    #               paste0("low value in ", ..5, " (", ..2, " < ",
-                                    #                      capture_ref_values[[paste(..3, ..4, ..5, sep="_")]]$Value[1],
-                                    #                      ")"),
-                                    #               paste0("high value in ", ..5, " (", ..2, " > ",
-                                    #                      capture_ref_values[[paste(..3, ..4, ..5, sep="_")]]$Value[2],
-                                    #                      ")")))
+                                      wmin <- capture_ref_values[[paste(..4, ..5, ..6, sep="_")]] %>%
+                                        dplyr::filter(ChickAge == ..3 & Reference == "Warning_min") %>%
+                                        dplyr::pull(Value)
 
-                                    if(..4 == "Chick" & ..5 == "Mass"){
+                                      wmax <- capture_ref_values[[paste(..4, ..5, ..6, sep="_")]] %>%
+                                        dplyr::filter(ChickAge == ..3 & Reference == "Warning_max") %>%
+                                        dplyr::pull(Value)
 
                                       paste0("Record on row ", ..1,
-                                             " (", Species_codes[Species_codes$Code == ..3, "CommonName"], " ",
-                                             ..4, ")",
-                                             " has an unusual mass value for its age (", ..2, ")")
+                                             " (", Species_codes[Species_codes$Code == ..4, "CommonName"], " ",
+                                             tolower(..5), ")",
+                                             " has an unusually ",
+                                             ifelse(..2 < wmin,
+                                                    paste0("low value in ", ..6, " (", ..2, " < ", round(wmin, 2)),
+                                                    paste0("high value in ", ..6, " (", ..2, " > ", round(wmax, 2))),
+                                             ") for its age (", ..3, ").")
 
                                     } else {
 
                                       paste0("Record on row ", ..1,
-                                             " (", Species_codes[Species_codes$Code == ..3, "CommonName"], " ",
+                                             " (", Species_codes[Species_codes$Code == ..4, "CommonName"], " ",
                                              ..4, ")",
                                              " has an unusually ",
-                                             ifelse(..2 < capture_ref_values[[paste(..3, ..4, ..5, sep="_")]]$Value[1],
-                                                    paste0("low value in ", ..5, " (", ..2, " < ",
-                                                           capture_ref_values[[paste(..3, ..4, ..5, sep="_")]]$Value[1],
-                                                           ")"),
-                                                    paste0("high value in ", ..5, " (", ..2, " > ",
-                                                           capture_ref_values[[paste(..3, ..4, ..5, sep="_")]]$Value[2],
-                                                           ")")))
+                                             ifelse(..2 < capture_ref_values[[paste(..4, ..5, ..6, sep="_")]]$Value[1],
+                                                    paste0("low value in ", ..6, " (", ..2, " < ",
+                                                           capture_ref_values[[paste(..4, ..5, ..6, sep="_")]]$Value[1]),
+                                                    paste0("high value in ", ..6, " (", ..2, " > ",
+                                                           capture_ref_values[[paste(..4, ..5, ..6, sep="_")]]$Value[2])),
+                                             ").")
 
                                     }
 

@@ -16,6 +16,8 @@ brood_check(Brood_data, Individual_data, check_format = TRUE)
 \value{
 A list of:
 \item{CheckList}{A summary dataframe of check warnings and errors.}
+\item{WarningRows}{A vector of rows with warnings.}
+\item{ErrorRows}{A vector of rows with errors.}
 \item{Warnings}{A list of row-by-row warnings.}
 \item{Errors}{A list of row-by-row errors.}
 }
@@ -28,5 +30,11 @@ The following brood data checks are performed:
 \item \strong{B1}: Check if the formats of each column in \code{Brood_data} match with the standard format using \code{\link{check_format_brood}}.
 \item \strong{B2}: Compare clutch size and brood size per brood using \code{\link{compare_clutch_brood}}.
 \item \strong{B3}: Compare brood size and fledgling number per brood using \code{\link{compare_brood_fledglings}}.
+\item \strong{B4}: Compare laying date and hatching date per brood using \code{\link{compare_laying_hatching}}.
+\item \strong{B5}: Compare hatching date and fledging date per brood using \code{\link{compare_hatching_fledging}}.
+\item \strong{B6}: Check brood variable values against reference values using \code{\link{check_values_brood}}.
+\item \strong{B7}: Check if parents of a brood are the same species using \code{\link{check_parent_species}}.
+\item \strong{B8}: Compare brood size with number of chicks captured using \code{\link{compare_broodsize_chicknumber}}.
+\item \strong{B9}: Check if the IDs of broods are unique using \code{\link{check_unique_BroodID}}.
 }
 }

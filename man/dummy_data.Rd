@@ -26,6 +26,7 @@ A dummy pipeline output specifically created to test single checks from \code{\l
   \item Row 15-22 represent broods with impossible values in ClutchSize, BroodSize and NumberFledged per species (part of: 'B6: Checking brood variable values against reference values'; see \code{\link{check_values_brood}}).
   \item Row 23 represents a brood with parents of different species (part of: 'B7: Checking parent species'; see \code{\link{check_parent_species}}).
   \item Rows 24-25 represent broods with, respectively, a larger and smaller BroodSize than number of chicks in Individual_data (part of: 'B8: Comparing brood size and number of chicks captured'; see \code{\link{compare_broodsize_chicknumber}}).
+  \item Rows 26-27 represent duplicated broods within a population (part of 'B9: Checking unique brood IDs'; see \code{\link{check_unique_BroodID}}).
 }
 
 \strong{Capture data}:

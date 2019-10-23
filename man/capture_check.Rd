@@ -14,6 +14,8 @@ capture_check(Capture_data, check_format = TRUE)
 \value{
 A list of:
 \item{CheckList}{A summary dataframe of check warnings and errors.}
+\item{WarningRows}{A vector of rows with warnings.}
+\item{ErrorRows}{A vector of rows with errors.}
 \item{Warnings}{A list of row-by-row warnings.}
 \item{Errors}{A list of row-by-row errors.}
 }

@@ -11,9 +11,11 @@ compare_laying_hatching(Brood_data)
 }
 \value{
 A list of:
-\item{CheckList}{A summary dataframe of whether the check resulted in any warnings or errors.}
-\item{WarningOutput}{A list of row-by-row warnings.}
-\item{ErrorOutput}{A list of row-by-row errors.}
+\item{CheckList}{A summary dataframe of check warnings and errors.}
+\item{WarningRows}{A vector of rows with warnings.}
+\item{ErrorRows}{A vector of rows with errors.}
+\item{Warnings}{A list of row-by-row warnings.}
+\item{Errors}{A list of row-by-row errors.}
 }
 \description{
 Compare laying and hatching date per brood. Broods with laying date later than hatching date will result in an error. Broods with laying date earlier than hatching date but the difference in number of days is smaller than incubation time will result in a warning.
