@@ -462,12 +462,13 @@ compare_laying_hatching <- function(Brood_data){
     err <- TRUE
 
     error_output <- purrr::pmap(.l = list(Brood_data_late$Row,
+                                          Brood_data_late$BroodID,
                                           Brood_data_late$LayDate,
                                           Brood_data_late$HatchDate),
                                 .f = ~{
-                                  paste0("Record on row ", ..1,
-                                         " has a later laying date (", ..2,
-                                         ") than hatching date (", ..3, ").")
+                                  paste0("Record on row ", ..1, " (BroodID: ", ..2, ")",
+                                         " has a later laying date (", ..3,
+                                         ") than hatching date (", ..4, ").")
                                 })
   }
 
