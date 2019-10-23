@@ -51,7 +51,7 @@ format_VEL <- function(db = utils::choose.dir(),
                        species = NULL,
                        pop = NULL,
                        path = ".",
-                       output_type = "csv") {
+                       output_type = "R") {
 
   #Force user to select directory
   force(db)

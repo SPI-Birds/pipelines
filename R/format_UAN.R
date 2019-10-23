@@ -64,7 +64,7 @@ format_UAN <- function(db = utils::choose.dir(),
                        species = NULL,
                        pop = NULL,
                        path = ".",
-                       output_type = "csv"){
+                       output_type = "R"){
 
   #Force choose.dir() if used
   force(db)
