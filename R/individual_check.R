@@ -15,11 +15,7 @@
 #' @inheritParams checks_location_params
 #' @param check_format \code{TRUE} or \code{FALSE}. If \code{TRUE}, the check on variable format (i.e. \code{\link{check_format_individual}}) is included in the quality check. Default: \code{TRUE}.
 #'
-#' @return
-#' A list of:
-#' \item{CheckList}{A summary dataframe of check warnings and errors.}
-#' \item{Warnings}{A list of row-by-row warnings.}
-#' \item{Errors}{A list of row-by-row errors.}
+#' @inherit checks_return return
 #'
 #' @export
 
@@ -95,14 +91,14 @@ individual_check <- function(Individual_data, Capture_data, Location_data, check
   }
 
   return(list(CheckList = check_list,
-              Warnings = warning_list,
-              Errors = error_list,
-              Warning_Rows = unique(c(check_unique_IndvID_output$WarningRows,
+              WarningRows = unique(c(check_unique_IndvID_output$WarningRows,
                                       check_BroodID_chicks_output$WarningRows,
                                       check_conflicting_sex_output$WarningRows)),
-              Error_Rows = unique(c(check_unique_IndvID_output$ErrorRows,
+              ErrorRows = unique(c(check_unique_IndvID_output$ErrorRows,
                                     check_BroodID_chicks_output$ErrorRows,
-                                    check_conflicting_sex_output$ErrorRows))))
+                                    check_conflicting_sex_output$ErrorRows)),
+              Warnings = warning_list,
+              Errors = error_list))
 }
 
 
@@ -111,11 +107,7 @@ individual_check <- function(Individual_data, Capture_data, Location_data, check
 #' Check that the format of each column in the individual data match with the standard format
 #' @inheritParams checks_individual_params
 #'
-#' @return
-#' A list of:
-#' \item{CheckList}{A summary dataframe of whether the check resulted in any warnings or errors.}
-#' \item{WarningOutput}{A list of row-by-row warnings.}
-#' \item{ErrorOutput}{A list of row-by-row errors.}
+#' @inherit checks_return return
 #'
 #' @export
 
@@ -218,11 +210,7 @@ check_format_individual <- function(Individual_data){
 #'
 #' @inheritParams checks_individual_params
 #'
-#' @return
-#' A list of:
-#' \item{CheckList}{A summary dataframe of check warnings and errors.}
-#' \item{Warnings}{A list of row-by-row warnings.}
-#' \item{Errors}{A list of row-by-row errors.}
+#' @inherit checks_return return
 #'
 #' @export
 
@@ -305,11 +293,7 @@ check_unique_IndvID <- function(Individual_data){
 #' @inheritParams checks_capture_params
 #' @inheritParams checks_location_params
 #'
-#' @return
-#' A list of:
-#' \item{CheckList}{A summary dataframe of whether the check resulted in any warnings or errors.}
-#' \item{WarningOutput}{A list of row-by-row warnings.}
-#' \item{ErrorOutput}{A list of row-by-row errors.}
+#' @inherit checks_return return
 #'
 #' @export
 
@@ -365,11 +349,7 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data) {
 #'
 #' @inheritParams checks_individual_params
 #'
-#' @return
-#' A list of:
-#' \item{CheckList}{A summary dataframe of whether the check resulted in any warnings or errors.}
-#' \item{WarningOutput}{A list of row-by-row warnings.}
-#' \item{ErrorOutput}{A list of row-by-row errors.}
+#' @inherit checks_return return
 #'
 #' @export
 

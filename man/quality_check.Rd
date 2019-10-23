@@ -24,6 +24,7 @@ A list of:
 \item{NumberWarnings}{Number of checks resulted in warnings.}
 \item{NumberErrors}{Number of checks resulted in errors.}
 \item{ElapsedTime}{Elapsed time in seconds.}
+\item{R_data}{Pipeline output (a list of 4 dataframes) with Warning & Error columns marking the rows with warnings and errors.}
 
 and a report (pdf, html or both) of row-by-row list of warnings and errors if \code{output_format = TRUE}.
 }

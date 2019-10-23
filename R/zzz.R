@@ -135,6 +135,18 @@ NULL
 #'@name checks_location_params
 NULL
 
+#' Return documentation for data checks
+#'
+#' @return
+#' A list of:
+#' \item{CheckList}{A summary dataframe of check warnings and errors.}
+#' \item{WarningRows}{A vector of rows with warnings.}
+#' \item{ErrorRows}{A vector of rows with errors.}
+#' \item{Warnings}{A list of row-by-row warnings.}
+#' \item{Errors}{A list of row-by-row errors.}
+#' @name checks_return
+NULL
+
 ############################################################################
 
 utils::globalVariables(c(".", "AvgChickTarsus", "AvgChickMass", "AvgTarsus", "PopID",

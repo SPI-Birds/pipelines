@@ -17,6 +17,7 @@
 #' \item{NumberWarnings}{Number of checks resulted in warnings.}
 #' \item{NumberErrors}{Number of checks resulted in errors.}
 #' \item{ElapsedTime}{Elapsed time in seconds.}
+#' \item{R_data}{Pipeline output (a list of 4 dataframes) with Warning & Error columns marking the rows with warnings and errors.}
 #'
 #' and a report (pdf, html or both) of row-by-row list of warnings and errors if \code{output_format = TRUE}.
 #'
@@ -58,18 +59,18 @@ quality_check <- function(R_data,
   #We don't do this for location because there are currently now rowwise checks
   Brood_data$Warning <- NA
   Brood_data$Error <- NA
-  Brood_data[Brood_data$Row %in% Brood_checks$Warning_Rows, "Warning"] <- TRUE
-  Brood_data[Brood_data$Row %in% Brood_checks$Error_Rows, "Error"] <- TRUE
+  Brood_data[Brood_data$Row %in% Brood_checks$WarningRows, "Warning"] <- TRUE
+  Brood_data[Brood_data$Row %in% Brood_checks$ErrorRows, "Error"] <- TRUE
 
   Capture_data$Warning <- NA
   Capture_data$Error <- NA
-  Capture_data[Capture_data$Row %in% Capture_checks$Warning_Rows, "Warning"] <- TRUE
-  Capture_data[Capture_data$Row %in% Capture_checks$Error_Rows, "Error"] <- TRUE
+  Capture_data[Capture_data$Row %in% Capture_checks$WarningRows, "Warning"] <- TRUE
+  Capture_data[Capture_data$Row %in% Capture_checks$ErrorRows, "Error"] <- TRUE
 
   Individual_data$Warning <- NA
   Individual_data$Error <- NA
-  Individual_data[Individual_data$Row %in% Individual_checks$Warning_Rows, "Warning"] <- TRUE
-  Individual_data[Individual_data$Row %in% Individual_checks$Error_Rows, "Error"] <- TRUE
+  Individual_data[Individual_data$Row %in% Individual_checks$WarningRows, "Warning"] <- TRUE
+  Individual_data[Individual_data$Row %in% Individual_checks$ErrorRows, "Error"] <- TRUE
 
   # Combine check lists
   check_list <- dplyr::bind_rows(Brood_checks$CheckList,
