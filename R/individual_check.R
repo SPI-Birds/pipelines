@@ -233,8 +233,7 @@ check_unique_IndvID <- function(Individual_data){
                                  paste0("Record on row ",
                                         # Duplicated rows
                                         Duplicated_within[Duplicated_within$IndvID == .x, "Row"][1,],
-                                        " (IndvID: ", .x, ")",
-                                        " has the same IndvID as row(s) ",
+                                        " has the same IndvID (", .x, ") as row(s) ",
                                         # Duplicates (if 1, else more)
                                         ifelse(nrow(Duplicated_within[Duplicated_within$IndvID == .x, "Row"][-1,]) == 1,
                                                Duplicated_within[Duplicated_within$IndvID == .x, "Row"][-1,],

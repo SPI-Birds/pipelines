@@ -325,6 +325,15 @@ create_dummy_data <- function(db = utils::choose.dir()) {
     ) ->
     Brood_data
 
+  # B9: Check that BroodIDs are unique
+  Brood_data %>%
+    tibble::add_row(
+      Row = as.integer(26:27),
+      BroodID = as.character(c("2019_DDD001", "2019_DDD001")),
+      PopID = as.character(c("DDD", "DDD"))
+    ) ->
+    Brood_data
+
   # Combine in list
   dummy_data <- list(Brood_data = Brood_data,
                      Capture_data = Capture_data,

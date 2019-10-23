@@ -35,5 +35,6 @@ The following brood data checks are performed:
 \item \strong{B6}: Check brood variable values against reference values using \code{\link{check_values_brood}}.
 \item \strong{B7}: Check if parents of a brood are the same species using \code{\link{check_parent_species}}.
 \item \strong{B8}: Compare brood size with number of chicks captured using \code{\link{compare_broodsize_chicknumber}}.
+\item \strong{B9}: Check if the IDs of broods are unique using \code{\link{check_unique_BroodID}}.
 }
 }

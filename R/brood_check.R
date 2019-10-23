@@ -12,6 +12,7 @@
 #' \item \strong{B6}: Check brood variable values against reference values using \code{\link{check_values_brood}}.
 #' \item \strong{B7}: Check if parents of a brood are the same species using \code{\link{check_parent_species}}.
 #' \item \strong{B8}: Compare brood size with number of chicks captured using \code{\link{compare_broodsize_chicknumber}}.
+#' \item \strong{B9}: Check if the IDs of broods are unique using \code{\link{check_unique_BroodID}}.
 #' }
 #'
 #' @inheritParams checks_brood_params
@@ -25,7 +26,7 @@
 brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
 
   # Create check list with a summary of warnings and errors per check
-  check_list <- tibble::tibble(CheckID = purrr::map_chr(1:8, ~paste0("B", .)),
+  check_list <- tibble::tibble(CheckID = purrr::map_chr(1:9, ~paste0("B", .)),
                                CheckDescription = c("Check format of brood data",
                                                     "Compare clutch and brood sizes",
                                                     "Compare brood sizes and fledgling numbers",
@@ -33,7 +34,8 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
                                                     "Compare hatching and fledging dates",
                                                     "Check brood variable values against reference values",
                                                     "Check that parents are the same species",
-                                                    "Compare brood size with number of chicks captured"),
+                                                    "Compare brood size with number of chicks captured",
+                                                    "Check that brood IDs are unique"),
                                Warning = NA,
                                Error = NA)
 
@@ -99,6 +101,13 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
 
   check_list[8,3:4] <- compare_broodsize_chicknumber_output$CheckList
 
+  # - Check that BroodIDs are unique
+  message("B9: Checking that brood IDs are unique...")
+
+  check_unique_BroodID_output <- check_unique_BroodID(Brood_data)
+
+  check_list[9,3:4] <- check_unique_BroodID_output$CheckList
+
 
   if(check_format) {
     # Warning list
@@ -109,7 +118,8 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
                          Check5 = compare_hatching_fledging_output$WarningOutput,
                          Check6 = check_values_brood_output$WarningOutput,
                          Check7 = check_parent_species_output$WarningOutput,
-                         Check8 = compare_broodsize_chicknumber_output$WarningOutput)
+                         Check8 = compare_broodsize_chicknumber_output$WarningOutput,
+                         Check9 = check_unique_BroodID_output$WarningOutput)
 
     # Error list
     error_list <- list(Check1 = check_format_brood_output$ErrorOutput,
@@ -119,7 +129,8 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
                        Check5 = compare_hatching_fledging_output$ErrorOutput,
                        Check6 = check_values_brood_output$ErrorOutput,
                        Check7 = check_parent_species_output$ErrorOutput,
-                       Check8 = compare_broodsize_chicknumber_output$ErrorOutput)
+                       Check8 = compare_broodsize_chicknumber_output$ErrorOutput,
+                       Check9 = check_unique_BroodID_output$ErrorOutput)
   } else {
     # Warning list
     warning_list <- list(Check2 = compare_clutch_brood_output$WarningOutput,
@@ -128,7 +139,8 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
                          Check5 = compare_hatching_fledging_output$WarningOutput,
                          Check6 = check_values_brood_output$WarningOutput,
                          Check7 = check_parent_species_output$WarningOutput,
-                         Check8 = compare_broodsize_chicknumber_output$WarningOutput)
+                         Check8 = compare_broodsize_chicknumber_output$WarningOutput,
+                         Check9 = check_unique_BroodID_output$WarningOutput)
 
     # Error list
     error_list <- list(Check2 = compare_clutch_brood_output$ErrorOutput,
@@ -137,7 +149,8 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
                        Check5 = compare_hatching_fledging_output$ErrorOutput,
                        Check6 = check_values_brood_output$ErrorOutput,
                        Check7 = check_parent_species_output$ErrorOutput,
-                       Check8 = compare_broodsize_chicknumber_output$ErrorOutput)
+                       Check8 = compare_broodsize_chicknumber_output$ErrorOutput,
+                       Check9 = check_unique_BroodID_output$ErrorOutput)
 
     check_list <- check_list[-1,]
   }
@@ -149,14 +162,16 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
                                     compare_hatching_fledging_output$WarningRows,
                                     check_values_brood_output$WarningRows,
                                     check_parent_species_output$WarningRows,
-                                    compare_broodsize_chicknumber_output$WarningRows)),
+                                    compare_broodsize_chicknumber_output$WarningRows,
+                                    check_unique_BroodID_output$WarningRows)),
               ErrorRows = unique(c(compare_clutch_brood_output$ErrorRows,
                                     compare_brood_fledglings_output$ErrorRows,
                                     compare_laying_hatching_output$ErrorRows,
                                     compare_hatching_fledging_output$ErrorRows,
                                     check_values_brood_output$ErrorRows,
                                     check_parent_species_output$ErrorRows,
-                                    compare_broodsize_chicknumber_output$ErrorRows)),
+                                    compare_broodsize_chicknumber_output$ErrorRows,
+                                   check_unique_BroodID_output$ErrorRows)),
               Warnings = warning_list,
               Errors = error_list))
 }
@@ -801,72 +816,46 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data) {
 #'
 #' @export
 
-check_unique_BroodID <- function(Individual_data){
+check_unique_BroodID <- function(Brood_data){
 
   # Errors
-  # Select IndvIDs that are duplicated within populations
-  Duplicated_within <- Individual_data %>%
-    dplyr::group_by(PopID, IndvID) %>%
+  # Select BroodIDs that are duplicated within populations
+  Duplicated <- Brood_data %>%
+    dplyr::group_by(PopID, BroodID) %>%
     dplyr::filter(n() > 1)
 
   err <- FALSE
   error_output <- NULL
 
-  if(nrow(Duplicated_within) > 0) {
+  if(nrow(Duplicated) > 0) {
     err <- TRUE
 
-    error_output <- purrr::map(.x = unique(Duplicated_within$IndvID),
+    error_output <- purrr::map(.x = unique(Duplicated$BroodID),
                                .f = ~{
                                  paste0("Record on row ",
                                         # Duplicated rows
-                                        Duplicated_within[Duplicated_within$IndvID == .x, "Row"][1,],
-                                        " (IndvID: ", .x, ")",
-                                        " has the same IndvID as row(s) ",
+                                        Duplicated[Duplicated$BroodID == .x, "Row"][1,],
+                                        " has the same BroodID (", .x, ") as row(s) ",
                                         # Duplicates (if 1, else more)
-                                        ifelse(nrow(Duplicated_within[Duplicated_within$IndvID == .x, "Row"][-1,]) == 1,
-                                               Duplicated_within[Duplicated_within$IndvID == .x, "Row"][-1,],
+                                        ifelse(nrow(Duplicated[Duplicated$BroodID == .x, "Row"][-1,]) == 1,
+                                               Duplicated[Duplicated$BroodID == .x, "Row"][-1,],
                                                gsub("^c\\(|\\)$", "",
-                                                    Duplicated_within[Duplicated_within$IndvID == .x, "Row"][-1,])),
+                                                    Duplicated[Duplicated$BroodID == .x, "Row"][-1,])),
                                         ".")
                                })
   }
 
-  # Warnings
-  # Select IndvIDs that are duplicated among populations
-  Duplicated_among <- Individual_data %>%
-    dplyr::group_by(IndvID) %>%
-    dplyr::filter(!duplicated(PopID) & n() > 1) %>%
-    dplyr::filter(n() > 1)
-
+  # No warnings
   war <- FALSE
   warning_output <- NULL
 
-  if(nrow(Duplicated_among) > 0) {
-    war <- TRUE
-
-    warning_output <- purrr::map(.x = unique(Duplicated_among$IndvID),
-                                 .f = ~{
-                                   paste0("Record on row ",
-                                          # Duplicated rows
-                                          Duplicated_among[Duplicated_among$IndvID == .x, "Row"][1,],
-                                          " (IndvID: ", .x, ", ", "PopID: ",
-                                          Duplicated_among[Duplicated_among$IndvID == .x, "PopID"][1,],")",
-                                          " has the same IndvID as row(s) ",
-                                          # Duplicates (if 1, else more)
-                                          ifelse(nrow(Duplicated_among[Duplicated_among$IndvID == .x, "Row"][-1,]) == 1,
-                                                 Duplicated_among[Duplicated_among$IndvID == .x, "Row"][-1,],
-                                                 gsub("^c\\(|\\)$", "",
-                                                      Duplicated_among[Duplicated_among$IndvID == .x, "Row"][-1,])),
-                                          " (PopID: ", Duplicated_among[Duplicated_among$IndvID == .x, "PopID"][-1,],").")
-                                 })
-  }
 
   check_list <- tibble::tibble(Warning = war,
                                Error = err)
 
   return(list(CheckList = check_list,
-              WarningRows = Duplicated_among$Row,
-              ErrorRows = Duplicated_within$Row,
+              WarningRows = NULL,
+              ErrorRows = Duplicated$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 }
