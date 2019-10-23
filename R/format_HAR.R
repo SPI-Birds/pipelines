@@ -58,8 +58,8 @@
 #'the same capture date (e.g. HA-30103)
 #'
 #'Where there are measurements (e.g. mass, tarsus) in both Nestling_data and
-#'Capture_data, we give precedence to the data from Capture_data. We only use
-#'data from Nestling_data when there is no data in Capture_data
+#'Capture_data, we give precedence to the data from Nestling_data. We only use
+#'data from Capture_data when there is no data in Nestling_data
 #'
 #'\item #5.	Record of chick (Age is PM/PP) with information in the last ring
 #'number column which matches data in Nestling_data (e.g. HL-26103 - 26107)
@@ -491,8 +491,8 @@ create_capture_HAR    <- function(db, Brood_data, species_filter){
   ####
 
   #4. Individuals with measurement records in both capture and nestling.
-  #Where measurements are present in both we assume that the capture data record takes precedence.
-  #Where measurements are NA in capture, we give nestling data precedence
+  #Where measurements are present in both we assume that the nestling data record takes precedence.
+  #Where measurements are NA in nestling, we give capture data precedence
   indv_chick_record_conflict <- indv_chick_capture %>%
     #Join Nestling data and filter those cases where the same date is present
     dplyr::mutate(Last2DigitsRingNr = stringr::str_sub(RingNumber, start = -2),
@@ -506,13 +506,13 @@ create_capture_HAR    <- function(db, Brood_data, species_filter){
     dplyr::filter(is.na(LastRingNumber) & CaptureDate == CaptureDateNestling) %>%
     dplyr::mutate(Mass = purrr::map2_dbl(.x = .$Mass, .y = .$MassNestling, .f = ~{
 
-      if(is.na(..1)){
+      if(is.na(..2)){
 
-        return(..2)
+        return(..1)
 
       } else {
 
-        return(..1)
+        return(..2)
 
       }
 
@@ -520,13 +520,13 @@ create_capture_HAR    <- function(db, Brood_data, species_filter){
     WingLength = purrr::map2_dbl(.x = .$WingLength, .$WingLengthNestling,
                                  ~{
 
-                                   if(is.na(..1)){
+                                   if(is.na(..2)){
 
-                                     return(..2)
+                                     return(..1)
 
                                    } else {
 
-                                     return(..1)
+                                     return(..2)
 
                                    }
 
