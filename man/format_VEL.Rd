@@ -5,7 +5,7 @@
 \title{Construct standard summary for data from Velky Kosir, Czechia.}
 \usage{
 format_VEL(db = utils::choose.dir(), species = NULL, pop = NULL,
-  path = ".", output_type = "csv")
+  path = ".", output_type = "R")
 }
 \arguments{
 \item{db}{Location of database file.}

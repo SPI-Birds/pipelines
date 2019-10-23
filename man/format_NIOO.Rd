@@ -5,7 +5,7 @@
 \title{Construct standard format for NIOO data.}
 \usage{
 format_NIOO(db = utils::choose.dir(), species = NULL, pop = NULL,
-  path = ".", output_type = "csv")
+  path = ".", output_type = "R")
 }
 \arguments{
 \item{db}{Location of database file.}

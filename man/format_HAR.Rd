@@ -5,7 +5,7 @@
 \title{Construct standard format for data from Harjavalta, Finland.}
 \usage{
 format_HAR(db = utils::choose.dir(), species = NULL, pop = NULL,
-  path = ".", output_type = "csv")
+  path = ".", output_type = "R")
 }
 \arguments{
 \item{db}{Location of database file.}

@@ -5,7 +5,7 @@
 \title{Run multiple data pipelines}
 \usage{
 run_pipelines(path = utils::choose.dir(), PopID = NULL,
-  Species = NULL, output_type = "csv")
+  Species = NULL, output_type = "R")
 }
 \arguments{
 \item{path}{File path. Location of all folders for data owners. Note, the
@@ -22,7 +22,7 @@ as seen in pop_names.}
 if a population doesn't have the requested species it will not be
 formatted.)}
 
-\item{output_type}{Should the pipeline generate .csv files ('csv') or R objects ('R').}
+\item{output_type}{Should the pipeline generate .csv files ('csv') or R objects ('R'). Default: R.}
 }
 \value{
 Generate .csv files or return an R list object with 4 items
