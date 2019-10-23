@@ -473,8 +473,7 @@ create_capture_HAR    <- function(db, Brood_data, species_filter){
   #There is not a 1 to 1 relationship. There are often more nestling records than there are capture records
   #Therefore, we need to separate out the records from capture and nestling data tables
   indv_chick_multirecord_capture_data <- indv_chick_multirecord_combined %>%
-    dplyr::select(-contains("Nestling")) %>%
-    dplyr::filter(!duplicated(.))
+    dplyr::select(-contains("Nestling"))
 
   indv_chick_multirecord_nestling_data <- indv_chick_multirecord_combined %>%
     dplyr::select(IndvID:Age, contains("Nestling")) %>%
@@ -650,7 +649,9 @@ create_capture_HAR    <- function(db, Brood_data, species_filter){
     calc_age(ID = IndvID, Age = Age_observed, Date = CaptureDate, Year = BreedingSeason) %>%
     dplyr::mutate(Tarsus = NA_real_, OriginalTarsusMethod = NA_character_) %>%
     dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, CapturePopID, CapturePlot,
-                  ReleasePopID, ReleasePlot, Mass, Tarsus, OriginalTarsusMethod, WingLength, Age_observed, Age_calculated, ChickAge, Sex, BroodID, CaptureType, BirdStatus)
+                  ReleasePopID, ReleasePlot, Mass, Tarsus, OriginalTarsusMethod, WingLength, Age_observed, Age_calculated, ChickAge, Sex, BroodID, CaptureType, BirdStatus) %>%
+    #Remove duplicates that can arise from cases when CaptureDate is the same in Capture and Nestling
+    dplyr::distinct()
 
   return(Capture_data_output)
 
