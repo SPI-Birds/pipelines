@@ -6,8 +6,6 @@
 #' extracted.
 #'
 #' @return Nothing
-#' @import sp
-#' @import rgdal
 
 get_MON_metdata <- function(){
 
