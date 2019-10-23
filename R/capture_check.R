@@ -403,11 +403,11 @@ check_values_capture <- function(Capture_data) {
 
                                     if(..4 %in% c("PARMAJ", "CYACAE") & ..5 == "Chick" & ..6 == "Mass"){
 
-                                      min <- capture_ref_values[[paste(..4, ..5, ..6, sep="_")]] %>%
+                                      wmin <- capture_ref_values[[paste(..4, ..5, ..6, sep="_")]] %>%
                                         dplyr::filter(ChickAge == ..3 & Reference == "Warning_min") %>%
                                         dplyr::pull(Value)
 
-                                      max <- capture_ref_values[[paste(..4, ..5, ..6, sep="_")]] %>%
+                                      wmax <- capture_ref_values[[paste(..4, ..5, ..6, sep="_")]] %>%
                                         dplyr::filter(ChickAge == ..3 & Reference == "Warning_max") %>%
                                         dplyr::pull(Value)
 
@@ -415,9 +415,9 @@ check_values_capture <- function(Capture_data) {
                                              " (", Species_codes[Species_codes$Code == ..4, "CommonName"], " ",
                                              tolower(..5), ")",
                                              " has an unusually ",
-                                             ifelse(..2 < min,
-                                                    paste0("low value in ", ..6, " (", ..2, " < ", round(min, 2)),
-                                                    paste0("high value in ", ..6, " (", ..2, " > ", round(max, 2))),
+                                             ifelse(..2 < wmin,
+                                                    paste0("low value in ", ..6, " (", ..2, " < ", round(wmin, 2)),
+                                                    paste0("high value in ", ..6, " (", ..2, " > ", round(wmax, 2))),
                                              ") for its age (", ..3, ").")
 
                                     } else {
