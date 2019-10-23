@@ -7,6 +7,11 @@
 #' \item \strong{B1}: Check if the formats of each column in \code{Brood_data} match with the standard format using \code{\link{check_format_brood}}.
 #' \item \strong{B2}: Compare clutch size and brood size per brood using \code{\link{compare_clutch_brood}}.
 #' \item \strong{B3}: Compare brood size and fledgling number per brood using \code{\link{compare_brood_fledglings}}.
+#' \item \strong{B4}: Compare laying date and hatching date per brood using \code{\link{compare_laying_hatching}}.
+#' \item \strong{B5}: Compare hatching date and fledging date per brood using \code{\link{compare_hatching_fledging}}.
+#' \item \strong{B6}: Check brood variable values against reference values using \code{\link{check_values_brood}}.
+#' \item \strong{B7}: Check if parents of a brood are the same species using \code{\link{check_parent_species}}.
+#' \item \strong{B8}: Compare brood size with number of chicks captured using \code{\link{compare_broodsize_chicknumber}}.
 #' }
 #'
 #' @inheritParams checks_brood_params

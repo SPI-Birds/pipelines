@@ -5,6 +5,9 @@
 #' The following individual data checks are performed:
 #' \itemize{
 #' \item \strong{I1}: Check if the formats of each column in \code{Individual_data} match with the standard format using \code{\link{check_format_individual}}.
+#' \item \strong{I2}: Check if the IDs of individuals are unique using \code{\link{check_unique_IndvID}}.
+#' \item \strong{I3}: Check if all chicks have BroodID using \code{\link{check_BroodID_chicks}}.
+#' \item \strong{I4}: Check if individuals have no conflicting sex using \code{\link{check_conflicting_sex}}.
 #' }
 #'
 #' @inheritParams checks_individual_params
