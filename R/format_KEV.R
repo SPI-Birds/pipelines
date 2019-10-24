@@ -440,8 +440,7 @@ create_capture_KEV    <- function(db, Brood_data, species_filter){
   #There is not a 1 to 1 relationship. There are often more nestling records than there are capture records
   #Therefore, we need to separate out the records from capture and nestling data tables
   indv_chick_multirecord_capture_data <- indv_chick_multirecord_combined %>%
-    dplyr::select(-contains("Nestling")) %>%
-    dplyr::filter(!duplicated(.))
+    dplyr::select(-contains("Nestling"))
 
   indv_chick_multirecord_nestling_data <- indv_chick_multirecord_combined %>%
     dplyr::select(IndvID:Age, contains("Nestling")) %>%
@@ -473,13 +472,13 @@ create_capture_KEV    <- function(db, Brood_data, species_filter){
     dplyr::filter(is.na(LastRingNumber) & CaptureDate == CaptureDateNestling) %>%
     dplyr::mutate(Mass = purrr::map2_dbl(.x = .$Mass, .y = .$MassNestling, .f = ~{
 
-                    if(is.na(..1)){
+                    if(is.na(..2)){
 
-                      return(..2)
+                      return(..1)
 
                     } else {
 
-                      return(..1)
+                      return(..2)
 
                     }
 
@@ -487,13 +486,13 @@ create_capture_KEV    <- function(db, Brood_data, species_filter){
                   WingLength = purrr::map2_dbl(.x = .$WingLength, .$WingLengthNestling,
                   ~{
 
-                    if(is.na(..1)){
+                    if(is.na(..2)){
 
-                      return(..2)
+                      return(..1)
 
                     } else {
 
-                      return(..1)
+                      return(..2)
 
                     }
 
