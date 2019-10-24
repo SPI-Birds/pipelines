@@ -275,7 +275,7 @@ create_individual_HOC <- function(db){
     dplyr::mutate(IndvID = ring_number, Species = "PARMAJ",
                   Sex = dplyr::case_when(sex == "female" ~ "F",
                                          sex == "male" ~ "M"),
-                  PopID = "HOG", RingSeason = lubridate::year(janitor::excel_numeric_to_date(as.numeric(date_ringed))),
+                  PopID = "HOC", RingSeason = lubridate::year(janitor::excel_numeric_to_date(as.numeric(date_ringed))),
                   RingAge = dplyr::case_when(age_simple == "adult" ~ "adult",
                                              age_simple == "nestling" ~ "chick"),
                   BroodIDLaid = nest_of_origin_id,
