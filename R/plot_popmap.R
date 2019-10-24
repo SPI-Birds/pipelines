@@ -9,6 +9,7 @@
 #'
 #' @return A jpeg file in the working directory
 #' @export
+#' @import ggplot2
 #'
 #' @examples
 #' #Create jpeg map
