@@ -278,4 +278,17 @@ utils::globalVariables(c(".", "AvgChickTarsus", "AvgChickMass", "AvgTarsus", "Po
                          "Mulu", "Naaras", "Nuro", "Ojalka", "Okas", "Olent",
                          "Pajut", "Pesa", "Pihlaja", "Pitu", "Pohja",
                          "Poik", "Pontlaji", "Psulka", "Ptapa", "Tuomi",
-                         "la", "lo", "ni", "nichoir"))
+                         "la", "lo", "ni", "nichoir", "ChickAge2", "Coordinates",
+                         "ExperimentCode", "age_offspring", "bird_id",
+                         "budka", "capture_method", "clutch_no", "clutch_size_error",
+                         "date_ringed", "fledge_date", "fledge_date_error",
+                         "fledge_number", "fledge_number_error", "hatch_date_error",
+                         "hatch_number", "hatch_number_error", "lay_date_error",
+                         "mass_g", "measures_taken_by", "nadmorska_vyska",
+                         "nest_id", "nest_location", "nest_of_origin_id",
+                         "nestbox_no", "nestbox_number", "physical_manipulation_present_at_time_of_release",
+                         "physical_manipulation_present_at_time_of_catching",
+                         "physiological_manipulation", "rearing_nest_id",
+                         "ring_number", "sirka_delka_hddd_mm_mmm", "social_female_bird_id",
+                         "social_male_bird_id", "status", "tarsus_length_mm", "time_capture",
+                         "unique_nest_id", "wing_lengh_mm", "x1st_egg_lay_date"))
