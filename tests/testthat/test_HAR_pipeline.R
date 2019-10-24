@@ -223,16 +223,16 @@ test_that("Location_data returns an expected outcome...", {
   #Test 1: Nestbox check
   #Location listed as a nest box that has lat/long from separate file
   #Record has expected LocationType
-  expect_true(subset(HAR_data, LocationID == "Kaarleinen_0018")$LocationType == "NB")
+  expect_true(subset(HAR_data, LocationID == "0018")$LocationType == "NB")
   #Expect LocationID and NestboxID are the same
-  expect_true(subset(HAR_data, LocationID == "Kaarleinen_0018")$NestboxID == "Kaarleinen_0018")
+  expect_true(subset(HAR_data, LocationID == "0018")$NestboxID == "0018")
   #Expect Start and EndSeason is as expected
-  expect_equal(subset(HAR_data, LocationID == "Kaarleinen_0018")$StartSeason, 1981L)
-  expect_equal(subset(HAR_data, LocationID == "Kaarleinen_0018")$EndSeason, 1983L)
+  expect_equal(subset(HAR_data, LocationID == "0018")$StartSeason, 1981L)
+  expect_equal(subset(HAR_data, LocationID == "0018")$EndSeason, 1998L)
   #Check that LocationID is in the expected PopID
-  expect_equal(subset(HAR_data, LocationID == "Kaarleinen_0018")$PopID, "HAR")
+  expect_equal(subset(HAR_data, LocationID == "0018")$PopID, "HAR")
   #Check that latitude and longitude are as expected
-  expect_equal(round(subset(HAR_data, LocationID == "Kaarleinen_0018")$Latitude, 1), 58.8)
-  expect_equal(round(subset(HAR_data, LocationID == "Kaarleinen_0018")$Longitude, 2), 7.62)
+  expect_equal(round(subset(HAR_data, LocationID == "0018")$Latitude, 2), 60.67)
+  expect_equal(round(subset(HAR_data, LocationID == "0018")$Longitude, 2), 21.92)
 
 })
