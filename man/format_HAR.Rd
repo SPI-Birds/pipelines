@@ -88,8 +88,8 @@ number column, corresponding record in Nestling_data that was taken at exactly
 the same capture date (e.g. HA-30103)
 
 Where there are measurements (e.g. mass, tarsus) in both Nestling_data and
-Capture_data, we give precedence to the data from Capture_data. We only use
-data from Nestling_data when there is no data in Capture_data
+Capture_data, we give precedence to the data from Nestling_data. We only use
+data from Capture_data when there is no data in Nestling_data
 
 \item #5.	Record of chick (Age is PM/PP) with information in the last ring
 number column which matches data in Nestling_data (e.g. HL-26103 - 26107)
