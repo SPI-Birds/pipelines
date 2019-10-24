@@ -40,7 +40,8 @@ Imports: dplyr,
          reshape2,
          magrittr,
          maps,
-         stats
+         stats,
+         rgdal
 RoxygenNote: 6.1.1
 Suggests: 
     knitr,

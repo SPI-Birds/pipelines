@@ -9,6 +9,7 @@
 #'
 #' @return A data frame with cutoffs values at each age
 #' @export
+#' @importFrom stats na.omit nls
 #'
 #' @examples
 #' \dontrun{
