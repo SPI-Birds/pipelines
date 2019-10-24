@@ -8,6 +8,32 @@
 #'this data. For a general description of the standard protocl please see
 #'\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
 #'
+#'\strong{AvgEggMass:} Clutch mass is recorded in many cases; however, these measurements are
+#'taken on or after the start of incubation. As egg mass can change throughout the period of
+#'incubation we have not used these data.
+#'
+#'\strong{Plot:} There is no distinct plot information in Hochstadt. Plot is left blank.
+#'
+#'\strong{LocationID:} Captures can occur on nest boxes (e.g., with trap, while brooding, at feeder)
+#'or with mistnets. The location of all non-nestbox trapping is located next to a known nestbox.
+#'Therefore, we simply use nestbox as the LocationID for all captures, even when the capture didn't
+#'occur within the nestbox itself. Therefore, Location data only includes location information
+#'for nestbox sites.
+#'
+#'\strong{Age_observed:} All captures listed as 'nestling' are given a EURING code of 1 (i.e. unable to fly).
+#'Captures listed as 'adult' can be either '1st year' or 'adult'. We treat '1st year' as birds known to
+#'be in their first reproductive season (i.e. 2nd year of life; EURING 5) while 'adult' are birds known to be after
+#'hatched before this season, but exact age unknown (i.e. EURING 4). Some cases are listed as '1st year?'.
+#'These are treated the same as '1st year'.
+#'
+#'\strong{ChickAge:} Chick age is sometimes stored with uncertainty (e.g. 14/15). In all these cases we
+#'take the lower age.
+#'
+#'\strong{ExperimentID:} Manipulation of individuals is recorded with each capture. This includes
+#'hormonal injections and attaching backpacks. We treat any brood as having been experimented on
+#'if any type of manipulation was recorded on any individual associated with a given brood.
+#'\strong{Note:} at this moment, ExperimentID is simply recorded as TRUE/FALSE while we try to
+#'categorise all experiments.
 #'
 #'@inheritParams pipeline_params
 #'
@@ -181,7 +207,8 @@ create_capture_HOC <- function(db){
                   CaptureTime = paste0((as.numeric(time_capture) * (24*60)) %/% 60,
                                        ":", (as.numeric(time_capture) * (24*60)) %% 60),
                   BreedingSeason = as.integer(lubridate::year(CaptureDate)),
-                  FoundDead = grepl(pattern = "dead|died", status), LocationID = purrr::map_chr(.x = nest_location, ~{
+                  FoundDead = grepl(pattern = "dead|died", status),
+                  LocationID = purrr::map_chr(.x = nest_location, ~{
 
                     if(is.na(..1)){
 
