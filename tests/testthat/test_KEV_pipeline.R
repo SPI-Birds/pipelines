@@ -49,52 +49,52 @@ test_that("Individual data returns an expected outcome...", {
 
   #Test 1: Capture records only as adult
   #Test for the expected number of captures
-  expect_equal(nrow(subset(HAR_data, IndvID == "V-20856")), 4)
+  expect_equal(nrow(subset(KEV_data, IndvID == "V-20856")), 4)
   #Test that the first capture is as expected
-  expect_equal(subset(HAR_data, IndvID == "V-20856")$CaptureDate[1], as.Date("1983-6-15"))
-  expect_equal(subset(HAR_data, IndvID == "V-20856")$CaptureDate[4], as.Date("1987-6-1"))
+  expect_equal(subset(KEV_data, IndvID == "V-20856")$CaptureDate[1], as.Date("1983-6-15"))
+  expect_equal(subset(KEV_data, IndvID == "V-20856")$CaptureDate[4], as.Date("1987-6-1"))
   #Test that age observed is as expected on first and 4th capture
-  expect_equal(subset(HAR_data, IndvID == "V-20856")$Age_observed[1], 4L)
-  expect_equal(subset(HAR_data, IndvID == "V-20856")$Age_observed[4], 4L)
+  expect_equal(subset(KEV_data, IndvID == "V-20856")$Age_observed[1], 4L)
+  expect_equal(subset(KEV_data, IndvID == "V-20856")$Age_observed[4], 4L)
   #Test that age calculated is correct on first capture and last capture
-  expect_equal(subset(HAR_data, IndvID == "V-20856")$Age_calculated[1], 4L)
-  expect_equal(subset(HAR_data, IndvID == "V-20856")$Age_calculated[4], 12L)
+  expect_equal(subset(KEV_data, IndvID == "V-20856")$Age_calculated[1], 4L)
+  expect_equal(subset(KEV_data, IndvID == "V-20856")$Age_calculated[4], 12L)
 
   #Test 2: Capture records as single chick
   #Test for the expected number of captures
-  expect_equal(nrow(subset(HAR_data, IndvID == "VL-501786")), 2)
+  expect_equal(nrow(subset(KEV_data, IndvID == "VL-501786")), 2)
   #Test that the first and 5th capture is as expected
-  expect_equal(subset(HAR_data, IndvID == "VL-501786")$CaptureDate[1], as.Date("2013-6-24"))
-  expect_equal(subset(HAR_data, IndvID == "VL-501786")$CaptureDate[2], as.Date("2016-5-11"))
+  expect_equal(subset(KEV_data, IndvID == "VL-501786")$CaptureDate[1], as.Date("2013-6-24"))
+  expect_equal(subset(KEV_data, IndvID == "VL-501786")$CaptureDate[2], as.Date("2016-5-11"))
   #Test that age observed is as expected on first and 2nd capture
-  expect_equal(subset(HAR_data, IndvID == "VL-501786")$Age_observed[1], 1L)
-  expect_equal(subset(HAR_data, IndvID == "VL-501786")$Age_observed[2], 4L)
+  expect_equal(subset(KEV_data, IndvID == "VL-501786")$Age_observed[1], 1L)
+  expect_equal(subset(KEV_data, IndvID == "VL-501786")$Age_observed[2], 4L)
   #Test that age calculated is correct on first capture and last capture
-  expect_equal(subset(HAR_data, IndvID == "VL-501786")$Age_calculated[1], 1L)
-  expect_equal(subset(HAR_data, IndvID == "VL-501786")$Age_calculated[2], 9L)
+  expect_equal(subset(KEV_data, IndvID == "VL-501786")$Age_calculated[1], 1L)
+  expect_equal(subset(KEV_data, IndvID == "VL-501786")$Age_calculated[2], 9L)
 
   #Test 3: Chick captures with separate info in capture and nestling tables
   #Test for the expected number of captures
-  expect_equal(nrow(subset(HAR_data, IndvID == "V-478577")), 2)
+  expect_equal(nrow(subset(KEV_data, IndvID == "V-478577")), 2)
   #Test that the first and 5th capture is as expected
-  expect_equal(subset(HAR_data, IndvID == "V-478577")$CaptureDate[1], as.Date("1986-07-03"))
-  expect_equal(subset(HAR_data, IndvID == "V-478577")$CaptureDate[2], as.Date("1986-07-08"))
+  expect_equal(subset(KEV_data, IndvID == "V-478577")$CaptureDate[1], as.Date("1986-07-03"))
+  expect_equal(subset(KEV_data, IndvID == "V-478577")$CaptureDate[2], as.Date("1986-07-08"))
   #Test that age observed is as expected on first and 16th capture
-  expect_equal(subset(HAR_data, IndvID == "V-478577")$Age_observed[1], 1L)
-  expect_equal(subset(HAR_data, IndvID == "V-478577")$Age_observed[2], 1L)
+  expect_equal(subset(KEV_data, IndvID == "V-478577")$Age_observed[1], 1L)
+  expect_equal(subset(KEV_data, IndvID == "V-478577")$Age_observed[2], 1L)
   #Test that age calculated is correct on first capture and last capture
-  expect_equal(subset(HAR_data, IndvID == "V-478577")$Age_calculated[1], 1L)
-  expect_equal(subset(HAR_data, IndvID == "V-478577")$Age_calculated[2], 1L)
+  expect_equal(subset(KEV_data, IndvID == "V-478577")$Age_calculated[1], 1L)
+  expect_equal(subset(KEV_data, IndvID == "V-478577")$Age_calculated[2], 1L)
 
   #Test 4: Individual in a multi-chick capture
   #Test for the expected number of captures
-  expect_equal(nrow(subset(HAR_data, IndvID == "V-815033")), 1)
+  expect_equal(nrow(subset(KEV_data, IndvID == "V-815033")), 1)
   #Test that the first capture is as expected
-  expect_equal(subset(HAR_data, IndvID == "V-815033")$CaptureDate[1], as.Date("1989-6-15"))
+  expect_equal(subset(KEV_data, IndvID == "V-815033")$CaptureDate[1], as.Date("1989-6-15"))
   #Test that age observed is as expected
-  expect_equal(subset(HAR_data, IndvID == "V-815033")$Age_observed[1], 1L)
+  expect_equal(subset(KEV_data, IndvID == "V-815033")$Age_observed[1], 1L)
   #Test that age calculated is as expected
-  expect_equal(subset(HAR_data, IndvID == "V-815033")$Age_calculated[1], 1L)
+  expect_equal(subset(KEV_data, IndvID == "V-815033")$Age_calculated[1], 1L)
 
   #Test 5: Never caught as chick
   #Individual V-20856 should be listed as a great tit female
