@@ -98,7 +98,7 @@ format_HOC <- function(db = utils::choose.dir(),
 
   brood_exp <- Capture_data %>%
     dplyr::group_by(BroodID) %>%
-    dplyr::summarise(ExperimentID = any(ExperimentID))
+    dplyr::summarise(ExperimentID = as.character(any(ExperimentID)))
 
   Brood_data <- Brood_data %>%
     dplyr::left_join(chick_measures, by = "BroodID") %>%

@@ -464,7 +464,7 @@ create_brood_NIOO <- function(database, Individual_data, location_data, species_
                   LayDate = lubridate::ymd(LayDate) + LayDateError,
                   HatchDate = lubridate::ymd(HatchDate),
                   FledgeDate = lubridate::ymd(FledgeDate),
-                  ExperimentID = !is.na(dplyr::na_if(ExperimentID, "")),
+                  ExperimentID = as.character(!is.na(dplyr::na_if(ExperimentID, ""))),
                   Plot = as.character(Plot)) %>%
     #Include species letter codes for all species
     dplyr::mutate(Species = dplyr::case_when(.$BroodSpecies == 14400 ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code,
