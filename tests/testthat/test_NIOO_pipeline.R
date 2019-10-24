@@ -86,9 +86,9 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(NIOO_data, BroodID == "64088")$AvgChickMass, 11.70)
   expect_equal(subset(NIOO_data, BroodID == "64088")$AvgTarsus, NA_real_)
   #Check ExperimentID is as expected
-  expect_equal(subset(NIOO_data, BroodID == "64088")$ExperimentID, FALSE)
+  expect_equal(subset(NIOO_data, BroodID == "64088")$ExperimentID, "FALSE")
   #Check that Plot is as expected
-  expect_equal(subset(NIOO_data, BroodID == "64088")$Plot, 7L)
+  expect_equal(subset(NIOO_data, BroodID == "64088")$Plot, "7")
 
   #Test 2: clutch type = second
   #Check species is as expected
@@ -105,9 +105,9 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(NIOO_data, BroodID == "65073")$AvgChickMass, NA_real_)
   expect_equal(subset(NIOO_data, BroodID == "65073")$AvgTarsus, NA_real_)
   #Test ExperimentID is as expected
-  expect_equal(subset(NIOO_data, BroodID == "65073")$ExperimentID, FALSE)
+  expect_equal(subset(NIOO_data, BroodID == "65073")$ExperimentID, "FALSE")
   #Check that Plot is as expected
-  expect_equal(subset(NIOO_data, BroodID == "65073")$Plot, 57L)
+  expect_equal(subset(NIOO_data, BroodID == "65073")$Plot, "57")
 
   #Test 3: clutch type = replacement, where replacement is known (i.e. previous clutch was seen)
   #Check species is as expected
@@ -124,9 +124,9 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(NIOO_data, BroodID == "64597")$AvgChickMass, NA_real_)
   expect_equal(subset(NIOO_data, BroodID == "64597")$AvgTarsus, NA_real_)
   #Test ExperimentID is as expected
-  expect_equal(subset(NIOO_data, BroodID == "64597")$ExperimentID, TRUE)
+  expect_equal(subset(NIOO_data, BroodID == "64597")$ExperimentID, "TRUE")
   #Check that Plot is as expected
-  expect_equal(subset(NIOO_data, BroodID == "64597")$Plot, 41L)
+  expect_equal(subset(NIOO_data, BroodID == "64597")$Plot, "41")
 
   #Test 4: clutch type = replacement, where replacement calculated from cutoff
   #Check species is as expected
@@ -143,9 +143,9 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(round(subset(NIOO_data, BroodID == "64825")$AvgChickMass, 1), NA_real_)
   expect_equal(round(subset(NIOO_data, BroodID == "64825")$AvgTarsus, 1), NA_real_)
   #Test ExperimentID is as expected
-  expect_equal(subset(NIOO_data, BroodID == "64825")$ExperimentID, FALSE)
+  expect_equal(subset(NIOO_data, BroodID == "64825")$ExperimentID, "FALSE")
   #Check that Plot is as expected
-  expect_equal(subset(NIOO_data, BroodID == "64825")$Plot, 4L)
+  expect_equal(subset(NIOO_data, BroodID == "64825")$Plot, "4")
 
 })
 
