@@ -319,12 +319,13 @@ compare_clutch_brood <- function(Brood_data){
     err <- TRUE
 
     error_output <- purrr::pmap(.l = list(Brood_data_non$Row,
+                                          Brood_data_non$BroodID,
                                           Brood_data_non$ClutchSize,
                                           Brood_data_non$BroodSize),
                                 .f = ~{
-                                  paste0("Record on row ", ..1,
-                                         " has a larger brood size (", ..3,
-                                         ") than clutch size (", ..2,
+                                  paste0("Record on row ", ..1, " (BroodID: ", ..2, ")",
+                                         " has a larger brood size (", ..4,
+                                         ") than clutch size (", ..3,
                                          "), but was not experimentally manipulated.")
                                 })
   }
@@ -336,12 +337,13 @@ compare_clutch_brood <- function(Brood_data){
     war <- TRUE
 
     warning_output <- purrr::pmap(.l = list(Brood_data_man$Row,
+                                            Brood_data_man$BroodID,
                                             Brood_data_man$ClutchSize,
                                             Brood_data_man$BroodSize),
                                   .f = ~{
-                                    paste0("Record on row ", ..1,
-                                           " has a larger brood size (", ..3,
-                                           ") than clutch size (", ..2,
+                                    paste0("Record on row ", ..1, " (BroodID: ", ..2, ")",
+                                           " has a larger brood size (", ..4,
+                                           ") than clutch size (", ..3,
                                            "), but was experimentally manipulated.")
                                   })
   }
@@ -388,12 +390,13 @@ compare_brood_fledglings <- function(Brood_data){
     err <- TRUE
 
     error_output <- purrr::pmap(.l = list(Brood_data_non$Row,
+                                          Brood_data_non$BroodID,
                                           Brood_data_non$BroodSize,
                                           Brood_data_non$NumberFledged),
                                 .f = ~{
-                                  paste0("Record on row ", ..1,
-                                         " has a larger fledgling number (", ..3,
-                                         ") than brood size (", ..2,
+                                  paste0("Record on row ", ..1, " (BroodID: ", ..2, ")",
+                                         " has a larger fledgling number (", ..4,
+                                         ") than brood size (", ..3,
                                          "), but was not experimentally manipulated.")
                                 })
   }
@@ -405,12 +408,13 @@ compare_brood_fledglings <- function(Brood_data){
     war <- TRUE
 
     warning_output <- purrr::pmap(.l = list(Brood_data_man$Row,
+                                            Brood_data_man$BroodID,
                                             Brood_data_man$BroodSize,
                                             Brood_data_man$NumberFledged),
                                   .f = ~{
-                                    paste0("Record on row ", ..1,
-                                           " has a larger fledgling number (", ..3,
-                                           ") than brood size (", ..2,
+                                    paste0("Record on row ", ..1, " (BroodID: ", ..2, ")",
+                                           " has a larger fledgling number (", ..4,
+                                           ") than brood size (", ..3,
                                            "), and was experimentally manipulated.")
                                   })
   }
@@ -534,12 +538,13 @@ compare_hatching_fledging <- function(Brood_data){
     err <- TRUE
 
     error_output <- purrr::pmap(.l = list(Brood_data_late$Row,
+                                          Brood_data_late$BroodID,
                                           Brood_data_late$HatchDate,
                                           Brood_data_late$FledgeDate),
                                 .f = ~{
-                                  paste0("Record on row ", ..1,
-                                         " has a later hatching date (", ..2,
-                                         ") than fledging date (", ..3, ").")
+                                  paste0("Record on row ", ..1, " (BroodID: ", ..2, ")",
+                                         " has a later hatching date (", ..3,
+                                         ") than fledging date (", ..4, ").")
                                 })
   }
 
