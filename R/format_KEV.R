@@ -432,13 +432,18 @@ create_capture_KEV    <- function(db, Brood_data, species_filter){
   #In this case, it doesn't matter whether mass/wing length is NA, they are still legit capture records
   indv_chick_capture_only <- indv_chick_capture %>%
     #Filter only those where the BroodID_RingNumber combo is not found in Nestling data
-    dplyr::filter(!paste(BroodID, stringr::str_sub(RingNumber, start = -2), sep = "_") %in% paste(Nestling_data$BroodID, Nestling_data$Last2DigitsRingNr, sep = "_")) %>%
+    dplyr::mutate(Brood_ring = paste(BroodID, stringr::str_sub(RingNumber, start = -2), sep = "_")) %>%
+    dplyr::anti_join(Nestling_data %>%
+                       dplyr::mutate(Brood_ring = paste(BroodID, Last2DigitsRingNr, sep = "_")) %>%
+                       dplyr::select(Brood_ring),
+                     by = "Brood_ring") %>%
     dplyr::left_join(select(Brood_data, BroodID, HatchDate), by = "BroodID") %>%
     #Join in Brood_data (with HatchDate) so we can determine ChickAge
     dplyr::mutate(Capture_type = "Chick", Last2DigitsRingNr = NA,
                   ChickAge = as.integer(CaptureDate - HatchDate),
                   IndvID = paste(RingSeries, RingNumber, sep = "-")) %>%
-    dplyr::select(IndvID, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, BroodID, Species, Sex, Age, WingLength, Mass, CaptureType, BirdStatus, Last2DigitsRingNr, ChickAge)
+    dplyr::select(IndvID, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, BroodID, Species,
+                  Sex, Age, WingLength, Mass, CaptureType, BirdStatus, Last2DigitsRingNr, ChickAge)
 
   ####
 
