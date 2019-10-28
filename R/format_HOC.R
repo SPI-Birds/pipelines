@@ -169,7 +169,7 @@ create_brood_HOC <- function(db){
                   PopID = "HOC",
                   Species = "PARMAJ",
                   Plot = NA_character_,
-                  LocationID = nestbox_no,
+                  LocationID = paste0("H", nestbox_no),
                   ClutchType_observed = clutch_no,
                   BreedingSeason = as.integer(year),
                   MaleID = social_male_bird_id,
@@ -216,7 +216,9 @@ create_capture_HOC <- function(db){
 
                     } else {
 
-                      return(na.omit(dplyr::na_if(unlist(strsplit(..1, split = "[^0-9]+")), "")))
+                      boxnumber <- na.omit(dplyr::na_if(unlist(strsplit(..1, split = "[^0-9]+")), ""))
+
+                      return(paste0("H", boxnumber))
 
                     }
 
@@ -291,8 +293,8 @@ create_location_HOC <- function(db){
   Location_data <- readxl::read_excel(paste0(db, "/HOC_PrimaryData.xlsx"), sheet = "Location Data", na = c("", "na"),
                                       col_types = "text") %>%
     janitor::clean_names() %>%
-    dplyr::mutate(LocationID = nestbox_number,
-                  NestboxID = nestbox_number,
+    dplyr::mutate(LocationID = paste0("H", nestbox_number),
+                  NestboxID = LocationID,
                   LocationType = "NB",
                   PopID = "HOC",
                   Latitude = as.numeric(latitude),
