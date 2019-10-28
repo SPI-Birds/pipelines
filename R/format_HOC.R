@@ -223,11 +223,10 @@ create_capture_HOC <- function(db){
                     }
 
                   }), Mass = as.numeric(mass_g), WingLength = as.numeric(wing_length_mm),
-                  Mass = as.numeric(mass_g), WingLength = as.numeric(wing_length_mm),
                   Tarsus = as.numeric(tarsus_length_mm), OriginalTarsusMethod = "Alternative") %>%
-    dplyr::bind_cols(., purrr::map2_df(.x = .$age_exact, .y = .$age_simple,
+    dplyr::bind_cols(., purrr::pmap_df(.l = list(age_exact = .$age_exact, age_simple = .$age_simple, BreedingSeason = .$BreedingSeason),
 
-                                       function(age_exact, age_simple){
+                                       function(age_exact, age_simple, BreedingSeason){
 
                                        if(age_simple == "nestling"){
 
@@ -245,7 +244,8 @@ create_capture_HOC <- function(db){
                                        } else {
 
                                          return(tibble::tibble(Age_observed = dplyr::case_when(grepl("ADULT", toupper(age_exact)) ~ 4L,
-                                                                                               grepl("1ST YEAR", toupper(age_exact)) ~ 5L),
+                                                                                               grepl("1ST YEAR", toupper(age_exact)) & BreedingSeason >= 2019 ~ 5L,
+                                                                                               grepl("1ST YEAR", toupper(age_exact)) & BreedingSeason < 2019 ~ 4L),
                                                                                                ChickAge = NA_integer_))
 
                                        }
