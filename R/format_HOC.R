@@ -251,19 +251,40 @@ create_capture_HOC <- function(db){
                                        }
 
                                     })) %>%
-    dplyr::arrange(IndvID, BreedingSeason, CaptureDate, CaptureTime) %>%
-    calc_age(ID = IndvID, Age = Age_observed, Date = CaptureDate, Year = BreedingSeason) %>%
     dplyr::rowwise() %>%
     dplyr::mutate(ExperimentID = any(c(physical_manipulation_present_at_time_of_catching,
                                        physical_manipulation_present_at_time_of_release,
                                        physiological_manipulation) %in% "manipulated")) %>%
-    dplyr::ungroup() %>%
+    dplyr::ungroup()
+
+  Death_captures <- readxl::read_excel(paste0(db, "/HOC_PrimaryData.xlsx"), sheet = "DeadBirds ID", na = c("", "na"),
+                                       col_types = "text") %>%
+    janitor::clean_names() %>%
+    dplyr::mutate(CaptureDate = janitor::excel_numeric_to_date(as.numeric(date_found)),
+                  IndvID = ringnumber) %>%
+    #Find cases where that individual was not recorded captured on that date
+    dplyr::left_join(x = ., y = (Capture_data %>% dplyr::mutate(in_capt = TRUE) %>% dplyr::select(CaptureDate, IndvID, in_capt)), by = c("CaptureDate", "IndvID")) %>%
+    dplyr::filter(is.na(in_capt)) %>%
+    dplyr::mutate(Species = "PARMAJ", BreedingSeason = lubridate::year(CaptureDate),
+                  CaptureTime = NA_character_, ObserverID = NA_character_,
+                  LocationID = NA_character_, CapturePopID = "HOC",
+                  CapturePlot = NA_character_, ReleasePopID = "HOC",
+                  ReleasePlot = NA_character_, Mass = NA_real_,
+                  Tarsus = NA_real_, OriginalTarsusMethod = NA_character_,
+                  WingLength = NA_real_, Age_observed = dplyr::case_when(.$age == "adult" ~ 4L,
+                                                                         .$age == "nestling" ~ 1L),
+                  ChickAge = NA_integer_, BroodID = NA_character_, ExperimentID = NA_character_,
+                  FoundDead = TRUE, capture_method = NA_character_)
+
+  Capture_data_combined <- dplyr::bind_rows(Capture_data, Death_captures) %>%
+    dplyr::arrange(IndvID, BreedingSeason, CaptureDate, CaptureTime) %>%
+    calc_age(ID = IndvID, Age = Age_observed, Date = CaptureDate, Year = BreedingSeason)  %>%
     dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime,
                   ObserverID, LocationID, CapturePopID, CapturePlot, ReleasePopID, ReleasePlot,
                   Mass, Tarsus, OriginalTarsusMethod, WingLength, Age_observed,
-                  Age_calculated, ChickAge, ChickAge2, FoundDead, BroodID, ExperimentID, capture_method)
+                  Age_calculated, ChickAge, FoundDead, BroodID, ExperimentID, capture_method)
 
-  return(Capture_data)
+  return(Capture_data_combined)
 
 }
 
