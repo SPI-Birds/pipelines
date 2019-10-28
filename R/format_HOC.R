@@ -204,8 +204,8 @@ create_capture_HOC <- function(db){
                   CapturePopID = "HOC", ReleasePopID = "HOC",
                   CapturePlot = NA_character_, ReleasePlot = NA_character_,
                   CaptureDate = janitor::excel_numeric_to_date(as.numeric(date)),
-                  CaptureTime = paste0((as.numeric(time_capture) * (24*60)) %/% 60,
-                                       ":", (as.numeric(time_capture) * (24*60)) %% 60),
+                  CaptureTime = paste0(stringr::str_pad(string = (as.numeric(time_capture) * (24*60)) %/% 60, width = 2, pad = "0"),
+                                       ":", stringr::str_pad(string = round((as.numeric(time_capture) * (24*60)) %% 60), width = 2, pad = "0")),
                   BreedingSeason = as.integer(lubridate::year(CaptureDate)),
                   FoundDead = grepl(pattern = "dead|died", status),
                   LocationID = purrr::map_chr(.x = nest_location, ~{
