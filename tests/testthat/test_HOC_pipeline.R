@@ -120,6 +120,49 @@ test_that("Capture data returns an expected outcome...", {
   expect_equal(subset(HOC_data, IndvID == "C3K7291")$Age_calculated[1], 4L)
   expect_equal(subset(HOC_data, IndvID == "C3K7291")$Age_calculated[7], 10L)
 
+  #Test 3: Individual caught as 1st year adult pre 2019
+  #This individual should be treated as EURING 4
+  #Test it has the correct number of capture records
+  expect_equal(nrow(subset(HOC_data, IndvID == "C3K7272")), 5)
+  #Test that the first capture is as expected
+  expect_equal(subset(HOC_data, IndvID == "C3K7272")$CaptureDate[1], as.Date("2016-03-08"))
+  #Test that the 7th capture is as expected
+  expect_equal(subset(HOC_data, IndvID == "C3K7272")$CaptureDate[5], as.Date("2019-05-09"))
+  #Test that first and last age observed is as expected
+  expect_equal(subset(HOC_data, IndvID == "C3K7272")$Age_observed[1], 4L)
+  expect_equal(subset(HOC_data, IndvID == "C3K7272")$Age_observed[5], 4L)
+  #Test that first and last age calculated is as expected
+  expect_equal(subset(HOC_data, IndvID == "C3K7272")$Age_calculated[1], 4L)
+  expect_equal(subset(HOC_data, IndvID == "C3K7272")$Age_calculated[5], 10L)
+
+  #Test 4: Individual caught as 1st year adult post 2019
+  #This individual should be treated as EURING 5
+  #Test it has the correct number of capture records
+  expect_equal(nrow(subset(HOC_data, IndvID == "C5E9102")), 2)
+  #Test that the first capture is as expected
+  expect_equal(subset(HOC_data, IndvID == "C5E9102")$CaptureDate[1], as.Date("2019-03-16"))
+  #Test that the 7th capture is as expected
+  expect_equal(subset(HOC_data, IndvID == "C5E9102")$CaptureDate[2], as.Date("2019-05-08"))
+  #Test that first and last age observed is as expected
+  expect_equal(subset(HOC_data, IndvID == "C5E9102")$Age_observed[1], 5L)
+  expect_equal(subset(HOC_data, IndvID == "C5E9102")$Age_observed[2], 4L)
+  #Test that first and last age calculated is as expected
+  expect_equal(subset(HOC_data, IndvID == "C5E9102")$Age_calculated[1], 4L)
+  expect_equal(subset(HOC_data, IndvID == "C5E9102")$Age_calculated[2], 4L)
+
+  #Test 5: Individual found dead in DeadCapture ID table
+  #Test it has the correct number of capture records
+  expect_equal(nrow(subset(HOC_data, IndvID == "C5E8940")), 3)
+  #Test that the first capture is as expected
+  expect_equal(subset(HOC_data, IndvID == "C5E8940")$CaptureDate[1], as.Date("2019-05-13"))
+  #Test that the 7th capture is as expected
+  expect_equal(subset(HOC_data, IndvID == "C5E8940")$CaptureDate[3], as.Date("2019-05-23"))
+  #Test that first and last age observed is as expected
+  expect_equal(subset(HOC_data, IndvID == "C5E8940")$Age_observed[1], 1L)
+  expect_equal(subset(HOC_data, IndvID == "C5E8940")$Age_observed[3], 1L)
+  #Test that first and last age calculated is as expected
+  expect_equal(subset(HOC_data, IndvID == "C5E8940")$Age_calculated[1], 1L)
+  expect_equal(subset(HOC_data, IndvID == "C5E8940")$Age_calculated[3], 1L)
 
 })
 
