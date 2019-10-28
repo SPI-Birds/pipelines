@@ -453,45 +453,55 @@ create_capture_HAR    <- function(db, Brood_data, species_filter){
 
   ####
 
-  #3. Individual chick captures with separate records in Nestling data
-  #In this case, it doesn't matter whether mass/wing length is NA, they are still legit capture records
-  indv_chick_multirecord_combined <- indv_chick_capture %>%
-    #Join Nestling data.
+  #3 - 4. Individual chick captures with that also have records in Nestling data
+  #These can be 3) where the records were at different dates. In thise case, both records are used
+  # or 4) where the records are on the same date. In this case, nestling record is used
+  #unless data are missing
+
+  #First, identify those cases where the individual chick record is in both tables
+  non_matching_records <- indv_chick_capture %>%
     dplyr::mutate(Last2DigitsRingNr = stringr::str_sub(RingNumber, start = -2),
                   IndvID = paste(RingSeries, RingNumber, sep = "-")) %>%
-    dplyr::left_join(dplyr::select(Nestling_data, BroodID, Last2DigitsRingNr, CaptureDateNestling = CaptureDate,
-                                   CaptureTimeNestling = CaptureTime, MassNestling = Mass, WingLengthNestling = WingLength, HatchDate, ChickAgeNestling = ChickAge),
+    dplyr::semi_join(Nestling_data %>%
+                       dplyr::select(BroodID, Last2DigitsRingNr, CaptureDateNestling = CaptureDate),
                      by = c("BroodID", "Last2DigitsRingNr")) %>%
-    #Filter those cases where it's an individual capture (i.e. no last ring number)
-    #Find cases where the date of capture between the two is different
-    dplyr::filter(CaptureDate != CaptureDateNestling) %>%
-    #Make a chick age for the capture date in the capture data using hatch date as well
+    dplyr::pull(IndvID)
+
+  #Next, go through capture data records and return all the cases where these
+  #chicks had a record in capture data that didn't match anything in nestling data
+  unique_individual_captures <- indv_chick_capture %>%
+    dplyr::mutate(Last2DigitsRingNr = stringr::str_sub(RingNumber, start = -2),
+                  IndvID = paste(RingSeries, RingNumber, sep = "-")) %>%
+    dplyr::filter(IndvID %in% non_matching_records) %>%
+    dplyr::anti_join(Nestling_data %>%
+                       dplyr::select(BroodID, Last2DigitsRingNr, CaptureDate),
+                     by = c("BroodID", "Last2DigitsRingNr", "CaptureDate")) %>%
+    dplyr::left_join(Brood_data %>%
+                       select(BroodID, HatchDate), by = "BroodID") %>%
     dplyr::mutate(ChickAge = as.integer(CaptureDate - HatchDate)) %>%
-    dplyr::select(IndvID, BreedingSeason, CaptureType, BirdStatus, ObserverID, LocationID, BroodID, Species, Sex, Age,
-                  WingLength, Mass, CaptureDate, CaptureTime, CaptureDateNestling, CaptureTimeNestling, MassNestling, WingLengthNestling, ChickAgeNestling, ChickAge)
+    dplyr::select(IndvID, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, BroodID, Species,
+                  Sex, Age, WingLength, Mass, CaptureType, BirdStatus, ChickAge)
 
-  #There is not a 1 to 1 relationship. There are often more nestling records than there are capture records
-  #Therefore, we need to separate out the records from capture and nestling data tables
-  indv_chick_multirecord_capture_data <- indv_chick_multirecord_combined %>%
-    dplyr::select(-contains("Nestling"))
+  #Go through the nestling data records and do the same thing
+  unique_individual_nestlings <- Nestling_data %>%
+    dplyr::left_join(indv_chick_capture %>%
+                       dplyr::mutate(Last2DigitsRingNr = stringr::str_sub(RingNumber, start = -2)) %>%
+                       dplyr::select(BroodID, Last2DigitsRingNr, RingSeries, RingNumber, Species),
+                     by = c("BroodID", "Last2DigitsRingNr")) %>%
+    dplyr::mutate(IndvID = paste(RingSeries, RingNumber, sep = "-")) %>%
+    dplyr::filter(IndvID %in% non_matching_records) %>%
+    dplyr::anti_join(indv_chick_capture %>%
+                       dplyr::mutate(Last2DigitsRingNr = stringr::str_sub(RingNumber, start = -2)) %>%
+                       dplyr::select(BroodID, Last2DigitsRingNr, CaptureDate),
+                     by = c("BroodID", "Last2DigitsRingNr", "CaptureDate")) %>%
+    dplyr::mutate(ObserverID = NA_character_, Sex = NA_character_, Age = "PP", CaptureType = "5",
+                  BirdStatus = NA_character_) %>%
+    dplyr::select(IndvID, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, BroodID, Species,
+                  Sex, Age, WingLength, Mass, CaptureType, BirdStatus, ChickAge)
 
-  indv_chick_multirecord_nestling_data <- indv_chick_multirecord_combined %>%
-    dplyr::select(IndvID:Age, contains("Nestling")) %>%
-    dplyr::rename_at(.vars = vars(contains("Nestling")), .funs = ~{
+  indv_chick_multirecord <- dplyr::bind_rows(unique_individual_captures, unique_individual_nestlings)
 
-      stringr::str_replace(string = ..1, pattern = "Nestling", replacement = "")
-
-    })
-
-  #Combine these two together
-  indv_chick_multirecord <- dplyr::bind_rows(indv_chick_multirecord_capture_data, indv_chick_multirecord_nestling_data) %>%
-    dplyr::select(IndvID, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, BroodID, Species, Sex, Age, WingLength, Mass, CaptureType, BirdStatus, ChickAge)
-
-  ####
-
-  #4. Individuals with measurement records in both capture and nestling.
-  #Where measurements are present in both we assume that the nestling data record takes precedence.
-  #Where measurements are NA in nestling, we give capture data precedence
+  #Go through and find the exact matches
   indv_chick_record_conflict <- indv_chick_capture %>%
     #Join Nestling data and filter those cases where the same date is present
     dplyr::mutate(Last2DigitsRingNr = stringr::str_sub(RingNumber, start = -2),
@@ -501,8 +511,8 @@ create_capture_HAR    <- function(db, Brood_data, species_filter){
                      by = c("BroodID", "Last2DigitsRingNr")) %>%
     #Filter those cases that are individual captures (i.e. no last ring number)
     #Find cases where there was mass and/or wing length in the nestling data
-    #AND where the CaptureDate in the Nestling data is the same as Capture_data
-    dplyr::filter(is.na(LastRingNumber) & CaptureDate == CaptureDateNestling) %>%
+    #AND where the CaptureDate in the Nestling data is different to Capture_data
+    dplyr::filter(CaptureDate == CaptureDateNestling) %>%
     dplyr::mutate(Mass = purrr::map2_dbl(.x = .$Mass, .y = .$MassNestling, .f = ~{
 
       if(is.na(..2)){
@@ -530,7 +540,8 @@ create_capture_HAR    <- function(db, Brood_data, species_filter){
                                    }
 
                                  })) %>%
-    dplyr::select(IndvID, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, BroodID, Species, Sex, Age, WingLength, Mass, CaptureType, BirdStatus, ChickAge)
+    dplyr::select(IndvID, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, BroodID, Species,
+                  Sex, Age, WingLength, Mass, CaptureType, BirdStatus, ChickAge)
 
   ####
 
