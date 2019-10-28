@@ -148,7 +148,6 @@ format_KEV <- function(db = utils::choose.dir(),
   # WRANGLE DATA FOR EXPORT
 
   ## Add average chick mass and tarsus to brood data
-
   Chick_avg <- Capture_data %>%
     dplyr::filter(dplyr::between(ChickAge, 14, 16)) %>%
     #Remove cases where tarsus or weight are 0 (make them NA)
@@ -162,13 +161,47 @@ format_KEV <- function(db = utils::choose.dir(),
                      NumberChicksTarsus = n(),
                      OriginalTarsusMethod = "Alternative")
 
-  #Join these into Brood_data
-  #Only existing broods will be used.
-  Brood_data <- left_join(Brood_data, Chick_avg, by = "BroodID") %>%
-    dplyr::select(BroodID:NumberFledgedError, AvgEggMass:OriginalTarsusMethod, ExperimentID)
+  ##Determine parents of every brood
+  Parents <- Capture_data %>%
+    dplyr::filter(BirdStatus == "P" & !is.na(Sex)) %>%
+    dplyr::select(BroodID, IndvID, Sex) %>%
+    dplyr::distinct()
+
+  #There can be cases where an brood has multiple female/male parents
+  #This may be due to mis-sexing or typos in IndvID records (e.g. V-622002 v. V-622022)
+  #We check these are report them
+  double_parents <- Parents %>%
+    dplyr::group_by(BroodID, Sex) %>%
+    dplyr::summarise(n = n()) %>%
+    dplyr::filter(n > 1)
+
+  NA_broods <- double_parents$BroodID
+
+  message(paste0("There are ", nrow(double_parents), " broods where there is more than one possible parent"))
+
+  #In these cases, we just say we can't know the parents and leave it as NA
+  Parents <- Parents %>%
+    dplyr::filter(!BroodID %in% NA_broods) %>%
+    tidyr::pivot_wider(names_from = Sex, values_from = IndvID) %>%
+    dplyr::rename(FemaleID = F, MaleID = M)
+
+  #Join avg measurements and parents to brood data
+  Brood_data <- dplyr::left_join(Brood_data, Chick_avg, by = "BroodID") %>%
+    dplyr::left_join(Parents, by = "BroodID") %>%
+    #Now we can do clutchtype_calculated (we couldn't do this until we have FemaleID)
+    dplyr::arrange(BreedingSeason, FemaleID, LayDate) %>%
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
+    dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot, LocationID,
+                  FemaleID, MaleID, ClutchType_observed, ClutchType_calculated,
+                  LayDate, LayDateError, ClutchSize, ClutchSizeError,
+                  HatchDate, HatchDateError, BroodSize, BroodSizeError,
+                  FledgeDate, FledgeDateError, NumberFledged, NumberFledgedError,
+                  AvgEggMass, NumberEggs,
+                  AvgChickMass, NumberChicksMass, AvgTarsus, NumberChicksTarsus,
+                  OriginalTarsusMethod, ExperimentID)
 
   Capture_data <- Capture_data %>%
-    dplyr::select(-Sex, -BroodID)
+    dplyr::select(-Sex, -BroodID, -CaptureType, -BirdStatus)
 
   # EXPORT DATA
 
