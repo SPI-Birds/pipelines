@@ -131,16 +131,16 @@ test_that("Location_data returns an expected outcome...", {
   HOC_data <- dplyr::filter(pipeline_output$Location_data, PopID %in% "HOC")
 
   #Test 1: Nestbox check
-  expect_true(subset(HOC_data, LocationID == "1")$LocationType == "NB")
+  expect_true(subset(HOC_data, LocationID == "H1")$LocationType == "NB")
   #Expect LocationID and NestboxID are the same
-  expect_true(subset(HOC_data, LocationID == "1")$NestboxID == "1")
+  expect_true(subset(HOC_data, LocationID == "H1")$NestboxID == "H1")
   #Expect Start and EndSeason is as expected
-  expect_equal(subset(HOC_data, LocationID == "1")$StartSeason, 2014L)
-  expect_equal(subset(HOC_data, LocationID == "1")$EndSeason, NA_integer_)
+  expect_equal(subset(HOC_data, LocationID == "H1")$StartSeason, 2014L)
+  expect_equal(subset(HOC_data, LocationID == "H1")$EndSeason, NA_integer_)
   #Check that LocationID is in the expected PopID
-  expect_equal(subset(HOC_data, LocationID == "1")$PopID, "HOC")
+  expect_equal(subset(HOC_data, LocationID == "H1")$PopID, "HOC")
   #Check that latitude and longitude are as expected
-  expect_equal(round(subset(HOC_data, LocationID == "1")$Latitude, 2), 11.26)
-  expect_equal(round(subset(HOC_data, LocationID == "1")$Longitude, 2), 48.06)
+  expect_equal(round(subset(HOC_data, LocationID == "H1")$Latitude, 2), 11.26)
+  expect_equal(round(subset(HOC_data, LocationID == "H1")$Longitude, 2), 48.06)
 
 })
