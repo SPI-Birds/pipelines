@@ -119,7 +119,7 @@ format_HOC <- function(db = utils::choose.dir(),
                   ExperimentID)
 
   Capture_data <- Capture_data %>%
-    dplyr::select(-ChickAge2, -BroodID, -ExperimentID, -capture_method)
+    dplyr::select(-BroodID, -ExperimentID, -capture_method)
 
   # EXPORT DATA
 
@@ -220,7 +220,7 @@ create_capture_HOC <- function(db){
 
                     }
 
-                  }), ChickAge2 = as.integer(stringr::str_split(age_offspring, pattern = "/")[[1]][1]),
+                  }), Mass = as.numeric(mass_g), WingLength = as.numeric(wing_length_mm),
                   Mass = as.numeric(mass_g), WingLength = as.numeric(wing_length_mm),
                   Tarsus = as.numeric(tarsus_length_mm), OriginalTarsusMethod = "Alternative") %>%
     dplyr::bind_cols(., purrr::map2_df(.x = .$age_exact, .y = .$age_simple,
