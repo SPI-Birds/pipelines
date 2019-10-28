@@ -284,12 +284,7 @@ create_brood_KEV <- function(db, species_filter){
                                                          ClutchType_observed == 5 ~ "second")) %>%
     #Create calendar date for laying date and hatch date
     dplyr::mutate(LayDate = as.Date(paste(LayDate_day, LayDate_month, BreedingSeason, sep = "/"), format = "%d/%m/%Y"),
-                  HatchDate  = as.Date(paste(HatchDate_day, HatchDate_month, BreedingSeason, sep = "/"), format = "%d/%m/%Y"),
-                  FemaleID = NA_character_, MaleID = NA_character_) %>%
-    #ClutchType_calculated will only be first or replacement because we don't know FemaleID.
-    #Need to ask Tapio about this
-    dplyr::arrange(BreedingSeason, FemaleID, LayDate) %>%
-    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
+                  HatchDate  = as.Date(paste(HatchDate_day, HatchDate_month, BreedingSeason, sep = "/"), format = "%d/%m/%Y")) %>%
     dplyr::mutate(LayDateError = dplyr::case_when(LayDateError == "1" ~ 1L,
                                                   LayDateError == "2" ~ 2L,
                                                   LayDateError == "3" ~ 3L,
@@ -300,13 +295,7 @@ create_brood_KEV <- function(db, species_filter){
                                                     HatchDateError == "4" ~ 7L),
                   FledgeDate = as.Date(NA), ClutchSizeError = NA_real_, BroodSizeError = NA_real_,
                   FledgeDateError = NA_real_, NumberFledgedError = NA_real_,
-                  BroodSize = as.integer(BroodSize), ExperimentID = NA_character_) %>%
-    #Arrange columns correctly
-    dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot, LocationID, FemaleID, MaleID,
-                  ClutchType_observed, ClutchType_calculated, LayDate, LayDateError,
-                  ClutchSize, ClutchSizeError, HatchDate, HatchDateError,
-                  BroodSize, BroodSizeError, FledgeDate, FledgeDateError, NumberFledged, NumberFledgedError,
-                  ExperimentID)
+                  BroodSize = as.integer(BroodSize), ExperimentID = NA_character_)
 
   return(Brood_data)
 
@@ -530,7 +519,8 @@ create_capture_KEV    <- function(db, Brood_data, species_filter){
                     }
 
                   })) %>%
-    dplyr::select(IndvID, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, BroodID, Species, Sex, Age, WingLength, Mass, CaptureType, BirdStatus, ChickAge)
+    dplyr::select(IndvID, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, BroodID, Species,
+                  Sex, Age, WingLength, Mass, CaptureType, BirdStatus, ChickAge)
 
   ####
 
