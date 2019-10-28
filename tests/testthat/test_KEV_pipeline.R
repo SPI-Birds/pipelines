@@ -47,6 +47,36 @@ test_that("Individual data returns an expected outcome...", {
   #Take a subset of only KEV data
   KEV_data <- dplyr::filter(pipeline_output$Individual_data, PopID %in% "KEV")
 
+  #Test 1: Never caught as chick
+  #Individual V-20856 should be listed as a great tit female
+  expect_equal(subset(KEV_data, IndvID == "V-91428")$Sex, "F")
+  expect_equal(subset(KEV_data, IndvID == "V-91428")$Species, "FICHYP")
+  #They should have no BroodIDLaid or Fledged because she was never caught as a chick
+  expect_equal(subset(KEV_data, IndvID == "V-91428")$BroodIDLaid, NA_character_)
+  expect_equal(subset(KEV_data, IndvID == "V-91428")$BroodIDFledged, NA_character_)
+  #Her ring season should be 1991 with a RingAge of 'adult'
+  expect_equal(subset(KEV_data, IndvID == "V-91428")$RingSeason, 1984L)
+  expect_equal(subset(KEV_data, IndvID == "V-91428")$RingAge, "adult")
+
+  #Test 2: First caught as chick
+  #Individual HL-010189 should be listed as a female flycatcher
+  expect_equal(subset(KEV_data, IndvID == "V-815188")$Sex, "F")
+  expect_equal(subset(KEV_data, IndvID == "V-815188")$Species, "FICHYP")
+  expect_equal(subset(KEV_data, IndvID == "V-815188")$BroodIDLaid, "1989_1291_1")
+  expect_equal(subset(KEV_data, IndvID == "V-815188")$BroodIDFledged, "1989_1291_1")
+  expect_equal(subset(KEV_data, IndvID == "V-815188")$RingSeason, 1989L)
+  expect_equal(subset(KEV_data, IndvID == "V-815188")$RingAge, "chick")
+
+})
+
+test_that("Capture data returns an expected outcome...", {
+
+  #We want to run tests for captures as both chicks, males, and females
+  #Currently we have no chick data, so we can only test adults
+
+  #Take a subset of only KEV data
+  KEV_data <- dplyr::filter(pipeline_output$Capture_data, CapturePopID %in% "KEV")
+
   #Test 1: Capture records only as adult
   #Test for the expected number of captures
   expect_equal(nrow(subset(KEV_data, IndvID == "V-20856")), 4)
@@ -88,45 +118,18 @@ test_that("Individual data returns an expected outcome...", {
 
   #Test 4: Individual in a multi-chick capture
   #Test for the expected number of captures
-  expect_equal(nrow(subset(KEV_data, IndvID == "V-815033")), 1)
+  expect_equal(nrow(subset(KEV_data, IndvID == "V-20847")), 2)
   #Test that the first capture is as expected
-  expect_equal(subset(KEV_data, IndvID == "V-815033")$CaptureDate[1], as.Date("1989-6-15"))
+  expect_equal(subset(KEV_data, IndvID == "V-20847")$CaptureDate[1], as.Date("1983-6-14"))
+  expect_equal(subset(KEV_data, IndvID == "V-20847")$CaptureDate[2], as.Date("1984-6-22"))
   #Test that age observed is as expected
-  expect_equal(subset(KEV_data, IndvID == "V-815033")$Age_observed[1], 1L)
+  expect_equal(subset(KEV_data, IndvID == "V-20847")$Age_observed[1], 1L)
+  expect_equal(subset(KEV_data, IndvID == "V-20847")$Age_observed[2], 4L)
   #Test that age calculated is as expected
-  expect_equal(subset(KEV_data, IndvID == "V-815033")$Age_calculated[1], 1L)
+  expect_equal(subset(KEV_data, IndvID == "V-20847")$Age_calculated[1], 1L)
+  expect_equal(subset(KEV_data, IndvID == "V-20847")$Age_calculated[2], 5L)
 
-  #Test 5: Never caught as chick
-  #Individual V-20856 should be listed as a great tit female
-  expect_equal(subset(KEV_data, IndvID == "V-91428")$Sex, "F")
-  expect_equal(subset(KEV_data, IndvID == "V-91428")$Species, "FICHYP")
-  #They should have no BroodIDLaid or Fledged because she was never caught as a chick
-  expect_equal(subset(KEV_data, IndvID == "V-91428")$BroodIDLaid, NA_character_)
-  expect_equal(subset(KEV_data, IndvID == "V-91428")$BroodIDFledged, NA_character_)
-  #Her ring season should be 1991 with a RingAge of 'adult'
-  expect_equal(subset(KEV_data, IndvID == "V-91428")$RingSeason, 1984L)
-  expect_equal(subset(KEV_data, IndvID == "V-91428")$RingAge, "adult")
-
-  #Test 6: First caught as chick
-  #Individual HL-010189 should be listed as a female flycatcher
-  expect_equal(subset(KEV_data, IndvID == "V-815188")$Sex, "F")
-  expect_equal(subset(KEV_data, IndvID == "V-815188")$Species, "FICHYP")
-  expect_equal(subset(KEV_data, IndvID == "V-815188")$BroodIDLaid, "1989_1291_1")
-  expect_equal(subset(KEV_data, IndvID == "V-815188")$BroodIDFledged, "1989_1291_1")
-  expect_equal(subset(KEV_data, IndvID == "V-815188")$RingSeason, 1989L)
-  expect_equal(subset(KEV_data, IndvID == "V-815188")$RingAge, "chick")
-
-})
-
-test_that("Capture data returns an expected outcome...", {
-
-  #We want to run tests for captures as both chicks, males, and females
-  #Currently we have no chick data, so we can only test adults
-
-  #Take a subset of only KEV data
-  KEV_data <- dplyr::filter(pipeline_output$Capture_data, CapturePopID %in% "KEV")
-
-  #Test 1: Individual ringed as a chick
+  #Test 5: Individual ringed as a chick
   #Test for the expected number of captures
   expect_equal(nrow(subset(KEV_data, IndvID == "V-815188")), 3)
   #Test that the first capture is as expected
@@ -143,7 +146,7 @@ test_that("Capture data returns an expected outcome...", {
   expect_equal(subset(KEV_data, IndvID == "V-815188")$Age_calculated[1], 1L)
   expect_equal(subset(KEV_data, IndvID == "V-815188")$Age_calculated[3], 5L)
 
-  #Test 2: Caught only as adult with multiple records
+  #Test 6: Caught only as adult with multiple records
   #Test it has the correct number of capture records
   expect_equal(nrow(subset(KEV_data, IndvID == "V-91428")), 3)
   #Test that the first capture is as expected
