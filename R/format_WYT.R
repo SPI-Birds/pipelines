@@ -38,23 +38,89 @@
 #' @export
 
 format_WYT <- function(db = utils::choose.dir(),
-                       path = ".",
                        species = NULL,
-                       pop = NULL){
+                       pop = NULL,
+                       path = ".",
+                       output_type = "R"){
 
   #Force user to select directory
   force(db)
 
-  start <- Sys.time()
+  #Determine species codes for filtering
+  if(is.null(species)){
 
-  message("Importing primary data...")
+    species <- Species_codes$Code
 
-  WYT_data <- utils::read.csv(paste0(db, "/WYT_PrimaryData.csv"), header = T, sep = ",", stringsAsFactors = FALSE) %>%
+  }
+
+  start_time <- Sys.time()
+
+  # BROOD DATA
+
+  message("Compiling brood information...")
+
+  Brood_data <- create_brood_WYT(db = db)
+
+  # CAPTURE DATA
+
+  message("Compiling capture information...")
+
+  Capture_data <- create_capture_WYT(db = db, Brood_data = Brood_data)
+
+  # INDIVIDUAL DATA
+
+  message("Compiling individual information...")
+
+  Individual_data <- create_individual_WYT(Capture_data)
+
+  # WRANGLE DATA FOR EXPORT
+
+  #Remove unneeded Capture columns
+  Capture_data <- Capture_data %>%
+    dplyr::select(-Sex, -BroodIDLaid, -BroodIDFledged, -HatchDate)
+
+  # EXPORT DATA
+
+  time <- difftime(Sys.time(), start_time, units = "sec")
+
+  message(paste0("All tables generated in ", round(time, 2), " seconds"))
+
+  if(output_type == "csv"){
+
+    message("Saving .csv files...")
+
+    utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_WYT.csv"), row.names = F)
+
+    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_WYT.csv"), row.names = F)
+
+    utils::write.csv(x = Capture_data %>% select(-Sex, -BroodID), file = paste0(path, "\\Capture_data_WYT.csv"), row.names = F)
+
+    invisible(NULL)
+
+  }
+
+  if(output_type == "R"){
+
+    message("Returning R objects...")
+
+    return(list(Brood_data = Brood_data,
+                Capture_data = Capture_data,
+                Individual_data = Individual_data,
+                Location_data = NA))
+
+  }
+
+}
+
+create_brood_WYT <- function(db){
+
+  Brood_data_raw <- utils::read.csv(paste0(db, "/WYT_PrimaryData_Brood.csv"), header = T,
+                              sep = ",", stringsAsFactors = FALSE) %>%
     janitor::clean_names()
 
-  pb <- dplyr::progress_estimated(n = nrow(WYT_data)*3)
+  pb <- dplyr::progress_estimated(n = nrow(Brood_data_raw)*3)
 
-  WYT_data <- WYT_data %>%
+  Brood_data <- Brood_data_raw %>%
     #Rename columns to meet our standard format
     dplyr::mutate(BreedingSeason = year, LocationID = nestbox,
                   PopID = "WYT", Plot = toupper(section),
@@ -64,7 +130,7 @@ format_WYT <- function(db = utils::choose.dir(),
                                              .$species == "n" ~ Species_codes[Species_codes$SpeciesID == 14790, ]$Code,
                                              .$species == "m" ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code),
                   LayDate = as.Date(lay_date, format = "%d/%m/%Y"),
-                  HatchDate = purrr::pmap_chr(.l = list(hatch_date, legacy_april_hatch_date),
+                  HatchDate = as.Date(purrr::pmap_chr(.l = list(hatch_date, legacy_april_hatch_date),
                                               .f = ~{
 
                                                 pb$print()$tick()
@@ -79,7 +145,7 @@ format_WYT <- function(db = utils::choose.dir(),
 
                                                 }
 
-                                              }),
+                                              }), format = "%d/%m/%Y"),
                   NumberEggs = num_eggs_weighed,
                   AvgEggMass = purrr::pmap_dbl(.l = list(total_egg_weight, num_eggs_weighed, legacy_average_egg_weight),
                                                .f = ~{
@@ -128,7 +194,7 @@ format_WYT <- function(db = utils::choose.dir(),
                                                   .$experiment_codes == "11" ~ "SURVIVAL",
                                                   .$experiment_codes == "12" ~ "SURVIVAL",
                                                   .$experiment_codes == "13" ~ "SURVIVAL"),
-                  BroodID = paste(BreedingSeason, LocationID)) %>%
+                  BroodID = pnum) %>%
     #Separate out chick ids into different columns. N.B. Currently, there is only
     #the chick id column and no actual info. Therefore, it's hard to know what the
     #max possible number of columns we should include are. I just go with 22 (max
@@ -136,30 +202,8 @@ format_WYT <- function(db = utils::choose.dir(),
     #I'm basing all this code (e.g. sep used) on the dead chick ids columns.
     #I assume when chick numbers are provided, it will be in the same format.
     tidyr::separate(chick_ids, into = paste0("chick_", seq(1:22)), sep = " ,") %>%
-    as_tibble()
-
-  ##############
-  # BROOD DATA #
-  ##############
-
-  message("Compiling brood information...")
-
-  Brood_data <- create_brood_WYT(data = WYT_data)
-
-  ################
-  # CAPTURE DATA #
-  ################
-
-  message("Compiling capture information...")
-
-  Capture_data <- create_capture_WYT(WYT_data)
-
-
-}
-
-create_brood_WYT <- function(data){
-
-  Brood_data <- data %>%
+    as_tibble() %>%
+    dplyr::arrange(BreedingSeason, FemaleID, LayDate) %>%
     dplyr::mutate(ClutchType_observed = NA,
                   ClutchType_calc = calc_clutchtype(data = ., na.rm = FALSE),
                   LayDateError = NA,
@@ -185,7 +229,7 @@ create_brood_WYT <- function(data){
                   NumberFledged, NumberFledgedError,
                   AvgEggMass, NumberEggs,
                   AvgChickMass, NumberChicksMass,
-                  AvgChickTarsus, NumberChicksTarsus,
+                  AvgTarsus, NumberChicksTarsus,
                   ExperimentID)
 
   return(Brood_data)
@@ -202,56 +246,197 @@ create_brood_WYT <- function(data){
 
 }
 
-create_capture_WYT <- function(data){
+create_capture_WYT <- function(db, Brood_data){
 
-  Capture_data <- data %>%
-    dplyr::select(FemaleID, MaleID,
-                  chick_1:chick_22,
-                  Species, BreedingSeason,
-                  LocationID, PopID, Plot) %>%
-    reshape2::melt(id.vars = c("Species", "BreedingSeason",
-                               "LocationID", "PopID", "Plot"),
-                   value.name = "IndvID") %>%
-    dplyr::filter(!is.na(IndvID) & IndvID != "") %>%
-    #Keep as tibble so we can save list columns (needed for sex and age below)
-    as_tibble()
+  #Load chick capture data
+  Chick_captures_old <- readxl::read_xlsx(paste0(db, "/WYT_PrimaryData_Capture.xlsx"),
+                                          col_types = "text", sheet = "1947-2012",
+                                          na = c("unringed", "unrrunt", "UNRRUNT")) %>%
+    janitor::clean_names()
 
-  pb <- dplyr::progress_estimated(n = nrow(Capture_data))
+  chick_old_pb <- dplyr::progress_estimated(n = nrow(Chick_captures_old))
 
-  Capture_data <- Capture_data %>%
-    dplyr::mutate(CaptureDate = NA, CaptureTime = NA,
-                  CapturePopID = PopID, CapturePlot = Plot,
-                  ReleasePopID = PopID, ReleasePlot = Plot,
-                  Mass = NA, Tarsus = NA, WingLength = NA,
-                  ChickAge = NA,
-                  Sex_Age = purrr::map(.x = variable,
-                                       .f = ~{
+  Chick_captures_old <- Chick_captures_old %>%
+    dplyr::mutate(Species = dplyr::case_when(toupper(species_code) == "GRETI" ~ Species_codes[Species_codes$SpeciesID == 14640, ]$Code,
+                                             toupper(species_code) == "BLUTI" ~ Species_codes[Species_codes$SpeciesID == 14620, ]$Code,
+                                             toupper(species_code) == "COATI" ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code,
+                                             toupper(species_code) == "MARTI" ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code),
+                  CaptureDate = janitor::excel_numeric_to_date(as.numeric(date_time)), CaptureTime = NA_character_) %>%
+    dplyr::rowwise() %>%
+    dplyr::mutate(BreedingSeason = ifelse(is.na(CaptureDate), as.numeric(stringr::str_sub(pnum, start = 1, end = 4)),
+                                          lubridate::year(CaptureDate))) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(IndvID = ring_number, CapturePopID = "WYT",
+                  CapturePlot = stringr::str_remove_all(string = pnum, pattern = "\\d"),
+                  LocationID = stringr::str_sub(pnum, start = 6),
+                  #Release is just NA for now because we need to find the location with cross-fostering
+                  ReleasePopID = "WYT", ReleasePlot = NA_character_,
+                  ObserverID = NA_character_,
+                  Mass = as.numeric(weight), WingLength = as.numeric(wing_length),
+                  Age_observed = dplyr::case_when(age %in% c("3", "3J") ~ 3L,
+                                                  age == "0" ~ NA_integer_,
+                                                  age == "1" ~ 1L,
+                                                  age == "2" ~ 2L,
+                                                  age == "4" ~ 4L,
+                                                  age == "5" ~ 5L,
+                                                  age == "6" ~ 6L)) %>%
+    #Add tarsus. We are assuming that when tarsus method is "S" this is Svensson's Alternative and doesn't need conversion
+    #Otherwise (NA or "M") assume it's Oxford.
+    #Need to check this with Ella.
+    dplyr::bind_cols(purrr::map2_df(.x = .$tarsus_length, .y = .$tarsus_length_method,
+                                    .f = ~{
 
-                                         pb$print()$tick()
+                                      chick_old_pb$tick()$print()
 
-                                         if(grepl(pattern = "Female",
-                                                  x = ..1)){
+                                      if(is.na(..1)){
 
-                                           return(tibble(Sex = "F", Age_obsv = NA))
+                                        return(tibble::tibble(Tarsus = NA_real_,
+                                                              OriginalTarsusMethod = NA_character_))
 
-                                         } else if(grepl(pattern = "Male",
-                                                         x = ..1)){
+                                      }
 
-                                           return(tibble(Sex = "M", Age_obsv = NA))
+                                      if(is.na(..2) | ..2 == "M"){
 
-                                         } else {
+                                        return(tibble::tibble(Tarsus = convert_tarsus(as.numeric(..1), method = "Oxford"),
+                                                              OriginalTarsusMethod = "Oxford"))
 
-                                           return(tibble(Sex = "U", Age_obsv = 1))
+                                      } else {
 
-                                         }
+                                        return(tibble::tibble(Tarsus = as.numeric(..1),
+                                                              OriginalTarsusMethod = "Oxford"))
 
-                                       })) %>%
-    tidyr::unnest(cols = "Sex_Age") %>%
-    calc_age(ID = IndvID, Age = Age_obsv, Date = CaptureDate,
-             Year = BreedingSeason, showpb = TRUE) %>%
-    dplyr::select(IndvID, Species, BreedingSeason, LocationID,
-                  CaptureDate:WingLength, Age_obsv,
-                  Age_calculated, ChickAge)
+                                      }
+
+                                    })) %>%
+    #Include sex and brood info for linked to Brood_data and Individual_data
+    #Sex 'n' is assumed to be a typo and treated as male
+    #As always, we ignore sex uncertainty
+    dplyr::mutate(Sex = dplyr::case_when(grepl(toupper(sex), pattern = "F") ~ "F",
+                                         grepl(toupper(sex), pattern = "M|N") ~ "M")) %>%
+    dplyr::bind_cols(purrr::pmap_df(.l = list(.$Age_observed, .$pnum, .$origin_pnum),
+                                    .f = ~{
+
+                                      if(!..1 %in% c(1, 3)){
+
+                                        return(tibble::tibble(BroodIDLaid = NA_character_,
+                                                              BroodIDFledged = NA_character_))
+
+                                      } else {
+
+                                        if(is.na(..3)){
+
+                                          return(tibble::tibble(BroodIDLaid = ..2,
+                                                                BroodIDFledged = ..2))
+
+                                        } else {
+
+                                          return(tibble::tibble(BroodIDLaid = ..3,
+                                                                BroodIDFledged = ..2))
+
+                                        }
+
+                                      }
+
+                                    })) %>%
+    dplyr::select(IndvID, Species, BreedingSeason, CaptureDate,
+                  CaptureTime, ObserverID, LocationID, CapturePopID,
+                  CapturePlot, ReleasePopID, ReleasePlot, Mass,
+                  Tarsus, OriginalTarsusMethod, WingLength,
+                  Age_observed, Sex, BroodIDLaid, BroodIDFledged)
+
+  Chick_captures_new <- readxl::read_xlsx(paste0(db, "/WYT_PrimaryData_Capture.xlsx"),
+                                          col_types = "text", sheet = "2013-2018",
+                                          na = c("unringed", "unrrunt", "UNRRUNT")) %>%
+    janitor::clean_names()
+
+  chick_new_pb <- dplyr::progress_estimated(n = nrow(Chick_captures_new))
+
+  Chick_captures_new <- Chick_captures_new %>%
+    dplyr::mutate(Species = dplyr::case_when(toupper(bto_species_code) == "GRETI" ~ Species_codes[Species_codes$SpeciesID == 14640, ]$Code,
+                                             toupper(bto_species_code) == "BLUTI" ~ Species_codes[Species_codes$SpeciesID == 14620, ]$Code,
+                                             toupper(bto_species_code) == "COATI" ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code,
+                                             toupper(bto_species_code) == "MARTI" ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code,
+                                             toupper(bto_species_code) == "NUTHA" ~ Species_codes[Species_codes$SpeciesID == 14790, ]$Code),
+                  CaptureDate = janitor::excel_numeric_to_date(as.numeric(date_time) %/% 1),
+                  CaptureTime = paste(stringr::str_pad(string = ((as.numeric(date_time) %% 1) * 24) %/% 1,
+                                                       width = 2, pad = "0"),
+                                      stringr::str_pad(string = round((((as.numeric(date_time) %% 1) * 24) %% 1) * 60),
+                                                       width = 2, pad = "0"), sep = ":")) %>%
+    dplyr::rowwise() %>%
+    dplyr::mutate(BreedingSeason = ifelse(is.na(CaptureDate), as.numeric(stringr::str_sub(pnum, start = 1, end = 4)),
+                                          lubridate::year(CaptureDate))) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(IndvID = bto_ring, CapturePopID = "WYT",
+                  CapturePlot = stringr::str_remove_all(string = pnum, pattern = "\\d"),
+                  LocationID = stringr::str_sub(pnum, start = 6),
+                  #Release is just NA for now because we need to find the location with cross-fostering
+                  ReleasePopID = "WYT", ReleasePlot = NA_character_,
+                  ObserverID = NA_character_,
+                  Mass = as.numeric(weight), WingLength = as.numeric(wing_length),
+                  #Currently just treat ages as is (assume they are EURING codes)
+                  Age_observed = as.integer(age)) %>%
+    #Add tarsus. We are assuming that when tarsus method is "S" this is Svensson's Alternative and doesn't need conversion
+    #Otherwise (NA or "M") assume it's Oxford.
+    #Need to check this with Ella.
+    dplyr::bind_cols(purrr::map2_df(.x = .$tarsus_length, .y = .$tarsus_length_method,
+                                    .f = ~{
+
+                                      chick_new_pb$tick()$print()
+
+                                      if(is.na(..1)){
+
+                                        return(tibble::tibble(Tarsus = NA_real_,
+                                                              OriginalTarsusMethod = NA_character_))
+
+                                      }
+
+                                      if(is.na(..2) | toupper(..2) == "M"){
+
+                                        return(tibble::tibble(Tarsus = convert_tarsus(as.numeric(..1), method = "Oxford"),
+                                                              OriginalTarsusMethod = "Oxford"))
+
+                                      } else {
+
+                                        return(tibble::tibble(Tarsus = as.numeric(..1),
+                                                              OriginalTarsusMethod = "Oxford"))
+
+                                      }
+
+                                    })) %>%
+    #Include sex and brood info for linked to Brood_data and Individual_data
+    #Sex 'n' is assumed to be a typo and treated as male
+    #As always, we ignore sex uncertainty
+    dplyr::mutate(Sex = sex)  %>%
+    dplyr::bind_cols(purrr::map2_df(.x = .$Age_observed, .y = .$pnum,
+                                    .f = ~{
+
+                                      if(!..1 %in% c(1, 3)){
+
+                                        return(tibble::tibble(BroodIDLaid = NA_character_,
+                                                              BroodIDFledged = NA_character_))
+
+                                      } else {
+
+                                        return(tibble::tibble(BroodIDLaid = ..2,
+                                                              BroodIDFledged = ..2))
+
+                                      }
+
+                                    })) %>%
+    dplyr::select(IndvID, Species, BreedingSeason, CaptureDate,
+                  CaptureTime, ObserverID, LocationID, CapturePopID,
+                  CapturePlot, ReleasePopID, ReleasePlot, Mass,
+                  Tarsus, OriginalTarsusMethod, WingLength,
+                  Age_observed, Sex, BroodIDLaid, BroodIDFledged)
+
+  Capture_data <- dplyr::bind_rows(Chick_captures_new, Chick_captures_old) %>%
+    dplyr::arrange(IndvID, BreedingSeason, CaptureDate, CaptureTime) %>%
+    calc_age(ID = IndvID, Age = Age_observed, Date = CaptureDate, Year = BreedingSeason) %>%
+    dplyr::left_join(Brood_data %>%
+                       select(BroodID, HatchDate), by = c("BroodIDLaid" = "BroodID")) %>%
+    dplyr::rowwise() %>%
+    dplyr::mutate(ChickAge = ifelse(Age_observed == 1, CaptureDate - HatchDate, NA_integer_)) %>%
+    dplyr::ungroup()
 
   return(Capture_data)
 
@@ -260,5 +445,96 @@ create_capture_WYT <- function(data){
   CaptureDate <- CaptureTime <- ObserverID <- CapturePopID <- ReleasePopID <- Mass <- Tarsus <- NULL
   OriginalTarsusMethod <- WingLength <- Age_calculated <- ChickAge <- NULL
   FemaleID <- MaleID <- chick_1 <- chick_22 <- NULL
+
+}
+
+create_individual_WYT <- function(Capture_data){
+
+  indv_pb <- dplyr::progress_estimated(n = length(unique(na.omit(Capture_data$IndvID))) * 4 + 1)
+
+  #For every individual determine their unchanged individual information
+  Individual_data <- Capture_data %>%
+    dplyr::filter(!is.na(IndvID)) %>%
+    dplyr::group_by(IndvID) %>%
+    dplyr::summarise(Species = purrr::map_chr(.x = list(unique(na.omit(Species))), .f = ~{
+
+      indv_pb$tick()$print()
+
+      if(length(..1) == 0){
+
+        return(NA_character_)
+
+      } else if(length(..1) == 1){
+
+        return(..1)
+
+      } else {
+
+        return("CONFLICTED")
+
+      }
+
+    }), PopID = "WYT",
+    BroodIDLaid = purrr::map_chr(.x = list(unique(na.omit(BroodIDLaid))), .f = ~{
+
+      indv_pb$tick()$print()
+
+      if(length(..1) == 0){
+
+        return(NA_character_)
+
+      } else if(length(..1) == 1){
+
+        return(..1)
+
+      } else {
+
+        return("CONFLICTED")
+
+      }
+
+    }),
+    BroodIDFledged = purrr::map_chr(.x = list(unique(na.omit(BroodIDFledged))), .f = ~{
+
+      indv_pb$tick()$print()
+
+      if(length(..1) == 0){
+
+        return(NA_character_)
+
+      } else if(length(..1) == 1){
+
+        return(..1)
+
+      } else {
+
+        return("CONFLICTED")
+
+      }
+
+    }),
+    RingSeason = first(BreedingSeason),
+    RingAge = ifelse(all(is.na(Age_calculated)), NA_character_, ifelse(any(Age_calculated %in% c(1, 3)), "chick", ifelse(min(Age_calculated) == 2, NA_character_, "adult"))),
+    Sex = purrr::map_chr(.x = list(unique(na.omit(Sex))), .f = ~{
+
+      indv_pb$tick()$print()
+
+      if(length(..1) == 0){
+
+        return(NA_character_)
+
+      } else if(length(..1) == 1){
+
+        return(..1)
+
+      } else {
+
+        return("C")
+
+      }
+
+    }))
+
+  return(Individual_data)
 
 }
