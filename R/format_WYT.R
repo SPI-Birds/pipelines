@@ -4,10 +4,13 @@
 #' Woods, UK, administered by Edward Grey Institute Oxford (Ben Sheldon).
 #'
 #' This section provides details on data management choices that are unique to
-#' this data. For a general description of the standard format please see XXXXX
-#' PLACE HOLDER!
+#' this data. For a general description of the standard format please see
+#'\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
 #'
-#' \strong{ExperimentID}: There are experiment codes given, I have tried to
+#'\strong{LocationID}: Unique locations are defined by using the nestbox IDs. These include
+#'plot information as nest box numbers are not unique across plots.
+#'
+#'\strong{ExperimentID}: There are experiment codes given, I have tried to
 #' adapt these to the ExperimentID categories described in the standard
 #' protocol; however, these need to be checked by data owners. For now I assume:
 #' - Egg manipulation (code 2) is clutch size manipulation.
@@ -16,21 +19,39 @@
 #' - Feeding manipulation (code 8) affects phenology.
 #' - Altering parasites, predation, competition and territory quality (codes 9, 11, 12, 13) all affect survival.
 #'
-#' \strong{Species}: We include nests form blue tits, great tits, coal tits,
-#' marsh tits, and nuthatches. Currently, mixed broods are treated as having no
-#' species (NA), but we will fix this. There is one brood with Species 'w',
-#' which I suspect is willow tit. This is currently ignored.
+#'\strong{Species}: We include nests form blue tits, great tits, coal tits,
+#'marsh tits, and nuthatches. Currently, mixed broods are treated as having no
+#'species (NA), but we will fix this. There is one brood with Species 'w',
+#'which I suspect is willow tit. This is currently ignored.
 #'
-#' \strong{AvgEggMass}: There are two columns with mass data, one is a 'legacy'
-#' column. When these overlap, they can differ up to 5g! I assume the 'legacy'
-#' column is less prefered (due to it's name). I only use this data where no
-#' other egg mass data is provided.
+#'\strong{AvgEggMass}: There are two columns with mass data, one is a 'legacy'
+#'column. When these overlap, they can differ up to 5g! I assume the 'legacy'
+#'column is less prefered (due to it's name). I only use this data where no
+#'other egg mass data is provided.
 #'
-#' \strong{AvgChickMass}: As with AvgChickMass, there is also a 'legacy' column.
-#' This is only used if the regular column is empty.
+#'\strong{AvgChickMass}: Average egg mass is recorded for each brood; however,
+#'this may include mass measurements taken outside of our focal period (14 - 16 days old).
+#'Therefore, this column is ignored and AvgChickMass is calculated manually from
+#'capture data.
 #'
-#' \strong{HatchDate}: As with AvgEggMass, there is also a 'legacy' column for
-#' hatch date. This is only used if the regular column is empty.
+#'\strong{HatchDate}: As with AvgEggMass, there is also a 'legacy' column for
+#'hatch date. This is only used if the regular column is empty.
+#'
+#'\strong{Age_observed}: Ages are assumed to follow EURING system and are
+#'included unchanged. The only exception to this is '3J', which is an old EURING
+#'code. This is treated as EURING age 3.
+#'
+#'\strong{Tarsus}: Tarsus method is either 'M', 'S', or NA. We have assumed that
+#''M' is the Oxford min/max method and converted accordingly. Currently, we treat
+#''S' and NA as Svensson's Alternative and do not convert. This needs to be clarified with
+#'data owner.
+#'
+#'\strong{Sex}: Any uncertainty in sex is ignored. For example, 'm?' is treated as male.
+#'
+#'\strong{BroodIDLaid and BroodIDFledged}: There are (some) cases where BroodIDLaid/Fledged
+#'have conflicting records for an individual. In these cases, BroodIDLaid/Fledged is
+#'simply listed as 'CONFLICTED'.
+#'
 #'
 #'@inheritParams pipeline_params
 #'

@@ -4,13 +4,11 @@
 \alias{format_WYT}
 \title{Construct standard summary for data from Wytham Woods, UK.}
 \usage{
-format_WYT(db = utils::choose.dir(), path = ".", species = NULL,
-  pop = NULL)
+format_WYT(db = utils::choose.dir(), species = NULL, pop = NULL,
+  path = ".", output_type = "R")
 }
 \arguments{
 \item{db}{Location of database file.}
-
-\item{path}{Location where output csv files will be saved.}
 
 \item{species}{Species of interest. The 6 letter codes of all the species of
 interest as listed in the
@@ -22,6 +20,10 @@ protocol}. For data owners with multiple populations (e.g. NIOO, UAN) where a si
 pipeline is used for many populations this argument is used to extract data from
 individual populations. For other pipelines that contain only one population
 this argument can be ignored.}
+
+\item{path}{Location where output csv files will be saved.}
+
+\item{output_type}{Should the pipeline generate .csv files ('csv') or R objects ('R').}
 }
 \value{
 Generates 4 .csv files with data in a standard format.
@@ -32,8 +34,11 @@ Woods, UK, administered by Edward Grey Institute Oxford (Ben Sheldon).
 }
 \details{
 This section provides details on data management choices that are unique to
-this data. For a general description of the standard format please see XXXXX
-PLACE HOLDER!
+this data. For a general description of the standard format please see
+\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
+
+\strong{LocationID}: Unique locations are defined by using the nestbox IDs. These include
+plot information as nest box numbers are not unique across plots.
 
 \strong{ExperimentID}: There are experiment codes given, I have tried to
 adapt these to the ExperimentID categories described in the standard
@@ -54,9 +59,26 @@ column. When these overlap, they can differ up to 5g! I assume the 'legacy'
 column is less prefered (due to it's name). I only use this data where no
 other egg mass data is provided.
 
-\strong{AvgChickMass}: As with AvgChickMass, there is also a 'legacy' column.
-This is only used if the regular column is empty.
+\strong{AvgChickMass}: Average egg mass is recorded for each brood; however,
+this may include mass measurements taken outside of our focal period (14 - 16 days old).
+Therefore, this column is ignored and AvgChickMass is calculated manually from
+capture data.
 
 \strong{HatchDate}: As with AvgEggMass, there is also a 'legacy' column for
 hatch date. This is only used if the regular column is empty.
+
+\strong{Age_observed}: Ages are assumed to follow EURING system and are
+included unchanged. The only exception to this is '3J', which is an old EURING
+code. This is treated as EURING age 3.
+
+\strong{Tarsus}: Tarsus method is either 'M', 'S', or NA. We have assumed that
+'M' is the Oxford min/max method and converted accordingly. Currently, we treat
+'S' and NA as Svensson's Alternative and do not convert. This needs to be clarified with
+data owner.
+
+\strong{Sex}: Any uncertainty in sex is ignored. For example, 'm?' is treated as male.
+
+\strong{BroodIDLaid and BroodIDFledged}: There are (some) cases where BroodIDLaid/Fledged
+have conflicting records for an individual. In these cases, BroodIDLaid/Fledged is
+simply listed as 'CONFLICTED'.
 }
