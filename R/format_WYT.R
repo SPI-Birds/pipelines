@@ -73,6 +73,12 @@ format_WYT <- function(db = utils::choose.dir(),
 
   Individual_data <- create_individual_WYT(Capture_data)
 
+  # LOCATION DATA
+
+  message("Compiling location information...")
+
+  Location_data <- create_location_WYT(Brood_data)
+
   # WRANGLE DATA FOR EXPORT
 
   #Remove unneeded Capture columns
@@ -95,6 +101,8 @@ format_WYT <- function(db = utils::choose.dir(),
 
     utils::write.csv(x = Capture_data %>% select(-Sex, -BroodID), file = paste0(path, "\\Capture_data_WYT.csv"), row.names = F)
 
+    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_WYT.csv"), row.names = F)
+
     invisible(NULL)
 
   }
@@ -106,7 +114,7 @@ format_WYT <- function(db = utils::choose.dir(),
     return(list(Brood_data = Brood_data,
                 Capture_data = Capture_data,
                 Individual_data = Individual_data,
-                Location_data = NA))
+                Location_data = Location_data))
 
   }
 
@@ -536,5 +544,18 @@ create_individual_WYT <- function(Capture_data){
     }))
 
   return(Individual_data)
+
+}
+
+create_location_WYT <- function(Brood_data){
+
+  Location_data <- tibble::tibble(LocationID = unique(Brood_data$LocationID),
+                                  NestboxID = unique(Brood_data$LocationID),
+                                  LocationType = "NB", PopID = "WYT",
+                                  Latitude = NA_real_, Longitude = NA_real_,
+                                  StartSeason = 1947L, EndSeason = NA_integer_,
+                                  Habitat = "deciduous")
+
+  return(Location_data)
 
 }
