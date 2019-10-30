@@ -156,6 +156,12 @@ format_HOC <- function(db = utils::choose.dir(),
 
 }
 
+#' Create brood data table for Hochstadt.
+#'
+#' @param db Location of primary data from Hochstadt.
+#'
+#' @return A data frame with Brood data
+
 create_brood_HOC <- function(db){
 
   #We read everything in as text and convert it afterwards
@@ -193,6 +199,12 @@ create_brood_HOC <- function(db){
   return(Brood_data)
 
 }
+
+#' Create capture data table for Hochstadt.
+#'
+#' @param db Location of primary data from Hochstadt.
+#'
+#' @return A data frame with Capture data
 
 create_capture_HOC <- function(db){
 
@@ -288,6 +300,12 @@ create_capture_HOC <- function(db){
 
 }
 
+#' Create individual data table for Hochstadt.
+#'
+#' @param db Location of individual data from Hochstadt.
+#'
+#' @return A data frame with Individual data
+
 create_individual_HOC <- function(db){
 
   #Technically, they already have individual data in a separate table
@@ -308,6 +326,12 @@ create_individual_HOC <- function(db){
   return(Individual_data)
 
 }
+
+#' Create location data table for Hochstadt.
+#'
+#' @param db Location of location data from Hochstadt.
+#'
+#' @return A data frame with Location data
 
 create_location_HOC <- function(db){
 
