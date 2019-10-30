@@ -159,7 +159,7 @@ create_brood_WYT <- function(db, species_filter){
 
   Brood_data <- Brood_data_raw %>%
     #Rename columns to meet our standard format
-    dplyr::mutate(BreedingSeason = year, LocationID = nestbox,
+    dplyr::mutate(BreedingSeason = year, LocationID = toupper(nestbox),
                   PopID = "WYT", Plot = toupper(section),
                   Species = dplyr::case_when(.$species == "b" ~ Species_codes[Species_codes$SpeciesID == 14620, ]$Code,
                                              .$species == "g" ~ Species_codes[Species_codes$SpeciesID == 14640, ]$Code,
@@ -303,9 +303,9 @@ create_capture_WYT <- function(db, Brood_data, species_filter){
     dplyr::mutate(BreedingSeason = ifelse(is.na(CaptureDate), as.numeric(stringr::str_sub(pnum, start = 1, end = 4)),
                                           lubridate::year(CaptureDate))) %>%
     dplyr::ungroup() %>%
-    dplyr::mutate(IndvID = ring_number, CapturePopID = "WYT",
-                  CapturePlot = stringr::str_remove_all(string = pnum, pattern = "\\d"),
-                  LocationID = stringr::str_sub(pnum, start = 6),
+    dplyr::mutate(IndvID = toupper(ring_number), CapturePopID = "WYT",
+                  CapturePlot = stringr::str_remove_all(string = toupper(pnum), pattern = "\\d"),
+                  LocationID = stringr::str_sub(toupper(pnum), start = 6),
                   #Release is just NA for now because we need to find the location with cross-fostering
                   ReleasePopID = "WYT", ReleasePlot = NA_character_,
                   ObserverID = NA_character_,
@@ -362,13 +362,13 @@ create_capture_WYT <- function(db, Brood_data, species_filter){
 
                                         if(is.na(..3)){
 
-                                          return(tibble::tibble(BroodIDLaid = ..2,
-                                                                BroodIDFledged = ..2))
+                                          return(tibble::tibble(BroodIDLaid = toupper(..2),
+                                                                BroodIDFledged = toupper(..2)))
 
                                         } else {
 
-                                          return(tibble::tibble(BroodIDLaid = ..3,
-                                                                BroodIDFledged = ..2))
+                                          return(tibble::tibble(BroodIDLaid = toupper(..3),
+                                                                BroodIDFledged = toupper(..2)))
 
                                         }
 
@@ -403,9 +403,9 @@ create_capture_WYT <- function(db, Brood_data, species_filter){
     dplyr::mutate(BreedingSeason = ifelse(is.na(CaptureDate), as.numeric(stringr::str_sub(pnum, start = 1, end = 4)),
                                           lubridate::year(CaptureDate))) %>%
     dplyr::ungroup() %>%
-    dplyr::mutate(IndvID = bto_ring, CapturePopID = "WYT",
-                  CapturePlot = stringr::str_remove_all(string = pnum, pattern = "\\d"),
-                  LocationID = stringr::str_sub(pnum, start = 6),
+    dplyr::mutate(IndvID = toupper(bto_ring), CapturePopID = "WYT",
+                  CapturePlot = stringr::str_remove_all(string = toupper(pnum), pattern = "\\d"),
+                  LocationID = stringr::str_sub(toupper(pnum), start = 6),
                   #Release is just NA for now because we need to find the location with cross-fostering
                   ReleasePopID = "WYT", ReleasePlot = NA_character_,
                   ObserverID = NA_character_,
@@ -454,8 +454,8 @@ create_capture_WYT <- function(db, Brood_data, species_filter){
 
                                       } else {
 
-                                        return(tibble::tibble(BroodIDLaid = ..2,
-                                                              BroodIDFledged = ..2))
+                                        return(tibble::tibble(BroodIDLaid = toupper(..2),
+                                                              BroodIDFledged = toupper(..2)))
 
                                       }
 
