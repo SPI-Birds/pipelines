@@ -165,8 +165,9 @@ create_brood_WYT <- function(db, species_filter){
                                              .$species == "g" ~ Species_codes[Species_codes$SpeciesID == 14640, ]$Code,
                                              .$species == "c" ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code,
                                              .$species == "n" ~ Species_codes[Species_codes$SpeciesID == 14790, ]$Code,
-                                             .$species == "m" ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code),
+                                             .$species == "m" ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code)) %>%
     dplyr::filter(Species %in% species_filter) %>%
+    dplyr::mutate(LayDate = as.Date(lay_date, format = "%d/%m/%Y"),
                   HatchDate = as.Date(purrr::pmap_chr(.l = list(hatch_date, legacy_april_hatch_date),
                                               .f = ~{
 
@@ -203,71 +204,29 @@ create_brood_WYT <- function(db, species_filter){
                   ClutchSize = clutch_size,
                   BroodSize = num_chicks,
                   NumberFledged = num_fledglings,
-                  AvgChickMass = purrr::pmap_dbl(.l = list(mean_chick_weight, legacy_mean_fledge_weight),
-                                                 .f = ~{
-
-                                                   pb$print()$tick()
-
-                                                   if(!is.na(..1)){
-
-                                                     return(..1)
-
-                                                   } else {
-
-                                                     return(..2)
-
-                                                   }
-
-                                                 }),
-                  NumberChicksMass = num_chicks_ringed,
                   FemaleID = mother,
                   MaleID = father,
-                  ExperimentID = dplyr::case_when(.$experiment_codes == "1" ~ "UNKOWN",
-                                                  .$experiment_codes == "2" ~ "COHORT",
-                                                  .$experiment_codes == "3" ~ "PARENTAGE",
-                                                  .$experiment_codes == "7" ~ "PHENOLOGY",
-                                                  .$experiment_codes == "8" ~ "PHENOLOGY",
-                                                  .$experiment_codes == "9" ~ "SURVIVAL",
-                                                  .$experiment_codes == "11" ~ "SURVIVAL",
-                                                  .$experiment_codes == "12" ~ "SURVIVAL",
-                                                  .$experiment_codes == "13" ~ "SURVIVAL"),
-                  BroodID = pnum) %>%
-    #Separate out chick ids into different columns. N.B. Currently, there is only
-    #the chick id column and no actual info. Therefore, it's hard to know what the
-    #max possible number of columns we should include are. I just go with 22 (max
-    #number of fledglings ever recorded), although this seems excessive!!
-    #I'm basing all this code (e.g. sep used) on the dead chick ids columns.
-    #I assume when chick numbers are provided, it will be in the same format.
-    tidyr::separate(chick_ids, into = paste0("chick_", seq(1:22)), sep = " ,") %>%
-    as_tibble() %>%
+                  # ExperimentID = dplyr::case_when(.$experiment_codes == "1" ~ "UNKOWN",
+                  #                                 .$experiment_codes == "2" ~ "COHORT",
+                  #                                 .$experiment_codes == "3" ~ "PARENTAGE",
+                  #                                 .$experiment_codes == "7" ~ "PHENOLOGY",
+                  #                                 .$experiment_codes == "8" ~ "PHENOLOGY",
+                  #                                 .$experiment_codes == "9" ~ "SURVIVAL",
+                  #                                 .$experiment_codes == "11" ~ "SURVIVAL",
+                  #                                 .$experiment_codes == "12" ~ "SURVIVAL",
+                  #                                 .$experiment_codes == "13" ~ "SURVIVAL"),
+                  ExperimentID = !is.na(experiment_codes),
+                  BroodID = toupper(pnum)) %>%
     dplyr::arrange(BreedingSeason, FemaleID, LayDate) %>%
     dplyr::mutate(ClutchType_observed = NA,
-                  ClutchType_calc = calc_clutchtype(data = ., na.rm = FALSE),
+                  ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE),
                   LayDateError = NA,
                   ClutchSizeError = NA,
                   HatchDateError = NA,
                   BroodSizeError = NA,
                   FledgeDate = NA,
                   FledgeDateError = NA,
-                  NumberFledgedError = NA,
-                  AvgTarsus = NA,
-                  NumberChicksTarsus = NA) %>%
-    dplyr::select(PopID, BreedingSeason,
-                  Species, Plot,
-                  LocationID, BroodID,
-                  FemaleID, MaleID,
-                  ClutchType_observed,
-                  ClutchType_calc,
-                  LayDate, LayDateError,
-                  ClutchSize, ClutchSizeError,
-                  HatchDate, HatchDateError,
-                  BroodSize, BroodSizeError,
-                  FledgeDate, FledgeDateError,
-                  NumberFledged, NumberFledgedError,
-                  AvgEggMass, NumberEggs,
-                  AvgChickMass, NumberChicksMass,
-                  AvgTarsus, NumberChicksTarsus,
-                  ExperimentID)
+                  NumberFledgedError = NA)
 
   return(Brood_data)
 
@@ -297,8 +256,9 @@ create_capture_WYT <- function(db, Brood_data, species_filter){
     dplyr::mutate(Species = dplyr::case_when(toupper(species_code) == "GRETI" ~ Species_codes[Species_codes$SpeciesID == 14640, ]$Code,
                                              toupper(species_code) == "BLUTI" ~ Species_codes[Species_codes$SpeciesID == 14620, ]$Code,
                                              toupper(species_code) == "COATI" ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code,
-                                             toupper(species_code) == "MARTI" ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code),
+                                             toupper(species_code) == "MARTI" ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code)) %>%
     dplyr::filter(Species %in% species_filter) %>%
+    dplyr::mutate(CaptureDate = janitor::excel_numeric_to_date(as.numeric(date_time)), CaptureTime = NA_character_) %>%
     dplyr::rowwise() %>%
     dplyr::mutate(BreedingSeason = ifelse(is.na(CaptureDate), as.numeric(stringr::str_sub(pnum, start = 1, end = 4)),
                                           lubridate::year(CaptureDate))) %>%
@@ -481,7 +441,7 @@ create_capture_WYT <- function(db, Brood_data, species_filter){
   Species <- IndvID <- BreedingSeason <- LocationID <- Plot <- Sex <- Age_obsv <- NULL
   CaptureDate <- CaptureTime <- ObserverID <- CapturePopID <- ReleasePopID <- Mass <- Tarsus <- NULL
   OriginalTarsusMethod <- WingLength <- Age_calculated <- ChickAge <- NULL
-  FemaleID <- MaleID <- chick_1 <- chick_22 <- NULL
+  FemaleID <- MaleID <- NULL
 
 }
 
