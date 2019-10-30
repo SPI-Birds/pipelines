@@ -11,7 +11,8 @@ if(file.exists("../../inst/extdata/test_data.RDS")){
   message("Choose the location of the raw data to run tests...")
   pipeline_output <- run_pipelines(path = choose.dir(),
                                    PopID = c("SSQ", "BAN", "VEL", "CHO", "MUR", "PIR", "ROU", "MON", "MTV", "MIS", "HOC",
-                                             "HOG", "OOS", "VLI", "BUU", "LIE", "WAR", "WES", "KEV", "HAR", "PEE", "BOS"),
+                                             "HOG", "OOS", "VLI", "BUU", "LIE", "WAR", "WES", "KEV", "HAR", "PEE", "BOS",
+                                             "WYT"),
                                    output_type = "R")
 
 }
