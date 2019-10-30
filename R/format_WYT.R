@@ -59,13 +59,13 @@ format_WYT <- function(db = utils::choose.dir(),
 
   message("Compiling brood information...")
 
-  Brood_data <- create_brood_WYT(db = db)
+  Brood_data <- create_brood_WYT(db = db, species_filter = species)
 
   # CAPTURE DATA
 
   message("Compiling capture information...")
 
-  Capture_data <- create_capture_WYT(db = db, Brood_data = Brood_data)
+  Capture_data <- create_capture_WYT(db = db, Brood_data = Brood_data, species_filter = species)
 
   # INDIVIDUAL DATA
 
@@ -112,7 +112,7 @@ format_WYT <- function(db = utils::choose.dir(),
 
 }
 
-create_brood_WYT <- function(db){
+create_brood_WYT <- function(db, species_filter){
 
   Brood_data_raw <- utils::read.csv(paste0(db, "/WYT_PrimaryData_Brood.csv"), header = T,
                               sep = ",", stringsAsFactors = FALSE) %>%
@@ -129,7 +129,7 @@ create_brood_WYT <- function(db){
                                              .$species == "c" ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code,
                                              .$species == "n" ~ Species_codes[Species_codes$SpeciesID == 14790, ]$Code,
                                              .$species == "m" ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code),
-                  LayDate = as.Date(lay_date, format = "%d/%m/%Y"),
+    dplyr::filter(Species %in% species_filter) %>%
                   HatchDate = as.Date(purrr::pmap_chr(.l = list(hatch_date, legacy_april_hatch_date),
                                               .f = ~{
 
@@ -246,7 +246,7 @@ create_brood_WYT <- function(db){
 
 }
 
-create_capture_WYT <- function(db, Brood_data){
+create_capture_WYT <- function(db, Brood_data, species_filter){
 
   #Load chick capture data
   Chick_captures_old <- readxl::read_xlsx(paste0(db, "/WYT_PrimaryData_Capture.xlsx"),
@@ -261,7 +261,7 @@ create_capture_WYT <- function(db, Brood_data){
                                              toupper(species_code) == "BLUTI" ~ Species_codes[Species_codes$SpeciesID == 14620, ]$Code,
                                              toupper(species_code) == "COATI" ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code,
                                              toupper(species_code) == "MARTI" ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code),
-                  CaptureDate = janitor::excel_numeric_to_date(as.numeric(date_time)), CaptureTime = NA_character_) %>%
+    dplyr::filter(Species %in% species_filter) %>%
     dplyr::rowwise() %>%
     dplyr::mutate(BreedingSeason = ifelse(is.na(CaptureDate), as.numeric(stringr::str_sub(pnum, start = 1, end = 4)),
                                           lubridate::year(CaptureDate))) %>%
