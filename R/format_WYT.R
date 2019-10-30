@@ -81,6 +81,35 @@ format_WYT <- function(db = utils::choose.dir(),
 
   # WRANGLE DATA FOR EXPORT
 
+  #Calculate average chick mass/tarsus
+  avg_chick_mass <- Capture_data %>%
+    dplyr::filter(between(ChickAge, 14, 16) & !is.na(Mass)) %>%
+    dplyr::group_by(BroodIDLaid) %>%
+    dplyr::summarise(AvgChickMass = mean(Mass, na.rm = TRUE),
+                     NumberChicksMass = n())
+
+  avg_chick_tarsus <- Capture_data %>%
+    dplyr::filter(between(ChickAge, 14, 16) & !is.na(Tarsus)) %>%
+    dplyr::group_by(BroodIDLaid) %>%
+    dplyr::summarise(AvgTarsus = mean(Tarsus, na.rm = TRUE),
+                     NumberChicksTarsus = n(),
+                     OriginalTarsusMethod = first(OriginalTarsusMethod))
+
+  Brood_data <- Brood_data %>%
+    dplyr::left_join(avg_chick_mass, by = c("BroodID" = "BroodIDLaid")) %>%
+    dplyr::left_join(avg_chick_tarsus, by = c("BroodID" = "BroodIDLaid")) %>%
+    dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot, LocationID,
+                  FemaleID, MaleID, ClutchType_observed, ClutchType_calculated,
+                  LayDate, LayDateError, ClutchSize, ClutchSizeError,
+                  HatchDate, HatchDateError,
+                  BroodSize, BroodSizeError,
+                  FledgeDate, FledgeDateError,
+                  NumberFledged, NumberFledgedError,
+                  AvgEggMass, NumberEggs,
+                  AvgChickMass, NumberChicksMass,
+                  AvgTarsus, NumberChicksTarsus,
+                  OriginalTarsusMethod, ExperimentID)
+
   #Remove unneeded Capture columns
   Capture_data <- Capture_data %>%
     dplyr::select(-Sex, -BroodIDLaid, -BroodIDFledged, -HatchDate)
