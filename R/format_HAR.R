@@ -109,6 +109,8 @@
 #'BreedingSeason_LocationID_BroodID
 #'
 #'@inheritParams pipeline_params
+#'@param return_errors Logical (TRUE/FALSE). If true, return all records of
+#'nestling with no corresponding ringing data.
 #'
 #'@return Generates either 4 .csv files or 4 data frames in the standard format.
 #'@export
@@ -117,7 +119,8 @@ format_HAR <- function(db = utils::choose.dir(),
                        species = NULL,
                        pop = NULL,
                        path = ".",
-                       output_type = "R"){
+                       output_type = "R",
+                       return_errors = FALSE){
 
   #Force user to select directory
   force(db)
@@ -143,7 +146,14 @@ format_HAR <- function(db = utils::choose.dir(),
 
   message("Compiling capture data....")
 
-  Capture_data <- create_capture_HAR(db = db, Brood_data = Brood_data, species_filter = species)
+  Capture_data <- create_capture_HAR(db = db, Brood_data = Brood_data,
+                                     species_filter = species, return_errors = return_errors)
+
+  if(return_errors){
+
+    return(Capture_data)
+
+  }
 
   # INDIVIDUAL DATA
 
@@ -370,7 +380,7 @@ create_nestling_HAR <- function(db, Brood_data){
 #'
 #' @return A data frame.
 
-create_capture_HAR    <- function(db, Brood_data, species_filter){
+create_capture_HAR    <- function(db, Brood_data, species_filter, return_errors){
 
   Nestling_data <- create_nestling_HAR(db = db, Brood_data = Brood_data)
 
@@ -626,6 +636,13 @@ create_capture_HAR    <- function(db, Brood_data, species_filter){
     dplyr::select(IndvID, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, BroodID, Species, Sex, Age, WingLength, Mass, CaptureType, ChickAge)
 
   message(paste0("There are ", nrow(ringed_chicks_nocapture), " nestling records where we cannot translate Last2Digits into an IndvID"))
+
+  if(return_errors){
+
+    return(nocapture_nestlings %>%
+             dplyr::filter(!toupper(Last2DigitsRingNr) %in% LETTERS))
+
+  }
 
   ####
 

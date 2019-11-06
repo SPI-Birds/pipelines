@@ -104,9 +104,10 @@
 
 format_KEV <- function(db = utils::choose.dir(),
                        species = NULL,
-                         pop = NULL,
-                         path = ".",
-                         output_type = "R"){
+                       pop = NULL,
+                       path = ".",
+                       output_type = "R",
+                       return_errors = FALSE){
 
   #Force user to select directory
   force(db)
@@ -131,7 +132,14 @@ format_KEV <- function(db = utils::choose.dir(),
 
   message("\n Compiling capture data....")
 
-  Capture_data <- create_capture_KEV(db = db, Brood_data = Brood_data, species_filter = species)
+  Capture_data <- create_capture_KEV(db = db, Brood_data = Brood_data,
+                                     species_filter = species, return_errors = return_errors)
+
+  if(return_errors){
+
+    return(Capture_data)
+
+  }
 
   # INDIVIDUAL DATA
 
@@ -215,11 +223,11 @@ format_KEV <- function(db = utils::choose.dir(),
 
     utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_KEV.csv"), row.names = F)
 
-    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_HAR.csv"), row.names = F)
+    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_KEV.csv"), row.names = F)
 
     utils::write.csv(x = Capture_data %>% select(-Sex, -BroodID), file = paste0(path, "\\Capture_data_KEV.csv"), row.names = F)
 
-    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_HAR.csv"), row.names = F)
+    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_KEV.csv"), row.names = F)
 
     invisible(NULL)
 
@@ -365,7 +373,7 @@ create_nestling_KEV <- function(db, Brood_data){
 #'
 #' @return A data frame.
 
-create_capture_KEV    <- function(db, Brood_data, species_filter){
+create_capture_KEV    <- function(db, Brood_data, species_filter, return_errors){
 
   Nestling_data <- create_nestling_KEV(db = db, Brood_data = Brood_data)
 
@@ -621,6 +629,13 @@ create_capture_KEV    <- function(db, Brood_data, species_filter){
     dplyr::select(IndvID, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, BroodID, Species, Sex, Age, WingLength, Mass, CaptureType, ChickAge)
 
   message(paste0("There are ", nrow(ringed_chicks_nocapture), " nestling records where we cannot translate Last2Digits into an IndvID"))
+
+  if(return_errors){
+
+    return(nocapture_nestlings %>%
+             dplyr::filter(!toupper(Last2DigitsRingNr) %in% LETTERS))
+
+  }
 
   ####
 
