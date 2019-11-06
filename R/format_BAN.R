@@ -21,7 +21,8 @@
 #'
 #'\strong{LayDate, HatchDate, NumberFledged}: There are some cases where
 #'values are given with uncertainty (e.g. 97+, 95?). We don't know how much
-#'uncertainty is involved here, it is ignored.
+#'uncertainty is involved here, it is currently ignored, but we need to
+#'discuss this with data owner.
 #'
 #'\strong{ClutchSize}: Cases where clutch size is uncertain (e.g. nests were
 #'predated before completion) are treated as NA because clutch size is unknown.
@@ -41,7 +42,7 @@
 #'\strong{AvgEggMass}: Currently we only include records where the day of egg
 #'weighing is <= LayDate + ClutchSize. This should be an estimate of the date
 #'that incubation began. Once incubation starts, egg weight is not easily
-#'comparable because it changes with chick development.
+#'comparable because it changes with embryonic development.
 #'
 #'\strong{AvgChickMass/AvgTarsus}: Individual capture data is not included in
 #'the data currently provided. These values are therefore left blank.
@@ -57,7 +58,7 @@ format_BAN <- function(db = utils::choose.dir(),
                        path = ".",
                        species = NULL,
                        pop = NULL,
-                       output_type = 'csv'){
+                       output_type = 'R'){
 
   #Force choose.dir() if used
   force(db)
