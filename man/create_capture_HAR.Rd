@@ -4,7 +4,7 @@
 \alias{create_capture_HAR}
 \title{Create capture table for Harjavalta, Finland.}
 \usage{
-create_capture_HAR(db, Brood_data, species_filter)
+create_capture_HAR(db, Brood_data, species_filter, return_errors)
 }
 \arguments{
 \item{db}{Location of primary data from Harjavalta.}

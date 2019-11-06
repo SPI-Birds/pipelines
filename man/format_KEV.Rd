@@ -5,7 +5,7 @@
 \title{Construct standard format for data from Kevo, Finland.}
 \usage{
 format_KEV(db = utils::choose.dir(), species = NULL, pop = NULL,
-  path = ".", output_type = "R")
+  path = ".", output_type = "R", return_errors = FALSE)
 }
 \arguments{
 \item{db}{Location of database file.}

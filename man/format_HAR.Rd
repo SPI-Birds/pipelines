@@ -5,7 +5,7 @@
 \title{Construct standard format for data from Harjavalta, Finland.}
 \usage{
 format_HAR(db = utils::choose.dir(), species = NULL, pop = NULL,
-  path = ".", output_type = "R")
+  path = ".", output_type = "R", return_errors = FALSE)
 }
 \arguments{
 \item{db}{Location of database file.}
@@ -24,6 +24,9 @@ this argument can be ignored.}
 \item{path}{Location where output csv files will be saved.}
 
 \item{output_type}{Should the pipeline generate .csv files ('csv') or R objects ('R').}
+
+\item{return_errors}{Logical (TRUE/FALSE). If true, return all records of
+nestling with no corresponding ringing data.}
 }
 \value{
 Generates either 4 .csv files or 4 data frames in the standard format.

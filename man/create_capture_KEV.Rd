@@ -4,7 +4,7 @@
 \alias{create_capture_KEV}
 \title{Create capture table for Kevo, Finland.}
 \usage{
-create_capture_KEV(db, Brood_data, species_filter)
+create_capture_KEV(db, Brood_data, species_filter, return_errors)
 }
 \arguments{
 \item{db}{Location of primary data from Kevo.}
