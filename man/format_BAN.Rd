@@ -14,10 +14,10 @@ format_BAN(db = utils::choose.dir(), path = ".", species = NULL,
 
 \item{species}{Species of interest. The 6 letter codes of all the species of
 interest as listed in the
-\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{standard
+\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{standard
 protocol}. If blank will return all major species.}
 
-\item{pop}{The three-letter code of population as listed in the \href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{standard
+\item{pop}{The three-letter code of population as listed in the \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{standard
 protocol}. For data owners with multiple populations (e.g. NIOO, UAN) where a single
 pipeline is used for many populations this argument is used to extract data from
 individual populations. For other pipelines that contain only one population
@@ -35,7 +35,7 @@ Valley, Ireland, administered by John Quinn.
 \details{
 This section provides details on data management choices that are unique to
 this data. For a general description of the standard format please see
-\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
+\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
 
 \strong{Species}: There are records where species is uncertain (e.g. listed as
 'GRETI?'). This uncertainty is ignored. We assume that the suggested species

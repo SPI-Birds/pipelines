@@ -5,7 +5,7 @@
 #'
 #'This section provides details on data management choices that are unique to
 #'this data. For a general description of the standard protocl please see
-#'\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
+#'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
 #'
 #'\strong{Species:} We only include records for great tit, pied flycatcher,
 #'Siberan tit (Parus cinctus), and Common redstart (Phoenicurus phoenicurus).
@@ -253,7 +253,7 @@ format_KEV <- function(db = utils::choose.dir(),
 #' @param db Location of primary data from Kevo
 #' @param species_filter Species of interest. The 6 letter codes of all the species of
 #'  interest as listed in the
-#'  \href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{standard
+#'  \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{standard
 #'  protocol}.
 #'
 #' @return A data frame.
@@ -368,7 +368,7 @@ create_nestling_KEV <- function(db, Brood_data){
 #' @param db Location of primary data from Kevo.
 #' @param species_filter Species of interest. The 6 letter codes of all the species of
 #'  interest as listed in the
-#'  \href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{standard
+#'  \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{standard
 #'  protocol}.
 #'
 #' @return A data frame.

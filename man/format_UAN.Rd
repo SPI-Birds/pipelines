@@ -12,10 +12,10 @@ format_UAN(db = utils::choose.dir(), species = NULL, pop = NULL,
 
 \item{species}{Species of interest. The 6 letter codes of all the species of
 interest as listed in the
-\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{standard
+\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{standard
 protocol}. If blank will return all major species.}
 
-\item{pop}{The three-letter code of population as listed in the \href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{standard
+\item{pop}{The three-letter code of population as listed in the \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{standard
 protocol}. For data owners with multiple populations (e.g. NIOO, UAN) where a single
 pipeline is used for many populations this argument is used to extract data from
 individual populations. For other pipelines that contain only one population
@@ -35,7 +35,7 @@ populations administered by the University of Antwerp.
 \details{
 This section provides details on data management choices that are unique to
 this data. For a general description of the standard format please see
-\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
+\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
 
 \strong{ClutchType_observed}: The raw data distinguishes second and third
 nests and first, second, and third replacements. We group these all as 'second'

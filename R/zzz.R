@@ -3,7 +3,7 @@ quality_check_description_pdf <- "
 \\section{Introduction}
 
 Welcome to the SPI-Birds quality check report. This report shows the results of a number of standard data quality checks that can be
-used on any data that have been created following the \\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{SPI-Birds Standard Protocol}.
+used on any data that have been created following the \\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{SPI-Birds Standard Protocol}.
 
 \\subsection{How to use this report}
 
@@ -93,9 +93,9 @@ quality_check_description_html <- "
 #'@param db Location of database file.
 #'@param species Species of interest. The 6 letter codes of all the species of
 #'  interest as listed in the
-#'  \href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{standard
+#'  \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{standard
 #'  protocol}. If blank will return all major species.
-#'@param pop The three-letter code of population as listed in the \href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{standard
+#'@param pop The three-letter code of population as listed in the \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{standard
 #'  protocol}. For data owners with multiple populations (e.g. NIOO, UAN) where a single
 #'  pipeline is used for many populations this argument is used to extract data from
 #'  individual populations. For other pipelines that contain only one population

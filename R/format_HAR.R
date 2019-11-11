@@ -5,7 +5,7 @@
 #'
 #'This section provides details on data management choices that are unique to
 #'this data. For a general description of the standard protocl please see
-#'\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
+#'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
 #'
 #'\strong{Species}: Data from Harjavalta contains information on 23 different
 #'hole nesting species; however, only 4 of these (great tit, blue tit, coal tit,
@@ -237,7 +237,7 @@ format_HAR <- function(db = utils::choose.dir(),
 #' @param db Location of primary data from Harjavalta.
 #' @param species_filter Species of interest. The 6 letter codes of all the species of
 #'  interest as listed in the
-#'  \href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{standard
+#'  \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{standard
 #'  protocol}.
 #'
 #' @return A data frame.
@@ -375,7 +375,7 @@ create_nestling_HAR <- function(db, Brood_data){
 #' @param db Location of primary data from Harjavalta.
 #' @param species_filter Species of interest. The 6 letter codes of all the species of
 #'  interest as listed in the
-#'  \href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{standard
+#'  \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{standard
 #'  protocol}.
 #'
 #' @return A data frame.

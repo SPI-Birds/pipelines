@@ -6,7 +6,7 @@
 #'
 #'This section provides details on data management choices that are unique to
 #'this data. For a general description of the standard protocl please see
-#'\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
+#'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
 #'
 #'\strong{IndvID:} In Capture_data, any individuals given unidentified numbers
 #'(i.e. containing 'no-ident') are given an IndvID = NA. These records are still kept
@@ -198,7 +198,7 @@ format_MON <- function(db = utils::choose.dir(),
 #' @param db Location of primary data from Montpellier.
 #' @param species_filter Species of interest. The 6 letter codes of all the species of
 #'  interest as listed in the
-#'  \href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{standard
+#'  \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{standard
 #'  protocol}.
 #' @param pop_filter Population three letter codes from the standard protocol.
 #'   Used to filter the data.
@@ -561,7 +561,7 @@ create_capture_MON <- function(db, species_filter, pop_filter){
 #' @param db Location of primary data from Montpellier.
 #' @param species_filter Species of interest. The 6 letter codes of all the species of
 #'  interest as listed in the
-#'  \href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{standard
+#'  \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{standard
 #'  protocol}.
 #' @param pop_filter Population three letter codes from the standard protocol.
 #'   Used to filter the data.

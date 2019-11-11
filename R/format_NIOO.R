@@ -5,12 +5,13 @@
 #'
 #'This section provides details on data management choices that are unique to
 #'the NIOO database. For a general description of the standard format please see
-#'\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
+#'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
 #'
 #'\strong{Species}: By default the pipeline will include great tit \emph{Parus
 #'major}; blue tit \emph{Cyanistes caeruleus}; pied flycatcher \emph{Ficedula
 #'hypoleuca}; Eurasian nuthatch \emph{Sitta europaea}; coal tit \emph{Periparus
-#'ater}; and tree sparrow \emph{Passer montanus}.
+#'ater}; and tree sparrow \emph{Passer montanus}. Other minority species are
+#'excluded.
 #'
 #'\strong{Populations}: This pipeline extracts data for 8 populations managed by
 #'NIOO-KNAW: Buunderkamp, Lichtenbeek, Westerheide, Hoge Veluwe, Warnsborn,
@@ -20,22 +21,24 @@
 #'(conflicting). Uncertainty in sex was ignored (e.g.
 #''male?' or 'female?').
 #'
-#'\strong{Measurement error}: For BroodSize, NumberFledged XXXX FILL IN a best
+#'\strong{Measurement error}: For BroodSize, NumberFledged, and LayDate a best
 #'estimate is provided. Best estimate is halfway between the minimum and maximum
-#'possible value. \emph{N.B.:} This means that the best estimate will not
-#'necessarily be an integer. Error is provided in BroodSizeError,
-#'NumberFledgedError etc. this is the absolute error (+/-) around the best
+#'possible value. \emph{N.B.:} In cases where the best estimate is not an integer,
+#'we provide the lower value (e.g. 2.5 is recorded as 2).
+#'Error is provided in BroodSizeError,
+#'NumberFledgedError, and LayDateError this is the absolute error (+/-) around the best
 #'estimate.
 #'
 #'\strong{CapturePlot, ReleasePlot, LocationID}: NIOO data gives CaptureLocation
-#'and ReleaseLocation (e.g. which nest box was a check transfered to during crossfoster).
-#'Each box is within an plot specified by AreaID. We use this for the Capture/ReleasePlot
+#'and ReleaseLocation of each capture.
+#'Each location is within a plot, specified by AreaID. We use this AreaID
+#'information as the Capture/ReleasePlot
 #'information.
 #'
 #'\strong{Capture_data}: Capture_data has information on the accuracy of capture dates.
-#'For now, I am only including those individuals where capture date is known with
-#'100% accuracy, otherwise this might affect the calculated age of individuals
-#'during capture.
+#'Values >1 are inaccurate and are ignored. A value of 0 is unknown. These are likely
+#'mistakes in the primary data (i.e. the accuracy should always be known). For now,
+#'we include captures with accuracy of both 0 and 1 in the final data.
 #'
 #'\strong{AvgEggMass} Egg measurements are included in the NIOO database, but these are a bit more difficult to include
 #'because they aren't associated with a given brood (they can be weighed before and after a cross fostering). For now,
@@ -45,10 +48,9 @@
 #'taken from BroodIDFledged (in Individual_data) and the CaptureDate. We include chick ages for all individuals
 #'up until 30 days post hatching to accomodate possible late fledging.
 #'
-#'
 #'@inheritParams pipeline_params
 #'
-#'@return Generates 4 .csv files with data in a standard format.
+#'@return Generates 4 .csv files or R data frames in the SPI-Birds standard format.
 #'@export
 #'@import dplyr
 #'@import DBI

@@ -11,7 +11,7 @@ create_brood_WYT(db, species_filter)
 
 \item{species_filter}{Species of interest. The 6 letter codes of all the species of
 interest as listed in the
-\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{standard
+\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{standard
 protocol}.}
 }
 \value{

@@ -5,7 +5,7 @@
 #'
 #'This section provides details on data management choices that are unique to
 #'this data. For a general description of the standard protocl please see
-#'\href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
+#'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
 #'
 #'\strong{LocationID}: Nestbox numbers are not unique across plots. Therefore, unique locationIDs are
 #'a combination of plot and nestbox number.
@@ -231,7 +231,7 @@ format_PIL <- function(db = utils::choose.dir(),
 #' @param PIL_data Data frame with primary data from Pilis-Visegrád Mountains
 #' @param species_filter Species of interest. The 6 letter codes of all the species of
 #'  interest as listed in the
-#'  \href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{standard
+#'  \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{standard
 #'  protocol}.
 #'
 #' @return A data frame.
@@ -282,7 +282,7 @@ create_brood_PIL <- function(PIL_data, species_filter){
 #' @param PIL_data Data frame with primary data from Pilis-Visegrád Mountains
 #' @param species_filter Species of interest. The 6 letter codes of all the species of
 #'  interest as listed in the
-#'  \href{https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf}{standard
+#'  \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{standard
 #'  protocol}.
 #'
 #' @return A data frame.
