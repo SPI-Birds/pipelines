@@ -15,6 +15,15 @@
 #'   if a population doesn't have the requested species it will not be
 #'   formatted.)
 #' @param output_type Should the pipeline generate .csv files ('csv') or R objects ('R'). Default: R.
+#' @param save TRUE/FALSE. Should the output be saved locally? This is only relevant where
+#' `output_type` is 'R'. If output_type is 'csv'
+#' 4 .csv files will be created in the save path (specified by `save_path` argument). If output_type is 'R'
+#' and `save` is TRUE, an .RDS file will be created in the save path.
+#' @param save_path Path where files will be saved if `save` is TRUE. By default, the save
+#' path will be path/standard_format.
+#' @param filename The filename of the saved file. No file extension is
+#' needed, as this will differ depending on `output_type`. By default, filename is
+#' "standard_format".
 #'
 #' @return Generate .csv files or return an R list object with 4 items
 #' @export
@@ -30,10 +39,24 @@
 run_pipelines <- function(path = utils::choose.dir(),
                           PopID = NULL,
                           Species = NULL,
-                          output_type = "R"){
+                          output_type = "R",
+                          save = TRUE, save_path = NULL,
+                          filename = "standard_format"){
 
   #Force choose.dir()
   force(path)
+
+  if((output_type == "csv" | (output_type == "R" & save)) & is.null(save_path)){
+
+    save_path <- paste(path, "standard_format", sep = "/")
+
+    if(!"standard_format" %in% list.dirs(path)){
+
+      dir.create(save_path)
+
+    }
+
+  }
 
   #If PopID is NULL use all populations
   if(is.null(PopID)){
@@ -140,22 +163,30 @@ run_pipelines <- function(path = utils::choose.dir(),
   #If we want an R output, return a list with the 4 different data frames
   if(output_type == "R"){
 
-    return(list(Brood_data = Brood_data,
-                Capture_data = Capture_data,
-                Individual_data = Individual_data,
-                Location_data = Location_data))
+    output_object <- list(Brood_data = Brood_data,
+                          Capture_data = Capture_data,
+                          Individual_data = Individual_data,
+                          Location_data = Location_data)
+
+    if(save){
+
+      saveRDS(output_object, file = paste0(save_path, "\\", filename, ".RDS"))
+
+    }
+
+    return(output_object)
 
   } else {
 
     message("Saving combined .csv files...")
 
-    utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data.csv"), row.names = F)
+    utils::write.csv(x = Brood_data, file = paste0(save_path, "\\", filename, "_Brood_data.csv"), row.names = F)
 
-    utils::write.csv(x = Capture_data, file = paste0(path, "\\Capture_data.csv"), row.names = F)
+    utils::write.csv(x = Capture_data, file = paste0(save_path, "\\", filename, "_Capture_data.csv"), row.names = F)
 
-    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data.csv"), row.names = F)
+    utils::write.csv(x = Individual_data, file = paste0(save_path, "\\", filename, "Individual_data.csv"), row.names = F)
 
-    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data.csv"), row.names = F)
+    utils::write.csv(x = Location_data, file = paste0(save_path, "\\", filename, "_Location_data.csv"), row.names = F)
 
     invisible(NULL)
 

@@ -5,7 +5,8 @@
 \title{Run multiple data pipelines}
 \usage{
 run_pipelines(path = utils::choose.dir(), PopID = NULL,
-  Species = NULL, output_type = "R")
+  Species = NULL, output_type = "R", save = TRUE, save_path = NULL,
+  filename = "standard_format")
 }
 \arguments{
 \item{path}{File path. Location of all folders for data owners. Note, the
@@ -23,6 +24,18 @@ if a population doesn't have the requested species it will not be
 formatted.)}
 
 \item{output_type}{Should the pipeline generate .csv files ('csv') or R objects ('R'). Default: R.}
+
+\item{save}{TRUE/FALSE. Should the output be saved locally? This is only relevant where
+`output_type` is 'R'. If output_type is 'csv'
+4 .csv files will be created in the save path (specified by `save_path` argument). If output_type is 'R'
+and `save` is TRUE, an .RDS file will be created in the save path.}
+
+\item{save_path}{Path where files will be saved if `save` is TRUE. By default, the save
+path will be path/standard_format.}
+
+\item{filename}{The filename of the saved file. No file extension is
+needed, as this will differ depending on `output_type`. By default, filename is
+"standard_format".}
 }
 \value{
 Generate .csv files or return an R list object with 4 items
