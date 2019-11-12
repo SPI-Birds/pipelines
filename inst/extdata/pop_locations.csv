@@ -21,6 +21,7 @@ Montpellier city,France,43.37,3.52,Antica,Yes
 Puachabon,France,43.72,3.61,Antica,No
 Tuarelli (3 sites),France,42.39,8.75,Antica,No
 Ventoux,France,44.17,5.28,Antica,Yes
+Strasbourg,France,48.57908139,7.765490556,Data_owner,Yes
 Munich (Westerholz),Germany,48.14317,10.890577,Data_owner,Yes
 Radolfzell,Germany,47.762031,9.005178,Google_maps,No
 S_Bavaria,Germany,48.61666667,11.23333333,Data_owner,Yes
@@ -54,6 +55,9 @@ Cantabrian mountains,Spain,42.71667,-5.016667,https://www.sciencedirect.com/scie
 Sagunto,Spain,39.7,-0.25,Data_owner,No
 "La Hirvela, Habitat 1",Spain,41.06666667,-3.45,Data_owner,No
 Barcelona,Spain,41.46667,2.133333,Data_owner,No
+"Valsaín, Spain",Spain,40.886,-4.030999972,Data_owner,Yes
+Montesclaros,Spain,41.08333333,-3.433333333,Data_owner,Yes
+La Hiruela,Spain,41.06666667,-3.45,Data_owner,Yes
 Font Roja,Spain,38.39,-0.32,Antica,No
 Mariola,Spain,38.44,-0.33,Antica,No
 Pitarque,Spain,40.65,-0.59,Antica,No
@@ -75,7 +79,7 @@ Nagshead,UK,51.78333,-2.566667,Data_owner,No
 Lake Wood,UK,50.96667,0.08333333,Data_owner,No
 Cambridgeshire,UK,52.36667,-0.2166667,Data_owner,No
 Cardiff,UK,51.48333,-3.183333,Data_owner,No
-Lancaster,UK,54,-2.783333,Data_owner,No
+Lancaster,UK,54,-2.783333,Data_owner,Yes
 Dendles Wood,UK,50.432,-3.9585,Data_owner,No
 Teign Valley,UK,50.679,-3.7139,Data_owner,No
 Okehampton,UK,50.7287,-3.985,Data_owner,No
