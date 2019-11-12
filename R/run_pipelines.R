@@ -50,7 +50,7 @@ run_pipelines <- function(path = utils::choose.dir(),
 
     save_path <- paste(path, "standard_format", sep = "/")
 
-    if(!"standard_format" %in% list.dirs(path)){
+    if(!any(grepl(pattern = "standard_format", x = list.dirs(path)))){
 
       dir.create(save_path)
 
