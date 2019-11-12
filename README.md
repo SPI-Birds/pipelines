@@ -1,7 +1,7 @@
 
 # SPI-Birds pipeline: Introduction (for the general user)
 
-Welcome to the SPI-Birds pipeline package. This README will give you an introduction on how to load the package, how to find out details about each pipeline, and how to use the package for creating hole-nesting bird data following the [SPI-Birds standard protocol](https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf).
+Welcome to the SPI-Birds pipeline package. This README will give you an introduction on how to load the package, how to find out details about each pipeline, and how to use the package for creating bird data following the [SPI-Birds community data standard](https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf) and generating standard quality checks.
 
 ## Load the pipeline package
 
@@ -12,30 +12,30 @@ devtools::install_github("SPI-Birds/pipelines")
 library(pipelines)
 ```
 
-This will install all pipelines and quality check code on your computer and load the code into your session of R. Individual pipelines are build as separate functions for each data owner and are given the name `format_X()` where *X* is the letter code for the data owner. The codes for different data owners and corresponding populations are described below. *Note* in cases where a data owner administers one population, the unique 3 letter population ID code and the data owner code are identical.
+This will install all pipelines and quality check code on your computer and load the code into your session of R. Individual pipelines are build as separate functions for each data owner (where one data owner can administer multiple populations). Each function is given the name `format_X()` where *X* is the letter code for the data owner. The codes for different data owners and corresponding populations are described below. *Note* in cases where a data owner administers one population, the unique 3 letter population ID code and the data owner code are identical.
 
-| PopID         | Name                   | Country     |Data owner  |
-| ------------- |:----------------------:| -----------:| ----------:|
+| Data owner    | Population Name        | Country     |PopID       |
+| -------------:|-----------------------:| -----------:| ----------:|
 | CHO           | Choupal                | Portugal    |CHO         |
 | HAR           | Harjavalta             | Finland     |HAR         |
 | BAN           | Bandon Valley          | Ireland     |BAN         |
 | VEL           | Velky Kosir            | Czechia     |VEL         |
-| HOG           | Hoge Veluwe            | Netherlands |NIOO        |
-| OOS           | Oosterhout             | Netherlands |NIOO        |
-| VLI           | Vlieland               | Netherlands |NIOO        |
-| BUU           | Buunderkamp            | Netherlands |NIOO        |
-| LIE           | Liesbos                | Netherlands |NIOO        |
-| WAR           | Warnsborn              | Netherlands |NIOO        |
-| WES           | Westerheide            | Netherlands |NIOO        |
+| NIOO          | Hoge Veluwe            | Netherlands |HOG         |
+| NIOO          | Oosterhout             | Netherlands |OOS         |
+| NIOO          | Vlieland               | Netherlands |VLI         |
+| NIOO          | Buunderkamp            | Netherlands |BUU         |
+| NIOO          | Liesbos                | Netherlands |LIE         |
+| NIOO          | Warnsborn              | Netherlands |WAR         |
+| NIOO          | Westerheide            | Netherlands |WES         |
 | SSQ           | Santo Stefano Quisquina| Italy       |SSQ         |
-| BOS           | Boshoek                | Belgium     |UAN         |
-| PEE           | Peerdsbos              | Belgium     |UAN         |
+| UAN           | Boshoek                | Belgium     |BOS         |
+| UAN           | Peerdsbos              | Belgium     |PEE         |
 | WYT           | Wytham Woods           | UK          |WYT         |
-| ROU           | Rouviere               | France      |MON         |
+| MON           | Rouviere               | France      |ROU         |
 | MON           | Montpellier City       | France      |MON         |
-| MTV           | Mont Ventoux           | France      |MON         |
-| MUR           | Muro                   | France      |MON         |
-| PIR           | Pirio                  | France      |MON         |
+| MON           | Mont Ventoux           | France      |MTV         |
+| MON           | Muro                   | France      |MUR         |
+| MON           | Pirio                  | France      |PIR         |
 | KEV           | Kevo                   | Finland     |KEV         |
 
 ## Read about a pipeline
@@ -103,6 +103,10 @@ Once installed, open the 'Anaconda prompt' and type:
 This will install the *pypxlib* library on your system.
 
 Restart your computer before running the pipelines.
+
+#### MikTex
+
+To generate the pdf quality check report on Windows you will need to have installed [`MikTex`](https://miktex.org/). If MikTex is not installed, only the html version of the qualit check report can be created.
 
 #### Mac
 
