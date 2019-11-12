@@ -31,7 +31,7 @@ The checks include:
   \\item \\textbf{Check for impossible clutch/brood/fledgling numbers}. Identify any rows where clutch size, brood size, or number fledged are negative and return a 'potential error'.
   \\item \\textbf{Check for unexpected mass/tarsus values}. In Capture data, identify any rows where mass or tarsus are larger or smaller than expected for
   a given species. 'warning' values for adults are currently drawn from the data validation values used at the NIOO.
-  'warning' values for chicks are the 95% confidence interval of a chick growth curve (logistic model) applied to data from Hoge Veluwe.
+  'warning' values for chicks are the 95\\% confidence interval of a chick growth curve (logistic model) applied to data from Hoge Veluwe.
   \\item \\textbf{Check for multi-species broods}. Currently, we identify any rows where the species of the male and female parent differ and return a 'potential error'.
   In the future, we will also check for discrepencies between the species of parents and chicks and also within a brood.
   \\item \\textbf{Check for discrepencies between brood size and capture records}. Identify any rows where the number of chicks captured at a brood in Capture data is different to the brood size listed in Brood data.
