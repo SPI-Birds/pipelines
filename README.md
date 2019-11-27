@@ -166,3 +166,25 @@ run_pipelines(path = "C:\\all_data", PopID = c("HAR", "CHO"), Species = "PARMAJ"
 **Note:** If you select a PopID/Species combination that does not exist, this population will be skipped.
 
 In most cases, we will want to run all pipelines together. In this case, the arguments *PopID* and *Species* can be ignored.
+
+## Recommended workflow
+
+*THIS WORKFLOW IS IN BETA. CHANGES NEED TO BE MADE TO STREAMLINE THE PROCESS*
+
+1. Run pipelines for populations of interest using `run_pipelines` return an R object. If you are just outputting the standard format for a user request there is no need to save the output as an .RDA file.
+
+```r
+standard_format <- run_pipelines(PopID = "HOG", output_type = "R", save = FALSE)
+```
+
+2. Run the quality check on the newly created object. Generally, we will just want to pdf output. The file should be created in the working directory.
+
+```r
+quality_check(standard_format, output_format = "pdf")
+```
+
+3. For now, we need to run `run_pipelines` again to output the 4 .csv files to send to the user.
+
+```r
+run_pipelines(PopID = "HOG", output_type = "csv")
+```
