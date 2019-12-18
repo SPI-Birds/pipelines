@@ -4,8 +4,13 @@
 \alias{format_SSQ}
 \title{Construct standard format for data from Santo Stefano Quisquina, Italy.}
 \usage{
-format_SSQ(db = utils::choose.dir(), species = NULL, pop = NULL,
-  path = ".", output_type = "R")
+format_SSQ(
+  db = utils::choose.dir(),
+  species = NULL,
+  pop = NULL,
+  path = ".",
+  output_type = "R"
+)
 }
 \arguments{
 \item{db}{Location of database file.}

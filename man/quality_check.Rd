@@ -4,8 +4,12 @@
 \alias{quality_check}
 \title{Perform a quality check on pipeline outputs}
 \usage{
-quality_check(R_data, output = TRUE, output_format = "both",
-  check_format = TRUE)
+quality_check(
+  R_data,
+  output = TRUE,
+  output_format = "both",
+  check_format = TRUE
+)
 }
 \arguments{
 \item{R_data}{Output of pipeline as an R object. Generated using

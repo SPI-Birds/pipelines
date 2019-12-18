@@ -4,8 +4,13 @@
 \alias{format_UAN}
 \title{Construct standard format for data from the Univeristy of Antwerp.}
 \usage{
-format_UAN(db = utils::choose.dir(), species = NULL, pop = NULL,
-  path = ".", output_type = "R")
+format_UAN(
+  db = utils::choose.dir(),
+  species = NULL,
+  pop = NULL,
+  path = ".",
+  output_type = "R"
+)
 }
 \arguments{
 \item{db}{Location of database file.}

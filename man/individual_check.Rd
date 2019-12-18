@@ -4,8 +4,12 @@
 \alias{individual_check}
 \title{Perform quality checks on individual data}
 \usage{
-individual_check(Individual_data, Capture_data, Location_data,
-  check_format = TRUE)
+individual_check(
+  Individual_data,
+  Capture_data,
+  Location_data,
+  check_format = TRUE
+)
 }
 \arguments{
 \item{Individual_data}{Data frame. Individual data output from pipeline.}

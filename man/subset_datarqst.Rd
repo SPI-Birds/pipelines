@@ -4,8 +4,12 @@
 \alias{subset_datarqst}
 \title{Create a subset of SPI-Birds standard data}
 \usage{
-subset_datarqst(file = file.choose(), PopID = unique(pop_names$code),
-  Species = unique(Species_codes$Code), filter = NULL)
+subset_datarqst(
+  file = file.choose(),
+  PopID = unique(pop_names$code),
+  Species = unique(Species_codes$Code),
+  filter = NULL
+)
 }
 \arguments{
 \item{file}{The location of the file in the standard format (.RDS file). This file is created using `run_pipelines`.}

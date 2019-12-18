@@ -4,8 +4,13 @@
 \alias{create_brood_NIOO}
 \title{Create brood data table for NIOO pipeline.}
 \usage{
-create_brood_NIOO(database, Individual_data, location_data, species_filter,
-  pop_filter)
+create_brood_NIOO(
+  database,
+  Individual_data,
+  location_data,
+  species_filter,
+  pop_filter
+)
 }
 \arguments{
 \item{database}{Connection to NIOO Access database.}

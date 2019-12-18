@@ -4,8 +4,14 @@
 \alias{format_HAR}
 \title{Construct standard format for data from Harjavalta, Finland.}
 \usage{
-format_HAR(db = utils::choose.dir(), species = NULL, pop = NULL,
-  path = ".", output_type = "R", return_errors = FALSE)
+format_HAR(
+  db = utils::choose.dir(),
+  species = NULL,
+  pop = NULL,
+  path = ".",
+  output_type = "R",
+  return_errors = FALSE
+)
 }
 \arguments{
 \item{db}{Location of database file.}

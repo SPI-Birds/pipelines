@@ -4,8 +4,13 @@
 \alias{format_CHO}
 \title{Construct standard format for data from Choupal, Portugal.}
 \usage{
-format_CHO(db = utils::choose.dir(), species = NULL, pop = NULL,
-  path = ".", output_type = "R")
+format_CHO(
+  db = utils::choose.dir(),
+  species = NULL,
+  pop = NULL,
+  path = ".",
+  output_type = "R"
+)
 }
 \arguments{
 \item{db}{Location of database file.}

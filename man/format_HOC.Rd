@@ -4,8 +4,13 @@
 \alias{format_HOC}
 \title{Construct standard format for data from Hochstadt, Germany.}
 \usage{
-format_HOC(db = utils::choose.dir(), species = NULL, pop = NULL,
-  path = ".", output_type = "R")
+format_HOC(
+  db = utils::choose.dir(),
+  species = NULL,
+  pop = NULL,
+  path = ".",
+  output_type = "R"
+)
 }
 \arguments{
 \item{db}{Location of database file.}

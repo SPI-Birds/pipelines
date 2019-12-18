@@ -1,7 +1,7 @@
 #' Species EURING codes and letter codes
 #'
 #' Letter codes to easily identify species (English names)
-#' @format A data frame with 8 rows and 4 variables
+#' @format A data frame with 10 rows and 4 variables
 #' \describe{
 #'   \item{SpeciesID}{Species EUring code.}
 #'   \item{Code}{Species letter code.}
@@ -14,7 +14,7 @@ NULL
 #'Population names and locations
 #'
 #'Information and identifying codes for all populations and data owners.
-#'@format A data frame with 15 rows and 4 variables
+#'@format A data frame with 23 rows and 4 variables
 #'\describe{
 #'  \item{code}{Three-letter population code.}
 #'  \item{name}{Name of population.}

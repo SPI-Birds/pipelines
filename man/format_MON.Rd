@@ -4,8 +4,14 @@
 \alias{format_MON}
 \title{Construct standard format for data from Montpellier, France.}
 \usage{
-format_MON(db = utils::choose.dir(), species = NULL, pop = NULL,
-  path = ".", output_type = "R", verbose = FALSE)
+format_MON(
+  db = utils::choose.dir(),
+  species = NULL,
+  pop = NULL,
+  path = ".",
+  output_type = "R",
+  verbose = FALSE
+)
 }
 \arguments{
 \item{db}{Location of database file.}

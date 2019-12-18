@@ -1,7 +1,7 @@
 Package: pipelines
 Title: What the Package Does (one line, title case)
 Version: 0.0.1
-Authors@R:  
+Authors@R: 
     c(person(given = "Liam",
              family = "Bailey",
              role = c("aut", "cre"),
@@ -42,7 +42,7 @@ Imports: dplyr,
          maps,
          stats,
          rgdal
-RoxygenNote: 6.1.1
+RoxygenNote: 7.0.0
 Suggests: 
     knitr,
     rmarkdown,

@@ -4,8 +4,13 @@
 \alias{format_WYT}
 \title{Construct standard summary for data from Wytham Woods, UK.}
 \usage{
-format_WYT(db = utils::choose.dir(), species = NULL, pop = NULL,
-  path = ".", output_type = "R")
+format_WYT(
+  db = utils::choose.dir(),
+  species = NULL,
+  pop = NULL,
+  path = ".",
+  output_type = "R"
+)
 }
 \arguments{
 \item{db}{Location of database file.}

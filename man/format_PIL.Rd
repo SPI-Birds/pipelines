@@ -4,8 +4,13 @@
 \alias{format_PIL}
 \title{Construct standard format for data from Pilis-Visegrád Mountains, Hungary.}
 \usage{
-format_PIL(db = utils::choose.dir(), species = NULL, pop = NULL,
-  path = ".", output_type = "R")
+format_PIL(
+  db = utils::choose.dir(),
+  species = NULL,
+  pop = NULL,
+  path = ".",
+  output_type = "R"
+)
 }
 \arguments{
 \item{db}{Location of database file.}

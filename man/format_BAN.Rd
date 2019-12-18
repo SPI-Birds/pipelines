@@ -4,8 +4,13 @@
 \alias{format_BAN}
 \title{Construct standard format for data from Bandon Valley, Ireland.}
 \usage{
-format_BAN(db = utils::choose.dir(), path = ".", species = NULL,
-  pop = NULL, output_type = "R")
+format_BAN(
+  db = utils::choose.dir(),
+  path = ".",
+  species = NULL,
+  pop = NULL,
+  output_type = "R"
+)
 }
 \arguments{
 \item{db}{Location of database file.}

@@ -3,7 +3,7 @@
 \name{pop_names}
 \alias{pop_names}
 \title{Population names and locations}
-\format{A data frame with 15 rows and 4 variables
+\format{A data frame with 23 rows and 4 variables
 \describe{
  \item{code}{Three-letter population code.}
  \item{name}{Name of population.}
