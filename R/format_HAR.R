@@ -137,6 +137,7 @@ format_HAR <- function(db = utils::choose.dir(),
   start_time <- Sys.time()
 
   # BROOD DATA
+  #Extract Harjavalta brood data
 
   message("Compiling brood data....")
 
