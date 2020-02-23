@@ -5,7 +5,7 @@
 \title{Run multiple data pipelines}
 \usage{
 run_pipelines(
-  path = utils::choose.dir(),
+  path = choose_directory(),
   PopID = NULL,
   Species = NULL,
   output_type = "R",

@@ -5,7 +5,7 @@
 \title{Construct standard summary for data from Velky Kosir, Czechia.}
 \usage{
 format_VEL(
-  db = utils::choose.dir(),
+  db = choose_directory(),
   species = NULL,
   pop = NULL,
   path = ".",
