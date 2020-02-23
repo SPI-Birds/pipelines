@@ -5,7 +5,7 @@
 \title{Construct standard format for data from Hochstadt, Germany.}
 \usage{
 format_HOC(
-  db = utils::choose.dir(),
+  db = choose_directory(),
   species = NULL,
   pop = NULL,
   path = ".",

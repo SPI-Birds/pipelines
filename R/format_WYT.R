@@ -58,7 +58,7 @@
 #' @return Generates 4 .csv files with data in a standard format.
 #' @export
 
-format_WYT <- function(db = utils::choose.dir(),
+format_WYT <- function(db = choose_directory(),
                        species = NULL,
                        pop = NULL,
                        path = ".",

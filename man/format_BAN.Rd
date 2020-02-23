@@ -5,7 +5,7 @@
 \title{Construct standard format for data from Bandon Valley, Ireland.}
 \usage{
 format_BAN(
-  db = utils::choose.dir(),
+  db = choose_directory(),
   path = ".",
   species = NULL,
   pop = NULL,

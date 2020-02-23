@@ -5,7 +5,7 @@
 \title{Construct standard format for data from Choupal, Portugal.}
 \usage{
 format_CHO(
-  db = utils::choose.dir(),
+  db = choose_directory(),
   species = NULL,
   pop = NULL,
   path = ".",

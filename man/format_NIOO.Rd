@@ -5,7 +5,7 @@
 \title{Construct standard format for NIOO data.}
 \usage{
 format_NIOO(
-  db = utils::choose.dir(),
+  db = choose_directory(),
   species = NULL,
   pop = NULL,
   path = ".",

@@ -47,7 +47,7 @@
 #' @export
 #' @import stringr
 
-format_VEL <- function(db = utils::choose.dir(),
+format_VEL <- function(db = choose_directory(),
                        species = NULL,
                        pop = NULL,
                        path = ".",

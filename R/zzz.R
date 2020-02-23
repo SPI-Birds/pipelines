@@ -235,7 +235,7 @@ utils::globalVariables(c(".", "AvgChickTarsus", "AvgChickMass", "AvgTarsus", "Po
                          "py", "section", "total_egg_weight", "treatment",
                          "capture_ref_values_list", "AccuracyOfDate",
                          "Observer", "RingAgeObsv", "ObserverID",
-                         "Age_observed_new", "choose.dir",
+                         "Age_observed_new",
                          "pop_species_combos", "pop", "species",
                          "total_sp", "TotalEggWeight",
                          "lieu", "nic", "BoxNumber", "an", "date_ponte",

@@ -5,7 +5,7 @@
 \title{Construct standard format for data from Kevo, Finland.}
 \usage{
 format_KEV(
-  db = utils::choose.dir(),
+  db = choose_directory(),
   species = NULL,
   pop = NULL,
   path = ".",

@@ -36,14 +36,14 @@
 #'
 #' }
 
-run_pipelines <- function(path = utils::choose.dir(),
+run_pipelines <- function(path = choose_directory(),
                           PopID = NULL,
                           Species = NULL,
                           output_type = "R",
                           save = TRUE, save_path = NULL,
                           filename = "standard_format"){
 
-  #Force choose.dir()
+  #Force choose_directory()
   force(path)
 
   if((output_type == "csv" | (output_type == "R" & save)) & is.null(save_path)){

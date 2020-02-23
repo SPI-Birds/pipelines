@@ -56,7 +56,7 @@
 #'@import DBI
 #'@import purrr
 
-format_NIOO <- function(db = utils::choose.dir(),
+format_NIOO <- function(db = choose_directory(),
                         species = NULL,
                         pop = NULL,
                         path = ".",

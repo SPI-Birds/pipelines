@@ -5,7 +5,7 @@
 \title{Construct standard format for data from Pilis-Visegrád Mountains, Hungary.}
 \usage{
 format_PIL(
-  db = utils::choose.dir(),
+  db = choose_directory(),
   species = NULL,
   pop = NULL,
   path = ".",

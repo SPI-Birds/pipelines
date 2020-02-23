@@ -9,7 +9,7 @@ if(file.exists("../../inst/extdata/test_data.RDS")){
 
   #Run pipelines for all populations
   message("Choose the location of the raw data to run tests...")
-  pipeline_output <- run_pipelines(path = choose.dir(),
+  pipeline_output <- run_pipelines(path = choose_directory(),
                                    PopID = c("SSQ", "BAN", "VEL", "CHO", "MUR", "PIR", "ROU", "MON", "MTV", "MIS", "HOC",
                                              "HOG", "OOS", "VLI", "BUU", "LIE", "WAR", "WES", "KEV", "HAR", "PEE", "BOS",
                                              "WYT"),

@@ -5,7 +5,7 @@
 \title{Construct standard format for data from Montpellier, France.}
 \usage{
 format_MON(
-  db = utils::choose.dir(),
+  db = choose_directory(),
   species = NULL,
   pop = NULL,
   path = ".",
