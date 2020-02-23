@@ -4,10 +4,12 @@
 \alias{check_values_brood}
 \title{Check brood variable values against reference values}
 \usage{
-check_values_brood(Brood_data)
+check_values_brood(Brood_data, var)
 }
 \arguments{
 \item{Brood_data}{Data frame. Brood data output from pipeline.}
+
+\item{var}{Character. Variable to check against reference values.}
 }
 \value{
 A list of:
@@ -18,5 +20,5 @@ A list of:
 \item{Errors}{A list of row-by-row errors.}
 }
 \description{
-Check variable values against species-specific reference values in brood data. Unusual values will result in a warning. Impossible values will result in an error. Variables that are checked: LayDate, ClutchSize, HatchDate, BroodSize, FledgeDate, NumberFledged, AvgEggMass, AvgChickMass, AvgTarsus.
+Check variable values against species-specific reference values in brood data. Unusual values will result in a warning. Impossible values will result in an error. Variables that can be checked: LayDate, ClutchSize, HatchDate, BroodSize, FledgeDate, NumberFledged, AvgEggMass, AvgChickMass, AvgTarsus.
 }
