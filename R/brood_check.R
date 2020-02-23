@@ -581,24 +581,32 @@ compare_hatching_fledging <- function(Brood_data){
 
 #' Check brood variable values against reference values
 #'
-#' Check variable values against species-specific reference values in brood data. Unusual values will result in a warning. Impossible values will result in an error. Variables that are checked: LayDate, ClutchSize, HatchDate, BroodSize, FledgeDate, NumberFledged, AvgEggMass, AvgChickMass, AvgTarsus.
+#' Check variable values against species-specific reference values in brood data. Unusual values will result in a warning. Impossible values will result in an error. Variables that can be checked: LayDate, ClutchSize, HatchDate, BroodSize, FledgeDate, NumberFledged, AvgEggMass, AvgChickMass, AvgTarsus.
 #'
 #' @inheritParams checks_brood_params
+#' @param var Character. Variable to check against reference values.
 #'
 #' @inherit checks_return return
 #'
 #' @export
 
-check_values_brood <- function(Brood_data) {
+check_values_brood <- function(Brood_data, var) {
+
+  # Select variable
+    if(missing(var)) {
+    stop("Please select a variable in Brood_data to check against reference values")
+  }
+
+  selected_ref_values <- brood_ref_values[stringr::str_detect(names(brood_ref_values), var)]
 
   # Reference values
-  ref_names <- stringr::str_split(names(brood_ref_values), pattern="_")
+  ref_names <- stringr::str_split(names(selected_ref_values), pattern="_")
 
   # Progress bar
-  pb <- dplyr::progress_estimated(2*length(brood_ref_values))
+  pb <- dplyr::progress_estimated(2*length(selected_ref_values))
 
   # Brood-specific errors
-  Brood_err <- purrr::map2(.x = brood_ref_values,
+  Brood_err <- purrr::map2(.x = selected_ref_values,
                            .y = ref_names,
                            .f = ~{
                              pb$tick()$print()
@@ -629,7 +637,7 @@ check_values_brood <- function(Brood_data) {
   }
 
   # Brood-specific warnings
-  Brood_war <- purrr::map2(.x = brood_ref_values,
+  Brood_war <- purrr::map2(.x = selected_ref_values,
                            .y = ref_names,
                            .f = ~{
                              pb$tick()$print()
@@ -656,7 +664,7 @@ check_values_brood <- function(Brood_data) {
                                     paste0("Record on row ", ..1,
                                            " (", Species_codes[Species_codes$Code == ..3, "CommonName"], ")",
                                            " has an unusually high value in ", ..4, " (", ..2, " > ",
-                                           brood_ref_values[[paste(..3, ..4, sep="_")]]$Value[2],")")
+                                           selected_ref_values[[paste(..3, ..4, sep="_")]]$Value[2],")")
                                   })
   }
 
@@ -670,8 +678,8 @@ check_values_brood <- function(Brood_data) {
               ErrorOutput = unlist(error_output)))
 
   #Satisfy RCMD Checks
-  brood_ref_values <- Species <- NULL
-  Variable <- NULL
+  brood_ref_values <- selected_ref_values <- ref_names <- NULL
+  Species <- Variable <- NULL
 }
 
 
