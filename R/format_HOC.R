@@ -40,7 +40,7 @@
 #'@return Generates either 4 .csv files or 4 data frames in the standard format.
 #'@export
 
-format_HOC <- function(db = utils::choose.dir(),
+format_HOC <- function(db = choose_directory(),
                        species = NULL,
                        pop = NULL,
                        path = ".",

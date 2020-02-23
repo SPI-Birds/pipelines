@@ -43,13 +43,13 @@
 #'@return Generates either 4 .csv files or 4 data frames in the standard format.
 #'@export
 
-format_CHO <- function(db = utils::choose.dir(),
+format_CHO <- function(db = choose_directory(),
                        species = NULL,
                        pop = NULL,
                        path = ".",
                        output_type = "R"){
 
-  #Force choose.dir() if used
+  #Force choose_directory() if used
   force(db)
 
   #Assign species for filtering

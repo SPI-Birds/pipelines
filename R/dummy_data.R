@@ -16,7 +16,7 @@
 #'
 #' @export
 
-create_dummy_data <- function(db = utils::choose.dir()) {
+create_dummy_data <- function(db = choose_directory()) {
 
   # Create skeletons for each pipeline data frame
   # Brood data

@@ -46,7 +46,7 @@
 #'@return Generates either 4 .csv files or 4 data frames in the standard format.
 #'@export
 
-format_PIL <- function(db = utils::choose.dir(),
+format_PIL <- function(db = choose_directory(),
                        species = NULL,
                        pop = NULL,
                        path = ".",
