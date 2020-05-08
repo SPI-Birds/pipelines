@@ -67,7 +67,6 @@ format_PFN <- function(db,
   Brood_data <- Brood_data %>%
     dplyr::select(-ChickAge)
 
-
   # EXPORT DATA
 
   time <- difftime(Sys.time(), start_time, units = "sec")
@@ -114,7 +113,11 @@ format_PFN <- function(db,
 
 create_brood_PFN <- function(db){
 
-  ## Load data
+  ## Pre) Determine a vector of "bad" (nonconclusive) IDs
+  #This will be used downstream in point 7)
+  badIDs <- c("RUNT", "ringed", "ringed left", "ringed right", "unringed", "Unringed")
+
+  ## 0) Load data
   #We read everything in as text and convert it afterwards
   #Even though some columns (e.g. date) work well, they may be broken with newer data.
   #Using text and converting manually should be more robust to data changes
@@ -122,7 +125,7 @@ create_brood_PFN <- function(db){
     Brood_data <- read.csv(file = paste0(db, "/PFN_PrimaryData.csv"), na.strings = c("", "?"),
                                     colClasses = "character") %>%
 
-    ## Rename columns that are equivalent (content and format) to columns in the standard format
+    ## 1) Rename columns that are equivalent (content and format) to columns in the standard format
     dplyr::rename(Plot = Popn,
                   LocationID = Box) %>%
 
@@ -132,12 +135,12 @@ create_brood_PFN <- function(db){
                   Species = dplyr::case_when(Species == "BLUTI" ~ "CYACAE",
                                             Species == "PIEFL" ~ "FICHYP",
                                             Species == "GRETI" ~ "PARMAJ",
-                                            Species == "REDST" ~ "NA", # Missing, 160 observations --> Should be added as a new code!
+                                            Species == "REDST" ~ "PHOPHO",
                                             Species == "MARTI" ~ "POEPAL",
                                             Species == "NUTHA" ~ "SITEUR",
                                             Species == "COATI" ~ "PERATE",
-                                            Species == "WREN" ~ "NA", # Missing, 1 observation only
-                                            Species == "TREEC" ~ "NA"), # Missing, 1 observation only
+                                            Species == "WREN" ~ NA_character_, # Missing, 1 observation only
+                                            Species == "TREEC" ~ NA_character_), # Missing, 1 observation only
                   ClutchType_observed = dplyr::case_when(CltCd == "1" ~ "first",
                                                         CltCd == "2" ~ "replacement",
                                                         CltCd == "3" ~ "second"), # Needs double-checking with data owner
@@ -156,9 +159,9 @@ create_brood_PFN <- function(db){
                   YoungDate = as.Date(YoungDate, format = "%d/%m/%Y")) %>%
   # NOTE: YoungDate is not part of the standard format, but we need it here to determine chick age, and therefore whether or not we can use the chick measurements)
 
-      # 4) Add columns that are based on calculations
-      dplyr::arrange(BreedingSeason, FemaleID, LayDate)
-      # --> This sorting is required for the function "calc_clutchtype" to work
+    # 4) Add columns that are based on calculations
+    dplyr::arrange(BreedingSeason, FemaleID, LayDate)
+    # --> This sorting is required for the function "calc_clutchtype" to work
 
     # 4.1) Calculate means and observation numbers for fledgling weight/tarsus length
     Weight_data <- Brood_data[,paste("Weight.Y", c(1:11), sep = "")]
@@ -193,10 +196,20 @@ create_brood_PFN <- function(db){
                     FledgeDateError = NA_integer_,
                     NumberFledgedError = NA_integer_,
                     AvgEggMass =  NA_real_,
+                    NumberEggs = NA_integer_,
                     OriginalTarsusMethod = NA_character_,
                     ExperimentID = NA_character_) %>%
 
-      # 6) Select and arrange columns for output
+      # 6) Remove broods from species not included in Species_codes
+      dplyr::filter(Species %in% Species_codes$Code) %>%
+
+      # 7) Replace non-conclusive male and female IDs with NA
+      dplyr::mutate(FemaleID = dplyr::case_when(!(FemaleID%in%badIDs) ~ FemaleID,
+                                                FemaleID%in%badIDs ~ NA_character_),
+                    MaleID = dplyr::case_when(!(MaleID%in%badIDs) ~ MaleID,
+                                                MaleID%in%badIDs ~ NA_character_)) %>%
+
+      # 8) Select and arrange columns for output
       dplyr::select(BroodID, PopID, BreedingSeason,
                     Species, Plot, LocationID, FemaleID, MaleID,
                     ClutchType_observed, ClutchType_calculated,
@@ -212,8 +225,28 @@ create_brood_PFN <- function(db){
                     OriginalTarsusMethod,
                     ExperimentID, ChickAge)
 
+
   # Return data
   return(tibble::as_tibble(Brood_data))
+
+  # Satisfy RCMD check
+  PopID <- BroodID <- PopID <- BreedingSeason <- Species <- Plot <- LocationID <- NULL
+  FemaleID <- MaleID <- ClutchType_observed <- ClutchType_calculated <- NULL
+  LayDate <- LayDateError <- ClutchSize <- ClutchSizeError <- NULL
+  HatchDate <- HatchDateError <- BroodSize <- BroodSizeError <- NULL
+  FledgeDate <- FledgeDateError <- NumberFledged <- NumberFledgedError <- NULL
+  AvgEggMass <- NumberEggs <- AvgChickMass <- AvgTarsus <- NumberChicksTarsus <- NULL
+  OriginalTarsusMethod <- ExperimentID <- NULL
+
+  Year <- Box <- Popn <- CltCd <- CltSize <- Hatch <- Fledged <- Success <- NULL
+  DAR <- N1 <- DFE <- DH <- MinEggs <- UnHatch <- AverageMass <- Outcome <- NULL
+  MaleDate <- MaleRingDate <- FemaleDate <- FemaleRingDate <- FemaleStatus <- FemaleMinAge <- NULL
+  YoungDate <- Young1 <- Young2 <- Young3 <- Young4 <- Young5 <- Young6 <- NULL
+  Young7 <- Young8 <- Young9 <- Young10 <- Young11 <- NULL
+  Weight.Y1 <- Weight.Y2 <- Weight.Y3 <- Weight.Y4 <- Weight.Y5 <- Weight.Y6 <- NULL
+  Weight.Y7 <- Weight.Y8 <- Weight.Y9 <- Weight.Y10 <- Weight.Y11  <- NULL
+  Tarsus.Y1 <- Tarsus.Y2 <- Tarsus.Y3 <- Tarsus.Y4 <- Tarsus.Y5 <- Tarsus.Y6 <- NULL
+  Tarsus.Y7 <- Tarsus.Y8 <- Tarsus.Y9 <- Tarsus.Y10 <- Tarsus.Y11  <- NULL
 
 }
 
@@ -234,12 +267,12 @@ create_capture_PFN <- function(db){
                                   Species = dplyr::case_when(Capture_data$Species == "BLUTI" ~ "CYACAE",
                                                              Capture_data$Species == "PIEFL" ~ "FICHYP",
                                                              Capture_data$Species == "GRETI" ~ "PARMAJ",
-                                                             Capture_data$Species == "REDST" ~ "NA",
+                                                             Capture_data$Species == "REDST" ~ "PHOPHO",
                                                              Capture_data$Species == "MARTI" ~ "POEPAL",
                                                              Capture_data$Species == "NUTHA" ~ "SITEUR",
                                                              Capture_data$Species == "COATI" ~ "PERATE",
-                                                             Capture_data$Species == "WREN" ~ "NA",
-                                                             Capture_data$Species == "TREEC" ~ "NA"),
+                                                             Capture_data$Species == "WREN" ~ NA_character_,
+                                                             Capture_data$Species == "TREEC" ~ NA_character_),
                                   BreedingSeason = as.numeric(Capture_data$Year),
                                   CaptureDate = as.Date(Capture_data$MaleDate, format = "%d/%m/%Y"),
                                   CaptureTime = NA,
@@ -253,7 +286,7 @@ create_capture_PFN <- function(db){
                                   Tarsus = NA_real_,
                                   OriginalTarsusMethod = NA_character_,
                                   WingLength = NA_real_,
-                                  Age_observed = 2L,
+                                  Age_observed = 4L,
                                   Age_calculated = NA_integer_, # Will be added later
                                   #ChickAge = NA_integer_, # Will be added later
                                   Sex = "M", # Will be removed later
@@ -265,12 +298,12 @@ create_capture_PFN <- function(db){
                                     Species = dplyr::case_when(Capture_data$Species == "BLUTI" ~ "CYACAE",
                                                                Capture_data$Species == "PIEFL" ~ "FICHYP",
                                                                Capture_data$Species == "GRETI" ~ "PARMAJ",
-                                                               Capture_data$Species == "REDST" ~ "NA",
+                                                               Capture_data$Species == "REDST" ~ "PHOPHO",
                                                                Capture_data$Species == "MARTI" ~ "POEPAL",
                                                                Capture_data$Species == "NUTHA" ~ "SITEUR",
                                                                Capture_data$Species == "COATI" ~ "PERATE",
-                                                               Capture_data$Species == "WREN" ~ "NA",
-                                                               Capture_data$Species == "TREEC" ~ "NA"),
+                                                               Capture_data$Species == "WREN" ~ NA_character_,
+                                                               Capture_data$Species == "TREEC" ~ NA_character_),
                                     BreedingSeason = as.numeric(Capture_data$Year),
                                     CaptureDate = as.Date(Capture_data$FemaleDate, format = "%d/%m/%Y"),
                                     CaptureTime = NA,
@@ -284,7 +317,7 @@ create_capture_PFN <- function(db){
                                     Tarsus = NA_real_,
                                     OriginalTarsusMethod = NA_character_,
                                     WingLength = NA_real_,
-                                    Age_observed = 2L,
+                                    Age_observed = 4L,
                                     Age_calculated = NA_integer_, # Will be added later
                                     #ChickAge = NA_integer_, # Will be added later
                                     Sex = "F", # Will be removed later
@@ -298,12 +331,12 @@ create_capture_PFN <- function(db){
                                           Species = dplyr::case_when(Capture_data$Species[i] == "BLUTI" ~ "CYACAE",
                                                                      Capture_data$Species[i] == "PIEFL" ~ "FICHYP",
                                                                      Capture_data$Species[i] == "GRETI" ~ "PARMAJ",
-                                                                     Capture_data$Species[i] == "REDST" ~ "NA",
+                                                                     Capture_data$Species[i] == "REDST" ~ "PHOPHO",
                                                                      Capture_data$Species[i] == "MARTI" ~ "POEPAL",
                                                                      Capture_data$Species[i] == "NUTHA" ~ "SITEUR",
                                                                      Capture_data$Species[i] == "COATI" ~ "PERATE",
-                                                                     Capture_data$Species[i] == "WREN" ~ "NA",
-                                                                     Capture_data$Species[i] == "TREEC" ~ "NA"),
+                                                                     Capture_data$Species[i] == "WREN" ~ NA_character_,
+                                                                     Capture_data$Species[i] == "TREEC" ~ NA_character_),
                                           BreedingSeason = as.numeric(Capture_data$Year[i]),
                                           CaptureDate = as.Date(Capture_data$FemaleDate[i], format = "%d/%m/%Y"),
                                           CaptureTime = strptime(NA, format = "%hh:%mm"),
@@ -329,21 +362,37 @@ create_capture_PFN <- function(db){
 
   # 4) Combine data and remove missing IDs
 
-  Capture_data <- dplyr::bind_rows(Chick_Capture_data, Male_Capture_data, Female_Capture_data)
+  Capture_data <- dplyr::bind_rows(Chick_Capture_data, Male_Capture_data, Female_Capture_data) %>%
 
-  Capture_data <- subset(Capture_data, !is.na(IndvID))
+  # 5) Remove all individuals with missing IDs and/or from species not included in Species_codes
+  dplyr::filter(Species %in% Species_codes$Code & !is.na(IndvID) & !(IndvID%in%c("RUNT", "ringed", "ringed left", "ringed right", "unringed", "Unringed"))) %>%
 
-
-  # 5) Calculate age at capture
+  # 6) Calculate age at capture
 
   # Sort chronologically within individual
-  Capture_data <- Capture_data %>%
     dplyr::arrange(IndvID, CaptureDate, CaptureTime) %>%
     #Calculate age at each capture based on first capture
     calc_age(ID = IndvID, Age = Age_observed, Date = CaptureDate, Year = BreedingSeason)
 
-  # 6) Return data
+  # 7) Return data
   return(Capture_data)
+
+  #Satisfy RCMD Check
+  PopID <- Species <- IndvID <- BroodID <- BreedingSeason <- LocationID <- Plot <- Sex <- Age_observed <- NULL
+  CaptureDate <- CaptureTime <- ObserverID <- CapturePopID <- CapturePlot <- NULL
+  ReleasePopID <- ReleasePlot <- Mass <- Tarsus <- OriginalTarsusMethod <- NULL
+  WingLength <- Age_observed <- Age_calculated <- NULL
+
+  Year <- Box <- Popn <- CltCd <- CltSize <- Hatch <- Fledged <- Success <- NULL
+  DAR <- N1 <- DFE <- DH <- MinEggs <- UnHatch <- AverageMass <- Outcome <- NULL
+  MaleID <- MaleDate <- MaleRingDate <- NULL
+  FemaleID <- FemaleDate <- FemaleRingDate <- FemaleStatus <- FemaleMinAge <- NULL
+  YoungDate <- Young1 <- Young2 <- Young3 <- Young4 <- Young5 <- Young6 <- NULL
+  Young7 <- Young8 <- Young9 <- Young10 <- Young11 <- NULL
+  Weight.Y1 <- Weight.Y2 <- Weight.Y3 <- Weight.Y4 <- Weight.Y5 <- Weight.Y6 <- NULL
+  Weight.Y7 <- Weight.Y8 <- Weight.Y9 <- Weight.Y10 <- Weight.Y11  <- NULL
+  Tarsus.Y1 <- Tarsus.Y2 <- Tarsus.Y3 <- Tarsus.Y4 <- Tarsus.Y5 <- Tarsus.Y6 <- NULL
+  Tarsus.Y7 <- Tarsus.Y8 <- Tarsus.Y9 <- Tarsus.Y10 <- Tarsus.Y11  <- NULL
 
 }
 
@@ -415,6 +464,14 @@ create_individual_PFN <- function(Capture_data){
 
   return(Indv_data)
 
+  #Satisfy RCMD Check
+  Species <- IndvID <- PopID <- BroodIDLaid <- BroodIDFledged <- NULL
+  RingSeason <- RingAge <- Sex <- NULL
+
+  BroodID <- BreedingSeason <- LocationID <- Plot <- Age_observed <- NULL
+  CaptureDate <- CaptureTime <- ObserverID <- CapturePopID <- CapturePlot <- NULL
+  ReleasePopID <- ReleasePlot <- Mass <- Tarsus <- OriginalTarsusMethod <- NULL
+  WingLength <- Age_observed <- Age_calculated <- NULL
 }
 
 #' Create location data table for EastDartmoor.
@@ -449,6 +506,18 @@ create_location_PFN <- function(Brood_data){
                   Habitat)
 
   return(Location_data)
+
+  # Satisfy RCMD check
+  LocationID <- NestboxID <- LocationType <- PopID <- NULL
+  Latitude <- Longitude <- StartSeason <- EndSeason <- Habitat <- NULL
+
+  BroodID <- BreedingSeason <- Species <- Plot <- NULL
+  FemaleID <- MaleID <- ClutchType_observed <- ClutchType_calculated <- NULL
+  LayDate <- LayDateError <- ClutchSize <- ClutchSizeError <- NULL
+  HatchDate <- HatchDateError <- BroodSize <- BroodSizeError <- NULL
+  FledgeDate <- FledgeDateError <- NumberFledged <- NumberFledgedError <- NULL
+  AvgEggMass <- NumberEggs <- AvgChickMass <- AvgTarsus <- NumberChicksTarsus <- NULL
+  OriginalTarsusMethod <- ExperimentID <- NULL
 
 }
 
