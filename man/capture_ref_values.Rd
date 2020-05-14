@@ -3,7 +3,8 @@
 \name{capture_ref_values}
 \alias{capture_ref_values}
 \title{List of reference values for capture data}
-\format{A list with 40 data frames:
+\format{
+A list with 40 data frames:
 
 \itemize{
 \item{10 species: \code{PARMAJ}, \code{CYACAE}, \code{FICHYP}, \code{SITEUR}, \code{PERATE}, \code{PASMON}, \code{FICALB}, \code{POEPAL}, \code{POECIN}, \code{PHOPHO}}
@@ -17,7 +18,8 @@ Each species-stage-variable combination has the following reference values:
  \item{Warning_max}{Upper bound of a variable's expected values. A value larger than this threshold is considered unusual and will result in a warning.}
  \item{Error_min}{Lower bound of a variable's unusual values. A value smaller than this threshold is considered impossible and will result in an error.}
  \item{Error_max}{Upper bound of a variable's unusual values. A value larger than this threshold is considered impossible and will result in an error.}
- }}
+ }
+}
 \description{
 Plausible capture data values that can be used to detect outliers.
 }

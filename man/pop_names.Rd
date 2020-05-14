@@ -3,13 +3,15 @@
 \name{pop_names}
 \alias{pop_names}
 \title{Population names and locations}
-\format{A data frame with 23 rows and 4 variables
+\format{
+A data frame with 23 rows and 4 variables
 \describe{
  \item{code}{Three-letter population code.}
  \item{name}{Name of population.}
  \item{country}{Name of country where population is situated.}
  \item{owner}{Letter code for data owner. Note, multiple populations can have
- the same data owner.} }}
+ the same data owner.} }
+}
 \description{
 Information and identifying codes for all populations and data owners.
 }
