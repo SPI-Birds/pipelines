@@ -341,6 +341,6 @@ create_dummy_data <- function(db = choose_directory()) {
                      Location_data = Location_data)
 
   save(dummy_data,
-       file = paste0(db, "\\dummy_data.rda"))
+       file = paste0(db, "/dummy_data.rda"))
 
 }
