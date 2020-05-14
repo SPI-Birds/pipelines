@@ -29,7 +29,7 @@ test_that("Brood_data returns an expected outcome...", {
   #Test 2: Brood where clutch type = replacement (because first is known to have failed, CltCd = 2 in raw)
   expect_equal(subset(PFN_data, BroodID == "6077")$Species, "CYACAE")
   expect_equal(subset(PFN_data, BroodID == "6077")$ClutchType_calculated, "replacement")
-  expect_equal(subset(PFN_data, BroodID == "6077")$LayDate, as.Date("2013-03-31") + 45)
+  expect_equal(subset(PFN_data, BroodID == "6077")$LayDate, as.Date("2015-03-31") + 45)
   expect_equal(subset(PFN_data, BroodID == "6077")$ClutchSize, 10L)
   expect_equal(subset(PFN_data, BroodID == "6077")$BroodSize, NA_integer_)
   expect_equal(subset(PFN_data, BroodID == "6077")$NumberFledged, 2L)
@@ -49,7 +49,7 @@ test_that("Brood_data returns an expected outcome...", {
   #Test 4: Brood where clutch type = second (CltCd = 3 in raw)
   expect_equal(subset(PFN_data, BroodID == "4653")$Species, "FICHYP")
   expect_equal(subset(PFN_data, BroodID == "4653")$ClutchType_calculated, "second")
-  expect_equal(subset(PFN_data, BroodID == "4653")$LayDate, as.Date("2000-03-31") + 68)
+  expect_equal(subset(PFN_data, BroodID == "4653")$LayDate, as.Date("2007-03-31") + 68)
   expect_equal(subset(PFN_data, BroodID == "4653")$ClutchSize, 4L)
   expect_equal(subset(PFN_data, BroodID == "4653")$BroodSize, 0L)
   expect_equal(subset(PFN_data, BroodID == "4653")$NumberFledged, 0L)
@@ -113,7 +113,7 @@ test_that("Capture data returns an expected outcome...", {
   expect_equal(subset(PFN_data, IndvID == "Y369483")$Age_observed[7], 4L)
   #Test that age calculated is correct on first capture and last capture
   expect_equal(subset(PFN_data, IndvID == "Y369483")$Age_calculated[1], 1L)
-  expect_equal(subset(PFN_data, IndvID == "Y369483")$Age_calculated[7], 7L)
+  expect_equal(subset(PFN_data, IndvID == "Y369483")$Age_calculated[7], 15L)
 
   #Test 2: Individual caught only as adult
   #Test it has the correct number of capture records
