@@ -5,7 +5,7 @@
 #' The following capture data checks are performed:
 #' \itemize{
 #' \item \strong{C1}: Check if the formats of each column in \code{Capture_data} match with the standard format using \code{\link{check_format_capture}}.
-#' \item \strong{C2}: Check capture variable values against reference values using \code{\link{check_values_capture}}.
+#' \item \strong{C2a-d}: Check capture variable values against reference values using \code{\link{check_values_capture}}. Capture variables checked: Adult_Mass, Adult_Tarsus, Chick_Mass, Chick_Tarsus.
 #' }
 #'
 #' @inheritParams checks_capture_params
