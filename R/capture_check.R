@@ -18,9 +18,12 @@
 capture_check <- function(Capture_data, check_format=TRUE){
 
   # Create check list with a summary of warnings and errors per check
-  check_list <- tibble::tibble(CheckID = purrr::map_chr(1:2, ~paste0("C", .)),
+  check_list <- tibble::tibble(CheckID = paste0("C", c(1, paste0(2, letters[1:4]))),
                                CheckDescription = c("Check format of capture data",
-                                                    "Check capture variable values against reference values"),
+                                                    "Check adult mass values against reference values",
+                                                    "Check adult tarsus values against reference values",
+                                                    "Check chick mass values against reference values",
+                                                    "Check chick tarsus values against reference values"),
                                Warning = NA,
                                Error = NA)
 
@@ -36,35 +39,74 @@ capture_check <- function(Capture_data, check_format=TRUE){
     check_list[1,3:4] <- check_format_capture_output$CheckList
   }
 
-  # - Check capture variable values against reference values
-  message("C2: Checking capture variable values against reference values...")
+  # - Check adult mass values against reference values
+  message("C2a: Checking adult mass values against reference values...")
 
-  check_values_capture_output <- check_values_capture(Capture_data)
+  check_values_adult_mass_output <- check_values_capture(Capture_data, "Adult_Mass")
 
-  check_list[2,3:4] <- check_values_capture_output$CheckList
+  check_list[2,3:4] <- check_values_adult_mass_output$CheckList
+
+  # - Check adult tarsus values against reference values
+  message("C2b: Checking adult tarsus values against reference values...")
+
+  check_values_adult_tarsus_output <- check_values_capture(Capture_data, "Adult_Tarsus")
+
+  check_list[3,3:4] <- check_values_adult_tarsus_output$CheckList
+
+  # - Check chick mass values against reference values
+  message("C2c: Checking chick mass values against reference values...")
+
+  check_values_chick_mass_output <- check_values_capture(Capture_data, "Chick_Mass")
+
+  check_list[4,3:4] <- check_values_chick_mass_output$CheckList
+
+  # - Check chick tarsus values against reference values
+  message("C2d: Checking chick tarsus values against reference values...")
+
+  check_values_chick_tarsus_output <- check_values_capture(Capture_data, "Chick_Tarsus")
+
+  check_list[5,3:4] <- check_values_chick_tarsus_output$CheckList
 
 
   if(check_format) {
     # Warning list
     warning_list <- list(Check1 = check_format_capture_output$WarningOutput,
-                         Check2 = check_values_capture_output$WarningOutput)
+                         Check2a = check_values_adult_mass_output$WarningOutput,
+                         Check2b = check_values_adult_tarsus_output$WarningOutput,
+                         Check2c = check_values_chick_mass_output$WarningOutput,
+                         Check2d = check_values_chick_tarsus_output$WarningOutput)
 
     # Error list
     error_list <- list(Check1 = check_format_capture_output$ErrorOutput,
-                       Check2 = check_values_capture_output$ErrorOutput)
+                       Check2a = check_values_adult_mass_output$ErrorOutput,
+                       Check2b = check_values_adult_tarsus_output$ErrorOutput,
+                       Check2c = check_values_chick_mass_output$ErrorOutput,
+                       Check2d = check_values_chick_tarsus_output$ErrorOutput)
   } else {
     # Warning list
-    warning_list <- list(Check2 = check_values_capture_output$WarningOutput)
+    warning_list <- list(Check2a = check_values_adult_mass_output$WarningOutput,
+                         Check2b = check_values_adult_tarsus_output$WarningOutput,
+                         Check2c = check_values_chick_mass_output$WarningOutput,
+                         Check2d = check_values_chick_tarsus_output$WarningOutput)
 
     # Error list
-    error_list <- list(Check2 = check_values_capture_output$ErrorOutput)
+    error_list <- list(Check2a = check_values_adult_mass_output$ErrorOutput,
+                       Check2b = check_values_adult_tarsus_output$ErrorOutput,
+                       Check2c = check_values_chick_mass_output$ErrorOutput,
+                       Check2d = check_values_chick_tarsus_output$ErrorOutput)
 
     check_list <- check_list[-1,]
   }
 
   return(list(CheckList = check_list,
-              WarningRows = unique(c(check_values_capture_output$WarningRows)),
-              ErrorRows = unique(c(check_values_capture_output$ErrorRows)),
+              WarningRows = unique(c(check_values_adult_mass_output$WarningRows,
+                                     check_values_adult_tarsus_output$WarningRows,
+                                     check_values_chick_mass_output$WarningRows,
+                                     check_values_chick_tarsus_output$WarningRows)),
+              ErrorRows = unique(c(check_values_adult_mass_output$ErrorRows,
+                                   check_values_adult_tarsus_output$ErrorRows,
+                                   check_values_chick_mass_output$ErrorRows,
+                                   check_values_chick_tarsus_output$ErrorRows)),
               Warnings = warning_list,
               Errors = error_list))
 }
@@ -179,15 +221,29 @@ check_format_capture <- function(Capture_data){
 
 #' Check capture variable values against reference values
 #'
-#' Check variable values against species-specific reference values in capture data. Unusual values will result in a warning. Impossible values will result in an error. Variables that are checked: Mass, Tarsus, WingLength, Age_obsv, Age_calc, Chick_age.
+#' Check variable values against species-specific reference values in capture data. Unusual values will result in a warning. Impossible values will result in an error. Variables that are checked: Adult_Mass, Adult_Tarsus, Chick_Mass, Chick_Tarsus.
 #'
 #' @inheritParams checks_capture_params
+#' @param var Character. Variable to check against reference values.
 #'
 #' @inherit checks_return return
 #'
 #' @export
 
-check_values_capture <- function(Capture_data) {
+check_values_capture <- function(Capture_data, var) {
+
+  # Stop if var is missing
+  if(missing(var)) {
+    stop("Please select a variable in Capture_data to check against reference values.")
+  }
+
+  # Stop if var is given, but not a variable in Capture_data
+  if(sum(stringr::str_detect(names(capture_ref_values), var)) == 0) {
+    stop("The selected variable name is not in Capture_data. Perhaps you made a typo?")
+  }
+
+  # Select variable
+  selected_ref_values <- capture_ref_values[stringr::str_detect(names(capture_ref_values), var)]
 
   # Reference values
   ref_names <- stringr::str_split(names(capture_ref_values), pattern="_")
