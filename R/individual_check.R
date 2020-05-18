@@ -22,11 +22,12 @@
 individual_check <- function(Individual_data, Capture_data, Location_data, check_format=TRUE){
 
   # Create check list with a summary of warnings and errors per check
-  check_list <- tibble::tibble(CheckID = purrr::map_chr(1:4, ~paste0("I", .)),
+  check_list <- tibble::tibble(CheckID = paste0("I", 1:5),
                                CheckDescription = c("Check format of individual data",
                                                     "Check that individual IDs are unique",
                                                     "Check that chicks have BroodIDs",
-                                                    "Check that individuals have no conflicting sex"),
+                                                    "Check that individuals have no conflicting sex",
+                                                    "Check that individuals have no conflicting species"),
                                Warning = NA,
                                Error = NA)
 
@@ -63,40 +64,53 @@ individual_check <- function(Individual_data, Capture_data, Location_data, check
 
   check_list[4, 3:4] <- check_conflicting_sex_output$CheckList
 
+  # - Check that individuals have no conflicting species
+  message("I5: Checking that individuals have no conflicting species...")
+
+  check_conflicting_species_output <- check_conflicting_species(Individual_data)
+
+  check_list[5, 3:4] <- check_conflicting_species_output$CheckList
+
 
   if(check_format) {
     # Warning list
     warning_list <- list(Check1 = check_format_individual_output$WarningOutput,
                          Check2 = check_unique_IndvID_output$WarningOutput,
                          Check3 = check_BroodID_chicks_output$WarningOutput,
-                         Check4 = check_conflicting_sex_output$WarningOutput)
+                         Check4 = check_conflicting_sex_output$WarningOutput,
+                         Check5 = check_conflicting_species_output$WarningOutput)
 
     # Error list
     error_list <- list(Check1 = check_format_individual_output$ErrorOutput,
                        Check2 = check_unique_IndvID_output$ErrorOutput,
                        Check3 = check_BroodID_chicks_output$ErrorOutput,
-                       Check4 = check_conflicting_sex_output$ErrorOutput)
+                       Check4 = check_conflicting_sex_output$ErrorOutput,
+                       Check5 = check_conflicting_species_output$ErrorOutput)
   } else {
     # Warning list
     warning_list <- list(Check2 = check_unique_IndvID_output$WarningOutput,
                          Check3 = check_BroodID_chicks_output$WarningOutput,
-                         Check4 = check_conflicting_sex_output$WarningOutput)
+                         Check4 = check_conflicting_sex_output$WarningOutput,
+                         Check5 = check_conflicting_species_output$WarningOutput)
 
     # Error list
     error_list <- list(Check2 = check_unique_IndvID_output$ErrorOutput,
                        Check3 = check_BroodID_chicks_output$ErrorOutput,
-                       Check4 = check_conflicting_sex_output$ErrorOutput)
+                       Check4 = check_conflicting_sex_output$ErrorOutput,
+                       Check5 = check_conflicting_species_output$ErrorOutput)
 
     check_list <- check_list[-1,]
   }
 
   return(list(CheckList = check_list,
               WarningRows = unique(c(check_unique_IndvID_output$WarningRows,
-                                      check_BroodID_chicks_output$WarningRows,
-                                      check_conflicting_sex_output$WarningRows)),
+                                     check_BroodID_chicks_output$WarningRows,
+                                     check_conflicting_sex_output$WarningRows,
+                                     check_conflicting_species_output$WarningRows)),
               ErrorRows = unique(c(check_unique_IndvID_output$ErrorRows,
-                                    check_BroodID_chicks_output$ErrorRows,
-                                    check_conflicting_sex_output$ErrorRows)),
+                                   check_BroodID_chicks_output$ErrorRows,
+                                   check_conflicting_sex_output$ErrorRows,
+                                   check_conflicting_species_output$ErrorRows)),
               Warnings = warning_list,
               Errors = error_list))
 }
@@ -379,6 +393,50 @@ check_conflicting_sex <- function(Individual_data) {
 
   return(list(CheckList = check_list,
               WarningRow = Conflicting_sex$Row,
+              ErrorRow = NULL,
+              WarningOutput = unlist(warning_output),
+              ErrorOutput = unlist(error_output)))
+}
+
+
+
+#' Check conflicting species
+#'
+#' Check that the species of individuals in Individual_data is recorded consistently. Individuals who have been recorded as two different species will have conflicting species ('CONFLICTED') in Individual_data.
+#'
+#' @inheritParams checks_individual_params
+#'
+#' @inherit checks_return return
+#'
+#' @export
+
+check_conflicting_species <- function(Individual_data) {
+
+  # Select individuals with conflicting species
+  Conflicting_species <- Individual_data %>%
+    dplyr::filter(Species == "CONFLICTED")
+
+  war <- FALSE
+  warning_output <- NULL
+
+  if(nrow(Conflicting_species) > 0) {
+    war <- TRUE
+
+    warning_output <- purrr::pmap(.l = Conflicting_species,
+                                  .f = ~{
+                                    paste0("Record on row ", ..1,
+                                           " has conflicting species.")
+                                  })
+  }
+
+  err <- FALSE
+  error_output <- NULL
+
+  check_list <- tibble::tibble(Warning = war,
+                               Error = err)
+
+  return(list(CheckList = check_list,
+              WarningRow = Conflicting_species$Row,
               ErrorRow = NULL,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))

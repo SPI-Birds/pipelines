@@ -17,7 +17,7 @@
 location_check <- function(Location_data, check_format=TRUE){
 
   # Create check list with a summary of warnings and errors per check
-  check_list <- tibble::tibble(CheckID = purrr::map_chr(1, ~paste0("L", .)),
+  check_list <- tibble::tibble(CheckID = paste0("L", 1),
                                CheckDescription = c("Check format of location data"),
                                Warning = NA,
                                Error = NA)
