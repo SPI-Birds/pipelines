@@ -131,7 +131,7 @@ create_brood_PFN <- function(db){
 
     ## 2) Add population ID and reformat colums with equivalent content but different format
     dplyr::mutate(PopID = "PFN",
-                  BreedingSeason = as.numeric(Year),
+                  BreedingSeason = as.integer(Year),
                   Species = dplyr::case_when(Species == "BLUTI" ~ "CYACAE",
                                             Species == "PIEFL" ~ "FICHYP",
                                             Species == "GRETI" ~ "PARMAJ",
@@ -188,13 +188,13 @@ create_brood_PFN <- function(db){
 
   # 5) Add columns without data
   Brood_data <- Brood_data %>%
-      dplyr::mutate(LayDateError = NA_integer_,
-                    ClutchSizeError = NA_integer_,
-                    HatchDateError = NA_integer_,
-                    BroodSizeError = NA_integer_,
+      dplyr::mutate(LayDateError = NA_real_,
+                    ClutchSizeError = NA_real_,
+                    HatchDateError = NA_real_,
+                    BroodSizeError = NA_real_,
                     FledgeDate = as.Date(NA, format = "%d/%m/%Y"),
-                    FledgeDateError = NA_integer_,
-                    NumberFledgedError = NA_integer_,
+                    FledgeDateError = NA_real_,
+                    NumberFledgedError = NA_real_,
                     AvgEggMass =  NA_real_,
                     NumberEggs = NA_integer_,
                     OriginalTarsusMethod = NA_character_,
@@ -273,9 +273,10 @@ create_capture_PFN <- function(db){
                                                              Capture_data$Species == "COATI" ~ "PERATE",
                                                              Capture_data$Species == "WREN" ~ NA_character_,
                                                              Capture_data$Species == "TREEC" ~ NA_character_),
-                                  BreedingSeason = as.numeric(Capture_data$Year),
+                                  BreedingSeason = as.integer(Capture_data$Year),
                                   CaptureDate = as.Date(Capture_data$MaleDate, format = "%d/%m/%Y"),
-                                  CaptureTime = NA,
+                                  #CaptureTime = strptime(NA, format = "%hh:%mm"),
+                                  CaptureTime = NA_character_,
                                   ObserverID = NA_character_,
                                   LocationID = Capture_data$Box,
                                   CapturePopID = "PFN",
@@ -304,9 +305,10 @@ create_capture_PFN <- function(db){
                                                                Capture_data$Species == "COATI" ~ "PERATE",
                                                                Capture_data$Species == "WREN" ~ NA_character_,
                                                                Capture_data$Species == "TREEC" ~ NA_character_),
-                                    BreedingSeason = as.numeric(Capture_data$Year),
+                                    BreedingSeason = as.integer(Capture_data$Year),
                                     CaptureDate = as.Date(Capture_data$FemaleDate, format = "%d/%m/%Y"),
-                                    CaptureTime = NA,
+                                    #CaptureTime = strptime(NA, format = "%hh:%mm"),
+                                    CaptureTime = NA_character_,
                                     ObserverID = NA_character_,
                                     LocationID = Capture_data$Box,
                                     CapturePopID = "PFN",
@@ -337,9 +339,10 @@ create_capture_PFN <- function(db){
                                                                      Capture_data$Species[i] == "COATI" ~ "PERATE",
                                                                      Capture_data$Species[i] == "WREN" ~ NA_character_,
                                                                      Capture_data$Species[i] == "TREEC" ~ NA_character_),
-                                          BreedingSeason = as.numeric(Capture_data$Year[i]),
+                                          BreedingSeason = as.integer(Capture_data$Year[i]),
                                           CaptureDate = as.Date(Capture_data$FemaleDate[i], format = "%d/%m/%Y"),
-                                          CaptureTime = strptime(NA, format = "%hh:%mm"),
+                                          #CaptureTime = strptime(NA, format = "%hh:%mm"),
+                                          CaptureTime = NA_character_,
                                           ObserverID = NA_character_,
                                           LocationID = Capture_data$Box[i],
                                           CapturePopID = "PFN",
@@ -493,7 +496,7 @@ create_location_PFN <- function(Brood_data){
                   PopID = 'PFN',
                   Latitude = NA_real_,
                   Longitude = NA_real_,
-                  Habitat = NA_real_) %>%
+                  Habitat = NA_character_) %>%
 
      # 3) Merge information on nestbox usage by birds
     dplyr::left_join(calc_birdNBuse(Brood_data = Brood_data), by = "LocationID") %>%
