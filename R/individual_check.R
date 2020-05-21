@@ -231,7 +231,7 @@ check_format_individual <- function(Individual_data){
 check_unique_IndvID <- function(Individual_data){
 
   # Errors
-  # Select IndvIDs that are duplicated within populations
+  # Select records with IndvIDs that are duplicated within populations
   Duplicated_within <- Individual_data %>%
     dplyr::group_by(PopID, IndvID) %>%
     dplyr::filter(n() > 1)
@@ -258,7 +258,7 @@ check_unique_IndvID <- function(Individual_data){
   }
 
   # Warnings
-  # Select IndvIDs that are duplicated among populations
+  # Select records with IndvIDs that are duplicated among populations
   Duplicated_among <- Individual_data %>%
     dplyr::group_by(IndvID) %>%
     dplyr::filter(!duplicated(PopID) & n() > 1) %>%
@@ -323,7 +323,8 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data) {
   Ind_cap_loc_data <- Individual_data %>%
     dplyr::left_join(First_captures, by="IndvID")
 
-  # Select chicks caught in a nest box but not associated with a BroodID
+  # Errors
+  # Select records with chicks caught in a nest box but not associated with a BroodID
   No_BroodID_nest <- Ind_cap_loc_data %>%
     dplyr::filter(RingAge == "chick" & (is.na(BroodIDLaid) | is.na(BroodIDFledged)) & LocationType == "NB")
 
@@ -340,7 +341,7 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data) {
                                 })
   }
 
-
+  # No warnings
   war <- FALSE
   warning_output <- NULL
 
@@ -368,7 +369,7 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data) {
 
 check_conflicting_sex <- function(Individual_data) {
 
-  # Select individuals with conflicting sex
+  # Select records with conflicting sex
   Conflicting_sex <- Individual_data %>%
     dplyr::filter(Sex == "C")
 

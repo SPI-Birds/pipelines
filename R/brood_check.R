@@ -744,7 +744,8 @@ check_parent_species <- function(Brood_data, Individual_data) {
     dplyr::left_join(Individual_data[,c("IndvID", "Species")], by=c("MaleID" = "IndvID")) %>%
     dplyr::rename(MaleSpecies = Species)
 
-  # Join and select broods where parents are different species
+  # Errors
+  # Select records where parents are different species
   Interspecific_broods <- dplyr::bind_cols(Females, Males) %>%
     dplyr::filter(FemaleSpecies != MaleSpecies)
 
@@ -763,6 +764,7 @@ check_parent_species <- function(Brood_data, Individual_data) {
                                 })
   }
 
+  # No warnings
   war <- FALSE
   warning_output <- NULL
 
@@ -799,7 +801,8 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data) {
     dplyr::group_by(BroodIDLaid) %>%
     dplyr::summarise(Chicks = n_distinct(IndvID))
 
-  # Error if number of chicks in Capture_data > brood size in Brood_data
+  # Errors
+  # Select records where number of chicks in Capture_data > brood size in Brood_data
   # (this should not be possible)
   Brood_err <- Brood_data %>%
     dplyr::left_join(Chicks_captured, by=c("BroodID" = "BroodIDLaid")) %>%
@@ -820,8 +823,8 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data) {
                                          ..4, ").")
                                 })
   }
-
-  # Warning if number of chicks in Capture_data < brood size in Brood_data
+  # Warnings
+  # Select records where number of chicks in Capture_data < brood size in Brood_data
   # (chicks might have died before measuring/ringing)
   Brood_war <- Brood_data %>%
     dplyr::left_join(Chicks_captured, by=c("BroodID" = "BroodIDLaid")) %>%
@@ -867,7 +870,7 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data) {
 check_unique_BroodID <- function(Brood_data){
 
   # Errors
-  # Select BroodIDs that are duplicated within populations
+  # Select records that are duplicated within populations
   Duplicated <- Brood_data %>%
     dplyr::group_by(PopID, BroodID) %>%
     dplyr::filter(n() > 1)
