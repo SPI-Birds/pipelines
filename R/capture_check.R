@@ -5,7 +5,7 @@
 #' The following capture data checks are performed:
 #' \itemize{
 #' \item \strong{C1}: Check if the formats of each column in \code{Capture_data} match with the standard format using \code{\link{check_format_capture}}.
-#' \item \strong{C2a-d}: Check capture variable values against reference values using \code{\link{check_values_capture}}. Capture variables checked: Adult_Mass, Adult_Tarsus, Chick_Mass, Chick_Tarsus.
+#' \item \strong{C2a-d}: Check capture variable values against reference values using \code{\link{check_values_capture}}. Capture variables checked for adults and chicks: Mass and Tarsus.
 #' }
 #'
 #' @inheritParams checks_capture_params
@@ -18,12 +18,13 @@
 capture_check <- function(Capture_data, check_format=TRUE){
 
   # Create check list with a summary of warnings and errors per check
-  check_list <- tibble::tibble(CheckID = paste0("C", c(1, paste0(2, letters[1:4]))),
+  check_list <- tibble::tibble(CheckID = paste0("C", c(1, paste0(2, letters[1:4])), 3),
                                CheckDescription = c("Check format of capture data",
                                                     "Check adult mass values against reference values",
                                                     "Check adult tarsus values against reference values",
                                                     "Check chick mass values against reference values",
-                                                    "Check chick tarsus values against reference values"),
+                                                    "Check chick tarsus values against reference values",
+                                                    "Check chick age"),
                                Warning = NA,
                                Error = NA)
 
@@ -67,6 +68,12 @@ capture_check <- function(Capture_data, check_format=TRUE){
 
   check_list[5,3:4] <- check_values_chick_tarsus_output$CheckList
 
+  # - Check chick age values
+  message("C3: Checking chick age values...")
+
+  check_chick_age_output <- check_chick_age(Capture_data)
+
+  check_list[6,3:4] <- check_chick_age_output$CheckList
 
   if(check_format) {
     # Warning list
@@ -74,26 +81,30 @@ capture_check <- function(Capture_data, check_format=TRUE){
                          Check2a = check_values_adult_mass_output$WarningOutput,
                          Check2b = check_values_adult_tarsus_output$WarningOutput,
                          Check2c = check_values_chick_mass_output$WarningOutput,
-                         Check2d = check_values_chick_tarsus_output$WarningOutput)
+                         Check2d = check_values_chick_tarsus_output$WarningOutput,
+                         Check3 = check_chick_age_output$WarningOutput)
 
     # Error list
     error_list <- list(Check1 = check_format_capture_output$ErrorOutput,
                        Check2a = check_values_adult_mass_output$ErrorOutput,
                        Check2b = check_values_adult_tarsus_output$ErrorOutput,
                        Check2c = check_values_chick_mass_output$ErrorOutput,
-                       Check2d = check_values_chick_tarsus_output$ErrorOutput)
+                       Check2d = check_values_chick_tarsus_output$ErrorOutput,
+                       Check3 = check_chick_age_output$ErrorOutput)
   } else {
     # Warning list
     warning_list <- list(Check2a = check_values_adult_mass_output$WarningOutput,
                          Check2b = check_values_adult_tarsus_output$WarningOutput,
                          Check2c = check_values_chick_mass_output$WarningOutput,
-                         Check2d = check_values_chick_tarsus_output$WarningOutput)
+                         Check2d = check_values_chick_tarsus_output$WarningOutput,
+                         Check3 = check_chick_age_output$WarningOutput)
 
     # Error list
     error_list <- list(Check2a = check_values_adult_mass_output$ErrorOutput,
                        Check2b = check_values_adult_tarsus_output$ErrorOutput,
                        Check2c = check_values_chick_mass_output$ErrorOutput,
-                       Check2d = check_values_chick_tarsus_output$ErrorOutput)
+                       Check2d = check_values_chick_tarsus_output$ErrorOutput,
+                       Check3 = check_chick_age_output$ErrorOutput)
 
     check_list <- check_list[-1,]
   }
@@ -102,11 +113,13 @@ capture_check <- function(Capture_data, check_format=TRUE){
               WarningRows = unique(c(check_values_adult_mass_output$WarningRows,
                                      check_values_adult_tarsus_output$WarningRows,
                                      check_values_chick_mass_output$WarningRows,
-                                     check_values_chick_tarsus_output$WarningRows)),
+                                     check_values_chick_tarsus_output$WarningRows,
+                                     check_chick_age_output$WarningRows)),
               ErrorRows = unique(c(check_values_adult_mass_output$ErrorRows,
                                    check_values_adult_tarsus_output$ErrorRows,
                                    check_values_chick_mass_output$ErrorRows,
-                                   check_values_chick_tarsus_output$ErrorRows)),
+                                   check_values_chick_tarsus_output$ErrorRows,
+                                   check_chick_age_output$ErrorRows)),
               Warnings = warning_list,
               Errors = error_list))
 }
@@ -221,7 +234,7 @@ check_format_capture <- function(Capture_data){
 
 #' Check capture variable values against reference values
 #'
-#' Check variable values against species-specific reference values in capture data. Unusual values will result in a warning. Impossible values will result in an error. Variables that are checked: Adult_Mass, Adult_Tarsus, Chick_Mass, Chick_Tarsus.
+#' Check variable values against species-specific reference values in capture data. Unusual values will result in a warning. Impossible values will result in an error. Variables that are checked for adults and chicks: Mass and Tarsus.
 #'
 #' @inheritParams checks_capture_params
 #' @param var Character. Variable to check against reference values.
@@ -295,7 +308,7 @@ check_values_capture <- function(Capture_data, var) {
 
                                          } else {
 
-                                           if(is.na(ChickAge)){
+                                           if(is.na(ChickAge) | ChickAge < 0 | ChickAge > 30){
 
                                              current_chick_age <- 14
 
@@ -349,9 +362,9 @@ check_values_capture <- function(Capture_data, var) {
     error_output <- purrr::pmap(.l = Capture_err,
                                 .f = ~{
                                   paste0("Record on row ", ..1,
-                                         " (", Species_codes[Species_codes$Code == ..3, "CommonName"], " ",
-                                         ..4, ")",
-                                         " has an impossible value in ", ..5, " (", ..2, ").")
+                                         " (", Species_codes[Species_codes$Code == ..4, "CommonName"], " ",
+                                         ..5, ")",
+                                         " has an impossible value in ", ..6, " (", ..2, ").")
                                 })
 
   }
@@ -360,7 +373,7 @@ check_values_capture <- function(Capture_data, var) {
   Capture_war <- purrr::map2(.x = capture_ref_values,
                              .y = ref_names,
                              .f = ~{
-                               #pb$tick()$print()
+                               pb$tick()$print()
 
                                if(.y[2] == "Adult") {
 
@@ -401,7 +414,7 @@ check_values_capture <- function(Capture_data, var) {
 
                                                                                } else {
 
-                                                                                 if(is.na(ChickAge)){
+                                                                                 if(is.na(ChickAge) | ChickAge < 0 | ChickAge > 30){
 
                                                                                    current_chick_age <- 14
 
@@ -480,7 +493,7 @@ check_values_capture <- function(Capture_data, var) {
 
                                       paste0("Record on row ", ..1,
                                              " (", Species_codes[Species_codes$Code == ..4, "CommonName"], " ",
-                                             ..4, ")",
+                                             tolower(..5), ")",
                                              " has an unusually ",
                                              ifelse(..2 < capture_ref_values[[paste(..4, ..5, ..6, sep="_")]]$Value[1],
                                                     paste0("low value in ", ..6, " (", ..2, " < ",
@@ -507,4 +520,51 @@ check_values_capture <- function(Capture_data, var) {
   capture_ref_values <- NULL
   Species <- Age_calc <- NULL
   Variable <- NULL
+}
+
+
+#' Check chick age
+#'
+#' Check whether chick ages (in number of days since hatching) are within the range of 0 and 30 days since hatching. Values outside this range will result in an error.
+#'
+#' @inheritParams checks_capture_params
+#'
+#' @inherit checks_return return
+#'
+#' @export
+
+check_chick_age <- function(Capture_data){
+
+  # Errors
+  # Select records with chick age < 0 OR > 30
+  Chick_age_err <- Capture_data %>%
+    dplyr::filter(ChickAge < 0 | ChickAge > 30) %>%
+    dplyr::select(Row, Species, ChickAge)
+
+  err <- FALSE
+  error_output <- NULL
+
+  if(nrow(Chick_age_err) > 0) {
+    err <- TRUE
+
+    error_output <- purrr::pmap(.l = Chick_age_err,
+                                .f = ~{
+                                  paste0("Record on row ", ..1,
+                                         " (", Species_codes[Species_codes$Code == ..2, "CommonName"], ")",
+                                         " has an impossible value in ChickAge (", ..3, ").")
+                                })
+  }
+
+  # No warnings
+  war <- FALSE
+  warning_output <- NULL
+
+  check_list <- tibble::tibble(Warning = war,
+                               Error = err)
+
+  return(list(CheckList = check_list,
+              WarningRows = NULL,
+              ErrorRows = Chick_age_err$Row,
+              WarningOutput = unlist(warning_output),
+              ErrorOutput = unlist(error_output)))
 }
