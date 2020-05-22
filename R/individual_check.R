@@ -237,22 +237,29 @@ check_unique_IndvID <- function(Individual_data){
     dplyr::filter(n() > 1)
 
   err <- FALSE
+  error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
   if(nrow(Duplicated_within) > 0) {
     err <- TRUE
 
-    error_output <- purrr::map(.x = unique(Duplicated_within$IndvID),
+    # Compare to whitelist
+    error_records <- Duplicated_within %>%
+      dplyr::mutate(CheckID = "I2") %>%
+      dplyr::anti_join(whitelist$Individual_whitelist, by=c("PopID", "CheckID", "IndvID"))
+
+    # Create quality check report statements
+    error_output <- purrr::map(.x = unique(error_records$IndvID),
                                .f = ~{
                                  paste0("Record on row ",
                                         # Duplicated rows
-                                        Duplicated_within[Duplicated_within$IndvID == .x, "Row"][1,],
+                                        error_records[error_records$IndvID == .x, "Row"][1,],
                                         " has the same IndvID (", .x, ") as row(s) ",
                                         # Duplicates (if 1, else more)
-                                        ifelse(nrow(Duplicated_within[Duplicated_within$IndvID == .x, "Row"][-1,]) == 1,
-                                               Duplicated_within[Duplicated_within$IndvID == .x, "Row"][-1,],
+                                        ifelse(nrow(error_records[error_records$IndvID == .x, "Row"][-1,]) == 1,
+                                               error_records[error_records$IndvID == .x, "Row"][-1,],
                                                gsub("^c\\(|\\)$", "",
-                                                    Duplicated_within[Duplicated_within$IndvID == .x, "Row"][-1,])),
+                                                    error_records[error_records$IndvID == .x, "Row"][-1,])),
                                         ".")
                                })
   }
@@ -265,25 +272,32 @@ check_unique_IndvID <- function(Individual_data){
     dplyr::filter(n() > 1)
 
   war <- FALSE
+  warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
   if(nrow(Duplicated_among) > 0) {
     war <- TRUE
 
-    warning_output <- purrr::map(.x = unique(Duplicated_among$IndvID),
+    # Compare to whitelist
+    warning_records <- Duplicated_among %>%
+      dplyr::mutate(CheckID = "I2") %>%
+      dplyr::anti_join(whitelist$Individual_whitelist, by=c("PopID", "CheckID", "IndvID"))
+
+    # Create quality check report statements
+    warning_output <- purrr::map(.x = unique(warning_records$IndvID),
                                  .f = ~{
                                    paste0("Record on row ",
                                           # Duplicated rows
-                                          Duplicated_among[Duplicated_among$IndvID == .x, "Row"][1,],
+                                          warning_records[warning_records$IndvID == .x, "Row"][1,],
                                           " (IndvID: ", .x, ", ", "PopID: ",
-                                          Duplicated_among[Duplicated_among$IndvID == .x, "PopID"][1,],")",
+                                          warning_records[warning_records$IndvID == .x, "PopID"][1,],")",
                                           " has the same IndvID as row(s) ",
                                           # Duplicates (if 1, else more)
-                                          ifelse(nrow(Duplicated_among[Duplicated_among$IndvID == .x, "Row"][-1,]) == 1,
-                                                 Duplicated_among[Duplicated_among$IndvID == .x, "Row"][-1,],
+                                          ifelse(nrow(warning_records[warning_records$IndvID == .x, "Row"][-1,]) == 1,
+                                                 warning_records[warning_records$IndvID == .x, "Row"][-1,],
                                                  gsub("^c\\(|\\)$", "",
-                                                      Duplicated_among[Duplicated_among$IndvID == .x, "Row"][-1,])),
-                                          " (PopID: ", Duplicated_among[Duplicated_among$IndvID == .x, "PopID"][-1,],").")
+                                                      warning_records[warning_records$IndvID == .x, "Row"][-1,])),
+                                          " (PopID: ", warning_records[warning_records$IndvID == .x, "PopID"][-1,],").")
                                  })
   }
 
@@ -291,8 +305,8 @@ check_unique_IndvID <- function(Individual_data){
                                Error = err)
 
   return(list(CheckList = check_list,
-              WarningRows = Duplicated_among$Row,
-              ErrorRows = Duplicated_within$Row,
+              WarningRows = warning_records$Row,
+              ErrorRows = error_records$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 }
@@ -329,20 +343,29 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data) {
     dplyr::filter(RingAge == "chick" & (is.na(BroodIDLaid) | is.na(BroodIDFledged)) & LocationType == "NB")
 
   err <- FALSE
+  error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
   if(nrow(No_BroodID_nest) > 0) {
     err <- TRUE
 
-    error_output <- purrr::pmap(.l = No_BroodID_nest,
+    # Compare to whitelist
+    error_records <- No_BroodID_nest %>%
+      dplyr::mutate(PopID = unique(Individual_data$PopID),
+                    CheckID = "I3") %>%
+      dplyr::anti_join(whitelist$Individual_whitelist, by=c("PopID", "CheckID", "IndvID"))
+
+    # Create quality check report statements
+    error_output <- purrr::pmap(.l = error_records,
                                 .f = ~{
-                                  paste0("Record on row ", ..1,
+                                  paste0("Record on row ", ..1, " (IndvID: ", ..2, ")",
                                          " has no BroodID.")
                                 })
   }
 
   # No warnings
   war <- FALSE
+  #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
   check_list <- tibble::tibble(Warning = war,
@@ -350,7 +373,7 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data) {
 
   return(list(CheckList = check_list,
               WarningRows = NULL,
-              ErrorRows = No_BroodID_nest$Row,
+              ErrorRows = error_records$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 
@@ -373,27 +396,38 @@ check_conflicting_sex <- function(Individual_data) {
   Conflicting_sex <- Individual_data %>%
     dplyr::filter(Sex == "C")
 
+  # No errors
+  err <- FALSE
+  #error_records <- tibble::tibble(Row = NA_character_)
+  error_output <- NULL
+
+  # Warnings
   war <- FALSE
+  warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
   if(nrow(Conflicting_sex) > 0) {
     war <- TRUE
 
-    warning_output <- purrr::pmap(.l = Conflicting_sex,
+    # Compare to whitelist
+    warning_records <- Conflicting_sex %>%
+      dplyr::mutate(PopID = unique(Individual_data$PopID),
+                    CheckID = "I4") %>%
+      dplyr::anti_join(whitelist$Individual_whitelist, by=c("PopID", "CheckID", "IndvID"))
+
+    # Create quality check report statements
+    warning_output <- purrr::pmap(.l = warning_records,
                                   .f = ~{
-                                    paste0("Record on row ", ..1,
+                                    paste0("Record on row ", ..1, " (IndvID: ", ..2, ")",
                                            " has conflicting sex.")
                                   })
   }
-
-  err <- FALSE
-  error_output <- NULL
 
   check_list <- tibble::tibble(Warning = war,
                                Error = err)
 
   return(list(CheckList = check_list,
-              WarningRow = Conflicting_sex$Row,
+              WarningRow = warning_records$Row,
               ErrorRow = NULL,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
@@ -417,27 +451,38 @@ check_conflicting_species <- function(Individual_data) {
   Conflicting_species <- Individual_data %>%
     dplyr::filter(Species == "CONFLICTED")
 
+  # No errors
+  err <- FALSE
+  #error_records <- tibble::tibble(Row = NA_character_)
+  error_output <- NULL
+
+  # Warnings
   war <- FALSE
+  warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
   if(nrow(Conflicting_species) > 0) {
     war <- TRUE
 
-    warning_output <- purrr::pmap(.l = Conflicting_species,
+    # Compare to whitelist
+    warning_records <- Conflicting_sex %>%
+      dplyr::mutate(PopID = unique(Individual_data$PopID),
+                    CheckID = "I5") %>%
+      dplyr::anti_join(whitelist$Individual_whitelist, by=c("PopID", "CheckID", "IndvID"))
+
+    # Create quality check report statements
+    warning_output <- purrr::pmap(.l = warning_records,
                                   .f = ~{
-                                    paste0("Record on row ", ..1,
+                                    paste0("Record on row ", ..1," (IndvID: ", ..2, ")",
                                            " has conflicting species.")
                                   })
   }
-
-  err <- FALSE
-  error_output <- NULL
 
   check_list <- tibble::tibble(Warning = war,
                                Error = err)
 
   return(list(CheckList = check_list,
-              WarningRow = Conflicting_species$Row,
+              WarningRow = warning_records$Row,
               ErrorRow = NULL,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
