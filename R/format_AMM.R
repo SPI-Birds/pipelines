@@ -116,23 +116,23 @@ format_AMM <- function(db = choose_directory(),
 
   message(paste0("All tables generated in ", round(time, 2), " seconds"))
 
-  if(output_type == 'csv'){
+  if (output_type == 'csv') {
 
     message("Saving .csv files...")
 
-    utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_BAN.csv"), row.names = F)
+    utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_AMM.csv"), row.names = F)
 
-    utils::write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_BAN.csv"), row.names = F)
+    utils::write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_AMM.csv"), row.names = F)
 
-    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_BAN.csv"), row.names = F)
+    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_AMM.csv"), row.names = F)
 
-    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_BAN.csv"), row.names = F)
+    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_AMM.csv"), row.names = F)
 
     invisible(NULL)
 
   }
 
-  if(output_type == "R"){
+  if (output_type == "R") {
 
     message("Returning R objects...")
 
