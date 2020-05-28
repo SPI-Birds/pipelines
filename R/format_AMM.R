@@ -303,15 +303,17 @@ create_capture_AMM <- function(Brood_data, connection) {
                   .data$Day14Observer, Day18BodyMass = .data$Day18Bodymass, .data$Day18BodyMassTime, .data$Day18Observer) %>%
     dplyr::mutate_all(~dplyr::na_if(as.character(.), "-99")) %>% #Needed because pivot functions expect coercable classes when making value col
     dplyr::mutate_at(.vars = vars(contains("BodyMassTime")), ~str_extract(., "[:digit:]{2}:[:digit:]{2}")) %>%
-    tidyr::pivot_longer(cols = .data$Day2BodyMass:.data$Day18Observer, names_to = "column", values_to = "value") %>%
-    dplyr::mutate(value = dplyr::na_if(value, -99L),
-                  Day = str_extract(column, "[:digit:]{1,}"),
+    tidyr::pivot_longer(data = ., cols = .data$Day2BodyMass:.data$Day18Observer, names_to = "column", values_to = "value") %>%
+    dplyr::mutate(value = dplyr::na_if(.data$value, -99L),
+                  Day = str_extract(.data$column, "[:digit:]{1,}"),
                   OriginalTarsusMethod = NA_character_, ##FIXME: Ask Niels about tarsus measurement method
                   Age_observed = 1L) %>%
-    tidyr::separate(column, into = c(NA, "Variable"), sep = "^Day[:digit:]{1,}") %>%
-    tidyr::pivot_wider(names_from = Variable, values_from = value) %>%
-    dplyr::mutate_at(.vars = vars(ChickYear, HatchDay, Day, BodyMass, P3, Tarsus), as.numeric) %>%
-    dplyr::mutate(CaptureDate = as.Date(.data$EndMarch) + HatchDay + Day) %>%
+    tidyr::separate(.data$column, into = c(NA, "Variable"), sep = "^Day[:digit:]{1,}") %>%
+    tidyr::pivot_wider(data = ., names_from = .data$Variable, values_from = .data$value) %>%
+    dplyr::mutate_at(.vars = vars(.data$ChickYear, .data$HatchDay, .data$Day), as.integer) %>%
+    dplyr::mutate_at(.vars = vars(.data$BodyMass, .data$P3, .data$Tarsus), ~ifelse(as.numeric(.) <= 0, NA_real_, as.numeric(.))) %>%
+    dplyr::filter(!(is.na(.data$BodyMass) & is.na(.data$P3) & is.na(.data$Tarsus))) %>%
+    dplyr::mutate(CaptureDate = as.Date(.data$EndMarch) + .data$HatchDay + .data$Day) %>%
     dplyr::left_join(Brood_data, by = "BroodID") %>%
     dplyr::select(IndvID = .data$BirdID,
                   .data$Species,
