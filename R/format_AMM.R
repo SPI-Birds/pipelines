@@ -86,7 +86,7 @@ format_AMM <- function(db = choose_directory(),
 
   message("Compiling location information...")
 
-  Location_data <- create_location_BAN(all_data)
+  Location_data <- create_location_AMM(connection)
 
   # WRANGLE DATA FOR EXPORT
 
@@ -366,7 +366,27 @@ create_individual_AMM <- function(Capture_data, Brood_data, connection) {
 #'
 #' @return A data frame.
 
-create_location_AMM <- function(data) {
+create_location_AMM <- function(connection) {
 
+  start_year <- min(Capture_data$BreedingSeason)
+  end_year   <- max(Capture_data$BreedingSeason)
+
+  dplyr::tbl(connection, "NestBoxes") %>%
+    dplyr::collect() %>%
+    dplyr::filter(.data$NestBox != -99L) %>%
+    dplyr::mutate(LocationType = "NB",
+                  PopID = "AMM",
+                  StartSeason = start_year,
+                  EndSeason = end_year,
+                  Habitat = NA_character_) %>% #FIXME: Ask Niels about habitat type
+    dplyr::select(LocationID = .data$NestBox,
+                  NestboxID = .data$NestBox,
+                  .data$LocationType,
+                  .data$PopID,
+                  Latitude = .data$CoordinateLatitude2013,
+                  Longitude = .data$CoordinateLongitude2013,
+                  .data$StartSeason,
+                  .data$EndSeason,
+                  .data$Habitat)
 
 }
