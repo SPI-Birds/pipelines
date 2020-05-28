@@ -80,7 +80,7 @@ format_AMM <- function(db = choose_directory(),
 
   message("Compiling individual information...")
 
-  Individual_data <- create_individual_BAN(Capture_data)
+  Individual_data <- create_individual_AMM(Capture_data = Capture_data, Brood_data = Brood_data, connection = connection)
 
   # LOCATION DATA
 
@@ -308,10 +308,54 @@ create_capture_AMM <- function(Brood_data, connection) {
 #' Create individual data table in standard format for data from Ammersee, Germany.
 #'
 #' @param Capture_data Data frame. Output from \code{\link{create_capture_AMM}}.
+#' @param Brood_data Data frame. Output from \code{\link{create_brood_AMM}}.
 #'
 #' @return A data frame.
 
-create_individual_AMM <- function(Capture_data) {
+create_individual_AMM <- function(Capture_data, Brood_data, connection) {
+
+  Sex_data <- dplyr::tbl(connection, "BirdID") %>%
+    dplyr::select(IndvID = .data$BirdID, Sex = .data$SexConclusion) %>%
+    dplyr::collect() %>%
+    dplyr::mutate(Sex = dplyr::case_when(.data$Sex == 1L ~ "F",
+                                         .data$Sex == 2L ~ "M",
+                                         TRUE ~ NA_character_),
+                  IndvID = as.character(.data$IndvID))
+
+  Brood_swap_info <- dplyr::tbl(connection, "Chicks") %>%
+    dplyr::select(IndvID = .data$BirdID, BroodIDLaid = .data$BroodID, BroodIDFledged = .data$SwapToBroodID) %>%
+    dplyr::collect() %>%
+    dplyr::mutate_all(as.character)
+
+  Capture_data %>%
+    dplyr::group_by(.data$IndvID) %>%
+    dplyr::summarise(Species = purrr::map_chr(.x = list(unique(na.omit(.data$Species))), .f = ~{
+
+      if(length(..1) == 0){
+
+        return(NA_character_)
+
+      } else if(length(..1) == 1){
+
+        return(..1)
+
+      } else {
+
+        return("CONFLICTED")
+
+      }
+
+    }),
+    PopID = "AMM",
+    RingSeason = min(.data$BreedingSeason),
+    RingAge = ifelse(min(.data$Age_observed) != 1L | is.na(min(.data$Age_observed)), "adult", "chick")) %>%
+    dplyr::left_join(Sex_data, by = "IndvID") %>%
+    dplyr::left_join(Brood_swap_info, by = "IndvID") %>%
+    dplyr::select(.data$IndvID, .data$Species, .data$PopID,
+                  .data$BroodIDLaid, .data$BroodIDFledged,
+                  .data$RingSeason, .data$RingAge,
+                  .data$Sex)
+
 
 }
 
