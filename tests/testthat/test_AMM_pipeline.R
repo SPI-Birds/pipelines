@@ -1,0 +1,136 @@
+context("Run data quality check on Ammersee pipeline output")
+
+test_that("AMM outputs all files...", {
+
+  expect_true(all("AMM" %in% pipeline_output$Brood_data$PopID))
+  expect_true(all("AMM" %in% pipeline_output$Capture_data$CapturePopID))
+  expect_true(all("AMM" %in% pipeline_output$Individual_data$PopID))
+  expect_true(all("AMM" %in% pipeline_output$Location_data$PopID))
+
+})
+
+test_that("Brood_data returns an expected outcome...", {
+
+  #We want to run tests for all possible outcomes of ClutchType_calculated
+
+  #Take a subset of only AMM data
+  AMM_data <- dplyr::filter(pipeline_output$Brood_data, PopID %in% "AMM")
+
+  #Test 1: Brood where clutch type = first
+  expect_equal(subset(AMM_data, BroodID == "3642")$Species, "PARMAJ")
+  expect_equal(subset(AMM_data, BroodID == "3642")$ClutchType_calculated, "first")
+  expect_equal(subset(AMM_data, BroodID == "3642")$LayDate, as.Date("2015-04-21"))
+  expect_equal(subset(AMM_data, BroodID == "3642")$ClutchSize, 7L)
+  expect_equal(subset(AMM_data, BroodID == "3642")$BroodSize, NA_integer_)
+  expect_equal(subset(AMM_data, BroodID == "3642")$NumberFledged, 7L)
+  expect_equal(round(subset(AMM_data, BroodID == "3642")$AvgChickMass, 2), 16.80)
+  expect_equal(round(subset(AMM_data, BroodID == "3642")$AvgTarsus, 2), 20.46)
+
+  #Test 2: Brood where clutch type = replacement (because first is known to have failed)
+  expect_equal(subset(AMM_data, BroodID == "4375")$Species, "PARMAJ")
+  expect_equal(subset(AMM_data, BroodID == "4375")$ClutchType_calculated, "replacement")
+  expect_equal(subset(AMM_data, BroodID == "4375")$LayDate, as.Date("2016-05-18"))
+  expect_equal(subset(AMM_data, BroodID == "4375")$ClutchSize, 8L)
+  expect_equal(subset(AMM_data, BroodID == "4375")$BroodSize, NA_integer_)
+  expect_equal(subset(AMM_data, BroodID == "4375")$NumberFledged, 0L)
+  #Measurements taken but not included in average because chick age was >16
+  expect_equal(subset(AMM_data, BroodID == "4375")$AvgChickMass, 13.30)
+  expect_equal(subset(AMM_data, BroodID == "4375")$AvgTarsus, 20.25)
+
+  #Test 3: Brood where clutch type = replacement (past the cutoff)
+  expect_equal(subset(AMM_data, BroodID == "59")$Species, "CYACAE")
+  expect_equal(subset(AMM_data, BroodID == "59")$ClutchType_calculated, "replacement")
+  expect_equal(subset(AMM_data, BroodID == "59")$LayDate, as.Date("2010-05-11"))
+  expect_equal(subset(AMM_data, BroodID == "59")$ClutchSize, 1L)
+  expect_equal(subset(AMM_data, BroodID == "59")$BroodSize, 1L)
+  expect_equal(subset(AMM_data, BroodID == "59")$NumberFledged, 0L)
+  expect_equal(subset(AMM_data, BroodID == "59")$AvgChickMass, NA_real_)
+  expect_equal(subset(AMM_data, BroodID == "59")$AvgTarsus, NA_real_)
+
+  #Test 4: Brood where clutch type = second
+  expect_equal(subset(AMM_data, BroodID == "581")$Species, "PARMAJ")
+  expect_equal(subset(AMM_data, BroodID == "581")$ClutchType_calculated, "second")
+  expect_equal(subset(AMM_data, BroodID == "581")$LayDate, as.Date("2011-05-22"))
+  expect_equal(subset(AMM_data, BroodID == "581")$ClutchSize, 8L)
+  expect_equal(subset(AMM_data, BroodID == "581")$BroodSize, 8L)
+  expect_equal(subset(AMM_data, BroodID == "581")$NumberFledged, 5L)
+  expect_equal(subset(AMM_data, BroodID == "581")$AvgChickMass, NA_real_)
+  expect_equal(round(subset(AMM_data, BroodID == "581")$AvgTarsus, 2), 18.82)
+
+})
+
+test_that("Individual data returns an expected outcome...", {
+
+  #We want to run a test for each sex for individuals caught as adults and chicks
+
+  #Take a subset of only AMM data
+  AMM_data <- dplyr::filter(pipeline_output$Individual_data, PopID %in% "AMM")
+
+  #Test 1: First caught as adult
+  expect_equal(subset(AMM_data, IndvID == "251")$Sex, "F")
+  expect_equal(subset(AMM_data, IndvID == "251")$Species, "PARMAJ")
+  expect_equal(subset(AMM_data, IndvID == "251")$BroodIDLaid, NA_character_)
+  expect_equal(subset(AMM_data, IndvID == "251")$BroodIDFledged, NA_character_)
+  expect_equal(subset(AMM_data, IndvID == "251")$RingSeason, 2010L)
+  expect_equal(subset(AMM_data, IndvID == "251")$RingAge, "adult")
+
+  #Test 2: Caught first as chick (not cross fostered)
+  expect_equal(subset(AMM_data, IndvID == "15412")$Sex, "F")
+  expect_equal(subset(AMM_data, IndvID == "15412")$Species, "PARMAJ")
+  expect_equal(subset(AMM_data, IndvID == "15412")$BroodIDLaid, "3853")
+  expect_equal(subset(AMM_data, IndvID == "15412")$BroodIDFledged, "3853")
+  expect_equal(subset(AMM_data, IndvID == "15412")$RingSeason, 2015L)
+  expect_equal(subset(AMM_data, IndvID == "15412")$RingAge, "chick")
+
+  #Test 2: Caught first as chick (cross fostered)
+  expect_equal(subset(AMM_data, IndvID == "2108")$Sex, "M")
+  expect_equal(subset(AMM_data, IndvID == "2108")$Species, "PARMAJ")
+  expect_equal(subset(AMM_data, IndvID == "2108")$BroodIDLaid, "321")
+  expect_equal(subset(AMM_data, IndvID == "2108")$BroodIDFledged, "331")
+  expect_equal(subset(AMM_data, IndvID == "2108")$RingSeason, 2011L)
+  expect_equal(subset(AMM_data, IndvID == "2108")$RingAge, "chick")
+
+})
+
+test_that("Capture data returns an expected outcome...", {
+
+  #Take a subset of only AMM data
+  AMM_data <- dplyr::filter(pipeline_output$Capture_data, CapturePopID %in% "AMM")
+
+  #Test 1: Individual ringed as a chick
+  expect_equal(nrow(subset(AMM_data, IndvID == "952")), 12L)
+  expect_equal(subset(AMM_data, IndvID == "952")$CaptureDate[1], as.Date("2010-05-10"))
+  expect_equal(subset(AMM_data, IndvID == "952")$CaptureDate[12], as.Date("2015-01-14"))
+  expect_equal(subset(AMM_data, IndvID == "952")$Age_observed[1], 1L)
+  expect_equal(subset(AMM_data, IndvID == "952")$Age_observed[12], 6L)
+  expect_equal(subset(AMM_data, IndvID == "952")$Age_calculated[1], 1L)
+  expect_equal(subset(AMM_data, IndvID == "952")$Age_calculated[12], 13L)
+
+  #Test 2: Individual caught only as adult
+  expect_equal(nrow(subset(AMM_data, IndvID == "15450")), 11)
+  expect_equal(subset(AMM_data, IndvID == "15450")$CaptureDate[1], as.Date("2015-10-20"))
+  expect_equal(subset(AMM_data, IndvID == "15450")$CaptureDate[11], as.Date("2019-06-17"))
+  expect_equal(subset(AMM_data, IndvID == "15450")$Age_observed[1], 4L)
+  expect_equal(subset(AMM_data, IndvID == "15450")$Age_observed[11], 6L)
+  expect_equal(subset(AMM_data, IndvID == "15450")$Age_calculated[1], 4L)
+  expect_equal(subset(AMM_data, IndvID == "15450")$Age_calculated[11], 12L)
+
+})
+
+test_that("Location_data returns an expected outcome...", {
+
+  #We want to run tests for nest boxes (there are no mistnets)
+
+  #Take a subset of only NIOO data
+  AMM_data <- dplyr::filter(pipeline_output$Location_data, PopID %in% "AMM")
+
+  #Test 1: Nestbox check
+  expect_true(subset(AMM_data, LocationID == "1144")$LocationType == "NB")
+  expect_true(subset(AMM_data, LocationID == "1144")$NestboxID == "1144")
+  expect_equal(subset(AMM_data, LocationID == "1144")$StartSeason, 2010L)
+  expect_equal(subset(AMM_data, LocationID == "1144")$EndSeason, NA_integer_)
+  expect_equal(subset(AMM_data, LocationID == "1144")$PopID, "AMM")
+  expect_equal(round(subset(AMM_data, LocationID == "1144")$Latitude, 2), 47.98)
+  expect_equal(round(subset(AMM_data, LocationID == "1144")$Longitude, 2), 11.16)
+
+})

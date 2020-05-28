@@ -86,7 +86,7 @@ format_AMM <- function(db = choose_directory(),
 
   message("Compiling location information...")
 
-  Location_data <- create_location_AMM(connection)
+  Location_data <- create_location_AMM(Capture_data, connection)
 
   # WRANGLE DATA FOR EXPORT
 
@@ -261,7 +261,7 @@ create_capture_AMM <- function(Brood_data, connection) {
                   ReleasePlot = .data$CapturePlot,
                   LocationID = as.character(.data$NestBox),
                   OriginalTarsusMethod = NA_character_, #FIXME: Need to ask Niels about method used
-                  Age_observed = dplyr::recode(.data$AgeObserved, `7` = NA_integer_, `0` = NA_integer_),
+                  Age_observed = dplyr::recode(.data$AgeObserved, `7` = NA_integer_, `0` = NA_integer_), ##FIXME: Check how this compares to new EURING method
                   ChickAge = NA_integer_,
                   ObserverID = as.character(dplyr::na_if(.data$FieldObserver, -99L)),
                   BroodID = as.character(.data$BroodID)) %>%
@@ -402,10 +402,9 @@ create_individual_AMM <- function(Capture_data, Brood_data, connection) {
 #'
 #' @return A data frame.
 
-create_location_AMM <- function(connection) {
+create_location_AMM <- function(Capture_data, connection) {
 
   start_year <- min(Capture_data$BreedingSeason)
-  end_year   <- max(Capture_data$BreedingSeason)
 
   dplyr::tbl(connection, "NestBoxes") %>%
     dplyr::collect() %>%
@@ -413,7 +412,7 @@ create_location_AMM <- function(connection) {
     dplyr::mutate(LocationType = "NB",
                   PopID = "AMM",
                   StartSeason = start_year,
-                  EndSeason = end_year,
+                  EndSeason = NA_integer_,
                   Habitat = NA_character_) %>% #FIXME: Ask Niels about habitat type
     dplyr::select(LocationID = .data$NestBox,
                   NestboxID = .data$NestBox,
