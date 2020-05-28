@@ -90,8 +90,25 @@ format_AMM <- function(db = choose_directory(),
 
   # WRANGLE DATA FOR EXPORT
 
-  Capture_data <- Capture_data %>%
-    dplyr::select(-Sex)
+  #Calculate average tarsus per brood
+  AvgTarsus <- Capture_data %>%
+    dplyr::filter(.data$ChickAge == 14L & !is.na(.data$Tarsus)) %>%
+    dplyr::group_by(.data$BroodID) %>% ##FIXME: We are taking average tarsus length of all chicks from the
+    ##genetic brood not the actual brood where they were measured!!!!!!!!!!!!!!
+    ##Do we want this to be the norm? Or would be rather use the average
+    ##of the brood of measurement (i.e. after cross-fostering)
+    dplyr::summarise(AvgTarsus = mean(.data$Tarsus),
+                     NumberChicksTarsus = n(),
+                     OriginalTarsusMethod = NA_character_) ##FIXME: Check with Niels
+
+  #Add average tarsus
+  Brood_data <- Brood_data %>%
+    dplyr::left_join(AvgTarsus, by = "BroodID") %>%
+    dplyr::select(.data$BroodID:.data$NumberChicksMass, .data$AvgTarsus,
+                  .data$NumberChicksTarsus, .data$OriginalTarsusMethod, .data$ExperimentID)
+
+  #Remove BroodID, no longer needed
+  Capture_data <- dplyr::select(Capture_data, -.data$BroodID)
 
   # EXPORT DATA
 
