@@ -155,14 +155,18 @@ format_AMM <- function(db = choose_directory(),
 create_brood_AMM   <- function(connection) {
 
   Colour_codes <- dplyr::tbl(connection, "ColourCode") %>%
-    dplyr::select(.data$ColourCode, .data$BirdID)
+    dplyr::select(.data$ColourCode, .data$BirdID, .data$ColourDate)
 
   Nest_boxes <- dplyr::tbl(connection, "NestBoxes") %>%
     dplyr::select(.data$NestBox, .data$Plot)
 
   Brood_data <- dplyr::tbl(connection, "Broods") %>%
-    dplyr::left_join(Colour_codes %>% dplyr::rename(FemaleID = .data$BirdID), by = c("ColourCodeFemale" = "ColourCode")) %>%
-    dplyr::left_join(Colour_codes %>% dplyr::rename(MaleID = .data$BirdID), by = c("ColourCodeMale" = "ColourCode")) %>%
+    dplyr::left_join(Colour_codes %>% dplyr::rename(FemaleID = .data$BirdID,
+                                                    FemaleColourDate = .data$ColourDate),
+                     by = c("ColourCodeFemale" = "ColourCode")) %>%
+    dplyr::left_join(Colour_codes %>% dplyr::rename(MaleID = .data$BirdID,
+                                                    MaleColourDate = .data$ColourDate),
+                     by = c("ColourCodeMale" = "ColourCode")) %>%
     dplyr::left_join(Nest_boxes, by = c("NestBox" = "NestBox")) %>%
     dplyr::mutate(BreedingSeason = .data$BroodYear,
                   PopID = "AMM",
@@ -176,6 +180,14 @@ create_brood_AMM   <- function(connection) {
                   Plot_ExperimentID = ifelse(.data$PlotLevelTreatment == 3L, "SURVIVAL", NA_character_),
                   ExperimentID = paste(.data$BroodSwap_ExperimentID, .data$BroodOther_ExperimentID, .data$Plot_ExperimentID, sep = ";")) %>% ##TODO: Decipher other treatment values and check with Niels
     dplyr::collect() %>%
+    # Needed because some colour rings have multiple BirdIDs over time
+    # We only want those individuals that had this colour code in a given brood year
+    # The correct individual should be the most recent individual ringed before the given BroodYear
+    # i.e. individuals ringed later are excluded, individuals ringed earlier than another individual with the same colour code are excluded
+    dplyr::filter(.data$BroodYear >= lubridate::year(.data$MaleColourDate) & .data$BroodYear >= lubridate::year(.data$FemaleColourDate)) %>%
+    dplyr::group_by(.data$BroodID) %>%
+    dplyr::slice(n()) %>%
+    dplyr::ungroup() %>%
     # Remove all cases of -99
     dplyr::mutate_all(~dplyr::na_if(., -99L)) %>%
     # Case when not available in SQL Access, needs to be done after collecting
