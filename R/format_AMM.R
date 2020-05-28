@@ -184,7 +184,7 @@ create_brood_AMM   <- function(connection) {
     # We only want those individuals that had this colour code in a given brood year
     # The correct individual should be the most recent individual ringed before the given BroodYear
     # i.e. individuals ringed later are excluded, individuals ringed earlier than another individual with the same colour code are excluded
-    dplyr::filter(.data$BroodYear >= lubridate::year(.data$MaleColourDate) & .data$BroodYear >= lubridate::year(.data$FemaleColourDate)) %>%
+    dplyr::filter((is.na(.data$MaleColourDate) | .data$BroodYear >= lubridate::year(.data$MaleColourDate)) & (is.na(.data$FemaleColourDate) | .data$BroodYear >= lubridate::year(.data$FemaleColourDate))) %>%
     dplyr::group_by(.data$BroodID) %>%
     dplyr::slice(n()) %>%
     dplyr::ungroup() %>%
