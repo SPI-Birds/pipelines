@@ -176,9 +176,12 @@ create_brood_AMM   <- function(connection) {
                   Plot_ExperimentID = ifelse(.data$PlotLevelTreatment == 3L, "SURVIVAL", NA_character_),
                   ExperimentID = paste(.data$BroodSwap_ExperimentID, .data$BroodOther_ExperimentID, .data$Plot_ExperimentID, sep = ";")) %>% ##TODO: Decipher other treatment values and check with Niels
     dplyr::collect() %>%
+    # Remove all cases of -99
+    dplyr::mutate_all(~dplyr::na_if(., -99L)) %>%
     # Case when not available in SQL Access, needs to be done after collecting
     dplyr::arrange(.data$BreedingSeason, .data$FemaleID, .data$LayDate) %>%
-    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE),
+    dplyr::mutate(BroodID = as.character(.data$BroodID),
+                  ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE),
                   Species = dplyr::case_when(.data$Species == 1L ~ !!Species_codes$Code[Species_codes$SpeciesID == "14640"],
                                              .data$Species == 2L ~ !!Species_codes$Code[Species_codes$SpeciesID == "14620"],
                                              .data$Species == 3L ~ !!Species_codes$Code[Species_codes$SpeciesID == "14610"],
@@ -189,10 +192,9 @@ create_brood_AMM   <- function(connection) {
                                                          .data$ClutchNumber == 4L ~ "second",
                                                          .data$ClutchNumber == 6L ~ "replacement"),
                   ClutchSizeError = NA_integer_,
-                  FledgeDateError = NA_integer_)
-
-    dplyr::mutate_at(.vars = c("Plot", "LocationID", "MaleID"), as.character) %>%
-    # dplyr::mutate_at(.vars = vars(LayDate, HatchDate, FledgeDate), as.Date) %>%
+                  FledgeDateError = NA_integer_,
+                  AvgEggMass = NA_real_,
+                  NumberEggs = NA_integer_) %>%
     dplyr::select(.data$BroodID, .data$PopID, .data$BreedingSeason,
                   .data$Species, .data$Plot, LocationID = .data$NestBox, .data$FemaleID, .data$MaleID,
                   .data$ClutchType_observed, .data$ClutchType_calculated,
@@ -202,8 +204,11 @@ create_brood_AMM   <- function(connection) {
                   BroodSize = .data$NumberHatched, BroodSizeError = .data$ErrorHatched, ## TODO: Consistent way to deal with errors.
                   .data$FledgeDate, .data$FledgeDateError,
                   .data$NumberFledged, NumberFledgedError = .data$FledgedError,
+                  .data$AvgEggMass, .data$NumberEggs,
                   AvgChickMass = .data$BroodWeight, NumberChicksMass = .data$BroodWeightBS, ##FIXME: What day were they weighed?
-                  .data$ExperimentID)
+                  .data$ExperimentID) %>%
+    dplyr::mutate_at(.vars = vars(.data$Plot:.data$MaleID), as.character) %>%
+    dplyr::mutate_at(.vars = vars(.data$LayDate, .data$HatchDate, .data$FledgeDate), as.Date)
 
   Brood_data
 
