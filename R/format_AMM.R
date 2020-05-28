@@ -74,7 +74,7 @@ format_AMM <- function(db = choose_directory(),
 
   message("Compiling capture information...")
 
-  Capture_data <- create_capture_BAN(all_data)
+  Capture_data <- create_capture_AMM(Brood_data, connection)
 
   # INDIVIDUAL DATA
 
@@ -199,7 +199,107 @@ create_brood_AMM   <- function(connection) {
 #'
 #' @return A data frame.
 
-create_capture_AMM <- function(data) {
+create_capture_AMM <- function(Brood_data, connection) {
+
+  Catches_table      <- dplyr::tbl(connection, "Catches")
+  Chick_catch_tables <- dplyr::tbl(connection, "Chicks")
+  Nestbox_capture    <- dplyr::tbl(connection, "NestBoxes") %>%
+    dplyr::select(.data$NestBox, CapturePlot = .data$Plot)
+  Nestbox_release    <- dplyr::tbl(connection, "NestBoxes") %>%
+    dplyr::select(.data$NestBox, ReleasePlot = .data$Plot)
+
+  #Adult captures
+  Adult_capture <- Catches_table %>%
+    dplyr::left_join(Nestbox_capture, by = "NestBox") %>%
+    dplyr::collect() %>%
+    dplyr::mutate(Species = dplyr::case_when(.data$CatchSpecies == 1L ~ !!Species_codes$Code[Species_codes$SpeciesID == "14640"],
+                                   .data$CatchSpecies == 2L ~ !!Species_codes$Code[Species_codes$SpeciesID == "14620"],
+                                   .data$CatchSpecies == 3L ~ !!Species_codes$Code[Species_codes$SpeciesID == "14610"],
+                                   .data$CatchSpecies == 4L ~ !!Species_codes$Code[Species_codes$SpeciesID == "14790"]),
+                  CaptureTime = dplyr::na_if(paste(lubridate::hour(.data$CatchTimeField),
+                                      lubridate::minute(.data$CatchTimeField), sep = ":"), "NA:NA"),
+                  IndvID = as.character(.data$BirdID),
+                  BreedingSeason = .data$CatchYear,
+                  CaptureDate = as.Date(.data$CatchDate),
+                  CapturePopID = "AMM",
+                  ReleasePopID = "AMM",
+                  CapturePlot = as.character(.data$CapturePlot),
+                  ReleasePlot = .data$CapturePlot,
+                  LocationID = as.character(.data$NestBox),
+                  OriginalTarsusMethod = NA_character_, #FIXME: Need to ask Niels about method used
+                  Age_observed = dplyr::recode(.data$AgeObserved, `7` = NA_integer_, `0` = NA_integer_),
+                  ChickAge = NA_integer_,
+                  ObserverID = as.character(dplyr::na_if(.data$FieldObserver, -99L)),
+                  BroodID = as.character(.data$BroodID)) %>%
+    mutate_at(.vars = vars(.data$BodyMassField, .data$Tarsus, .data$WingP3), .funs = ~ifelse(. <= 0, NA_real_, .)) %>%
+    dplyr::select(.data$IndvID,
+                  .data$Species,
+                  .data$BreedingSeason,
+                  .data$CaptureDate,
+                  .data$CaptureTime,
+                  .data$ObserverID,
+                  .data$LocationID,
+                  .data$CapturePopID,
+                  .data$CapturePlot,
+                  .data$ReleasePopID,
+                  .data$ReleasePlot,
+                  Mass = .data$BodyMassField,
+                  .data$Tarsus,
+                  WingLength = .data$WingP3,
+                  .data$Age_observed,
+                  .data$ChickAge,
+                  .data$BroodID)
+
+  #Chick Captures
+  Brood_data <- Brood_data %>%
+    dplyr::select(.data$BroodID, .data$Species)
+
+  Chick_capture <- Chick_catch_tables %>%
+    dplyr::left_join(Nestbox_capture, by = "NestBox") %>%
+    dplyr::left_join(Nestbox_release, by = c("SwapToNestBox" = "NestBox")) %>%
+    dplyr::mutate(EndMarch = as.Date(paste(.data$ChickYear, "03", "31", sep = "-")),
+                  CapturePopID = "AMM", ReleasePopID = "AMM") %>%
+    dplyr::collect() %>%
+    dplyr::select(.data$BirdID, .data$ChickYear, .data$EndMarch, .data$NestBox, .data$BroodID,
+                  .data$CapturePlot, .data$ReleasePlot,
+                  .data$CapturePopID, .data$ReleasePopID,
+                  .data$HatchDay, .data$Day2BodyMass, .data$Day2BodyMassTime,
+                  .data$Day6BodyMass, .data$Day6BodyMassTime, .data$Day6Observer,
+                  .data$Day14P3, .data$Day14Tarsus, .data$Day14BodyMass, .data$Day14BodyMassTime,
+                  .data$Day14Observer, Day18BodyMass = .data$Day18Bodymass, .data$Day18BodyMassTime, .data$Day18Observer) %>%
+    dplyr::mutate_all(~dplyr::na_if(as.character(.), "-99")) %>% #Needed because pivot functions expect coercable classes when making value col
+    dplyr::mutate_at(.vars = vars(contains("BodyMassTime")), ~str_extract(., "[:digit:]{2}:[:digit:]{2}")) %>%
+    tidyr::pivot_longer(cols = .data$Day2BodyMass:.data$Day18Observer, names_to = "column", values_to = "value") %>%
+    dplyr::mutate(value = dplyr::na_if(value, -99L),
+                  Day = str_extract(column, "[:digit:]{1,}"),
+                  OriginalTarsusMethod = NA_character_, ##FIXME: Ask Niels about tarsus measurement method
+                  Age_observed = 1L) %>%
+    tidyr::separate(column, into = c(NA, "Variable"), sep = "^Day[:digit:]{1,}") %>%
+    tidyr::pivot_wider(names_from = Variable, values_from = value) %>%
+    dplyr::mutate_at(.vars = vars(ChickYear, HatchDay, Day, BodyMass, P3, Tarsus), as.numeric) %>%
+    dplyr::mutate(CaptureDate = as.Date(.data$EndMarch) + HatchDay + Day) %>%
+    dplyr::left_join(Brood_data, by = "BroodID") %>%
+    dplyr::select(IndvID = .data$BirdID,
+                  .data$Species,
+                  BreedingSeason = .data$ChickYear,
+                  .data$CaptureDate,
+                  CaptureTime = .data$BodyMassTime,
+                  ObserverID = .data$Observer,
+                  LocationID = .data$NestBox,
+                  .data$CapturePopID,
+                  .data$CapturePlot,
+                  .data$ReleasePopID,
+                  .data$ReleasePlot,
+                  Mass = .data$BodyMass,
+                  .data$Tarsus,
+                  WingLength = .data$P3,
+                  .data$Age_observed,
+                  ChickAge = .data$Day,
+                  .data$BroodID)
+
+  Capture_data <- dplyr::bind_rows(Adult_capture, Chick_capture) %>%
+    calc_age(ID = .data$IndvID, Age = .data$Age_observed,
+             Date = .data$CaptureDate, Year = .data$BreedingSeason)
 
 }
 
