@@ -158,35 +158,36 @@ create_brood_PFN <- function(Primary_data){
                   HatchDate = as.Date(paste('31/03/', BreedingSeason, sep = ''), format = "%d/%m/%Y") + as.numeric(DH), # See note on LayingDate
                   BroodSize = as.integer(Hatch),
                   NumberFledged = as.integer(Fledged),
-                  YoungDate = as.Date(YoungDate, format = "%d/%m/%Y")) %>%
-  # NOTE: YoungDate is not part of the standard format, but we need it here to determine chick age, and therefore whether or not we can use the chick measurements)
-
+                  ChickAge = as.integer(as.Date(YoungDate, format = "%d/%m/%Y") - HatchDate)) %>%
+                  
     # 4) Add columns that are based on calculations
     dplyr::arrange(BreedingSeason, FemaleID, LayDate)
     # --> This sorting is required for the function "calc_clutchtype" to work
 
     # 4.1) Calculate means and observation numbers for fledgling weight/tarsus length
-    Weight_data <- Brood_data[,paste("Weight.Y", c(1:11), sep = "")]
-    Tarsus_data <- Brood_data[,paste("Tarsus.Y", c(1:11), sep = "")]
-
-    Weight_data_sum <- do.call("rbind", sapply(1:nrow(Weight_data), FUN = function(x)  mean_countObs(Weight_data[x,]), simplify = FALSE))
-    Tarsus_data_sum <- do.call("rbind", sapply(1:nrow(Tarsus_data), FUN = function(x)  mean_countObs(Tarsus_data[x,]), simplify = FALSE))
-
+Brood_averages <- Brood_data %>% 
+    dplyr::filter(between(ChickAge, 14, 16)) %>%  #Remove chicks outside the age range
+    dplyr::select(BroodID, contains("Weight."), contains("Tarsus.")) %>% #Select only weight and tarsus cols
+    tidyr::pivot_longer(cols = -BroodID) %>%  #Rearrange so they're individual rows rather than individual columns
+    dplyr::filter(!is.na(value)) %>% #Remove Nas
+    dplyr::mutate(name = gsub(pattern = "Weight", replacement = "ChickMass", gsub(pattern = ".Y\\d+", replacement = "", x = name))) %>% #Change the names so it's not 'Weight.Y1' and 'Tarsus.Y1' but just 'ChickMass' and 'Tarsus'
+    dplyr::group_by(BroodID, name) %>% #Group by brood, weight and tarsus
+    dplyr::summarise(Avg = mean(as.numeric(value), na.rm = TRUE), Number = n()) %>% #Extract the mean and sample size
+    tidyr::pivot_wider(names_from = name, values_from = c(Avg, Number), names_sep = "") %>% #Move this back into cols so we have AvgChickMass, NumberChickMass etc.
+    dplyr::ungroup()
+    
     # 4.2) Add calculated columns
     Brood_data <- Brood_data %>%
       dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = Brood_data, na.rm = FALSE),
-                    NumberEggs = as.integer(Hatch) + as.integer(UnHatch),
-                    AvgChickMass = Weight_data_sum[,1],
-                    NumberChicksMass = as.integer(Weight_data_sum[,2]),
-                    AvgTarsus = Tarsus_data_sum[,1],
-                    NumberChicksTarsus = as.integer(Tarsus_data_sum[,2]),
-                    ChickAge = as.integer(YoungDate - HatchDate))
+                    NumberEggs = as.integer(Hatch) + as.integer(UnHatch)) %>%
+      dplyr::left_join(Brood_averages, by = "BroodID")
 
+#NO LONGER NEEDED WITH FILTER DONE ABOVE
   # 4.3) Remove chick measurement data when chick age was outside the 14-16 day window
-  Brood_data$AvgChickMass[which(!between(Brood_data$ChickAge, 14, 16))] <- NA_real_
-  Brood_data$NumberChicksMass[which(!between(Brood_data$ChickAge, 14, 16))] <- NA_integer_
-  Brood_data$AvgTarsus[which(!between(Brood_data$ChickAge, 14, 16))] <- NA_real_
-  Brood_data$NumberChicksTarsus[which(!between(Brood_data$ChickAge, 14, 16))] <- NA_integer_
+  #Brood_data$AvgChickMass[which(!between(Brood_data$ChickAge, 14, 16))] <- NA_real_
+  #Brood_data$NumberChicksMass[which(!between(Brood_data$ChickAge, 14, 16))] <- NA_integer_
+  #Brood_data$AvgTarsus[which(!between(Brood_data$ChickAge, 14, 16))] <- NA_real_
+  #Brood_data$NumberChicksTarsus[which(!between(Brood_data$ChickAge, 14, 16))] <- NA_integer_
 
   # 5) Add columns without data
   Brood_data <- Brood_data %>%
