@@ -21,19 +21,16 @@
 #'
 #' @examples
 #' library(dplyr)
-#' set.seed(666)
 #' Brood_data <- tibble::tibble(BroodID = c(1:10), LocationID = LETTERS[c(1,3,1,1,2,3,1,2,1,2)],
 #'                              BreedingSeason = sort(sample(2012:2016, 10, replace = TRUE)))
+#' calc_birdNBuse(Brood_data)
 calc_birdNBuse <- function(Brood_data){
 
   output <- Brood_data %>%
-    dplyr::arrange(LocationID, BreedingSeason) %>%
     dplyr::group_by(LocationID) %>%
-    dplyr::mutate(StartSeason  = as.integer(first(BreedingSeason)),
-                  EndSeason  = as.integer(last(BreedingSeason))) %>%
-    dplyr::ungroup() %>%
-    dplyr::select(LocationID, StartSeason, EndSeason) %>%
-    base::unique()
+    dplyr::summarise(StartSeason  = as.integer(min(BreedingSeason)),
+                  EndSeason  = as.integer(max(BreedingSeason))) %>%
+    dplyr::ungroup()
 
   return(output)
 

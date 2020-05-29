@@ -194,7 +194,7 @@ create_brood_PFN <- function(Primary_data){
                     ClutchSizeError = NA_real_,
                     HatchDateError = NA_real_,
                     BroodSizeError = NA_real_,
-                    FledgeDate = as.Date(NA, format = "%d/%m/%Y"),
+                    FledgeDate = as.Date(NA),
                     FledgeDateError = NA_real_,
                     NumberFledgedError = NA_real_,
                     AvgEggMass =  NA_real_,
@@ -410,7 +410,6 @@ create_individual_PFN <- function(Capture_data){
 
   #Take capture data and determine summary data for each individual
   Indv_data <- Capture_data %>%
-    dplyr::filter(!is.na(IndvID)) %>%
     dplyr::arrange(IndvID, BreedingSeason, CaptureDate, CaptureTime) %>%
     dplyr::group_by(IndvID) %>%
 
@@ -553,4 +552,3 @@ mean_countObs <- function(x){
 #---------------------------------------
 # NOTES:
 # Automatically add template for function documentation: cmd+alt+shift+R ("Insert Roxygen Skeleton")
-
