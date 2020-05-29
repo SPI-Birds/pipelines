@@ -1,6 +1,42 @@
-#' Title
+#' Construct standard format for data from East Dartmoor, UK
 #'
-#'Brief description
+#'A pipeline to produce the standard format for the hole-nesting bird population
+#'in East Dartmoor, UK, administered by PiedFlyNet.
+#'
+#'This section provides details on data management choices that are unique to
+#'this data. For a general description of the standard protocl please see
+#'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
+#'
+#'\strong{Species}: By default, pipeline outputs will include great tit \emph{Parus
+#'major}; blue tit \emph{Cyanistes caeruleus}; pied flycatcher \emph{Ficedula
+#'hypoleuca}; Eurasian nuthatch \emph{Sitta europaea}; coal tit \emph{Periparus
+#'ater}; marsh tit \emph{Poecile palustris}, and common redstart \emph{Phoenicurus phoenicurus}.
+#'Other minority species are excluded.
+#'
+#'\strong{Capture data}: Capture data is extracted directly from information on broods, separately for
+#'males, females, and chicks, and then merged. Ringing data (first capture) therefore usually comes
+#'from chick capture data, while recaptures come from captures of parents at the nests.
+#'
+#'\strong{Unidentified individuals}: Some individuals have not been given unique IDs. They appear
+#'in the primary data as: "RUNT", "ringed", "ringed left", "ringed right", "unringed", or "Unringed".
+#'In the Brood data, we assume unknown identity and treat ID as NA. From Capture data and Individual
+#'data, these individuals are omitted entirely.
+#'
+#'\strong{LayDate and HatchDate}: Information is provided as date of first egg (DFE) and
+#'date of hatching (DH). These are given as integer number, and represent days after a set
+#'starting date (day 0). Day 0 is assumed to be 31. March every year (to be confirmed).
+#'
+#'\strong{Age}: Adult individuals are only recorded as being either the breeding male or breeding females.
+#'The observed age for all adults is therefore EURING code 4: adult with otherwise unknown age. When possible,
+#'we calculate age more specifically using information on previous captures, and hatch date for individuals
+#'ringed as chicks (see below).
+#'
+#'\strong{ChickAge}: For every capture, we estimate the age of a chick as the difference between the hatch date
+#'taken from BroodIDFledged (in Individual_data) and the CaptureDate.
+#'
+#'\strong{Location Start- and EndSeason}: The first and last breeding seasons in which specific locations
+#'(nestboxes) were used are defined from the perspective of the birds, not the researchers, i.e. StartSeason
+#' and EndSeason of a nestbox represent the first and last breeding season in which birds bred in it.
 #'
 #'@inheritParams pipeline_params
 #'
