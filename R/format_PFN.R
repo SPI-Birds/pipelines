@@ -409,7 +409,6 @@ create_individual_PFN <- function(Capture_data){
 
   #Take capture data and determine summary data for each individual
   Indv_data <- Capture_data %>%
-    dplyr::filter(!is.na(IndvID)) %>%
     dplyr::arrange(IndvID, BreedingSeason, CaptureDate, CaptureTime) %>%
     dplyr::group_by(IndvID) %>%
 
