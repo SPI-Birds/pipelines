@@ -192,7 +192,7 @@ create_brood_PFN <- function(db){
                     ClutchSizeError = NA_real_,
                     HatchDateError = NA_real_,
                     BroodSizeError = NA_real_,
-                    FledgeDate = as.Date(NA, format = "%d/%m/%Y"),
+                    FledgeDate = as.Date(NA),
                     FledgeDateError = NA_real_,
                     NumberFledgedError = NA_real_,
                     AvgEggMass =  NA_real_,
@@ -552,4 +552,3 @@ mean_countObs <- function(x){
 #---------------------------------------
 # NOTES:
 # Automatically add template for function documentation: cmd+alt+shift+R ("Insert Roxygen Skeleton")
-
