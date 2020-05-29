@@ -27,13 +27,10 @@
 calc_birdNBuse <- function(Brood_data){
 
   output <- Brood_data %>%
-    dplyr::arrange(LocationID, BreedingSeason) %>%
     dplyr::group_by(LocationID) %>%
-    dplyr::mutate(StartSeason  = as.integer(first(BreedingSeason)),
-                  EndSeason  = as.integer(last(BreedingSeason))) %>%
-    dplyr::ungroup() %>%
-    dplyr::select(LocationID, StartSeason, EndSeason) %>%
-    base::unique()
+    dplyr::summarise(StartSeason  = as.integer(min(BreedingSeason)),
+                  EndSeason  = as.integer(max(BreedingSeason))) %>%
+    dplyr::ungroup()
 
   return(output)
 
