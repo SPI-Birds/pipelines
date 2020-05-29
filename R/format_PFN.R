@@ -159,13 +159,13 @@ create_brood_PFN <- function(Primary_data){
                   BroodSize = as.integer(Hatch),
                   NumberFledged = as.integer(Fledged),
                   ChickAge = as.integer(as.Date(YoungDate, format = "%d/%m/%Y") - HatchDate)) %>%
-                  
+
     # 4) Add columns that are based on calculations
     dplyr::arrange(BreedingSeason, FemaleID, LayDate)
     # --> This sorting is required for the function "calc_clutchtype" to work
 
     # 4.1) Calculate means and observation numbers for fledgling weight/tarsus length
-Brood_averages <- Brood_data %>% 
+    Brood_averages <- Brood_data %>%
     dplyr::filter(between(ChickAge, 14, 16)) %>%  #Remove chicks outside the age range
     dplyr::select(BroodID, contains("Weight."), contains("Tarsus.")) %>% #Select only weight and tarsus cols
     tidyr::pivot_longer(cols = -BroodID) %>%  #Rearrange so they're individual rows rather than individual columns
@@ -175,23 +175,19 @@ Brood_averages <- Brood_data %>%
     dplyr::summarise(Avg = mean(as.numeric(value), na.rm = TRUE), Number = n()) %>% #Extract the mean and sample size
     tidyr::pivot_wider(names_from = name, values_from = c(Avg, Number), names_sep = "") %>% #Move this back into cols so we have AvgChickMass, NumberChickMass etc.
     dplyr::ungroup()
-    
+
     # 4.2) Add calculated columns
     Brood_data <- Brood_data %>%
       dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = Brood_data, na.rm = FALSE),
                     NumberEggs = as.integer(Hatch) + as.integer(UnHatch)) %>%
       dplyr::left_join(Brood_averages, by = "BroodID")
 
-#NO LONGER NEEDED WITH FILTER DONE ABOVE
-  # 4.3) Remove chick measurement data when chick age was outside the 14-16 day window
-  #Brood_data$AvgChickMass[which(!between(Brood_data$ChickAge, 14, 16))] <- NA_real_
-  #Brood_data$NumberChicksMass[which(!between(Brood_data$ChickAge, 14, 16))] <- NA_integer_
-  #Brood_data$AvgTarsus[which(!between(Brood_data$ChickAge, 14, 16))] <- NA_real_
-  #Brood_data$NumberChicksTarsus[which(!between(Brood_data$ChickAge, 14, 16))] <- NA_integer_
 
-  # 5) Add columns without data
+  # 5) Rename chick sample size columns and add columns without data
   Brood_data <- Brood_data %>%
-      dplyr::mutate(LayDateError = NA_real_,
+      dplyr::mutate(NumberChicksMass = NumberChickMass,
+                    NumberChicksTarsus = NumberTarsus,
+                    LayDateError = NA_real_,
                     ClutchSizeError = NA_real_,
                     HatchDateError = NA_real_,
                     BroodSizeError = NA_real_,
@@ -238,7 +234,8 @@ Brood_averages <- Brood_data %>%
   LayDate <- LayDateError <- ClutchSize <- ClutchSizeError <- NULL
   HatchDate <- HatchDateError <- BroodSize <- BroodSizeError <- NULL
   FledgeDate <- FledgeDateError <- NumberFledged <- NumberFledgedError <- NULL
-  AvgEggMass <- NumberEggs <- AvgChickMass <- AvgTarsus <- NumberChicksTarsus <- NULL
+  AvgEggMass <- AvgChickMass <- AvgTarsus <- NULL
+  NumberEggs <- NumberChicksMass <- NumberChicksTarsus <- NumberChickMass <- NumberTarsus <- NULL
   OriginalTarsusMethod <- ExperimentID <- NULL
 
   Year <- Box <- Popn <- CltCd <- CltSize <- Hatch <- Fledged <- Success <- NULL
@@ -525,29 +522,6 @@ create_location_PFN <- function(Brood_data){
 
 }
 
-
-
-# HELPER FUNCTIONS
-#------------------
-
-#' Return mean and number of observations of a data vector
-#'
-#' @param x A single row of relevant columns in a data frame
-#'
-#' @return A vector containing a calculated mean and a number of observations
-
-mean_countObs <- function(x){
-
-  mean <- mean(as.numeric(x), na.rm = T)
-
-  if(is.nan(mean)){
-    mean <- NA_real_
-  }
-
-  noObs <- length(which(!is.na(x)))
-
-  return(c(mean, noObs))
-}
 
 
 #---------------------------------------
