@@ -28,17 +28,20 @@ format_PFN <- function(db,
   #Record start time to estimate processing time.
   start_time <- Sys.time()
 
+  #Load primary data
+  Primary_data <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_EDartmoor.csv"), na.strings = c("", "?"),
+                                colClasses = "character")
   # CAPTURE DATA
 
   message("Compiling capture data....")
 
-  Capture_data <- create_capture_PFN(db = db)
+  Capture_data <- create_capture_PFN(Primary_data = Primary_data)
 
   # BROOD DATA
 
   message("Compiling brood data...")
 
-  Brood_data <- create_brood_PFN(db = db)
+  Brood_data <- create_brood_PFN(Primary_data = Primary_data)
 
   # INDIVIDUAL DATA
 
@@ -106,12 +109,12 @@ format_PFN <- function(db,
 
 #' Create brood data table for EastDartmoor.
 #'
-#' @param db Location of primary data from EastDartmoor.
+#' @param Primary_data Primary data from EastDartmoor.
 #'
 #' @return A data frame with Brood data
 
 
-create_brood_PFN <- function(db){
+create_brood_PFN <- function(Primary_data){
 
   ## Pre) Determine a vector of "bad" (nonconclusive) IDs
   #This will be used downstream in point 7)
@@ -122,8 +125,7 @@ create_brood_PFN <- function(db){
   #Even though some columns (e.g. date) work well, they may be broken with newer data.
   #Using text and converting manually should be more robust to data changes
 
-    Brood_data <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_EDartmoor.csv"), na.strings = c("", "?"),
-                                    colClasses = "character") %>%
+    Brood_data <- Primary_data %>%
 
     ## 1) Rename columns that are equivalent (content and format) to columns in the standard format
     dplyr::rename(Plot = Popn,
@@ -252,14 +254,13 @@ create_brood_PFN <- function(db){
 
 #' Create capture data table for EastDartmoor.
 #'
-#' @param db Location of primary data from EastDartmoor.
+#' @param Primary_data Primary data from EastDartmoor.
 #'
 #' @return A data frame with Capture data
 
-create_capture_PFN <- function(db){
+create_capture_PFN <- function(Primary_data){
 
-  Capture_data <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_EDartmoor.csv"), na.strings = c("", "?"),
-                           colClasses = "character")
+  Capture_data <- Primary_data
 
   # 1) Male capture data
   Male_Capture_data <- data.frame(IndvID = Capture_data$MaleID,
