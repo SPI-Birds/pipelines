@@ -110,6 +110,9 @@ format_AMM <- function(db = choose_directory(),
   #Remove BroodID, no longer needed
   Capture_data <- dplyr::select(Capture_data, -.data$BroodID)
 
+  #Disconnect from database
+  DBI::dbDisconnect(connection)
+
   # EXPORT DATA
 
   time <- difftime(Sys.time(), start_time, units = "sec")
