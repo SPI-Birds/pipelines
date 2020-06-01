@@ -3,13 +3,15 @@
 \name{Species_codes}
 \alias{Species_codes}
 \title{Species EURING codes and letter codes}
-\format{A data frame with 10 rows and 4 variables
+\format{
+A data frame with 10 rows and 4 variables
 \describe{
   \item{SpeciesID}{Species EUring code.}
   \item{Code}{Species letter code.}
   \item{CommonName}{Common English name.}
   \item{BinomialName}{Genus and species name.}
-  }}
+  }
+}
 \description{
 Letter codes to easily identify species (English names)
 }

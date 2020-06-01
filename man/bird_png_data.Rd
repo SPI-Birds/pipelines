@@ -3,13 +3,15 @@
 \name{bird_png_data}
 \alias{bird_png_data}
 \title{Details for plotting png files of birds}
-\format{A data frame with 6 rows and 5 variables
+\format{
+A data frame with 6 rows and 5 variables
 \describe{
  \item{species}{Six-letter species code.}
  \item{label}{English common name of species, used to create labels below .png files.}
  \item{scale}{Size of png relative to the size of great tit.}
  \item{base_colour}{Colour used to plot data from this species (based on plumage colour).}
- \item{top_colour}{Secondary colour used to plot data from this species (based on plumage colour).}}}
+ \item{top_colour}{Secondary colour used to plot data from this species (based on plumage colour).}}
+}
 \description{
 Details for plotting png files of birds
 }

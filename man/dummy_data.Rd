@@ -3,13 +3,15 @@
 \name{dummy_data}
 \alias{dummy_data}
 \title{Quality check dummy data}
-\format{A list of 4 data frames:
+\format{
+A list of 4 data frames:
 \itemize{
    \item{Brood_data}
    \item{Capture_data}
    \item{Individual_data}
    \item{Location_data}
-}}
+}
+}
 \description{
 A dummy pipeline output specifically created to test single checks from \code{\link{quality_check}}. See a detailed description of which rows correspond to which checks in 'Details'.
 }

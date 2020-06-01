@@ -3,7 +3,9 @@
 \name{GT_dist_gg}
 \alias{GT_dist_gg}
 \title{Spatial data polygon of great tit distribution.}
-\format{A spatial data polygon.}
+\format{
+A spatial data polygon.
+}
 \description{
 Distribution of great tits used for plotting all populations.
 }
