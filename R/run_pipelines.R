@@ -100,10 +100,9 @@ run_pipelines <- function(path = choose_directory(),
   pop_species_subset <- pop_species_combos %>%
     dplyr::filter(pop %in% PopID & species %in% Species) %>%
     dplyr::left_join(dplyr::select(pop_names, code, owner), by = c("pop" = "code")) %>%
-    dplyr::group_by(owner, pop) %>%
-    dplyr::summarise(species = list(c(species))) %>%
-    dplyr::summarise(species = first(species),
-                     pops = list(c(pop)))
+    dplyr::group_by(owner) %>%
+    dplyr::summarise(species = list(c(unique(species))),
+                     pops = list(c(unique(pop))))
 
   #Find the file path for each of the data owners of interest
   all_dirs <- list.dirs(path = path, full.names = TRUE, recursive = FALSE)

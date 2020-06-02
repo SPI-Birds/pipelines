@@ -12,8 +12,8 @@ if(file.exists("../../inst/extdata/test_data.RDS")){
   pipeline_output <- run_pipelines(path = choose_directory(),
                                    PopID = c("SSQ", "BAN", "VEL", "CHO", "MUR", "PIR", "ROU", "MON", "MTV", "MIS", "HOC",
                                              "HOG", "OOS", "VLI", "BUU", "LIE", "WAR", "WES", "KEV", "HAR", "PEE", "BOS",
-                                             "WYT"),
-                                   output_type = "R")
+                                             "WYT", "AMM"),
+                                   output_type = "R", save_path = choose_directory())
 
 }
 

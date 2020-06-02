@@ -108,7 +108,8 @@ format_AMM <- function(db = choose_directory(),
                   .data$NumberChicksTarsus, .data$OriginalTarsusMethod, .data$ExperimentID)
 
   #Remove BroodID, no longer needed
-  Capture_data <- dplyr::select(Capture_data, -.data$BroodID)
+  Capture_data <- Capture_data %>%
+    dplyr::select(.data$IndvID:.data$Age_observed, .data$Age_calculated, .data$ChickAge)
 
   #Disconnect from database
   DBI::dbDisconnect(connection)
@@ -340,6 +341,8 @@ create_capture_AMM <- function(Brood_data, connection) {
     calc_age(ID = .data$IndvID, Age = .data$Age_observed,
              Date = .data$CaptureDate, Year = .data$BreedingSeason)
 
+  Capture_data
+
 }
 
 #' Create individual data table for Ammersee, Germany
@@ -409,22 +412,28 @@ create_location_AMM <- function(Capture_data, connection) {
 
   start_year <- min(Capture_data$BreedingSeason)
 
-  dplyr::tbl(connection, "NestBoxes") %>%
+  Location_data <- dplyr::tbl(connection, "NestBoxes") %>%
     dplyr::collect() %>%
     dplyr::filter(.data$NestBox != -99L) %>%
-    dplyr::mutate(LocationType = "NB",
+    dplyr::mutate(LocationID = as.character(.data$NestBox),
+                  NestboxID = as.character(.data$NestBox),
+                  Latitude = as.numeric(.data$CoordinateLatitude2013), ## Needed because these variables are stored as
+                  Longitude = as.numeric(.data$CoordinateLongitude2013), ## named vectors, not regular numeric vectors
+                  LocationType = "NB",
                   PopID = "AMM",
                   StartSeason = start_year,
                   EndSeason = NA_integer_,
                   Habitat = NA_character_) %>% #FIXME: Ask Niels about habitat type
-    dplyr::select(LocationID = .data$NestBox,
-                  NestboxID = .data$NestBox,
+    dplyr::select(.data$LocationID,
+                  .data$NestboxID,
                   .data$LocationType,
                   .data$PopID,
-                  Latitude = .data$CoordinateLatitude2013,
-                  Longitude = .data$CoordinateLongitude2013,
+                  .data$Latitude,
+                  .data$Longitude,
                   .data$StartSeason,
                   .data$EndSeason,
                   .data$Habitat)
+
+  Location_data
 
 }
