@@ -313,7 +313,7 @@ check_values_capture <- function(Capture_data, var) {
                                                      | Capture_data2[,which(colnames(Capture_data2) == .y[3])] > .x$Value[4]))
 
                                      Capture_data2[sel,] %>%
-                                       dplyr::select(Row, Value = !!.y[3], ChickAge) %>%
+                                       dplyr::select(Row, CaptureID, Value = !!.y[3], ChickAge) %>%
                                        dplyr::mutate(Species = .y[1],
                                                      Age = .y[2],
                                                      Variable = .y[3])
@@ -327,17 +327,25 @@ check_values_capture <- function(Capture_data, var) {
     dplyr::arrange(Species, Age, ChickAge, Variable)
 
   err <- FALSE
+  error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
   if(nrow(Capture_err) > 0) {
     err <- TRUE
 
-    error_output <- purrr::pmap(.l = Capture_err,
+    # Compare to whitelist
+    error_records <- Capture_err %>%
+      dplyr::mutate(PopID = unique(Capture_data$CapturePopID),
+                    CheckID = checkID_var[checkID_var$Var == var,]$CheckID) %>%
+      dplyr::anti_join(whitelist$Capture_whitelist, by=c("PopID", "CheckID", "CaptureID"))
+
+    # Create quality check report statements
+    error_output <- purrr::pmap(.l = error_records,
                                 .f = ~{
                                   paste0("Record on row ", ..1,
-                                         " (", Species_codes[Species_codes$Code == ..4, "CommonName"], " ",
-                                         ..5, ")",
-                                         " has an impossible value in ", ..6, " (", ..2, ").")
+                                         " (CaptureID: ", ..2, "; ",
+                                         Species_codes[Species_codes$Code == ..5, "CommonName"], " ", ..6, ")",
+                                         " has an impossible value in ", ..7, " (", ..3, ").")
                                 })
 
   }
@@ -361,7 +369,7 @@ check_values_capture <- function(Capture_data, var) {
                                                     & Capture_data2[,which(colnames(Capture_data2) == .y[3])] <= .x$Value[4])))
 
                                  Capture_data2[sel,] %>%
-                                   dplyr::select(Row, Value = !!.y[3], ChickAge) %>%
+                                   dplyr::select(Row, CaptureID, Value = !!.y[3], ChickAge) %>%
                                    dplyr::mutate(Species = .y[1],
                                                  Age = .y[2],
                                                  Variable = .y[3])
@@ -407,7 +415,7 @@ check_values_capture <- function(Capture_data, var) {
                                      which()
 
                                    Capture_data3[sel,] %>%
-                                     dplyr::select(Row, Value = !!.y[3], ChickAge) %>%
+                                     dplyr::select(Row, CaptureID, Value = !!.y[3], ChickAge) %>%
                                      dplyr::mutate(Species = .y[1],
                                                    Age = .y[2],
                                                    Variable = .y[3])
@@ -421,7 +429,7 @@ check_values_capture <- function(Capture_data, var) {
                                                       & Capture_data2[,which(colnames(Capture_data2) == .y[3])] <= .x$Value[4])))
 
                                    Capture_data2[sel,] %>%
-                                     dplyr::select(Row, Value = !!.y[3], ChickAge) %>%
+                                     dplyr::select(Row, CaptureID, Value = !!.y[3], ChickAge) %>%
                                      dplyr::mutate(Species = .y[1],
                                                    Age = .y[2],
                                                    Variable = .y[3])
@@ -435,44 +443,52 @@ check_values_capture <- function(Capture_data, var) {
     dplyr::arrange(Species, Age, ChickAge, Variable)
 
   war <- FALSE
+  warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
   if(nrow(Capture_war) > 0) {
     war <- TRUE
 
-    warning_output <- purrr::pmap(.l = Capture_war,
+    # Compare to whitelist
+    warning_records <- Capture_war %>%
+      dplyr::mutate(PopID = unique(Capture_data$CapturePopID),
+                    CheckID = checkID_var[checkID_var$Var == var,]$CheckID) %>%
+      dplyr::anti_join(whitelist$Capture_whitelist, by=c("PopID", "CheckID", "CaptureID"))
+
+    # Create quality check report statements
+    warning_output <- purrr::pmap(.l = warning_records,
                                   .f = ~{
 
-                                    if(..4 %in% c("PARMAJ", "CYACAE") & ..5 == "Chick" & ..6 == "Mass"){
+                                    if(..5 %in% c("PARMAJ", "CYACAE") & ..6 == "Chick" & ..7 == "Mass"){
 
-                                      wmin <- capture_ref_values[[paste(..4, ..5, ..6, sep="_")]] %>%
-                                        dplyr::filter(ChickAge == ..3 & Reference == "Warning_min") %>%
+                                      wmin <- capture_ref_values[[paste(..5, ..6, ..7, sep="_")]] %>%
+                                        dplyr::filter(ChickAge == ..4 & Reference == "Warning_min") %>%
                                         dplyr::pull(Value)
 
-                                      wmax <- capture_ref_values[[paste(..4, ..5, ..6, sep="_")]] %>%
-                                        dplyr::filter(ChickAge == ..3 & Reference == "Warning_max") %>%
+                                      wmax <- capture_ref_values[[paste(..5, ..6, ..7, sep="_")]] %>%
+                                        dplyr::filter(ChickAge == ..4 & Reference == "Warning_max") %>%
                                         dplyr::pull(Value)
 
                                       paste0("Record on row ", ..1,
-                                             " (", Species_codes[Species_codes$Code == ..4, "CommonName"], " ",
-                                             tolower(..5), ")",
+                                             " (CaptureID: ", ..2, "; ",
+                                             Species_codes[Species_codes$Code == ..5, "CommonName"], " ", tolower(..6), ")",
                                              " has an unusually ",
-                                             ifelse(..2 < wmin,
-                                                    paste0("low value in ", ..6, " (", ..2, " < ", round(wmin, 2)),
-                                                    paste0("high value in ", ..6, " (", ..2, " > ", round(wmax, 2))),
-                                             ") for its age (", ..3, ").")
+                                             ifelse(..3 < wmin,
+                                                    paste0("low value in ", ..7, " (", ..3, " < ", round(wmin, 2)),
+                                                    paste0("high value in ", ..7, " (", ..3, " > ", round(wmax, 2))),
+                                             ") for its age (", ..4, ").")
 
                                     } else {
 
                                       paste0("Record on row ", ..1,
-                                             " (", Species_codes[Species_codes$Code == ..4, "CommonName"], " ",
-                                             tolower(..5), ")",
+                                             " (CaptureID: ", ..2, "; ",
+                                             Species_codes[Species_codes$Code == ..5, "CommonName"], " ", tolower(..6), ")",
                                              " has an unusually ",
-                                             ifelse(..2 < capture_ref_values[[paste(..4, ..5, ..6, sep="_")]]$Value[1],
-                                                    paste0("low value in ", ..6, " (", ..2, " < ",
-                                                           capture_ref_values[[paste(..4, ..5, ..6, sep="_")]]$Value[1]),
-                                                    paste0("high value in ", ..6, " (", ..2, " > ",
-                                                           capture_ref_values[[paste(..4, ..5, ..6, sep="_")]]$Value[2])),
+                                             ifelse(..3 < capture_ref_values[[paste(..5, ..6, ..7, sep="_")]]$Value[1],
+                                                    paste0("low value in ", ..7, " (", ..3, " < ",
+                                                           capture_ref_values[[paste(..5, ..6, ..7, sep="_")]]$Value[1]),
+                                                    paste0("high value in ", ..7, " (", ..3, " > ",
+                                                           capture_ref_values[[paste(..5, ..6, ..7, sep="_")]]$Value[2])),
                                              ").")
 
                                     }
@@ -484,8 +500,8 @@ check_values_capture <- function(Capture_data, var) {
                                Error = err)
 
   return(list(CheckList = check_list,
-              WarningRows = Capture_war$Row,
-              ErrorRows = Capture_err$Row,
+              WarningRows = warning_records$Row,
+              ErrorRows = error_records$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 
@@ -515,12 +531,20 @@ check_chick_age <- function(Capture_data){
     dplyr::select(Row, Species, ChickAge)
 
   err <- FALSE
+  error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
   if(nrow(Chick_age_err) > 0) {
     err <- TRUE
 
-    error_output <- purrr::pmap(.l = Chick_age_err,
+    # Compare to whitelist
+    error_records <- Chick_age_err %>%
+      dplyr::mutate(PopID = unique(Capture_data$PopID),
+                    CheckID = "C3") %>%
+      dplyr::anti_join(whitelist$Capture_whitelist, by=c("PopID", "CheckID", "CaptureID"))
+
+    # Create quality check report statements
+    error_output <- purrr::pmap(.l = error_records,
                                 .f = ~{
                                   paste0("Record on row ", ..1,
                                          " (", Species_codes[Species_codes$Code == ..2, "CommonName"], ")",
@@ -530,6 +554,7 @@ check_chick_age <- function(Capture_data){
 
   # No warnings
   war <- FALSE
+  #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
   check_list <- tibble::tibble(Warning = war,
@@ -537,7 +562,7 @@ check_chick_age <- function(Capture_data){
 
   return(list(CheckList = check_list,
               WarningRows = NULL,
-              ErrorRows = Chick_age_err$Row,
+              ErrorRows = error_records$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 }

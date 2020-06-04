@@ -49,6 +49,9 @@ quality_check <- function(R_data,
   Individual_data <- R_data$Individual_data
   Location_data <- R_data$Location_data
 
+  # Add temporary empty CaptureID column to allow whitelisting procedure
+  Capture_data$CaptureID <- NA_character_
+
   # Run checks
   Brood_checks <- brood_check(Brood_data, Individual_data, check_format)
   Capture_checks <- capture_check(Capture_data, check_format)
