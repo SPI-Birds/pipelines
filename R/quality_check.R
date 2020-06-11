@@ -50,7 +50,7 @@ quality_check <- function(R_data,
   Location_data <- R_data$Location_data
 
   # Add temporary empty CaptureID column to allow whitelisting procedure
-  Capture_data$CaptureID <- NA_character_
+  Capture_data$CaptureID <- NA_character_ ##FIXME remove after CaptureID column has been added in pipelines
 
   # Run checks
   Brood_checks <- brood_check(Brood_data, Individual_data, check_format)
