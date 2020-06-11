@@ -49,7 +49,7 @@ quality_check <- function(R_data,
   Individual_data <- R_data$Individual_data
   Location_data <- R_data$Location_data
 
-  # Add temporary empty CaptureID column to allow whitelisting procedure
+  # Add temporary empty CaptureID column to allow procedure to approve previously flagged records
   Capture_data$CaptureID <- NA_character_ ##FIXME remove after CaptureID column has been added in pipelines
 
   # Run checks

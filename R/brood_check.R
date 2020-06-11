@@ -348,10 +348,10 @@ compare_clutch_brood <- function(Brood_data){
   if(nrow(Brood_data_non) > 0) {
     err <- TRUE
 
-    # Compare to whitelist
+    # Compare to approved_list
     error_records <- Brood_data_non %>%
       dplyr::mutate(CheckID = "B2") %>%
-      dplyr::anti_join(whitelist$Brood_whitelist, by=c("PopID", "CheckID", "BroodID"))
+      dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
     error_output <- purrr::pmap(.l = list(error_records$Row,
@@ -374,10 +374,10 @@ compare_clutch_brood <- function(Brood_data){
   if(nrow(Brood_data_man) > 0) {
     war <- TRUE
 
-    # Compare to whitelist
+    # Compare to approved_list
     warning_records <- Brood_data_man %>%
       dplyr::mutate(CheckID = "B2") %>%
-      dplyr::anti_join(whitelist$Brood_whitelist, by=c("PopID", "CheckID", "BroodID"))
+      dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
     warning_output <- purrr::pmap(.l = list(warning_records$Row,
@@ -436,10 +436,10 @@ compare_brood_fledglings <- function(Brood_data){
   if(nrow(Brood_data_non) > 0) {
     err <- TRUE
 
-    # Compare to whitelist
+    # Compare to approved_list
     error_records <- Brood_data_non %>%
       dplyr::mutate(CheckID = "B3") %>%
-      dplyr::anti_join(whitelist$Brood_whitelist, by=c("PopID", "CheckID", "BroodID"))
+      dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
     error_output <- purrr::pmap(.l = list(error_records$Row,
@@ -462,10 +462,10 @@ compare_brood_fledglings <- function(Brood_data){
   if(nrow(Brood_data_man) > 0) {
     war <- TRUE
 
-    # Compare to whitelist
+    # Compare to approved_list
     warning_records <- Brood_data_man %>%
       dplyr::mutate(CheckID = "B3") %>%
-      dplyr::anti_join(whitelist$Brood_whitelist, by=c("PopID", "CheckID", "BroodID"))
+      dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
     warning_output <- purrr::pmap(.l = list(warning_records$Row,
@@ -528,10 +528,10 @@ compare_laying_hatching <- function(Brood_data){
   if(nrow(Brood_data_late) > 0) {
     err <- TRUE
 
-    # Compare to whitelist
+    # Compare to approved_list
     error_records <- Brood_data_late %>%
       dplyr::mutate(CheckID = "B4") %>%
-      dplyr::anti_join(whitelist$Brood_whitelist, by=c("PopID", "CheckID", "BroodID"))
+      dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
     error_output <- purrr::pmap(.l = list(error_records$Row,
@@ -598,10 +598,10 @@ compare_hatching_fledging <- function(Brood_data){
   if(nrow(Brood_data_late) > 0) {
     err <- TRUE
 
-    # Compare to whitelist
+    # Compare to approved_list
     error_records <- Brood_data_late %>%
       dplyr::mutate(CheckID = "B5") %>%
-      dplyr::anti_join(whitelist$Brood_whitelist, by=c("PopID", "CheckID", "BroodID"))
+      dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
     error_output <- purrr::pmap(.l = list(error_records$Row,
@@ -691,10 +691,10 @@ check_values_brood <- function(Brood_data, var) {
   if(nrow(Brood_err) > 0) {
     err <- TRUE
 
-    # Compare to whitelist
+    # Compare to approved_list
     error_records <- Brood_err %>%
       dplyr::mutate(CheckID = checkID_var[checkID_var$Var == var,]$CheckID) %>%
-      dplyr::anti_join(whitelist$Brood_whitelist, by=c("PopID", "CheckID", "BroodID"))
+      dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
     error_output <- purrr::pmap(.l = error_records,
@@ -729,10 +729,10 @@ check_values_brood <- function(Brood_data, var) {
   if(nrow(Brood_war) > 0) {
     war <- TRUE
 
-    # Compare to whitelist
+    # Compare to approved_list
     warning_records <- Brood_war %>%
       dplyr::mutate(CheckID = checkID_var[checkID_var$Var == var,]$CheckID) %>%
-      dplyr::anti_join(whitelist$Brood_whitelist, by=c("PopID", "CheckID", "BroodID"))
+      dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
     warning_output <- purrr::pmap(.l = warning_records,
@@ -798,10 +798,10 @@ check_parent_species <- function(Brood_data, Individual_data) {
   if(nrow(Interspecific_broods) > 0) {
     err <- TRUE
 
-    # Compare to whitelist
+    # Compare to approved_list
     error_records <- Interspecific_broods %>%
       dplyr::mutate(CheckID = "B7") %>%
-      dplyr::anti_join(whitelist$Brood_whitelist, by=c("PopID", "CheckID", "BroodID"))
+      dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
     error_output <- purrr::pmap(.l = error_records,
@@ -867,10 +867,10 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data) {
   if(nrow(Brood_err) > 0) {
     err <- TRUE
 
-    # Compare to whitelist
+    # Compare to approved_list
     error_records <- Brood_err %>%
       dplyr::mutate(CheckID = "B8") %>%
-      dplyr::anti_join(whitelist$Brood_whitelist, by=c("PopID", "CheckID", "BroodID"))
+      dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
     error_output <- purrr::pmap(.l = error_records,
@@ -897,10 +897,10 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data) {
   if(nrow(Brood_war) > 0) {
     war <- TRUE
 
-    # Compare to whitelist
+    # Compare to approved_list
     warning_records <- Brood_war %>%
       dplyr::mutate(CheckID = "B8") %>%
-      dplyr::anti_join(whitelist$Brood_whitelist, by=c("PopID", "CheckID", "BroodID"))
+      dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
     warning_output <- purrr::pmap(.l = warning_records,
@@ -951,7 +951,7 @@ check_unique_BroodID <- function(Brood_data){
     # Compare to whitelist
     error_records <- Duplicated %>%
       dplyr::mutate(CheckID = "B9") %>%
-      dplyr::anti_join(whitelist$Brood_whitelist, by=c("PopID", "CheckID", "BroodID"))
+      dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
     error_output <- purrr::map(.x = unique(error_records$BroodID),

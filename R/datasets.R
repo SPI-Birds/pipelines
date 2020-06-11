@@ -152,16 +152,16 @@ NULL
 #' @name dummy_data
 NULL
 
-#' Whitelist of records to be used in quality check
+#' List of verified records to exempted from future quality check
 #'
-#' Whitelist of records that were flagged as warning/error but have been verified by the data owner to be correct.
+#' List of records that were flagged as warning/error but have been verified by the data owner to be correct.
 #'
 #' @format A list of 4 data frames:
 #' \itemize{
-#'    \item{Brood_whitelist}
-#'    \item{Capture_whitelist}
-#'    \item{Individual_whitelist}
-#'    \item{Location_whitelist}
+#'    \item{Brood_approved_list}
+#'    \item{Capture_approved_list}
+#'    \item{Individual_approved_list}
+#'    \item{Location_approved_list}
 #' }
 #'
 #' Each data frame has 3 variables:
@@ -171,7 +171,7 @@ NULL
 #'    \item{CheckID, unique identifier for individual quality check.}
 #' }
 #'
-#' @name whitelist
+#' @name approved_list
 NULL
 
 #' CheckIDs and variable names

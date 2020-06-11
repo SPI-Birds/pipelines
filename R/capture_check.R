@@ -333,10 +333,10 @@ check_values_capture <- function(Capture_data, var) {
   if(nrow(Capture_err) > 0) {
     err <- TRUE
 
-    # Compare to whitelist
+    # Compare to approved_list
     error_records <- Capture_err %>%
       dplyr::mutate(CheckID = checkID_var[checkID_var$Var == var,]$CheckID) %>%
-      dplyr::anti_join(whitelist$Capture_whitelist, by=c("PopID", "CheckID", "CaptureID"))
+      dplyr::anti_join(approved_list$Capture_approved_list, by=c("PopID", "CheckID", "CaptureID"))
 
     # Create quality check report statements
     error_output <- purrr::pmap(.l = error_records,
@@ -448,10 +448,10 @@ check_values_capture <- function(Capture_data, var) {
   if(nrow(Capture_war) > 0) {
     war <- TRUE
 
-    # Compare to whitelist
+    # Compare to approved_list
     warning_records <- Capture_war %>%
       dplyr::mutate(CheckID = checkID_var[checkID_var$Var == var,]$CheckID) %>%
-      dplyr::anti_join(whitelist$Capture_whitelist, by=c("PopID", "CheckID", "CaptureID"))
+      dplyr::anti_join(approved_list$Capture_approved_list, by=c("PopID", "CheckID", "CaptureID"))
 
     # Create quality check report statements
     warning_output <- purrr::pmap(.l = warning_records,
@@ -535,10 +535,10 @@ check_chick_age <- function(Capture_data){
   if(nrow(Chick_age_err) > 0) {
     err <- TRUE
 
-    # Compare to whitelist
+    # Compare to approved_list
     error_records <- Chick_age_err %>%
       dplyr::mutate(CheckID = "C3") %>%
-      dplyr::anti_join(whitelist$Capture_whitelist, by=c("PopID", "CheckID", "CaptureID"))
+      dplyr::anti_join(approved_list$Capture_approved_list, by=c("PopID", "CheckID", "CaptureID"))
 
     # Create quality check report statements
     error_output <- purrr::pmap(.l = error_records,

@@ -244,10 +244,10 @@ check_unique_IndvID <- function(Individual_data){
   if(nrow(Duplicated_within) > 0) {
     err <- TRUE
 
-    # Compare to whitelist
+    # Compare to approved_list
     error_records <- Duplicated_within %>%
       dplyr::mutate(CheckID = "I2") %>%
-      dplyr::anti_join(whitelist$Individual_whitelist, by=c("PopID", "CheckID", "IndvID"))
+      dplyr::anti_join(approved_list$Individual_approved_list, by=c("PopID", "CheckID", "IndvID"))
 
     # Create quality check report statements
     error_output <- purrr::map(.x = unique(error_records$IndvID),
@@ -279,10 +279,10 @@ check_unique_IndvID <- function(Individual_data){
   if(nrow(Duplicated_among) > 0) {
     war <- TRUE
 
-    # Compare to whitelist
+    # Compare to approved_list
     warning_records <- Duplicated_among %>%
       dplyr::mutate(CheckID = "I2") %>%
-      dplyr::anti_join(whitelist$Individual_whitelist, by=c("PopID", "CheckID", "IndvID"))
+      dplyr::anti_join(approved_list$Individual_approved_list, by=c("PopID", "CheckID", "IndvID"))
 
     # Create quality check report statements
     warning_output <- purrr::map(.x = unique(warning_records$IndvID),
@@ -350,10 +350,10 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data) {
   if(nrow(No_BroodID_nest) > 0) {
     err <- TRUE
 
-    # Compare to whitelist
+    # Compare to approved_list
     error_records <- No_BroodID_nest %>%
       dplyr::mutate(CheckID = "I3") %>%
-      dplyr::anti_join(whitelist$Individual_whitelist, by=c("PopID", "CheckID", "IndvID"))
+      dplyr::anti_join(approved_list$Individual_approved_list, by=c("PopID", "CheckID", "IndvID"))
 
     # Create quality check report statements
     error_output <- purrr::pmap(.l = error_records,
@@ -409,10 +409,10 @@ check_conflicting_sex <- function(Individual_data) {
   if(nrow(Conflicting_sex) > 0) {
     war <- TRUE
 
-    # Compare to whitelist
+    # Compare to approved_list
     warning_records <- Conflicting_sex %>%
       dplyr::mutate(CheckID = "I4") %>%
-      dplyr::anti_join(whitelist$Individual_whitelist, by=c("PopID", "CheckID", "IndvID"))
+      dplyr::anti_join(approved_list$Individual_approved_list, by=c("PopID", "CheckID", "IndvID"))
 
     # Create quality check report statements
     warning_output <- purrr::pmap(.l = warning_records,
@@ -458,10 +458,10 @@ check_conflicting_species <- function(Individual_data) {
   if(nrow(Conflicting_species) > 0) {
     err <- TRUE
 
-    # Compare to whitelist
+    # Compare to approved_list
     error_records <- Conflicting_sex %>%
       dplyr::mutate(CheckID = "I5") %>%
-      dplyr::anti_join(whitelist$Individual_whitelist, by=c("PopID", "CheckID", "IndvID"))
+      dplyr::anti_join(approved_list$Individual_approved_list, by=c("PopID", "CheckID", "IndvID"))
 
     # Create quality check report statements
     error_output <- purrr::pmap(.l = error_records,
