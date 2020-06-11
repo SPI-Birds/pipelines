@@ -4,9 +4,6 @@
 #' In each data frame, rows are specifically created to test single checks from \code{\link{quality_check}}.
 #' See a detailed description of which rows correspond to which checks in \code{\link{dummy_data}}.
 #'
-#'
-#' @param db File path. Location to save dummy data.
-#'
 #' @return
 #' List of 4 dataframes:
 #' \item{Brood_data}{Dummy brood data.}
@@ -16,7 +13,7 @@
 #'
 #' @export
 
-create_dummy_data <- function(db = choose_directory()) {
+create_dummy_data <- function() {
 
   # Create skeletons for each pipeline data frame
   # Brood data
@@ -340,7 +337,5 @@ create_dummy_data <- function(db = choose_directory()) {
                      Individual_data = Individual_data,
                      Location_data = Location_data)
 
-  save(dummy_data,
-       file = paste0(db, "\\dummy_data.rda"))
-
+  return(dummy_data)
 }

@@ -234,7 +234,8 @@ check_unique_IndvID <- function(Individual_data){
   # Select records with IndvIDs that are duplicated within populations
   Duplicated_within <- Individual_data %>%
     dplyr::group_by(PopID, IndvID) %>%
-    dplyr::filter(n() > 1)
+    dplyr::filter(n() > 1) %>%
+    dplyr::ungroup()
 
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
@@ -351,8 +352,7 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data) {
 
     # Compare to whitelist
     error_records <- No_BroodID_nest %>%
-      dplyr::mutate(PopID = unique(Individual_data$PopID),
-                    CheckID = "I3") %>%
+      dplyr::mutate(CheckID = "I3") %>%
       dplyr::anti_join(whitelist$Individual_whitelist, by=c("PopID", "CheckID", "IndvID"))
 
     # Create quality check report statements
@@ -411,8 +411,7 @@ check_conflicting_sex <- function(Individual_data) {
 
     # Compare to whitelist
     warning_records <- Conflicting_sex %>%
-      dplyr::mutate(PopID = unique(Individual_data$PopID),
-                    CheckID = "I4") %>%
+      dplyr::mutate(CheckID = "I4") %>%
       dplyr::anti_join(whitelist$Individual_whitelist, by=c("PopID", "CheckID", "IndvID"))
 
     # Create quality check report statements
@@ -451,32 +450,33 @@ check_conflicting_species <- function(Individual_data) {
   Conflicting_species <- Individual_data %>%
     dplyr::filter(Species == "CONFLICTED")
 
-  # No errors
+  # Errors
   err <- FALSE
-  #error_records <- tibble::tibble(Row = NA_character_)
+  error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  # Warnings
-  war <- FALSE
-  warning_records <- tibble::tibble(Row = NA_character_)
-  warning_output <- NULL
-
   if(nrow(Conflicting_species) > 0) {
-    war <- TRUE
+    err <- TRUE
 
     # Compare to whitelist
-    warning_records <- Conflicting_sex %>%
-      dplyr::mutate(PopID = unique(Individual_data$PopID),
-                    CheckID = "I5") %>%
+    error_records <- Conflicting_sex %>%
+      dplyr::mutate(CheckID = "I5") %>%
       dplyr::anti_join(whitelist$Individual_whitelist, by=c("PopID", "CheckID", "IndvID"))
 
     # Create quality check report statements
-    warning_output <- purrr::pmap(.l = warning_records,
-                                  .f = ~{
-                                    paste0("Record on row ", ..1," (IndvID: ", ..2, ")",
-                                           " has conflicting species.")
-                                  })
+    error_output <- purrr::pmap(.l = error_records,
+                                .f = ~{
+                                  paste0("Record on row ", ..1," (IndvID: ", ..2, ")",
+                                         " has conflicting species.")
+                                })
   }
+
+
+  # No warnings
+  war <- FALSE
+  #warning_records <- tibble::tibble(Row = NA_character_)
+  warning_output <- NULL
+
 
   check_list <- tibble::tibble(Warning = war,
                                Error = err)

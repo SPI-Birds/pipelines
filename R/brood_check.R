@@ -350,8 +350,7 @@ compare_clutch_brood <- function(Brood_data){
 
     # Compare to whitelist
     error_records <- Brood_data_non %>%
-      dplyr::mutate(PopID = unique(Brood_data$PopID),
-                    CheckID = "B2") %>%
+      dplyr::mutate(CheckID = "B2") %>%
       dplyr::anti_join(whitelist$Brood_whitelist, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
@@ -377,8 +376,7 @@ compare_clutch_brood <- function(Brood_data){
 
     # Compare to whitelist
     warning_records <- Brood_data_man %>%
-      dplyr::mutate(PopID = unique(Brood_data$PopID),
-                    CheckID = "B2") %>%
+      dplyr::mutate(CheckID = "B2") %>%
       dplyr::anti_join(whitelist$Brood_whitelist, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
@@ -440,8 +438,7 @@ compare_brood_fledglings <- function(Brood_data){
 
     # Compare to whitelist
     error_records <- Brood_data_non %>%
-      dplyr::mutate(PopID = unique(Brood_data$PopID),
-                    CheckID = "B3") %>%
+      dplyr::mutate(CheckID = "B3") %>%
       dplyr::anti_join(whitelist$Brood_whitelist, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
@@ -467,8 +464,7 @@ compare_brood_fledglings <- function(Brood_data){
 
     # Compare to whitelist
     warning_records <- Brood_data_man %>%
-      dplyr::mutate(PopID = unique(Brood_data$PopID),
-                    CheckID = "B3") %>%
+      dplyr::mutate(CheckID = "B3") %>%
       dplyr::anti_join(whitelist$Brood_whitelist, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
@@ -534,8 +530,7 @@ compare_laying_hatching <- function(Brood_data){
 
     # Compare to whitelist
     error_records <- Brood_data_late %>%
-      dplyr::mutate(PopID = unique(Brood_data$PopID),
-                    CheckID = "B4") %>%
+      dplyr::mutate(CheckID = "B4") %>%
       dplyr::anti_join(whitelist$Brood_whitelist, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
@@ -605,8 +600,7 @@ compare_hatching_fledging <- function(Brood_data){
 
     # Compare to whitelist
     error_records <- Brood_data_late %>%
-      dplyr::mutate(PopID = unique(Brood_data$PopID),
-                    CheckID = "B5") %>%
+      dplyr::mutate(CheckID = "B5") %>%
       dplyr::anti_join(whitelist$Brood_whitelist, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
@@ -683,7 +677,7 @@ check_values_brood <- function(Brood_data, var) {
                                              | Brood_data[,which(colnames(Brood_data) == .y[2])] > .x$Value[4]))
 
                              Brood_data[sel,] %>%
-                               dplyr::select(Row, BroodID, Value = !!.y[2]) %>%
+                               dplyr::select(Row, PopID, BroodID, Value = !!.y[2]) %>%
                                dplyr::mutate(Species = .y[1],
                                              Variable = .y[2])
                            }) %>%
@@ -699,16 +693,15 @@ check_values_brood <- function(Brood_data, var) {
 
     # Compare to whitelist
     error_records <- Brood_err %>%
-      dplyr::mutate(PopID = unique(Brood_data$PopID),
-                    CheckID = checkID_var[checkID_var$Var == var,]$CheckID) %>%
+      dplyr::mutate(CheckID = checkID_var[checkID_var$Var == var,]$CheckID) %>%
       dplyr::anti_join(whitelist$Brood_whitelist, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
     error_output <- purrr::pmap(.l = error_records,
                                 .f = ~{
                                   paste0("Record on row ", ..1,
-                                         " (BroodID: ", ..2, "; ", Species_codes[Species_codes$Code == ..4, "CommonName"], ")",
-                                         " has an impossible value in ", ..5, " (", ..3, ").")
+                                         " (BroodID: ", ..3, "; ", Species_codes[Species_codes$Code == ..5, "CommonName"], ")",
+                                         " has an impossible value in ", ..6, " (", ..4, ").")
                                 })
   }
 
@@ -722,7 +715,7 @@ check_values_brood <- function(Brood_data, var) {
                                           & Brood_data[,which(colnames(Brood_data) == .y[2])] <= .x$Value[4])
 
                              Brood_data[sel,] %>%
-                               dplyr::select(Row, BroodID, Value = !!.y[2]) %>%
+                               dplyr::select(Row, PopID, BroodID, Value = !!.y[2]) %>%
                                dplyr::mutate(Species = .y[1],
                                              Variable = .y[2])
                            }) %>%
@@ -738,17 +731,16 @@ check_values_brood <- function(Brood_data, var) {
 
     # Compare to whitelist
     warning_records <- Brood_war %>%
-      dplyr::mutate(PopID = unique(Brood_data$PopID),
-                    CheckID = checkID_var[checkID_var$Var == var,]$CheckID) %>%
+      dplyr::mutate(CheckID = checkID_var[checkID_var$Var == var,]$CheckID) %>%
       dplyr::anti_join(whitelist$Brood_whitelist, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
     warning_output <- purrr::pmap(.l = warning_records,
                                   .f = ~{
                                     paste0("Record on row ", ..1,
-                                           " (BroodID: ", ..2, "; ", Species_codes[Species_codes$Code == ..4, "CommonName"], ")",
-                                           " has an unusually high value in ", ..5, " (", ..3, " > ",
-                                           selected_ref_values[[paste(..4, ..5, sep="_")]]$Value[2],")")
+                                           " (BroodID: ", ..3, "; ", Species_codes[Species_codes$Code == ..5, "CommonName"], ")",
+                                           " has an unusually high value in ", ..6, " (", ..4, " > ",
+                                           selected_ref_values[[paste(..5, ..6, sep="_")]]$Value[2],")")
                                   })
   }
 
@@ -783,20 +775,20 @@ check_parent_species <- function(Brood_data, Individual_data) {
   # Find species information of mothers
   Females <- Brood_data %>%
     dplyr::filter(!is.na(FemaleID) & !is.na(MaleID)) %>%
-    dplyr::select(Row, BroodID, FemaleID) %>%
+    dplyr::select(Row, PopID, BroodID, FemaleID) %>%
     dplyr::left_join(Individual_data[,c("IndvID", "Species")], by=c("FemaleID" = "IndvID")) %>%
     dplyr::rename(FemaleSpecies = Species)
 
   # Find species information of fathers
   Males <- Brood_data %>%
     dplyr::filter(!is.na(FemaleID) & !is.na(MaleID)) %>%
-    dplyr::select(MaleID) %>%
+    dplyr::select(Row, PopID, BroodID, MaleID) %>%
     dplyr::left_join(Individual_data[,c("IndvID", "Species")], by=c("MaleID" = "IndvID")) %>%
     dplyr::rename(MaleSpecies = Species)
 
   # Errors
   # Select records where parents are different species
-  Interspecific_broods <- dplyr::bind_cols(Females, Males) %>%
+  Interspecific_broods <- dplyr::left_join(Females, Males, by=c("Row", "PopID", "BroodID")) %>%
     dplyr::filter(FemaleSpecies != MaleSpecies)
 
   err <- FALSE
@@ -808,17 +800,16 @@ check_parent_species <- function(Brood_data, Individual_data) {
 
     # Compare to whitelist
     error_records <- Interspecific_broods %>%
-      dplyr::mutate(PopID = unique(Brood_data$PopID),
-                    CheckID = "B7") %>%
+      dplyr::mutate(CheckID = "B7") %>%
       dplyr::anti_join(whitelist$Brood_whitelist, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
     error_output <- purrr::pmap(.l = error_records,
                                 .f = ~{
-                                  paste0("Record on row ", ..1, " (BroodID: ", ..2, ")",
+                                  paste0("Record on row ", ..1, " (BroodID: ", ..3, ")",
                                          " has parents of different species",
-                                         " (Mother: ", Species_codes[Species_codes$Code == ..4, "CommonName"],
-                                         ", father: ", Species_codes[Species_codes$Code == ..6, "CommonName"], ").")
+                                         " (Mother: ", Species_codes[Species_codes$Code == ..5, "CommonName"],
+                                         ", father: ", Species_codes[Species_codes$Code == ..7, "CommonName"], ").")
                                 })
   }
 
@@ -858,7 +849,8 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data) {
   Chicks_captured <- Individual_data %>%
     dplyr::select(IndvID, BroodIDLaid) %>%
     dplyr::group_by(BroodIDLaid) %>%
-    dplyr::summarise(Chicks = n_distinct(IndvID))
+    dplyr::summarise(Chicks = n_distinct(IndvID)) %>%
+    dplyr::ungroup()
 
   # Errors
   # Select records where number of chicks in Capture_data > brood size in Brood_data
@@ -866,7 +858,7 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data) {
   Brood_err <- Brood_data %>%
     dplyr::left_join(Chicks_captured, by=c("BroodID" = "BroodIDLaid")) %>%
     dplyr::filter(BroodSize < Chicks) %>%
-    dplyr::select(Row, BroodID, BroodSize, Chicks)
+    dplyr::select(Row, PopID, BroodID, BroodSize, Chicks)
 
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
@@ -877,17 +869,16 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data) {
 
     # Compare to whitelist
     error_records <- Brood_err %>%
-      dplyr::mutate(PopID = unique(Brood_data$PopID),
-                    CheckID = "B8") %>%
+      dplyr::mutate(CheckID = "B8") %>%
       dplyr::anti_join(whitelist$Brood_whitelist, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
     error_output <- purrr::pmap(.l = error_records,
                                 .f = ~{
-                                  paste0("Record on row ", ..1, " (BroodID: ", ..2, ")",
-                                         " has a smaller BroodSize (", ..3, ")",
+                                  paste0("Record on row ", ..1, " (BroodID: ", ..3, ")",
+                                         " has a smaller BroodSize (", ..4, ")",
                                          " than the number of chicks in Individual_data (",
-                                         ..4, ").")
+                                         ..5, ").")
                                 })
   }
 
@@ -897,7 +888,7 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data) {
   Brood_war <- Brood_data %>%
     dplyr::left_join(Chicks_captured, by=c("BroodID" = "BroodIDLaid")) %>%
     dplyr::filter(BroodSize > Chicks) %>%
-    dplyr::select(Row, BroodID, BroodSize, Chicks)
+    dplyr::select(Row, PopID, BroodID, BroodSize, Chicks)
 
   war <- FALSE
   warning_records <- tibble::tibble(Row = NA_character_)
@@ -908,17 +899,16 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data) {
 
     # Compare to whitelist
     warning_records <- Brood_war %>%
-      dplyr::mutate(PopID = unique(Brood_data$PopID),
-                    CheckID = "B8") %>%
+      dplyr::mutate(CheckID = "B8") %>%
       dplyr::anti_join(whitelist$Brood_whitelist, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
     warning_output <- purrr::pmap(.l = warning_records,
                                   .f = ~{
-                                    paste0("Record on row ", ..1, " (BroodID: ", ..2, ")",
-                                           " has a larger BroodSize (", ..3, ")",
+                                    paste0("Record on row ", ..1, " (BroodID: ", ..3, ")",
+                                           " has a larger BroodSize (", ..4, ")",
                                            " than the number of chicks in Individual_data (",
-                                           ..4, ").")
+                                           ..5, ").")
                                   })
   }
 
@@ -948,7 +938,8 @@ check_unique_BroodID <- function(Brood_data){
   # Select records that are duplicated within populations
   Duplicated <- Brood_data %>%
     dplyr::group_by(PopID, BroodID) %>%
-    dplyr::filter(n() > 1)
+    dplyr::filter(n() > 1) %>%
+    dplyr::ungroup()
 
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
