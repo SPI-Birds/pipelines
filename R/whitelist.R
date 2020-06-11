@@ -2,11 +2,9 @@
 #'
 #' A function to create a whitelist of values that are verified as correct by data owners but previously marked as warning/error.
 #'
-#' When a data owner is sent a quality check report, they can determine whether the flagged records are a) unverifiable, b) verifiable to be inccorect, or c) verifiable to be correct. If a), it cannot be known for certain whether the information should be kept or removed. They are continued to be flagged as improbable/impossible, and it is up to the user to decide how they treat them in analysis. If b), the data owner is expected to fix this in the raw data, and it will automatically be no longer flagged in future reports. If c), the records will be whitelisted for future quality checks.
+#' When a data owner is sent a quality check report, they can determine whether the flagged records are a) unverifiable, b) verifiable and inccorect, or c) verifiable and correct. If a), it cannot be known for certain whether the information should be kept or removed. They are continued to be flagged as improbable/impossible, and it is up to the user to decide how they treat them in analysis. If b), it will continue to be flagged until the data owner changes the value in the raw data. If c), the records will be whitelisted for future quality checks.
 #'
-#' To whitelist records, there are to pieces of information we use: the unique identifier of the record (e.g., BroodID in Brood_data) and the unique identifier of the quality check that resulted in the original warning/error (e.g., B2).
-#'
-#' @param db File path. Location to save whitelist. Default pipelines/data folder.
+#' To whitelist records, there are two pieces of information we use: the unique identifier of the record (e.g., BroodID in Brood_data) and the unique identifier of the quality check that resulted in the original warning/error (e.g., B2).
 #'
 #' @return
 #' List of 4 dataframes:
@@ -17,7 +15,7 @@
 #'
 #' @export
 
-create_whitelist <- function(db = paste0(getwd(), "/data/")){
+create_whitelist <- function(){
 
   # Whitelist for Brood_data
   Brood_whitelist <- tibble::tibble(PopID = NA_character_,
@@ -51,8 +49,7 @@ create_whitelist <- function(db = paste0(getwd(), "/data/")){
   whitelist <- list(Brood_whitelist = Brood_whitelist,
                     Capture_whitelist = Capture_whitelist,
                     Individual_whitelist = Individual_whitelist,
-                    LocatioN_whitelist = Location_whitelist)
+                    Location_whitelist = Location_whitelist)
 
-  save(whitelist,
-       file = paste0(db, "whitelist.rda"))
+  return(whitelist)
 }
