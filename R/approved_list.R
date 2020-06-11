@@ -6,6 +6,8 @@
 #'
 #' To prevent verified records from flagged in future quality checks, there are two pieces of information we use: the unique identifier of the record (e.g., BroodID in Brood_data) and the unique identifier of the quality check that resulted in the original warning/error (e.g., B2).
 #'
+#' @param new_approved_list A list of the same format as the approved_list with new approved records.
+#'
 #' @return
 #' List of 4 dataframes:
 #' \item{Brood_approved_list}{Approved records in Brood_data.}
@@ -15,35 +17,44 @@
 #'
 #' @export
 
-create_approved_list <- function(){
+create_approved_list <- function(new_approved_list){
 
-  # Approved_list for Brood_data
-  Brood_approved_list <- tibble::tibble(PopID = NA_character_,
-                                        BroodID = NA_character_,
-                                        CheckID = NA_character_)
+  if(file.exists("data/approved_list.rda")) {
 
-  # First entry
-  # Brood_approved_list <- Brood_approved_list %>%
-  #   dplyr::mutate(PopID = "", BroodID = "", CheckID = "")
+    # Stop if new_approved_list is missing
+    if(missing(new_approved_list)) {
+      stop("Please provide a new list with verified records.")
+    }
 
-  # Second and higher entries
-  # Brood_approved_list <- Brood_approved_list %>%
-  #   tibble::add_row(PopID = "", BroodID = "", CheckID = "")
+    # Merge existing approved_lists with new approved_lists
+    Brood_approved_list <- dplyr::bind_rows(approved_list$Brood_approved_list, new_approved_list$Brood_approved_list)
+    Capture_approved_list <- dplyr::bind_rows(approved_list$Capture_approved_list, new_approved_list$Capture_approved_list)
+    Individual_approved_list <- dplyr::bind_rows(approved_list$Individual_approved_list, new_approved_list$Individual_approved_list)
+    Location_approved_list <- dplyr::bind_rows(approved_list$Location_approved_list, new_approved_list$Location_approved_list)
 
-  # Approved_list for Capture_data
-  Capture_approved_list <- tibble::tibble(PopID = NA_character_,
-                                          CaptureID = NA_character_,
+  } else {
+
+    # Empty approved_list for Brood_data
+    Brood_approved_list <- tibble::tibble(PopID = NA_character_,
+                                          BroodID = NA_character_,
                                           CheckID = NA_character_)
 
-  # Approved_list for Individual_data
-  Individual_approved_list <- tibble::tibble(PopID = NA_character_,
-                                             IndvID = NA_character_,
+    # Empty approved_list for Capture_data
+    Capture_approved_list <- tibble::tibble(PopID = NA_character_,
+                                            CaptureID = NA_character_,
+                                            CheckID = NA_character_)
+
+    # Empty approved_list for Individual_data
+    Individual_approved_list <- tibble::tibble(PopID = NA_character_,
+                                               IndvID = NA_character_,
+                                               CheckID = NA_character_)
+
+    # Empty approved_list for Location_data
+    Location_approved_list <- tibble::tibble(PopID = NA_character_,
+                                             LocationID = NA_character_,
                                              CheckID = NA_character_)
 
-  # Approved_list for Location_data
-  Location_approved_list <- tibble::tibble(PopID = NA_character_,
-                                           LocationID = NA_character_,
-                                           CheckID = NA_character_)
+  }
 
   # Combine data-specific approved_lists into one list object
   approved_list <- list(Brood_wapproved_list = Brood_approved_list,
@@ -51,5 +62,5 @@ create_approved_list <- function(){
                         Individual_approved_list = Individual_approved_list,
                         Location_approved_list = Location_approved_list)
 
-  return(approved_list)
+  usethis::use_data(approved_list)
 }
