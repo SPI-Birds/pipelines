@@ -5,3 +5,6 @@
 #                file.remove(eval(..1))
 #
 #              })
+
+# Restore approved list
+create_approved_list(backup_approved_list)
