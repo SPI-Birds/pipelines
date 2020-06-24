@@ -4,10 +4,12 @@
 \alias{check_values_capture}
 \title{Check capture variable values against reference values}
 \usage{
-check_values_capture(Capture_data)
+check_values_capture(Capture_data, var)
 }
 \arguments{
 \item{Capture_data}{Data frame. Capture data output from pipeline.}
+
+\item{var}{Character. Variable to check against reference values.}
 }
 \value{
 A list of:
@@ -18,5 +20,5 @@ A list of:
 \item{Errors}{A list of row-by-row errors.}
 }
 \description{
-Check variable values against species-specific reference values in capture data. Unusual values will result in a warning. Impossible values will result in an error. Variables that are checked: Mass, Tarsus, WingLength, Age_obsv, Age_calc, Chick_age.
+Check variable values against species-specific reference values in capture data. Unusual values will result in a warning. Impossible values will result in an error. Variables that are checked for adults and chicks: Mass and Tarsus.
 }

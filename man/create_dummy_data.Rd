@@ -4,10 +4,7 @@
 \alias{create_dummy_data}
 \title{Create quality check dummy data}
 \usage{
-create_dummy_data(db = choose_directory())
-}
-\arguments{
-\item{db}{File path. Location to save dummy data.}
+create_dummy_data()
 }
 \value{
 List of 4 dataframes:

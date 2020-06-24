@@ -404,6 +404,7 @@ compare_clutch_brood <- function(Brood_data){
 
   #Satisfy RCMD Checks
   ExperimentID <- ClutchSize <- BroodSize <- NULL
+  approved_list <- NULL
 
 }
 
@@ -489,8 +490,9 @@ compare_brood_fledglings <- function(Brood_data){
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 
-  #Satisfy RCMD Checks
+  # Satisfy RCMD Checks
   ExperimentID <- BroodSize <- NumberFledged <- NULL
+  approved_list <- NULL
 
 }
 
@@ -560,8 +562,9 @@ compare_laying_hatching <- function(Brood_data){
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 
-  #Satisfy RCMD Checks
+  # Satisfy RCMD Checks
   LayDate <- HatchDate <- NULL
+  approved_list <- NULL
 
 }
 
@@ -629,8 +632,9 @@ compare_hatching_fledging <- function(Brood_data){
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 
-  #Satisfy RCMD Checks
+  # Satisfy RCMD Checks
   HatchDate <- FledgeDate <- NULL
+  approved_list <- NULL
 
 }
 
@@ -665,13 +669,15 @@ check_values_brood <- function(Brood_data, var) {
   ref_names <- stringr::str_split(names(selected_ref_values), pattern="_")
 
   # Progress bar
-  pb <- dplyr::progress_estimated(2*length(selected_ref_values))
+  pb <- progress::progress_bar$new(total = 2*length(selected_ref_values),
+                                   format = "[:bar] :percent ~:eta remaining",
+                                   clear = FALSE)
 
   # Brood-specific errors
   Brood_err <- purrr::map2(.x = selected_ref_values,
                            .y = ref_names,
                            .f = ~{
-                             pb$tick()$print()
+                             pb$tick()
                              sel <- which(Brood_data$Species == .y[1]
                                           & (Brood_data[,which(colnames(Brood_data) == .y[2])] < .x$Value[3]
                                              | Brood_data[,which(colnames(Brood_data) == .y[2])] > .x$Value[4]))
@@ -709,7 +715,7 @@ check_values_brood <- function(Brood_data, var) {
   Brood_war <- purrr::map2(.x = selected_ref_values,
                            .y = ref_names,
                            .f = ~{
-                             pb$tick()$print()
+                             pb$tick()
                              sel <- which(Brood_data$Species == .y[1]
                                           & Brood_data[,which(colnames(Brood_data) == .y[2])] > .x$Value[2]
                                           & Brood_data[,which(colnames(Brood_data) == .y[2])] <= .x$Value[4])
@@ -748,14 +754,16 @@ check_values_brood <- function(Brood_data, var) {
                                Error = err)
 
   return(list(CheckList = check_list,
-              WarningRows = error_records$Row,
-              ErrorRows = warning_records$Row,
+              WarningRows = warning_records$Row,
+              ErrorRows = error_records$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 
-  #Satisfy RCMD Checks
+  # Satisfy RCMD Checks
   brood_ref_values <- selected_ref_values <- ref_names <- NULL
   Species <- Variable <- NULL
+  approved_list <- checkID_var <- NULL
+
 }
 
 
@@ -829,6 +837,8 @@ check_parent_species <- function(Brood_data, Individual_data) {
 
   # Satisfy RCMD Checks
   FemaleSpecies <- MaleSpecies <- NULL
+  approved_list <- NULL
+
 }
 
 
@@ -920,6 +930,10 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data) {
               ErrorRows = error_records$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
+
+  # Satisfy RCMD checks
+  approved_list <- NULL
+
 }
 
 
@@ -983,4 +997,8 @@ check_unique_BroodID <- function(Brood_data){
               ErrorRows = error_records$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
+
+  # Satisfy RCMD checks
+  approved_list <- NULL
+
 }

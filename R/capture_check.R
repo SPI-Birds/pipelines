@@ -235,13 +235,15 @@ check_values_capture <- function(Capture_data, var) {
   ref_names <- stringr::str_split(names(selected_ref_values), pattern="_")
 
   # Progress bar
-  pb <- dplyr::progress_estimated(2*length(selected_ref_values))
+  pb <- progress::progress_bar$new(total = 2*length(selected_ref_values),
+                                   format = "[:bar] :percent ~:eta remaining",
+                                   clear = FALSE)
 
   # Capture-specific errors
   Capture_err <- purrr::map2(.x = selected_ref_values,
                              .y = ref_names,
                              .f = ~{
-                               pb$tick()$print()
+                               pb$tick()
 
                                if(.y[2] == "Adult") {
 
@@ -313,7 +315,7 @@ check_values_capture <- function(Capture_data, var) {
                                                      | Capture_data2[,which(colnames(Capture_data2) == .y[3])] > .x$Value[4]))
 
                                      Capture_data2[sel,] %>%
-                                       dplyr::select(Row, PopID, CaptureID, Value = !!.y[3], ChickAge) %>%
+                                       dplyr::select(Row, PopID = CapturePopID, CaptureID, Value = !!.y[3], ChickAge) %>%
                                        dplyr::mutate(Species = .y[1],
                                                      Age = .y[2],
                                                      Variable = .y[3])
@@ -353,7 +355,7 @@ check_values_capture <- function(Capture_data, var) {
   Capture_war <- purrr::map2(.x = selected_ref_values,
                              .y = ref_names,
                              .f = ~{
-                               pb$tick()$print()
+                               pb$tick()
 
                                if(.y[2] == "Adult") {
 
@@ -414,7 +416,7 @@ check_values_capture <- function(Capture_data, var) {
                                      which()
 
                                    Capture_data3[sel,] %>%
-                                     dplyr::select(Row, PopID, CaptureID, Value = !!.y[3], ChickAge) %>%
+                                     dplyr::select(Row, PopID = CapturePopID, CaptureID, Value = !!.y[3], ChickAge) %>%
                                      dplyr::mutate(Species = .y[1],
                                                    Age = .y[2],
                                                    Variable = .y[3])
@@ -428,7 +430,7 @@ check_values_capture <- function(Capture_data, var) {
                                                       & Capture_data2[,which(colnames(Capture_data2) == .y[3])] <= .x$Value[4])))
 
                                    Capture_data2[sel,] %>%
-                                     dplyr::select(Row, PopID, CaptureID, Value = !!.y[3], ChickAge) %>%
+                                     dplyr::select(Row, PopID = CapturePopID, CaptureID, Value = !!.y[3], ChickAge) %>%
                                      dplyr::mutate(Species = .y[1],
                                                    Age = .y[2],
                                                    Variable = .y[3])
@@ -507,6 +509,7 @@ check_values_capture <- function(Capture_data, var) {
   capture_ref_values <- NULL
   Species <- Age_calc <- NULL
   Variable <- NULL
+  approved_list <- checkID_var <- NULL
 }
 
 
@@ -526,7 +529,7 @@ check_chick_age <- function(Capture_data){
   # Select records with chick age < 0 OR > 30
   Chick_age_err <- Capture_data %>%
     dplyr::filter(ChickAge < 0 | ChickAge > 30) %>%
-    dplyr::select(Row, PopID, CaptureID, Species, ChickAge)
+    dplyr::select(Row, PopID = CapturePopID, CaptureID, Species, ChickAge)
 
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
@@ -562,4 +565,7 @@ check_chick_age <- function(Capture_data){
               ErrorRows = error_records$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
+
+  # Satisfy RCMD checks
+  approved_list <- NULL
 }

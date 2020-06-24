@@ -310,6 +310,10 @@ check_unique_IndvID <- function(Individual_data){
               ErrorRows = error_records$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
+
+  # Satisfy RCMD checks
+  approved_list <- NULL
+
 }
 
 
@@ -377,6 +381,9 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data) {
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 
+  # Satisfy RCMD checks
+  approved_list <- NULL
+
 }
 
 
@@ -426,10 +433,14 @@ check_conflicting_sex <- function(Individual_data) {
                                Error = err)
 
   return(list(CheckList = check_list,
-              WarningRow = warning_records$Row,
-              ErrorRow = NULL,
+              WarningRows = warning_records$Row,
+              ErrorRows = NULL,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
+
+  # Satisfy RCMD checks
+  Conflicting_sex <- NULL
+  approved_list <- NULL
 }
 
 
@@ -459,7 +470,7 @@ check_conflicting_species <- function(Individual_data) {
     err <- TRUE
 
     # Compare to approved_list
-    error_records <- Conflicting_sex %>%
+    error_records <- Conflicting_species %>%
       dplyr::mutate(CheckID = "I5") %>%
       dplyr::anti_join(approved_list$Individual_approved_list, by=c("PopID", "CheckID", "IndvID"))
 
@@ -471,7 +482,6 @@ check_conflicting_species <- function(Individual_data) {
                                 })
   }
 
-
   # No warnings
   war <- FALSE
   #warning_records <- tibble::tibble(Row = NA_character_)
@@ -482,8 +492,13 @@ check_conflicting_species <- function(Individual_data) {
                                Error = err)
 
   return(list(CheckList = check_list,
-              WarningRow = warning_records$Row,
-              ErrorRow = NULL,
+              WarningRows = NULL,
+              ErrorRows = error_records$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
+
+  # Satisfy RCMD checks
+  Conflicting_species <- NULL
+  approved_list <- NULL
+
 }

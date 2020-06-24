@@ -26,6 +26,7 @@ A wrapper that runs all single checks related to \code{Capture_data}.
 The following capture data checks are performed:
 \itemize{
 \item \strong{C1}: Check if the formats of each column in \code{Capture_data} match with the standard format using \code{\link{check_format_capture}}.
-\item \strong{C2}: Check capture variable values against reference values using \code{\link{check_values_capture}}.
+\item \strong{C2a-b}: Check capture variable values against reference values using \code{\link{check_values_capture}}. Capture variables checked for adults and chicks: Mass and Tarsus.
+#' \item \strong{C3}: Check chick age (in numbers of days since hatching) using \code{\link{check_chick_age}}.
 }
 }
