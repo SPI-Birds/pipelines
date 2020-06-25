@@ -8,6 +8,7 @@
 #' \item \strong{I2}: Check if the IDs of individuals are unique using \code{\link{check_unique_IndvID}}.
 #' \item \strong{I3}: Check if all chicks have BroodID using \code{\link{check_BroodID_chicks}}.
 #' \item \strong{I4}: Check if individuals have no conflicting sex using \code{\link{check_conflicting_sex}}.
+#' \item \strong{I5}: Check if individuals have no conflicting species using \code{\link{check_conflicting_species}}.
 #' }
 #'
 #' @inheritParams checks_individual_params
@@ -118,7 +119,10 @@ individual_check <- function(Individual_data, Capture_data, Location_data, check
 
 #' Check format of individual data
 #'
-#' Check that the format of each column in the individual data match with the standard format
+#' Check that the format of each column in the individual data match with the standard format.
+#'
+#' Check ID: I1.
+#'
 #' @inheritParams checks_individual_params
 #'
 #' @inherit checks_return return
@@ -222,6 +226,8 @@ check_format_individual <- function(Individual_data){
 #'
 #' Check that the individual identifiers (IndvID) are unique. Records with individual identifiers that are not unique among populations will result in a warning. Records with individual identifiers that are not unique within populations will result in an error.
 #'
+#' Check ID: I2.
+#'
 #' @inheritParams checks_individual_params
 #'
 #' @inherit checks_return return
@@ -321,6 +327,8 @@ check_unique_IndvID <- function(Individual_data){
 #'
 #' Check that all chicks in Individual_data that are caught and ringed in a nest box have a BroodID. Individuals just ringed after fledging are regarded as chicks but are not associated with a BroodID.
 #'
+#' Check ID: I3.
+#'
 #' @inheritParams checks_individual_params
 #' @inheritParams checks_capture_params
 #' @inheritParams checks_location_params
@@ -391,6 +399,8 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data) {
 #'
 #' Check that the sex of individuals in Individual_data is recorded consistently. Individuals who have been recorded as both male ('M') and female ('F') will have conflicting sex ('C') in Individual_data.
 #'
+#' Check ID: I4.
+#'
 #' @inheritParams checks_individual_params
 #'
 #' @inherit checks_return return
@@ -448,6 +458,8 @@ check_conflicting_sex <- function(Individual_data) {
 #' Check conflicting species
 #'
 #' Check that the species of individuals in Individual_data is recorded consistently. Individuals who have been recorded as two different species will have conflicting species ('CONFLICTED') in Individual_data.
+#'
+#' Check ID: I5.
 #'
 #' @inheritParams checks_individual_params
 #'

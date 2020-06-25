@@ -609,7 +609,7 @@ create_dummy_data <- function(overwrite=TRUE) {
       PopID = "AAA"
     )
 
-  # Approved_list: make sure that our approvelisting procedure works
+  # Approved_list: make sure that our approve-listing procedure works
   # We create a record that violates check B4, but should NOT result in TRUE in Warning & Error columns
   al_rows <- Brood_data %>%
     dplyr::mutate(

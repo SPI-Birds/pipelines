@@ -100,6 +100,9 @@ capture_check <- function(Capture_data, check_format=TRUE){
 #' Check format of capture data
 #'
 #' Check that the format of each column in the capture data match with the standard format.
+#'
+#' Check ID: C1.
+#'
 #' @inheritParams checks_capture_params
 #'
 #' @inherit checks_return return
@@ -208,6 +211,8 @@ check_format_capture <- function(Capture_data){
 #' Check capture variable values against reference values
 #'
 #' Check variable values against species-specific reference values in capture data. Unusual values will result in a warning. Impossible values will result in an error. Variables that are checked for adults and chicks: Mass and Tarsus.
+#'
+#' Check IDs: C2a-b.
 #'
 #' @inheritParams checks_capture_params
 #' @param var Character. Variable to check against reference values.
@@ -516,6 +521,8 @@ check_values_capture <- function(Capture_data, var) {
 #' Check chick age
 #'
 #' Check whether chick ages (in number of days since hatching) are within the range of 0 and 30 days since hatching. Values outside this range will result in an error.
+#'
+#' Check ID: C3.
 #'
 #' @inheritParams checks_capture_params
 #'
