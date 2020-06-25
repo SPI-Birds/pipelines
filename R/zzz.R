@@ -16,6 +16,10 @@ table output in the standard format. It does \\textbf{not} refer to row numbers 
 check two new columns ('warning' and 'error') will be added to each of the four data tables to allow potentially spurious records
 to be easily identified.
 
+\\subsection{Verification of flagged records}
+
+Some of the records flagged as a 'warning' or 'potential error' are likely to be uncommon but true observations. We don't want these same values to be flagged each time a new quality check is conducted. To overcome this, we have implemented an 'approve-listing' procedure that will prevent true records, that have been verified by the data owner, from appearing in future quality check reports. We hope that this will make the quality check reports more useful for data owners and users.
+
 \\subsection{Types of checks}
 
 The checks include:
@@ -76,7 +80,7 @@ quality_check_titlepage_pdf <- "\\renewcommand{\\familydefault}{\\sfdefault}
 % =================
 %	Information
 % =================
-	{\\large Produced by: SPI-Birds team (Antica Culina, Liam D. Bailey, Stefan Vriend \\& Marcel E. Visser)} \\\\
+	{\\large Produced by: SPI-Birds team (Antica Culina, Liam D. Bailey, Chlo\\'e R. Nater, Stefan J.G. Vriend \\& Marcel E. Visser)} \\\\
 	\\vfill
 \\end{titlepage}"
 
