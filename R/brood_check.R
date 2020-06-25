@@ -794,25 +794,30 @@ check_parent_species <- function(Brood_data, Individual_data) {
     dplyr::left_join(Individual_data[,c("IndvID", "Species")], by=c("MaleID" = "IndvID")) %>%
     dplyr::rename(MaleSpecies = Species)
 
-  # Errors
+  # No errors
+  err <- FALSE
+  #error_records <- tibble::tibble(Row = NA_character_)
+  error_output <- NULL
+
+  # Warnings
   # Select records where parents are different species
   Interspecific_broods <- dplyr::left_join(Females, Males, by=c("Row", "PopID", "BroodID")) %>%
     dplyr::filter(FemaleSpecies != MaleSpecies)
 
-  err <- FALSE
-  error_records <- tibble::tibble(Row = NA_character_)
-  error_output <- NULL
+  war <- FALSE
+  warning_records <- tibble::tibble(Row = NA_character_)
+  warning_output <- NULL
 
   if(nrow(Interspecific_broods) > 0) {
-    err <- TRUE
+    war <- TRUE
 
     # Compare to approved_list
-    error_records <- Interspecific_broods %>%
+    warning_records <- Interspecific_broods %>%
       dplyr::mutate(CheckID = "B7") %>%
       dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
-    error_output <- purrr::pmap(.l = error_records,
+    warning_output <- purrr::pmap(.l = warning_records,
                                 .f = ~{
                                   paste0("Record on row ", ..1, " (BroodID: ", ..3, ")",
                                          " has parents of different species",
@@ -821,17 +826,12 @@ check_parent_species <- function(Brood_data, Individual_data) {
                                 })
   }
 
-  # No warnings
-  war <- FALSE
-  #warning_records <- tibble::tibble(Row = NA_character_)
-  warning_output <- NULL
-
   check_list <- tibble::tibble(Warning = war,
                                Error = err)
 
   return(list(CheckList = check_list,
-              WarningRows = NULL,
-              ErrorRows = error_records$Row,
+              WarningRows = warning_records$Row,
+              ErrorRows = NULL,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 
