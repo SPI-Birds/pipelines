@@ -256,7 +256,7 @@ check_values_capture <- function(Capture_data, var) {
                                                  | Capture_data2[,which(colnames(Capture_data2) == .y[3])] > .x$Value[4]))
 
                                  Capture_data2[sel,] %>%
-                                   dplyr::select(Row, Value = !!.y[3], ChickAge) %>%
+                                   dplyr::select(Row, PopID = CapturePopID, CaptureID, Value = !!.y[3], ChickAge) %>%
                                    dplyr::mutate(Species = .y[1],
                                                  Age = .y[2],
                                                  Variable = .y[3])
@@ -303,7 +303,7 @@ check_values_capture <- function(Capture_data, var) {
                                        which()
 
                                      Capture_data3[sel,] %>%
-                                       dplyr::select(Row, Value = !!.y[3], ChickAge) %>%
+                                       dplyr::select(Row, PopID = CapturePopID, CaptureID, Value = !!.y[3], ChickAge) %>%
                                        dplyr::mutate(Species = .y[1],
                                                      Age = .y[2],
                                                      Variable = .y[3])
@@ -370,7 +370,7 @@ check_values_capture <- function(Capture_data, var) {
                                                     & Capture_data2[,which(colnames(Capture_data2) == .y[3])] <= .x$Value[4])))
 
                                  Capture_data2[sel,] %>%
-                                   dplyr::select(Row, CaptureID, Value = !!.y[3], ChickAge) %>%
+                                   dplyr::select(Row, PopID = CapturePopID, CaptureID, Value = !!.y[3], ChickAge) %>%
                                    dplyr::mutate(Species = .y[1],
                                                  Age = .y[2],
                                                  Variable = .y[3])
