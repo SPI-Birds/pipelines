@@ -1051,7 +1051,6 @@ check_unique_BroodID <- function(Brood_data){
 
 check_clutch_type_order <- function(Brood_data){
 
-  # Error
   # Select breeding females with ClutchType_calculated == "first" not as first clutch in a particular breeding season
   Brood_err <- Brood_data %>%
     dplyr::filter(!is.na(FemaleID) & !is.na(ClutchType_calculated)) %>%
@@ -1063,6 +1062,7 @@ check_clutch_type_order <- function(Brood_data){
     dplyr::filter(!is.na(CTcal) & CTcal > 1) %>%
     dplyr::ungroup()
 
+  # Errors
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
@@ -1101,6 +1101,7 @@ check_clutch_type_order <- function(Brood_data){
               ErrorOutput = unlist(error_output)))
 
   # Satisfy RCMD checks
+  Brood_err <- NULL
   approved_list <- NULL
 
 }

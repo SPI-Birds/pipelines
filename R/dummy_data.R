@@ -393,7 +393,7 @@ create_dummy_data <- function(overwrite=TRUE) {
 
   # B10: Check that clutch type order is correct
   B10_rows <- Brood_data %>%
-    dplyr::mutate( # Possible (first - second)
+    dplyr::mutate( # Probable (first - second)
       Row = as.integer(33),
       FemaleID = "F33",
       ClutchType_calculated = "first"
@@ -403,7 +403,7 @@ create_dummy_data <- function(overwrite=TRUE) {
       FemaleID = "F33",
       ClutchType_calculated = "second"
     ) %>%
-    dplyr::add_row( # Possible (replacement - second)
+    dplyr::add_row( # Probable (replacement - second)
       Row = as.integer(35),
       FemaleID = "F35",
       ClutchType_calculated = "replacement"
@@ -681,6 +681,31 @@ create_dummy_data <- function(overwrite=TRUE) {
       PopID = "AAA"
     )
 
+  # I6: Checking that individuals in Individual_data also appear in Capture_data
+  I6_indv_rows <- Individual_data %>%
+    dplyr::mutate( # Probable
+      Row = as.integer(20)
+    ) %>%
+    dplyr::add_row( # Impossible (missing from Capture_data)
+      Row = as.integer(21)
+    ) %>%
+    dplyr::mutate(
+      IndvID = paste0("I", Row),
+      PopID = "AAA",
+      Species = "PARMAJ"
+    )
+
+  I6_capture_rows <- Capture_data %>%
+    dplyr::mutate( # Probable
+      Row = as.integer(23),
+      IndvID = "I20",
+      CapturePopID = "AAA",
+      BreedingSeason = as.integer(2020),
+      Species = "PARMAJ",
+      CaptureDate = "2020-06-01",
+      CaptureID = paste(CapturePopID, IndvID, CaptureDate, sep="_")
+    )
+
   # Approved_list: make sure that our approve-listing procedure works
   # We create a record that violates check B4, but should NOT result in TRUE in Warning & Error columns
   al_rows <- Brood_data %>%
@@ -700,8 +725,8 @@ create_dummy_data <- function(overwrite=TRUE) {
 
   # Combine single check rows per dataframe
   Brood_data <- dplyr::bind_rows(B2_rows, B3_rows, B4_rows, B5_rows, B6a_rows, B6b_rows, B6c_rows, B7_brood_rows, B8_brood_rows, B9_rows, B10_rows, al_rows)
-  Capture_data <- dplyr::bind_rows(C2a_adult_rows, C2a_chick_rows, C2b_adult_rows, C2b_chick_rows, C3_rows, I3_capture_rows)
-  Individual_data <- dplyr::bind_rows(B7_indv_rows, B8_indv_rows, I2_rows, I3_indv_rows, I4_rows, I5_rows)
+  Capture_data <- dplyr::bind_rows(C2a_adult_rows, C2a_chick_rows, C2b_adult_rows, C2b_chick_rows, C3_rows, I3_capture_rows, I6_capture_rows)
+  Individual_data <- dplyr::bind_rows(B7_indv_rows, B8_indv_rows, I2_rows, I3_indv_rows, I4_rows, I5_rows, I6_indv_rows)
   Location_data <- dplyr::bind_rows(I3_location_rows)
 
   # Combine in list
