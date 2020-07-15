@@ -285,15 +285,12 @@ create_capture_AMM <- function(Brood_data, connection) {
                   .data$ChickAge,
                   .data$BroodID)
 
-  #Chick Captures
-  Brood_data <- Brood_data %>%
-    dplyr::select(.data$BroodID, .data$Species)
-
   Chick_capture <- Chick_catch_tables %>%
     dplyr::left_join(Nestbox_capture, by = "NestBox") %>%
     dplyr::left_join(Nestbox_release, by = c("SwapToNestBox" = "NestBox")) %>%
     dplyr::mutate(EndMarch = as.Date(paste(.data$ChickYear, "03", "31", sep = "-")),
-                  CapturePopID = "AMM", ReleasePopID = "AMM") %>%
+                  CapturePopID = "AMM", ReleasePopID = "AMM",
+                  Species = "GT") %>%
     dplyr::collect() %>%
     dplyr::select(.data$BirdID, .data$ChickYear, .data$EndMarch, .data$NestBox, .data$BroodID,
                   .data$CapturePlot, .data$ReleasePlot,
@@ -315,7 +312,6 @@ create_capture_AMM <- function(Brood_data, connection) {
     dplyr::mutate_at(.vars = vars(.data$BodyMass, .data$P3, .data$Tarsus), ~ifelse(as.numeric(.) <= 0, NA_real_, as.numeric(.))) %>%
     dplyr::filter(!(is.na(.data$BodyMass) & is.na(.data$P3) & is.na(.data$Tarsus))) %>%
     dplyr::mutate(CaptureDate = as.Date(.data$EndMarch) + .data$HatchDay + .data$Day) %>%
-    dplyr::left_join(Brood_data, by = "BroodID") %>%
     dplyr::select(IndvID = .data$BirdID,
                   .data$Species,
                   BreedingSeason = .data$ChickYear,
