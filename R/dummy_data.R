@@ -391,6 +391,45 @@ create_dummy_data <- function(overwrite=TRUE) {
       MaleID = paste0("M", Row)
     )
 
+  # B10: Check that clutch type order is correct
+  B10_rows <- Brood_data %>%
+    dplyr::mutate( # Possible (first - second)
+      Row = as.integer(33),
+      FemaleID = "F33",
+      ClutchType_calculated = "first"
+    ) %>%
+    dplyr::add_row(
+      Row = as.integer(34),
+      FemaleID = "F33",
+      ClutchType_calculated = "second"
+    ) %>%
+    dplyr::add_row( # Possible (replacement - second)
+      Row = as.integer(35),
+      FemaleID = "F35",
+      ClutchType_calculated = "replacement"
+    ) %>%
+    dplyr::add_row(
+      Row = as.integer(36),
+      FemaleID = "F35",
+      ClutchType_calculated = "second"
+    ) %>%
+    dplyr::add_row( # Impossible (second - first)
+      Row = as.integer(37),
+      FemaleID = "F37",
+      ClutchType_calculated = "second"
+    ) %>%
+    dplyr::add_row(
+      Row = as.integer(38),
+      FemaleID = "F37",
+      ClutchType_calculated = "first"
+    ) %>%
+    dplyr::mutate(
+      PopID = "AAA",
+      BreedingSeason = as.integer(2020),
+      Species = "PARMAJ",
+      BroodID = paste(PopID, BreedingSeason, Row, sep="-")
+    )
+
 
   # C2a: Checking mass values against reference values
   # - adults
@@ -660,7 +699,7 @@ create_dummy_data <- function(overwrite=TRUE) {
     )
 
   # Combine single check rows per dataframe
-  Brood_data <- dplyr::bind_rows(B2_rows, B3_rows, B4_rows, B5_rows, B6a_rows, B6b_rows, B6c_rows, B7_brood_rows, B8_brood_rows, B9_rows, al_rows)
+  Brood_data <- dplyr::bind_rows(B2_rows, B3_rows, B4_rows, B5_rows, B6a_rows, B6b_rows, B6c_rows, B7_brood_rows, B8_brood_rows, B9_rows, B10_rows, al_rows)
   Capture_data <- dplyr::bind_rows(C2a_adult_rows, C2a_chick_rows, C2b_adult_rows, C2b_chick_rows, C3_rows, I3_capture_rows)
   Individual_data <- dplyr::bind_rows(B7_indv_rows, B8_indv_rows, I2_rows, I3_indv_rows, I4_rows, I5_rows)
   Location_data <- dplyr::bind_rows(I3_location_rows)

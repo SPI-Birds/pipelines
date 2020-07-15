@@ -13,6 +13,7 @@
 #' \item \strong{B7}: Check if parents of a brood are the same species using \code{\link{check_parent_species}}.
 #' \item \strong{B8}: Compare brood size with number of chicks captured using \code{\link{compare_broodsize_chicknumber}}.
 #' \item \strong{B9}: Check if the IDs of broods are unique using \code{\link{check_unique_BroodID}}.
+#' \item \strong{B10}: Check if the order of clutch types for multiple breeding attempts per female per season is correct using \code{\link{check_clutch_type_order}}.
 #' }
 #'
 #' @inheritParams checks_brood_params
@@ -26,7 +27,7 @@
 brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
 
   # Create check list with a summary of warnings and errors per check
-  check_list <- tibble::tibble(CheckID = paste0("B", c(1:5, paste0(6, letters[1:3]), 7:9)),
+  check_list <- tibble::tibble(CheckID = paste0("B", c(1:5, paste0(6, letters[1:3]), 7:10)),
                                CheckDescription = c("Check format of brood data",
                                                     "Compare clutch and brood sizes",
                                                     "Compare brood sizes and fledgling numbers",
@@ -37,7 +38,8 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
                                                     "Check fledgling number values against reference values",
                                                     "Check that parents are the same species",
                                                     "Compare brood size with number of chicks captured",
-                                                    "Check that brood IDs are unique"),
+                                                    "Check that brood IDs are unique",
+                                                    "Check clutch type order"),
                                Warning = NA,
                                Error = NA)
 
@@ -124,6 +126,13 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
 
   check_list[11,3:4] <- check_unique_BroodID_output$CheckList
 
+  # - Check clutch type order
+  message("B10: Checking that clutch type order is correct..")
+
+  check_clutch_type_order_output <- check_clutch_type_order(Brood_data)
+
+  check_list[12,3:4] <- check_clutch_type_order_output$CheckList
+
 
   if(check_format) {
     # Warning list
@@ -137,7 +146,8 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
                          Check6c = check_values_fledgling_number_output$WarningOutput,
                          Check7 = check_parent_species_output$WarningOutput,
                          Check8 = compare_broodsize_chicknumber_output$WarningOutput,
-                         Check9 = check_unique_BroodID_output$WarningOutput)
+                         Check9 = check_unique_BroodID_output$WarningOutput,
+                         Check10 = check_clutch_type_order_output$WarningOutput)
 
     # Error list
     error_list <- list(Check1 = check_format_brood_output$ErrorOutput,
@@ -150,7 +160,8 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
                        Check6c = check_values_fledgling_number_output$ErrorOutput,
                        Check7 = check_parent_species_output$ErrorOutput,
                        Check8 = compare_broodsize_chicknumber_output$ErrorOutput,
-                       Check9 = check_unique_BroodID_output$ErrorOutput)
+                       Check9 = check_unique_BroodID_output$ErrorOutput,
+                       Check10 = check_clutch_type_order_output$ErrorOutput)
   } else {
     # Warning list
     warning_list <- list(Check2 = compare_clutch_brood_output$WarningOutput,
@@ -162,7 +173,8 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
                          Check6c = check_values_fledgling_number_output$WarningOutput,
                          Check7 = check_parent_species_output$WarningOutput,
                          Check8 = compare_broodsize_chicknumber_output$WarningOutput,
-                         Check9 = check_unique_BroodID_output$WarningOutput)
+                         Check9 = check_unique_BroodID_output$WarningOutput,
+                         Check10 = check_clutch_type_order_output$WarningOutput)
 
     # Error list
     error_list <- list(Check2 = compare_clutch_brood_output$ErrorOutput,
@@ -174,7 +186,8 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
                        Check6c = check_values_fledgling_number_output$ErrorOutput,
                        Check7 = check_parent_species_output$ErrorOutput,
                        Check8 = compare_broodsize_chicknumber_output$ErrorOutput,
-                       Check9 = check_unique_BroodID_output$ErrorOutput)
+                       Check9 = check_unique_BroodID_output$ErrorOutput,
+                       Check10 = check_clutch_type_order_output$ErrorOutput)
 
     check_list <- check_list[-1,]
   }
@@ -189,7 +202,8 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
                                      check_values_fledgling_number_output$WarningRows,
                                      check_parent_species_output$WarningRows,
                                      compare_broodsize_chicknumber_output$WarningRows,
-                                     check_unique_BroodID_output$WarningRows)),
+                                     check_unique_BroodID_output$WarningRows,
+                                     check_clutch_type_order_output$WarningRows)),
               ErrorRows = unique(c(compare_clutch_brood_output$ErrorRows,
                                    compare_brood_fledglings_output$ErrorRows,
                                    compare_laying_hatching_output$ErrorRows,
@@ -199,7 +213,8 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
                                    check_values_fledgling_number_output$ErrorRows,
                                    check_parent_species_output$ErrorRows,
                                    compare_broodsize_chicknumber_output$ErrorRows,
-                                   check_unique_BroodID_output$ErrorRows)),
+                                   check_unique_BroodID_output$ErrorRows,
+                                   check_clutch_type_order_output$ErrorRows)),
               Warnings = warning_list,
               Errors = error_list))
 }
@@ -1000,6 +1015,74 @@ check_unique_BroodID <- function(Brood_data){
                                                     error_records[error_records$BroodID == .x, "Row"][-1,])),
                                         ".")
                                })
+  }
+
+  # No warnings
+  war <- FALSE
+  #warning_records <- tibble::tibble(Row = NA_character_)
+  warning_output <- NULL
+
+
+  check_list <- tibble::tibble(Warning = war,
+                               Error = err)
+
+  return(list(CheckList = check_list,
+              WarningRows = NULL,
+              ErrorRows = error_records$Row,
+              WarningOutput = unlist(warning_output),
+              ErrorOutput = unlist(error_output)))
+
+  # Satisfy RCMD checks
+  approved_list <- NULL
+
+}
+
+
+#' Check clutch type order
+#'
+#' Check that the order of calculated clutch types per breeding female per season is correct; "first" should always come before "replacement" and "second".
+#'
+#' Check ID: B10.
+#'
+#' @inheritParams checks_brood_params
+#' @inherit checks_return return
+#'
+#' @export
+
+check_clutch_type_order <- function(Brood_data){
+
+  # Error
+  # Select breeding females with ClutchType_calculated == "first" not as first clutch in a particular breeding season
+  Brood_err <- Brood_data %>%
+    dplyr::filter(!is.na(FemaleID) & !is.na(ClutchType_calculated)) %>%
+    dplyr::group_by(PopID, BreedingSeason, FemaleID) %>%
+    dplyr::summarise(CTcal = ifelse(any(ClutchType_calculated == "first"),
+                         which(ClutchType_calculated == "first"), NA),
+              BroodID = BroodID[CTcal],
+              Row = Row[CTcal]) %>%
+    dplyr::filter(!is.na(CTcal) & CTcal > 1) %>%
+    dplyr::ungroup()
+
+  err <- FALSE
+  error_records <- tibble::tibble(Row = NA_character_)
+  error_output <- NULL
+
+  if(nrow(Brood_err) > 0) {
+
+    err <- TRUE
+
+    # Compare to whitelist
+    error_records <- Brood_err %>%
+      dplyr::mutate(CheckID = "B10") %>%
+      dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
+
+    error_output <- purrr::pmap(.l = error_records,
+                                .f = ~{
+                                  paste0("Record on row ", ..6, " (BroodID: ", ..5, ")",
+                                         " has ClutchType_calculated == 'first', but is not the first brood recorded for that female (FemaleID: ", ..3, ") in that season (", ..2, ").")
+                                }
+    )
+
   }
 
   # No warnings
