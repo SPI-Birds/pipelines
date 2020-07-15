@@ -178,7 +178,6 @@ create_brood_AMM   <- function(connection) {
                   LayDate = .data$EndMarch + .data$FirstEggDay,
                   HatchDate = .data$EndMarch + .data$HatchDay,
                   FledgeDate = .data$EndMarch + .data$FledgeDay,
-                  ClutchSize_combined = .data$ClutchSize + .data$EggOtherSpecies,
                   BroodSwap_ExperimentID = ifelse(.data$BroodSwap > 0L, "COHORT", NA_character_),
                   BroodOther_ExperimentID = ifelse(.data$BroodOtherTreatment == 3L, "SURVIVAL", NA_character_),
                   Plot_ExperimentID = ifelse(.data$PlotLevelTreatment == 3L, "SURVIVAL", NA_character_),
