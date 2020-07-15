@@ -419,43 +419,76 @@ create_dummy_data <- function(overwrite=TRUE) {
 
   # - chicks
   C2a_chick_rows <- Capture_data %>%
+    # ChickAge known
     dplyr::mutate( # Probable
       Row = as.integer(4),
-      Mass = as.integer(20)
+      Mass = as.integer(20),
+      ChickAge = 12
     ) %>%
     dplyr::add_row( # Improbable (warning)
       Row = as.integer(5),
-      Mass = as.integer(30)
+      Mass = as.integer(30),
+      ChickAge = 12
     ) %>%
     dplyr::add_row( # Impossible (error)
       Row = as.integer(6),
-      Mass = as.integer(100)
+      Mass = as.integer(100),
+      ChickAge = 12
+    ) %>%
+    # ChickAge unknown, age_calculated == 3 (ChickAge becomes 30)
+    dplyr::add_row( # Probable
+      Row = as.integer(7),
+      Mass = as.integer(20),
+      Age_calculated = 3
+    ) %>%
+    dplyr::add_row( # Improbable (warning)
+      Row = as.integer(8),
+      Mass = as.integer(30),
+      Age_calculated = 3
+    ) %>%
+    dplyr::add_row( # Impossible (error)
+      Row = as.integer(9),
+      Mass = as.integer(100),
+      Age_calculated = 3
+    ) %>%
+    # ChickAge unknown, age_calculated == 1 (ChickAge becomes 14)
+    dplyr::add_row( # Probable
+      Row = as.integer(10),
+      Mass = as.integer(20),
+      Age_calculated = 1
+    ) %>%
+    dplyr::add_row( # Improbable (warning)
+      Row = as.integer(11),
+      Mass = as.integer(30),
+      Age_calculated = 1
+    ) %>%
+    dplyr::add_row( # Impossible (error)
+      Row = as.integer(12),
+      Mass = as.integer(100),
+      Age_calculated = 1
     ) %>%
     dplyr::mutate(
       CapturePopID = "AAA",
       IndvID = paste0("C", Row),
-      Age_calculated = 3,
-      ChickAge = 15,
       Species = "PARMAJ",
       BreedingSeason = 2020,
       CaptureDate = "2020-06-01",
       CaptureID = paste(CapturePopID, IndvID, CaptureDate, sep="_")
     )
 
-
   # C2b: Checking tarsus values against reference values
   # - adults
   C2b_adult_rows <- Capture_data %>%
     dplyr::mutate( # Probable
-      Row = as.integer(7),
+      Row = as.integer(13),
       Tarsus = as.integer(20)
     ) %>%
     dplyr::add_row( # Improbable (warning)
-      Row = as.integer(8),
+      Row = as.integer(14),
       Tarsus = as.integer(40)
     ) %>%
     dplyr::add_row( # Impossible (error)
-      Row = as.integer(9),
+      Row = as.integer(15),
       Tarsus = as.integer(100)
     ) %>%
     dplyr::mutate(
@@ -471,15 +504,15 @@ create_dummy_data <- function(overwrite=TRUE) {
   # - chicks
   C2b_chick_rows <- Capture_data %>%
     dplyr::mutate( # Probable
-      Row = as.integer(10),
+      Row = as.integer(16),
       Tarsus = as.integer(20)
     ) %>%
     dplyr::add_row( # Improbable (warning)
-      Row = as.integer(11),
+      Row = as.integer(17),
       Tarsus = as.integer(40)
     ) %>%
     dplyr::add_row( # Impossible (error)
-      Row = as.integer(12),
+      Row = as.integer(18),
       Tarsus = as.integer(100)
     ) %>%
     dplyr::mutate(
@@ -496,11 +529,11 @@ create_dummy_data <- function(overwrite=TRUE) {
   # C3: Checking chick age values
   C3_rows <- Capture_data %>%
     dplyr::mutate( # Probable
-      Row = as.integer(13),
+      Row = as.integer(19),
       ChickAge = 15
     ) %>%
     dplyr::add_row( # Impossible (error)
-      Row = as.integer(14),
+      Row = as.integer(20),
       ChickAge = -2
     ) %>%
     dplyr::mutate(
@@ -553,11 +586,11 @@ create_dummy_data <- function(overwrite=TRUE) {
 
   I3_capture_rows <- Capture_data %>%
     dplyr::mutate( # Probable
-      Row = as.integer(15),
+      Row = as.integer(21),
       IndvID = "C14"
       ) %>%
     dplyr::add_row( # Impossible (error)
-      Row = as.integer(16),
+      Row = as.integer(22),
       IndvID = "C15"
       ) %>%
     dplyr::mutate(

@@ -288,7 +288,7 @@ check_values_capture <- function(Capture_data, var) {
 
                                          } else {
 
-                                           if(is.na(ChickAge) | ChickAge < 0 | ChickAge > 30){
+                                           if(Age_calculated == 1 | is.na(ChickAge) | ChickAge < 0 | ChickAge > 30){
 
                                              current_chick_age <- 14
 

@@ -112,16 +112,18 @@ test_that("Single checks function as expected...", {
   expect_equal(subset(dummy_check$R_data$Brood_data, Row %in% 30:32)$Error, c(NA, TRUE, TRUE))
 
   # Test 11: C2a
-  expect_equal(subset(dummy_check$R_data$Capture_data, Row %in% 1:6)$Warning, c(NA, TRUE, NA, NA, TRUE, NA))
-  expect_equal(subset(dummy_check$R_data$Capture_data, Row %in% 1:6)$Error, c(NA, NA, TRUE, NA, NA, TRUE))
+  expect_equal(subset(dummy_check$R_data$Capture_data, Row %in% 1:12)$Warning,
+               c(NA, TRUE, NA, NA, TRUE, NA, NA, TRUE, NA, NA, TRUE, NA))
+  expect_equal(subset(dummy_check$R_data$Capture_data, Row %in% 1:12)$Error,
+               c(NA, NA, TRUE, NA, NA, TRUE, NA, NA, TRUE, NA, NA, TRUE))
 
   # Test 12: C2b
-  expect_equal(subset(dummy_check$R_data$Capture_data, Row %in% 7:12)$Warning, c(NA, TRUE, NA, NA, TRUE, NA))
-  expect_equal(subset(dummy_check$R_data$Capture_data, Row %in% 7:12)$Error, c(NA, NA, TRUE, NA, NA, TRUE))
+  expect_equal(subset(dummy_check$R_data$Capture_data, Row %in% 13:18)$Warning, c(NA, TRUE, NA, NA, TRUE, NA))
+  expect_equal(subset(dummy_check$R_data$Capture_data, Row %in% 13:18)$Error, c(NA, NA, TRUE, NA, NA, TRUE))
 
   # Test 13: C3
-  expect_equal(subset(dummy_check$R_data$Capture_data, Row %in% 13:14)$Warning, c(NA, NA))
-  expect_equal(subset(dummy_check$R_data$Capture_data, Row %in% 13:14)$Error, c(NA, TRUE))
+  expect_equal(subset(dummy_check$R_data$Capture_data, Row %in% 19:20)$Warning, c(NA, NA))
+  expect_equal(subset(dummy_check$R_data$Capture_data, Row %in% 19:20)$Error, c(NA, TRUE))
 
   # Test 14: I2
   expect_equal(subset(dummy_check$R_data$Individual_data, Row %in% 9:13)$Warning, c(NA, TRUE, TRUE, NA, NA))
