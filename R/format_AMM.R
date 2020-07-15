@@ -99,7 +99,7 @@ format_AMM <- function(db = choose_directory(),
     ##of the brood of measurement (i.e. after cross-fostering)
     dplyr::summarise(AvgTarsus = mean(.data$Tarsus),
                      NumberChicksTarsus = n(),
-                     OriginalTarsusMethod = NA_character_) ##FIXME: Check with Niels
+                     OriginalTarsusMethod = "Alternative")
 
   #Add average tarsus
   Brood_data <- Brood_data %>%
@@ -261,7 +261,7 @@ create_capture_AMM <- function(Brood_data, connection) {
                   CapturePlot = as.character(.data$CapturePlot),
                   ReleasePlot = .data$CapturePlot,
                   LocationID = as.character(.data$NestBox),
-                  OriginalTarsusMethod = NA_character_, #FIXME: Need to ask Niels about method used
+                  OriginalTarsusMethod = "Alternative",
                   Age_observed = dplyr::recode(.data$AgeObserved, `7` = NA_integer_, `0` = NA_integer_), ##FIXME: Check how this compares to new EURING method
                   ChickAge = NA_integer_,
                   ObserverID = as.character(dplyr::na_if(.data$FieldObserver, -99L)),
@@ -307,7 +307,7 @@ create_capture_AMM <- function(Brood_data, connection) {
     tidyr::pivot_longer(data = ., cols = .data$Day2BodyMass:.data$Day18Observer, names_to = "column", values_to = "value") %>%
     dplyr::mutate(value = dplyr::na_if(.data$value, -99L),
                   Day = str_extract(.data$column, "[:digit:]{1,}"),
-                  OriginalTarsusMethod = NA_character_, ##FIXME: Ask Niels about tarsus measurement method
+                  OriginalTarsusMethod = "Alternative",
                   Age_observed = 1L) %>%
     tidyr::separate(.data$column, into = c(NA, "Variable"), sep = "^Day[:digit:]{1,}") %>%
     tidyr::pivot_wider(data = ., names_from = .data$Variable, values_from = .data$value) %>%
