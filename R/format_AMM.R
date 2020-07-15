@@ -172,17 +172,20 @@ create_brood_AMM   <- function(connection) {
                                                     MaleColourDate = .data$ColourDate),
                      by = c("ColourCodeMale" = "ColourCode")) %>%
     dplyr::left_join(Nest_boxes, by = c("NestBox" = "NestBox")) %>%
+    dplyr::collect() %>%
     dplyr::mutate(BreedingSeason = .data$BroodYear,
                   PopID = "AMM",
                   EndMarch = as.Date(paste(.data$BroodYear, "03", "31", sep = "-")),
                   LayDate = .data$EndMarch + .data$FirstEggDay,
+                  #HatchDay > 500 or < 0 should be NA
+                  HatchDay = dplyr::case_when((.data$HatchDay >= 500 | .data$HatchDay < 0) ~ NA,
+                                              TRUE ~ .data$HatchDay),
                   HatchDate = .data$EndMarch + .data$HatchDay,
                   FledgeDate = .data$EndMarch + .data$FledgeDay,
                   BroodSwap_ExperimentID = ifelse(.data$BroodSwap > 0L, "COHORT", NA_character_),
                   BroodOther_ExperimentID = ifelse(.data$BroodOtherTreatment == 3L, "SURVIVAL", NA_character_),
                   Plot_ExperimentID = ifelse(.data$PlotLevelTreatment == 3L, "SURVIVAL", NA_character_),
                   ExperimentID = paste(.data$BroodSwap_ExperimentID, .data$BroodOther_ExperimentID, .data$Plot_ExperimentID, sep = ";")) %>% ##TODO: Decipher other treatment values and check with Niels
-    dplyr::collect() %>%
     # Needed because some colour rings have multiple BirdIDs over time
     # We only want those individuals that had this colour code in a given brood year
     # The correct individual should be the most recent individual ringed before the given BroodYear
@@ -292,6 +295,9 @@ create_capture_AMM <- function(Brood_data, connection) {
                   CapturePopID = "AMM", ReleasePopID = "AMM",
                   Species = "GT") %>%
     dplyr::collect() %>%
+    #Hatchday >500 and <0 should be NA
+    dplyr::mutate(HatchDay = dplyr::case_when((.data$HatchDay >= 500 | .data$HatchDay < 0) ~ NA,
+                                              TRUE ~ .data$HatchDay)) %>%
     dplyr::select(.data$BirdID, .data$ChickYear, .data$EndMarch, .data$NestBox, .data$BroodID,
                   .data$CapturePlot, .data$ReleasePlot,
                   .data$CapturePopID, .data$ReleasePopID,
