@@ -109,7 +109,7 @@ format_AMM <- function(db = choose_directory(),
 
   #Remove BroodID, no longer needed
   Capture_data <- Capture_data %>%
-    dplyr::select(.data$IndvID:.data$Age_observed, .data$Age_calculated, .data$ChickAge)
+    dplyr::select(.data$CaptureID:.data$Age_observed, .data$Age_calculated, .data$ChickAge)
 
   #Disconnect from database
   DBI::dbDisconnect(connection)
@@ -344,7 +344,12 @@ create_capture_AMM <- function(Brood_data, connection) {
 
   Capture_data <- dplyr::bind_rows(Adult_capture, Chick_capture) %>%
     calc_age(ID = .data$IndvID, Age = .data$Age_observed,
-             Date = .data$CaptureDate, Year = .data$BreedingSeason)
+             Date = .data$CaptureDate, Year = .data$BreedingSeason) %>%
+    #Arrange by ID/Date and add unique capture ID
+    dplyr::arrange(.data$IndvID, .data$CaptureDate) %>%
+    dplyr::group_by(.data$IndvID) %>%
+    dplyr::mutate(CaptureID = paste(.data$IndvID, 1:n(), sep = "_")) %>%
+    dplyr::select(.data$CaptureID, everything())
 
   Capture_data
 
