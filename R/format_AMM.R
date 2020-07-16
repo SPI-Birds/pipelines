@@ -221,7 +221,7 @@ create_brood_AMM   <- function(connection) {
                   .data$FledgeDate, .data$FledgeDateError,
                   .data$NumberFledged, NumberFledgedError = .data$FledgedError,
                   .data$AvgEggMass, .data$NumberEggs,
-                  AvgChickMass = .data$BroodWeight, NumberChicksMass = .data$BroodWeightBS, ##FIXME: What day were they weighed?
+                  AvgChickMass = NA_integer_, NumberChicksMass = NA_integer_,
                   .data$ExperimentID) %>%
     dplyr::mutate_at(.vars = vars(.data$Plot:.data$MaleID), as.character) %>%
     dplyr::mutate_at(.vars = vars(.data$LayDate, .data$HatchDate, .data$FledgeDate), as.Date)
