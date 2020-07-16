@@ -158,19 +158,26 @@ format_AMM <- function(db = choose_directory(),
 
 create_brood_AMM   <- function(connection) {
 
-  Colour_codes <- dplyr::tbl(connection, "ColourCode") %>%
-    dplyr::select(.data$ColourCode, .data$BirdID, .data$ColourDate)
+  Catches_M <- dplyr::tbl(connection, "Catches") %>%
+    dplyr::select(.data$BroodID, MaleID = .data$BirdID, .data$SexConclusion) %>%
+    dplyr::filter(!is.na(BroodID)) %>%
+    dplyr::distinct() %>%
+    dplyr::filter(.data$SexConclusion == 2L) %>%
+    dplyr::select(-.data$SexConclusion)
+
+  Catches_F <- dplyr::tbl(connection, "Catches") %>%
+    dplyr::select(.data$BroodID, FemaleID = .data$BirdID, .data$SexConclusion) %>%
+    dplyr::filter(!is.na(BroodID)) %>%
+    dplyr::distinct() %>%
+    dplyr::filter(.data$SexConclusion == 1L) %>%
+    dplyr::select(-.data$SexConclusion)
 
   Nest_boxes <- dplyr::tbl(connection, "NestBoxes") %>%
     dplyr::select(.data$NestBox, .data$Plot)
 
   Brood_data <- dplyr::tbl(connection, "Broods") %>%
-    dplyr::left_join(Colour_codes %>% dplyr::rename(FemaleID = .data$BirdID,
-                                                    FemaleColourDate = .data$ColourDate),
-                     by = c("ColourCodeFemale" = "ColourCode")) %>%
-    dplyr::left_join(Colour_codes %>% dplyr::rename(MaleID = .data$BirdID,
-                                                    MaleColourDate = .data$ColourDate),
-                     by = c("ColourCodeMale" = "ColourCode")) %>%
+    dplyr::left_join(Catches_F, by = c("BroodID")) %>%
+    dplyr::left_join(Catches_M, by = c("BroodID")) %>%
     dplyr::left_join(Nest_boxes, by = c("NestBox" = "NestBox")) %>%
     dplyr::collect() %>%
     dplyr::mutate(BreedingSeason = .data$BroodYear,
@@ -187,14 +194,6 @@ create_brood_AMM   <- function(connection) {
                   BroodOther_ExperimentID = ifelse(.data$BroodOtherTreatment == 3L, "SURVIVAL", NA_character_),
                   Plot_ExperimentID = ifelse(.data$PlotLevelTreatment == 3L, "SURVIVAL", NA_character_),
                   ExperimentID = paste(.data$BroodSwap_ExperimentID, .data$BroodOther_ExperimentID, .data$Plot_ExperimentID, sep = ";")) %>% ##TODO: Decipher other treatment values and check with Niels
-    # Needed because some colour rings have multiple BirdIDs over time
-    # We only want those individuals that had this colour code in a given brood year
-    # The correct individual should be the most recent individual ringed before the given BroodYear
-    # i.e. individuals ringed later are excluded, individuals ringed earlier than another individual with the same colour code are excluded
-    dplyr::filter((is.na(.data$MaleColourDate) | .data$BroodYear >= lubridate::year(.data$MaleColourDate)) & (is.na(.data$FemaleColourDate) | .data$BroodYear >= lubridate::year(.data$FemaleColourDate))) %>%
-    dplyr::group_by(.data$BroodID) %>%
-    dplyr::slice(n()) %>%
-    dplyr::ungroup() %>%
     # Remove all cases of -99
     dplyr::mutate_all(~dplyr::na_if(., -99L)) %>%
     # Case when not available in SQL Access, needs to be done after collecting
@@ -294,7 +293,7 @@ create_capture_AMM <- function(Brood_data, connection) {
     dplyr::left_join(Nestbox_release, by = c("SwapToNestBox" = "NestBox")) %>%
     dplyr::mutate(EndMarch = as.Date(paste(.data$ChickYear, "03", "31", sep = "-")),
                   CapturePopID = "AMM", ReleasePopID = "AMM",
-                  Species = "GT") %>%
+                  Species = Species_codes$Code[Species_codes$SpeciesID == 14640]) %>%
     dplyr::collect() %>%
     #Hatchday >500 and <0 should be NA
     dplyr::mutate(HatchDay = dplyr::case_when((.data$HatchDay >= 500 | .data$HatchDay < 0) ~ NA_integer_,
