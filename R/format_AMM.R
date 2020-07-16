@@ -425,7 +425,8 @@ create_location_AMM <- function(Capture_data, connection) {
                   LocationType = "NB",
                   PopID = "AMM",
                   StartSeason = start_year,
-                  EndSeason = NA_integer_,
+                  EndSeason = dplyr::case_when(nchar(.data$NestboxID) == 4 & stringr::str_sub(.data$NestboxID, 1, 2) == "16" ~ 2016L,
+                                               TRUE ~ 2019L),
                   Habitat = NA_character_) %>% #FIXME: Ask Niels about habitat type
     dplyr::select(.data$LocationID,
                   .data$NestboxID,
