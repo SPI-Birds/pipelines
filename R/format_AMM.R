@@ -25,7 +25,7 @@
 #'\strong{BroodSize/NumberFledgedError}: Use ErrorHatched for BroodSizeError, but this really represents minimum (BroodSize)
 #'and maximum (BroodSize + ErrorHatched). We need to rethink how we deal with this error. Do we use (BroodSize + ErrorHatched/2) = BroodSize?
 #'
-#'\strong{AvgChickMass}: Included column BroodWeight, but need to check what day they were weighed.
+#'\strong{HatchDate}: The day a clutch hatched.
 #'
 #'@inheritParams pipeline_params
 #'
@@ -213,7 +213,9 @@ create_brood_AMM   <- function(connection) {
                   ClutchSizeError = NA_integer_,
                   FledgeDateError = NA_integer_,
                   AvgEggMass = NA_real_,
-                  NumberEggs = NA_integer_) %>%
+                  NumberEggs = NA_integer_,
+                  AvgChickMass = NA_integer_,
+                  NumberChicksMass = NA_integer_) %>%
     dplyr::select(.data$BroodID, .data$PopID, .data$BreedingSeason,
                   .data$Species, .data$Plot, LocationID = .data$NestBox, .data$FemaleID, .data$MaleID,
                   .data$ClutchType_observed, .data$ClutchType_calculated,
@@ -224,7 +226,7 @@ create_brood_AMM   <- function(connection) {
                   .data$FledgeDate, .data$FledgeDateError,
                   .data$NumberFledged, NumberFledgedError = .data$FledgedError,
                   .data$AvgEggMass, .data$NumberEggs,
-                  AvgChickMass = NA_integer_, NumberChicksMass = NA_integer_,
+                  .data$AvgChickMass, .data$NumberChicksMass,
                   .data$ExperimentID) %>%
     dplyr::mutate_at(.vars = vars(.data$Plot:.data$MaleID), as.character) %>%
     dplyr::mutate_at(.vars = vars(.data$LayDate, .data$HatchDate, .data$FledgeDate), as.Date)

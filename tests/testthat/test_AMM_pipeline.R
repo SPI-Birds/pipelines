@@ -23,7 +23,7 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(AMM_data, BroodID == "3642")$ClutchSize, 7L)
   expect_equal(subset(AMM_data, BroodID == "3642")$BroodSize, NA_integer_)
   expect_equal(subset(AMM_data, BroodID == "3642")$NumberFledged, 7L)
-  expect_equal(round(subset(AMM_data, BroodID == "3642")$AvgChickMass, 2), 16.80)
+  expect_equal(round(subset(AMM_data, BroodID == "3642")$AvgChickMass, 2), NA_real_)
   expect_equal(round(subset(AMM_data, BroodID == "3642")$AvgTarsus, 2), 20.46)
 
   #Test 2: Brood where clutch type = replacement (because first is known to have failed)
@@ -34,7 +34,7 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(AMM_data, BroodID == "4375")$BroodSize, NA_integer_)
   expect_equal(subset(AMM_data, BroodID == "4375")$NumberFledged, 0L)
   #Measurements taken but not included in average because chick age was >16
-  expect_equal(subset(AMM_data, BroodID == "4375")$AvgChickMass, 13.30)
+  expect_equal(subset(AMM_data, BroodID == "4375")$AvgChickMass, NA_real_)
   expect_equal(subset(AMM_data, BroodID == "4375")$AvgTarsus, 20.25)
 
   #Test 3: Brood where clutch type = replacement (past the cutoff)
@@ -128,7 +128,7 @@ test_that("Location_data returns an expected outcome...", {
   expect_true(subset(AMM_data, LocationID == "1144")$LocationType == "NB")
   expect_true(subset(AMM_data, LocationID == "1144")$NestboxID == "1144")
   expect_equal(subset(AMM_data, LocationID == "1144")$StartSeason, 2010L)
-  expect_equal(subset(AMM_data, LocationID == "1144")$EndSeason, NA_integer_)
+  expect_equal(subset(AMM_data, LocationID == "1144")$EndSeason, 2019L)
   expect_equal(subset(AMM_data, LocationID == "1144")$PopID, "AMM")
   expect_equal(round(subset(AMM_data, LocationID == "1144")$Latitude, 2), 47.98)
   expect_equal(round(subset(AMM_data, LocationID == "1144")$Longitude, 2), 11.16)
