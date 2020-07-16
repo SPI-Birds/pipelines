@@ -178,7 +178,8 @@ create_brood_AMM   <- function(connection) {
                   EndMarch = as.Date(paste(.data$BroodYear, "03", "31", sep = "-")),
                   LayDate = .data$EndMarch + .data$FirstEggDay,
                   #HatchDay > 500 or < 0 should be NA
-                  HatchDay = dplyr::case_when((.data$HatchDay >= 500 | .data$HatchDay < 0) ~ NA,
+                  HatchDay = dplyr::case_when(.data$HatchDay >= 500 ~ NA_integer_,
+                                              .data$HatchDay < 0 ~ NA_integer_,
                                               TRUE ~ .data$HatchDay),
                   HatchDate = .data$EndMarch + .data$HatchDay,
                   FledgeDate = .data$EndMarch + .data$FledgeDay,
@@ -296,9 +297,9 @@ create_capture_AMM <- function(Brood_data, connection) {
                   Species = "GT") %>%
     dplyr::collect() %>%
     #Hatchday >500 and <0 should be NA
-    dplyr::mutate(HatchDay = dplyr::case_when((.data$HatchDay >= 500 | .data$HatchDay < 0) ~ NA,
+    dplyr::mutate(HatchDay = dplyr::case_when((.data$HatchDay >= 500 | .data$HatchDay < 0) ~ NA_integer_,
                                               TRUE ~ .data$HatchDay)) %>%
-    dplyr::select(.data$BirdID, .data$ChickYear, .data$EndMarch, .data$NestBox, .data$BroodID,
+    dplyr::select(.data$Species, .data$BirdID, .data$ChickYear, .data$EndMarch, .data$NestBox, .data$BroodID,
                   .data$CapturePlot, .data$ReleasePlot,
                   .data$CapturePopID, .data$ReleasePopID,
                   .data$HatchDay, .data$Day2BodyMass, .data$Day2BodyMassTime,
