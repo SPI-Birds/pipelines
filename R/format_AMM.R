@@ -292,16 +292,17 @@ create_capture_AMM <- function(Brood_data, connection) {
     dplyr::left_join(Nestbox_capture, by = "NestBox") %>%
     dplyr::left_join(Nestbox_release, by = c("SwapToNestBox" = "NestBox")) %>%
     dplyr::mutate(EndMarch = as.Date(paste(.data$ChickYear, "03", "31", sep = "-")),
-                  CapturePopID = "AMM", ReleasePopID = "AMM",
-                  Species = Species_codes$Code[Species_codes$SpeciesID == 14640]) %>%
+                  CapturePopID = "AMM", ReleasePopID = "AMM") %>%
     dplyr::collect() %>%
     #Hatchday >500 and <0 should be NA
     dplyr::mutate(HatchDay = dplyr::case_when((.data$HatchDay >= 500 | .data$HatchDay < 0) ~ NA_integer_,
-                                              TRUE ~ .data$HatchDay)) %>%
+                                              TRUE ~ .data$HatchDay),
+                  Species = Species_codes$Code[Species_codes$SpeciesID == 14640]) %>%
     dplyr::select(.data$Species, .data$BirdID, .data$ChickYear, .data$EndMarch, .data$NestBox, .data$BroodID,
                   .data$CapturePlot, .data$ReleasePlot,
                   .data$CapturePopID, .data$ReleasePopID,
                   .data$HatchDay, .data$Day2BodyMass, .data$Day2BodyMassTime,
+                  Day2Observer = .data$SwapObserver,
                   .data$Day6BodyMass, .data$Day6BodyMassTime, .data$Day6Observer,
                   .data$Day14P3, .data$Day14Tarsus, .data$Day14BodyMass, .data$Day14BodyMassTime,
                   .data$Day14Observer, Day18BodyMass = .data$Day18Bodymass, .data$Day18BodyMassTime, .data$Day18Observer) %>%
