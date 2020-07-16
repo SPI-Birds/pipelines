@@ -190,9 +190,12 @@ create_brood_AMM   <- function(connection) {
                                               TRUE ~ .data$HatchDay),
                   HatchDate = .data$EndMarch + .data$HatchDay,
                   FledgeDate = .data$EndMarch + .data$FledgeDay,
-                  BroodSwap_ExperimentID = ifelse(.data$BroodSwap > 0L, "COHORT", NA_character_),
-                  BroodOther_ExperimentID = ifelse(.data$BroodOtherTreatment == 3L, "SURVIVAL", NA_character_),
-                  Plot_ExperimentID = ifelse(.data$PlotLevelTreatment == 3L, "SURVIVAL", NA_character_),
+                  BroodSwap_ExperimentID = ifelse(.data$BroodSwap > 0L, "PARENTAGE/COHORT", NA_character_),
+                  BroodOther_ExperimentID = dplyr::case_when(.data$BroodOtherTreatment %in% c(1L, 2L, 3L, 4L, 5L) ~ "SURVIVAL",
+                                                             TRUE ~ NA_character_),
+                Plot_ExperimentID = dplyr::case_when(.data$PlotLevelTreatment %in% c(1L, 2L) ~ "PHENOLOGY",
+                    .data$PlotLevelTreatment == 3L ~ "PHENOLOGY/COHORT/SURVIVAL",
+                                                       TRUE ~ NA_character_),
                   ExperimentID = paste(.data$BroodSwap_ExperimentID, .data$BroodOther_ExperimentID, .data$Plot_ExperimentID, sep = ";")) %>% ##TODO: Decipher other treatment values and check with Niels
     # Remove all cases of -99
     dplyr::mutate_all(~dplyr::na_if(., -99L)) %>%
