@@ -273,10 +273,14 @@ create_capture_AMM <- function(Brood_data, connection) {
                   Age_observed = dplyr::recode(.data$AgeObserved, `7` = NA_integer_, `0` = NA_integer_), ##FIXME: Check how this compares to new EURING method
                   ChickAge = NA_integer_,
                   ObserverID = as.character(dplyr::na_if(.data$FieldObserver, -99L)),
-                  BroodID = as.character(.data$BroodID)) %>%
+                  BroodID = as.character(.data$BroodID),
+                  SexObserved = dplyr::case_when(.data$SexObserved == 1L ~ "F",
+                                                 .data$SexObserved == 2L ~ "M",
+                                                 TRUE ~ NA_character_)) %>%
     mutate_at(.vars = vars(.data$BodyMassField, .data$Tarsus, .data$WingP3), .funs = ~ifelse(. <= 0, NA_real_, .)) %>%
     dplyr::select(.data$IndvID,
                   .data$Species,
+                  .data$SexObserved,
                   .data$BreedingSeason,
                   .data$CaptureDate,
                   .data$CaptureTime,
@@ -302,8 +306,9 @@ create_capture_AMM <- function(Brood_data, connection) {
     #Hatchday >500 and <0 should be NA
     dplyr::mutate(HatchDay = dplyr::case_when((.data$HatchDay >= 500 | .data$HatchDay < 0) ~ NA_integer_,
                                               TRUE ~ .data$HatchDay),
-                  Species = Species_codes$Code[Species_codes$SpeciesID == 14640]) %>%
-    dplyr::select(.data$Species, .data$BirdID, .data$ChickYear, .data$EndMarch, .data$NestBox, .data$BroodID,
+                  Species = Species_codes$Code[Species_codes$SpeciesID == 14640],
+                  SexObserved = NA_character_) %>%
+    dplyr::select(.data$Species, .data$SexObserved, .data$BirdID, .data$ChickYear, .data$EndMarch, .data$NestBox, .data$BroodID,
                   .data$CapturePlot, .data$ReleasePlot,
                   .data$CapturePopID, .data$ReleasePopID,
                   .data$HatchDay, .data$Day2BodyMass, .data$Day2BodyMassTime,
@@ -326,6 +331,7 @@ create_capture_AMM <- function(Brood_data, connection) {
     dplyr::mutate(CaptureDate = as.Date(.data$EndMarch) + .data$HatchDay + .data$Day) %>%
     dplyr::select(IndvID = .data$BirdID,
                   .data$Species,
+                  .data$SexObserved,
                   BreedingSeason = .data$ChickYear,
                   .data$CaptureDate,
                   CaptureTime = .data$BodyMassTime,
@@ -366,13 +372,31 @@ create_capture_AMM <- function(Brood_data, connection) {
 
 create_individual_AMM <- function(Capture_data, Brood_data, connection) {
 
-  Sex_data <- dplyr::tbl(connection, "BirdID") %>%
-    dplyr::select(IndvID = .data$BirdID, Sex = .data$SexConclusion) %>%
+  Sex_genetic <- dplyr::tbl(connection, "GenotypesAllYears") %>%
+    dplyr::select(IndvID = .data$BirdID, .data$SexGenetic) %>%
+    dplyr::filter(!is.na(.data$IndvID) & !is.na(.data$SexGenetic) & .data$SexGenetic > 0) %>%
     dplyr::collect() %>%
-    dplyr::mutate(Sex = dplyr::case_when(.data$Sex == 1L ~ "F",
-                                         .data$Sex == 2L ~ "M",
-                                         TRUE ~ NA_character_),
-                  IndvID = as.character(.data$IndvID))
+    dplyr::group_by(.data$IndvID) %>%
+    dplyr::summarise(length_sex = length(unique(.data$SexGenetic)),
+                     unique_sex = list(unique(.data$SexGenetic))) %>%
+    dplyr::rowwise() %>%
+    dplyr::mutate(IndvID = as.character(.data$IndvID),
+                  SexGenetic = dplyr::case_when(.data$length_sex > 1 ~ "C",
+                                                .data$unique_sex[[1]] == 1L ~ "F",
+                                                .data$unique_sex[[1]] == 2L ~ "M")) %>%
+    dplyr::ungroup() %>%
+    dplyr::select(.data$IndvID, .data$SexGenetic)
+
+  Sex_calc <- Capture_data %>%
+    dplyr::filter(!is.na(.data$SexObserved)) %>%
+    dplyr::group_by(.data$IndvID) %>%
+    dplyr::summarise(length_sex = length(unique(.data$SexObserved)),
+                     unique_sex = list(unique(.data$SexObserved))) %>%
+    dplyr::rowwise() %>%
+    dplyr::mutate(SexCalculated = dplyr::case_when(.data$length_sex > 1 ~ "C",
+                                                TRUE ~ .data$unique_sex[[1]])) %>%
+    dplyr::ungroup() %>%
+    dplyr::select(.data$IndvID, .data$SexCalculated)
 
   Brood_swap_info <- dplyr::tbl(connection, "Chicks") %>%
     dplyr::select(IndvID = .data$BirdID, BroodIDLaid = .data$BroodID, BroodIDFledged = .data$SwapToBroodID) %>%
@@ -401,12 +425,13 @@ create_individual_AMM <- function(Capture_data, Brood_data, connection) {
     PopID = "AMM",
     RingSeason = min(.data$BreedingSeason),
     RingAge = ifelse(min(.data$Age_observed) != 1L | is.na(min(.data$Age_observed)), "adult", "chick")) %>%
-    dplyr::left_join(Sex_data, by = "IndvID") %>%
+    dplyr::left_join(Sex_calc, by = "IndvID") %>%
+    dplyr::left_join(Sex_genetic, by = "IndvID") %>%
     dplyr::left_join(Brood_swap_info, by = "IndvID") %>%
     dplyr::select(.data$IndvID, .data$Species, .data$PopID,
                   .data$BroodIDLaid, .data$BroodIDFledged,
                   .data$RingSeason, .data$RingAge,
-                  .data$Sex)
+                  .data$SexCalculated, .data$SexGenetic)
 
 
 }
