@@ -277,6 +277,11 @@ create_capture_AMM <- function(Brood_data, connection) {
                   Sex_observed = dplyr::case_when(.data$SexObserved == 1L ~ "F",
                                                  .data$SexObserved == 2L ~ "M",
                                                  TRUE ~ NA_character_),
+                  #If taken to the lab for personality tests this could affect survival
+                  #Attaching a transponder could also affect survival
+                  CaptureExperimentID = dplyr::case_when(.data$ToLab == 1L ~ "SURVIVAL",
+                                                         .data$Transponder == 1L ~ "SURVIVAL",
+                                                         TRUE ~ NA_character_),
                   CaptureAlive = dplyr::case_when(.data$CatchType %in% 13L:15L ~ FALSE,
                                                     TRUE ~ TRUE),
                   ReleaseAlive = dplyr::case_when(.data$CatchType %in% 13L:15L ~ FALSE,
