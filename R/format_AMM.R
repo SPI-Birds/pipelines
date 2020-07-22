@@ -22,8 +22,13 @@
 #'In this case, we are giving the clutch size as the number of eggs of both species. We are thinking
 #'about ways to more effectively deal with multi-species clutches.
 #'
-#'\strong{BroodSize}: Use NumberHatched to determine observed BroodSize. BroodSize minimum is equal to BroodSize
+#'\strong{BroodSize}: Use NumberHatched to determine observed BroodSize. BroodSize_minimum is equal to BroodSize
 #'observed. BroodSize_maximum is NumberHatched + ErrorHatched (i.e. number of eggs never observed either alive
+#'or dead, so status was unknown).
+#'
+#'\strong{NumberFledged}: Use NumberFledged to determine observed number of fledlings.
+#'NumberFledged_minimum is equal to BroodSize_observed.
+#'BroodSize_maximum is NumberFledged + ErrorFledged (i.e. number of chicks never observed either alive
 #'or dead, so status was unknown).
 #'
 #'\strong{HatchDate}: The day a clutch hatched.
@@ -184,13 +189,27 @@ create_brood_AMM   <- function(connection) {
     dplyr::mutate(BreedingSeason = .data$BroodYear,
                   PopID = "AMM",
                   EndMarch = as.Date(paste(.data$BroodYear, "03", "31", sep = "-")),
-                  LayDate = .data$EndMarch + .data$FirstEggDay,
-                  #HatchDay > 500 or < 0 should be NA
+                  LayDate_observed = .data$EndMarch + .data$FirstEggDay,
+                  LayDate_maximum = .data$LayDate_observed,
+                  LayDate_minimum = .data$EndMarch + (.data$FirstEggDay - .data$FirstEggDayError),
+                  ClutchSize_observed = .data$ClutchSize,
+                  ClutchSize_minimum = .data$ClutchSize_observed,
+                  ClutchSize_maximum = .data$ClutchSize_observed,
                   HatchDay = dplyr::case_when(.data$HatchDay >= 500 ~ NA_integer_,
                                               .data$HatchDay < 0 ~ NA_integer_,
                                               TRUE ~ .data$HatchDay),
-                  HatchDate = .data$EndMarch + .data$HatchDay,
-                  FledgeDate = .data$EndMarch + .data$FledgeDay,
+                  HatchDate_observed = .data$EndMarch + .data$HatchDay,
+                  HatchDate_maximum = .data$HatchDate_observed,
+                  HatchDate_minimum = .data$EndMarch + (.data$HatchDay - .data$HatchDayError),
+                  BroodSize_observed = .data$NumberHatched,
+                  BroodSize_minimum = .data$NumberHatched,
+                  BroodSize_maximum = .data$NumberHatched + .data$ErrorHatched,
+                  FledgeDate_observed = .data$EndMarch + .data$FledgeDay,
+                  FledgeDate_minimum = .data$EndMarch + .data$FledgeDay,
+                  FledgeDate_maximum = .data$EndMarch + .data$FledgeDay,
+                  NumberFledged_observed = .data$NumberFledged,
+                  NumberFledged_minimum = .data$NumberFledged,
+                  NumberFledged_maximum = .data$NumberFledged + .data$FledgedError,
                   BroodSwap_ExperimentID = ifelse(.data$BroodSwap > 0L, "PARENTAGE/COHORT", NA_character_),
                   BroodOther_ExperimentID = dplyr::case_when(.data$BroodOtherTreatment %in% c(1L, 2L, 3L, 4L, 5L) ~ "SURVIVAL",
                                                              TRUE ~ NA_character_),
@@ -201,7 +220,7 @@ create_brood_AMM   <- function(connection) {
     # Remove all cases of -99
     dplyr::mutate_all(~dplyr::na_if(., -99L)) %>%
     # Case when not available in SQL Access, needs to be done after collecting
-    dplyr::arrange(.data$BreedingSeason, .data$FemaleID, .data$LayDate) %>%
+    dplyr::arrange(.data$BreedingSeason, .data$FemaleID, .data$LayDate_observed) %>%
     dplyr::mutate(BroodID = as.character(.data$BroodID),
                   ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE),
                   Species = dplyr::case_when(.data$Species == 1L ~ !!Species_codes$Code[Species_codes$SpeciesID == "14640"],
@@ -211,8 +230,6 @@ create_brood_AMM   <- function(connection) {
                   ClutchType_observed = dplyr::case_when(.data$ClutchNumber == 1L ~ "first",
                                                          .data$ClutchNumber %in% c(2L, 4L) ~ "second",
                                                          .data$ClutchNumber %in% c(3L, 5L, 6L) ~ "replacement"),
-                  ClutchSizeError = NA_integer_,
-                  FledgeDateError = NA_integer_,
                   AvgEggMass = NA_real_,
                   NumberEggs = NA_integer_,
                   AvgChickMass = NA_integer_,
@@ -220,18 +237,20 @@ create_brood_AMM   <- function(connection) {
     dplyr::select(.data$BroodID, .data$PopID, .data$BreedingSeason,
                   .data$Species, .data$Plot, LocationID = .data$NestBox, .data$FemaleID, .data$MaleID,
                   .data$ClutchType_observed, .data$ClutchType_calculated,
-                  .data$LayDate, LayingDateError = .data$FirstEggDayError,
-                  .data$ClutchSize, .data$ClutchSizeError,
-                  .data$HatchDate, HatchDateError = .data$HatchDayError,
-                  BroodSize_observed = .data$NumberHatched, BroodSize_minimum = .data$NumberHatched,
-                  BroodSize_maximum = .data$NumberHatched + .data$ErrorHatched, ## TODO: Consistent way to deal with errors.
-                  .data$FledgeDate, .data$FledgeDateError,
-                  .data$NumberFledged, NumberFledgedError = .data$FledgedError,
+                  .data$LayDate_observed, .data$LayDate_minimum, .data$LayDate_maximum,
+                  .data$ClutchSize_observed, .data$ClutchSize_minimum, .data$ClutchSize_maximum,
+                  .data$HatchDate_observed, .data$HatchDate_minimum, .data$HatchDate_maximum,
+                  .data$BroodSize_observed, .data$BroodSize_minimum,
+                  .data$BroodSize_maximum,
+                  .data$FledgeDate_observed, .data$FledgeDate_minimum,
+                  .data$FledgeDate_maximum,
+                  .data$NumberFledged_observed, .data$NumberFledged_minimum,
+                  .data$NumberFledged_maximum,
                   .data$AvgEggMass, .data$NumberEggs,
                   .data$AvgChickMass, .data$NumberChicksMass,
                   .data$ExperimentID) %>%
     dplyr::mutate_at(.vars = vars(.data$Plot:.data$MaleID), as.character) %>%
-    dplyr::mutate_at(.vars = vars(.data$LayDate, .data$HatchDate, .data$FledgeDate), as.Date)
+    dplyr::mutate_at(.vars = vars(.data$LayDate_observed, .data$HatchDate_observed, .data$FledgeDate_observed), as.Date)
 
   Brood_data
 
