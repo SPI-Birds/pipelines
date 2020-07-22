@@ -22,8 +22,9 @@
 #'In this case, we are giving the clutch size as the number of eggs of both species. We are thinking
 #'about ways to more effectively deal with multi-species clutches.
 #'
-#'\strong{BroodSize/NumberFledgedError}: Use ErrorHatched for BroodSizeError, but this really represents minimum (BroodSize)
-#'and maximum (BroodSize + ErrorHatched). We need to rethink how we deal with this error. Do we use (BroodSize + ErrorHatched/2) = BroodSize?
+#'\strong{BroodSize}: Use NumberHatched to determine observed BroodSize. BroodSize minimum is equal to BroodSize
+#'observed. BroodSize_maximum is NumberHatched + ErrorHatched (i.e. number of eggs never observed either alive
+#'or dead, so status was unknown).
 #'
 #'\strong{HatchDate}: The day a clutch hatched.
 #'
@@ -222,7 +223,8 @@ create_brood_AMM   <- function(connection) {
                   .data$LayDate, LayingDateError = .data$FirstEggDayError,
                   .data$ClutchSize, .data$ClutchSizeError,
                   .data$HatchDate, HatchDateError = .data$HatchDayError,
-                  BroodSize = .data$NumberHatched, BroodSizeError = .data$ErrorHatched, ## TODO: Consistent way to deal with errors.
+                  BroodSize_observed = .data$NumberHatched, BroodSize_minimum = .data$NumberHatched,
+                  BroodSize_maximum = .data$NumberHatched + .data$ErrorHatched, ## TODO: Consistent way to deal with errors.
                   .data$FledgeDate, .data$FledgeDateError,
                   .data$NumberFledged, NumberFledgedError = .data$FledgedError,
                   .data$AvgEggMass, .data$NumberEggs,
