@@ -276,7 +276,12 @@ create_capture_AMM <- function(Brood_data, connection) {
                   BroodID = as.character(.data$BroodID),
                   Sex_observed = dplyr::case_when(.data$SexObserved == 1L ~ "F",
                                                  .data$SexObserved == 2L ~ "M",
-                                                 TRUE ~ NA_character_)) %>%
+                                                 TRUE ~ NA_character_),
+                  CaptureAlive = dplyr::case_when(.data$CatchType %in% 13L:15L ~ FALSE,
+                                                    TRUE ~ TRUE),
+                  ReleaseAlive = dplyr::case_when(.data$CatchType %in% 13L:15L ~ FALSE,
+                                                  .data$DeadOrAlive == 0L ~ FALSE,
+                                                  TRUE ~ TRUE)) %>%
     mutate_at(.vars = vars(.data$BodyMassField, .data$Tarsus, .data$WingP3), .funs = ~ifelse(. <= 0, NA_real_, .)) %>%
     dplyr::select(.data$IndvID,
                   .data$Species,
