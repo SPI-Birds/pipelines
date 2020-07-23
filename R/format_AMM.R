@@ -186,7 +186,15 @@ create_brood_AMM   <- function(connection) {
     dplyr::left_join(Catches_M, by = c("BroodID")) %>%
     dplyr::left_join(Nest_boxes, by = c("NestBox" = "NestBox")) %>%
     dplyr::collect() %>%
-    dplyr::mutate(BreedingSeason = .data$BroodYear,
+    #Remove -99 and replace with NA
+    dplyr::mutate_all(~dplyr::na_if(., -99)) %>%
+    #For day data, remove any cases >= 500. These equate to NA
+    dplyr::mutate_at(vars(HatchDay, FledgeDay), ~{
+
+      dplyr::case_when(. >= 500 ~ NA_integer_,
+                       TRUE ~ .)
+
+    }) %>%
                   PopID = "AMM",
                   EndMarch = as.Date(paste(.data$BroodYear, "03", "31", sep = "-")),
                   LayDate_observed = .data$EndMarch + .data$FirstEggDay,
@@ -217,8 +225,7 @@ create_brood_AMM   <- function(connection) {
                     .data$PlotLevelTreatment == 3L ~ "PHENOLOGY/COHORT/SURVIVAL",
                                                        TRUE ~ NA_character_),
                   ExperimentID = paste(.data$BroodSwap_ExperimentID, .data$BroodOther_ExperimentID, .data$Plot_ExperimentID, sep = ";")) %>% ##TODO: Decipher other treatment values and check with Niels
-    # Remove all cases of -99
-    dplyr::mutate_all(~dplyr::na_if(., -99L)) %>%
+    # Determine clutch type
     # Case when not available in SQL Access, needs to be done after collecting
     dplyr::arrange(.data$BreedingSeason, .data$FemaleID, .data$LayDate_observed) %>%
     dplyr::mutate(BroodID = as.character(.data$BroodID),
