@@ -195,6 +195,8 @@ create_brood_AMM   <- function(connection) {
                        TRUE ~ .)
 
     }) %>%
+    dplyr::mutate(BroodID = as.character(.data$BroodID),
+                  BreedingSeason = .data$BroodYear,
                   PopID = "AMM",
                   EndMarch = as.Date(paste(.data$BroodYear, "03", "31", sep = "-")),
                   LayDate_observed = .data$EndMarch + .data$FirstEggDay,
@@ -203,9 +205,6 @@ create_brood_AMM   <- function(connection) {
                   ClutchSize_observed = .data$ClutchSize,
                   ClutchSize_minimum = .data$ClutchSize_observed,
                   ClutchSize_maximum = .data$ClutchSize_observed,
-                  HatchDay = dplyr::case_when(.data$HatchDay >= 500 ~ NA_integer_,
-                                              .data$HatchDay < 0 ~ NA_integer_,
-                                              TRUE ~ .data$HatchDay),
                   HatchDate_observed = .data$EndMarch + .data$HatchDay,
                   HatchDate_maximum = .data$HatchDate_observed,
                   HatchDate_minimum = .data$EndMarch + (.data$HatchDay - .data$HatchDayError),
@@ -218,6 +217,14 @@ create_brood_AMM   <- function(connection) {
                   NumberFledged_observed = .data$NumberFledged,
                   NumberFledged_minimum = .data$NumberFledged,
                   NumberFledged_maximum = .data$NumberFledged + .data$FledgedError,
+                  Species = dplyr::case_when(.data$Species == 1L ~ !!Species_codes$Code[Species_codes$SpeciesID == "14640"],
+                                             .data$Species == 2L ~ !!Species_codes$Code[Species_codes$SpeciesID == "14620"],
+                                             .data$Species == 3L ~ !!Species_codes$Code[Species_codes$SpeciesID == "14610"],
+                                             .data$Species == 4L ~ !!Species_codes$Code[Species_codes$SpeciesID == "14790"]),
+                  AvgEggMass = NA_real_,
+                  NumberEggs = NA_integer_,
+                  AvgChickMass = NA_integer_,
+                  NumberChicksMass = NA_integer_
                   BroodSwap_ExperimentID = ifelse(.data$BroodSwap > 0L, "PARENTAGE/COHORT", NA_character_),
                   BroodOther_ExperimentID = dplyr::case_when(.data$BroodOtherTreatment %in% c(1L, 2L, 3L, 4L, 5L) ~ "SURVIVAL",
                                                              TRUE ~ NA_character_),
@@ -226,21 +233,12 @@ create_brood_AMM   <- function(connection) {
                                                        TRUE ~ NA_character_),
                   ExperimentID = paste(.data$BroodSwap_ExperimentID, .data$BroodOther_ExperimentID, .data$Plot_ExperimentID, sep = ";")) %>% ##TODO: Decipher other treatment values and check with Niels
     # Determine clutch type
-    # Case when not available in SQL Access, needs to be done after collecting
     dplyr::arrange(.data$BreedingSeason, .data$FemaleID, .data$LayDate_observed) %>%
-    dplyr::mutate(BroodID = as.character(.data$BroodID),
-                  ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE),
-                  Species = dplyr::case_when(.data$Species == 1L ~ !!Species_codes$Code[Species_codes$SpeciesID == "14640"],
-                                             .data$Species == 2L ~ !!Species_codes$Code[Species_codes$SpeciesID == "14620"],
-                                             .data$Species == 3L ~ !!Species_codes$Code[Species_codes$SpeciesID == "14610"],
-                                             .data$Species == 4L ~ !!Species_codes$Code[Species_codes$SpeciesID == "14790"]),
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE),
                   ClutchType_observed = dplyr::case_when(.data$ClutchNumber == 1L ~ "first",
                                                          .data$ClutchNumber %in% c(2L, 4L) ~ "second",
-                                                         .data$ClutchNumber %in% c(3L, 5L, 6L) ~ "replacement"),
-                  AvgEggMass = NA_real_,
-                  NumberEggs = NA_integer_,
-                  AvgChickMass = NA_integer_,
-                  NumberChicksMass = NA_integer_) %>%
+                                                         .data$ClutchNumber %in% c(3L, 5L, 6L) ~ "replacement")) %>%
+    # Arrange columns
     dplyr::select(.data$BroodID, .data$PopID, .data$BreedingSeason,
                   .data$Species, .data$Plot, LocationID = .data$NestBox, .data$FemaleID, .data$MaleID,
                   .data$ClutchType_observed, .data$ClutchType_calculated,
