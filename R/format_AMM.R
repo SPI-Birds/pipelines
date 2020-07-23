@@ -228,10 +228,10 @@ create_brood_AMM   <- function(connection) {
                   BroodSwap_ExperimentID = ifelse(.data$BroodSwap > 0L, "PARENTAGE/COHORT", NA_character_),
                   BroodOther_ExperimentID = dplyr::case_when(.data$BroodOtherTreatment %in% c(1L, 2L, 3L, 4L, 5L) ~ "SURVIVAL",
                                                              TRUE ~ NA_character_),
-                Plot_ExperimentID = dplyr::case_when(.data$PlotLevelTreatment %in% c(1L, 2L) ~ "PHENOLOGY",
-                    .data$PlotLevelTreatment == 3L ~ "PHENOLOGY/COHORT/SURVIVAL",
+                  Plot_ExperimentID = dplyr::case_when(.data$PlotLevelTreatment %in% c(1L, 2L) ~ "PHENOLOGY",
+                                                       .data$PlotLevelTreatment == 3L ~ "PHENOLOGY;COHORT;SURVIVAL",
                                                        TRUE ~ NA_character_),
-                  ExperimentID = paste(.data$BroodSwap_ExperimentID, .data$BroodOther_ExperimentID, .data$Plot_ExperimentID, sep = ";")) %>% ##TODO: Decipher other treatment values and check with Niels
+                  ExperimentID = paste(.data$BroodSwap_ExperimentID, .data$BroodOther_ExperimentID, .data$Plot_ExperimentID, sep = ";")) %>%
     # Determine clutch type
     dplyr::arrange(.data$BreedingSeason, .data$FemaleID, .data$LayDate_observed) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE),
@@ -254,6 +254,7 @@ create_brood_AMM   <- function(connection) {
                   .data$AvgEggMass, .data$NumberEggs,
                   .data$AvgChickMass, .data$NumberChicksMass,
                   .data$ExperimentID) %>%
+    # Convert to correct formats
     dplyr::mutate_at(.vars = vars(.data$Plot:.data$MaleID), as.character) %>%
     dplyr::mutate_at(.vars = vars(.data$LayDate_observed, .data$HatchDate_observed, .data$FledgeDate_observed), as.Date)
 
@@ -342,6 +343,7 @@ create_capture_AMM <- function(Brood_data, connection) {
     #Hatchday >500 and <0 should be NA
     dplyr::mutate(HatchDay = dplyr::case_when((.data$HatchDay >= 500 | .data$HatchDay < 0) ~ NA_integer_,
                                               TRUE ~ .data$HatchDay),
+                  # All chicks are GT
                   Species = Species_codes$Code[Species_codes$SpeciesID == 14640],
                   Sex_observed = NA_character_) %>%
     dplyr::select(.data$Species, .data$Sex_observed, .data$BirdID, .data$ChickYear, .data$EndMarch, .data$NestBox, .data$BroodID,
@@ -355,12 +357,12 @@ create_capture_AMM <- function(Brood_data, connection) {
     dplyr::mutate_all(~dplyr::na_if(as.character(.), "-99")) %>% #Needed because pivot functions expect coercable classes when making value col
     dplyr::mutate_at(.vars = vars(contains("BodyMassTime")), ~str_extract(., "[:digit:]{2}:[:digit:]{2}")) %>%
     tidyr::pivot_longer(data = ., cols = .data$Day2BodyMass:.data$Day18Observer, names_to = "column", values_to = "value") %>%
-    dplyr::mutate(value = dplyr::na_if(.data$value, -99L),
-                  Day = str_extract(.data$column, "[:digit:]{1,}"),
+    dplyr::mutate(Day = str_extract(.data$column, "[:digit:]{1,}"),
                   OriginalTarsusMethod = "Alternative",
                   Age_observed = 1L) %>%
     tidyr::separate(.data$column, into = c(NA, "Variable"), sep = "^Day[:digit:]{1,}") %>%
     tidyr::pivot_wider(data = ., names_from = .data$Variable, values_from = .data$value) %>%
+    #Mutate columns back to correct type
     dplyr::mutate_at(.vars = vars(.data$ChickYear, .data$HatchDay, .data$Day), as.integer) %>%
     dplyr::mutate_at(.vars = vars(.data$BodyMass, .data$P3, .data$Tarsus), ~ifelse(as.numeric(.) <= 0, NA_real_, as.numeric(.))) %>%
     dplyr::filter(!(is.na(.data$BodyMass) & is.na(.data$P3) & is.na(.data$Tarsus))) %>%
