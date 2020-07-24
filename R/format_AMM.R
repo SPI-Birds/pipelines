@@ -335,6 +335,7 @@ create_capture_AMM <- function(Brood_data, connection) {
                   .data$BroodID)
 
   Chick_capture <- Chick_catch_tables %>%
+    dplyr::filter(Egg %in% c(-99L, 0L, 2L)) %>%
     dplyr::left_join(Nestbox_capture, by = "NestBox") %>%
     dplyr::left_join(Nestbox_release, by = c("SwapToNestBox" = "NestBox")) %>%
     dplyr::mutate(EndMarch = as.Date(paste(.data$ChickYear, "03", "31", sep = "-")),
