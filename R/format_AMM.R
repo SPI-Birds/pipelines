@@ -456,7 +456,7 @@ create_individual_AMM <- function(Capture_data, Brood_data, connection) {
 
       } else {
 
-        return("CONFLICTED")
+        return("CCCCCC")
 
       }
 
@@ -498,7 +498,7 @@ create_location_AMM <- function(Capture_data, connection) {
                   StartSeason = start_year,
                   EndSeason = dplyr::case_when(nchar(.data$NestboxID) == 4 & stringr::str_sub(.data$NestboxID, 1, 2) == "16" ~ 2016L,
                                                TRUE ~ 2019L),
-                  Habitat = NA_character_) %>% #FIXME: Ask Niels about habitat type
+                  HabitatType = NA_character_) %>% #FIXME: Ask Niels about habitat type
     dplyr::select(.data$LocationID,
                   .data$NestboxID,
                   .data$LocationType,
