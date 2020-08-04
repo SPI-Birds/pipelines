@@ -81,6 +81,24 @@ quality_check <- function(R_data,
                                  Individual_checks$CheckList,
                                  Location_checks$CheckList)
 
+  # Subset approved list items
+  Brood_approved_list <- approved_list$Brood_approved_list %>%
+    dplyr::filter(PopID %in% unique(R_data$Brood_data$PopID)) %>%
+    dplyr::arrange(PopID, BroodID, CheckID)
+
+  Capture_approved_list <- approved_list$Capture_approved_list %>%
+    dplyr::filter(PopID %in% unique(R_data$Brood_data$PopID)) %>%
+    dplyr::arrange(PopID, CaptureID, CheckID)
+
+  Individual_approved_list <- approved_list$Individual_approved_list %>%
+    dplyr::filter(PopID %in% unique(R_data$Brood_data$PopID)) %>%
+    dplyr::arrange(PopID, IndvID, CheckID)
+
+  Location_approved_list <- approved_list$Location_approved_list %>%
+    dplyr::filter(PopID %in% unique(R_data$Brood_data$PopID)) %>%
+    dplyr::arrange(PopID, LocationID, CheckID)
+
+
   # Check messages
   time <- difftime(Sys.time(), start_time, units = "sec")
 
@@ -234,6 +252,52 @@ quality_check <- function(R_data,
                   .f = ~{
                     cat(paste0("Check ", ..2, ": ", ..3), "\n")
                     cat(..1, sep="\n", "\n")
+                  })',
+    '```',
+    '\\newpage',
+    '# Verified records',
+    '',
+    '## Brood data',
+    '',
+    '```{r, echo=FALSE}',
+    '    purrr::pwalk(.l = Brood_approved_list,
+                 .f = ~{ cat(paste0("Record with BroodID ", ..2,
+                                    " and PopID ", ..1,
+                                    " has been verified by the data owner and does no longer violate check ",
+                                    ..3, "."), sep="\n")
+                  })',
+    '```',
+    '',
+    '## Capture data',
+    '',
+    '```{r, echo=FALSE}',
+    '    purrr::pwalk(.l = Capture_approved_list,
+                 .f = ~{ cat(paste0("Record with CaptureID ", ..2,
+                                    " and PopID ", ..1,
+                                    " has been verified by the data owner and does no longer violate check ",
+                                    ..3, "."), sep="\n")
+                  })',
+    '```',
+    '',
+    '## Individual data',
+    '',
+    '```{r, echo=FALSE}',
+    '    purrr::pwalk(.l = Individual_approved_list,
+                 .f = ~{ cat(paste0("Record with IndvID ", ..2,
+                                    " and PopID ", ..1,
+                                    " has been verified by the data owner and does no longer violate check ",
+                                    ..3, "."), sep="\n")
+                  })',
+    '```',
+    '',
+    '## Location data',
+    '',
+    '```{r, echo=FALSE}',
+    '    purrr::pwalk(.l = Location_approved_list,
+                 .f = ~{ cat(paste0("Record with LocationID ", ..2,
+                                    " and PopID ", ..1,
+                                    " has been verified by the data owner and does no longer violate check ",
+                                    ..3, "."), sep="\n")
                   })',
     '```',
     '')

@@ -28,13 +28,20 @@ create_approved_list <- function(new_approved_list){
 
     # Merge existing approved_lists with new approved_lists
     Brood_approved_list <- dplyr::bind_rows(approved_list$Brood_approved_list,
-                                            new_approved_list$Brood_approved_list)
+                                            new_approved_list$Brood_approved_list) %>%
+      tidyr::drop_na()
+
     Capture_approved_list <- dplyr::bind_rows(approved_list$Capture_approved_list,
-                                              new_approved_list$Capture_approved_list)
+                                              new_approved_list$Capture_approved_list) %>%
+      tidyr::drop_na()
+
     Individual_approved_list <- dplyr::bind_rows(approved_list$Individual_approved_list,
-                                                 new_approved_list$Individual_approved_list)
+                                                 new_approved_list$Individual_approved_list) %>%
+      tidyr::drop_na()
+
     Location_approved_list <- dplyr::bind_rows(approved_list$Location_approved_list,
-                                               new_approved_list$Location_approved_list)
+                                               new_approved_list$Location_approved_list) %>%
+      tidyr::drop_na()
 
     overwrite <- TRUE
 

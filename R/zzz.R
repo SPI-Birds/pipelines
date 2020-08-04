@@ -18,7 +18,7 @@ to be easily identified.
 
 \\subsection{Verification of flagged records}
 
-Some of the records flagged as a 'warning' or 'potential error' are likely to be uncommon but true observations. We don't want these same values to be flagged each time a new quality check is conducted. To overcome this, we have implemented an 'approve-listing' procedure that will prevent true records, that have been verified by the data owner, from appearing in future quality check reports. We hope that this will make the quality check reports more useful for data owners and users.
+Some of the records flagged as a 'warning' or 'potential error' are likely to be uncommon but true observations. We don't want these same values to be flagged each time a new quality check is conducted. To overcome this, we have implemented an 'approve-listing' procedure that will prevent true records, that have been verified by the data owner, from appearing in future quality check reports. These records are listed at the end of this document. We hope that this will make the quality check reports more useful for data owners and users.
 
 \\subsection{Types of checks}
 
@@ -28,17 +28,17 @@ The checks include:
   It is possible for empty columns to occur and this check will simply flag these empty columns so they can easily be identified by users.
   \\item \\textbf{Check of data format}. Identify any columns where the format of the data is not as expected (e.g. date, integer) and return a 'potential error'.
   All columns (even empty columns) should be of an expected class. When this does not occur, it is an indiciation of problems in the underlying pipelines.
-  \\item \\textbf{Check for discrepencies in clutch size/brood size/fledgling numbers}. We assume that clutch size >= brood size >= number fledged. Identify any rows where this assumption is not met.
-  Where a brood has not been experimentally manipulated a 'potential error' will be returned. Where a brood has been experimentally manipulated a 'warning' is returned, as the discrepency may be explained by the experimental procedure.
-  \\item \\textbf{Check for discrepencies in unexpected lay/hatch/fledge dates}. We assume that lay date < hatch date < fledge date. Identify any rows where this assumption is not met and return a 'potential error'.
+  \\item \\textbf{Check for discrepancies in clutch size/brood size/fledgling numbers}. We assume that clutch size >= brood size >= number fledged. Identify any rows where this assumption is not met.
+  Where a brood has not been experimentally manipulated a 'potential error' will be returned. Where a brood has been experimentally manipulated a 'warning' is returned, as the discrepancy may be explained by the experimental procedure.
+  \\item \\textbf{Check for discrepancies in unexpected lay/hatch/fledge dates}. We assume that lay date < hatch date < fledge date. Identify any rows where this assumption is not met and return a 'potential error'.
   \\item \\textbf{Check for unusual clutch/brood/fledgling numbers}. Identify any rows where clutch size, brood size, or number fledged are larger than expected and return a 'warning'. Expected values will differ between species.
   \\item \\textbf{Check for impossible clutch/brood/fledgling numbers}. Identify any rows where clutch size, brood size, or number fledged are negative and return a 'potential error'.
   \\item \\textbf{Check for unexpected mass/tarsus values}. In Capture data, identify any rows where mass or tarsus are larger or smaller than expected for
   a given species. 'warning' values for adults are currently drawn from the data validation values used at the NIOO.
   'warning' values for chicks are the 95\\% confidence interval of a chick growth curve (logistic model) applied to data from Hoge Veluwe.
   \\item \\textbf{Check for multi-species broods}. Currently, we identify any rows where the species of the male and female parent differ and return a 'potential error'.
-  In the future, we will also check for discrepencies between the species of parents and chicks and also within a brood.
-  \\item \\textbf{Check for discrepencies between brood size and capture records}. Identify any rows where the number of chicks captured at a brood in Capture data is different to the brood size listed in Brood data.
+  In the future, we will also check for discrepancies between the species of parents and chicks and also within a brood.
+  \\item \\textbf{Check for discrepancies between brood size and capture records}. Identify any rows where the number of chicks captured at a brood in Capture data is different to the brood size listed in Brood data.
   Where the number of chick captures in a brood is less than the brood size we return a 'warning'. This may occur if not all chicks in a brood are ringed.
   Where the number of chick captures in a brood is more than the brood size we return
   \\item \\textbf{Check that brood and individual ID are unique}. Identify any rows where the IndvID column in Individual data or the BroodID column in Brood data are

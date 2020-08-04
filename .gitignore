@@ -4,3 +4,9 @@ inst/doc
 .RData
 .Ruserdata
 debug_report
+
+output-report.html
+
+output-report.md
+
+output-report.pdf
