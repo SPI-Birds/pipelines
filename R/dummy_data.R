@@ -646,8 +646,9 @@ create_dummy_data <- function(overwrite=TRUE) {
       Row = as.integer(1),
       PopID = "AAA",
       LocationType = "NB",
-      LocationID = paste(PopID, LocationType, 1, sep="_"),
-      NestboxID = paste(PopID, LocationType, 1, sep="_")
+      LocationID = paste(PopID, LocationType, "001", sep="_"),
+      NestboxID = paste(PopID, LocationType, "001", sep="_"),
+      StartSeason = 2019
     )
 
   # I4: Checking that individuals have no conflicting sex
@@ -706,6 +707,73 @@ create_dummy_data <- function(overwrite=TRUE) {
       CaptureID = paste(CapturePopID, IndvID, CaptureDate, sep="_")
     )
 
+
+  # C4: Checking that adults caught on nest are listed are the parents
+  C4_capture_rows <- Capture_data %>%
+    dplyr::mutate( # Probable
+      Row = as.integer(24),
+      LocationID = "AAA_NB_002"
+    ) %>%
+    dplyr::add_row( # Probable (not caught on nest)
+      Row = as.integer(25),
+      LocationID = "AAA_MN_001"
+    ) %>%
+    dplyr::add_row( # Improbable (warning)
+      Row = as.integer(26),
+      LocationID = "AAA_NB_003"
+    ) %>%
+    dplyr::mutate(
+      Age_calculated = 5,
+      IndvID = paste0("I", Row),
+      CapturePopID = "AAA",
+      BreedingSeason = as.integer(2020),
+      Species = "PARMAJ",
+      CaptureDate = "2020-08-01",
+      CaptureID = paste(CapturePopID, IndvID, CaptureDate, sep="_")
+    )
+
+  C4_location_rows <- Location_data %>%
+    dplyr::mutate( # Probable
+      Row = as.integer(2),
+      LocationID = "AAA_NB_002",
+      LocationType = "NB",
+      NestboxID = LocationID
+    ) %>%
+    dplyr::add_row( # Probable (not caught on nest)
+      Row = as.integer(3),
+      LocationID = "AAA_MN_001",
+      LocationType = "MN"
+    ) %>%
+    dplyr::add_row( # Improbable (warning)
+      Row = as.integer(4),
+      LocationID = "AAA_NB_003",
+      LocationType = "NB",
+      NestboxID = LocationID
+    ) %>%
+    dplyr::mutate(
+      PopID = "AAA",
+      StartSeason = 2019,
+      EndSeason = NA
+    )
+
+  C4_brood_rows <- Brood_data %>%
+    dplyr::mutate( # Probable
+      Row = as.integer(39),
+      FemaleID = "I24",
+      LocationID = "AAA_NB_002"
+    ) %>%
+    dplyr::add_row( # Improbable (warning)
+      Row = as.integer(40),
+      FemaleID = "I01",
+      LocationID = "AAA_NB_003"
+    ) %>%
+    dplyr::mutate(
+      PopID = "AAA",
+      BreedingSeason = 2020,
+      Species = "PARMAJ",
+      BroodID = paste(PopID, BreedingSeason, Row, sep="-")
+    )
+
   # Approved_list: make sure that our approve-listing procedure works
   # We create a record that violates check B4, but should NOT result in TRUE in Warning & Error columns
   al_rows <- Brood_data %>%
@@ -724,10 +792,10 @@ create_dummy_data <- function(overwrite=TRUE) {
     )
 
   # Combine single check rows per dataframe
-  Brood_data <- dplyr::bind_rows(B2_rows, B3_rows, B4_rows, B5_rows, B6a_rows, B6b_rows, B6c_rows, B7_brood_rows, B8_brood_rows, B9_rows, B10_rows, al_rows)
-  Capture_data <- dplyr::bind_rows(C2a_adult_rows, C2a_chick_rows, C2b_adult_rows, C2b_chick_rows, C3_rows, I3_capture_rows, I6_capture_rows)
+  Brood_data <- dplyr::bind_rows(al_rows, B2_rows, B3_rows, B4_rows, B5_rows, B6a_rows, B6b_rows, B6c_rows, B7_brood_rows, B8_brood_rows, B9_rows, B10_rows, C4_brood_rows)
+  Capture_data <- dplyr::bind_rows(C2a_adult_rows, C2a_chick_rows, C2b_adult_rows, C2b_chick_rows, C3_rows, I3_capture_rows, I6_capture_rows, C4_capture_rows)
   Individual_data <- dplyr::bind_rows(B7_indv_rows, B8_indv_rows, I2_rows, I3_indv_rows, I4_rows, I5_rows, I6_indv_rows)
-  Location_data <- dplyr::bind_rows(I3_location_rows)
+  Location_data <- dplyr::bind_rows(I3_location_rows, C4_location_rows)
 
   # Combine in list
   dummy_data <- list(Brood_data = Brood_data,

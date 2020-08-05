@@ -6,24 +6,28 @@
 #' \itemize{
 #' \item \strong{C1}: Check if the formats of each column in \code{Capture_data} match with the standard format using \code{\link{check_format_capture}}.
 #' \item \strong{C2a-b}: Check capture variable values against reference values using \code{\link{check_values_capture}}. Capture variables checked for adults and chicks: Mass and Tarsus.
-#' #' \item \strong{C3}: Check chick age (in numbers of days since hatching) using \code{\link{check_chick_age}}.
+#' \item \strong{C3}: Check chick age (in numbers of days since hatching) using \code{\link{check_chick_age}}.
+#' \item \strong{C4}: Check that adults caught on nest are listed as parents using \code{\link{check_adult_parent_nest}}.
 #' }
 #'
 #' @inheritParams checks_capture_params
+#' @inheritParams checks_location_params
+#' @inheritParams checks_brood_params
 #' @param check_format \code{TRUE} or \code{FALSE}. If \code{TRUE}, the check on variable format (i.e. \code{\link{check_format_capture}}) is included in the quality check. Default: \code{TRUE}.
 #'
 #' @inherit checks_return return
 #'
 #' @export
 
-capture_check <- function(Capture_data, check_format=TRUE){
+capture_check <- function(Capture_data, Location_data, Brood_data, check_format=TRUE){
 
   # Create check list with a summary of warnings and errors per check
-  check_list <- tibble::tibble(CheckID = paste0("C", c(1, paste0(2, letters[1:2]), 3)),
+  check_list <- tibble::tibble(CheckID = paste0("C", c(1, paste0(2, letters[1:2]), 3:4)),
                                CheckDescription = c("Check format of capture data",
                                                     "Check mass values against reference values",
                                                     "Check tarsus values against reference values",
-                                                    "Check chick age"),
+                                                    "Check chick age",
+                                                    "Check that adults caught on nest are listed are the parents"),
                                Warning = NA,
                                Error = NA)
 
@@ -60,28 +64,39 @@ capture_check <- function(Capture_data, check_format=TRUE){
 
   check_list[4,3:4] <- check_chick_age_output$CheckList
 
+  # - Check that adults caught on nest are listed are the parents
+  message("C4: Checking that adults caught on nest are listed are the parents...")
+
+  check_adult_parent_nest_output <- check_adult_parent_nest(Capture_data, Location_data, Brood_data)
+
+  check_list[5,3:4] <- check_adult_parent_nest_output$CheckList
+
   if(check_format) {
     # Warning list
     warning_list <- list(Check1 = check_format_capture_output$WarningOutput,
                          Check2a = check_values_mass_output$WarningOutput,
                          Check2b = check_values_tarsus_output$WarningOutput,
-                         Check3 = check_chick_age_output$WarningOutput)
+                         Check3 = check_chick_age_output$WarningOutput,
+                         Check4 = check_adult_parent_nest_output$WarningOutput)
 
     # Error list
     error_list <- list(Check1 = check_format_capture_output$ErrorOutput,
                        Check2a = check_values_mass_output$ErrorOutput,
                        Check2b = check_values_tarsus_output$ErrorOutput,
-                       Check3 = check_chick_age_output$ErrorOutput)
+                       Check3 = check_chick_age_output$ErrorOutput,
+                       CHeck4 = check_adult_parent_nest_output$ErrorOutput)
   } else {
     # Warning list
     warning_list <- list(Check2a = check_values_mass_output$WarningOutput,
                          Check2b = check_values_tarsus_output$WarningOutput,
-                         Check3 = check_chick_age_output$WarningOutput)
+                         Check3 = check_chick_age_output$WarningOutput,
+                         Check4 = check_adult_parent_nest_output$WarningOutput)
 
     # Error list
     error_list <- list(Check2a = check_values_mass_output$ErrorOutput,
                        Check2b = check_values_tarsus_output$ErrorOutput,
-                       Check3 = check_chick_age_output$ErrorOutput)
+                       Check3 = check_chick_age_output$ErrorOutput,
+                       Check4 = check_adult_parent_nest_output$ErrorOutput)
 
     check_list <- check_list[-1,]
   }
@@ -89,10 +104,12 @@ capture_check <- function(Capture_data, check_format=TRUE){
   return(list(CheckList = check_list,
               WarningRows = unique(c(check_values_mass_output$WarningRows,
                                      check_values_tarsus_output$WarningRows,
-                                     check_chick_age_output$WarningRows)),
+                                     check_chick_age_output$WarningRows,
+                                     check_adult_parent_nest_output$WarningRows)),
               ErrorRows = unique(c(check_values_mass_output$ErrorRows,
                                    check_values_tarsus_output$ErrorRows,
-                                   check_chick_age_output$ErrorRows)),
+                                   check_chick_age_output$ErrorRows,
+                                   check_adult_parent_nest_output$ErrorRows)),
               Warnings = warning_list,
               Errors = error_list))
 }
@@ -575,4 +592,117 @@ check_chick_age <- function(Capture_data){
 
   # Satisfy RCMD checks
   approved_list <- NULL
+}
+
+
+#' Check that adults captured on a nest are listed as parents of that nest
+#'
+#' Check that adults captured on a nest are are listed as the parents of that nest in Brood_data. If not, records will be flagged as a warning. Adults can be caught near a nest box
+#'
+#' Check ID: C4.
+#'
+#' @inheritParams checks_capture_params
+#' @inheritParams checks_location_params
+#' @inheritParams checks_brood_params
+#'
+#' @inherit checks_return return
+#'
+#' @export
+
+check_adult_parent_nest <- function(Capture_data, Location_data, Brood_data){
+
+  # Select adults
+  Adults <- Capture_data %>%
+    dplyr::filter(Age_calculated > 3)
+
+  # Determine location type of their capture locations
+  pb1 <- progress::progress_bar$new(total = nrow(Adults),
+                                    format = "[:bar] :percent ~:eta remaining",
+                                    clear = FALSE)
+  Location_type <- purrr::pmap(.l = list(Adults$LocationID,
+                                         Adults$BreedingSeason,
+                                         Adults$CapturePopID),
+                               .f = ~{
+                                 pb1$tick()
+
+                                 Location_type <- Location_data %>%
+                                   dplyr::filter(LocationID == ..1
+                                                 & StartSeason <= ..2
+                                                 & (EndSeason >= ..2 | is.na(EndSeason))
+                                                 & PopID == ..3) %>%
+                                   dplyr::pull(LocationType)
+
+                                 ifelse(is.null(Location_type), NA, Location_type)
+
+                               })
+
+  # Add location type to adults data frame and filter captures on nest box
+  Adults_nest_box <- Adults %>%
+    dplyr::mutate(LocationType = unlist(Location_type)) %>%
+    dplyr::filter(LocationType == "NB")
+
+  # Check whether adults caught in nest box are associated with that nest in Brood data
+  pb2 <- progress::progress_bar$new(total = nrow(Adults_nest_box),
+                                    format = "[:bar] :percent ~:eta remaining",
+                                    clear = FALSE)
+  Parents_nests <- purrr::pmap_lgl(.l = list(Adults_nest_box$CapturePopID,
+                                             Adults_nest_box$BreedingSeason,
+                                             Adults_nest_box$LocationID,
+                                             Adults_nest_box$IndvID),
+                                   .f = ~{
+                                     pb2$tick()
+                                     Brood_parents <- Brood_data %>%
+                                       dplyr::filter(PopID == ..1
+                                                     & BreedingSeason == ..2
+                                                     &  LocationID == ..3) %>%
+                                       dplyr::select(FemaleID, MaleID)
+
+                                     ..4 %in% Brood_parents$FemaleID | ..4 %in% Brood_parents$MaleID
+                                   })
+
+  # Select adults caught in a nest box that are NOT associated with that nest
+  Unassociated_adults <- Adults_nest_box[!Parents_nests,] %>%
+    dplyr::select(Row, CaptureID, IndvID, PopID = CapturePopID)
+
+  # Warnings
+  war <- FALSE
+  warning_records <- tibble::tibble(Row = NA_character_)
+  warning_output <- NULL
+
+  if(nrow(Unassociated_adults) > 0) {
+    war <- TRUE
+
+    # Compare to approved_list
+    warning_records <- Unassociated_adults %>%
+      dplyr::mutate(CheckID = "C4") %>%
+      dplyr::anti_join(approved_list$Capture_approved_list, by=c("PopID", "CheckID", "CaptureID"))
+
+    # Create quality check report statements
+    warning_output <- purrr::pmap(.l = warning_records,
+                                  .f = ~{
+                                    paste0("Record on row ", ..1,
+                                           " (CaptureID: ", ..2,
+                                           ", IndvID: ", ..3, ")",
+                                           " is caught on a location marked as a nest box but is not listed as the parent of that nest in Brood_data.")
+                                  })
+  }
+
+
+  # No errors
+  err <- FALSE
+  #error_records <- tibble::tibble(Row = NA_character_)
+  error_output <- NULL
+
+  check_list <- tibble::tibble(Warning = war,
+                               Error = err)
+
+  return(list(CheckList = check_list,
+              WarningRows = warning_records$Row,
+              ErrorRows = NULL,
+              WarningOutput = unlist(warning_output),
+              ErrorOutput = unlist(error_output)))
+
+  # Satisfy RCMD checks
+  approved_list <- NULL
+
 }

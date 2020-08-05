@@ -148,6 +148,10 @@ test_that("Single checks function as expected...", {
   # Test 19: I6
   expect_equal(subset(dummy_check$R_data$Individual_data, Row %in% 20:21)$Warning, c(NA, NA))
   expect_equal(subset(dummy_check$R_data$Individual_data, Row %in% 20:21)$Error, c(NA, TRUE))
+
+  # Test 20: C4
+  expect_equal(subset(dummy_check$R_data$Capture_data, Row %in% 24:26)$Warning, c(NA, NA, TRUE))
+  expect_equal(subset(dummy_check$R_data$Capture_data, Row %in% 24:26)$Error, c(NA, NA, NA))
 })
 
 test_that("Approved-listing procedure functions as expected...", {
