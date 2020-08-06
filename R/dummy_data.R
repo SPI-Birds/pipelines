@@ -817,6 +817,50 @@ create_dummy_data <- function(overwrite=TRUE) {
       RingAge = "adult"
     )
 
+  # B12: Comparing species of brood and of chicks
+  B12_brood_rows <- Brood_data %>%
+    dplyr::mutate( # Probable
+      Row = as.integer(43),
+      Species = "PARMAJ"
+    ) %>%
+    dplyr::add_row( # Improbable (warning)
+      Row = as.integer(44),
+      Species = "CYACAE"
+    ) %>%
+    dplyr::mutate(
+      PopID = "AAA",
+      BreedingSeason = as.integer(2020),
+      BroodID = paste(PopID, BreedingSeason, Row, sep="-")
+    )
+
+  B12_indv_rows <- Individual_data %>%
+    dplyr::mutate( # Probable
+      Row = as.integer(26),
+      BroodIDLaid = "AAA-2020-43",
+      Species = "PARMAJ"
+    ) %>%
+    dplyr::add_row( # Probable
+      Row = as.integer(27),
+      BroodIDLaid = "AAA-2020-43",
+      Species = "PARMAJ"
+    ) %>%
+    dplyr::add_row( # Improbable (warning)
+      Row = as.integer(28),
+      BroodIDLaid = "AAA-2020-44",
+      Species = "CYACAE"
+    ) %>%
+    dplyr::add_row( # Improbable (warning)
+      Row = as.integer(29),
+      BroodIDLaid = "AAA-2020-44",
+      Species = "PARMAJ"
+    ) %>%
+    dplyr::mutate(
+      IndvID = paste0("C", Row),
+      PopID = "AAA",
+      RingAge = "chick",
+      BroodIDFledged = BroodIDLaid
+    )
+
   # Approved_list: make sure that our approve-listing procedure works
   # We create a record that violates check B4, but should NOT result in TRUE in Warning & Error columns
   al_rows <- Brood_data %>%
@@ -835,9 +879,13 @@ create_dummy_data <- function(overwrite=TRUE) {
     )
 
   # Combine single check rows per dataframe
-  Brood_data <- dplyr::bind_rows(al_rows, B2_rows, B3_rows, B4_rows, B5_rows, B6a_rows, B6b_rows, B6c_rows, B7_brood_rows, B8_rows, B9_rows, B10_brood_rows, C4_brood_rows, B11_brood_rows)
-  Capture_data <- dplyr::bind_rows(C2a_adult_rows, C2a_chick_rows, C2b_adult_rows, C2b_chick_rows, C3_rows, I3_capture_rows, I6_capture_rows, C4_capture_rows)
-  Individual_data <- dplyr::bind_rows(B7_indv_rows, B10_indv_rows, I2_rows, I3_indv_rows, I4_rows, I5_rows, I6_indv_rows, B11_indv_rows)
+  Brood_data <- dplyr::bind_rows(al_rows, B2_rows, B3_rows, B4_rows, B5_rows, B6a_rows, B6b_rows,
+                                 B6c_rows, B7_brood_rows, B8_rows, B9_rows, B10_brood_rows,
+                                 C4_brood_rows, B11_brood_rows, B12_brood_rows)
+  Capture_data <- dplyr::bind_rows(C2a_adult_rows, C2a_chick_rows, C2b_adult_rows, C2b_chick_rows,
+                                   C3_rows, I3_capture_rows, I6_capture_rows, C4_capture_rows)
+  Individual_data <- dplyr::bind_rows(B7_indv_rows, B10_indv_rows, I2_rows, I3_indv_rows, I4_rows,
+                                      I5_rows, I6_indv_rows, B11_indv_rows, B12_indv_rows)
   Location_data <- dplyr::bind_rows(I3_location_rows, C4_location_rows)
 
   # Combine in list
