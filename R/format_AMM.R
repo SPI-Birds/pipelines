@@ -484,6 +484,24 @@ create_individual_AMM <- function(Capture_data, Brood_data, connection) {
 
 create_location_AMM <- function(Capture_data, connection) {
 
+  Habitat_data <- dplyr::tbl(connection, "HabitatDescription") %>%
+    dplyr::select(NestBox, Beech:OtherTree) %>%
+    dplyr::collect() %>%
+    dplyr::group_by(NestBox) %>%
+    dplyr::summarise(across(everything(), ~sum(.x, na.rm = TRUE)), .groups = "keep") %>%
+    dplyr::summarise(DEC = sum(c(Beech, Larch, Maple, Birch, Oak, Willow, Poplar, Alder, AshTree)),
+                     EVE = sum(c(Spruce, Pine))) %>%
+    dplyr::mutate(perc_dec = DEC/(DEC + EVE),
+                  dominant_sp = dplyr::case_when(perc_dec >= 0.66 ~ "DEC",
+                                                 perc_dec < 0.33 ~ "EVE",
+                                                 TRUE ~ "MIX"))
+
+  #The vast majority of nestboxes (90%) of nestboxes are surrounded by deciduous or mixed stands. Therefore,
+  #we use the 'DEC' category to describe the population.
+  #In the future, we could include a nest-box specific habitat type, but that would require us to decide
+  #the range over which habitat is sampled (the nestbox vicinity, the plot?). To do later.
+  table(Habitat_data$dominant_sp)
+
   start_year <- min(Capture_data$BreedingSeason)
 
   Location_data <- dplyr::tbl(connection, "NestBoxes") %>%
@@ -498,7 +516,7 @@ create_location_AMM <- function(Capture_data, connection) {
                   StartSeason = start_year,
                   EndSeason = dplyr::case_when(nchar(.data$NestboxID) == 4 & stringr::str_sub(.data$NestboxID, 1, 2) == "16" ~ 2016L,
                                                TRUE ~ 2019L),
-                  HabitatType = NA_character_) %>% #FIXME: Ask Niels about habitat type
+                  HabitatType = "DEC") %>%
     dplyr::select(.data$LocationID,
                   .data$NestboxID,
                   .data$LocationType,
