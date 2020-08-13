@@ -356,12 +356,12 @@ create_capture_AMM <- function(Brood_data, connection) {
                   .data$Day14P3, .data$Day14Tarsus, .data$Day14BodyMass, .data$Day14BodyMassTime,
                   .data$Day14Observer, Day18BodyMass = .data$Day18Bodymass, .data$Day18BodyMassTime, .data$Day18Observer) %>%
     dplyr::mutate_all(~dplyr::na_if(as.character(.), "-99")) %>% #Needed because pivot functions expect coercable classes when making value col
-    dplyr::mutate_at(.vars = vars(contains("BodyMassTime")), ~str_extract(., "[:digit:]{2}:[:digit:]{2}")) %>%
+    dplyr::mutate_at(.vars = vars(contains("BodyMassTime")), ~str_extract(., "[0-9]{2}:[0-9]{2}")) %>%
     tidyr::pivot_longer(data = ., cols = .data$Day2BodyMass:.data$Day18Observer, names_to = "column", values_to = "value") %>%
-    dplyr::mutate(Day = str_extract(.data$column, "[:digit:]{1,}"),
+    dplyr::mutate(Day = str_extract(.data$column, "[0-9]{1,}"),
                   OriginalTarsusMethod = "Alternative",
                   Age_observed = 1L) %>%
-    tidyr::separate(.data$column, into = c(NA, "Variable"), sep = "^Day[:digit:]{1,}") %>%
+    tidyr::separate(.data$column, into = c(NA, "Variable"), sep = "^Day[0-9]{1,}") %>%
     tidyr::pivot_wider(data = ., names_from = .data$Variable, values_from = .data$value) %>%
     #Mutate columns back to correct type
     dplyr::mutate_at(.vars = vars(.data$ChickYear, .data$HatchDay, .data$Day), as.integer) %>%
