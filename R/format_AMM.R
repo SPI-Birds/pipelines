@@ -297,7 +297,7 @@ create_capture_AMM <- function(Brood_data, connection) {
                   ReleasePlot = .data$CapturePlot,
                   LocationID = as.character(.data$NestBox),
                   OriginalTarsusMethod = "Alternative",
-                  Age_observed = dplyr::recode(.data$AgeObserved, `7` = NA_integer_, `0` = NA_integer_), ##FIXME: Check how this compares to new EURING method
+                  Age_observed = dplyr::recode(.data$AgeObserved, `7` = NA_integer_, `0` = NA_integer_), ## These age categories match our EURING codes exactly
                   ChickAge = NA_integer_,
                   ObserverID = as.character(dplyr::na_if(.data$FieldObserver, -99L)),
                   BroodID = as.character(.data$BroodID),
