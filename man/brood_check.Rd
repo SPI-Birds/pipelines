@@ -32,7 +32,7 @@ The following brood data checks are performed:
 \item \strong{B3}: Compare brood size and fledgling number per brood using \code{\link{compare_brood_fledglings}}.
 \item \strong{B4}: Compare laying date and hatching date per brood using \code{\link{compare_laying_hatching}}.
 \item \strong{B5}: Compare hatching date and fledging date per brood using \code{\link{compare_hatching_fledging}}.
-\item \strong{B6a-c}: Check brood variable values against reference values using \code{\link{check_values_brood}} Brood variables used: ClutchSize, BroodSize, NumberFledged.
+\item \strong{B6a-c}: Check brood variable values against reference values using \code{\link{check_values_brood}}. Brood variables checked: ClutchSize, BroodSize, NumberFledged.
 \item \strong{B7}: Check if parents of a brood are the same species using \code{\link{check_parent_species}}.
 \item \strong{B8}: Compare brood size with number of chicks captured using \code{\link{compare_broodsize_chicknumber}}.
 \item \strong{B9}: Check if the IDs of broods are unique using \code{\link{check_unique_BroodID}}.

@@ -3,7 +3,8 @@
 \name{brood_ref_values}
 \alias{brood_ref_values}
 \title{List of reference values for brood data}
-\format{A list with 30 data frames:
+\format{
+A list with 30 data frames:
 
 \itemize{
 \item{10 species: \code{PARMAJ}, \code{CYACAE}, \code{FICHYP}, \code{SITEUR}, \code{PERATE}, \code{PASMON}, \code{FICALB}, \code{POEPAL}, \code{POECIN}, \code{PHOPHO}}
@@ -17,7 +18,8 @@ Each species-variable combination has the following reference values:
  \item{Warning_max}{Upper bound of a variable's expected values. A value larger than this threshold is considered unusual and will result in a warning.}
  \item{Error_min}{Lower bound of a variable's unusual values. A value smaller than this threshold is considered impossible and will result in an error.}
  \item{Error_max}{Upper bound of a variable's unusual values. A value larger than this threshold is considered impossible and will result in an error.}
- }}
+ }
+}
 \description{
 Plausible brood data values that can be used to detect outliers.
 }

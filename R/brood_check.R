@@ -9,7 +9,7 @@
 #' \item \strong{B3}: Compare brood size and fledgling number per brood using \code{\link{compare_brood_fledglings}}.
 #' \item \strong{B4}: Compare laying date and hatching date per brood using \code{\link{compare_laying_hatching}}.
 #' \item \strong{B5}: Compare hatching date and fledging date per brood using \code{\link{compare_hatching_fledging}}.
-#' \item \strong{B6a-c}: Check brood variable values against reference values using \code{\link{check_values_brood}} Brood variables used: ClutchSize, BroodSize, NumberFledged.
+#' \item \strong{B6a-c}: Check brood variable values against reference values using \code{\link{check_values_brood}}. Brood variables checked: ClutchSize, BroodSize, NumberFledged.
 #' \item \strong{B7}: Check if parents of a brood are the same species using \code{\link{check_parent_species}}.
 #' \item \strong{B8}: Compare brood size with number of chicks captured using \code{\link{compare_broodsize_chicknumber}}.
 #' \item \strong{B9}: Check if the IDs of broods are unique using \code{\link{check_unique_BroodID}}.
@@ -207,6 +207,9 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
 #' Check format of brood data
 #'
 #' Check that the format of each column in the brood data match with the standard format.
+#'
+#' Check ID: B1.
+#'
 #' @inheritParams checks_brood_params
 #'
 #' @inherit checks_return return
@@ -324,6 +327,8 @@ check_format_brood <- function(Brood_data){
 #'
 #' Compare clutch size and brood size per brood. In non-manipulated broods, clutch size should be larger or equal to brood size. If not, the record will result in an error. In broods with clutch manipulation, clutch size might be smaller than brood size. If so, the record will result in a warning.
 #'
+#' Check ID: B2.
+#'
 #' @inheritParams checks_brood_params
 #'
 #' @inherit checks_return return
@@ -340,16 +345,24 @@ compare_clutch_brood <- function(Brood_data){
   Brood_data_man <- Brood_data %>%
     filter(!is.na(ExperimentID) & ClutchSize < BroodSize)
 
+  # Errors
   err <- FALSE
+  error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
   if(nrow(Brood_data_non) > 0) {
     err <- TRUE
 
-    error_output <- purrr::pmap(.l = list(Brood_data_non$Row,
-                                          Brood_data_non$BroodID,
-                                          Brood_data_non$ClutchSize,
-                                          Brood_data_non$BroodSize),
+    # Compare to approved_list
+    error_records <- Brood_data_non %>%
+      dplyr::mutate(CheckID = "B2") %>%
+      dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
+
+    # Create quality check report statements
+    error_output <- purrr::pmap(.l = list(error_records$Row,
+                                          error_records$BroodID,
+                                          error_records$ClutchSize,
+                                          error_records$BroodSize),
                                 .f = ~{
                                   paste0("Record on row ", ..1, " (BroodID: ", ..2, ")",
                                          " has a larger brood size (", ..4,
@@ -358,16 +371,24 @@ compare_clutch_brood <- function(Brood_data){
                                 })
   }
 
+  # Warnings
   war <- FALSE
+  warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
   if(nrow(Brood_data_man) > 0) {
     war <- TRUE
 
-    warning_output <- purrr::pmap(.l = list(Brood_data_man$Row,
-                                            Brood_data_man$BroodID,
-                                            Brood_data_man$ClutchSize,
-                                            Brood_data_man$BroodSize),
+    # Compare to approved_list
+    warning_records <- Brood_data_man %>%
+      dplyr::mutate(CheckID = "B2") %>%
+      dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
+
+    # Create quality check report statements
+    warning_output <- purrr::pmap(.l = list(warning_records$Row,
+                                            warning_records$BroodID,
+                                            warning_records$ClutchSize,
+                                            warning_records$BroodSize),
                                   .f = ~{
                                     paste0("Record on row ", ..1, " (BroodID: ", ..2, ")",
                                            " has a larger brood size (", ..4,
@@ -379,14 +400,16 @@ compare_clutch_brood <- function(Brood_data){
   check_list <- tibble::tibble(Warning = war,
                                Error = err)
 
+
   return(list(CheckList = check_list,
-              WarningRows = Brood_data_man$Row,
-              ErrorRows = Brood_data_non$Row,
+              WarningRows = warning_records$Row,
+              ErrorRows = error_records$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 
   #Satisfy RCMD Checks
   ExperimentID <- ClutchSize <- BroodSize <- NULL
+  approved_list <- NULL
 
 }
 
@@ -394,6 +417,8 @@ compare_clutch_brood <- function(Brood_data){
 #' Compare brood sizes and fledgling numbers
 #'
 #' Compare brood size and fledgling number per brood. In non-manipulated broods, brood size should be larger or equal to fledgling number. If not, the record will result in an error. In broods with clutch manipulation, brood size might be smaller than fledgling number. If so, the record will result in a warning.
+#'
+#' Check ID: B3.
 #'
 #' @inheritParams checks_brood_params
 #'
@@ -411,16 +436,24 @@ compare_brood_fledglings <- function(Brood_data){
   Brood_data_man <- Brood_data %>%
     filter(!is.na(ExperimentID) & BroodSize < NumberFledged)
 
+  # Errors
   err <- FALSE
+  error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
   if(nrow(Brood_data_non) > 0) {
     err <- TRUE
 
-    error_output <- purrr::pmap(.l = list(Brood_data_non$Row,
-                                          Brood_data_non$BroodID,
-                                          Brood_data_non$BroodSize,
-                                          Brood_data_non$NumberFledged),
+    # Compare to approved_list
+    error_records <- Brood_data_non %>%
+      dplyr::mutate(CheckID = "B3") %>%
+      dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
+
+    # Create quality check report statements
+    error_output <- purrr::pmap(.l = list(error_records$Row,
+                                          error_records$BroodID,
+                                          error_records$BroodSize,
+                                          error_records$NumberFledged),
                                 .f = ~{
                                   paste0("Record on row ", ..1, " (BroodID: ", ..2, ")",
                                          " has a larger fledgling number (", ..4,
@@ -429,16 +462,24 @@ compare_brood_fledglings <- function(Brood_data){
                                 })
   }
 
+  # Warnings
   war <- FALSE
+  warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
   if(nrow(Brood_data_man) > 0) {
     war <- TRUE
 
-    warning_output <- purrr::pmap(.l = list(Brood_data_man$Row,
-                                            Brood_data_man$BroodID,
-                                            Brood_data_man$BroodSize,
-                                            Brood_data_man$NumberFledged),
+    # Compare to approved_list
+    warning_records <- Brood_data_man %>%
+      dplyr::mutate(CheckID = "B3") %>%
+      dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
+
+    # Create quality check report statements
+    warning_output <- purrr::pmap(.l = list(warning_records$Row,
+                                            warning_records$BroodID,
+                                            warning_records$BroodSize,
+                                            warning_records$NumberFledged),
                                   .f = ~{
                                     paste0("Record on row ", ..1, " (BroodID: ", ..2, ")",
                                            " has a larger fledgling number (", ..4,
@@ -451,13 +492,14 @@ compare_brood_fledglings <- function(Brood_data){
                                Error = err)
 
   return(list(CheckList = check_list,
-              WarningRows = Brood_data_man$Row,
-              ErrorRows = Brood_data_non$Row,
+              WarningRows = warning_records$Row,
+              ErrorRows = error_records$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 
-  #Satisfy RCMD Checks
+  # Satisfy RCMD Checks
   ExperimentID <- BroodSize <- NumberFledged <- NULL
+  approved_list <- NULL
 
 }
 
@@ -466,6 +508,8 @@ compare_brood_fledglings <- function(Brood_data){
 #' Compare laying and hatching dates
 #'
 #' Compare laying and hatching date per brood. Broods with laying date later than hatching date will result in an error. Broods with laying date earlier than hatching date but the difference in number of days is smaller than incubation time will result in a warning.
+#'
+#' Check ID: B4.
 #'
 #' @inheritParams checks_brood_params
 #'
@@ -487,16 +531,24 @@ compare_laying_hatching <- function(Brood_data){
   # Brood_data_late <- Brood_data %>%
   #   filter(LayDate < HatchDate & (HatchDate-LayDate) >= )
 
+  # Errors
   err <- FALSE
+  error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
   if(nrow(Brood_data_late) > 0) {
     err <- TRUE
 
-    error_output <- purrr::pmap(.l = list(Brood_data_late$Row,
-                                          Brood_data_late$BroodID,
-                                          Brood_data_late$LayDate,
-                                          Brood_data_late$HatchDate),
+    # Compare to approved_list
+    error_records <- Brood_data_late %>%
+      dplyr::mutate(CheckID = "B4") %>%
+      dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
+
+    # Create quality check report statements
+    error_output <- purrr::pmap(.l = list(error_records$Row,
+                                          error_records$BroodID,
+                                          error_records$LayDate,
+                                          error_records$HatchDate),
                                 .f = ~{
                                   paste0("Record on row ", ..1, " (BroodID: ", ..2, ")",
                                          " has a later laying date (", ..3,
@@ -504,33 +556,24 @@ compare_laying_hatching <- function(Brood_data){
                                 })
   }
 
+  # Warnings
   war <- FALSE
+  #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
-  # if(nrow(Brood_data_man) > 0) {
-  #   war <- TRUE
-  #
-  #   warning_output <- purrr::pmap(.l = list(Brood_data_man$BroodID,
-  #                                           Brood_data_man$BroodSize,
-  #                                           Brood_data_man$NumberFledged),
-  #                                 .f = ~{
-  #                                   paste0("Record with BroodID ", ..1,
-  #                                          " has a larger fledgling number (", ..3,
-  #                                          ") than brood size (", ..2, ").")
-  #                                 })
-  # }
 
   check_list <- tibble::tibble(Warning = war,
                                Error = err)
 
   return(list(CheckList = check_list,
               WarningRows = NULL,
-              ErrorRows = Brood_data_late$Row,
+              ErrorRows = error_records$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 
-  #Satisfy RCMD Checks
+  # Satisfy RCMD Checks
   LayDate <- HatchDate <- NULL
+  approved_list <- NULL
 
 }
 
@@ -538,6 +581,8 @@ compare_laying_hatching <- function(Brood_data){
 #' Compare hatching and fledging dates
 #'
 #' Compare hatching and fledging date per brood. Broods with hatching date later than fledging date will result in an error. Broods with hatching date earlier than fledging date but the difference in number of days is smaller than breeding time will result in a warning.
+#'
+#' Check ID: B5.
 #'
 #' @inheritParams checks_brood_params
 #'
@@ -559,16 +604,24 @@ compare_hatching_fledging <- function(Brood_data){
   # Brood_data_late <- Brood_data %>%
   #   filter(HatchDate < FledgeDate & (FledgeDate-HatchDate) >= )
 
+  # Errors
   err <- FALSE
+  error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
   if(nrow(Brood_data_late) > 0) {
     err <- TRUE
 
-    error_output <- purrr::pmap(.l = list(Brood_data_late$Row,
-                                          Brood_data_late$BroodID,
-                                          Brood_data_late$HatchDate,
-                                          Brood_data_late$FledgeDate),
+    # Compare to approved_list
+    error_records <- Brood_data_late %>%
+      dplyr::mutate(CheckID = "B5") %>%
+      dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
+
+    # Create quality check report statements
+    error_output <- purrr::pmap(.l = list(error_records$Row,
+                                          error_records$BroodID,
+                                          error_records$HatchDate,
+                                          error_records$FledgeDate),
                                 .f = ~{
                                   paste0("Record on row ", ..1, " (BroodID: ", ..2, ")",
                                          " has a later hatching date (", ..3,
@@ -576,40 +629,32 @@ compare_hatching_fledging <- function(Brood_data){
                                 })
   }
 
+  # Warnings
   war <- FALSE
+  #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
-
-  # if(nrow(Brood_data_man) > 0) {
-  #   war <- TRUE
-  #
-  #   warning_output <- purrr::pmap(.l = list(Brood_data_man$BroodID,
-  #                                           Brood_data_man$BroodSize,
-  #                                           Brood_data_man$NumberFledged),
-  #                                 .f = ~{
-  #                                   paste0("Record with BroodID ", ..1,
-  #                                          " has a larger fledgling number (", ..3,
-  #                                          ") than brood size (", ..2, ").")
-  #                                 })
-  # }
 
   check_list <- tibble::tibble(Warning = war,
                                Error = err)
 
   return(list(CheckList = check_list,
               WarningRows = NULL,
-              ErrorRows = Brood_data_late$Row,
+              ErrorRows = error_records$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 
-  #Satisfy RCMD Checks
+  # Satisfy RCMD Checks
   HatchDate <- FledgeDate <- NULL
+  approved_list <- NULL
 
 }
 
 
 #' Check brood variable values against reference values
 #'
-#' Check variable values against species-specific reference values in brood data. Unusual values will result in a warning. Impossible values will result in an error. Variables that can be checked: LayDate, ClutchSize, HatchDate, BroodSize, FledgeDate, NumberFledged, AvgEggMass, AvgChickMass, AvgTarsus.
+#' Check variable values against species-specific reference values in brood data. Unusual values will result in a warning. Impossible values will result in an error. Variables that are checked: ClutchSize, BroodSize, NumberFledged.
+#'
+#' Check IDs: B6a-c.
 #'
 #' @inheritParams checks_brood_params
 #' @param var Character. Variable to check against reference values.
@@ -622,7 +667,7 @@ check_values_brood <- function(Brood_data, var) {
 
   # Stop if var is missing
   if(missing(var)) {
-    stop("Please select a variable in Brood_data to check against reference values")
+    stop("Please select a variable in Brood_data to check against reference values.")
   }
 
   # Stop if var is given, but not a variable in Brood_data
@@ -637,19 +682,21 @@ check_values_brood <- function(Brood_data, var) {
   ref_names <- stringr::str_split(names(selected_ref_values), pattern="_")
 
   # Progress bar
-  pb <- dplyr::progress_estimated(2*length(selected_ref_values))
+  pb <- progress::progress_bar$new(total = 2*length(selected_ref_values),
+                                   format = "[:bar] :percent ~:eta remaining",
+                                   clear = FALSE)
 
   # Brood-specific errors
   Brood_err <- purrr::map2(.x = selected_ref_values,
                            .y = ref_names,
                            .f = ~{
-                             pb$tick()$print()
+                             pb$tick()
                              sel <- which(Brood_data$Species == .y[1]
                                           & (Brood_data[,which(colnames(Brood_data) == .y[2])] < .x$Value[3]
                                              | Brood_data[,which(colnames(Brood_data) == .y[2])] > .x$Value[4]))
 
                              Brood_data[sel,] %>%
-                               dplyr::select(Row, Value = !!.y[2]) %>%
+                               dplyr::select(Row, PopID, BroodID, Value = !!.y[2]) %>%
                                dplyr::mutate(Species = .y[1],
                                              Variable = .y[2])
                            }) %>%
@@ -657,16 +704,23 @@ check_values_brood <- function(Brood_data, var) {
     dplyr::arrange(Species, Variable)
 
   err <- FALSE
+  error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
   if(nrow(Brood_err) > 0) {
     err <- TRUE
 
-    error_output <- purrr::pmap(.l = Brood_err,
+    # Compare to approved_list
+    error_records <- Brood_err %>%
+      dplyr::mutate(CheckID = checkID_var[checkID_var$Var == var,]$CheckID) %>%
+      dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
+
+    # Create quality check report statements
+    error_output <- purrr::pmap(.l = error_records,
                                 .f = ~{
                                   paste0("Record on row ", ..1,
-                                         " (", Species_codes[Species_codes$Code == ..3, "CommonName"], ")",
-                                         " has an impossible value in ", ..4, " (", ..2, ").")
+                                         " (BroodID: ", ..3, "; ", Species_codes[Species_codes$Code == ..5, "CommonName"], ")",
+                                         " has an impossible value in ", ..6, " (", ..4, ").")
                                 })
   }
 
@@ -674,13 +728,13 @@ check_values_brood <- function(Brood_data, var) {
   Brood_war <- purrr::map2(.x = selected_ref_values,
                            .y = ref_names,
                            .f = ~{
-                             pb$tick()$print()
+                             pb$tick()
                              sel <- which(Brood_data$Species == .y[1]
                                           & Brood_data[,which(colnames(Brood_data) == .y[2])] > .x$Value[2]
                                           & Brood_data[,which(colnames(Brood_data) == .y[2])] <= .x$Value[4])
 
                              Brood_data[sel,] %>%
-                               dplyr::select(Row, Value = !!.y[2]) %>%
+                               dplyr::select(Row, PopID, BroodID, Value = !!.y[2]) %>%
                                dplyr::mutate(Species = .y[1],
                                              Variable = .y[2])
                            }) %>%
@@ -688,17 +742,24 @@ check_values_brood <- function(Brood_data, var) {
     dplyr::arrange(Species, Variable)
 
   war <- FALSE
+  warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
   if(nrow(Brood_war) > 0) {
     war <- TRUE
 
-    warning_output <- purrr::pmap(.l = Brood_war,
+    # Compare to approved_list
+    warning_records <- Brood_war %>%
+      dplyr::mutate(CheckID = checkID_var[checkID_var$Var == var,]$CheckID) %>%
+      dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
+
+    # Create quality check report statements
+    warning_output <- purrr::pmap(.l = warning_records,
                                   .f = ~{
                                     paste0("Record on row ", ..1,
-                                           " (", Species_codes[Species_codes$Code == ..3, "CommonName"], ")",
-                                           " has an unusually high value in ", ..4, " (", ..2, " > ",
-                                           selected_ref_values[[paste(..3, ..4, sep="_")]]$Value[2],")")
+                                           " (BroodID: ", ..3, "; ", Species_codes[Species_codes$Code == ..5, "CommonName"], ")",
+                                           " has an unusually high value in ", ..6, " (", ..4, " > ",
+                                           selected_ref_values[[paste(..5, ..6, sep="_")]]$Value[2],")")
                                   })
   }
 
@@ -706,20 +767,24 @@ check_values_brood <- function(Brood_data, var) {
                                Error = err)
 
   return(list(CheckList = check_list,
-              WarningRows = Brood_war$Row,
-              ErrorRows = Brood_err$Row,
+              WarningRows = warning_records$Row,
+              ErrorRows = error_records$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 
-  #Satisfy RCMD Checks
+  # Satisfy RCMD Checks
   brood_ref_values <- selected_ref_values <- ref_names <- NULL
   Species <- Variable <- NULL
+  approved_list <- checkID_var <- NULL
+
 }
 
 
 #' Check parent species
 #'
 #' Check that the parents of broods are the same species.
+#'
+#' Check ID: B7.
 #'
 #' @inheritParams checks_brood_params
 #' @inheritParams checks_individual_params
@@ -733,56 +798,70 @@ check_parent_species <- function(Brood_data, Individual_data) {
   # Find species information of mothers
   Females <- Brood_data %>%
     dplyr::filter(!is.na(FemaleID) & !is.na(MaleID)) %>%
-    dplyr::select(Row, BroodID, FemaleID) %>%
+    dplyr::select(Row, PopID, BroodID, FemaleID) %>%
     dplyr::left_join(Individual_data[,c("IndvID", "Species")], by=c("FemaleID" = "IndvID")) %>%
     dplyr::rename(FemaleSpecies = Species)
 
   # Find species information of fathers
   Males <- Brood_data %>%
     dplyr::filter(!is.na(FemaleID) & !is.na(MaleID)) %>%
-    dplyr::select(MaleID) %>%
+    dplyr::select(Row, PopID, BroodID, MaleID) %>%
     dplyr::left_join(Individual_data[,c("IndvID", "Species")], by=c("MaleID" = "IndvID")) %>%
     dplyr::rename(MaleSpecies = Species)
 
-  # Join and select broods where parents are different species
-  Interspecific_broods <- dplyr::bind_cols(Females, Males) %>%
-    dplyr::filter(FemaleSpecies != MaleSpecies)
-
+  # No errors
   err <- FALSE
+  #error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  if(nrow(Interspecific_broods) > 0) {
-    err <- TRUE
-
-    error_output <- purrr::pmap(.l = Interspecific_broods,
-                                .f = ~{
-                                  paste0("Record on row ", ..1, " (BroodID: ", ..2, ")",
-                                         " has parents of different species",
-                                         " (Mother: ", Species_codes[Species_codes$Code == ..4, "CommonName"],
-                                         ", father: ", Species_codes[Species_codes$Code == ..6, "CommonName"], ").")
-                                })
-  }
+  # Warnings
+  # Select records where parents are different species
+  Interspecific_broods <- dplyr::left_join(Females, Males, by=c("Row", "PopID", "BroodID")) %>%
+    dplyr::filter(FemaleSpecies != MaleSpecies)
 
   war <- FALSE
+  warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
+
+  if(nrow(Interspecific_broods) > 0) {
+    war <- TRUE
+
+    # Compare to approved_list
+    warning_records <- Interspecific_broods %>%
+      dplyr::mutate(CheckID = "B7") %>%
+      dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
+
+    # Create quality check report statements
+    warning_output <- purrr::pmap(.l = warning_records,
+                                .f = ~{
+                                  paste0("Record on row ", ..1, " (BroodID: ", ..3, ")",
+                                         " has parents of different species",
+                                         " (Mother: ", Species_codes[Species_codes$Code == ..5, "CommonName"],
+                                         ", father: ", Species_codes[Species_codes$Code == ..7, "CommonName"], ").")
+                                })
+  }
 
   check_list <- tibble::tibble(Warning = war,
                                Error = err)
 
   return(list(CheckList = check_list,
-              WarningRows = NULL,
-              ErrorRows = Interspecific_broods$Row,
+              WarningRows = warning_records$Row,
+              ErrorRows = NULL,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 
   # Satisfy RCMD Checks
   FemaleSpecies <- MaleSpecies <- NULL
+  approved_list <- NULL
+
 }
 
 
 #' Compare brood size with number of chicks captured
 #'
 #' Compare BroodSize in Brood_data with the number of chicks captured in Capture_data. We expect these numbers to be equal. Records where BroodSize is larger than the number of chicks captured results in a warning, because chicks might have died before ringing and measuring. Records where BroodSize is smaller than the number of chicks captured results in an error, because this should not be possible.
+#'
+#' Check ID: B8.
 #'
 #' @inheritParams checks_brood_params
 #' @inheritParams checks_individual_params
@@ -797,50 +876,66 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data) {
   Chicks_captured <- Individual_data %>%
     dplyr::select(IndvID, BroodIDLaid) %>%
     dplyr::group_by(BroodIDLaid) %>%
-    dplyr::summarise(Chicks = n_distinct(IndvID))
+    dplyr::summarise(Chicks = n_distinct(IndvID)) %>%
+    dplyr::ungroup()
 
-  # Error if number of chicks in Capture_data > brood size in Brood_data
+  # Errors
+  # Select records where number of chicks in Capture_data > brood size in Brood_data
   # (this should not be possible)
   Brood_err <- Brood_data %>%
     dplyr::left_join(Chicks_captured, by=c("BroodID" = "BroodIDLaid")) %>%
     dplyr::filter(BroodSize < Chicks) %>%
-    dplyr::select(Row, BroodID, BroodSize, Chicks)
+    dplyr::select(Row, PopID, BroodID, BroodSize, Chicks)
 
   err <- FALSE
+  error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
   if(nrow(Brood_err) > 0) {
     err <- TRUE
 
-    error_output <- purrr::pmap(.l = Brood_err,
+    # Compare to approved_list
+    error_records <- Brood_err %>%
+      dplyr::mutate(CheckID = "B8") %>%
+      dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
+
+    # Create quality check report statements
+    error_output <- purrr::pmap(.l = error_records,
                                 .f = ~{
-                                  paste0("Record on row ", ..1, " (BroodID: ", ..2, ")",
-                                         " has a smaller BroodSize (", ..3, ")",
+                                  paste0("Record on row ", ..1, " (BroodID: ", ..3, ")",
+                                         " has a smaller BroodSize (", ..4, ")",
                                          " than the number of chicks in Individual_data (",
-                                         ..4, ").")
+                                         ..5, ").")
                                 })
   }
 
-  # Warning if number of chicks in Capture_data < brood size in Brood_data
+  # Warnings
+  # Select records where number of chicks in Capture_data < brood size in Brood_data
   # (chicks might have died before measuring/ringing)
   Brood_war <- Brood_data %>%
     dplyr::left_join(Chicks_captured, by=c("BroodID" = "BroodIDLaid")) %>%
     dplyr::filter(BroodSize > Chicks) %>%
-    dplyr::select(Row, BroodID, BroodSize, Chicks)
-
+    dplyr::select(Row, PopID, BroodID, BroodSize, Chicks)
 
   war <- FALSE
+  warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
   if(nrow(Brood_war) > 0) {
     war <- TRUE
 
-    warning_output <- purrr::pmap(.l = Brood_war,
+    # Compare to approved_list
+    warning_records <- Brood_war %>%
+      dplyr::mutate(CheckID = "B8") %>%
+      dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
+
+    # Create quality check report statements
+    warning_output <- purrr::pmap(.l = warning_records,
                                   .f = ~{
-                                    paste0("Record on row ", ..1, " (BroodID: ", ..2, ")",
-                                           " has a larger BroodSize (", ..3, ")",
+                                    paste0("Record on row ", ..1, " (BroodID: ", ..3, ")",
+                                           " has a larger BroodSize (", ..4, ")",
                                            " than the number of chicks in Individual_data (",
-                                           ..4, ").")
+                                           ..5, ").")
                                   })
   }
 
@@ -848,16 +943,22 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data) {
                                Error = err)
 
   return(list(CheckList = check_list,
-              WarningRows = Brood_war$Row,
-              ErrorRows = Brood_err$Row,
+              WarningRows = warning_records$Row,
+              ErrorRows = error_records$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
+
+  # Satisfy RCMD checks
+  approved_list <- NULL
+
 }
 
 
 #' Check unique brood identifiers
 #'
 #' Check that the brood identifiers (BroodID) are unique within populations. Records with brood identifiers that are not unique within populations will result in an error.
+#'
+#' Check ID: B9.
 #'
 #' @inheritParams checks_brood_params
 #' @inherit checks_return return
@@ -867,34 +968,43 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data) {
 check_unique_BroodID <- function(Brood_data){
 
   # Errors
-  # Select BroodIDs that are duplicated within populations
+  # Select records that are duplicated within populations
   Duplicated <- Brood_data %>%
     dplyr::group_by(PopID, BroodID) %>%
-    dplyr::filter(n() > 1)
+    dplyr::filter(n() > 1) %>%
+    dplyr::ungroup()
 
   err <- FALSE
+  error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
   if(nrow(Duplicated) > 0) {
     err <- TRUE
 
-    error_output <- purrr::map(.x = unique(Duplicated$BroodID),
+    # Compare to whitelist
+    error_records <- Duplicated %>%
+      dplyr::mutate(CheckID = "B9") %>%
+      dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
+
+    # Create quality check report statements
+    error_output <- purrr::map(.x = unique(error_records$BroodID),
                                .f = ~{
                                  paste0("Record on row ",
                                         # Duplicated rows
-                                        Duplicated[Duplicated$BroodID == .x, "Row"][1,],
+                                        error_records[error_records$BroodID == .x, "Row"][1,],
                                         " has the same BroodID (", .x, ") as row(s) ",
                                         # Duplicates (if 1, else more)
-                                        ifelse(nrow(Duplicated[Duplicated$BroodID == .x, "Row"][-1,]) == 1,
-                                               Duplicated[Duplicated$BroodID == .x, "Row"][-1,],
+                                        ifelse(nrow(error_records[error_records$BroodID == .x, "Row"][-1,]) == 1,
+                                               error_records[error_records$BroodID == .x, "Row"][-1,],
                                                gsub("^c\\(|\\)$", "",
-                                                    Duplicated[Duplicated$BroodID == .x, "Row"][-1,])),
+                                                    error_records[error_records$BroodID == .x, "Row"][-1,])),
                                         ".")
                                })
   }
 
   # No warnings
   war <- FALSE
+  #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
 
@@ -903,7 +1013,11 @@ check_unique_BroodID <- function(Brood_data){
 
   return(list(CheckList = check_list,
               WarningRows = NULL,
-              ErrorRows = Duplicated$Row,
+              ErrorRows = error_records$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
+
+  # Satisfy RCMD checks
+  approved_list <- NULL
+
 }
