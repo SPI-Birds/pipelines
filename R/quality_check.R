@@ -263,8 +263,9 @@ quality_check <- function(R_data,
     '    purrr::pwalk(.l = Brood_approved_list,
                  .f = ~{ cat(paste0("Record with BroodID ", ..2,
                                     " and PopID ", ..1,
-                                    " has been verified by the data owner and does no longer violate check ",
-                                    ..3, "."), sep="\n")
+                                    " violates check ", ..3,
+                                    " but been verified by the data owner and is trustworthy."),
+                                    sep="\n")
                   })',
     '```',
     '',
@@ -274,8 +275,9 @@ quality_check <- function(R_data,
     '    purrr::pwalk(.l = Capture_approved_list,
                  .f = ~{ cat(paste0("Record with CaptureID ", ..2,
                                     " and PopID ", ..1,
-                                    " has been verified by the data owner and does no longer violate check ",
-                                    ..3, "."), sep="\n")
+                                    " violates check ", ..3,
+                                    " but been verified by the data owner and is trustworthy."),
+                                    sep="\n")
                   })',
     '```',
     '',
@@ -285,8 +287,9 @@ quality_check <- function(R_data,
     '    purrr::pwalk(.l = Individual_approved_list,
                  .f = ~{ cat(paste0("Record with IndvID ", ..2,
                                     " and PopID ", ..1,
-                                    " has been verified by the data owner and does no longer violate check ",
-                                    ..3, "."), sep="\n")
+                                    " violates check ", ..3,
+                                    " but been verified by the data owner and is trustworthy."),
+                                    sep="\n")
                   })',
     '```',
     '',
@@ -296,8 +299,9 @@ quality_check <- function(R_data,
     '    purrr::pwalk(.l = Location_approved_list,
                  .f = ~{ cat(paste0("Record with LocationID ", ..2,
                                     " and PopID ", ..1,
-                                    " has been verified by the data owner and does no longer violate check ",
-                                    ..3, "."), sep="\n")
+                                    " violates check ", ..3,
+                                    " but been verified by the data owner and is trustworthy."),
+                                    sep="\n")
                   })',
     '```',
     '')
