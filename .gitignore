@@ -5,8 +5,6 @@ inst/doc
 .Ruserdata
 debug_report
 
-output-report.html
-
-output-report.md
-
-output-report.pdf
+*.html
+*.md
+*.pdf
