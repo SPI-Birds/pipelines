@@ -100,7 +100,7 @@ format_PFN <- function(db,
   Capture_data$ChickAge[which(Capture_data$Age_observed > 1)] <- NA_integer_
 
   Capture_data <- Capture_data %>%
-    dplyr::select(-BroodID, -Sex)
+    dplyr::select(-BroodID)
 
   # Brood data: Remove unnecessary columns
   Brood_data <- Brood_data %>%
@@ -183,15 +183,12 @@ create_brood_EDM <- function(Primary_data){
                                                         CltCd == "2" ~ "replacement",
                                                         CltCd == "3" ~ "second"),
                   LayDate = as.Date(paste('31/03/', BreedingSeason, sep = ''), format = "%d/%m/%Y") + as.numeric(DFE),
-                  # NOTE: The date calculations require knowing from which date onwards DFE and DH are determined.
-                  #       In Smith et al. (2011), a paper mentioned on PiedFly.Net and of which Malcolm is a co-author, I found that 61 corresponds to 31. May. This would indicate that the "baseline" is 31. March, with DFE or DH = 1 corresponding to 1. April
-                  #       This NEEDS TO BE VERIFIED by the data owner!
-                  #
-                  #       REFERENCE:
-                  #       Smith, Ken W., et al. "Large-scale variation in the temporal patterns of the frass fall of defoliating caterpillars in oak woodlands in Britain: implications for nesting woodland birds." Bird Study 58.4 (2011): 506-511.
-
-                  ClutchSize = as.integer(CltSize),
-                  HatchDate = as.Date(paste('31/03/', BreedingSeason, sep = ''), format = "%d/%m/%Y") + as.numeric(DH), # See note on LayingDate
+                  #ClutchSize = dplyr::case_when(
+                  #  as.integer(CltSize) > 0 ~ as.integer(CltSize),
+                  #  as.integer(CltSize) == 0 | is.na(CltSize) ~
+                  #)
+                  ClutchSize = ifelse(!is.na(CltSize) & as.integer(CltSize) > 0, as.integer(CltSize), suppressWarnings(pmax(as.integer(MinEggs), as.integer(UnHatch)+as.integer(Hatch), as.integer(UnHatch)+as.integer(Fledged), na.rm = TRUE))),
+                  HatchDate = as.Date(paste('31/03/', BreedingSeason, sep = ''), format = "%d/%m/%Y") + as.numeric(DH),
                   BroodSize = as.integer(Hatch),
                   NumberFledged = as.integer(Fledged),
                   ChickAge = as.integer(as.Date(YoungDate, format = "%d/%m/%Y") - HatchDate)) %>%
@@ -214,14 +211,14 @@ create_brood_EDM <- function(Primary_data){
 
     # 4.2) Add calculated columns
     Brood_data <- Brood_data %>%
-      dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = Brood_data, na.rm = FALSE),
-                    NumberEggs = as.integer(Hatch) + as.integer(UnHatch)) %>%
+      dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = Brood_data, na.rm = FALSE)) %>%
       dplyr::left_join(Brood_averages, by = "BroodID")
 
 
-  # 5) Rename chick sample size columns and add columns without data
+  # 5) Rename columns and add columns without data
   Brood_data <- Brood_data %>%
       dplyr::mutate(ClutchType_observed = ClutchType,
+                    NumberChicksMass = NumberChickMass,
                     NumberChicksTarsus = NumberTarsus,
                     LayDate_observed = LayDate,
                     LayDate_min = as.Date(NA),
@@ -243,7 +240,7 @@ create_brood_EDM <- function(Primary_data){
                     NumberFledged_max = NA_integer_,
                     AvgEggMass =  NA_real_,
                     NumberEggs = NA_integer_,
-                    OriginalTarsusMethod = NA_character_,
+                    OriginalTarsusMethod = "Alternative",
                     ExperimentID = NA_character_) %>%
 
       # 6) Remove broods from species not included in Species_codes
@@ -335,9 +332,9 @@ create_capture_EDM <- function(Primary_data){
                                   ReleasePlot = Capture_data$Popn,
                                   Mass = NA_real_,
                                   Tarsus = NA_real_,
-                                  OriginalTarsusMethod = NA_character_,
+                                  OriginalTarsusMethod = "Alternative",
                                   WingLength = NA_real_,
-                                  Age_observed = 4L,
+                                  Age_observed = ifelse(is.na(Capture_data$MaleMinAge), 4L, as.integer(Capture_data$MaleMinAge)*2L + 3L),
                                   Age_calculated = NA_integer_, # Will be added later
                                   #ChickAge = NA_integer_, # Will be added later
                                   Sex_observed = "M",
@@ -370,9 +367,9 @@ create_capture_EDM <- function(Primary_data){
                                     ReleasePlot = Capture_data$Popn,
                                     Mass = NA_real_,
                                     Tarsus = NA_real_,
-                                    OriginalTarsusMethod = NA_character_,
+                                    OriginalTarsusMethod = "Alternative",
                                     WingLength = NA_real_,
-                                    Age_observed = 4L,
+                                    Age_observed = ifelse(is.na(Capture_data$FemaleMinAge), 4L, as.integer(Capture_data$FemaleMinAge)*2L + 3L),
                                     Age_calculated = NA_integer_, # Will be added later
                                     #ChickAge = NA_integer_, # Will be added later
                                     Sex_observed = "F",
@@ -396,7 +393,7 @@ create_capture_EDM <- function(Primary_data){
                                                                      Capture_data$Species[i] == "WREN" ~ NA_character_,
                                                                      Capture_data$Species[i] == "TREEC" ~ NA_character_),
                                           BreedingSeason = as.integer(Capture_data$Year[i]),
-                                          CaptureDate = as.Date(Capture_data$FemaleDate[i], format = "%d/%m/%Y"),
+                                          CaptureDate = as.Date(Capture_data$YoungDate[i], format = "%d/%m/%Y"),
                                           #CaptureTime = strptime(NA, format = "%hh:%mm"),
                                           CaptureTime = NA_character_,
                                           ObserverID = NA_character_,
@@ -407,7 +404,7 @@ create_capture_EDM <- function(Primary_data){
                                           ReleasePlot = Capture_data$Popn[i],
                                           Mass = as.numeric(Capture_data[i, paste0("Weight.Y", c(1:11))]),
                                           Tarsus = as.numeric(Capture_data[i, paste0("Tarsus.Y", c(1:11))]),
-                                          OriginalTarsusMethod = NA_character_,
+                                          OriginalTarsusMethod = "Alternative",
                                           WingLength = NA_real_,
                                           Age_observed = 1L,
                                           Age_calculated = NA_integer_, # Will be added later
@@ -526,7 +523,6 @@ create_individual_EDM <- function(Capture_data){
     })) %>%
     dplyr::rowwise() %>%
 
-    #* CN: Another way to do a for loop
 
     #For each individual, if their ring age was 1 or 3 (caught in first breeding year)
     #Then we take their first BroodID, otherwise it is NA
@@ -562,23 +558,36 @@ create_individual_EDM <- function(Capture_data){
 
 create_location_EDM <- function(Brood_data){
 
-  # 1) Start a dataframe with all unique LocationIDs / NestboxIDs
+  # 1) Load and format additional data on locations
+  Location_details <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_EDartmoor_Nestboxes.csv"), na.strings = c("", "?"),colClasses = "character") %>%
+
+    dplyr::rename(NestboxID = Box,
+                  Plot = Popn,
+                  Latitude = lat,
+                  Longitude = long,
+                  StartSeason = First,
+                  EndSeason = Last) %>%
+
+    dplyr::mutate(Latitude = suppressWarnings(as.numeric(Latitude)),
+                  Longitude = suppressWarnings(as.numeric(Longitude)),
+                  StartSeason = suppressWarnings(as.integer(StartSeason)),
+                  EndSeason = suppressWarnings(as.integer(EndSeason)))
+
+  # 2) Start a dataframe with all unique LocationIDs / NestboxIDs
   # NOTE: In this case, they are identical. Otherwise, this would have to be all unique combinations of LocationID and NestboxID
 
   Location_data <- tibble(LocationID = unique(Brood_data$LocationID),
-                              NestboxID = unique(Brood_data$LocationID)) %>%
+                          NestboxID = unique(Brood_data$LocationID)) %>%
 
-    # 2) Add additional columns
+    # 3) Add additional columns
     dplyr::mutate(LocationType = 'NB',
                   PopID = 'EDM',
                   HabitatType = 'deciduous') %>%
-                  Longitude = NA_real_,
-                  Habitat = NA_character_) %>%
 
-     # 3) Merge information on nestbox usage by birds
-    dplyr::left_join(calc_birdNBuse(Brood_data = Brood_data), by = "LocationID") %>%
+    # 4) Merge in detailed information
+    dplyr::left_join(Location_details, by = "NestboxID") %>%
 
-    # 4) Select relevant columns
+    # 5) Select relevant columns
     dplyr::select(LocationID, NestboxID,
                   LocationType, PopID,
                   Latitude, Longitude,
