@@ -22,7 +22,7 @@
 #'In the Brood data, we assume unknown identity and treat ID as NA. From Capture data and Individual
 #'data, these individuals are omitted entirely.
 #'
-#'\strong{LayDate and HatchDate}: Information is provided as date of first egg (DFE) and
+#'\strong{LayDate_observed and HatchDate_observed}: Information is provided as date of first egg (DFE) and
 #'date of hatching (DH). These are given as integer number, and represent days after a set
 #'starting date (day 0). Day 0 is assumed to be 31. March every year (to be confirmed).
 #'
@@ -65,31 +65,31 @@ format_PFN <- function(db,
   start_time <- Sys.time()
 
   #Load primary data
-  Primary_data <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_EDartmoor.csv"), na.strings = c("", "?"),
-                                colClasses = "character")
+  Primary_data <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_EDartmoor.csv"), na.strings = c("", "?"),colClasses = "character")
+
   # CAPTURE DATA
 
   message("Compiling capture data....")
 
-  Capture_data <- create_capture_PFN(Primary_data = Primary_data)
+  Capture_data <- create_capture_EDM(Primary_data = Primary_data)
 
   # BROOD DATA
 
   message("Compiling brood data...")
 
-  Brood_data <- create_brood_PFN(Primary_data = Primary_data)
+  Brood_data <- create_brood_EDM(Primary_data = Primary_data)
 
   # INDIVIDUAL DATA
 
   message("Compiling individual data...")
 
-  Individual_data <- create_individual_PFN(Capture_data = Capture_data)
+  Individual_data <- create_individual_EDM(Capture_data = Capture_data)
 
   # LOCATION DATA
 
   message("Compiling location data...")
 
-  Location_data <- create_location_PFN(Brood_data = Brood_data)
+  Location_data <- create_location_EDM(Brood_data = Brood_data)
 
 
   # WRANGLE DATA FOR EXPORT
@@ -116,13 +116,13 @@ format_PFN <- function(db,
 
     message("Saving .csv files...")
 
-    utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_PFN.csv"), row.names = F)
+    utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_EDM.csv"), row.names = F)
 
-    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_PFN.csv"), row.names = F)
+    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_EDM.csv"), row.names = F)
 
-    utils::write.csv(x = Capture_data %>% select(-Sex, -BroodID), file = paste0(path, "\\Capture_data_PFN.csv"), row.names = F)
+    utils::write.csv(x = Capture_data %>% select(-Sex, -BroodID), file = paste0(path, "\\Capture_data_EDM.csv"), row.names = F)
 
-    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_PFN.csv"), row.names = F)
+    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_EDM.csv"), row.names = F)
 
     invisible(NULL)
 
@@ -179,9 +179,9 @@ create_brood_PFN <- function(Primary_data){
                                             Species == "COATI" ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code,
                                             Species == "WREN" ~ NA_character_, # Missing, 1 observation only
                                             Species == "TREEC" ~ NA_character_), # Missing, 1 observation only
-                  ClutchType_observed = dplyr::case_when(CltCd == "1" ~ "first",
+                  ClutchType = dplyr::case_when(CltCd == "1" ~ "first",
                                                         CltCd == "2" ~ "replacement",
-                                                        CltCd == "3" ~ "second"), # Needs double-checking with data owner
+                                                        CltCd == "3" ~ "second"),
                   LayDate = as.Date(paste('31/03/', BreedingSeason, sep = ''), format = "%d/%m/%Y") + as.numeric(DFE),
                   # NOTE: The date calculations require knowing from which date onwards DFE and DH are determined.
                   #       In Smith et al. (2011), a paper mentioned on PiedFly.Net and of which Malcolm is a co-author, I found that 61 corresponds to 31. May. This would indicate that the "baseline" is 31. March, with DFE or DH = 1 corresponding to 1. April
@@ -221,15 +221,26 @@ create_brood_PFN <- function(Primary_data){
 
   # 5) Rename chick sample size columns and add columns without data
   Brood_data <- Brood_data %>%
-      dplyr::mutate(NumberChicksMass = NumberChickMass,
+      dplyr::mutate(ClutchType_observed = ClutchType,
                     NumberChicksTarsus = NumberTarsus,
-                    LayDateError = NA_real_,
-                    ClutchSizeError = NA_real_,
-                    HatchDateError = NA_real_,
-                    BroodSizeError = NA_real_,
-                    FledgeDate = as.Date(NA),
-                    FledgeDateError = NA_real_,
-                    NumberFledgedError = NA_real_,
+                    LayDate_observed = LayDate,
+                    LayDate_min = as.Date(NA),
+                    LayDate_max = as.Date(NA),
+                    ClutchSize_observed = ClutchSize,
+                    ClutchSize_min = NA_integer_,
+                    ClutchSize_max = NA_integer_,
+                    HatchDate_observed = HatchDate,
+                    HatchDate_min = as.Date(NA),
+                    HatchDate_max = as.Date(NA),
+                    BroodSize_observed = BroodSize,
+                    BroodSize_min = NA_integer_,
+                    BroodSize_max = NA_integer_,
+                    FledgeDate_observed = as.Date(NA),
+                    FledgeDate_min = as.Date(NA),
+                    FledgeDate_max = as.Date(NA),
+                    NumberFledged_observed = NumberFledged,
+                    NumberFledged_min = NA_integer_,
+                    NumberFledged_max = NA_integer_,
                     AvgEggMass =  NA_real_,
                     NumberEggs = NA_integer_,
                     OriginalTarsusMethod = NA_character_,
@@ -248,12 +259,12 @@ create_brood_PFN <- function(Primary_data){
       dplyr::select(BroodID, PopID, BreedingSeason,
                     Species, Plot, LocationID, FemaleID, MaleID,
                     ClutchType_observed, ClutchType_calculated,
-                    LayDate, LayDateError,
-                    ClutchSize, ClutchSizeError,
-                    HatchDate, HatchDateError,
-                    BroodSize, BroodSizeError,
-                    FledgeDate, FledgeDateError,
-                    NumberFledged, NumberFledgedError,
+                    LayDate_observed, LayDate_min, LayDate_max,
+                    ClutchSize_observed, ClutchSize_min, ClutchSize_max,
+                    HatchDate_observed, HatchDate_min, HatchDate_max,
+                    BroodSize_observed, BroodSize_min, BroodSize_max,
+                    FledgeDate_observed, FledgeDate_min, FledgeDate_max,
+                    NumberFledged_observed, NumberFledged_min, NumberFledged_max,
                     AvgEggMass, NumberEggs,
                     AvgChickMass, NumberChicksMass,
                     AvgTarsus, NumberChicksTarsus,
@@ -266,10 +277,14 @@ create_brood_PFN <- function(Primary_data){
 
   # Satisfy RCMD check
   PopID <- BroodID <- PopID <- BreedingSeason <- Species <- Plot <- LocationID <- NULL
-  FemaleID <- MaleID <- ClutchType_observed <- ClutchType_calculated <- NULL
-  LayDate <- LayDateError <- ClutchSize <- ClutchSizeError <- NULL
-  HatchDate <- HatchDateError <- BroodSize <- BroodSizeError <- NULL
-  FledgeDate <- FledgeDateError <- NumberFledged <- NumberFledgedError <- NULL
+  FemaleID <- MaleID <- NULL
+  ClutchType <- ClutchType_observed <- ClutchType_calculated <- NULL
+  LayDate <- LayDate_observed <- LayDate_min <- LayData_max <- NULL
+  ClutchSize <- ClutchSize_observed <- ClutchSize_min <- ClutchSize_max <- NULL
+  HatchDate <- HatchDate_observed <- HatchDate_min <- HatchData_max <- NULL
+  BroodSize <- BroodSize_observed <- BroodSize_min <- BroodSize_max <- NULL
+  FledgeDate <- FledgeDate_observed <- FledgeDate_min <- FledgeDate_max <- NULL
+  NumberFledged <- NumberFledged_observed <- NumberFledged_min <- NumberFledged_max <- NULL
   AvgEggMass <- AvgChickMass <- AvgTarsus <- NULL
   NumberEggs <- NumberChicksMass <- NumberChicksTarsus <- NumberChickMass <- NumberTarsus <- NULL
   OriginalTarsusMethod <- ExperimentID <- NULL
@@ -325,7 +340,10 @@ create_capture_PFN <- function(Primary_data){
                                   Age_observed = 4L,
                                   Age_calculated = NA_integer_, # Will be added later
                                   #ChickAge = NA_integer_, # Will be added later
-                                  Sex = "M", # Will be removed later
+                                  Sex_observed = "M",
+                                  CaptureAlive = TRUE,
+                                  ReleaseAlive = TRUE,
+                                  ExperimentID = NA_character_,
                                   stringsAsFactors = FALSE)
 
   # 2) Female capture data
@@ -357,7 +375,10 @@ create_capture_PFN <- function(Primary_data){
                                     Age_observed = 4L,
                                     Age_calculated = NA_integer_, # Will be added later
                                     #ChickAge = NA_integer_, # Will be added later
-                                    Sex = "F", # Will be removed later
+                                    Sex_observed = "F",
+                                    CaptureAlive = TRUE,
+                                    ReleaseAlive = TRUE,
+                                    ExperimentID = NA_character_,
                                     stringsAsFactors = FALSE)
 
   # 3) Chick capture data
@@ -391,7 +412,10 @@ create_capture_PFN <- function(Primary_data){
                                           Age_observed = 1L,
                                           Age_calculated = NA_integer_, # Will be added later
                                           #ChickAge = NA_integer_, # Will be added later
-                                          Sex = NA_character_, # Will be removed later
+                                          Sex_observed = NA_character_,
+                                          CaptureAlive = TRUE,
+                                          ReleaseAlive = TRUE,
+                                          ExperimentID = NA_character_,
                                           stringsAsFactors = FALSE)
   }
 
@@ -410,16 +434,29 @@ create_capture_PFN <- function(Primary_data){
   # Sort chronologically within individual
     dplyr::arrange(IndvID, CaptureDate, CaptureTime) %>%
     #Calculate age at each capture based on first capture
-    calc_age(ID = IndvID, Age = Age_observed, Date = CaptureDate, Year = BreedingSeason)
+    calc_age(ID = IndvID, Age = Age_observed, Date = CaptureDate, Year = BreedingSeason) %>%
 
-  # 7) Return data
+  # 7) Make CaptureID
+
+    # Write unique capture identifier as IndvID-CaptureNumber
+    dplyr::group_by(IndvID) %>%
+    dplyr::mutate(CaptureID = paste0(IndvID, '-', dplyr::row_number())) %>%
+    dplyr::ungroup()
+
+  # Move CaptureID to front (first column)
+  Capture_data <- Capture_data[c('CaptureID', setdiff(names(Capture_data), 'CaptureID'))]
+
+  # 8) Return data
   return(Capture_data)
 
+
+
   #Satisfy RCMD Check
-  PopID <- Species <- IndvID <- BroodID <- BreedingSeason <- LocationID <- Plot <- Sex <- Age_observed <- NULL
+  PopID <- Species <- IndvID <- BroodID <- BreedingSeason <- LocationID <- Plot <- Sex_observed <- Age_observed <- NULL
   CaptureDate <- CaptureTime <- ObserverID <- CapturePopID <- CapturePlot <- NULL
   ReleasePopID <- ReleasePlot <- Mass <- Tarsus <- OriginalTarsusMethod <- NULL
   WingLength <- Age_observed <- Age_calculated <- NULL
+  CaptureAlive <- ReleaseAlive <- ExperimentID <- NULL
 
   Year <- Box <- Popn <- CltCd <- CltSize <- Hatch <- Fledged <- Success <- NULL
   DAR <- N1 <- DFE <- DH <- MinEggs <- UnHatch <- AverageMass <- Outcome <- NULL
@@ -461,7 +498,7 @@ create_individual_PFN <- function(Capture_data){
 
       } else {
 
-        return("CONFLICTED")
+        return("CCCCCC")
 
       }
 
@@ -470,7 +507,7 @@ create_individual_PFN <- function(Capture_data){
     BroodIDFledged = BroodIDLaid, #* CN: This would have to be different if there were cross-fostering experiments
     RingSeason = first(BreedingSeason),
     RingAge = ifelse(any(Age_calculated %in% c(1, 3)), "chick", ifelse(min(Age_calculated) == 2, NA_character_, "adult")),
-    Sex = purrr::map_chr(.x = list(unique(na.omit(Sex))), .f = ~{
+    Sex_calculated = purrr::map_chr(.x = list(unique(na.omit(Sex_observed))), .f = ~{
 
       if(length(..1) == 0){
 
@@ -482,7 +519,7 @@ create_individual_PFN <- function(Capture_data){
 
       } else {
 
-        return("C") #* CN: Only one letter used here to keep it at the same length as sex
+        return("C")
 
       }
 
@@ -497,6 +534,11 @@ create_individual_PFN <- function(Capture_data){
                   BroodIDFledged = BroodIDLaid) %>%
     #Ungroup to prevent warnings in debug report
     dplyr::ungroup() %>%
+
+    # Add a column for genetic sex (not available here)
+    dplyr::mutate(Sex_genetic = NA_character_) %>%
+
+    # Sort
     dplyr::arrange(RingSeason, IndvID)
 
   return(Indv_data)
@@ -505,10 +547,11 @@ create_individual_PFN <- function(Capture_data){
   Species <- IndvID <- PopID <- BroodIDLaid <- BroodIDFledged <- NULL
   RingSeason <- RingAge <- Sex <- NULL
 
-  BroodID <- BreedingSeason <- LocationID <- Plot <- Age_observed <- NULL
+  PopID <- Species <- IndvID <- BroodID <- BreedingSeason <- LocationID <- Plot <- Sex_observed <- Age_observed <- NULL
   CaptureDate <- CaptureTime <- ObserverID <- CapturePopID <- CapturePlot <- NULL
   ReleasePopID <- ReleasePlot <- Mass <- Tarsus <- OriginalTarsusMethod <- NULL
   WingLength <- Age_observed <- Age_calculated <- NULL
+  CaptureAlive <- ReleaseAlive <- ExperimentID <- NULL
 }
 
 #' Create location data table for EastDartmoor.
@@ -528,7 +571,7 @@ create_location_PFN <- function(Brood_data){
     # 2) Add additional columns
     dplyr::mutate(LocationType = 'NB',
                   PopID = 'PFN',
-                  Latitude = NA_real_,
+                  HabitatType = 'deciduous') %>%
                   Longitude = NA_real_,
                   Habitat = NA_character_) %>%
 
@@ -540,19 +583,24 @@ create_location_PFN <- function(Brood_data){
                   LocationType, PopID,
                   Latitude, Longitude,
                   StartSeason, EndSeason,
-                  Habitat)
+                  HabitatType)
 
   return(Location_data)
 
   # Satisfy RCMD check
+  Box <- Popn <- lat <- long <- First <- Last <- NULL
   LocationID <- NestboxID <- LocationType <- PopID <- NULL
-  Latitude <- Longitude <- StartSeason <- EndSeason <- Habitat <- NULL
+  Latitude <- Longitude <- StartSeason <- EndSeason <- HabitatType <- NULL
 
   BroodID <- BreedingSeason <- Species <- Plot <- NULL
-  FemaleID <- MaleID <- ClutchType_observed <- ClutchType_calculated <- NULL
-  LayDate <- LayDateError <- ClutchSize <- ClutchSizeError <- NULL
-  HatchDate <- HatchDateError <- BroodSize <- BroodSizeError <- NULL
-  FledgeDate <- FledgeDateError <- NumberFledged <- NumberFledgedError <- NULL
+  FemaleID <- MaleID <- NULL
+  ClutchType <- ClutchType_observed <- ClutchType_calculated <- NULL
+  LayDate <- LayDate_observed <- LayDate_min <- LayData_max <- NULL
+  ClutchSize <- ClutchSize_observed <- ClutchSize_min <- ClutchSize_max <- NULL
+  HatchDate <- HatchDate_observed <- HatchDate_min <- HatchData_max <- NULL
+  BroodSize <- BroodSize_observed <- BroodSize_min <- BroodSize_max <- NULL
+  FledgeDate <- FledgeDate_observed <- FledgeDate_min <- FledgeDate_max <- NULL
+  NumberFledged <- NumberFledged_observed <- NumberFledged_min <- NumberFledged_max <- NULL
   AvgEggMass <- NumberEggs <- AvgChickMass <- AvgTarsus <- NumberChicksTarsus <- NULL
   OriginalTarsusMethod <- ExperimentID <- NULL
 
