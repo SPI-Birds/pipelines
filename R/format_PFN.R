@@ -64,8 +64,12 @@ format_PFN <- function(db,
   #Record start time to estimate processing time.
   start_time <- Sys.time()
 
-  #Load primary data
+  #Load primary brood data
   Primary_data <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_EDartmoor.csv"), na.strings = c("", "?"),colClasses = "character")
+
+  #Load complete PiedFlyNet ringing database
+  CMR_data <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_All_CMR.csv"), na.strings = c("", "?", "UNK", "-"),colClasses = "character") # TODO:Confirm with Malcolm that SITE = "UNK" refers to unknown/unassigned locations
+
 
   # PREPARATION: RE-RINGING DATA
 
@@ -85,7 +89,8 @@ format_PFN <- function(db,
 
   message("Compiling capture data....")
 
-  Capture_data <- create_capture_EDM(Primary_data = Primary_data)
+  Capture_data <- create_capture_EDM(CMR_data = CMR_data, Primary_data = Primary_data, ReRingTable = ReRingTable)
+
 
   # BROOD DATA
 
@@ -104,7 +109,7 @@ format_PFN <- function(db,
 
   message("Compiling location data...")
 
-  Location_data <- create_location_EDM(Brood_data = Brood_data)
+  Location_data <- create_location_EDM(Brood_data = Brood_data, Capture_data = Capture_data)
 
 
   # WRANGLE DATA FOR EXPORT
@@ -172,14 +177,9 @@ create_brood_EDM <- function(Primary_data, ReRingTable){
   #This will be used downstream in point 7)
   badIDs <- c("RUNT", "ringed", "ringed left", "ringed right", "unringed", "Unringed")
 
-  ## 0) Load data
-  #We read everything in as text and convert it afterwards
-  #Even though some columns (e.g. date) work well, they may be broken with newer data.
-  #Using text and converting manually should be more robust to data changes
 
-    Brood_data <- Primary_data %>%
-
-    ## 1) Rename columns that are equivalent (content and format) to columns in the standard format
+  ## 1) Rename columns that are equivalent (content and format) to columns in the standard format
+  Brood_data <- Primary_data %>%
     dplyr::rename(Plot = Popn,
                   LocationID = Box) %>%
 
@@ -329,14 +329,17 @@ create_brood_EDM <- function(Primary_data, ReRingTable){
 
 }
 
-#' Create capture data table for EastDartmoor.
+
+
+#' Create capture data table for EastDartmoor from ringing data.
 #'
-#' @param Primary_data Primary data from EastDartmoor.
+#' @param CMR_data Complete raw PiedFlyNet ringing data.
+#' @param Primary_data Primary brood data from EastDartmoor.
 #' @param ReRingTable Table containing ring numbers and unique identifiers for re-ringed individuals
 #'
 #' @return A data frame with Capture data
 
-create_capture_EDM <- function(Primary_data){
+create_capture_EDM <- function(CMR_data, Primary_data, ReRingTable){
 
   # 1) Add information on re-ringing IDs to capture data
   ReRingTable <- ReRingTable %>%
@@ -345,161 +348,120 @@ create_capture_EDM <- function(Primary_data){
   Capture_data <- CMR_data %>%
     dplyr::left_join(ReRingTable, by = 'RING') %>%
     dplyr::mutate(RING = ifelse(is.na(.data$ReRingID), .data$RING, .data$ReRingID))
-                                  Species = dplyr::case_when(Capture_data$Species == "BLUTI" ~ Species_codes[Species_codes$SpeciesID == 14620, ]$Code,
-                                                             Capture_data$Species == "PIEFL" ~ Species_codes[Species_codes$SpeciesID == 13490, ]$Code,
-                                                             Capture_data$Species == "GRETI" ~ Species_codes[Species_codes$SpeciesID == 14640, ]$Code,
-                                                             Capture_data$Species == "REDST" ~ Species_codes[Species_codes$SpeciesID == 11220, ]$Code,
-                                                             Capture_data$Species == "MARTI" ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code,
-                                                             Capture_data$Species == "NUTHA" ~ Species_codes[Species_codes$SpeciesID == 14790, ]$Code,
-                                                             Capture_data$Species == "COATI" ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code,
-                                                             Capture_data$Species == "WREN" ~ NA_character_,
-                                                             Capture_data$Species == "TREEC" ~ NA_character_),
-                                  BreedingSeason = as.integer(Capture_data$Year),
-                                  CaptureDate = as.Date(Capture_data$MaleDate, format = "%d/%m/%Y"),
-                                  #CaptureTime = strptime(NA, format = "%hh:%mm"),
-                                  CaptureTime = NA_character_,
-                                  ObserverID = NA_character_,
-                                  LocationID = Capture_data$Box,
-                                  CapturePopID = "EDM",
-                                  CapturePlot = Capture_data$Popn,
-                                  ReleasePopID = "EDM",
-                                  ReleasePlot = Capture_data$Popn,
-                                  Mass = NA_real_,
-                                  Tarsus = NA_real_,
-                                  OriginalTarsusMethod = "Alternative",
-                                  WingLength = NA_real_,
-                                  Age_observed = ifelse(is.na(Capture_data$MaleMinAge), 4L, as.integer(Capture_data$MaleMinAge)*2L + 3L),
-                                  Age_calculated = NA_integer_, # Will be added later
-                                  #ChickAge = NA_integer_, # Will be added later
-                                  Sex_observed = "M",
-                                  CaptureAlive = TRUE,
-                                  ReleaseAlive = TRUE,
-                                  ExperimentID = NA_character_,
-                                  stringsAsFactors = FALSE)
 
-  # 2) Female capture data
-  Female_Capture_data <- data.frame(IndvID = Capture_data$FemaleID,
-                                    BroodID = Capture_data$BroodID, # Will be removed later
-                                    Species = dplyr::case_when(Capture_data$Species == "BLUTI" ~ Species_codes[Species_codes$SpeciesID == 14620, ]$Code,
-                                                               Capture_data$Species == "PIEFL" ~ Species_codes[Species_codes$SpeciesID == 13490, ]$Code,
-                                                               Capture_data$Species == "GRETI" ~ Species_codes[Species_codes$SpeciesID == 14640, ]$Code,
-                                                               Capture_data$Species == "REDST" ~ Species_codes[Species_codes$SpeciesID == 11220, ]$Code,
-                                                               Capture_data$Species == "MARTI" ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code,
-                                                               Capture_data$Species == "NUTHA" ~ Species_codes[Species_codes$SpeciesID == 14790, ]$Code,
-                                                               Capture_data$Species == "COATI" ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code,
-                                                               Capture_data$Species == "WREN" ~ NA_character_,
-                                                               Capture_data$Species == "TREEC" ~ NA_character_),
-                                    BreedingSeason = as.integer(Capture_data$Year),
-                                    CaptureDate = as.Date(Capture_data$FemaleDate, format = "%d/%m/%Y"),
-                                    #CaptureTime = strptime(NA, format = "%hh:%mm"),
-                                    CaptureTime = NA_character_,
-                                    ObserverID = NA_character_,
-                                    LocationID = Capture_data$Box,
-                                    CapturePopID = "EDM",
-                                    CapturePlot = Capture_data$Popn,
-                                    ReleasePopID = "EDM",
-                                    ReleasePlot = Capture_data$Popn,
-                                    Mass = NA_real_,
-                                    Tarsus = NA_real_,
-                                    OriginalTarsusMethod = "Alternative",
-                                    WingLength = NA_real_,
-                                    Age_observed = ifelse(is.na(Capture_data$FemaleMinAge), 4L, as.integer(Capture_data$FemaleMinAge)*2L + 3L),
-                                    Age_calculated = NA_integer_, # Will be added later
-                                    #ChickAge = NA_integer_, # Will be added later
-                                    Sex_observed = "F",
-                                    CaptureAlive = TRUE,
-                                    ReleaseAlive = TRUE,
-                                    ExperimentID = NA_character_,
-                                    stringsAsFactors = FALSE)
+  ## 2) Subset ringing database to contain only captures relevant to population
+  LocationList <- unique(Primary_data$Popn)
+  Capture_data <- subset(Capture_data, PLACE %in% LocationList)
 
-  # 3) Chick capture data
+  ## 3) Rename columns that are equivalent (content and format) to columns in the standard format
+  Capture_data <- Capture_data %>%
+    dplyr::rename(IndvID = .data$RING,
+                  CapturePlot = .data$PLACE,
+                  LocationID = .data$SITE,
+                  Sex_observed = .data$SEX) %>%
+
+    ## 4) Add population ID and reformat colums with equivalent content but different format
+  #Capture_data <- Capture_data %>%
+    dplyr::mutate(PopID = "EDM",
+                  Species = dplyr::case_when(.data$SPEC == "BLUTI" ~ Species_codes[Species_codes$SpeciesID == 14620, ]$Code,
+                                             .data$SPEC == "PIEFL" ~ Species_codes[Species_codes$SpeciesID == 13490, ]$Code,
+                                             .data$SPEC == "GRETI" ~ Species_codes[Species_codes$SpeciesID == 14640, ]$Code,
+                                             .data$SPEC == "REDST" ~ Species_codes[Species_codes$SpeciesID == 11220, ]$Code,
+                                             .data$SPEC == "MARTI" ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code,
+                                             .data$SPEC == "NUTHA" ~ Species_codes[Species_codes$SpeciesID == 14790, ]$Code,
+                                             .data$SPEC == "COATI" ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code),
+                    CaptureDate = as.Date(.data$DATE, format = "%d/%m/%Y"),
+                    CaptureTime = ifelse(!grepl("00:00", Capture_data$DATE), sub(".* ", "", Capture_data$DATE), NA),
+                    ObserverID = dplyr::case_when(!is.na(.data$INIT) ~ .data$INIT,
+                                                  is.na(.data$INIT) & !is.na(.data$RINGINIT) ~ .data$RINGINIT),
+                    CapturePopID = "EDM",
+                    ReleasePopID = "EDM",
+                    ReleasePlot = CapturePlot,
+                    Mass_CMR = as.numeric(.data$WT),
+                    Tarsus_CMR = dplyr::case_when(is.na(.data$TSMTD) ~ as.numeric(.data$TARSUS),
+                                              .data$TSMTD == "S" ~ as.numeric(.data$TARSUS),
+                                              .data$TSMTD == "M" ~ (as.numeric(.data$TARSUS)*0.72005)+3.64549),
+                    OriginalTarsusMethod = dplyr::case_when(is.na(.data$TSMTD) ~ "Alternative",
+                                                            .data$TSMTD == "S" ~ "Alternative",
+                                                            .data$TSMTD == "M" ~ "Oxford"),
+                    WingLength = as.numeric(.data$WING),
+                    Age_observed = as.integer(str_remove(.data$AGE, "J")),
+                    Age_calculated = NA_integer_, # Will be added later
+                    #ChickAge = NA_integer_, # Will be added later
+                    stringsAsFactors = FALSE) %>%
+
+    ## 5) Add additional colums that need to be derived from original columns
+    #Capture_data <- Capture_data %>%
+    dplyr::mutate(BreedingSeason = as.integer(format(.data$CaptureDate, "%Y")),
+                  CaptureAlive = ifelse(.data$RTYPE == "X", FALSE, TRUE),
+                  ReleaseAlive = ifelse(.data$RTYPE == "X", FALSE, TRUE),
+                  ExperimentID = dplyr::case_when(.data$COND == "M" ~ "SURVIVAL",
+                                                  is.na(.data$COND) ~ NA_character_)
+    )
+
+
+
+  ## 6) Add chick measurement and brood ID data from brood table (primary data)
+
+  # Extract chick mass, tarsus, and BroodID from brood table
   Chick_Capture_list <- list()
-  for(i in 1:nrow(Capture_data)){
-    Chick_Capture_list[[i]] <- data.frame(IndvID = unname(t(Capture_data[i, paste0("Young", c(1:11))])),
-                                          BroodID = Capture_data$BroodID[i], # Will be removed later
-                                          Species = dplyr::case_when(Capture_data$Species[i] == "BLUTI" ~ Species_codes[Species_codes$SpeciesID == 14620, ]$Code,
-                                                                     Capture_data$Species[i] == "PIEFL" ~ Species_codes[Species_codes$SpeciesID == 13490, ]$Code,
-                                                                     Capture_data$Species[i] == "GRETI" ~ Species_codes[Species_codes$SpeciesID == 14640, ]$Code,
-                                                                     Capture_data$Species[i] == "REDST" ~ Species_codes[Species_codes$SpeciesID == 11220, ]$Code,
-                                                                     Capture_data$Species[i] == "MARTI" ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code,
-                                                                     Capture_data$Species[i] == "NUTHA" ~ Species_codes[Species_codes$SpeciesID == 14790, ]$Code,
-                                                                     Capture_data$Species[i] == "COATI" ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code,
-                                                                     Capture_data$Species[i] == "WREN" ~ NA_character_,
-                                                                     Capture_data$Species[i] == "TREEC" ~ NA_character_),
-                                          BreedingSeason = as.integer(Capture_data$Year[i]),
-                                          CaptureDate = as.Date(Capture_data$YoungDate[i], format = "%d/%m/%Y"),
-                                          #CaptureTime = strptime(NA, format = "%hh:%mm"),
-                                          CaptureTime = NA_character_,
-                                          ObserverID = NA_character_,
-                                          LocationID = Capture_data$Box[i],
-                                          CapturePopID = "EDM",
-                                          CapturePlot = Capture_data$Popn[i],
-                                          ReleasePopID = "EDM",
-                                          ReleasePlot = Capture_data$Popn[i],
-                                          Mass = as.numeric(Capture_data[i, paste0("Weight.Y", c(1:11))]),
-                                          Tarsus = as.numeric(Capture_data[i, paste0("Tarsus.Y", c(1:11))]),
-                                          OriginalTarsusMethod = "Alternative",
-                                          WingLength = NA_real_,
-                                          Age_observed = 1L,
-                                          Age_calculated = NA_integer_, # Will be added later
-                                          #ChickAge = NA_integer_, # Will be added later
-                                          Sex_observed = NA_character_,
-                                          CaptureAlive = TRUE,
-                                          ReleaseAlive = TRUE,
-                                          ExperimentID = NA_character_,
+  for(i in 1:nrow(Primary_data)){
+    Chick_Capture_list[[i]] <- data.frame(IndvID = unname(t(Primary_data[i, paste0("Young", c(1:11))])),
+                                          BroodID = Primary_data$BroodID[i], # Will be removed later
+                                          CaptureDate = as.Date(Primary_data$YoungDate[i], format = "%d/%m/%Y"),
+
+                                          Mass_B = as.numeric(Primary_data[i, paste0("Weight.Y", c(1:11))]),
+                                          Tarsus_B = as.numeric(Primary_data[i, paste0("Tarsus.Y", c(1:11))]),
                                           stringsAsFactors = FALSE)
   }
 
   Chick_Capture_data <- dplyr::bind_rows(Chick_Capture_list)
+  Chick_Capture_data <- subset(Chick_Capture_data, !is.na(IndvID))
 
+  # Merge additional chick data into capture data
+  Capture_data <- Capture_data %>%
+    dplyr::left_join(Chick_Capture_data, by = c("IndvID", "CaptureDate")) %>%
 
-  # 4) Combine data and remove missing IDs
+  # Summarise information on chick mass and tarsus measurements
+    dplyr::mutate(Mass = dplyr::case_when(!is.na(.data$Mass_CMR) ~ .data$Mass_CMR,
+                                          is.na(.data$Mass_CMR) & !is.na(.data$Mass_B) ~ .data$Mass_B),
+                  Tarsus = dplyr::case_when(!is.na(.data$Tarsus_CMR) ~ .data$Tarsus_CMR,
+                                   is.na(.data$Tarsus_CMR) & !is.na(.data$Tarsus_B) ~ .data$Tarsus_B)) %>%
 
-  Capture_data <- dplyr::bind_rows(Chick_Capture_data, Male_Capture_data, Female_Capture_data) %>%
+    ## 7) Exclude entries not included in the standard format
 
-  # 5) Remove all individuals with missing IDs and/or from species not included in Species_codes
-  dplyr::filter(Species %in% Species_codes$Code & !is.na(IndvID) & !(IndvID%in%c("RUNT", "ringed", "ringed left", "ringed right", "unringed", "Unringed"))) %>%
+    # Remove all individuals from species not included in Species_codes
+    dplyr::filter(.data$Species %in% Species_codes$Code) %>%
 
-  # 6) Calculate age at capture
+    # Remove all observations not involving a capture/dead recovery (i.e. resightings)
+    dplyr::filter(.data$RTYPE != 'O') %>%
 
-  # Sort chronologically within individual
-    dplyr::arrange(IndvID, CaptureDate, CaptureTime) %>%
-    #Calculate age at each capture based on first capture
-    calc_age(ID = IndvID, Age = Age_observed, Date = CaptureDate, Year = BreedingSeason) %>%
+    ## 8) Calculate age at capture
 
-  # 7) Make CaptureID
+    # Sort chronologically within individual
+    dplyr::arrange(.data$IndvID, .data$CaptureDate, .data$CaptureTime) %>%
+
+      #Calculate age at each capture based on first capture
+    calc_age(ID = .data$IndvID, Age = .data$Age_observed, Date = .data$CaptureDate, Year = .data$BreedingSeason) %>%
+
+    ## 9) Make CaptureID
 
     # Write unique capture identifier as IndvID-CaptureNumber
-    dplyr::group_by(IndvID) %>%
-    dplyr::mutate(CaptureID = paste0(IndvID, '-', dplyr::row_number())) %>%
-    dplyr::ungroup()
+    dplyr::group_by(.data$IndvID) %>%
+    dplyr::mutate(CaptureID = paste0(.data$IndvID, '-', dplyr::row_number())) %>%
+    dplyr::ungroup() %>%
 
-  # Move CaptureID to front (first column)
-  Capture_data <- Capture_data[c('CaptureID', setdiff(names(Capture_data), 'CaptureID'))]
+    ## 10) Select required columns
+    dplyr::select(CaptureID, IndvID, Species, Sex_observed,
+                  BreedingSeason, CaptureDate, CaptureTime, ObserverID,
+                  LocationID, CaptureAlive, ReleaseAlive,
+                  CapturePopID, CapturePlot, ReleasePopID, ReleasePlot,
+                  Mass, Tarsus, OriginalTarsusMethod, WingLength,
+                  Age_observed, Age_calculated, ExperimentID,
+                  BroodID)
 
-  # 8) Return data
+  ## 11) Return data
   return(Capture_data)
-
-
-
-  #Satisfy RCMD Check
-  PopID <- Species <- IndvID <- BroodID <- BreedingSeason <- LocationID <- Plot <- Sex_observed <- Age_observed <- NULL
-  CaptureDate <- CaptureTime <- ObserverID <- CapturePopID <- CapturePlot <- NULL
-  ReleasePopID <- ReleasePlot <- Mass <- Tarsus <- OriginalTarsusMethod <- NULL
-  WingLength <- Age_observed <- Age_calculated <- NULL
-  CaptureAlive <- ReleaseAlive <- ExperimentID <- NULL
-
-  Year <- Box <- Popn <- CltCd <- CltSize <- Hatch <- Fledged <- Success <- NULL
-  DAR <- N1 <- DFE <- DH <- MinEggs <- UnHatch <- AverageMass <- Outcome <- NULL
-  MaleID <- MaleDate <- MaleRingDate <- NULL
-  FemaleID <- FemaleDate <- FemaleRingDate <- FemaleStatus <- FemaleMinAge <- NULL
-  YoungDate <- Young1 <- Young2 <- Young3 <- Young4 <- Young5 <- Young6 <- NULL
-  Young7 <- Young8 <- Young9 <- Young10 <- Young11 <- NULL
-  Weight.Y1 <- Weight.Y2 <- Weight.Y3 <- Weight.Y4 <- Weight.Y5 <- Weight.Y6 <- NULL
-  Weight.Y7 <- Weight.Y8 <- Weight.Y9 <- Weight.Y10 <- Weight.Y11  <- NULL
-  Tarsus.Y1 <- Tarsus.Y2 <- Tarsus.Y3 <- Tarsus.Y4 <- Tarsus.Y5 <- Tarsus.Y6 <- NULL
-  Tarsus.Y7 <- Tarsus.Y8 <- Tarsus.Y9 <- Tarsus.Y10 <- Tarsus.Y11  <- NULL
-
 }
 
 #' Create individual data table for EastDartmoor.
