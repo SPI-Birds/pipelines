@@ -67,6 +67,20 @@ format_PFN <- function(db,
   #Load primary data
   Primary_data <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_EDartmoor.csv"), na.strings = c("", "?"),colClasses = "character")
 
+  # PREPARATION: RE-RINGING DATA
+
+  # Find all birds that were re-ringed at least once
+  ReRing <- CMR_data[,c('RING', 'RING2')] %>%
+    dplyr::filter(!is.na(.data$RING2))
+
+  # Collate all ring numbers used for each individual (with max. number of re-ringing events = 3)
+  ReRingTable <- make_ReRingTable(raw_data = ReRing, N = 3) %>%
+
+    # Make new individual ID for re-ringed birds
+    dplyr::mutate(ReRingID = paste0('MULTIRING',.data$ReRingNr)) %>%
+    dplyr::select(RingNr, ReRingID)
+
+
   # CAPTURE DATA
 
   message("Compiling capture data....")
@@ -77,7 +91,8 @@ format_PFN <- function(db,
 
   message("Compiling brood data...")
 
-  Brood_data <- create_brood_EDM(Primary_data = Primary_data)
+  Brood_data <- create_brood_EDM(Primary_data = Primary_data, ReRingTable = ReRingTable)
+
 
   # INDIVIDUAL DATA
 
@@ -146,11 +161,12 @@ format_PFN <- function(db,
 #' Create brood data table for EastDartmoor.
 #'
 #' @param Primary_data Primary data from EastDartmoor.
+#' @param ReRingTable Table containing ring numbers and unique identifiers for re-ringed individuals
 #'
 #' @return A data frame with Brood data
 
 
-create_brood_EDM <- function(Primary_data){
+create_brood_EDM <- function(Primary_data, ReRingTable){
 
   ## Pre) Determine a vector of "bad" (nonconclusive) IDs
   #This will be used downstream in point 7)
@@ -250,9 +266,24 @@ create_brood_EDM <- function(Primary_data){
       dplyr::mutate(FemaleID = dplyr::case_when(!(FemaleID%in%badIDs) ~ FemaleID,
                                                 FemaleID%in%badIDs ~ NA_character_),
                     MaleID = dplyr::case_when(!(MaleID%in%badIDs) ~ MaleID,
-                                                MaleID%in%badIDs ~ NA_character_)) %>%
+                                                MaleID%in%badIDs ~ NA_character_))
 
-      # 8) Select and arrange columns for output
+  # 8) Convert ring numbers for re-ringed females and males
+  ReRingTableF <- ReRingTable %>%
+    dplyr::rename(FemaleID = .data$RingNr,
+                  FemaleReRingID = .data$ReRingID)
+
+  ReRingTableM <- ReRingTable %>%
+    dplyr::rename(MaleID = .data$RingNr,
+                  MaleReRingID = .data$ReRingID)
+
+  Brood_data <- Brood_data %>%
+    dplyr::left_join(ReRingTableF, by = 'FemaleID') %>%
+    dplyr::left_join(ReRingTableM, by = 'MaleID') %>%
+    dplyr::mutate(FemaleID = ifelse(is.na(.data$FemaleReRingID), .data$FemaleID, .data$FemaleReRingID),
+                  MaleID = ifelse(is.na(.data$MaleReRingID), .data$MaleID, .data$MaleReRingID)) %>%
+
+      # 9) Select and arrange columns for output
       dplyr::select(BroodID, PopID, BreedingSeason,
                     Species, Plot, LocationID, FemaleID, MaleID,
                     ClutchType_observed, ClutchType_calculated,
@@ -301,16 +332,19 @@ create_brood_EDM <- function(Primary_data){
 #' Create capture data table for EastDartmoor.
 #'
 #' @param Primary_data Primary data from EastDartmoor.
+#' @param ReRingTable Table containing ring numbers and unique identifiers for re-ringed individuals
 #'
 #' @return A data frame with Capture data
 
 create_capture_EDM <- function(Primary_data){
 
-  Capture_data <- Primary_data
+  # 1) Add information on re-ringing IDs to capture data
+  ReRingTable <- ReRingTable %>%
+    dplyr::rename(RING = .data$RingNr)
 
-  # 1) Male capture data
-  Male_Capture_data <- data.frame(IndvID = Capture_data$MaleID,
-                                  BroodID = Capture_data$BroodID, # Will be removed later
+  Capture_data <- CMR_data %>%
+    dplyr::left_join(ReRingTable, by = 'RING') %>%
+    dplyr::mutate(RING = ifelse(is.na(.data$ReRingID), .data$RING, .data$ReRingID))
                                   Species = dplyr::case_when(Capture_data$Species == "BLUTI" ~ Species_codes[Species_codes$SpeciesID == 14620, ]$Code,
                                                              Capture_data$Species == "PIEFL" ~ Species_codes[Species_codes$SpeciesID == 13490, ]$Code,
                                                              Capture_data$Species == "GRETI" ~ Species_codes[Species_codes$SpeciesID == 14640, ]$Code,
