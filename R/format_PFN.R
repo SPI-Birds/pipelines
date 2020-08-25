@@ -199,13 +199,13 @@ create_brood_EDM <- function(Primary_data, ReRingTable){
                                                         CltCd == "2" ~ "replacement",
                                                         CltCd == "3" ~ "second"),
                   LayDate = as.Date(paste('31/03/', BreedingSeason, sep = ''), format = "%d/%m/%Y") + as.numeric(DFE),
-                  #ClutchSize = dplyr::case_when(
-                  #  as.integer(CltSize) > 0 ~ as.integer(CltSize),
-                  #  as.integer(CltSize) == 0 | is.na(CltSize) ~
-                  #)
-                  ClutchSize = ifelse(!is.na(CltSize) & as.integer(CltSize) > 0, as.integer(CltSize), suppressWarnings(pmax(as.integer(MinEggs), as.integer(UnHatch)+as.integer(Hatch), as.integer(UnHatch)+as.integer(Fledged), na.rm = TRUE))),
-                  HatchDate = as.Date(paste('31/03/', BreedingSeason, sep = ''), format = "%d/%m/%Y") + as.numeric(DH),
-                  BroodSize = as.integer(Hatch),
+                  ClutchSize = dplyr::case_when(as.integer(.data$CltSize) > 0 ~ as.integer(.data$CltSize),
+                                                as.integer(.data$CltSize) == 0 | is.na(.data$CltSize) ~ NA_integer_),
+                  ClutchSize_min = dplyr::case_when(is.na(.data$CltSize) | as.integer(.data$CltSize) == 0 ~ suppressWarnings(pmax(as.integer(.data$MinEggs), as.integer(.data$UnHatch)+as.integer(.data$Hatch), as.integer(.data$UnHatch)+as.integer(.data$Fledged), na.rm = TRUE))),
+                  HatchDate = as.Date(paste('31/03/', .data$BreedingSeason, sep = ''), format = "%d/%m/%Y") + as.numeric(.data$DH),
+                  BroodSize = as.integer(.data$Hatch),
+                  NumberFledged = as.integer(.data$Fledged),
+                  ChickAge = as.integer(as.Date(.data$YoungDate, format = "%d/%m/%Y") - .data$HatchDate)) %>%
                   NumberFledged = as.integer(Fledged),
                   ChickAge = as.integer(as.Date(YoungDate, format = "%d/%m/%Y") - HatchDate)) %>%
 
@@ -240,7 +240,7 @@ create_brood_EDM <- function(Primary_data, ReRingTable){
                     LayDate_min = as.Date(NA),
                     LayDate_max = as.Date(NA),
                     ClutchSize_observed = ClutchSize,
-                    ClutchSize_min = NA_integer_,
+                    #ClutchSize_min = NA_integer_, # Now added above
                     ClutchSize_max = NA_integer_,
                     HatchDate_observed = HatchDate,
                     HatchDate_min = as.Date(NA),
