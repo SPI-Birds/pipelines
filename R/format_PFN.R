@@ -13,30 +13,32 @@
 #'ater}; marsh tit \emph{Poecile palustris}, and common redstart \emph{Phoenicurus phoenicurus}.
 #'Other minority species are excluded.
 #'
-#'\strong{Capture data}: Capture data is extracted directly from information on broods, separately for
-#'males, females, and chicks, and then merged. Ringing data (first capture) therefore usually comes
-#'from chick capture data, while recaptures come from captures of parents at the nests.
+#'\strong{Primary data sources}: Brood data is extracted from data in a
+#'brood table/nest monitoring format. 'Capture data is extracted from Malcolm Burgess'
+#'version of the BTO ringing database for all birds marked within the PiedFlyNet.
+#'The format of this ringing data is IPMR, the 'old' BTO ringing database format, and Malcolm
+#'has his own pipeline to convert the new BTO ringing database format to the old one.
+#'Since all chick measurements are complete in the brood table/nest monitoring data but some have
+#'not been added to the BTO ringing data, the pipeline merges chick trait values from the former
+#'into Capture data.
 #'
 #'\strong{Unidentified individuals}: Some individuals have not been given unique IDs. They appear
 #'in the primary data as: "RUNT", "ringed", "ringed left", "ringed right", "unringed", or "Unringed".
 #'In the Brood data, we assume unknown identity and treat ID as NA. From Capture data and Individual
 #'data, these individuals are omitted entirely.
 #'
+#'\strong{Re-ringing events}: Some individuals carry multiple rings (up to 3 in this data) throughout
+#'their lives, and re-ringing events are recorded in the BTO ringing database. The pipeline identifies
+#'birds with several rings, and assigns them a new unique individual identifier of the the form
+#''MULTIRINGx', where 'x' is an integer number.
+#'
 #'\strong{LayDate_observed and HatchDate_observed}: Information is provided as date of first egg (DFE) and
 #'date of hatching (DH). These are given as integer number, and represent days after a set
 #'starting date (day 0). Day 0 is assumed to be 31. March every year (to be confirmed).
 #'
-#'\strong{Age}: Adult individuals are only recorded as being either the breeding male or breeding females.
-#'The observed age for all adults is therefore EURING code 4: adult with otherwise unknown age. When possible,
-#'we calculate age more specifically using information on previous captures, and hatch date for individuals
-#'ringed as chicks (see below).
-#'
 #'\strong{ChickAge}: For every capture, we estimate the age of a chick as the difference between the hatch date
 #'taken from BroodIDFledged (in Individual_data) and the CaptureDate.
 #'
-#'\strong{Location Start- and EndSeason}: The first and last breeding seasons in which specific locations
-#'(nestboxes) were used are defined from the perspective of the birds, not the researchers, i.e. StartSeason
-#' and EndSeason of a nestbox represent the first and last breeding season in which birds bred in it.
 #'
 #'@inheritParams pipeline_params
 #'
@@ -82,7 +84,7 @@ format_PFN <- function(db,
 
     # Make new individual ID for re-ringed birds
     dplyr::mutate(ReRingID = paste0('MULTIRING',.data$ReRingNr)) %>%
-    dplyr::select(RingNr, ReRingID)
+    dplyr::select(.data$RingNr, .data$ReRingID)
 
 
   # CAPTURE DATA
@@ -120,11 +122,11 @@ format_PFN <- function(db,
   Capture_data$ChickAge[which(Capture_data$Age_observed > 1)] <- NA_integer_
 
   Capture_data <- Capture_data %>%
-    dplyr::select(-BroodID)
+    dplyr::select(-.data$BroodID)
 
   # Brood data: Remove unnecessary columns
   Brood_data <- Brood_data %>%
-    dplyr::select(-ChickAge)
+    dplyr::select(-.data$ChickAge)
 
   # EXPORT DATA
 
@@ -180,25 +182,25 @@ create_brood_EDM <- function(Primary_data, ReRingTable){
 
   ## 1) Rename columns that are equivalent (content and format) to columns in the standard format
   Brood_data <- Primary_data %>%
-    dplyr::rename(Plot = Popn,
-                  LocationID = Box) %>%
+    dplyr::rename(Plot = .data$Popn,
+                  LocationID = .data$Box) %>%
 
     ## 2) Add population ID and reformat colums with equivalent content but different format
     dplyr::mutate(PopID = "EDM",
                   BreedingSeason = as.integer(Year),
-                  Species = dplyr::case_when(Species == "BLUTI" ~ Species_codes[Species_codes$SpeciesID == 14620, ]$Code,
-                                            Species == "PIEFL" ~ Species_codes[Species_codes$SpeciesID == 13490, ]$Code,
-                                            Species == "GRETI" ~ Species_codes[Species_codes$SpeciesID == 14640, ]$Code,
-                                            Species == "REDST" ~ Species_codes[Species_codes$SpeciesID == 11220, ]$Code,
-                                            Species == "MARTI" ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code,
-                                            Species == "NUTHA" ~ Species_codes[Species_codes$SpeciesID == 14790, ]$Code,
-                                            Species == "COATI" ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code,
-                                            Species == "WREN" ~ NA_character_, # Missing, 1 observation only
-                                            Species == "TREEC" ~ NA_character_), # Missing, 1 observation only
-                  ClutchType = dplyr::case_when(CltCd == "1" ~ "first",
-                                                        CltCd == "2" ~ "replacement",
-                                                        CltCd == "3" ~ "second"),
-                  LayDate = as.Date(paste('31/03/', BreedingSeason, sep = ''), format = "%d/%m/%Y") + as.numeric(DFE),
+                  Species = dplyr::case_when(.data$Species == "BLUTI" ~ Species_codes[Species_codes$SpeciesID == 14620, ]$Code,
+                                             .data$Species == "PIEFL" ~ Species_codes[Species_codes$SpeciesID == 13490, ]$Code,
+                                             .data$Species == "GRETI" ~ Species_codes[Species_codes$SpeciesID == 14640, ]$Code,
+                                             .data$Species == "REDST" ~ Species_codes[Species_codes$SpeciesID == 11220, ]$Code,
+                                             .data$Species == "MARTI" ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code,
+                                             .data$Species == "NUTHA" ~ Species_codes[Species_codes$SpeciesID == 14790, ]$Code,
+                                             .data$Species == "COATI" ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code,
+                                             .data$Species == "WREN" ~ NA_character_, # Missing, 1 observation only
+                                             .data$Species == "TREEC" ~ NA_character_), # Missing, 1 observation only
+                  ClutchType = dplyr::case_when(.data$CltCd == "1" ~ "first",
+                                                .data$CltCd == "2" ~ "replacement",
+                                                .data$CltCd == "3" ~ "second"),
+                  LayDate = as.Date(paste('31/03/', .data$BreedingSeason, sep = ''), format = "%d/%m/%Y") + as.numeric(.data$DFE),
                   ClutchSize = dplyr::case_when(as.integer(.data$CltSize) > 0 ~ as.integer(.data$CltSize),
                                                 as.integer(.data$CltSize) == 0 | is.na(.data$CltSize) ~ NA_integer_),
                   ClutchSize_min = dplyr::case_when(is.na(.data$CltSize) | as.integer(.data$CltSize) == 0 ~ suppressWarnings(pmax(as.integer(.data$MinEggs), as.integer(.data$UnHatch)+as.integer(.data$Hatch), as.integer(.data$UnHatch)+as.integer(.data$Fledged), na.rm = TRUE))),
@@ -206,21 +208,19 @@ create_brood_EDM <- function(Primary_data, ReRingTable){
                   BroodSize = as.integer(.data$Hatch),
                   NumberFledged = as.integer(.data$Fledged),
                   ChickAge = as.integer(as.Date(.data$YoungDate, format = "%d/%m/%Y") - .data$HatchDate)) %>%
-                  NumberFledged = as.integer(Fledged),
-                  ChickAge = as.integer(as.Date(YoungDate, format = "%d/%m/%Y") - HatchDate)) %>%
 
     # 4) Add columns that are based on calculations
-    dplyr::arrange(BreedingSeason, FemaleID, LayDate)
+    dplyr::arrange(.data$BreedingSeason, .data$FemaleID, .data$LayDate)
     # --> This sorting is required for the function "calc_clutchtype" to work
 
     # 4.1) Calculate means and observation numbers for fledgling weight/tarsus length
     Brood_averages <- Brood_data %>%
-    dplyr::filter(between(ChickAge, 14, 16)) %>%  #Remove chicks outside the age range
-    dplyr::select(BroodID, contains("Weight."), contains("Tarsus.")) %>% #Select only weight and tarsus cols
-    tidyr::pivot_longer(cols = -BroodID) %>%  #Rearrange so they're individual rows rather than individual columns
+    dplyr::filter(between(.data$ChickAge, 14, 16)) %>%  #Remove chicks outside the age range
+    dplyr::select(.data$BroodID, contains("Weight."), contains("Tarsus.")) %>% #Select only weight and tarsus cols
+    tidyr::pivot_longer(cols = -.data$BroodID) %>%  #Rearrange so they're individual rows rather than individual columns
     dplyr::filter(!is.na(value)) %>% #Remove Nas
     dplyr::mutate(name = gsub(pattern = "Weight", replacement = "ChickMass", gsub(pattern = ".Y\\d+", replacement = "", x = name))) %>% #Change the names so it's not 'Weight.Y1' and 'Tarsus.Y1' but just 'ChickMass' and 'Tarsus'
-    dplyr::group_by(BroodID, name) %>% #Group by brood, weight and tarsus
+    dplyr::group_by(.data$BroodID, name) %>% #Group by brood, weight and tarsus
     dplyr::summarise(Avg = mean(as.numeric(value), na.rm = TRUE), Number = n()) %>% #Extract the mean and sample size
     tidyr::pivot_wider(names_from = name, values_from = c(Avg, Number), names_sep = "") %>% #Move this back into cols so we have AvgChickMass, NumberChickMass etc.
     dplyr::ungroup()
@@ -233,25 +233,25 @@ create_brood_EDM <- function(Primary_data, ReRingTable){
 
   # 5) Rename columns and add columns without data
   Brood_data <- Brood_data %>%
-      dplyr::mutate(ClutchType_observed = ClutchType,
-                    NumberChicksMass = NumberChickMass,
-                    NumberChicksTarsus = NumberTarsus,
-                    LayDate_observed = LayDate,
+      dplyr::mutate(ClutchType_observed = .data$ClutchType,
+                    NumberChicksMass = .data$NumberChickMass,
+                    NumberChicksTarsus = .data$NumberTarsus,
+                    LayDate_observed = .data$LayDate,
                     LayDate_min = as.Date(NA),
                     LayDate_max = as.Date(NA),
-                    ClutchSize_observed = ClutchSize,
+                    ClutchSize_observed = .data$ClutchSize,
                     #ClutchSize_min = NA_integer_, # Now added above
                     ClutchSize_max = NA_integer_,
-                    HatchDate_observed = HatchDate,
+                    HatchDate_observed = .data$HatchDate,
                     HatchDate_min = as.Date(NA),
                     HatchDate_max = as.Date(NA),
-                    BroodSize_observed = BroodSize,
+                    BroodSize_observed = .data$BroodSize,
                     BroodSize_min = NA_integer_,
                     BroodSize_max = NA_integer_,
                     FledgeDate_observed = as.Date(NA),
                     FledgeDate_min = as.Date(NA),
                     FledgeDate_max = as.Date(NA),
-                    NumberFledged_observed = NumberFledged,
+                    NumberFledged_observed = .data$NumberFledged,
                     NumberFledged_min = NA_integer_,
                     NumberFledged_max = NA_integer_,
                     AvgEggMass =  NA_real_,
@@ -260,13 +260,13 @@ create_brood_EDM <- function(Primary_data, ReRingTable){
                     ExperimentID = NA_character_) %>%
 
       # 6) Remove broods from species not included in Species_codes
-      dplyr::filter(Species %in% Species_codes$Code) %>%
+      dplyr::filter(.data$Species %in% Species_codes$Code) %>%
 
       # 7) Replace non-conclusive male and female IDs with NA
-      dplyr::mutate(FemaleID = dplyr::case_when(!(FemaleID%in%badIDs) ~ FemaleID,
-                                                FemaleID%in%badIDs ~ NA_character_),
-                    MaleID = dplyr::case_when(!(MaleID%in%badIDs) ~ MaleID,
-                                                MaleID%in%badIDs ~ NA_character_))
+      dplyr::mutate(FemaleID = dplyr::case_when(!(.data$FemaleID%in%badIDs) ~ .data$FemaleID,
+                                                .data$FemaleID%in%badIDs ~ NA_character_),
+                    MaleID = dplyr::case_when(!(.data$MaleID%in%badIDs) ~ .data$MaleID,
+                                              .data$MaleID%in%badIDs ~ NA_character_))
 
   # 8) Convert ring numbers for re-ringed females and males
   ReRingTableF <- ReRingTable %>%
@@ -284,49 +284,24 @@ create_brood_EDM <- function(Primary_data, ReRingTable){
                   MaleID = ifelse(is.na(.data$MaleReRingID), .data$MaleID, .data$MaleReRingID)) %>%
 
       # 9) Select and arrange columns for output
-      dplyr::select(BroodID, PopID, BreedingSeason,
-                    Species, Plot, LocationID, FemaleID, MaleID,
-                    ClutchType_observed, ClutchType_calculated,
-                    LayDate_observed, LayDate_min, LayDate_max,
-                    ClutchSize_observed, ClutchSize_min, ClutchSize_max,
-                    HatchDate_observed, HatchDate_min, HatchDate_max,
-                    BroodSize_observed, BroodSize_min, BroodSize_max,
-                    FledgeDate_observed, FledgeDate_min, FledgeDate_max,
-                    NumberFledged_observed, NumberFledged_min, NumberFledged_max,
-                    AvgEggMass, NumberEggs,
-                    AvgChickMass, NumberChicksMass,
-                    AvgTarsus, NumberChicksTarsus,
-                    OriginalTarsusMethod,
-                    ExperimentID, ChickAge)
+      dplyr::select(.data$BroodID, .data$PopID, .data$BreedingSeason,
+                    .data$Species, .data$Plot, .data$LocationID, .data$FemaleID, .data$MaleID,
+                    .data$ClutchType_observed, .data$ClutchType_calculated,
+                    .data$LayDate_observed, .data$LayDate_min, .data$LayDate_max,
+                    .data$ClutchSize_observed, .data$ClutchSize_min, .data$ClutchSize_max,
+                    .data$HatchDate_observed, .data$HatchDate_min, .data$HatchDate_max,
+                    .data$BroodSize_observed, .data$BroodSize_min, .data$BroodSize_max,
+                    .data$FledgeDate_observed, .data$FledgeDate_min, .data$FledgeDate_max,
+                    .data$NumberFledged_observed, .data$NumberFledged_min, .data$NumberFledged_max,
+                    .data$AvgEggMass, .data$NumberEggs,
+                    .data$AvgChickMass, .data$NumberChicksMass,
+                    .data$AvgTarsus, .data$NumberChicksTarsus,
+                    .data$OriginalTarsusMethod,
+                    .data$ExperimentID, .data$ChickAge)
 
 
   # Return data
   return(tibble::as_tibble(Brood_data))
-
-  # Satisfy RCMD check
-  PopID <- BroodID <- PopID <- BreedingSeason <- Species <- Plot <- LocationID <- NULL
-  FemaleID <- MaleID <- NULL
-  ClutchType <- ClutchType_observed <- ClutchType_calculated <- NULL
-  LayDate <- LayDate_observed <- LayDate_min <- LayData_max <- NULL
-  ClutchSize <- ClutchSize_observed <- ClutchSize_min <- ClutchSize_max <- NULL
-  HatchDate <- HatchDate_observed <- HatchDate_min <- HatchData_max <- NULL
-  BroodSize <- BroodSize_observed <- BroodSize_min <- BroodSize_max <- NULL
-  FledgeDate <- FledgeDate_observed <- FledgeDate_min <- FledgeDate_max <- NULL
-  NumberFledged <- NumberFledged_observed <- NumberFledged_min <- NumberFledged_max <- NULL
-  AvgEggMass <- AvgChickMass <- AvgTarsus <- NULL
-  NumberEggs <- NumberChicksMass <- NumberChicksTarsus <- NumberChickMass <- NumberTarsus <- NULL
-  OriginalTarsusMethod <- ExperimentID <- NULL
-
-  Year <- Box <- Popn <- CltCd <- CltSize <- Hatch <- Fledged <- Success <- NULL
-  DAR <- N1 <- DFE <- DH <- MinEggs <- UnHatch <- AverageMass <- Outcome <- NULL
-  MaleDate <- MaleRingDate <- FemaleDate <- FemaleRingDate <- FemaleStatus <- FemaleMinAge <- NULL
-  YoungDate <- Young1 <- Young2 <- Young3 <- Young4 <- Young5 <- Young6 <- NULL
-  Young7 <- Young8 <- Young9 <- Young10 <- Young11 <- NULL
-  Weight.Y1 <- Weight.Y2 <- Weight.Y3 <- Weight.Y4 <- Weight.Y5 <- Weight.Y6 <- NULL
-  Weight.Y7 <- Weight.Y8 <- Weight.Y9 <- Weight.Y10 <- Weight.Y11  <- NULL
-  Tarsus.Y1 <- Tarsus.Y2 <- Tarsus.Y3 <- Tarsus.Y4 <- Tarsus.Y5 <- Tarsus.Y6 <- NULL
-  Tarsus.Y7 <- Tarsus.Y8 <- Tarsus.Y9 <- Tarsus.Y10 <- Tarsus.Y11  <- NULL
-
 }
 
 
@@ -387,7 +362,6 @@ create_capture_EDM <- function(CMR_data, Primary_data, ReRingTable){
                     WingLength = as.numeric(.data$WING),
                     Age_observed = as.integer(str_remove(.data$AGE, "J")),
                     Age_calculated = NA_integer_, # Will be added later
-                    #ChickAge = NA_integer_, # Will be added later
                     stringsAsFactors = FALSE) %>%
 
     ## 5) Add additional colums that need to be derived from original columns
@@ -474,12 +448,12 @@ create_individual_EDM <- function(Capture_data){
 
   #Take capture data and determine summary data for each individual
   Indv_data <- Capture_data %>%
-    dplyr::arrange(IndvID, BreedingSeason, CaptureDate, CaptureTime) %>%
-    dplyr::group_by(IndvID) %>%
+    dplyr::arrange(.data$IndvID, .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
+    dplyr::group_by(.data$IndvID) %>%
 
     #* CN: Loop over the species assigned to each individual and check the number of different assignments
 
-    dplyr::summarise(Species = purrr::map_chr(.x = list(unique(na.omit(Species))), .f = ~{
+    dplyr::summarise(Species = purrr::map_chr(.x = list(unique(na.omit(.data$Species))), .f = ~{
 
       if(length(..1) == 0){
 
@@ -496,11 +470,11 @@ create_individual_EDM <- function(Capture_data){
       }
 
     }), PopID = "EDM",
-    BroodIDLaid = first(BroodID),
-    BroodIDFledged = BroodIDLaid, #* CN: This would have to be different if there were cross-fostering experiments
-    RingSeason = first(BreedingSeason),
-    RingAge = ifelse(any(Age_calculated %in% c(1, 3)), "chick", ifelse(min(Age_calculated) == 2, NA_character_, "adult")),
-    Sex_calculated = purrr::map_chr(.x = list(unique(na.omit(Sex_observed))), .f = ~{
+    BroodIDLaid = first(.data$BroodID),
+    BroodIDFledged = .data$BroodIDLaid, # Identical, as no cross-fostering experiments were made
+    RingSeason = first(.data$BreedingSeason),
+    RingAge = ifelse(any(.data$Age_calculated %in% c(1, 3)), "chick", ifelse(min(.data$Age_calculated) == 2, NA_character_, "adult")),
+    Sex_calculated = purrr::map_chr(.x = list(unique(na.omit(.data$Sex_observed))), .f = ~{
 
       if(length(..1) == 0){
 
@@ -522,8 +496,8 @@ create_individual_EDM <- function(Capture_data){
 
     #For each individual, if their ring age was 1 or 3 (caught in first breeding year)
     #Then we take their first BroodID, otherwise it is NA
-    dplyr::mutate(BroodIDLaid = ifelse(RingAge == "chick", BroodIDLaid, NA),
-                  BroodIDFledged = BroodIDLaid) %>%
+    dplyr::mutate(BroodIDLaid = ifelse(.data$RingAge == "chick", .data$BroodIDLaid, NA),
+                  BroodIDFledged = .data$BroodIDLaid) %>%
     #Ungroup to prevent warnings in debug report
     dplyr::ungroup() %>%
 
@@ -531,19 +505,9 @@ create_individual_EDM <- function(Capture_data){
     dplyr::mutate(Sex_genetic = NA_character_) %>%
 
     # Sort
-    dplyr::arrange(RingSeason, IndvID)
+    dplyr::arrange(.data$RingSeason, .data$IndvID)
 
   return(Indv_data)
-
-  #Satisfy RCMD Check
-  Species <- IndvID <- PopID <- BroodIDLaid <- BroodIDFledged <- NULL
-  RingSeason <- RingAge <- Sex <- NULL
-
-  PopID <- Species <- IndvID <- BroodID <- BreedingSeason <- LocationID <- Plot <- Sex_observed <- Age_observed <- NULL
-  CaptureDate <- CaptureTime <- ObserverID <- CapturePopID <- CapturePlot <- NULL
-  ReleasePopID <- ReleasePlot <- Mass <- Tarsus <- OriginalTarsusMethod <- NULL
-  WingLength <- Age_observed <- Age_calculated <- NULL
-  CaptureAlive <- ReleaseAlive <- ExperimentID <- NULL
 }
 
 #' Create location data table for EastDartmoor.
@@ -558,17 +522,17 @@ create_location_EDM <- function(Brood_data, Capture_data){
   # 1) Load and format additional data on nest boxes
   Location_details <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_EDartmoor_Nestboxes.csv"), na.strings = c("", "?"),colClasses = "character") %>%
 
-    dplyr::rename(NestboxID = Box,
-                  Plot = Popn,
+    dplyr::rename(NestboxID = .data$Box,
+                  Plot = .data$Popn,
                   Latitude = lat,
-                  Longitude = long,
-                  StartSeason = First,
-                  EndSeason = Last) %>%
+                  Longitude = .data$long,
+                  StartSeason = .data$First,
+                  EndSeason = .data$Last) %>%
 
-    dplyr::mutate(Latitude = suppressWarnings(as.numeric(Latitude)),
-                  Longitude = suppressWarnings(as.numeric(Longitude)),
-                  StartSeason = suppressWarnings(as.integer(StartSeason)),
-                  EndSeason = suppressWarnings(as.integer(EndSeason)))
+    dplyr::mutate(Latitude = suppressWarnings(as.numeric(.data$Latitude)),
+                  Longitude = suppressWarnings(as.numeric(.data$Longitude)),
+                  StartSeason = suppressWarnings(as.integer(.data$StartSeason)),
+                  EndSeason = suppressWarnings(as.integer(.data$EndSeason)))
 
   # 2) Start a dataframe with all unique LocationIDs / NestboxIDs from brood data
   # NOTE: In this case, they are identical. Otherwise, this would have to be all unique combinations of LocationID and NestboxID
@@ -600,31 +564,13 @@ create_location_EDM <- function(Brood_data, Capture_data){
   # 6) Combine data and select relevant columns
   Location_data <- Location_data %>%
     dplyr::bind_rows(CapLocations) %>%
-    dplyr::select(LocationID, NestboxID,
-                  LocationType, PopID,
-                  Latitude, Longitude,
-                  StartSeason, EndSeason,
-                  HabitatType)
+    dplyr::select(.data$LocationID, .data$NestboxID,
+                  .data$LocationType, .data$PopID,
+                  .data$Latitude, .data$Longitude,
+                  .data$StartSeason, .data$EndSeason,
+                  .data$HabitatType)
 
   return(Location_data)
-
-  # Satisfy RCMD check
-  Box <- Popn <- lat <- long <- First <- Last <- NULL
-  LocationID <- NestboxID <- LocationType <- PopID <- NULL
-  Latitude <- Longitude <- StartSeason <- EndSeason <- HabitatType <- NULL
-
-  BroodID <- BreedingSeason <- Species <- Plot <- NULL
-  FemaleID <- MaleID <- NULL
-  ClutchType <- ClutchType_observed <- ClutchType_calculated <- NULL
-  LayDate <- LayDate_observed <- LayDate_min <- LayData_max <- NULL
-  ClutchSize <- ClutchSize_observed <- ClutchSize_min <- ClutchSize_max <- NULL
-  HatchDate <- HatchDate_observed <- HatchDate_min <- HatchData_max <- NULL
-  BroodSize <- BroodSize_observed <- BroodSize_min <- BroodSize_max <- NULL
-  FledgeDate <- FledgeDate_observed <- FledgeDate_min <- FledgeDate_max <- NULL
-  NumberFledged <- NumberFledged_observed <- NumberFledged_min <- NumberFledged_max <- NULL
-  AvgEggMass <- NumberEggs <- AvgChickMass <- AvgTarsus <- NumberChicksTarsus <- NULL
-  OriginalTarsusMethod <- ExperimentID <- NULL
-
 }
 
 
