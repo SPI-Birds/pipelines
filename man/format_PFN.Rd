@@ -2,7 +2,7 @@
 % Please edit documentation in R/format_PFN.R
 \name{format_PFN}
 \alias{format_PFN}
-\title{Title}
+\title{Construct standard format for data from East Dartmoor, UK}
 \usage{
 format_PFN(db, species = NULL, pop = NULL, path = ".", output_type = "R")
 }
@@ -28,5 +28,43 @@ this argument can be ignored.}
 Generates either 4 .csv files or 4 data frames in the standard format.
 }
 \description{
-Brief description
+A pipeline to produce the standard format for the hole-nesting bird population
+in East Dartmoor, UK, administered by PiedFlyNet.
+}
+\details{
+This section provides details on data management choices that are unique to
+this data. For a general description of the standard protocl please see
+\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
+
+\strong{Species}: By default, pipeline outputs will include great tit \emph{Parus
+major}; blue tit \emph{Cyanistes caeruleus}; pied flycatcher \emph{Ficedula
+hypoleuca}; Eurasian nuthatch \emph{Sitta europaea}; coal tit \emph{Periparus
+ater}; marsh tit \emph{Poecile palustris}, and common redstart \emph{Phoenicurus phoenicurus}.
+Other minority species are excluded.
+
+\strong{Primary data sources}: Brood data is extracted from data in a
+brood table/nest monitoring format. 'Capture data is extracted from Malcolm Burgess'
+version of the BTO ringing database for all birds marked within the PiedFlyNet.
+The format of this ringing data is IPMR, the 'old' BTO ringing database format, and Malcolm
+has his own pipeline to convert the new BTO ringing database format to the old one.
+Since all chick measurements are complete in the brood table/nest monitoring data but some have
+not been added to the BTO ringing data, the pipeline merges chick trait values from the former
+into Capture data.
+
+\strong{Unidentified individuals}: Some individuals have not been given unique IDs. They appear
+in the primary data as: "RUNT", "ringed", "ringed left", "ringed right", "unringed", or "Unringed".
+In the Brood data, we assume unknown identity and treat ID as NA. From Capture data and Individual
+data, these individuals are omitted entirely.
+
+\strong{Re-ringing events}: Some individuals carry multiple rings (up to 3 in this data) throughout
+their lives, and re-ringing events are recorded in the BTO ringing database. The pipeline identifies
+birds with several rings, and assigns them a new unique individual identifier of the the form
+'MULTIRINGx', where 'x' is an integer number.
+
+\strong{LayDate_observed and HatchDate_observed}: Information is provided as date of first egg (DFE) and
+date of hatching (DH). These are given as integer number, and represent days after a set
+starting date (day 0). Day 0 is assumed to be 31. March every year (to be confirmed).
+
+\strong{ChickAge}: For every capture, we estimate the age of a chick as the difference between the hatch date
+taken from BroodIDFledged (in Individual_data) and the CaptureDate.
 }

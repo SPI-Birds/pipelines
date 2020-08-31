@@ -218,11 +218,11 @@ create_brood_EDM <- function(Primary_data, ReRingTable){
     dplyr::filter(between(.data$ChickAge, 14, 16)) %>%  #Remove chicks outside the age range
     dplyr::select(.data$BroodID, contains("Weight."), contains("Tarsus.")) %>% #Select only weight and tarsus cols
     tidyr::pivot_longer(cols = -.data$BroodID) %>%  #Rearrange so they're individual rows rather than individual columns
-    dplyr::filter(!is.na(value)) %>% #Remove Nas
-    dplyr::mutate(name = gsub(pattern = "Weight", replacement = "ChickMass", gsub(pattern = ".Y\\d+", replacement = "", x = name))) %>% #Change the names so it's not 'Weight.Y1' and 'Tarsus.Y1' but just 'ChickMass' and 'Tarsus'
-    dplyr::group_by(.data$BroodID, name) %>% #Group by brood, weight and tarsus
-    dplyr::summarise(Avg = mean(as.numeric(value), na.rm = TRUE), Number = n()) %>% #Extract the mean and sample size
-    tidyr::pivot_wider(names_from = name, values_from = c(Avg, Number), names_sep = "") %>% #Move this back into cols so we have AvgChickMass, NumberChickMass etc.
+    dplyr::filter(!is.na(.data$value)) %>% #Remove Nas
+    dplyr::mutate(name = gsub(pattern = "Weight", replacement = "ChickMass", gsub(pattern = ".Y\\d+", replacement = "", x = .data$name))) %>% #Change the names so it's not 'Weight.Y1' and 'Tarsus.Y1' but just 'ChickMass' and 'Tarsus'
+    dplyr::group_by(.data$BroodID, .data$name) %>% #Group by brood, weight and tarsus
+    dplyr::summarise(Avg = mean(as.numeric(.data$value), na.rm = TRUE), Number = n()) %>% #Extract the mean and sample size
+    tidyr::pivot_wider(names_from = .data$name, values_from = c(.data$Avg, .data$Number), names_sep = "") %>% #Move this back into cols so we have AvgChickMass, NumberChickMass etc.
     dplyr::ungroup()
 
     # 4.2) Add calculated columns
@@ -382,7 +382,7 @@ create_capture_EDM <- function(CMR_data, Primary_data, ReRingTable){
   for(i in 1:nrow(Primary_data)){
     Chick_Capture_list[[i]] <- data.frame(IndvID = unname(t(Primary_data[i, paste0("Young", c(1:11))])),
                                           BroodID = Primary_data$BroodID[i], # Will be removed later
-                                          CaptureDate = as.Date(Primary_data$YoungDate[i], format = "%d/%m/%Y"),
+                                          #CaptureDate = as.Date(Primary_data$YoungDate[i], format = "%d/%m/%Y"),
 
                                           Mass_B = as.numeric(Primary_data[i, paste0("Weight.Y", c(1:11))]),
                                           Tarsus_B = as.numeric(Primary_data[i, paste0("Tarsus.Y", c(1:11))]),
@@ -393,14 +393,23 @@ create_capture_EDM <- function(CMR_data, Primary_data, ReRingTable){
   Chick_Capture_data <- subset(Chick_Capture_data, !is.na(IndvID))
 
   # Merge additional chick data into capture data
+  #Capture_data <- Capture_data %>%
+  #  dplyr::left_join(Chick_Capture_data, by = c("IndvID", "CaptureDate")) %>%
+
   Capture_data <- Capture_data %>%
-    dplyr::left_join(Chick_Capture_data, by = c("IndvID", "CaptureDate")) %>%
+    dplyr::left_join(Chick_Capture_data, by = "IndvID") %>%
 
   # Summarise information on chick mass and tarsus measurements
+    #dplyr::mutate(Mass = dplyr::case_when(!is.na(.data$Mass_CMR) ~ .data$Mass_CMR,
+    #                                      is.na(.data$Mass_CMR) & !is.na(.data$Mass_B) ~ .data$Mass_B),
+    #              Tarsus = dplyr::case_when(!is.na(.data$Tarsus_CMR) ~ .data$Tarsus_CMR,
+    #                               is.na(.data$Tarsus_CMR) & !is.na(.data$Tarsus_B) ~ .data$Tarsus_B)) %>%
     dplyr::mutate(Mass = dplyr::case_when(!is.na(.data$Mass_CMR) ~ .data$Mass_CMR,
-                                          is.na(.data$Mass_CMR) & !is.na(.data$Mass_B) ~ .data$Mass_B),
+                                          is.na(.data$Mass_CMR) & !is.na(.data$Mass_B) & .data$Age_observed == 1 ~ .data$Mass_B,
+                                          is.na(.data$Mass_CMR) & !is.na(.data$Mass_B) & .data$Age_observed != 1 ~ NA_real_),
                   Tarsus = dplyr::case_when(!is.na(.data$Tarsus_CMR) ~ .data$Tarsus_CMR,
-                                   is.na(.data$Tarsus_CMR) & !is.na(.data$Tarsus_B) ~ .data$Tarsus_B)) %>%
+                                            is.na(.data$Tarsus_CMR) & !is.na(.data$Tarsus_B) & .data$Age_observed == 1 ~ .data$Tarsus_B,
+                                            is.na(.data$Tarsus_CMR) & !is.na(.data$Tarsus_B) & .data$Age_observed != 1 ~ NA_real_)) %>%
 
     ## 7) Exclude entries not included in the standard format
 
@@ -426,13 +435,13 @@ create_capture_EDM <- function(CMR_data, Primary_data, ReRingTable){
     dplyr::ungroup() %>%
 
     ## 10) Select required columns
-    dplyr::select(CaptureID, IndvID, Species, Sex_observed,
-                  BreedingSeason, CaptureDate, CaptureTime, ObserverID,
-                  LocationID, CaptureAlive, ReleaseAlive,
-                  CapturePopID, CapturePlot, ReleasePopID, ReleasePlot,
-                  Mass, Tarsus, OriginalTarsusMethod, WingLength,
-                  Age_observed, Age_calculated, ExperimentID,
-                  BroodID)
+    dplyr::select(.data$CaptureID, .data$IndvID, .data$Species, .data$Sex_observed,
+                  .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime, .data$ObserverID,
+                  .data$LocationID, .data$CaptureAlive, .data$ReleaseAlive,
+                  .data$CapturePopID, .data$CapturePlot, .data$ReleasePopID, .data$ReleasePlot,
+                  .data$Mass, .data$Tarsus, .data$OriginalTarsusMethod, .data$WingLength,
+                  .data$Age_observed, .data$Age_calculated, .data$ExperimentID,
+                  .data$BroodID)
 
   ## 11) Return data
   return(Capture_data)
