@@ -28,7 +28,7 @@ make_ReRingTable = function(raw_data, N){
   #We will be left joining one set of data to the other
   #so we need to make sure the column names match
   check_data  <- raw_data %>%
-    dplyr::rename("RING2" = RING, "RING3" = RING2)
+    dplyr::rename("RING2" = .data$RING, "RING3" = .data$RING2)
 
   #Create an output_data object that will be updated
   output_data <- raw_data
