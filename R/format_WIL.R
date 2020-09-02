@@ -188,8 +188,13 @@ create_brood_WIL <- function(BT_data, GT_data){
 
                   browser()
 
+                  #Are there multiple columns with IDs (there can be more than 1 because previous year IDs are also recorded)
+                  male_match   <- ifelse(sum(stringr::str_detect(unique(..1$`...1`), "^man"), na.rm = TRUE) > 1, paste0("^man.*", ..2, "$"), "^man")
+                  female_match <- ifelse(sum(stringr::str_detect(unique(..1$`...1`), "^wij"), na.rm = TRUE) > 1, paste0("^wij.*", ..2, "$"), "^wij")
+
+
       ID_data <- ..1 %>%
-        dplyr::filter(stringr::str_detect(.data$`...1`, "Datum|^mann|^wij|^ring")) %>%
+        dplyr::filter(stringr::str_detect(.data$`...1`, "Datum|^ring") | stringr::str_detect(.data$`...1`, male_match) | stringr::str_detect(.data$`...1`, female_match)) %>%
         tidyr::pivot_longer(col = -`...1`) %>%
         dplyr::mutate(column = dplyr::case_when(`...1` == "Datum" ~ "LocationID",
                                                 stringr::str_detect(`...1`, "^mann") ~ "MaleID",
