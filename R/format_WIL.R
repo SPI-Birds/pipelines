@@ -179,7 +179,7 @@ create_brood_WIL <- function(BT_data, GT_data){
 
     split
 
-  }
+  } ## FIXME: Make into a generic func that also works for HAR/KEV data
 
   Bluetit_broods_wIDs <- BT_data %>%
     purrr::map2(.x = .,
@@ -197,7 +197,7 @@ create_brood_WIL <- function(BT_data, GT_data){
         dplyr::filter(stringr::str_detect(.data$`...1`, "Datum|^ring") | stringr::str_detect(.data$`...1`, male_match) | stringr::str_detect(.data$`...1`, female_match)) %>%
         tidyr::pivot_longer(col = -`...1`) %>%
         dplyr::mutate(column = dplyr::case_when(`...1` == "Datum" ~ "LocationID",
-                                                stringr::str_detect(`...1`, "^mann") ~ "MaleID",
+                                                stringr::str_detect(`...1`, "^man") ~ "MaleID",
                                                 stringr::str_detect(`...1`, "^wij") ~ "FemaleID",
                                                 stringr::str_detect(`...1`, "^ringnr") ~ "ChickIDs",
                                                 TRUE ~ `...1`)) %>%
@@ -223,13 +223,53 @@ create_brood_WIL <- function(BT_data, GT_data){
         dplyr::left_join(ID_data, by = "BroodID") %>%
         dplyr::filter(!is.na(Observation))
 
-      Brood_data <- Observation_data %>%
+      Egg_data <- Observation_data %>%
         dplyr::filter(stringr::str_detect(Observation, "[0-9]{1,2} ei")) %>%
         dplyr::mutate(NrEgg = as.numeric(stringr::str_extract(Observation, "[0-9]{1,2}"))) %>%
         dplyr::group_by(BroodID) %>%
-        dplyr::summarise(LayDate = Datum[1] - (NrEgg[1] - 1),
-                         ClutchSize = max(NrEgg), .groups = "drop",
-                         BroodSize = rowSums(across(starts_with("ChickID"), ~!is.na(.x)))[1])
+        dplyr::summarise(LayDate_observed = Datum[1] - (NrEgg[1] - 1),
+                         ClutchSize_observed = max(NrEgg),
+                         BroodSize_observed = rowSums(across(starts_with("ChickID"), ~!is.na(.x)))[1],
+                         .groups = "drop")
+
+      Fledge_data <- Observation_data %>%
+        dplyr::filter(stringr::str_detect(Observation, "[0-9]{1,2}.*jn")) %>%
+        dplyr::mutate(Fledge_str = stringr::str_extract(Observation, "[0-9]{1,2}.*jn"),
+                      NrFledge = as.numeric(stringr::str_extract(Fledge_str, "[0-9]{1,2}"))) %>%
+        dplyr::arrange(BroodID, Datum) %>%
+        dplyr::group_by(BroodID) %>%
+        dplyr::summarise(FledgeDate_observed = as.Date(NA),
+                         NumberFledged_observed = NrFledge[n()],
+                         .groups = "drop")
+
+      Brood_data <- Egg_data %>%
+        dplyr::left_join(Fledge_data, by = "BroodID") %>%
+        dplyr::left_join(ID_data, by = "BroodID") %>%
+        dplyr::mutate(ClutchType_observed = NA_character_,
+                      ClutchType_calculated = NA_character_, ##FIXME: Need to add this info
+                      LayDate_min = as.Date(NA), LayDate_max = as.Date(NA),
+                      ClutchSize_min = NA_integer_, ClutchSize_max = NA_integer_,
+                      HatchDate_observed = as.Date(NA), HatchDate_min = as.Date(NA), HatchDate_max = as.Date(NA),
+                      BroodSize_min = NA_integer_, BroodSize_max = NA_integer_,
+                      FledgeDate_min = as.Date(NA), FledgeDate_max = as.Date(NA),
+                      NumberFledged_min = NA_integer_, NumberFledged_max = NA_integer_,
+                      AvgEggMass = NA_real_, NumberEggs = NA_integer_,
+                      AvgChickMass = NA_real_, NumberChicksMass = NA_integer_,
+                      AvgTarsus = NA_real_, NumberChicksTarsus = NA_integer_,
+                      OriginalTarsusMethod = NA_character_,
+                      ExperimentID = NA_character_) %>% ##FIXME: Need to determine if any experiments were carried out
+        dplyr::select(BroodID, PopID, BreedingSeason,
+                      Species, Plot, LocationID,
+                      FemaleID, MaleID,
+                      LayDate_observed, LayDate_min, LayDate_max,
+                      ClutchSize_observed, ClutchSize_min, ClutchSize_max,
+                      HatchDate_observed, HatchDate_min, HatchDate_max,
+                      BroodSize_observed, BroodSize_min, BroodSize_max,
+                      FledgeDate_observed, FledgeDate_min, FledgeDate_max,
+                      NumberFledged_observed, NumberFledged_min, NumberFledged_max,
+                      AvgEggMass:ExperimentID)
+
+      return(Brood_data)
 
 
     })
