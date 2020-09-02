@@ -206,7 +206,7 @@ create_brood_WIL <- function(BT_data, GT_data){
         tidyr::unnest(cols = c(LocationID, MaleID, FemaleID, ChickIDs)) %>%
         dplyr::mutate(chick_expand(ChickIDs)) %>%
         dplyr::select(-ChickIDs) %>%
-        dplyr::mutate(LocationID = stringr::str_remove(LocationID, pattern = " "),
+        dplyr::mutate(LocationID = stringr::str_remove_all(LocationID, pattern = ' |\\"'),
                       PopID = "WIL", BreedingSeason = as.integer(..2),
                       Species = Species_codes$Code[Species_codes$SpeciesID == 14620],
                       Plot = NA, BroodID = paste(LocationID, BreedingSeason, sep = "_"))
@@ -218,7 +218,7 @@ create_brood_WIL <- function(BT_data, GT_data){
         dplyr::filter(.data$Datum != "Datum") %>%
         dplyr::mutate(Datum = janitor::excel_numeric_to_date(as.numeric(.data$Datum))) %>%
         tidyr::pivot_longer(cols = -Datum, names_to = "BroodID", values_to = "Observation") %>%
-        dplyr::mutate(BroodID = paste(stringr::str_remove(BroodID, pattern = " "), ..2, sep = "_")) %>%
+        dplyr::mutate(BroodID = paste(stringr::str_remove_all(BroodID, pattern = ' |\\"'), ..2, sep = "_")) %>%
         dplyr::arrange(BroodID, Datum) %>%
         dplyr::left_join(ID_data, by = "BroodID") %>%
         dplyr::filter(!is.na(Observation))
