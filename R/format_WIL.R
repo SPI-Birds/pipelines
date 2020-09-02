@@ -186,8 +186,6 @@ create_brood_WIL <- function(BT_data, GT_data){
                 .y = names(.),
                 .f = ~{
 
-                  browser()
-
                   #Are there multiple columns with IDs (there can be more than 1 because previous year IDs are also recorded)
                   male_match   <- ifelse(sum(stringr::str_detect(unique(..1$`...1`), "^man"), na.rm = TRUE) > 1, paste0("^man.*", ..2, "$"), "^man")
                   female_match <- ifelse(sum(stringr::str_detect(unique(..1$`...1`), "^wij"), na.rm = TRUE) > 1, paste0("^wij.*", ..2, "$"), "^wij")
@@ -206,20 +204,22 @@ create_brood_WIL <- function(BT_data, GT_data){
         tidyr::unnest(cols = c(LocationID, MaleID, FemaleID, ChickIDs)) %>%
         dplyr::mutate(chick_expand(ChickIDs)) %>%
         dplyr::select(-ChickIDs) %>%
-        dplyr::mutate(LocationID = stringr::str_remove_all(LocationID, pattern = ' |\\"'),
+        dplyr::mutate(LocationID = stringr::str_replace(stringr::str_remove_all(LocationID, pattern = ' '), pattern = '\"', replacement = "''"),
                       PopID = "WIL", BreedingSeason = as.integer(..2),
                       Species = Species_codes$Code[Species_codes$SpeciesID == 14620],
                       Plot = NA, BroodID = paste(LocationID, BreedingSeason, sep = "_"))
 
       Observation_data <- ..1 %>%
         #Use nestbox as the column name so they can be correctly linked back
-        dplyr::filter(!stringr::str_detect(.data$`...1`, "^mann|^wij|^ring")) %>%
+        dplyr::filter(!stringr::str_detect(.data$`...1`, "^man|^wij|^ring")) %>%
         setNames(.[1, ]) %>%
         dplyr::filter(.data$Datum != "Datum") %>%
         dplyr::mutate(Datum = janitor::excel_numeric_to_date(as.numeric(.data$Datum))) %>%
-        tidyr::pivot_longer(cols = -Datum, names_to = "BroodID", values_to = "Observation") %>%
-        dplyr::mutate(BroodID = paste(stringr::str_remove_all(BroodID, pattern = ' |\\"'), ..2, sep = "_")) %>%
+        tidyr::pivot_longer(cols = -Datum, names_to = "LocationID", values_to = "Observation") %>%
+        dplyr::mutate(LocationID = stringr::str_replace(stringr::str_remove_all(LocationID, pattern = ' '), pattern = '\"', replacement = "''"),
+                      BroodID = paste(LocationID, ..2, sep = "_")) %>%
         dplyr::arrange(BroodID, Datum) %>%
+        dplyr::select(-LocationID) %>%
         dplyr::left_join(ID_data, by = "BroodID") %>%
         dplyr::filter(!is.na(Observation))
 
@@ -272,7 +272,8 @@ create_brood_WIL <- function(BT_data, GT_data){
       return(Brood_data)
 
 
-    })
+    }) %>%
+    dplyr::bind_rows()
 
 }
 
