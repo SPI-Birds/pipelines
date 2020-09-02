@@ -525,7 +525,7 @@ create_location_AMM <- function(Capture_data, connection) {
                   .data$Longitude,
                   .data$StartSeason,
                   .data$EndSeason,
-                  .data$Habitat)
+                  .data$HabitatType)
 
   Location_data
 
