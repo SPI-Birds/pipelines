@@ -130,7 +130,7 @@ run_pipelines <- function(path = choose_directory(),
 
                                    }) %>%
     dplyr::mutate(Row = seq(1, n())) %>%
-    dplyr::select(Row, BroodID:ExperimentID)
+    dplyr::select(Row, everything())
 
   Capture_data <- purrr::map_df(.x = R_objects,
                                      .f = ~{
@@ -139,7 +139,7 @@ run_pipelines <- function(path = choose_directory(),
 
                                      }) %>%
     dplyr::mutate(Row = seq(1, n())) %>%
-    dplyr::select(Row, IndvID:ChickAge)
+    dplyr::select(Row, everything())
 
   Individual_data <- purrr::map_df(.x = R_objects,
                                         .f = ~{
@@ -148,7 +148,7 @@ run_pipelines <- function(path = choose_directory(),
 
                                         }) %>%
     dplyr::mutate(Row = seq(1, n())) %>%
-    dplyr::select(Row, IndvID:Sex)
+    dplyr::select(Row, everything())
 
   Location_data   <- purrr::map_df(.x = R_objects,
                                         .f = ~{
@@ -157,7 +157,7 @@ run_pipelines <- function(path = choose_directory(),
 
                                         }) %>%
     dplyr::mutate(Row = seq(1, n())) %>%
-    dplyr::select(Row, LocationID:Habitat)
+    dplyr::select(Row, everything())
 
   #If we want an R output, return a list with the 4 different data frames
   if(output_type == "R"){
