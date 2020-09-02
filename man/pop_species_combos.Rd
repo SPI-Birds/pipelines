@@ -3,11 +3,13 @@
 \name{pop_species_combos}
 \alias{pop_species_combos}
 \title{Combination of all PopID and Species from all pipelines.}
-\format{A data frame with 60 rows and 2 variables.
+\format{
+A data frame with 60 rows and 2 variables.
 \describe{
    \item{pop}{Three letter population ID.}
    \item{species}{Six letter species ID.}
-}}
+}
+}
 \description{
 A data frame with each row containing a unique population
 and species combination.
