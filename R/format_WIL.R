@@ -151,52 +151,29 @@ format_WIL <- function(db = choose_directory(),
 
 create_brood_WIL <- function(BT_data, GT_data){
 
-  chick_expand <- function(chick_rings) {
+  Bluetit_broods_wIDs <- BT_data[4] %>%
+    purrr::map2(.x = .,
+                .y = names(.),
+                .f = function(raw_data, year){
 
-    split <- stringr::str_split(chick_rings, pattern = "-") %>%
-      purrr::map_df(.f = ~{
+                  print(year)
 
         if(!all(is.na(..1))){
 
-          x <- stringr::str_trim(..1)
-
-          prefix <- stringr::str_sub(x[1], end = -(nchar(x[2]) + 1))
-          start  <- stringr::str_sub(x[1], start = -nchar(x[2])) %>% as.numeric()
-          end    <- x[2] %>% as.numeric()
-          suffix <- seq(start, end, 1)
-
-          tibble(col_name = paste0("ChickID_", 1:length(suffix)),
-                 ID = paste0(prefix, suffix)) %>%
-            tidyr::pivot_wider(names_from = col_name, values_from = ID)
-
-        } else {
-
-          tibble(ChickID_1 = NA_character_)
-
-        }
-
-      })
-
-    split
-
-  } ## FIXME: Make into a generic func that also works for HAR/KEV data
-
-  Bluetit_broods_wIDs <- BT_data %>%
-    purrr::map2(.x = .,
-                .y = names(.),
-                .f = ~{
+                  #Top left should always be called Datum (there are some cases where this is left blank)
+                  raw_data[1, 1] <- "Datum"
 
                   #Are there multiple columns with IDs (there can be more than 1 because previous year IDs are also recorded)
-                  male_match   <- ifelse(sum(stringr::str_detect(unique(..1$`...1`), "^man"), na.rm = TRUE) > 1, paste0("^man.*", ..2, "$"), "^man")
-                  female_match <- ifelse(sum(stringr::str_detect(unique(..1$`...1`), "^wij|^vro"), na.rm = TRUE) > 1, paste0("^wij.*", ..2, "$|^vro.*", ..2, "$"), "^wij|^vro")
+                  male_match   <- ifelse(sum(stringr::str_detect(unique(raw_data$`...1`), "^man"), na.rm = TRUE) > 1, paste0("^man.*", year, "$"), "^man")
+                  female_match <- ifelse(sum(stringr::str_detect(unique(raw_data$`...1`), "^wij|^vro"), na.rm = TRUE) > 1, paste0("^wij.*", year, "$|^vro.*", year, "$"), "^wij|^vro")
 
 
-      ID_data <- ..1 %>%
+      ID_data <- raw_data %>%
         dplyr::filter(stringr::str_detect(.data$`...1`, "Datum|^ring") | stringr::str_detect(.data$`...1`, male_match) | stringr::str_detect(.data$`...1`, female_match)) %>%
         tidyr::pivot_longer(col = -`...1`) %>%
         dplyr::mutate(column = dplyr::case_when(`...1` == "Datum" ~ "LocationID",
                                                 stringr::str_detect(`...1`, "^man") ~ "MaleID",
-                                                stringr::str_detect(`...1`, "^wij") ~ "FemaleID",
+                                                stringr::str_detect(`...1`, "^wij|^vro") ~ "FemaleID",
                                                 stringr::str_detect(`...1`, "^ringnr") ~ "ChickIDs",
                                                 TRUE ~ `...1`)) %>%
         dplyr::select(column, value) %>%
@@ -205,11 +182,11 @@ create_brood_WIL <- function(BT_data, GT_data){
         dplyr::mutate(chick_expand(ChickIDs)) %>%
         dplyr::select(-ChickIDs) %>%
         dplyr::mutate(LocationID = stringr::str_replace(stringr::str_remove_all(LocationID, pattern = ' '), pattern = '\"', replacement = "''"),
-                      PopID = "WIL", BreedingSeason = as.integer(..2),
+                      PopID = "WIL", BreedingSeason = as.integer(year),
                       Species = Species_codes$Code[Species_codes$SpeciesID == 14620],
                       Plot = NA, BroodID = paste(LocationID, BreedingSeason, sep = "_"))
 
-      Observation_data <- ..1 %>%
+      Observation_data <- raw_data %>%
         #Use nestbox as the column name so they can be correctly linked back
         dplyr::filter(!stringr::str_detect(.data$`...1`, "^man|^wij|^ring")) %>%
         setNames(.[1, ]) %>%
@@ -217,7 +194,7 @@ create_brood_WIL <- function(BT_data, GT_data){
         dplyr::mutate(Datum = janitor::excel_numeric_to_date(as.numeric(.data$Datum))) %>%
         tidyr::pivot_longer(cols = -Datum, names_to = "LocationID", values_to = "Observation") %>%
         dplyr::mutate(LocationID = stringr::str_replace(stringr::str_remove_all(LocationID, pattern = ' '), pattern = '\"', replacement = "''"),
-                      BroodID = paste(LocationID, ..2, sep = "_")) %>%
+                      BroodID = paste(LocationID, year, sep = "_")) %>%
         dplyr::arrange(BroodID, Datum) %>%
         dplyr::select(-LocationID) %>%
         dplyr::left_join(ID_data, by = "BroodID") %>%
