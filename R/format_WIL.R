@@ -490,3 +490,33 @@ create_location_WIL <- function(data){
   return(Location_data)
 
 }
+
+
+
+###################
+convert_dates <- function(date_vector){
+
+  #Trim and lower in case this will intefere with string matching
+  date_vector <- stringr::str_trim(date_vector) %>%
+    tolower()
+
+  for (i in 1:nrow(dutch_months)) {
+
+    date_vector <- stringr::str_replace_all(date_vector,
+                                            pattern = dutch_months$dutch[i],
+                                            replacement = dutch_months$english[i])
+
+  }
+
+  #Split data into numbers and non-numbers (should allow us to work vectorially which will be faster)
+  split_dates <- date_vector %>%
+    split(stringr::str_detect(date_vector, pattern = "^[0-9]*$"))
+
+  split_dates$`FALSE` <- as.Date(split_dates$`FALSE`, format = "%d %b %Y")
+  split_dates$`TRUE`  <- janitor::excel_numeric_to_date(as.numeric(split_dates$`TRUE`))
+
+  output <- do.call(c, split_dates)
+
+  return(output)
+
+}
