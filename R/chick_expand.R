@@ -25,8 +25,9 @@ chick_expand <- function(chick_rings) {
     #Trim whitespace to prevent empty 'rings' being created
     stringr::str_trim() %>%
     #Pattern searches for a hyphen surrounded by any number of spaces and removes spaces
-    stringr::str_replace_all(., pattern = "\\s*-\\s", replacement = "-") %>%
-    stringr::str_split(., pattern = " ")
+    stringr::str_replace_all(., pattern = "\\s*-\\s*", replacement = "-") %>%
+    #Some are separated by , some by " ", some by both
+    stringr::str_split(., pattern = "\\,*\\s+|\\,+\\s*")
 
   #We now have a list of all ring sequences/single rings separated for each brood
   split <- purrr::map_df(.x = raw_rings, .f = ~{
