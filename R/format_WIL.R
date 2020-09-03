@@ -16,6 +16,10 @@
 #'\strong{BroodSize}: Take number of chicks ringed (assume there are no chicks that hatch but are unringed...not great).
 #'In the summarised data this is the value of 'NumberFledglings'...are chicks ringed at fledging? Then we only know broodsize through estimation.
 #'
+#'\string{IndvID}: For chicks, we need to expand out a sequence of rings, using 'chick_expand.R'. There are some that
+#'have obvious typos where the number of ringed chicks would be too large. In these cases we return a flag to
+#'follow up later.
+#'
 #'@inheritParams pipeline_params
 #'
 #'@return Generates either 4 .csv files or 4 data frames in the standard format.
