@@ -188,7 +188,7 @@ create_brood_WIL <- function(BT_data, GT_data){
 
                   #Are there multiple columns with IDs (there can be more than 1 because previous year IDs are also recorded)
                   male_match   <- ifelse(sum(stringr::str_detect(unique(..1$`...1`), "^man"), na.rm = TRUE) > 1, paste0("^man.*", ..2, "$"), "^man")
-                  female_match <- ifelse(sum(stringr::str_detect(unique(..1$`...1`), "^wij"), na.rm = TRUE) > 1, paste0("^wij.*", ..2, "$"), "^wij")
+                  female_match <- ifelse(sum(stringr::str_detect(unique(..1$`...1`), "^wij|^vro"), na.rm = TRUE) > 1, paste0("^wij.*", ..2, "$|^vro.*", ..2, "$"), "^wij|^vro")
 
 
       ID_data <- ..1 %>%
