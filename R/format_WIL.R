@@ -16,9 +16,22 @@
 #'\strong{BroodSize}: Take number of chicks ringed (assume there are no chicks that hatch but are unringed...not great).
 #'In the summarised data this is the value of 'NumberFledglings'...are chicks ringed at fledging? Then we only know broodsize through estimation.
 #'
-#'\string{IndvID}: For chicks, we need to expand out a sequence of rings, using 'chick_expand.R'. There are some that
+#'\strong{IndvID}: For chicks, we need to expand out a sequence of rings, using 'chick_expand.R'. There are some that
 #'have obvious typos where the number of ringed chicks would be too large. In these cases we return a flag to
 #'follow up later.
+#'
+#'\strong{BroodID}: There are some nestboxes that have duplicate records (e.g. K56 in 2011).
+#'In these cases, we give the duplicate boxes a suffix ("_X") to keep them unique.
+#'
+#'\strong{Reading in data}: We need to read data in from individual excel spreadsheets. We assume
+#'that the relevant data is in the first sheet. Note, in some cases (e.g. broedpc2002) the first
+#'sheet is not the correct data. In this case we manually rearrange the data. I will need to talk
+#'to Marcel Eens about this to make sure that this is first sheet rule is maintained.
+#'
+#'\strong{Female/MaleID}: In some cases there are multiple male/female IDs in the data.
+#'In most cases, these are specified by their year (i.e. current/previous year). In some cases
+#'(e.g. broedpm2006) this is not clear. We just use the top ones, but need to check this with
+#'Marcel Eens
 #'
 #'@inheritParams pipeline_params
 #'
