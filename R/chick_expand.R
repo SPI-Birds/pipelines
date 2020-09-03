@@ -55,9 +55,17 @@ chick_expand <- function(chick_rings) {
             prefix <- stringr::str_sub(x[1], end = -(nchar(x[2]) + 1))
             start  <- stringr::str_sub(x[1], start = -nchar(x[2])) %>% as.numeric()
             end    <- x[2] %>% as.numeric()
-            suffix <- seq(start, end, 1)
 
-            paste0(prefix, suffix)
+            if (end < start) {
+
+              return("ERROR")
+
+            } else {
+
+              suffix <- seq(start, end, 1)
+              paste0(prefix, suffix)
+
+            }
 
           }
 
