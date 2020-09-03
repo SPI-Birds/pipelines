@@ -155,14 +155,12 @@ format_WIL <- function(db = choose_directory(),
 
 create_brood_WIL <- function(BT_data, GT_data){
 
-  Bluetit_broods_wIDs <- BT_data[4] %>%
-    purrr::map2(.x = .,
+  Bluetit_broods_wIDs <- BT_data %>%
+    purrr::map2_df(.x = .,
                 .y = names(.),
                 .f = function(raw_data, year){
 
                   print(year)
-
-        if(!all(is.na(..1))){
 
                   #Top left should always be called Datum (there are some cases where this is left blank)
                   raw_data[1, 1] <- "Datum"
@@ -178,7 +176,7 @@ create_brood_WIL <- function(BT_data, GT_data){
         dplyr::mutate(column = dplyr::case_when(`...1` == "Datum" ~ "LocationID",
                                                 stringr::str_detect(`...1`, "^man") ~ "MaleID",
                                                 stringr::str_detect(`...1`, "^wij|^vro") ~ "FemaleID",
-                                                stringr::str_detect(`...1`, "^ringnr") ~ "ChickIDs",
+                                                stringr::str_detect(`...1`, "^ring") ~ "ChickIDs",
                                                 TRUE ~ `...1`)) %>%
         dplyr::select(column, value) %>%
         tidyr::pivot_wider(names_from = column, values_from = value, values_fn = list) %>%
@@ -192,10 +190,24 @@ create_brood_WIL <- function(BT_data, GT_data){
 
       Observation_data <- raw_data %>%
         #Use nestbox as the column name so they can be correctly linked back
-        dplyr::filter(!stringr::str_detect(.data$`...1`, "^man|^wij|^ring")) %>%
-        setNames(.[1, ]) %>%
-        dplyr::filter(.data$Datum != "Datum") %>%
-        dplyr::mutate(Datum = janitor::excel_numeric_to_date(as.numeric(.data$Datum))) %>%
+        dplyr::filter(!stringr::str_detect(.data$`...1`, "^man|^wij|^vro|^ring"))
+
+      Box_vector <- t(Observation_data)[-1, 1]
+
+      #If there are any cases of duplicate boxes
+      if (length(Box_vector) != length(unique(Box_vector))) {
+
+        tibble::tibble(NestboxID = Box_vector) %>%
+          dplyr::group_by(.data$NestboxID) %>%
+          dplyr::mutate(NestboxID = paste(NestboxID, 1:n(), sep = "_")) %>%
+          pull(.data$NestboxID) -> Box_vector
+
+      }
+
+      Observation_data <- Observation_data %>%
+        setNames(c("Datum", Box_vector)) %>%
+        dplyr::filter(stringr::str_detect(.data$Datum, pattern = "^[0-9]+")) %>%
+        dplyr::mutate(Datum = convert_dates(.data$Datum)) %>%
         tidyr::pivot_longer(cols = -Datum, names_to = "LocationID", values_to = "Observation") %>%
         dplyr::mutate(LocationID = stringr::str_replace(stringr::str_remove_all(LocationID, pattern = ' '), pattern = '\"', replacement = "''"),
                       BroodID = paste(LocationID, year, sep = "_")) %>%
@@ -252,9 +264,120 @@ create_brood_WIL <- function(BT_data, GT_data){
 
       return(Brood_data)
 
+    })
 
-    }) %>%
-    dplyr::bind_rows()
+  Greattit_broods_wIDs <- GT_data %>%
+    purrr::map2_df(.x = .,
+                   .y = names(.),
+                   .f = function(raw_data, year){
+
+                     print(year)
+
+                     browser(year == "2002")
+
+                     #Top left should always be called Datum (there are some cases where this is left blank)
+                     raw_data[1, 1] <- "Datum"
+
+                     #Are there multiple columns with IDs (there can be more than 1 because previous year IDs are also recorded)
+                     male_match   <- ifelse(sum(stringr::str_detect(unique(raw_data$`...1`), "^man"), na.rm = TRUE) > 1, paste0("^man.*", year, "$"), "^man")
+                     female_match <- ifelse(sum(stringr::str_detect(unique(raw_data$`...1`), "^wij|^vro"), na.rm = TRUE) > 1, paste0("^wij.*", year, "$|^vro.*", year, "$"), "^wij|^vro")
+
+
+                     ID_data <- raw_data %>%
+                       dplyr::filter(stringr::str_detect(.data$`...1`, "Datum|^ring") | stringr::str_detect(.data$`...1`, male_match) | stringr::str_detect(.data$`...1`, female_match)) %>%
+                       tidyr::pivot_longer(col = -`...1`) %>%
+                       dplyr::mutate(column = dplyr::case_when(`...1` == "Datum" ~ "LocationID",
+                                                               stringr::str_detect(`...1`, "^man") ~ "MaleID",
+                                                               stringr::str_detect(`...1`, "^wij|^vro") ~ "FemaleID",
+                                                               stringr::str_detect(`...1`, "^ring") ~ "ChickIDs",
+                                                               TRUE ~ `...1`)) %>%
+                       dplyr::select(column, value) %>%
+                       tidyr::pivot_wider(names_from = column, values_from = value, values_fn = list) %>%
+                       tidyr::unnest(cols = c(LocationID, MaleID, FemaleID, ChickIDs)) %>%
+                       dplyr::mutate(chick_expand(ChickIDs)) %>%
+                       dplyr::select(-ChickIDs) %>%
+                       dplyr::mutate(LocationID = stringr::str_replace(stringr::str_remove_all(LocationID, pattern = ' '), pattern = '\"', replacement = "''"),
+                                     PopID = "WIL", BreedingSeason = as.integer(year),
+                                     Species = Species_codes$Code[Species_codes$SpeciesID == 14620],
+                                     Plot = NA, BroodID = paste(LocationID, BreedingSeason, sep = "_"))
+
+                     Observation_data <- raw_data %>%
+                       #Use nestbox as the column name so they can be correctly linked back
+                       dplyr::filter(!stringr::str_detect(.data$`...1`, "^man|^wij|^vro|^ring"))
+
+                     Box_vector <- t(Observation_data)[-1, 1]
+
+                     #If there are any cases of duplicate boxes
+                     if (length(Box_vector) != length(unique(Box_vector))) {
+
+                       tibble::tibble(NestboxID = Box_vector) %>%
+                         dplyr::group_by(.data$NestboxID) %>%
+                         dplyr::mutate(NestboxID = paste(NestboxID, 1:n(), sep = "_")) %>%
+                         pull(.data$NestboxID) -> Box_vector
+
+                     }
+
+                     Observation_data <- Observation_data %>%
+                       setNames(c("Datum", Box_vector)) %>%
+                       dplyr::filter(stringr::str_detect(.data$Datum, pattern = "^[0-9]+")) %>%
+                       dplyr::mutate(Datum = convert_dates(.data$Datum)) %>%
+                       tidyr::pivot_longer(cols = -Datum, names_to = "LocationID", values_to = "Observation") %>%
+                       dplyr::mutate(LocationID = stringr::str_replace(stringr::str_remove_all(LocationID, pattern = ' '), pattern = '\"', replacement = "''"),
+                                     BroodID = paste(LocationID, year, sep = "_")) %>%
+                       dplyr::arrange(BroodID, Datum) %>%
+                       dplyr::select(-LocationID) %>%
+                       dplyr::left_join(ID_data, by = "BroodID") %>%
+                       dplyr::filter(!is.na(Observation))
+
+                     Egg_data <- Observation_data %>%
+                       dplyr::filter(stringr::str_detect(Observation, "[0-9]{1,2} ei")) %>%
+                       dplyr::mutate(NrEgg = as.numeric(stringr::str_extract(Observation, "[0-9]{1,2}"))) %>%
+                       dplyr::group_by(BroodID) %>%
+                       dplyr::summarise(LayDate_observed = Datum[1] - (NrEgg[1] - 1),
+                                        ClutchSize_observed = max(NrEgg),
+                                        BroodSize_observed = rowSums(across(starts_with("ChickID"), ~!is.na(.x)))[1],
+                                        .groups = "drop")
+
+                     Fledge_data <- Observation_data %>%
+                       dplyr::filter(stringr::str_detect(Observation, "[0-9]{1,2}.*jn")) %>%
+                       dplyr::mutate(Fledge_str = stringr::str_extract(Observation, "[0-9]{1,2}.*jn"),
+                                     NrFledge = as.numeric(stringr::str_extract(Fledge_str, "[0-9]{1,2}"))) %>%
+                       dplyr::arrange(BroodID, Datum) %>%
+                       dplyr::group_by(BroodID) %>%
+                       dplyr::summarise(FledgeDate_observed = as.Date(NA),
+                                        NumberFledged_observed = NrFledge[n()],
+                                        .groups = "drop")
+
+                     Brood_data <- Egg_data %>%
+                       dplyr::left_join(Fledge_data, by = "BroodID") %>%
+                       dplyr::left_join(ID_data, by = "BroodID") %>%
+                       dplyr::mutate(ClutchType_observed = NA_character_,
+                                     ClutchType_calculated = NA_character_, ##FIXME: Need to add this info
+                                     LayDate_min = as.Date(NA), LayDate_max = as.Date(NA),
+                                     ClutchSize_min = NA_integer_, ClutchSize_max = NA_integer_,
+                                     HatchDate_observed = as.Date(NA), HatchDate_min = as.Date(NA), HatchDate_max = as.Date(NA),
+                                     BroodSize_min = NA_integer_, BroodSize_max = NA_integer_,
+                                     FledgeDate_min = as.Date(NA), FledgeDate_max = as.Date(NA),
+                                     NumberFledged_min = NA_integer_, NumberFledged_max = NA_integer_,
+                                     AvgEggMass = NA_real_, NumberEggs = NA_integer_,
+                                     AvgChickMass = NA_real_, NumberChicksMass = NA_integer_,
+                                     AvgTarsus = NA_real_, NumberChicksTarsus = NA_integer_,
+                                     OriginalTarsusMethod = NA_character_,
+                                     ExperimentID = NA_character_) %>% ##FIXME: Need to determine if any experiments were carried out
+                       dplyr::select(BroodID, PopID, BreedingSeason,
+                                     Species, Plot, LocationID,
+                                     FemaleID, MaleID,
+                                     LayDate_observed, LayDate_min, LayDate_max,
+                                     ClutchSize_observed, ClutchSize_min, ClutchSize_max,
+                                     HatchDate_observed, HatchDate_min, HatchDate_max,
+                                     BroodSize_observed, BroodSize_min, BroodSize_max,
+                                     FledgeDate_observed, FledgeDate_min, FledgeDate_max,
+                                     NumberFledged_observed, NumberFledged_min, NumberFledged_max,
+                                     AvgEggMass:ExperimentID)
+
+                     return(Brood_data)
+
+                   })
 
 }
 
