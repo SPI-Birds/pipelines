@@ -60,7 +60,7 @@ format_WIL <- function(db = choose_directory(),
   Greattit_data     <- purrr::map(.x = Greattit_filepath,
                               .f = ~{
 
-                                readxl::read_excel(..1)
+                                readxl::read_excel(..1, col_names = FALSE)
 
                               }) %>%
     setNames(stringr::str_extract(Greattit_filename, pattern = "[0-9]{4}"))
@@ -282,6 +282,11 @@ create_brood_WIL <- function(BT_data, GT_data){
                      male_match   <- ifelse(sum(stringr::str_detect(unique(raw_data$`...1`), "^man"), na.rm = TRUE) > 1, paste0("^man.*", year, "$"), "^man")
                      female_match <- ifelse(sum(stringr::str_detect(unique(raw_data$`...1`), "^wij|^vro"), na.rm = TRUE) > 1, paste0("^wij.*", year, "$|^vro.*", year, "$"), "^wij|^vro")
 
+                     #Remove duplicates (which can occur when there are redundant male/female rows)
+                     raw_data <- raw_data %>%
+                       dplyr::group_by(`...1`) %>%
+                       dplyr::slice(1) %>%
+                       dplyr::ungroup(`...1`)
 
                      ID_data <- raw_data %>%
                        dplyr::filter(stringr::str_detect(.data$`...1`, "Datum|^ring") | stringr::str_detect(.data$`...1`, male_match) | stringr::str_detect(.data$`...1`, female_match)) %>%
@@ -293,6 +298,22 @@ create_brood_WIL <- function(BT_data, GT_data){
                                                                TRUE ~ `...1`)) %>%
                        dplyr::select(column, value) %>%
                        tidyr::pivot_wider(names_from = column, values_from = value, values_fn = list) %>%
+
+                       #In early years there is no chick data recorded, so we need to create an empty ChickIDs column
+                       {
+
+                         if (!"ChickIDs" %in% colnames(.)) {
+
+                           dplyr::mutate(., ChickIDs = list(NA_character_))
+
+                         } else {
+
+                           .
+
+                         }
+
+                       } %>%
+
                        tidyr::unnest(cols = c(LocationID, MaleID, FemaleID, ChickIDs)) %>%
                        dplyr::mutate(chick_expand(ChickIDs)) %>%
                        dplyr::select(-ChickIDs) %>%
@@ -330,7 +351,7 @@ create_brood_WIL <- function(BT_data, GT_data){
                        dplyr::filter(!is.na(Observation))
 
                      Egg_data <- Observation_data %>%
-                       dplyr::filter(stringr::str_detect(Observation, "[0-9]{1,2} ei")) %>%
+                       dplyr::filter(stringr::str_detect(Observation, "[0-9]{1,2}\\s*ei")) %>%
                        dplyr::mutate(NrEgg = as.numeric(stringr::str_extract(Observation, "[0-9]{1,2}"))) %>%
                        dplyr::group_by(BroodID) %>%
                        dplyr::summarise(LayDate_observed = Datum[1] - (NrEgg[1] - 1),
@@ -339,8 +360,8 @@ create_brood_WIL <- function(BT_data, GT_data){
                                         .groups = "drop")
 
                      Fledge_data <- Observation_data %>%
-                       dplyr::filter(stringr::str_detect(Observation, "[0-9]{1,2}.*jn")) %>%
-                       dplyr::mutate(Fledge_str = stringr::str_extract(Observation, "[0-9]{1,2}.*jn"),
+                       dplyr::filter(stringr::str_detect(Observation, "[0-9]{1,2}.*j")) %>%
+                       dplyr::mutate(Fledge_str = stringr::str_extract(Observation, "[0-9]{1,2}.*j"),
                                      NrFledge = as.numeric(stringr::str_extract(Fledge_str, "[0-9]{1,2}"))) %>%
                        dplyr::arrange(BroodID, Datum) %>%
                        dplyr::group_by(BroodID) %>%
