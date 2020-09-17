@@ -53,20 +53,27 @@ format_VAL <- function(db = choose_directory(),
   late_broods  <- readxl::read_excel(data_file, sheet = 2, na = c("", "-")) %>%
     janitor::clean_names()
   chick_data   <- purrr::map_df(.x = 3:9,
-                                 .f = ~{
+                                .f = ~{
 
-                                   readxl::read_excel(data_file,
-                                                      sheet = ..1,
-                                                      col_type = "text")
+                                  readxl::read_excel(data_file,
+                                                     sheet = ..1,
+                                                     col_type = "text") %>%
+                                    janitor::clean_names() %>%
+                                    dplyr::filter(!is.na(.data$anilla)) %>%
+                                    #Add the year (starting at 2011)
+                                    dplyr::mutate(year = (2011 - 3 + ..1),
+                                                  NestboxID = stringr::str_remove(.data$nido, pattern = "[A-Z]"),
+                                                  Date = janitor::excel_numeric_to_date(as.numeric(.data$fecha))) %>%
+                                    dplyr::mutate(tidyr::fill(., .data$NestboxID, .direction = "down"))
 
-                                 })
+                                })
 
   # BROOD DATA
   #Extract Valsein brood data
 
   message("Compiling brood data....")
 
-  Brood_data <- create_brood_VAL(early_broods, late_broods)
+  Brood_data <- create_brood_VAL(early_broods, late_broods) #FIXME: Still need to add in average chick tarsus/mass measures.
 
   # CAPTURE DATA
 
@@ -219,11 +226,126 @@ create_brood_VAL <- function(early_broods, late_broods){
 create_capture_VAL    <- function(early_broods, late_broods, chick_data){
 
   #Extract info on adult captures
-  early_captures <- early_broods %>%
-    dplyr::select(female, ano_anilla_52, fage, surv_fem, fdia, ftarso, fala, fpeso,
+  early_adult_captures <- early_broods %>%
+    dplyr::select(year, nido, female, ano_anilla_52, fage, surv_fem, fdia, ftarso, fala, fpeso,
                   male, ano_anilla_84, mage, surv_man, mdia, mtarso, mala, mpeso) %>%
     tidyr::pivot_longer(cols = c(female, male), names_to = "Sex_observed", values_to = "IndvID") %>%
-    dplyr::mutate(Species = )
+    dplyr::mutate(MarchDay = as.Date(paste(.data$year, "03", "31", sep = "-")),
+                  Species = Species_codes$Code[Species_codes$SpeciesID == 13490],
+                  BreedingSeason = .data$year,
+                  Sex_observed = dplyr::case_when(.data$Sex_observed == "female" ~ "F",
+                                                  .data$Sex_observed == "male" ~ "M"),
+                  CaptureDate = dplyr::case_when(Sex_observed == "F" ~ .data$MarchDay + tidyr::replace_na(.data$fdia, 0),
+                                                 Sex_observed == "M" ~ .data$MarchDay + tidyr::replace_na(.data$mdia, 0)), # FIXME: What is the capture date if there is no fdia?
+                  CaptureTime = NA_character_,
+                  ObservedID = NA_character_,
+                  LocationID = .data$nido,
+                  CaptureAlive = TRUE, ReleaseAlive = TRUE,
+                  CapturePopID = "VAL", CapturePlot = NA_character_,
+                  ReleasePopID = "VAL", ReleasePlot = NA_character_,
+                  Mass = dplyr::case_when(.data$Sex_observed == "F" ~ .data$fpeso,
+                                          .data$Sex_observed == "M" ~ .data$mpeso),
+                  Tarsus = dplyr::case_when(.data$Sex_observed == "F" ~ .data$ftarso,
+                                            .data$Sex_observed == "M" ~ .data$mtarso),
+                  OriginalTarsusMethod = NA_character_, ##FIXME: Check with data owner what method they use
+                  WingLength = dplyr::case_when(.data$Sex_observed == "F" ~ .data$fala,
+                                                .data$Sex_observed == "M" ~ .data$mala),
+                  Age_observed = dplyr::case_when(.data$Sex_observed == "F" ~ as.integer(4 + (.data$fage - 1)*2),
+                                                  .data$Sex_observed == "M" ~ as.integer(4 + (.data$mage - 1)*2)), ## FIXME: What age measurement is this?
+                  ## For now, I assume it's starting at 4 (>1yo) and going up in units of year.
+                  ## i.e. 1 = age 4; 2 = age 6
+                  ChickAge = NA_integer_,
+                  ExperimentID = NA_character_) %>%   ## FIXME: Does the MANIP column apply also to adults?
+    dplyr::select(IndvID, Species, Sex_observed, BreedingSeason:ExperimentID)
+
+  late_adult_captures <- late_broods %>%
+    dplyr::select(year, nest, female, f_age, f_tarsus, f_wing, f_weight, obs_24,
+                  male, m_age, m_tarsus, m_wing, m_weight, obs_38) %>%
+    tidyr::pivot_longer(cols = c(female, male), names_to = "Sex_observed", values_to = "IndvID") %>%
+    dplyr::mutate(MarchDay = as.Date(paste(.data$year, "03", "31", sep = "-")),
+                  Species = Species_codes$Code[Species_codes$SpeciesID == 13490],
+                  BreedingSeason = .data$year,
+                  Sex_observed = dplyr::case_when(.data$Sex_observed == "female" ~ "F",
+                                                  .data$Sex_observed == "male" ~ "M"),
+                  CaptureDate = .data$MarchDay, ##FIXME: New brood data doesn't have any info on when adults were captured
+                  CaptureTime = NA_character_,
+                  ObservedID = dplyr::case_when(.data$Sex_observed == "F" ~ .data$obs_24,
+                                                .data$Sex_observed == "M" ~ .data$obs_38),
+                  LocationID = .data$nest,
+                  CaptureAlive = TRUE, ReleaseAlive = TRUE,
+                  CapturePopID = "VAL", CapturePlot = NA_character_,
+                  ReleasePopID = "VAL", ReleasePlot = NA_character_,
+                  Mass = dplyr::case_when(.data$Sex_observed == "F" ~ .data$f_weight,
+                                          .data$Sex_observed == "M" ~ .data$m_weight),
+                  Tarsus = dplyr::case_when(.data$Sex_observed == "F" ~ .data$f_tarsus,
+                                            .data$Sex_observed == "M" ~ .data$m_tarsus),
+                  OriginalTarsusMethod = NA_character_, ##FIXME: Check with data owner what method they use
+                  WingLength = dplyr::case_when(.data$Sex_observed == "F" ~ .data$f_wing,
+                                                .data$Sex_observed == "M" ~ .data$m_wing),
+                  Age_observed = dplyr::case_when(.data$Sex_observed == "F" ~ as.integer(4 + (.data$f_age * 2)),
+                                                  .data$Sex_observed == "M" ~ as.integer(4 + (.data$m_age * 2))), ## FIXME: What age measurement is this?
+                  ## For now, I assume it's starting at 4 (>1yo) and going up in units of year.
+                  ## i.e. 0 = age 4; 1 = age 6
+                  ChickAge = NA_integer_,
+                  ExperimentID = NA_character_) %>%   ## FIXME: Does the treatment column apply also to adults?
+    dplyr::select(IndvID, Species, Sex_observed, BreedingSeason:ExperimentID)
+
+  #No information on chick rings before 2011. Were chicks not ringed before this or the data is missing?
+  early_chick <- chick_data %>%
+    dplyr::mutate(MarchDay = as.Date(paste(.data$year, "03", "31", sep = "-")),
+                  IndvID = .data$anilla,
+                  Species = Species_codes$Code[Species_codes$SpeciesID == 13490],
+                  Sex_observed = NA_character_,
+                  BreedingSeason = .data$year,
+                  CaptureDate = .data$Date,
+                  CaptureTime = .data$hora,
+                  ObserverID = NA_character_,
+                  LocationID = .data$NestboxID,
+                  CaptureAlive = TRUE, ReleaseAlive = TRUE, ## FIXME: Are these ever FALSE?
+                  CapturePopID = "VAL", CapturePlot = NA_character_,
+                  ReleasePopID = "VAL", ReleasePlot = NA_character_, ## FIXME: Are these ever FALSE?
+                  Mass = as.numeric(.data$peso),
+                  Tarsus = as.numeric(.data$tarso),
+                  OriginalTarsusMethod = NA_character_, ## FIXME: Check with data owner
+                  WingLength = as.numeric(.data$ala),
+                  Age_observed = 1L, # FIXME: Assume all are chicks (pre-fledgling)
+                  ChickAge = NA_integer_, # FIXME: What age are chicks caught/ringed? 13 days?
+                  ExperimentID = NA_character_) %>%
+    dplyr::select(IndvID:ExperimentID)
+
+  late_chick <- late_broods %>%
+    dplyr::select(.data$nest, .data$year, .data$hd, .data$chick1:last_col()) %>%
+    tidyr::pivot_longer(cols = .data$chick1:last_col(), values_to = "IndvID") %>%
+    dplyr::filter(!is.na(IndvID)) %>%
+    dplyr::mutate(MarchDay = as.Date(paste(.data$year, "03", "31", sep = "-")),
+                  Species = Species_codes$Code[Species_codes$SpeciesID == 13490],
+                  Sex_observed = NA_character_,
+                  BreedingSeason = .data$year,
+                  CaptureDate = MarchDay + .data$hd + 13, #FIXME: Assume chicks are captured on day 13. Check with data owner.
+                  CaptureTime = NA_character_,
+                  ObserverID = NA_character_, #FIXME: Is this the same as one of the female/male observers?
+                  LocationID = .data$nest,
+                  CaptureAlive = TRUE, ReleaseAlive = TRUE,
+                  CapturePopID = "VAL", CapturePlot = NA_character_,
+                  ReleasePopID = "VAL", ReleasePlot = NA_character_,
+                  Mass = NA_real_, #FIXME: These chicks are not measured?
+                  Tarsus = NA_real_,
+                  OriginalTarsusMethod = NA_character_,
+                  WingLength = NA_real_,
+                  Age_observed = 1L,
+                  ChickAge = 13L,
+                  ExperimentID = NA_character_) %>%
+    dplyr::select(IndvID, Species:ExperimentID)
+
+  all_captures <- dplyr::bind_rows(early_adult_captures, late_adult_captures, early_chick, late_chick) %>%
+    dplyr::filter(!is.na(.data$IndvID)) %>%
+    dplyr::arrange(.data$IndvID, .data$BreedingSeason, .data$CaptureDate) %>%
+    calc_age(ID = IndvID, Age = Age_observed, Date = CaptureDate, Year = BreedingSeason) %>%
+    dplyr::group_by(IndvID) %>%
+    dplyr::mutate(CaptureID = paste(IndvID, 1:n(), sep = "_")) %>%
+    dplyr::select(CaptureID, IndvID:Age_observed, Age_calculated, ChickAge, ExperimentID)
+
+  return(all_captures)
 
 }
 
@@ -239,47 +361,33 @@ create_individual_VAL <- function(Capture_data){
 
   #Take capture data and determine summary data for each individual
   Indv_data <- Capture_data %>%
+    dplyr::mutate(BroodID = paste(.data$LocationID, .data$BreedingSeason, sep = "_")) %>%
     dplyr::filter(!is.na(IndvID)) %>%
     dplyr::arrange(IndvID, BreedingSeason, CaptureDate, CaptureTime) %>%
     dplyr::group_by(IndvID) %>%
-    dplyr::summarise(Species = purrr::map_chr(.x = list(unique(na.omit(Species))), .f = ~{
+    dplyr::summarise(Species = first(.data$Species),
+                     PopID = "VAL",
+                     BroodIDLaid = first(BroodID),
+                     BroodIDFledged = BroodIDLaid,
+                     RingSeason = first(BreedingSeason),
+                     RingAge = ifelse(any(Age_calculated %in% c(1, 3)), "chick", ifelse(min(Age_calculated) == 2, NA_character_, "adult")),
+                     Sex_calculated = purrr::map_chr(.x = list(unique(na.omit(Sex_observed))), .f = ~{
 
-      if(length(..1) == 0){
+                       if(length(..1) == 0){
 
-        return(NA_character_)
+                         return(NA_character_)
 
-      } else if(length(..1) == 1){
+                       } else if(length(..1) == 1){
 
-        return(..1)
+                         return(..1)
 
-      } else {
+                       } else {
 
-        return("CONFLICTED")
+                         return("C")
 
-      }
+                       }
 
-    }), PopID = "HAR",
-    BroodIDLaid = first(BroodID),
-    BroodIDFledged = BroodIDLaid,
-    RingSeason = first(BreedingSeason),
-    RingAge = ifelse(any(Age_calculated %in% c(1, 3)), "chick", ifelse(min(Age_calculated) == 2, NA_character_, "adult")),
-    Sex = purrr::map_chr(.x = list(unique(na.omit(Sex))), .f = ~{
-
-      if(length(..1) == 0){
-
-        return(NA_character_)
-
-      } else if(length(..1) == 1){
-
-        return(..1)
-
-      } else {
-
-        return("C")
-
-      }
-
-    })) %>%
+                     }), .groups = "drop") %>%
     dplyr::rowwise() %>%
     #For each individual, if their ring age was 1 or 3 (caught in first breeding year)
     #Then we take their first BroodID, otherwise it is NA
@@ -297,60 +405,24 @@ create_individual_VAL <- function(Capture_data){
 #'
 #' Create full location data table in standard format for data from Valsein, Spain.
 #'
-#' @param db Location of primary data from Harjavalta.
+#' @param Capture_data Output of \code{\link{create_capture_VAL}}.
 #'
 #' @return A data frame.
 #' @export
 
-create_location_VAL <- function(db){
+create_location_VAL <- function(Capture_data){
 
-  message("Extracting location data from paradox database")
-
-  #Extract table "Pullit.db" which contains brood data
-  Location_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Locations.DB") %>%
-    #Remove last 2 cols that have no info
-    dplyr::select(-Aukko, -Malli) %>%
-    dplyr::rename(BreedingSeason = Vuos, LocationID = Nuro,
-                  ForestType = Mety, PinusSylvestris = Manty,
-                  PiceaAbies = Kuusi, Betulasp = Koivu,
-                  PopulusTremula = Haapa,
-                  SorbusAcuparia = Pihlaja,
-                  Salixsp = Pajut, JuniperusCommunis = Kataja,
-                  Alnussp = Leppa, PrunusPadas = Tuomi,
-                  TreeHeight = Kork, BasalArea = Totrel,
-                  PineHeight = Makor, SpruceHeight = Kukor,
-                  BirchHeight = Kokor, PineBasalArea = Marel,
-                  SpruceBasalArea = Kurel, BirchBasalArea = Korel,
-                  Latitude = Leve, Longitude = Pitu, Municipality = Kunta,
-                  LocationName = Paikka)
-
-  #Separate locations with and without coordinates
-  Location_nocoord <- Location_data %>%
-    dplyr::filter(is.na(Longitude))
-
-  Location_wcoord  <- Location_data %>%
-    dplyr::filter(!is.na(Longitude))
-
-  #Read location data with coordinates as sf object in Finnish Coordinate system
-  #Coordinates are in Finland Uniform Coordinate System (EPSG 2393)
-
-  Location_data_sf <- sf::st_as_sf(Location_wcoord,
-                                   coords = c("Longitude", "Latitude"),
-                                   crs = 2393) %>%
-    sf::st_transform(crs = 4326)
-
-  Location_full <- dplyr::bind_rows(dplyr::bind_cols(dplyr::select(Location_wcoord, -Longitude, -Latitude),
-                                                     tibble(Longitude = sf::st_coordinates(Location_data_sf)[, 1]),
-                                                     tibble(Latitude = sf::st_coordinates(Location_data_sf)[, 2])),
-                                    Location_nocoord)
-
-  #The records of each Location should show the start/end season
-  Location_data <- Location_full %>%
+  Location_data <- Capture_data %>%
     dplyr::group_by(LocationID) %>%
-    dplyr::arrange(BreedingSeason, .by_group = TRUE) %>%
-    dplyr::summarise(NestboxID = unique(LocationID), PopID = "HAR", Latitude = as.numeric(first(Latitude)), Longitude = as.numeric(first(Longitude)),
-                     LocationType = "NB", StartSeason = min(BreedingSeason), EndSeason = max(BreedingSeason), Habitat = "Evergreen") %>%
-    dplyr::select(LocationID, NestboxID, LocationType, PopID, Latitude, Longitude, StartSeason, EndSeason, Habitat)
+    dplyr::summarise(NestboxID = first(.data$LocationID),
+                  LocationType = "NB",
+                  PopID = "VAL",
+                  Latitude = NA_real_, #FIXME: Is this data available?
+                  Longitude = NA_real_,
+                  StartSeason = min(.data$BreedingSeason),
+                  EndSeason = ifelse(max(.data$BreedingSeason) == max(Capture_data$BreedingSeason), NA_integer_, max(.data$BreedingSeason)), # FIXME: When numbers are missing does this mean the box is no longer used?
+                  HabitatType = "DEC", #FIXME: Taken from meta-data. Is this correct?
+                  .groups = "drop")
 
   return(Location_data)
 

@@ -122,8 +122,8 @@ calc_clutchtype <- function(data, na.rm = FALSE) {
     } else {
 
       clutchtype_calculated <- cutoff_dat %>%
-        mutate(total_fledge = calc_cumfledge(x = NumberFledged, na.rm = TRUE),
-               total_fledge_na = calc_cumfledge(x = NumberFledged, na.rm = FALSE),
+        mutate(total_fledge = calc_cumfledge(x = NumberFledged_observed, na.rm = TRUE),
+               total_fledge_na = calc_cumfledge(x = NumberFledged_observed, na.rm = FALSE),
                row = 1:n()) %>%
         ungroup() %>%
         mutate(ClutchType_calculated = purrr::pmap_chr(.l = list(rows = .$row,
