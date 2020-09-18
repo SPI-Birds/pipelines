@@ -47,7 +47,7 @@
 #'
 
 
-format_PFN <- function(db,
+format_PFN <- function(db = choose_directory(),
                        species = NULL,
                        pop = NULL,
                        path = ".",
