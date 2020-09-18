@@ -412,7 +412,7 @@ create_capture_EDM <- function(CMR_data, Primary_data, ReRingTable){
     #                               is.na(.data$Tarsus_CMR) & !is.na(.data$Tarsus_B) ~ .data$Tarsus_B)) %>%
     dplyr::mutate(Mass = dplyr::case_when(!is.na(.data$Mass_CMR) ~ .data$Mass_CMR,
                                           is.na(.data$Mass_CMR) & !is.na(.data$Mass_B) & .data$Age_observed == 1 ~ .data$Mass_B,
-                                          is.na(.data$Mass_CMR) & !is.na(.data$Mass_B) & .data$Age_observed != 1 ~ NA_real_),
+                                          TRUE ~ NA_real_),
                   Tarsus = dplyr::case_when(!is.na(.data$Tarsus_CMR) ~ .data$Tarsus_CMR,
                                             is.na(.data$Tarsus_CMR) & !is.na(.data$Tarsus_B) & .data$Age_observed == 1 ~ .data$Tarsus_B,
                                             is.na(.data$Tarsus_CMR) & !is.na(.data$Tarsus_B) & .data$Age_observed != 1 ~ NA_real_)) %>%
