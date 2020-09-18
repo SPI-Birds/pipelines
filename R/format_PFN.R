@@ -67,11 +67,13 @@ format_PFN <- function(db = choose_directory(),
   start_time <- Sys.time()
 
   #Load primary brood data
-  Primary_data <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_EDartmoor.csv"), na.strings = c("", "?"),colClasses = "character")
+  Primary_data <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_EDartmoor.csv"), na.strings = c("", "?"), colClasses = "character")
 
   #Load complete PiedFlyNet ringing database
-  CMR_data <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_All_CMR.csv"), na.strings = c("", "?", "UNK", "-"),colClasses = "character") # TODO:Confirm with Malcolm that SITE = "UNK" refers to unknown/unassigned locations
+  CMR_data <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_All_CMR.csv"), na.strings = c("", "?", "UNK", "-"), colClasses = "character") # TODO:Confirm with Malcolm that SITE = "UNK" refers to unknown/unassigned locations
 
+  #Load additional data on nestboxes (locations)
+  Location_details <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_EDartmoor_Nestboxes.csv"), na.strings = c("", "?"), colClasses = "character", fileEncoding="UTF-8-BOM")
 
   # PREPARATION: RE-RINGING DATA
 
@@ -111,7 +113,7 @@ format_PFN <- function(db = choose_directory(),
 
   message("Compiling location data...")
 
-  Location_data <- create_location_EDM(Brood_data = Brood_data, Capture_data = Capture_data)
+  Location_data <- create_location_EDM(Brood_data = Brood_data, Capture_data = Capture_data, Location_details = Location_details)
 
 
   # WRANGLE DATA FOR EXPORT
@@ -122,7 +124,8 @@ format_PFN <- function(db = choose_directory(),
   Capture_data$ChickAge[which(Capture_data$Age_observed > 1)] <- NA_integer_
 
   Capture_data <- Capture_data %>%
-    dplyr::select(-.data$BroodID)
+    dplyr::select(-.data$BroodID) %>%
+    dplyr::relocate(.data$ExperimentID, .after = .data$ChickAge)
 
   # Brood data: Remove unnecessary columns
   Brood_data <- Brood_data %>%
@@ -177,13 +180,16 @@ create_brood_EDM <- function(Primary_data, ReRingTable){
 
   ## Pre) Determine a vector of "bad" (nonconclusive) IDs
   #This will be used downstream in point 7)
-#Create a vector of all non-NA ID records for both males and females (need for chicks too?)
-allIDs <- na.omit(c(Primary_data$MaleID, Primary_data$FemaleID))
-#Return only those that don't match the expected ringing format (i.e. XXX9999)
-#"^[A-Z]{1,}[0-9]{1,}$" is a regular expression that looks for IDs that follow a pattern:
-#- Starts with at least one capital letter: '^[A-Z]{1,}'
-#- Ends with at least one number: '[0-9]{1,}$'
-badIDs <- unique(allIDs[!stringr::str_detect(allIDs, pattern = "^[A-Z]{1,}[0-9]{1,}$")])
+  #Create a vector of all non-NA ID records for both males and females (need for chicks too?)
+  allIDs <- na.omit(c(Primary_data$MaleID, Primary_data$FemaleID, Primary_data$Young1,
+                      Primary_data$Young2, Primary_data$Young3, Primary_data$Young4,
+                      Primary_data$Young5, Primary_data$Young6, Primary_data$Young7,
+                      Primary_data$Young8, Primary_data$Young9, Primary_data$Young10, Primary_data$Young11))
+  #Return only those that don't match the expected ringing format (i.e. XXX9999)
+  #"^[A-Z]{1,}[0-9]{1,}$" is a regular expression that looks for IDs that follow a pattern:
+  #- Starts with at least one capital letter: '^[A-Z]{1,}'
+  #- Ends with at least one number: '[0-9]{1,}$'
+  badIDs <- unique(allIDs[!stringr::str_detect(allIDs, pattern = "^[A-Z]{1,}[0-9]{1,}$")])
 
 
   ## 1) Rename columns that are equivalent (content and format) to columns in the standard format
@@ -203,7 +209,7 @@ badIDs <- unique(allIDs[!stringr::str_detect(allIDs, pattern = "^[A-Z]{1,}[0-9]{
                                              .data$Species == "COATI" ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code,
                                              .data$Species == "WREN" ~ NA_character_, # Missing, 1 observation only
                                              .data$Species == "TREEC" ~ NA_character_), # Missing, 1 observation only
-                  ClutchType = dplyr::case_when(.data$CltCd == "1" ~ "first",
+                  ClutchType_observed = dplyr::case_when(.data$CltCd == "1" ~ "first",
                                                 .data$CltCd == "2" ~ "replacement",
                                                 .data$CltCd == "3" ~ "second"),
                   LayDate = as.Date(paste('31/03/', .data$BreedingSeason, sep = ''), format = "%d/%m/%Y") + as.numeric(.data$DFE),
@@ -214,6 +220,14 @@ badIDs <- unique(allIDs[!stringr::str_detect(allIDs, pattern = "^[A-Z]{1,}[0-9]{
                   BroodSize = as.integer(.data$Hatch),
                   NumberFledged = as.integer(.data$Fledged),
                   ChickAge = as.integer(as.Date(.data$YoungDate, format = "%d/%m/%Y") - .data$HatchDate)) %>%
+
+    # Note on ClutchSize_min: In cases in which clutch size was either not recorded, or recorded as 0 (e.g. when clutches were laid but not incubated).
+    #                         other types of data may contain information on the minimum size of the clutch:
+    #                         Minimum number of eggs laid (MinEggs), and number of unhatched eggs (Unhatch) plus number of hatched eggs (Hatch) or fledglings (Fledged)
+    #                         Usually, only some of this information is available, and we therefore define the minimum possible clutch size as the largest number
+    #                         in the above categories. We use the largest number to determine minimum clutch size because all counted eggs/chicks were definitely
+    #                         part of the clutch, but the chances of eggs/chicks having disappeared before the count increases as we move further away from the
+    #                         laying date (i.e. number of fledlings (+ number of unhatched eggs) <= number of hatched eggs (+ number of unhatched eggs) <= number of laid eggs)
 
     # 4) Add columns that are based on calculations
     dplyr::arrange(.data$BreedingSeason, .data$FemaleID, .data$LayDate)
@@ -239,8 +253,7 @@ badIDs <- unique(allIDs[!stringr::str_detect(allIDs, pattern = "^[A-Z]{1,}[0-9]{
 
   # 5) Rename columns and add columns without data
   Brood_data <- Brood_data %>%
-      dplyr::mutate(ClutchType_observed = .data$ClutchType,
-                    NumberChicksMass = .data$NumberChickMass,
+      dplyr::mutate(NumberChicksMass = .data$NumberChickMass,
                     NumberChicksTarsus = .data$NumberTarsus,
                     LayDate_observed = .data$LayDate,
                     LayDate_min = as.Date(NA),
@@ -361,13 +374,12 @@ create_capture_EDM <- function(CMR_data, Primary_data, ReRingTable){
                     Mass_CMR = as.numeric(.data$WT),
                     Tarsus_CMR = dplyr::case_when(is.na(.data$TSMTD) ~ as.numeric(.data$TARSUS),
                                               .data$TSMTD == "S" ~ as.numeric(.data$TARSUS),
-                                              .data$TSMTD == "M" ~ (x = as.numeric(.data$TARSUS), method = "Oxford"),
+                                              .data$TSMTD == "M" ~ (x = convert_tarsus(as.numeric(.data$TARSUS), method = "Oxford"))),
                     OriginalTarsusMethod = dplyr::case_when(is.na(.data$TSMTD) ~ "Alternative",
                                                             .data$TSMTD == "S" ~ "Alternative",
                                                             .data$TSMTD == "M" ~ "Oxford"),
                     WingLength = as.numeric(.data$WING),
                     Age_observed = as.integer(str_remove(.data$AGE, "J")),
-                    Age_calculated = NA_integer_, # Will be added later
                     stringsAsFactors = FALSE) %>%
 
     ## 5) Add additional colums that need to be derived from original columns
@@ -529,13 +541,14 @@ create_individual_EDM <- function(Capture_data){
 #'
 #' @param Brood_data Brood data table generated by create_brood_EDM
 #' @param Capture_data Capture data table generated by create_capture_EDM
+#' @param Location_details Table containing detailed information on nestboxes
 #'
 #' @return A data frame with Location data
 
-create_location_EDM <- function(Brood_data, Capture_data){
+create_location_EDM <- function(Brood_data, Capture_data, Location_details){
 
-  # 1) Load and format additional data on nest boxes
-  Location_details <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_EDartmoor_Nestboxes.csv"), na.strings = c("", "?"),colClasses = "character") %>%
+  # 1) Format additional data on nest boxes
+  Location_details <- Location_details %>%
 
     dplyr::rename(NestboxID = .data$Box,
                   Plot = .data$Popn,
