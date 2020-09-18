@@ -539,7 +539,7 @@ create_location_EDM <- function(Brood_data, Capture_data){
 
     dplyr::rename(NestboxID = .data$Box,
                   Plot = .data$Popn,
-                  Latitude = lat,
+                  Latitude = .data$lat,
                   Longitude = .data$long,
                   StartSeason = .data$First,
                   EndSeason = .data$Last) %>%
