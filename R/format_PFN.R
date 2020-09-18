@@ -34,7 +34,7 @@
 #'
 #'\strong{LayDate_observed and HatchDate_observed}: Information is provided as date of first egg (DFE) and
 #'date of hatching (DH). These are given as integer number, and represent days after a set
-#'starting date (day 0). Day 0 is assumed to be 31. March every year (to be confirmed).
+#'starting date (day 0). Day 0 is defined as 31.
 #'
 #'\strong{ChickAge}: For every capture, we estimate the age of a chick as the difference between the hatch date
 #'taken from BroodIDFledged (in Individual_data) and the CaptureDate.
