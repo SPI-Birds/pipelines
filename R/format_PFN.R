@@ -361,7 +361,7 @@ create_capture_EDM <- function(CMR_data, Primary_data, ReRingTable){
                     Mass_CMR = as.numeric(.data$WT),
                     Tarsus_CMR = dplyr::case_when(is.na(.data$TSMTD) ~ as.numeric(.data$TARSUS),
                                               .data$TSMTD == "S" ~ as.numeric(.data$TARSUS),
-                                              .data$TSMTD == "M" ~ (as.numeric(.data$TARSUS)*0.72005)+3.64549),
+                                              .data$TSMTD == "M" ~ (x = as.numeric(.data$TARSUS), method = "Oxford"),
                     OriginalTarsusMethod = dplyr::case_when(is.na(.data$TSMTD) ~ "Alternative",
                                                             .data$TSMTD == "S" ~ "Alternative",
                                                             .data$TSMTD == "M" ~ "Oxford"),
