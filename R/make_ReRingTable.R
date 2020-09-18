@@ -9,8 +9,6 @@
 #'
 #' @param raw_data Data frame. Contains pairs of rings (one pair per
 #' re-ringing event). Column 'RING' = first ring, column 'RING2' = second ring.
-#' @param N Integer. The total number of rings carried by any one bird in the
-#' data.
 #'
 #' @return A data frame with columns 'RingNr' (= original ring number) and
 #' 'ReRingID' (= new unique identifier for the individual).
@@ -23,7 +21,7 @@
 #' #Summarise re-ringing information by individual
 #' make_ReRingTable(raw_data = dat, N = 3)
 
-make_ReRingTable = function(raw_data, N){
+make_ReRingTable = function(raw_data){
 
   #We will be left joining one set of data to the other
   #so we need to make sure the column names match
@@ -36,6 +34,7 @@ make_ReRingTable = function(raw_data, N){
   #As long as any new ring values (e.g. RING2) are also used as an old ring value (e.g. RING)
   #Then we need to keep going
   #We use ncol() so that the code is robust to any number of re-ringings
+  N = 1
   while (any(check_data[, 2] %in% check_data[, 1])) {
 
     #Add a new column to the output

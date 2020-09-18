@@ -80,7 +80,7 @@ format_PFN <- function(db,
     dplyr::filter(!is.na(.data$RING2))
 
   # Collate all ring numbers used for each individual (with max. number of re-ringing events = 3)
-  ReRingTable <- make_ReRingTable(raw_data = ReRing, N = 3) %>%
+  ReRingTable <- make_ReRingTable(raw_data = ReRing) %>%
 
     # Make new individual ID for re-ringed birds
     dplyr::mutate(ReRingID = paste0('MULTIRING',.data$ReRingNr)) %>%
