@@ -177,7 +177,13 @@ create_brood_EDM <- function(Primary_data, ReRingTable){
 
   ## Pre) Determine a vector of "bad" (nonconclusive) IDs
   #This will be used downstream in point 7)
-  badIDs <- c("RUNT", "ringed", "ringed left", "ringed right", "unringed", "Unringed")
+#Create a vector of all non-NA ID records for both males and females (need for chicks too?)
+allIDs <- na.omit(c(Primary_data$MaleID, Primary_data$FemaleID))
+#Return only those that don't match the expected ringing format (i.e. XXX9999)
+#"^[A-Z]{1,}[0-9]{1,}$" is a regular expression that looks for IDs that follow a pattern:
+#- Starts with at least one capital letter: '^[A-Z]{1,}'
+#- Ends with at least one number: '[0-9]{1,}$'
+badIDs <- unique(allIDs[!stringr::str_detect(allIDs, pattern = "^[A-Z]{1,}[0-9]{1,}$")])
 
 
   ## 1) Rename columns that are equivalent (content and format) to columns in the standard format
