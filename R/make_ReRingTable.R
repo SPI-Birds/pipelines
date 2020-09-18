@@ -41,7 +41,7 @@ make_ReRingTable = function(raw_data, N){
     #Add a new column to the output
     #Instead of RING > RING2, we now have RING > RING2 > RING3
     output_data <- output_data %>%
-      dplyr::left_join(check_data) %>%
+      dplyr::left_join(check_data, by = "RING2") %>%
       #Here we are removing the now redundant rows (where RING2 is now RING3 somewhere else)
       #!!as.symbol is just a way of referring to a column in dplyr using some code that returns a string rather than just a column name
       #e.g. !!as.symbol(names(.)[ncol(.) - 1]) refers to the column with the second last name
@@ -76,4 +76,3 @@ make_ReRingTable = function(raw_data, N){
   # Return final re-ringing table
   return(final_rings)
 }
-
