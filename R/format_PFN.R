@@ -357,7 +357,7 @@ create_capture_EDM <- function(CMR_data, Primary_data, ReRingTable){
                                                   is.na(.data$INIT) & !is.na(.data$RINGINIT) ~ .data$RINGINIT),
                     CapturePopID = "EDM",
                     ReleasePopID = "EDM",
-                    ReleasePlot = CapturePlot,
+                    ReleasePlot = .data$CapturePlot,
                     Mass_CMR = as.numeric(.data$WT),
                     Tarsus_CMR = dplyr::case_when(is.na(.data$TSMTD) ~ as.numeric(.data$TARSUS),
                                               .data$TSMTD == "S" ~ as.numeric(.data$TARSUS),
