@@ -50,7 +50,7 @@ format_VAL <- function(db = choose_directory(),
   data_file    <- paste0(db, "/VAL_PrimaryData.xlsx")
   early_broods <- readxl::read_excel(data_file, sheet = 1, na = c("", "-")) %>%
     janitor::clean_names()
-  late_broods  <- readxl::read_excel(data_file, sheet = 2, na = c("", "-")) %>%
+  late_broods  <- readxl::read_excel(data_file, sheet = 2, na = c("", "-")) %>% #FIXME: Are - NA or 0? e.g. 37_2017
     janitor::clean_names()
   chick_data   <- purrr::map_df(.x = 3:9,
                                 .f = ~{
@@ -73,7 +73,7 @@ format_VAL <- function(db = choose_directory(),
 
   message("Compiling brood data....")
 
-  Brood_data <- create_brood_VAL(early_broods, late_broods) #FIXME: Still need to add in average chick tarsus/mass measures.
+  Brood_data <- create_brood_VAL(early_broods, late_broods, chick_data) #FIXME: Still need to add in average chick tarsus/mass measures.
 
   # CAPTURE DATA
 
@@ -91,7 +91,7 @@ format_VAL <- function(db = choose_directory(),
 
   message("Compiling location data...")
 
-  Location_data <- create_location_VAL(db = db)
+  Location_data <- create_location_VAL(Brood_data = Brood_data)
 
   # EXPORT DATA
 
@@ -134,10 +134,11 @@ format_VAL <- function(db = choose_directory(),
 #'
 #' @param early_broods Data frame with data on early broods (1991 - 2010)
 #' @param late_broods Data frame with data on late broods (2011 -)
+#' @param chick_data Data frame with data on chick captures
 #'
 #' @return A data frame.
 
-create_brood_VAL <- function(early_broods, late_broods){
+create_brood_VAL <- function(early_broods, late_broods, chick_data){
 
   early_broods_format <- early_broods %>%
     dplyr::mutate(MarchDay = as.Date(paste(.data$year, "03", "31", sep = "-")),
@@ -168,6 +169,11 @@ create_brood_VAL <- function(early_broods, late_broods){
                   NumberFledged_observed = .data$fledgl,
                   NumberFledged_min = NA_integer_,
                   NumberFledged_max = NA_integer_) %>%
+    #When there are multiple nests in a brood in a year, give them different letter suffixes
+    dplyr::arrange(.data$FemaleID, .data$LayDate_observed) %>%
+    dplyr::group_by(.data$BroodID) %>%
+    dplyr::mutate(BroodID = paste0(.data$BroodID, letters[1:n()])) %>%
+    dplyr::ungroup() %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(.)) %>%
     dplyr::select(.data$BroodID:.data$ClutchType_observed,
                   .data$ClutchType_calculated,
@@ -184,7 +190,7 @@ create_brood_VAL <- function(early_broods, late_broods){
                   FemaleID = .data$female,
                   MaleID = .data$male,
                   ClutchType_observed = NA_character_,
-                  LayDate_observed = .data$MarchDay + floor(.data$ld),
+                  LayDate_observed = .data$MarchDay + floor(.data$ld), #FIXME: Is this laydate? There are some that are very close together in LD (e.g. nestbox 186 in 1998)!
                   LayDate_min = as.Date(NA),
                   LayDate_max = as.Date(NA),
                   ClutchSize_observed = .data$cs,
@@ -193,19 +199,47 @@ create_brood_VAL <- function(early_broods, late_broods){
                   HatchDate_observed = .data$MarchDay + floor(.data$hd),
                   HatchDate_min = as.Date(NA),
                   HatchDate_max = as.Date(NA),
-                  BroodSize_observed = as.integer(.data$cs * .data$hatching_suc),
+                  BroodSize_observed = as.integer(.data$cs * .data$hatching_suc/100),
                   BroodSize_min = NA_integer_,
                   BroodSize_max = NA_integer_,
                   FledgeDate_observed = as.Date(NA),
                   FledgeDate_min = as.Date(NA),
                   FledgeDate_max = as.Date(NA),
-                  NumberFledged_observed = as.integer(.data$cs * .data$fled_suc),
+                  NumberFledged_observed = as.integer(.data$cs * .data$fled_suc/100), #FIXME: Is this proportion of clutch that fledge or of brood?
                   NumberFledged_min = NA_integer_,
-                  NumberFledged_max = NA_integer_) %>%
+                  NumberFledged_max = NA_integer_,
+                  AvgEggMass = NA_real_,
+                  NumberEggs = NA_integer_,
+                  AvgChickMass = .data$chicks_wight,
+                  AvgTarsus = .data$chicks_tarsus,
+                  OriginalTarsusMethod = NA_character_,
+                  ExperimentID = NA_character_) %>% #FIXME: Translate 'treatment' column to experimentID
+    #When there are multiple nests in a brood in a year, give them different letter suffixes
+    dplyr::arrange(.data$FemaleID, .data$LayDate_observed) %>%
+    dplyr::group_by(.data$BroodID) %>%
+    dplyr::mutate(BroodID = paste0(.data$BroodID, letters[1:n()])) %>%
+    dplyr::ungroup() %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(.)) %>%
     dplyr::select(.data$BroodID:.data$ClutchType_observed,
                   .data$ClutchType_calculated,
-                  .data$LayDate_observed:.data$NumberFledged_max)
+                  .data$LayDate_observed:.data$ExperimentID)
+
+  #Determine number of chicks measured in each nest
+  #FIXME: What is the difference between clutch 1 and B1 (e.g. 2016?!)
+  #For now we just removed the number and group together.
+  number_chicks <- chick_data %>%
+    dplyr::mutate(BroodID = paste(.data$NestboxID, .data$year, sep = "_")) %>%
+    dplyr::group_by(BroodID) %>%
+    dplyr::summarise(NumberChicksMass = sum(!is.na(peso)),
+                     NumberChicksTarsus = sum(!is.na(tarso)),
+                     .groups = "drop")
+
+  #Join in to brood data
+  late_broods_format <- late_broods_format %>%
+    dplyr::left_join(number_chicks, by = "BroodID") %>%
+    dplyr::select(.data$BroodID:.data$AvgChickMass, .data$NumberChicksMass,
+                  .data$AvgTarsus, .data$NumberChicksTarsus,
+                  .data$OriginalTarsusMethod, .data$ExperimentID)
 
   all_broods <- dplyr::bind_rows(early_broods_format, late_broods_format)
 
@@ -223,7 +257,7 @@ create_brood_VAL <- function(early_broods, late_broods){
 #'
 #' @return A data frame.
 
-create_capture_VAL    <- function(early_broods, late_broods, chick_data){
+create_capture_VAL <- function(early_broods, late_broods, chick_data){
 
   #Extract info on adult captures
   early_adult_captures <- early_broods %>%
@@ -410,9 +444,9 @@ create_individual_VAL <- function(Capture_data){
 #' @return A data frame.
 #' @export
 
-create_location_VAL <- function(Capture_data){
+create_location_VAL <- function(Brood_data){
 
-  Location_data <- Capture_data %>%
+  Location_data <- Brood_data %>%
     dplyr::group_by(LocationID) %>%
     dplyr::summarise(NestboxID = first(.data$LocationID),
                   LocationType = "NB",

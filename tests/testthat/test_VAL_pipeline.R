@@ -1,0 +1,147 @@
+context("Run data quality check on Valsein pipeline output")
+
+test_that("VAL outputs all files...", {
+
+  expect_true("VAL" %in% pipeline_output$Brood_data$PopID)
+  expect_true("VAL" %in% pipeline_output$Capture_data$CapturePopID)
+  expect_true("VAL" %in% pipeline_output$Individual_data$PopID)
+  expect_true("VAL" %in% pipeline_output$Location_data$PopID)
+
+})
+
+test_that("Individual data returns an expected outcome...", {
+
+  #Take a subset of only VAL data
+  VAL_data <- dplyr::filter(pipeline_output$Individual_data, PopID == "VAL")
+
+  #Test 1: Adult flycatcher female
+  #Individual 332999 should be listed as a female flycatcher
+  expect_equal(subset(VAL_data, IndvID == "332999")$Sex_calculated, "F")
+  expect_equal(subset(VAL_data, IndvID == "332999")$Species, "FICHYP")
+  #She should have no BroodIDLaid or Fledged because there is no chick info
+  expect_equal(subset(VAL_data, IndvID == "332999")$BroodIDLaid, NA_character_)
+  expect_equal(subset(VAL_data, IndvID == "332999")$BroodIDFledged, NA_character_)
+  #Her ring season should be 2013 with a RingAge of 'adult'
+  expect_equal(subset(VAL_data, IndvID == "332999")$RingSeason, 1991)
+  expect_equal(subset(VAL_data, IndvID == "332999")$RingAge, "adult")
+
+  #Test 2: Adult flycatcher male
+  #Individual 735228 should be listed as a male flycatcher
+  expect_equal(subset(VAL_data, IndvID == "735228")$Sex_calculated, "M")
+  expect_equal(subset(VAL_data, IndvID == "735228")$Species, "FICHYP")
+  #She should have same BroodIDLaid and Fledged (2016_089_05_05)
+  expect_equal(subset(VAL_data, IndvID == "735228")$BroodIDLaid, NA_character_)
+  expect_equal(subset(VAL_data, IndvID == "735228")$BroodIDFledged, NA_character_)
+  #Her ring season should be 2016 with a RingAge of 'chick'
+  expect_equal(subset(VAL_data, IndvID == "735228")$RingSeason, 1995)
+  expect_equal(subset(VAL_data, IndvID == "735228")$RingAge, "adult")
+
+  #Test 3: Chick flycatcher with adult capture
+  #Individual RC0402 should be listed as a male flycatcher
+  expect_equal(subset(VAL_data, IndvID == "RC0402")$Sex_calculated, "M")
+  expect_equal(subset(VAL_data, IndvID == "RC0402")$Species, "FICHYP")
+  #He should have same BroodIDLaid and Fledged (2016_036_11_05)
+  expect_equal(subset(VAL_data, IndvID == "RC0402")$BroodIDLaid, "23_2018")
+  expect_equal(subset(VAL_data, IndvID == "RC0402")$BroodIDFledged, "23_2018")
+  #His ring season should be 2016 with a RingAge of 'chick'
+  expect_equal(subset(VAL_data, IndvID == "RC0402")$RingSeason, 2018)
+  expect_equal(subset(VAL_data, IndvID == "RC0402")$RingAge, "chick")
+
+  #Test 4: Flycatcher caught only as chick
+  #RC0401 was never caught as an adult
+  expect_equal(subset(VAL_data, IndvID == "RC0401")$Sex_calculated, NA_character_)
+  expect_equal(subset(VAL_data, IndvID == "RC0401")$Species, "FICHYP")
+  #Check BroodIDLaid and Fledged are the same (1998_041_10_05)
+  expect_equal(subset(VAL_data, IndvID == "RC0401")$BroodIDLaid, "1_2018")
+  expect_equal(subset(VAL_data, IndvID == "RC0401")$BroodIDFledged, "1_2018")
+  #Check RingSeason and RingAge are as expected (1998, 'chick')
+  expect_equal(subset(VAL_data, IndvID == "RC0401")$RingSeason, 2018)
+  expect_equal(subset(VAL_data, IndvID == "RC0401")$RingAge, "chick")
+
+})
+
+test_that("Brood_data returns an expected outcome...", {
+
+  #Take a subset of only VAL data
+  VAL_data <- dplyr::filter(pipeline_output$Brood_data, PopID == "VAL")
+
+  #Test 1: Brood where (calculated) clutch type = first
+  #From early data
+  expect_equal(subset(VAL_data, BroodID == "186_1998a")$Species, "FICHYP")
+  expect_equal(subset(VAL_data, BroodID == "186_1998a")$ClutchType_calculated, "first")
+  expect_equal(subset(VAL_data, BroodID == "186_1998a")$LayDate_observed, as.Date("1998-04-13"))
+  expect_equal(subset(VAL_data, BroodID == "186_1998a")$ClutchSize_observed, NA_integer_)
+  expect_equal(subset(VAL_data, BroodID == "186_1998a")$BroodSize_observed, NA_integer_)
+  expect_equal(subset(VAL_data, BroodID == "186_1998a")$NumberFledged_observed, NA_integer_)
+  expect_equal(subset(VAL_data, BroodID == "186_1998a")$AvgChickMass, NA_real_)
+  expect_equal(subset(VAL_data, BroodID == "186_1998a")$AvgTarsus, NA_real_)
+
+  #Test 2: Brood where (calculated) clutch type = replacement (due to failed nest)
+  #From early data
+  expect_equal(subset(VAL_data, BroodID == "34_2000b")$Species, "FICHYP")
+  expect_equal(subset(VAL_data, BroodID == "34_2000b")$ClutchType_calculated, "replacement")
+  expect_equal(subset(VAL_data, BroodID == "34_2000b")$LayDate_observed, as.Date("2000-04-17"))
+  expect_equal(subset(VAL_data, BroodID == "34_2000b")$ClutchSize_observed, 13L)
+  expect_equal(subset(VAL_data, BroodID == "34_2000b")$BroodSize_observed, 4L)
+  expect_equal(subset(VAL_data, BroodID == "34_2000b")$NumberFledged_observed, 3L)
+  expect_equal(subset(VAL_data, BroodID == "34_2000b")$AvgChickMass, NA_real_)
+  expect_equal(subset(VAL_data, BroodID == "34_2000b")$AvgTarsus, NA_real_)
+
+  #Test 3: Brood where (calculated) clutch type = first
+  #From late data
+  expect_equal(subset(VAL_data, BroodID == "37_2017a")$Species, "FICHYP")
+  expect_equal(subset(VAL_data, BroodID == "37_2017a")$ClutchType_calculated, "first")
+  expect_equal(subset(VAL_data, BroodID == "37_2017a")$LayDate_observed, as.Date("2017-05-25"))
+  expect_equal(subset(VAL_data, BroodID == "37_2017a")$ClutchSize_observed, 1L)
+  expect_equal(subset(VAL_data, BroodID == "37_2017a")$BroodSize_observed, NA_integer_)
+  expect_equal(subset(VAL_data, BroodID == "37_2017a")$NumberFledged_observed, NA_integer_)
+  expect_equal(subset(VAL_data, BroodID == "37_2017a")$AvgChickMass, NA_real_)
+  expect_equal(subset(VAL_data, BroodID == "37_2017a")$AvgTarsus, NA_real_)
+
+})
+
+test_that("Capture_data returns an expected outcome...", {
+
+  #Take a subset of only VAL data
+  VAL_data <- dplyr::filter(pipeline_output$Capture_data, CapturePopID == "VAL")
+
+  #Test 1: Caught as chick first
+  expect_equal(nrow(subset(VAL_data, IndvID == "RC0402")), 2)
+  expect_equal(min(subset(VAL_data, IndvID == "RC0402")$CaptureDate, na.rm = TRUE), as.Date("2018-06-18"))
+  expect_equal(subset(VAL_data, IndvID == "RC0402")$CaptureDate[2], as.Date("2019-03-31"))
+  expect_equal(subset(VAL_data, IndvID == "RC0402")$Age_observed[1], 1L)
+  expect_equal(subset(VAL_data, IndvID == "RC0402")$Age_calculated[1], 1L)
+  expect_equal(subset(VAL_data, IndvID == "RC0402")$Age_calculated[2], 5L)
+
+  #Test 2: Never caught as chick
+  expect_equal(nrow(subset(VAL_data, IndvID == "AS7967")), 4)
+  expect_equal(min(subset(VAL_data, IndvID == "AS7967")$CaptureDate, na.rm = TRUE), as.Date("2016-03-31"))
+  expect_equal(subset(VAL_data, IndvID == "AS7967")$CaptureDate[2], as.Date("2017-03-31"))
+  expect_equal(subset(VAL_data, IndvID == "AS7967")$Age_observed[1], 6L)
+  expect_equal(subset(VAL_data, IndvID == "AS7967")$Age_calculated[1], 4L)
+  expect_equal(subset(VAL_data, IndvID == "AS7967")$Age_calculated[4], 10L)
+
+  #Test 2: Never caught as chick
+  expect_equal(nrow(subset(VAL_data, IndvID == "CG5103")), 3)
+  expect_equal(min(subset(VAL_data, IndvID == "CG5103")$CaptureDate, na.rm = TRUE), as.Date("2014-03-31"))
+  expect_equal(subset(VAL_data, IndvID == "CG5103")$CaptureDate[2], as.Date("2015-03-31"))
+  expect_equal(subset(VAL_data, IndvID == "CG5103")$Age_observed[1], 4L)
+  expect_equal(subset(VAL_data, IndvID == "CG5103")$Age_calculated[1], 4L)
+  expect_equal(subset(VAL_data, IndvID == "CG5103")$Age_calculated[3], 8L)
+
+})
+
+test_that("Location_data returns an expected outcome...", {
+
+  #Take a subset of only VAL data
+  VAL_data <- dplyr::filter(pipeline_output$Location_data, PopID == "VAL")
+
+  #Test 1: Nest no longer in use
+  expect_equal(subset(VAL_data, LocationID == 1)$StartSeason, 1991)
+  expect_equal(subset(VAL_data, LocationID == 1)$EndSeason, 2018)
+
+  #Test 2: Nest still in use
+  expect_equal(subset(VAL_data, LocationID == 3)$StartSeason, 1991)
+  expect_equal(subset(VAL_data, LocationID == 3)$EndSeason, NA_integer_)
+
+})
