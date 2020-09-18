@@ -357,11 +357,11 @@ create_capture_EDM <- function(CMR_data, Primary_data, ReRingTable){
                                                   is.na(.data$INIT) & !is.na(.data$RINGINIT) ~ .data$RINGINIT),
                     CapturePopID = "EDM",
                     ReleasePopID = "EDM",
-                    ReleasePlot = CapturePlot,
+                    ReleasePlot = .data$CapturePlot,
                     Mass_CMR = as.numeric(.data$WT),
                     Tarsus_CMR = dplyr::case_when(is.na(.data$TSMTD) ~ as.numeric(.data$TARSUS),
                                               .data$TSMTD == "S" ~ as.numeric(.data$TARSUS),
-                                              .data$TSMTD == "M" ~ (as.numeric(.data$TARSUS)*0.72005)+3.64549),
+                                              .data$TSMTD == "M" ~ (x = as.numeric(.data$TARSUS), method = "Oxford"),
                     OriginalTarsusMethod = dplyr::case_when(is.na(.data$TSMTD) ~ "Alternative",
                                                             .data$TSMTD == "S" ~ "Alternative",
                                                             .data$TSMTD == "M" ~ "Oxford"),
@@ -412,10 +412,10 @@ create_capture_EDM <- function(CMR_data, Primary_data, ReRingTable){
     #                               is.na(.data$Tarsus_CMR) & !is.na(.data$Tarsus_B) ~ .data$Tarsus_B)) %>%
     dplyr::mutate(Mass = dplyr::case_when(!is.na(.data$Mass_CMR) ~ .data$Mass_CMR,
                                           is.na(.data$Mass_CMR) & !is.na(.data$Mass_B) & .data$Age_observed == 1 ~ .data$Mass_B,
-                                          is.na(.data$Mass_CMR) & !is.na(.data$Mass_B) & .data$Age_observed != 1 ~ NA_real_),
+                                          TRUE ~ NA_real_),
                   Tarsus = dplyr::case_when(!is.na(.data$Tarsus_CMR) ~ .data$Tarsus_CMR,
                                             is.na(.data$Tarsus_CMR) & !is.na(.data$Tarsus_B) & .data$Age_observed == 1 ~ .data$Tarsus_B,
-                                            is.na(.data$Tarsus_CMR) & !is.na(.data$Tarsus_B) & .data$Age_observed != 1 ~ NA_real_)) %>%
+                                            TRUE ~ NA_real_)) %>%
 
     ## 7) Exclude entries not included in the standard format
 
@@ -539,7 +539,7 @@ create_location_EDM <- function(Brood_data, Capture_data){
 
     dplyr::rename(NestboxID = .data$Box,
                   Plot = .data$Popn,
-                  Latitude = lat,
+                  Latitude = .data$lat,
                   Longitude = .data$long,
                   StartSeason = .data$First,
                   EndSeason = .data$Last) %>%
