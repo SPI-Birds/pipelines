@@ -8,6 +8,7 @@
 #' \item \strong{I2}: Check if the IDs of individuals are unique using \code{\link{check_unique_IndvID}}.
 #' \item \strong{I3}: Check if all chicks have BroodID using \code{\link{check_BroodID_chicks}}.
 #' \item \strong{I4}: Check if individuals have no conflicting sex using \code{\link{check_conflicting_sex}}.
+#' \item \strong{I5}: Check if individuals have no conflicting species using \code{\link{check_conflicting_species}}.
 #' }
 #'
 #' @inheritParams checks_individual_params
@@ -22,11 +23,12 @@
 individual_check <- function(Individual_data, Capture_data, Location_data, check_format=TRUE){
 
   # Create check list with a summary of warnings and errors per check
-  check_list <- tibble::tibble(CheckID = purrr::map_chr(1:4, ~paste0("I", .)),
+  check_list <- tibble::tibble(CheckID = paste0("I", 1:5),
                                CheckDescription = c("Check format of individual data",
                                                     "Check that individual IDs are unique",
                                                     "Check that chicks have BroodIDs",
-                                                    "Check that individuals have no conflicting sex"),
+                                                    "Check that individuals have no conflicting sex",
+                                                    "Check that individuals have no conflicting species"),
                                Warning = NA,
                                Error = NA)
 
@@ -63,40 +65,53 @@ individual_check <- function(Individual_data, Capture_data, Location_data, check
 
   check_list[4, 3:4] <- check_conflicting_sex_output$CheckList
 
+  # - Check that individuals have no conflicting species
+  message("I5: Checking that individuals have no conflicting species...")
+
+  check_conflicting_species_output <- check_conflicting_species(Individual_data)
+
+  check_list[5, 3:4] <- check_conflicting_species_output$CheckList
+
 
   if(check_format) {
     # Warning list
     warning_list <- list(Check1 = check_format_individual_output$WarningOutput,
                          Check2 = check_unique_IndvID_output$WarningOutput,
                          Check3 = check_BroodID_chicks_output$WarningOutput,
-                         Check4 = check_conflicting_sex_output$WarningOutput)
+                         Check4 = check_conflicting_sex_output$WarningOutput,
+                         Check5 = check_conflicting_species_output$WarningOutput)
 
     # Error list
     error_list <- list(Check1 = check_format_individual_output$ErrorOutput,
                        Check2 = check_unique_IndvID_output$ErrorOutput,
                        Check3 = check_BroodID_chicks_output$ErrorOutput,
-                       Check4 = check_conflicting_sex_output$ErrorOutput)
+                       Check4 = check_conflicting_sex_output$ErrorOutput,
+                       Check5 = check_conflicting_species_output$ErrorOutput)
   } else {
     # Warning list
     warning_list <- list(Check2 = check_unique_IndvID_output$WarningOutput,
                          Check3 = check_BroodID_chicks_output$WarningOutput,
-                         Check4 = check_conflicting_sex_output$WarningOutput)
+                         Check4 = check_conflicting_sex_output$WarningOutput,
+                         Check5 = check_conflicting_species_output$WarningOutput)
 
     # Error list
     error_list <- list(Check2 = check_unique_IndvID_output$ErrorOutput,
                        Check3 = check_BroodID_chicks_output$ErrorOutput,
-                       Check4 = check_conflicting_sex_output$ErrorOutput)
+                       Check4 = check_conflicting_sex_output$ErrorOutput,
+                       Check5 = check_conflicting_species_output$ErrorOutput)
 
     check_list <- check_list[-1,]
   }
 
   return(list(CheckList = check_list,
               WarningRows = unique(c(check_unique_IndvID_output$WarningRows,
-                                      check_BroodID_chicks_output$WarningRows,
-                                      check_conflicting_sex_output$WarningRows)),
+                                     check_BroodID_chicks_output$WarningRows,
+                                     check_conflicting_sex_output$WarningRows,
+                                     check_conflicting_species_output$WarningRows)),
               ErrorRows = unique(c(check_unique_IndvID_output$ErrorRows,
-                                    check_BroodID_chicks_output$ErrorRows,
-                                    check_conflicting_sex_output$ErrorRows)),
+                                   check_BroodID_chicks_output$ErrorRows,
+                                   check_conflicting_sex_output$ErrorRows,
+                                   check_conflicting_species_output$ErrorRows)),
               Warnings = warning_list,
               Errors = error_list))
 }
@@ -104,7 +119,10 @@ individual_check <- function(Individual_data, Capture_data, Location_data, check
 
 #' Check format of individual data
 #'
-#' Check that the format of each column in the individual data match with the standard format
+#' Check that the format of each column in the individual data match with the standard format.
+#'
+#' Check ID: I1.
+#'
 #' @inheritParams checks_individual_params
 #'
 #' @inherit checks_return return
@@ -208,6 +226,8 @@ check_format_individual <- function(Individual_data){
 #'
 #' Check that the individual identifiers (IndvID) are unique. Records with individual identifiers that are not unique among populations will result in a warning. Records with individual identifiers that are not unique within populations will result in an error.
 #'
+#' Check ID: I2.
+#'
 #' @inheritParams checks_individual_params
 #'
 #' @inherit checks_return return
@@ -217,59 +237,74 @@ check_format_individual <- function(Individual_data){
 check_unique_IndvID <- function(Individual_data){
 
   # Errors
-  # Select IndvIDs that are duplicated within populations
+  # Select records with IndvIDs that are duplicated within populations
   Duplicated_within <- Individual_data %>%
     dplyr::group_by(PopID, IndvID) %>%
-    dplyr::filter(n() > 1)
+    dplyr::filter(n() > 1) %>%
+    dplyr::ungroup()
 
   err <- FALSE
+  error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
   if(nrow(Duplicated_within) > 0) {
     err <- TRUE
 
-    error_output <- purrr::map(.x = unique(Duplicated_within$IndvID),
+    # Compare to approved_list
+    error_records <- Duplicated_within %>%
+      dplyr::mutate(CheckID = "I2") %>%
+      dplyr::anti_join(approved_list$Individual_approved_list, by=c("PopID", "CheckID", "IndvID"))
+
+    # Create quality check report statements
+    error_output <- purrr::map(.x = unique(error_records$IndvID),
                                .f = ~{
                                  paste0("Record on row ",
                                         # Duplicated rows
-                                        Duplicated_within[Duplicated_within$IndvID == .x, "Row"][1,],
+                                        error_records[error_records$IndvID == .x, "Row"][1,],
                                         " has the same IndvID (", .x, ") as row(s) ",
                                         # Duplicates (if 1, else more)
-                                        ifelse(nrow(Duplicated_within[Duplicated_within$IndvID == .x, "Row"][-1,]) == 1,
-                                               Duplicated_within[Duplicated_within$IndvID == .x, "Row"][-1,],
+                                        ifelse(nrow(error_records[error_records$IndvID == .x, "Row"][-1,]) == 1,
+                                               error_records[error_records$IndvID == .x, "Row"][-1,],
                                                gsub("^c\\(|\\)$", "",
-                                                    Duplicated_within[Duplicated_within$IndvID == .x, "Row"][-1,])),
+                                                    error_records[error_records$IndvID == .x, "Row"][-1,])),
                                         ".")
                                })
   }
 
   # Warnings
-  # Select IndvIDs that are duplicated among populations
+  # Select records with IndvIDs that are duplicated among populations
   Duplicated_among <- Individual_data %>%
     dplyr::group_by(IndvID) %>%
     dplyr::filter(!duplicated(PopID) & n() > 1) %>%
     dplyr::filter(n() > 1)
 
   war <- FALSE
+  warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
   if(nrow(Duplicated_among) > 0) {
     war <- TRUE
 
-    warning_output <- purrr::map(.x = unique(Duplicated_among$IndvID),
+    # Compare to approved_list
+    warning_records <- Duplicated_among %>%
+      dplyr::mutate(CheckID = "I2") %>%
+      dplyr::anti_join(approved_list$Individual_approved_list, by=c("PopID", "CheckID", "IndvID"))
+
+    # Create quality check report statements
+    warning_output <- purrr::map(.x = unique(warning_records$IndvID),
                                  .f = ~{
                                    paste0("Record on row ",
                                           # Duplicated rows
-                                          Duplicated_among[Duplicated_among$IndvID == .x, "Row"][1,],
+                                          warning_records[warning_records$IndvID == .x, "Row"][1,],
                                           " (IndvID: ", .x, ", ", "PopID: ",
-                                          Duplicated_among[Duplicated_among$IndvID == .x, "PopID"][1,],")",
+                                          warning_records[warning_records$IndvID == .x, "PopID"][1,],")",
                                           " has the same IndvID as row(s) ",
                                           # Duplicates (if 1, else more)
-                                          ifelse(nrow(Duplicated_among[Duplicated_among$IndvID == .x, "Row"][-1,]) == 1,
-                                                 Duplicated_among[Duplicated_among$IndvID == .x, "Row"][-1,],
+                                          ifelse(nrow(warning_records[warning_records$IndvID == .x, "Row"][-1,]) == 1,
+                                                 warning_records[warning_records$IndvID == .x, "Row"][-1,],
                                                  gsub("^c\\(|\\)$", "",
-                                                      Duplicated_among[Duplicated_among$IndvID == .x, "Row"][-1,])),
-                                          " (PopID: ", Duplicated_among[Duplicated_among$IndvID == .x, "PopID"][-1,],").")
+                                                      warning_records[warning_records$IndvID == .x, "Row"][-1,])),
+                                          " (PopID: ", warning_records[warning_records$IndvID == .x, "PopID"][-1,],").")
                                  })
   }
 
@@ -277,16 +312,22 @@ check_unique_IndvID <- function(Individual_data){
                                Error = err)
 
   return(list(CheckList = check_list,
-              WarningRows = Duplicated_among$Row,
-              ErrorRows = Duplicated_within$Row,
+              WarningRows = warning_records$Row,
+              ErrorRows = error_records$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
+
+  # Satisfy RCMD checks
+  approved_list <- NULL
+
 }
 
 
 #' Check that chicks have BroodID
 #'
 #' Check that all chicks in Individual_data that are caught and ringed in a nest box have a BroodID. Individuals just ringed after fledging are regarded as chicks but are not associated with a BroodID.
+#'
+#' Check ID: I3.
 #'
 #' @inheritParams checks_individual_params
 #' @inheritParams checks_capture_params
@@ -309,25 +350,34 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data) {
   Ind_cap_loc_data <- Individual_data %>%
     dplyr::left_join(First_captures, by="IndvID")
 
-  # Select chicks caught in a nest box but not associated with a BroodID
+  # Errors
+  # Select records with chicks caught in a nest box but not associated with a BroodID
   No_BroodID_nest <- Ind_cap_loc_data %>%
     dplyr::filter(RingAge == "chick" & (is.na(BroodIDLaid) | is.na(BroodIDFledged)) & LocationType == "NB")
 
   err <- FALSE
+  error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
   if(nrow(No_BroodID_nest) > 0) {
     err <- TRUE
 
-    error_output <- purrr::pmap(.l = No_BroodID_nest,
+    # Compare to approved_list
+    error_records <- No_BroodID_nest %>%
+      dplyr::mutate(CheckID = "I3") %>%
+      dplyr::anti_join(approved_list$Individual_approved_list, by=c("PopID", "CheckID", "IndvID"))
+
+    # Create quality check report statements
+    error_output <- purrr::pmap(.l = error_records,
                                 .f = ~{
-                                  paste0("Record on row ", ..1,
+                                  paste0("Record on row ", ..1, " (IndvID: ", ..2, ")",
                                          " has no BroodID.")
                                 })
   }
 
-
+  # No warnings
   war <- FALSE
+  #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
   check_list <- tibble::tibble(Warning = war,
@@ -335,9 +385,12 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data) {
 
   return(list(CheckList = check_list,
               WarningRows = NULL,
-              ErrorRows = No_BroodID_nest$Row,
+              ErrorRows = error_records$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
+
+  # Satisfy RCMD checks
+  approved_list <- NULL
 
 }
 
@@ -345,6 +398,8 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data) {
 #' Check conflicting sex
 #'
 #' Check that the sex of individuals in Individual_data is recorded consistently. Individuals who have been recorded as both male ('M') and female ('F') will have conflicting sex ('C') in Individual_data.
+#'
+#' Check ID: I4.
 #'
 #' @inheritParams checks_individual_params
 #'
@@ -354,32 +409,108 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data) {
 
 check_conflicting_sex <- function(Individual_data) {
 
-  # Select individuals with conflicting sex
+  # Select records with conflicting sex
   Conflicting_sex <- Individual_data %>%
     dplyr::filter(Sex == "C")
 
+  # No errors
+  err <- FALSE
+  #error_records <- tibble::tibble(Row = NA_character_)
+  error_output <- NULL
+
+  # Warnings
   war <- FALSE
+  warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
   if(nrow(Conflicting_sex) > 0) {
     war <- TRUE
 
-    warning_output <- purrr::pmap(.l = Conflicting_sex,
+    # Compare to approved_list
+    warning_records <- Conflicting_sex %>%
+      dplyr::mutate(CheckID = "I4") %>%
+      dplyr::anti_join(approved_list$Individual_approved_list, by=c("PopID", "CheckID", "IndvID"))
+
+    # Create quality check report statements
+    warning_output <- purrr::pmap(.l = warning_records,
                                   .f = ~{
-                                    paste0("Record on row ", ..1,
+                                    paste0("Record on row ", ..1, " (IndvID: ", ..2, ")",
                                            " has conflicting sex.")
                                   })
   }
-
-  err <- FALSE
-  error_output <- NULL
 
   check_list <- tibble::tibble(Warning = war,
                                Error = err)
 
   return(list(CheckList = check_list,
-              WarningRow = Conflicting_sex$Row,
-              ErrorRow = NULL,
+              WarningRows = warning_records$Row,
+              ErrorRows = NULL,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
+
+  # Satisfy RCMD checks
+  Conflicting_sex <- NULL
+  approved_list <- NULL
+}
+
+
+
+#' Check conflicting species
+#'
+#' Check that the species of individuals in Individual_data is recorded consistently. Individuals who have been recorded as two different species will have conflicting species ('CONFLICTED') in Individual_data.
+#'
+#' Check ID: I5.
+#'
+#' @inheritParams checks_individual_params
+#'
+#' @inherit checks_return return
+#'
+#' @export
+
+check_conflicting_species <- function(Individual_data) {
+
+  # Select individuals with conflicting species
+  Conflicting_species <- Individual_data %>%
+    dplyr::filter(Species == "CONFLICTED")
+
+  # Errors
+  err <- FALSE
+  error_records <- tibble::tibble(Row = NA_character_)
+  error_output <- NULL
+
+  if(nrow(Conflicting_species) > 0) {
+    err <- TRUE
+
+    # Compare to approved_list
+    error_records <- Conflicting_species %>%
+      dplyr::mutate(CheckID = "I5") %>%
+      dplyr::anti_join(approved_list$Individual_approved_list, by=c("PopID", "CheckID", "IndvID"))
+
+    # Create quality check report statements
+    error_output <- purrr::pmap(.l = error_records,
+                                .f = ~{
+                                  paste0("Record on row ", ..1," (IndvID: ", ..2, ")",
+                                         " has conflicting species.")
+                                })
+  }
+
+  # No warnings
+  war <- FALSE
+  #warning_records <- tibble::tibble(Row = NA_character_)
+  warning_output <- NULL
+
+
+  check_list <- tibble::tibble(Warning = war,
+                               Error = err)
+
+  return(list(CheckList = check_list,
+              WarningRows = NULL,
+              ErrorRows = error_records$Row,
+              WarningOutput = unlist(warning_output),
+              ErrorOutput = unlist(error_output)))
+
+  # Satisfy RCMD checks
+  Conflicting_species <- NULL
+  approved_list <- NULL
+
 }
