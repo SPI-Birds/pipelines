@@ -1,7 +1,7 @@
 
 # SPI-Birds pipeline: Introduction (for the general user)
 
-Welcome to the SPI-Birds pipeline package. This README will give you an introduction on how to load the package, how to find out details about each pipeline, and how to use the package for creating bird data following the [SPI-Birds community data standard](https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf) and generating standard quality checks.
+Welcome to the SPI-Birds pipeline package. This README will give you an introduction on how to load the package, how to find out details about each pipeline, and how to use the package for creating bird data following the [SPI-Birds community data standard](https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf) and generating standard quality checks.
 
 ## Load the pipeline package
 

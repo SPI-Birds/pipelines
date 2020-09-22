@@ -244,7 +244,7 @@ create_capture_HOC <- function(db){
 
                                          if(age_exact == "nestling" | is.na(age_exact)){
 
-                                           return(tibble::tibble(Age_observed = 1L, ChickAge = NA_character_))
+                                           return(tibble::tibble(Age_observed = 1L, ChickAge = NA_integer_))
 
                                          } else {
 
@@ -285,7 +285,7 @@ create_capture_HOC <- function(db){
                   Tarsus = NA_real_, OriginalTarsusMethod = NA_character_,
                   WingLength = NA_real_, Age_observed = dplyr::case_when(.$age == "adult" ~ 4L,
                                                                          .$age == "nestling" ~ 1L),
-                  ChickAge = NA_integer_, BroodID = NA_character_, ExperimentID = NA_character_,
+                  ChickAge = NA_integer_, BroodID = NA_character_, ExperimentID = NA,
                   FoundDead = TRUE, capture_method = NA_character_)
 
   Capture_data_combined <- dplyr::bind_rows(Capture_data, Death_captures) %>%

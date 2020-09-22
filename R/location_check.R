@@ -17,7 +17,7 @@
 location_check <- function(Location_data, check_format=TRUE){
 
   # Create check list with a summary of warnings and errors per check
-  check_list <- tibble::tibble(CheckID = purrr::map_chr(1, ~paste0("L", .)),
+  check_list <- tibble::tibble(CheckID = paste0("L", 1),
                                CheckDescription = c("Check format of location data"),
                                Warning = NA,
                                Error = NA)
@@ -60,7 +60,10 @@ location_check <- function(Location_data, check_format=TRUE){
 
 #' Check format of location data
 #'
-#' Check that the format of each column in the location data match with the standard format
+#' Check that the format of each column in the location data match with the standard format.
+#'
+#' Check ID: L1.
+#'
 #' @inheritParams checks_location_params
 #'
 #' @inherit checks_return return
@@ -86,6 +89,7 @@ check_format_location <- function(Location_data){
   Location_data_mismatch <- dplyr::left_join(Location_data_standard, Location_data_col, by="Variable") %>%
     filter(Format != "logical" & Format_standard != Format)
 
+  # Errors
   err <- FALSE
   error_output <- NULL
 
@@ -99,22 +103,8 @@ check_format_location <- function(Location_data){
                                 })
   }
 
-  ## Missing columns
-  # Location_data_missing <- dplyr::left_join(Location_data_standard, Location_data_col, by="Variable") %>%
-  #   filter(Format == "logical")
-  #
-  # war <- FALSE
-  # warning_output <- NULL
-  #
-  # if(nrow(Location_data_missing) > 0) {
-  #   war <- TRUE
-  #
-  #   warning_output <- purrr::map(.x = Location_data_missing$Variable,
-  #                                .f = ~{
-  #                                  paste0(.x, " in Location_data is missing, unmeasured or undetermined (NA).")
-  #                                })
-  # }
 
+  # Warnings
   #Test for empty columns by looking at uniques, rather than using data type
   warning_output <- purrr::pmap(.l = list(as.list(Location_data), colnames(Location_data)),
                                 .f = ~{
