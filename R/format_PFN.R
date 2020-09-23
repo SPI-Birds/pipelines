@@ -28,9 +28,9 @@
 #'data, these individuals are omitted entirely.
 #'
 #'\strong{Re-ringing events}: Some individuals carry multiple rings (up to 3 in this data) throughout
-#'their lives, and re-ringing events are recorded in the BTO ringing database. The pipeline identifies
-#'birds with several rings, and assigns them a new unique individual identifier of the the form
-#''MULTIRINGx', where 'x' is an integer number.
+#'their lives, and re-ringing events are recorded in the BTO ringing database. To correctly link data to
+#'individuals (not just ring numbers), the pipeline assigns a unique individual identifier defined as
+#'the number of the first ring ever given to this individual.
 #'
 #'\strong{LayDate_observed and HatchDate_observed}: Information is provided as date of first egg (DFE) and
 #'date of hatching (DH). These are given as integer number, and represent days after a set
@@ -75,18 +75,39 @@ format_PFN <- function(db = choose_directory(),
   #Load additional data on nestboxes (locations)
   Location_details <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_EDartmoor_Nestboxes.csv"), na.strings = c("", "?"), colClasses = "character", fileEncoding="UTF-8-BOM")
 
-  # PREPARATION: RE-RINGING DATA
 
-  # Find all birds that were re-ringed at least once
-  ReRing <- CMR_data[,c('RING', 'RING2')] %>%
-    dplyr::filter(!is.na(.data$RING2))
+  # PREPARATION: ASSIGNING INDIVIDUAL IDENTITIY (relevant for re-ringed birds)
 
-  # Collate all ring numbers used for each individual (with max. number of re-ringing events = 3)
-  ReRingTable <- make_ReRingTable(raw_data = ReRing) %>%
+  # Extract ring number (combinations) for all birds
+  RingCombos <- CMR_data[,c('RING', 'RING2', 'DATE')] %>%
+    dplyr::mutate(DATE = as.Date(.data$DATE, format = "%d/%m/%Y")) %>%
+    dplyr::distinct(.data$RING, .data$RING2, .keep_all = T)
 
-    # Make new individual ID for re-ringed birds
-    dplyr::mutate(ReRingID = paste0('MULTIRING',.data$ReRingNr)) %>%
-    dplyr::select(.data$RingNr, .data$ReRingID)
+  # Collate all ring numbers used for each individual
+  ReRingTable <- make_IndIdentifier(raw_data = RingCombos[,c('RING','RING2')])
+
+  # Determine earliest occurrence of each ring
+  RING1.Dates <- RingCombos[,c('RING', 'DATE')] %>%
+    dplyr::distinct(.data$RING, .data$DATE, .keep_all = T) %>%
+    dplyr::rename("RingNr" = .data$RING,
+                  "DATE1" = .data$DATE)
+  RING2.Dates <- RingCombos[,c('RING2', 'DATE')] %>%
+    dplyr::distinct(.data$RING2, .data$DATE, .keep_all = T) %>%
+    dplyr::filter(!is.na(.data$RING2)) %>%
+    dplyr::rename("RingNr" = .data$RING2,
+                  "DATE2" = .data$DATE)
+
+  RING.Dates <- left_join(RING1.Dates, RING2.Dates, by = "RingNr") %>%
+    dplyr::mutate(firstDATE = pmin(.data$DATE1, .data$DATE2, na.rm = T)) %>%
+    dplyr::select(.data$RingNr, .data$firstDATE)
+
+  # Merge identifiers and (re-)ringing dates, and set individual identifier (ReRingID) = first ring
+  ReRingTable <- dplyr::left_join(ReRingTable, RING.Dates, by = 'RingNr') %>%
+    dplyr::arrange(.data$Identifier, .data$firstDATE) %>%
+    dplyr::group_by(.data$Identifier) %>%
+    dplyr::mutate(ReRingID = first(.data$RingNr)) %>%
+    dplyr::ungroup() %>%
+    dplyr::distinct(.data$RingNr, .data$ReRingID)
 
 
   # CAPTURE DATA

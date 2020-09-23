@@ -174,25 +174,25 @@ test_that("Capture data returns an expected outcome...", {
 
   #Test 4: A re-ringed bird
   #Test it has the correct number of capture records
-  expect_equal(nrow(subset(PFN_data, IndvID == "MULTIRING48")), 3+7)
+  expect_equal(nrow(subset(PFN_data, IndvID == "D140987")), 3+7)
   #Test that the first and last captures are as expected
-  expect_equal(subset(PFN_data, IndvID == "MULTIRING48")$CaptureDate[1], as.Date("2013-06-13"))
-  expect_equal(subset(PFN_data, IndvID == "MULTIRING48")$CaptureDate[3+7], as.Date("2020-06-04"))
+  expect_equal(subset(PFN_data, IndvID == "D140987")$CaptureDate[1], as.Date("2013-06-13"))
+  expect_equal(subset(PFN_data, IndvID == "D140987")$CaptureDate[3+7], as.Date("2020-06-04"))
   #Test that first and last age observed is as expected
-  expect_equal(subset(PFN_data, IndvID == "MULTIRING48")$Age_observed[1], 4L)
-  expect_equal(subset(PFN_data, IndvID == "MULTIRING48")$Age_observed[3+7], 4L)
+  expect_equal(subset(PFN_data, IndvID == "D140987")$Age_observed[1], 4L)
+  expect_equal(subset(PFN_data, IndvID == "D140987")$Age_observed[3+7], 4L)
   #Test that first and last age calculated is as expected
-  expect_equal(subset(PFN_data, IndvID == "MULTIRING48")$Age_calculated[1], 4L)
-  expect_equal(subset(PFN_data, IndvID == "MULTIRING48")$Age_calculated[3+7], 18L)
+  expect_equal(subset(PFN_data, IndvID == "D140987")$Age_calculated[1], 4L)
+  expect_equal(subset(PFN_data, IndvID == "D140987")$Age_calculated[3+7], 18L)
   #Test that mass is correct on first and last capture
-  expect_equal(subset(PFN_data, IndvID == "MULTIRING48")$Mass[1], 11.8)
-  expect_equal(subset(PFN_data, IndvID == "MULTIRING48")$Mass[3+7], 12.7)
+  expect_equal(subset(PFN_data, IndvID == "D140987")$Mass[1], 11.8)
+  expect_equal(subset(PFN_data, IndvID == "D140987")$Mass[3+7], 12.7)
   #Test that tarsus is correct on first and last capture
-  expect_equal(subset(PFN_data, IndvID == "MULTIRING48")$Tarsus[1], NA_real_)
-  expect_equal(subset(PFN_data, IndvID == "MULTIRING48")$Tarsus[3+7], 17.1)
+  expect_equal(subset(PFN_data, IndvID == "D140987")$Tarsus[1], NA_real_)
+  expect_equal(subset(PFN_data, IndvID == "D140987")$Tarsus[3+7], 17.1)
   #Test that wing length is correct on first and last capture
-  expect_equal(subset(PFN_data, IndvID == "MULTIRING48")$WingLength[1], 77)
-  expect_equal(subset(PFN_data, IndvID == "MULTIRING48")$WingLength[3+7], 79)
+  expect_equal(subset(PFN_data, IndvID == "D140987")$WingLength[1], 77)
+  expect_equal(subset(PFN_data, IndvID == "D140987")$WingLength[3+7], 79)
 
 })
 
