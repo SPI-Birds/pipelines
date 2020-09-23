@@ -47,7 +47,7 @@ format_SSQ <- function(db = choose_directory(),
   #Force user to select directory
   force(db)
 
-  db <- paste0(db, "\\SSQ_PrimaryData.xlsx")
+  db <- paste0(db, "/SSQ_PrimaryData.xlsx")
 
   if(is.null(species)){
 

@@ -22,3 +22,6 @@ A list of:
 \description{
 Check variable values against species-specific reference values in capture data. Unusual values will result in a warning. Impossible values will result in an error. Variables that are checked for adults and chicks: Mass and Tarsus.
 }
+\details{
+Check IDs: C2a-b.
+}

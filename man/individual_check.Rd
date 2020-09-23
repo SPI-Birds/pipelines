@@ -38,5 +38,6 @@ The following individual data checks are performed:
 \item \strong{I2}: Check if the IDs of individuals are unique using \code{\link{check_unique_IndvID}}.
 \item \strong{I3}: Check if all chicks have BroodID using \code{\link{check_BroodID_chicks}}.
 \item \strong{I4}: Check if individuals have no conflicting sex using \code{\link{check_conflicting_sex}}.
+\item \strong{I5}: Check if individuals have no conflicting species using \code{\link{check_conflicting_species}}.
 }
 }

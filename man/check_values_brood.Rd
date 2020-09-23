@@ -22,3 +22,6 @@ A list of:
 \description{
 Check variable values against species-specific reference values in brood data. Unusual values will result in a warning. Impossible values will result in an error. Variables that are checked: ClutchSize, BroodSize, NumberFledged.
 }
+\details{
+Check IDs: B6a-c.
+}

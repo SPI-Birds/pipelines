@@ -63,7 +63,7 @@ format_CHO <- function(db = choose_directory(),
   start_time <- Sys.time()
 
   #Read in data with readxl
-  all_data <- readxl::read_excel(paste(db, "CHO_PrimaryData.xlsx", sep = "\\")) %>%
+  all_data <- readxl::read_excel(paste(db, "CHO_PrimaryData.xlsx", sep = "/")) %>%
     #Clean all names with janitor into snake_case
     janitor::clean_names(case = "upper_camel") %T>%
     #There is one column with "º" that doesn't convert to ASCII with janitor

@@ -9,11 +9,30 @@ if(file.exists("../../inst/extdata/test_data.RDS")){
 
   #Run pipelines for all populations
   message("Choose the location of the raw data to run tests...")
-  pipeline_output <- run_pipelines(path = choose_directory(),
-                                   PopID = c("SSQ", "BAN", "VEL", "CHO", "MUR", "PIR", "ROU", "MON", "MTV", "MIS", "HOC",
-                                             "HOG", "OOS", "VLI", "BUU", "LIE", "WAR", "WES", "KEV", "HAR", "PEE", "BOS",
-                                             "WYT", "AMM"),
-                                   output_type = "R", save_path = choose_directory())
+
+  #Determine operating system
+  OS <- tolower(sessionInfo()$running)
+
+  # Run pipelines depending on operating system
+  # (If running on a Mac, pipelines that use Access databases are not run)
+  if(grepl(pattern = 'mac', x = OS)){
+    pipeline_output <- run_pipelines(path = choose_directory(),
+                                     PopID = c("SSQ", "BAN", "VEL", "CHO", "MUR", "PIR", "ROU", "MON", "MTV", "MIS", "HOC",
+                                               "KEV", "HAR", "PEE", "BOS",
+                                               "WYT", "PIP", "EDM"),
+                                     output_type = "R")
+  }else if(grepl(pattern = 'windows', x = OS)){
+
+    pipeline_output <- run_pipelines(path = choose_directory(),
+                                     PopID = c("SSQ", "BAN", "VEL", "CHO", "MUR", "PIR", "ROU", "MON", "MTV", "MIS", "HOC",
+                                               "HOG", "OOS", "VLI", "BUU", "LIE", "WAR", "WES", "KEV", "HAR", "PEE", "BOS",
+                                               "WYT", "PIP", "EDM"),
+                                     output_type = "R")
+  }else{
+    stop(paste0('Operating system ', OS, ' not supported'))
+  }
+
+
 
 }
 

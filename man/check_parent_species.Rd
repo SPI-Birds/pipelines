@@ -22,3 +22,6 @@ A list of:
 \description{
 Check that the parents of broods are the same species.
 }
+\details{
+Check ID: B7.
+}
