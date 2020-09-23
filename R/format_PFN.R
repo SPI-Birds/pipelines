@@ -5,7 +5,7 @@
 #'
 #'This section provides details on data management choices that are unique to
 #'this data. For a general description of the standard protocl please see
-#'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
+#'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 #'
 #'\strong{Species}: By default, pipeline outputs will include great tit \emph{Parus
 #'major}; blue tit \emph{Cyanistes caeruleus}; pied flycatcher \emph{Ficedula
@@ -23,18 +23,25 @@
 #'into Capture data.
 #'
 #'\strong{Unidentified individuals}: Some individuals have not been given unique IDs. They appear
-#'in the primary data as: "RUNT", "ringed", "ringed left", "ringed right", "unringed", or "Unringed".
-#'In the Brood data, we assume unknown identity and treat ID as NA. From Capture data and Individual
-#'data, these individuals are omitted entirely.
+#'in the primary data as "RUNT", "ringed", "ringed left", "ringed right", "unringed", or "Unringed",
+#' and the pipeline recognizes them as improper IDs as they do not follow the standard format of ring
+#' numbers for this data (defined as a sequences of 1-9 letters followed by a sequence of 1-9 integer numbers).
+#'In the Brood data, we assume unknown identity for individuals with improper IDs and treat ID as NA.
+#'From Capture data and Individual data, these individuals are omitted entirely.
 #'
 #'\strong{Re-ringing events}: Some individuals carry multiple rings (up to 3 in this data) throughout
 #'their lives, and re-ringing events are recorded in the BTO ringing database. To correctly link data to
 #'individuals (not just ring numbers), the pipeline assigns a unique individual identifier defined as
 #'the number of the first ring ever given to this individual.
 #'
+#'\strong{Resightings}: The capture primary data contains some resightings of birds. At present, these
+#' records are excluded from the outputs because the standard format for capture data cannot distinguish
+#' between recaptures and resightings in its current state. Functionality do do this (i.e. via a "capture type" variable)
+#' may be added to a future update of the standard format.
+#'
 #'\strong{LayDate_observed and HatchDate_observed}: Information is provided as date of first egg (DFE) and
 #'date of hatching (DH). These are given as integer number, and represent days after a set
-#'starting date (day 0). Day 0 is defined as 31.
+#'starting date (day 0). Day 0 is defined as 31. March.
 #'
 #'\strong{ChickAge}: For every capture, we estimate the age of a chick as the difference between the hatch date
 #'taken from BroodIDFledged (in Individual_data) and the CaptureDate.
@@ -162,13 +169,13 @@ format_PFN <- function(db = choose_directory(),
 
     message("Saving .csv files...")
 
-    utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_EDM.csv"), row.names = F)
+    utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_PFN.csv"), row.names = F)
 
-    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_EDM.csv"), row.names = F)
+    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_PFN.csv"), row.names = F)
 
-    utils::write.csv(x = Capture_data %>% select(-Sex, -BroodID), file = paste0(path, "\\Capture_data_EDM.csv"), row.names = F)
+    utils::write.csv(x = Capture_data %>% select(-Sex, -BroodID), file = paste0(path, "\\Capture_data_PFN.csv"), row.names = F)
 
-    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_EDM.csv"), row.names = F)
+    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_PFN.csv"), row.names = F)
 
     invisible(NULL)
 
@@ -192,7 +199,7 @@ format_PFN <- function(db = choose_directory(),
 #' Create brood data table for EastDartmoor.
 #'
 #' @param Primary_data Primary data from EastDartmoor.
-#' @param ReRingTable Table containing ring numbers and unique identifiers for re-ringed individuals
+#' @param ReRingTable Table containing ring numbers and unique identifiers for all individuals
 #'
 #' @return A data frame with Brood data
 
@@ -280,8 +287,7 @@ create_brood_EDM <- function(Primary_data, ReRingTable){
                     LayDate_min = as.Date(NA),
                     LayDate_max = as.Date(NA),
                     ClutchSize_observed = .data$ClutchSize,
-                    #ClutchSize_min = NA_integer_, # Now added above
-                    ClutchSize_max = NA_integer_,
+                    ClutchSize_max = dplyr::case_when(!is.na(ClutchSize_min) ~ Inf),
                     HatchDate_observed = .data$HatchDate,
                     HatchDate_min = as.Date(NA),
                     HatchDate_max = as.Date(NA),
@@ -350,7 +356,7 @@ create_brood_EDM <- function(Primary_data, ReRingTable){
 #'
 #' @param CMR_data Complete raw PiedFlyNet ringing data.
 #' @param Primary_data Primary brood data from EastDartmoor.
-#' @param ReRingTable Table containing ring numbers and unique identifiers for re-ringed individuals
+#' @param ReRingTable Table containing ring numbers and unique identifiers for all individuals
 #'
 #' @return A data frame with Capture data
 
@@ -366,7 +372,7 @@ create_capture_EDM <- function(CMR_data, Primary_data, ReRingTable){
 
   ## 2) Subset ringing database to contain only captures relevant to population
   LocationList <- unique(Primary_data$Popn)
-  Capture_data <- subset(Capture_data, PLACE %in% LocationList)
+  Capture_data <- subset(Capture_data, .data$PLACE %in% LocationList)
 
   ## 3) Rename columns that are equivalent (content and format) to columns in the standard format
   Capture_data <- Capture_data %>%
@@ -457,6 +463,9 @@ create_capture_EDM <- function(CMR_data, Primary_data, ReRingTable){
 
     # Remove all observations not involving a capture/dead recovery (i.e. resightings)
     dplyr::filter(.data$RTYPE != 'O') %>%
+
+    # NOTE: For now, we are excluding "resightings" from the output.
+    #       However, we may change this following a future update of the standard protocol with the inclusion of a "CaptureType" variable (which will allow to distinguish recaptures and resightings)
 
     ## 8) Calculate age at capture
 
