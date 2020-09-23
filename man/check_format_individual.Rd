@@ -18,5 +18,8 @@ A list of:
 \item{Errors}{A list of row-by-row errors.}
 }
 \description{
-Check that the format of each column in the individual data match with the standard format
+Check that the format of each column in the individual data match with the standard format.
+}
+\details{
+Check ID: I1.
 }

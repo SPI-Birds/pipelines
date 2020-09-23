@@ -4,7 +4,13 @@
 \alias{format_PFN}
 \title{Construct standard format for data from East Dartmoor, UK}
 \usage{
-format_PFN(db, species = NULL, pop = NULL, path = ".", output_type = "R")
+format_PFN(
+  db = choose_directory(),
+  species = NULL,
+  pop = NULL,
+  path = ".",
+  output_type = "R"
+)
 }
 \arguments{
 \item{db}{Location of database file.}
@@ -61,9 +67,14 @@ their lives, and re-ringing events are recorded in the BTO ringing database. The
 birds with several rings, and assigns them a new unique individual identifier of the the form
 'MULTIRINGx', where 'x' is an integer number.
 
+\strong{Resightings}: The capture primary data contains some resightings of birds. At present, these
+records are excluded from the outputs because the standard format for capture data cannot distinguish
+between recaptures and resightings in its current state. Functionality do do this (i.e. via a "capture type" variable)
+may be added to a future update of the standard format.
+
 \strong{LayDate_observed and HatchDate_observed}: Information is provided as date of first egg (DFE) and
 date of hatching (DH). These are given as integer number, and represent days after a set
-starting date (day 0). Day 0 is assumed to be 31. March every year (to be confirmed).
+starting date (day 0). Day 0 is defined as 31.
 
 \strong{ChickAge}: For every capture, we estimate the age of a chick as the difference between the hatch date
 taken from BroodIDFledged (in Individual_data) and the CaptureDate.

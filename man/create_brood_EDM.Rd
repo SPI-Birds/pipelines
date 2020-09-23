@@ -9,7 +9,7 @@ create_brood_EDM(Primary_data, ReRingTable)
 \arguments{
 \item{Primary_data}{Primary data from EastDartmoor.}
 
-\item{ReRingTable}{Table containing ring numbers and unique identifiers for re-ringed individuals}
+\item{ReRingTable}{Table containing ring numbers and unique identifiers for all individuals}
 }
 \value{
 A data frame with Brood data

@@ -11,7 +11,7 @@ create_capture_EDM(CMR_data, Primary_data, ReRingTable)
 
 \item{Primary_data}{Primary brood data from EastDartmoor.}
 
-\item{ReRingTable}{Table containing ring numbers and unique identifiers for re-ringed individuals}
+\item{ReRingTable}{Table containing ring numbers and unique identifiers for all individuals}
 }
 \value{
 A data frame with Capture data

@@ -57,8 +57,14 @@ as NA.
 In this case, we are giving the clutch size as the number of eggs of both species. We are thinking
 about ways to more effectively deal with multi-species clutches.
 
-\strong{BroodSize/NumberFledgedError}: Use ErrorHatched for BroodSizeError, but this really represents minimum (BroodSize)
-and maximum (BroodSize + ErrorHatched). We need to rethink how we deal with this error. Do we use (BroodSize + ErrorHatched/2) = BroodSize?
+\strong{BroodSize}: Use NumberHatched to determine observed BroodSize. BroodSize_minimum is equal to BroodSize
+observed. BroodSize_maximum is NumberHatched + ErrorHatched (i.e. number of eggs never observed either alive
+or dead, so status was unknown).
 
-\strong{AvgChickMass}: Included column BroodWeight, but need to check what day they were weighed.
+\strong{NumberFledged}: Use NumberFledged to determine observed number of fledlings.
+NumberFledged_minimum is equal to BroodSize_observed.
+BroodSize_maximum is NumberFledged + ErrorFledged (i.e. number of chicks never observed either alive
+or dead, so status was unknown).
+
+\strong{HatchDate}: The day a clutch hatched.
 }

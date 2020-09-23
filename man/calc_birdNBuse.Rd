@@ -31,7 +31,7 @@ The function assumes that NestBoxID = LocationID.
 }
 \examples{
 library(dplyr)
-set.seed(666)
 Brood_data <- tibble::tibble(BroodID = c(1:10), LocationID = LETTERS[c(1,3,1,1,2,3,1,2,1,2)],
                              BreedingSeason = sort(sample(2012:2016, 10, replace = TRUE)))
+calc_birdNBuse(Brood_data)
 }

@@ -20,3 +20,6 @@ A list of:
 \description{
 Compare hatching and fledging date per brood. Broods with hatching date later than fledging date will result in an error. Broods with hatching date earlier than fledging date but the difference in number of days is smaller than breeding time will result in a warning.
 }
+\details{
+Check ID: B5.
+}
