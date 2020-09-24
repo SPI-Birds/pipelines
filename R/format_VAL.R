@@ -13,15 +13,6 @@
 #'
 #'\strong{BroodID}: BroodID is a concatenation of Year and BoxID (BoxID_Year).
 #'
-#'\strong{ClutchType_observed}: No clutch type recorded. This is left blank.
-#'This may be 'PrecpLD' or 'TIPO' column in early broods.
-#'Need to check with data owner.
-#'
-#'\strong{LayDate/HatchDate}: Assume that lay date information is April days (i.e. 0 = March 31st).
-#'Need to check with data owner.
-#'
-#'\strong{FledgeDate}: No information provided.
-#'
 #'@inheritParams pipeline_params
 #'
 #'@return Generates either 4 .csv files or 4 data frames in the standard format.
@@ -50,7 +41,7 @@ format_VAL <- function(db = choose_directory(),
   data_file    <- paste0(db, "/VAL_PrimaryData.xlsx")
   early_broods <- readxl::read_excel(data_file, sheet = 1, na = c("", "-")) %>%
     janitor::clean_names()
-  late_broods  <- readxl::read_excel(data_file, sheet = 2, na = c("", "-")) %>% #FIXME: Are - NA or 0? e.g. 37_2017
+  late_broods  <- readxl::read_excel(data_file, sheet = 2, na = c("", "-")) %>% #FIXME: Are - NA or 0? e.g. 37_2017 Check with data owner.
     janitor::clean_names()
   chick_data   <- purrr::map_df(.x = 3:9,
                                 .f = ~{
@@ -59,10 +50,11 @@ format_VAL <- function(db = choose_directory(),
                                                      sheet = ..1,
                                                      col_type = "text") %>%
                                     janitor::clean_names() %>%
+                                    #Remove the row with summary data (it will have no ring value)
                                     dplyr::filter(!is.na(.data$anilla)) %>%
                                     #Add the year (starting at 2011)
                                     dplyr::mutate(year = (2011 - 3 + ..1),
-                                                  NestboxID = stringr::str_remove(.data$nido, pattern = "[A-Z]"),
+                                                  NestboxID = stringr::str_remove(.data$nido, pattern = "[A-Z]"), ##FIXME: What does the letter before the nest mean? Are B1 and 1 the same nestbox?
                                                   Date = janitor::excel_numeric_to_date(as.numeric(.data$fecha))) %>%
                                     dplyr::mutate(tidyr::fill(., .data$NestboxID, .direction = "down"))
 
@@ -141,7 +133,7 @@ format_VAL <- function(db = choose_directory(),
 create_brood_VAL <- function(early_broods, late_broods, chick_data){
 
   early_broods_format <- early_broods %>%
-    dplyr::mutate(MarchDay = as.Date(paste(.data$year, "03", "31", sep = "-")),
+    dplyr::mutate(MarchDay = as.Date(paste(.data$year, "03", "31", sep = "-")), #FIXME: Are dates April days? i.e. 1 = April 1st
                   BroodID = paste(.data$nido, .data$year, sep = "_"),
                   PopID = "VAL",
                   BreedingSeason = .data$year,
@@ -151,29 +143,30 @@ create_brood_VAL <- function(early_broods, late_broods, chick_data){
                   FemaleID = .data$female,
                   MaleID = .data$male,
                   ClutchType_observed = NA_character_,
-                  LayDate_observed = .data$MarchDay + floor(.data$tmed_ld),
-                  LayDate_min = .data$MarchDay + floor(.data$tmin_ld),
+                  LayDate_observed = .data$MarchDay + floor(.data$tmed_ld), #FIXME: Is xxx_ld laying date info? How can there be broods in the same box with similar LD (e.g. 1997_117)?
+                  LayDate_min = .data$MarchDay + floor(.data$tmin_ld), #FIXME: These represent error in laying date?
                   LayDate_max = .data$MarchDay + floor(.data$tmax_ld),
-                  ClutchSize_observed = .data$incub,
+                  ClutchSize_observed = .data$incub, #FIXME: The number of eggs being incubated? This is comparable to CS in newer data?
+                                                     #FIXME: How is this affected by clutch size manipulation? Is it before or after?
                   ClutchSize_min = NA_integer_,
                   ClutchSize_max = NA_integer_,
                   HatchDate_observed = .data$MarchDay + .data$hdate,
                   HatchDate_min = as.Date(NA),
                   HatchDate_max = as.Date(NA),
-                  BroodSize_observed = .data$hatchl,
+                  BroodSize_observed = .data$hatchl, #FIXME: Number of hatchlings observed?
                   BroodSize_min = NA_integer_,
                   BroodSize_max = NA_integer_,
                   FledgeDate_observed = as.Date(NA),
                   FledgeDate_min = as.Date(NA),
                   FledgeDate_max = as.Date(NA),
-                  NumberFledged_observed = .data$fledgl,
+                  NumberFledged_observed = .data$fledgl, #FIXME: Number of fledlgings observed?
                   NumberFledged_min = NA_integer_,
-                  NumberFledged_max = NA_integer_) %>%
+                  NumberFledged_max = NA_integer_,
                   ExperimentID = dplyr::case_when(manip %in% c("aumentado", "reducido") ~ c("COHORT;PARENTAGE"))) %>% #FIXME: What do the other experiment values mean?
     #When there are multiple nests in a brood in a year, give them different letter suffixes
     dplyr::arrange(.data$FemaleID, .data$LayDate_observed) %>%
     dplyr::group_by(.data$BroodID) %>%
-    dplyr::mutate(BroodID = paste0(.data$BroodID, letters[1:n()])) %>%
+    dplyr::mutate(BroodID = paste0(.data$BroodID, letters[1:n()])) %>% #FIXME: How do we deal with multiple broods?
     dplyr::ungroup() %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(.)) %>%
     dplyr::select(.data$BroodID:.data$ClutchType_observed,
@@ -186,12 +179,12 @@ create_brood_VAL <- function(early_broods, late_broods, chick_data){
                   PopID = "VAL",
                   BreedingSeason = .data$year,
                   Species = Species_codes$Code[Species_codes$SpeciesID == 13490],
-                  Plot = NA_character_,
+                  Plot = NA_character_, #FIXME: Are there separate plots?
                   LocationID = .data$nest,
                   FemaleID = .data$female,
                   MaleID = .data$male,
                   ClutchType_observed = NA_character_,
-                  LayDate_observed = .data$MarchDay + floor(.data$ld), #FIXME: Is this laydate? There are some that are very close together in LD (e.g. nestbox 186 in 1998)!
+                  LayDate_observed = .data$MarchDay + floor(.data$ld),
                   LayDate_min = as.Date(NA),
                   LayDate_max = as.Date(NA),
                   ClutchSize_observed = .data$cs,
@@ -200,7 +193,7 @@ create_brood_VAL <- function(early_broods, late_broods, chick_data){
                   HatchDate_observed = .data$MarchDay + floor(.data$hd),
                   HatchDate_min = as.Date(NA),
                   HatchDate_max = as.Date(NA),
-                  BroodSize_observed = as.integer(.data$cs * .data$hatching_suc/100),
+                  BroodSize_observed = as.integer(.data$cs * .data$hatching_suc/100), #FIXME: Is this proportion of clutch that hatch?
                   BroodSize_min = NA_integer_,
                   BroodSize_max = NA_integer_,
                   FledgeDate_observed = as.Date(NA),
@@ -211,7 +204,7 @@ create_brood_VAL <- function(early_broods, late_broods, chick_data){
                   NumberFledged_max = NA_integer_,
                   AvgEggMass = NA_real_,
                   NumberEggs = NA_integer_,
-                  AvgChickMass = .data$chicks_wight,
+                  AvgChickMass = .data$chicks_wight, #FIXME: This data is not available in any other cases?
                   AvgTarsus = .data$chicks_tarsus,
                   OriginalTarsusMethod = NA_character_,
                   ExperimentID = NA_character_) %>% #FIXME: Translate 'treatment' column to experimentID
@@ -226,8 +219,6 @@ create_brood_VAL <- function(early_broods, late_broods, chick_data){
                   .data$LayDate_observed:.data$ExperimentID)
 
   #Determine number of chicks measured in each nest
-  #FIXME: What is the difference between clutch 1 and B1 (e.g. 2016?!)
-  #For now we just removed the number and group together.
   number_chicks <- chick_data %>%
     dplyr::mutate(BroodID = paste(.data$NestboxID, .data$year, sep = "_")) %>%
     dplyr::group_by(BroodID) %>%
@@ -271,7 +262,8 @@ create_capture_VAL <- function(early_broods, late_broods, chick_data){
                   Sex_observed = dplyr::case_when(.data$Sex_observed == "female" ~ "F",
                                                   .data$Sex_observed == "male" ~ "M"),
                   CaptureDate = dplyr::case_when(Sex_observed == "F" ~ .data$MarchDay + tidyr::replace_na(.data$fdia, 0),
-                                                 Sex_observed == "M" ~ .data$MarchDay + tidyr::replace_na(.data$mdia, 0)), # FIXME: What is the capture date if there is no fdia?
+                                                 Sex_observed == "M" ~ .data$MarchDay + tidyr::replace_na(.data$mdia, 0)), # FIXME: What is the capture date? Is it from fdia/mdia?
+                                                                                                                           # FIXME: What is the capture date when there is no f/mdia?
                   CaptureTime = NA_character_,
                   ObservedID = NA_character_,
                   LocationID = .data$nido,
@@ -302,7 +294,7 @@ create_capture_VAL <- function(early_broods, late_broods, chick_data){
                   BreedingSeason = .data$year,
                   Sex_observed = dplyr::case_when(.data$Sex_observed == "female" ~ "F",
                                                   .data$Sex_observed == "male" ~ "M"),
-                  CaptureDate = .data$MarchDay, ##FIXME: New brood data doesn't have any info on when adults were captured
+                  CaptureDate = .data$MarchDay, ##FIXME: New brood data doesn't have any info on when adults were captured. When would this be?
                   CaptureTime = NA_character_,
                   ObservedID = dplyr::case_when(.data$Sex_observed == "F" ~ .data$obs_24,
                                                 .data$Sex_observed == "M" ~ .data$obs_38),
@@ -325,7 +317,7 @@ create_capture_VAL <- function(early_broods, late_broods, chick_data){
                   ExperimentID = NA_character_) %>%   ## FIXME: Does the treatment column apply also to adults?
     dplyr::select(IndvID, Species, Sex_observed, BreedingSeason:ExperimentID)
 
-  #No information on chick rings before 2011. Were chicks not ringed before this or the data is missing?
+  #FIXME: No information on chick rings before 2011. Were chicks not ringed before this or the data is missing?
   early_chick <- chick_data %>%
     dplyr::mutate(MarchDay = as.Date(paste(.data$year, "03", "31", sep = "-")),
                   IndvID = .data$anilla,
@@ -338,7 +330,7 @@ create_capture_VAL <- function(early_broods, late_broods, chick_data){
                   LocationID = .data$NestboxID,
                   CaptureAlive = TRUE, ReleaseAlive = TRUE, ## FIXME: Are these ever FALSE?
                   CapturePopID = "VAL", CapturePlot = NA_character_,
-                  ReleasePopID = "VAL", ReleasePlot = NA_character_, ## FIXME: Are these ever FALSE?
+                  ReleasePopID = "VAL", ReleasePlot = NA_character_,
                   Mass = as.numeric(.data$peso),
                   Tarsus = as.numeric(.data$tarso),
                   OriginalTarsusMethod = NA_character_, ## FIXME: Check with data owner
@@ -455,7 +447,7 @@ create_location_VAL <- function(Brood_data){
                   Latitude = NA_real_, #FIXME: Is this data available?
                   Longitude = NA_real_,
                   StartSeason = min(.data$BreedingSeason),
-                  EndSeason = ifelse(max(.data$BreedingSeason) == max(Capture_data$BreedingSeason), NA_integer_, max(.data$BreedingSeason)), # FIXME: When numbers are missing does this mean the box is no longer used?
+                  EndSeason = ifelse(max(.data$BreedingSeason) == max(Capture_data$BreedingSeason), NA_integer_, max(.data$BreedingSeason)), # FIXME: When year is missing does this mean the box is no longer used?
                   HabitatType = "DEC", #FIXME: Taken from meta-data. Is this correct?
                   .groups = "drop")
 
