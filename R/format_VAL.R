@@ -169,6 +169,7 @@ create_brood_VAL <- function(early_broods, late_broods, chick_data){
                   NumberFledged_observed = .data$fledgl,
                   NumberFledged_min = NA_integer_,
                   NumberFledged_max = NA_integer_) %>%
+                  ExperimentID = dplyr::case_when(manip %in% c("aumentado", "reducido") ~ c("COHORT;PARENTAGE"))) %>% #FIXME: What do the other experiment values mean?
     #When there are multiple nests in a brood in a year, give them different letter suffixes
     dplyr::arrange(.data$FemaleID, .data$LayDate_observed) %>%
     dplyr::group_by(.data$BroodID) %>%
