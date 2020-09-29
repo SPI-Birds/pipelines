@@ -109,7 +109,7 @@ test_that("Capture data returns an expected outcome...", {
   expect_equal(subset(PFN_data, IndvID == "Y369483")$CaptureDate[14], as.Date("2019-06-03"))
   #Test that age observed is as expected on first and last capture
   expect_equal(subset(PFN_data, IndvID == "Y369483")$Age_observed[1], 1L)
-  expect_equal(subset(PFN_data, IndvID == "Y369483")$Age_observed[14], 4L)
+  expect_equal(subset(PFN_data, IndvID == "Y369483")$Age_observed[14], 16L)
   #Test that age calculated is correct on first and last capture
   expect_equal(subset(PFN_data, IndvID == "Y369483")$Age_calculated[1], 1L)
   expect_equal(subset(PFN_data, IndvID == "Y369483")$Age_calculated[14], 17L)
@@ -131,7 +131,7 @@ test_that("Capture data returns an expected outcome...", {
   expect_equal(subset(PFN_data, IndvID == "Z286392")$CaptureDate[3], as.Date("2017-05-28"))
   #Test that age observed is as expected on first and last capture
   expect_equal(subset(PFN_data, IndvID == "Z286392")$Age_observed[1], 1L)
-  expect_equal(subset(PFN_data, IndvID == "Z286392")$Age_observed[3], 4L)
+  expect_equal(subset(PFN_data, IndvID == "Z286392")$Age_observed[3], 7L)
   #Test that age calculated is correct on first and last capture
   expect_equal(subset(PFN_data, IndvID == "Z286392")$Age_calculated[1], 1L)
   expect_equal(subset(PFN_data, IndvID == "Z286392")$Age_calculated[3], 7L)
@@ -180,7 +180,7 @@ test_that("Capture data returns an expected outcome...", {
   expect_equal(subset(PFN_data, IndvID == "D140987")$CaptureDate[3+7], as.Date("2020-06-04"))
   #Test that first and last age observed is as expected
   expect_equal(subset(PFN_data, IndvID == "D140987")$Age_observed[1], 4L)
-  expect_equal(subset(PFN_data, IndvID == "D140987")$Age_observed[3+7], 4L)
+  expect_equal(subset(PFN_data, IndvID == "D140987")$Age_observed[3+7], 18L)
   #Test that first and last age calculated is as expected
   expect_equal(subset(PFN_data, IndvID == "D140987")$Age_calculated[1], 4L)
   expect_equal(subset(PFN_data, IndvID == "D140987")$Age_calculated[3+7], 18L)
