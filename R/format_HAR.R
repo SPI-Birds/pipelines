@@ -721,7 +721,9 @@ create_individual_HAR <- function(Capture_data){
 
       } else {
 
-        return("CONFLICTED")
+        print("A message!!")
+
+        return("CONFLICTED") #HERE'S A NOTE!!
 
       }
 
