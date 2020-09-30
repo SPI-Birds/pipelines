@@ -41,7 +41,7 @@ format_VAL <- function(db = choose_directory(),
   data_file    <- paste0(db, "/VAL_PrimaryData.xlsx")
   early_broods <- readxl::read_excel(data_file, sheet = 1, na = c("", "-")) %>%
     janitor::clean_names()
-  late_broods  <- readxl::read_excel(data_file, sheet = 2, na = c("", "-")) %>% #FIXME: Are - NA or 0? e.g. 37_2017 Check with data owner.
+  late_broods  <- readxl::read_excel(data_file, sheet = 2, na = c("", "-")) %>% #FIXME: Are - NA or 0? e.g. 37_2017 Check with data owner. Alex will check.
     janitor::clean_names()
   chick_data   <- purrr::map_df(.x = 3:9,
                                 .f = ~{
@@ -55,6 +55,7 @@ format_VAL <- function(db = choose_directory(),
                                     #Add the year (starting at 2011)
                                     dplyr::mutate(year = (2011 - 3 + ..1),
                                                   NestboxID = stringr::str_remove(.data$nido, pattern = "[A-Z]"), ##FIXME: What does the letter before the nest mean? Are B1 and 1 the same nestbox?
+                                                                                                                  ## 'B' is a different plot. The laying date data is stored separately.
                                                   Date = janitor::excel_numeric_to_date(as.numeric(.data$fecha))) %>%
                                     dplyr::mutate(tidyr::fill(., .data$NestboxID, .direction = "down"))
 
@@ -133,7 +134,7 @@ format_VAL <- function(db = choose_directory(),
 create_brood_VAL <- function(early_broods, late_broods, chick_data){
 
   early_broods_format <- early_broods %>%
-    dplyr::mutate(MarchDay = as.Date(paste(.data$year, "03", "31", sep = "-")), #FIXME: Are dates April days? i.e. 1 = April 1st
+    dplyr::mutate(MarchDay = as.Date(paste(.data$year, "03", "31", sep = "-")), #FIXME: Are dates April days? i.e. 1 = April 1st. Correct.
                   BroodID = paste(.data$nido, .data$year, sep = "_"),
                   PopID = "VAL",
                   BreedingSeason = .data$year,
@@ -144,29 +145,30 @@ create_brood_VAL <- function(early_broods, late_broods, chick_data){
                   MaleID = .data$male,
                   ClutchType_observed = NA_character_,
                   LayDate_observed = .data$MarchDay + floor(.data$tmed_ld), #FIXME: Is xxx_ld laying date info? How can there be broods in the same box with similar LD (e.g. 1997_117)?
+                                                                            #FPUESTA is LD and PUESTA is clutch size
                   LayDate_min = .data$MarchDay + floor(.data$tmin_ld), #FIXME: These represent error in laying date?
                   LayDate_max = .data$MarchDay + floor(.data$tmax_ld),
-                  ClutchSize_observed = .data$incub, #FIXME: The number of eggs being incubated? This is comparable to CS in newer data?
-                                                     #FIXME: How is this affected by clutch size manipulation? Is it before or after?
+                  ClutchSize_observed = .data$incub, #FIXME: The number of eggs being incubated? This is comparable to CS in newer data? NO!
+                                                     #FIXME: How is this affected by clutch size manipulation? Is it before or after? CS is before brood size manipulation.
                   ClutchSize_min = NA_integer_,
                   ClutchSize_max = NA_integer_,
                   HatchDate_observed = .data$MarchDay + .data$hdate,
                   HatchDate_min = as.Date(NA),
                   HatchDate_max = as.Date(NA),
-                  BroodSize_observed = .data$hatchl, #FIXME: Number of hatchlings observed?
+                  BroodSize_observed = .data$hatchl, #FIXME: Number of hatchlings observed? Correct.
                   BroodSize_min = NA_integer_,
                   BroodSize_max = NA_integer_,
                   FledgeDate_observed = as.Date(NA),
                   FledgeDate_min = as.Date(NA),
                   FledgeDate_max = as.Date(NA),
-                  NumberFledged_observed = .data$fledgl, #FIXME: Number of fledlgings observed?
+                  NumberFledged_observed = .data$fledgl, #FIXME: Number of fledlgings observed? Correct.
                   NumberFledged_min = NA_integer_,
                   NumberFledged_max = NA_integer_,
-                  ExperimentID = dplyr::case_when(manip %in% c("aumentado", "reducido") ~ c("COHORT;PARENTAGE"))) %>% #FIXME: What do the other experiment values mean?
+                  ExperimentID = dplyr::case_when(manip %in% c("aumentado", "reducido") ~ c("COHORT;PARENTAGE"))) %>% #FIXME: What do the other experiment values mean? Alex will check these.
     #When there are multiple nests in a brood in a year, give them different letter suffixes
     dplyr::arrange(.data$FemaleID, .data$LayDate_observed) %>%
     dplyr::group_by(.data$BroodID) %>%
-    dplyr::mutate(BroodID = paste0(.data$BroodID, letters[1:n()])) %>% #FIXME: How do we deal with multiple broods?
+    dplyr::mutate(BroodID = paste0(.data$BroodID, letters[1:n()])) %>% #FIXME: How do we deal with multiple broods? No second clutches, only replacement. XXX bis/b that is a replacement.
     dplyr::ungroup() %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(.)) %>%
     dplyr::select(.data$BroodID:.data$ClutchType_observed,
@@ -179,7 +181,7 @@ create_brood_VAL <- function(early_broods, late_broods, chick_data){
                   PopID = "VAL",
                   BreedingSeason = .data$year,
                   Species = Species_codes$Code[Species_codes$SpeciesID == 13490],
-                  Plot = NA_character_, #FIXME: Are there separate plots?
+                  Plot = NA_character_, #FIXME: Are there separate plots? Yes, there is plot B. ~3km away from main plot.
                   LocationID = .data$nest,
                   FemaleID = .data$female,
                   MaleID = .data$male,
@@ -193,13 +195,13 @@ create_brood_VAL <- function(early_broods, late_broods, chick_data){
                   HatchDate_observed = .data$MarchDay + floor(.data$hd),
                   HatchDate_min = as.Date(NA),
                   HatchDate_max = as.Date(NA),
-                  BroodSize_observed = as.integer(.data$cs * .data$hatching_suc/100), #FIXME: Is this proportion of clutch that hatch?
+                  BroodSize_observed = as.integer(.data$cs * .data$hatching_suc/100), #FIXME: Is this proportion of clutch that hatch? Correct.
                   BroodSize_min = NA_integer_,
                   BroodSize_max = NA_integer_,
                   FledgeDate_observed = as.Date(NA),
                   FledgeDate_min = as.Date(NA),
                   FledgeDate_max = as.Date(NA),
-                  NumberFledged_observed = as.integer(.data$cs * .data$fled_suc/100), #FIXME: Is this proportion of clutch that fledge or of brood?
+                  NumberFledged_observed = as.integer(.data$cs * .data$fled_suc/100), #FIXME: Is this proportion of clutch that fledge or of brood? Proportion of hatchlings that fledge.
                   NumberFledged_min = NA_integer_,
                   NumberFledged_max = NA_integer_,
                   AvgEggMass = NA_real_,
@@ -262,8 +264,7 @@ create_capture_VAL <- function(early_broods, late_broods, chick_data){
                   Sex_observed = dplyr::case_when(.data$Sex_observed == "female" ~ "F",
                                                   .data$Sex_observed == "male" ~ "M"),
                   CaptureDate = dplyr::case_when(Sex_observed == "F" ~ .data$MarchDay + tidyr::replace_na(.data$fdia, 0),
-                                                 Sex_observed == "M" ~ .data$MarchDay + tidyr::replace_na(.data$mdia, 0)), # FIXME: What is the capture date? Is it from fdia/mdia?
-                                                                                                                           # FIXME: What is the capture date when there is no f/mdia?
+                                                 Sex_observed == "M" ~ .data$MarchDay + tidyr::replace_na(.data$mdia, 0)), # FIXME: What is the capture date? Is it from fdia/mdia? Correct.
                   CaptureTime = NA_character_,
                   ObservedID = NA_character_,
                   LocationID = .data$nido,
@@ -274,15 +275,15 @@ create_capture_VAL <- function(early_broods, late_broods, chick_data){
                                           .data$Sex_observed == "M" ~ .data$mpeso),
                   Tarsus = dplyr::case_when(.data$Sex_observed == "F" ~ .data$ftarso,
                                             .data$Sex_observed == "M" ~ .data$mtarso),
-                  OriginalTarsusMethod = NA_character_, ##FIXME: Check with data owner what method they use
+                  OriginalTarsusMethod = NA_character_, ##FIXME: Check with data owner what method they use. Send Alex the word document.
                   WingLength = dplyr::case_when(.data$Sex_observed == "F" ~ .data$fala,
                                                 .data$Sex_observed == "M" ~ .data$mala),
                   Age_observed = dplyr::case_when(.data$Sex_observed == "F" ~ as.integer(4 + (.data$fage - 1)*2),
-                                                  .data$Sex_observed == "M" ~ as.integer(4 + (.data$mage - 1)*2)), ## FIXME: What age measurement is this?
+                                                  .data$Sex_observed == "M" ~ as.integer(4 + (.data$mage - 1)*2)), ## FIXME: What age measurement is this? Real age (i.e. 1 is born previous year)
                   ## For now, I assume it's starting at 4 (>1yo) and going up in units of year.
                   ## i.e. 1 = age 4; 2 = age 6
                   ChickAge = NA_integer_,
-                  ExperimentID = NA_character_) %>%   ## FIXME: Does the MANIP column apply also to adults?
+                  ExperimentID = NA_character_) %>%   ## FIXME: Does the MANIP column apply also to adults? Yes, Alex will specify this.
     dplyr::select(IndvID, Species, Sex_observed, BreedingSeason:ExperimentID)
 
   late_adult_captures <- late_broods %>%
@@ -294,7 +295,7 @@ create_capture_VAL <- function(early_broods, late_broods, chick_data){
                   BreedingSeason = .data$year,
                   Sex_observed = dplyr::case_when(.data$Sex_observed == "female" ~ "F",
                                                   .data$Sex_observed == "male" ~ "M"),
-                  CaptureDate = .data$MarchDay, ##FIXME: New brood data doesn't have any info on when adults were captured. When would this be?
+                  CaptureDate = .data$MarchDay, ##FIXME: New brood data doesn't have any info on when adults were captured. When would this be? HD + 7
                   CaptureTime = NA_character_,
                   ObservedID = dplyr::case_when(.data$Sex_observed == "F" ~ .data$obs_24,
                                                 .data$Sex_observed == "M" ~ .data$obs_38),
@@ -306,18 +307,18 @@ create_capture_VAL <- function(early_broods, late_broods, chick_data){
                                           .data$Sex_observed == "M" ~ .data$m_weight),
                   Tarsus = dplyr::case_when(.data$Sex_observed == "F" ~ .data$f_tarsus,
                                             .data$Sex_observed == "M" ~ .data$m_tarsus),
-                  OriginalTarsusMethod = NA_character_, ##FIXME: Check with data owner what method they use
+                  OriginalTarsusMethod = NA_character_, ##FIXME: Check with data owner what method they use. Send word doc.
                   WingLength = dplyr::case_when(.data$Sex_observed == "F" ~ .data$f_wing,
                                                 .data$Sex_observed == "M" ~ .data$m_wing),
                   Age_observed = dplyr::case_when(.data$Sex_observed == "F" ~ as.integer(4 + (.data$f_age * 2)),
-                                                  .data$Sex_observed == "M" ~ as.integer(4 + (.data$m_age * 2))), ## FIXME: What age measurement is this?
+                                                  .data$Sex_observed == "M" ~ as.integer(4 + (.data$m_age * 2))), ## FIXME: What age measurement is this? It's real age and Alex will fill in blanks if possible.
                   ## For now, I assume it's starting at 4 (>1yo) and going up in units of year.
                   ## i.e. 0 = age 4; 1 = age 6
                   ChickAge = NA_integer_,
-                  ExperimentID = NA_character_) %>%   ## FIXME: Does the treatment column apply also to adults?
+                  ExperimentID = NA_character_) %>%   ## FIXME: Does the treatment column apply also to adults? Can affect adults too.
     dplyr::select(IndvID, Species, Sex_observed, BreedingSeason:ExperimentID)
 
-  #FIXME: No information on chick rings before 2011. Were chicks not ringed before this or the data is missing?
+  #FIXME: No information on chick rings before 2011. Were chicks not ringed before this or the data is missing? This data is not digitised.
   early_chick <- chick_data %>%
     dplyr::mutate(MarchDay = as.Date(paste(.data$year, "03", "31", sep = "-")),
                   IndvID = .data$anilla,
@@ -328,15 +329,15 @@ create_capture_VAL <- function(early_broods, late_broods, chick_data){
                   CaptureTime = .data$hora,
                   ObserverID = NA_character_,
                   LocationID = .data$NestboxID,
-                  CaptureAlive = TRUE, ReleaseAlive = TRUE, ## FIXME: Are these ever FALSE?
+                  CaptureAlive = TRUE, ReleaseAlive = TRUE, ## FIXME: Are these ever FALSE? Chicks died is the difference between BS13 and 3.
                   CapturePopID = "VAL", CapturePlot = NA_character_,
                   ReleasePopID = "VAL", ReleasePlot = NA_character_,
                   Mass = as.numeric(.data$peso),
                   Tarsus = as.numeric(.data$tarso),
-                  OriginalTarsusMethod = NA_character_, ## FIXME: Check with data owner
+                  OriginalTarsusMethod = NA_character_, ## FIXME: Check with data owner. Send Alex word doc.
                   WingLength = as.numeric(.data$ala),
-                  Age_observed = 1L, # FIXME: Assume all are chicks (pre-fledgling)
-                  ChickAge = NA_integer_, # FIXME: What age are chicks caught/ringed? 13 days?
+                  Age_observed = 1L, # FIXME: Assume all are chicks (pre-fledgling). Always caught in nest.
+                  ChickAge = NA_integer_, # FIXME: What age are chicks caught/ringed? 13 days? Correct, 13 days.
                   ExperimentID = NA_character_) %>%
     dplyr::select(IndvID:ExperimentID)
 
@@ -348,14 +349,14 @@ create_capture_VAL <- function(early_broods, late_broods, chick_data){
                   Species = Species_codes$Code[Species_codes$SpeciesID == 13490],
                   Sex_observed = NA_character_,
                   BreedingSeason = .data$year,
-                  CaptureDate = MarchDay + .data$hd + 13, #FIXME: Assume chicks are captured on day 13. Check with data owner.
+                  CaptureDate = MarchDay + .data$hd + 13, #FIXME: Assume chicks are captured on day 13. Check with data owner. Yes, 13 days.
                   CaptureTime = NA_character_,
-                  ObserverID = NA_character_, #FIXME: Is this the same as one of the female/male observers?
+                  ObserverID = NA_character_, #FIXME: Is this the same as one of the female/male observers? Not recorded, Alex will check it.
                   LocationID = .data$nest,
                   CaptureAlive = TRUE, ReleaseAlive = TRUE,
                   CapturePopID = "VAL", CapturePlot = NA_character_,
                   ReleasePopID = "VAL", ReleasePlot = NA_character_,
-                  Mass = NA_real_, #FIXME: These chicks are not measured?
+                  Mass = NA_real_, #FIXME: These chicks are not measured? Alex will provide this for the last 3 years.
                   Tarsus = NA_real_,
                   OriginalTarsusMethod = NA_character_,
                   WingLength = NA_real_,
@@ -444,11 +445,13 @@ create_location_VAL <- function(Brood_data){
     dplyr::summarise(NestboxID = first(.data$LocationID),
                   LocationType = "NB",
                   PopID = "VAL",
-                  Latitude = NA_real_, #FIXME: Is this data available?
+                  Latitude = NA_real_, #FIXME: Is this data available? Alex will send a file.
                   Longitude = NA_real_,
                   StartSeason = min(.data$BreedingSeason),
                   EndSeason = ifelse(max(.data$BreedingSeason) == max(Capture_data$BreedingSeason), NA_integer_, max(.data$BreedingSeason)), # FIXME: When year is missing does this mean the box is no longer used?
-                  HabitatType = "DEC", #FIXME: Taken from meta-data. Is this correct?
+                                                                                                                                             # Some boxes may be used by BT/GT and they could be using the nest box
+                                                                                                                                             # This data is collected by other researcher. Alex will contact/give me his contact.
+                  HabitatType = "DEC", #FIXME: Taken from meta-data. Is this correct? Yes!
                   .groups = "drop")
 
   return(Location_data)
