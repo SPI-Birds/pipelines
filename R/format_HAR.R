@@ -750,6 +750,10 @@ create_individual_HAR <- function(Capture_data){
 
               })) %>%
     dplyr::rowwise() %>%
+
+
+
+
     #For each individual, if their ring age was 1 or 3 (caught in first breeding year)
     #Then we take their first BroodID, otherwise it is NA
     dplyr::mutate(BroodIDLaid = ifelse(RingAge == "chick", BroodIDLaid, NA),
