@@ -215,8 +215,8 @@ test_that("Location_data returns an expected outcome...", {
   #Check that LocationID is in the expected PopID
   expect_equal(subset(MON_data, LocationID == "rou_314_NB")$PopID, "ROU")
   #Check that latitude and longitude are as expected
-  expect_equal(round(subset(MON_data, LocationID == "rou_314_NB")$Latitude, 2), 43.67)
-  expect_equal(round(subset(MON_data, LocationID == "rou_314_NB")$Longitude, 2), 3.67)
+  expect_equal(round(subset(MON_data, LocationID == "rou_314_NB")$Latitude, 2) %>% setNames(nm = NULL), 43.67)
+  expect_equal(round(subset(MON_data, LocationID == "rou_314_NB")$Longitude, 2) %>% setNames(nm = NULL), 3.67)
 
   #Test 2: Nestbox check
   #Location with no lat/long info
@@ -230,8 +230,8 @@ test_that("Location_data returns an expected outcome...", {
   #Check that LocationID is in the expected PopID
   expect_equal(subset(MON_data, LocationID == "mau_1_NB")$PopID, "MIS")
   #Check that latitude and longitude are as expected
-  expect_equal(subset(MON_data, LocationID == "mau_1_NB")$Latitude, NA_real_)
-  expect_equal(subset(MON_data, LocationID == "mau_1_NB")$Longitude, NA_real_)
+  expect_equal(subset(MON_data, LocationID == "mau_1_NB")$Latitude %>% setNames(nm = NULL), NA_real_)
+  expect_equal(subset(MON_data, LocationID == "mau_1_NB")$Longitude %>% setNames(nm = NULL), NA_real_)
 
   #Test 3: Mistnet check (location outside main study area)
   #LocationType is as expected
@@ -244,8 +244,8 @@ test_that("Location_data returns an expected outcome...", {
   #Check that LocationID is in the expected PopID
   expect_equal(subset(MON_data, LocationID == "hs_1")$PopID, "MIS")
   #Check that latitude and longitude are as expected
-  expect_equal(round(subset(MON_data, LocationID == "hs_1")$Latitude, 2), 41.44)
-  expect_equal(round(subset(MON_data, LocationID == "hs_1")$Longitude, 2), 9.19)
+  expect_equal(round(subset(MON_data, LocationID == "hs_1")$Latitude, 2) %>% setNames(nm = NULL), 41.44)
+  expect_equal(round(subset(MON_data, LocationID == "hs_1")$Longitude, 2) %>% setNames(nm = NULL), 9.19)
 
   #Test 4: Mistnet check (caught at a nest box)
   #LocationType is as expected
@@ -258,7 +258,7 @@ test_that("Location_data returns an expected outcome...", {
   #Check that LocationID is in the expected PopID
   expect_equal(subset(MON_data, LocationID == "pir_14_MN")$PopID, "PIR")
   #Check that latitude and longitude are as expected
-  expect_equal(round(subset(MON_data, LocationID == "pir_14_MN")$Latitude, 2), 42.38)
-  expect_equal(round(subset(MON_data, LocationID == "pir_14_MN")$Longitude, 2), 8.75)
+  expect_equal(round(subset(MON_data, LocationID == "pir_14_MN")$Latitude, 2) %>% setNames(nm = NULL), 42.38)
+  expect_equal(round(subset(MON_data, LocationID == "pir_14_MN")$Longitude, 2) %>% setNames(nm = NULL), 8.75)
 
 })
