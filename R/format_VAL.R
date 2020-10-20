@@ -84,7 +84,7 @@ format_VAL <- function(db = choose_directory(),
 
   message("Compiling location data...")
 
-  Location_data <- create_location_VAL(Brood_data = Brood_data)
+  Location_data <- create_location_VAL(Brood_data = Brood_data, Capture_data = Capture_data)
 
   # EXPORT DATA
 
@@ -433,12 +433,13 @@ create_individual_VAL <- function(Capture_data){
 #'
 #' Create full location data table in standard format for data from Valsein, Spain.
 #'
+#' @param Brood_data Output of \code{\link{create_brood_VAL}}.
 #' @param Capture_data Output of \code{\link{create_capture_VAL}}.
 #'
 #' @return A data frame.
 #' @export
 
-create_location_VAL <- function(Brood_data){
+create_location_VAL <- function(Brood_data, Capture_data){
 
   Location_data <- Brood_data %>%
     dplyr::group_by(LocationID) %>%
