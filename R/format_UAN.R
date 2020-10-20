@@ -80,7 +80,7 @@ format_UAN <- function(db = choose_directory(),
 
   message("\n Loading all files")
 
-  all_files <- list.files(path = paste0(db, '/UAN_PrimaryData'), pattern = ".xlsx", full.names = TRUE)
+  all_files <- list.files(path = db, pattern = ".xlsx", full.names = TRUE)
 
   BOX_info <- readxl::read_excel(all_files[grepl("BOX", all_files)],
                                  col_types = c("text", "numeric", "numeric",

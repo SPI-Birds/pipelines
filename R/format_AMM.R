@@ -225,7 +225,7 @@ create_brood_AMM   <- function(connection) {
                   NumberEggs = NA_integer_,
                   AvgChickMass = NA_integer_,
                   NumberChicksMass = NA_integer_,
-                  BroodSwap_ExperimentID = ifelse(.data$BroodSwap > 0L, "PARENTAGE/COHORT", NA_character_),
+                  BroodSwap_ExperimentID = ifelse(.data$BroodSwap > 0L, "PARENTAGE;COHORT", NA_character_),
                   BroodOther_ExperimentID = dplyr::case_when(.data$BroodOtherTreatment %in% c(1L, 2L, 3L, 4L, 5L) ~ "SURVIVAL",
                                                              TRUE ~ NA_character_),
                   Plot_ExperimentID = dplyr::case_when(.data$PlotLevelTreatment %in% c(1L, 2L) ~ "PHENOLOGY",

@@ -19,14 +19,14 @@ if(file.exists("../../inst/extdata/test_data.RDS")){
     pipeline_output <- run_pipelines(path = choose_directory(),
                                      PopID = c("SSQ", "BAN", "VEL", "CHO", "MUR", "PIR", "ROU", "MON", "MTV", "MIS", "HOC",
                                                "KEV", "HAR", "PEE", "BOS",
-                                               "WYT", "PIP", "EDM"),
+                                               "WYT", "PIL", "EDM"),
                                      output_type = "R")
   }else if(grepl(pattern = 'windows', x = OS)){
 
     pipeline_output <- run_pipelines(path = choose_directory(),
                                      PopID = c("SSQ", "BAN", "VEL", "CHO", "MUR", "PIR", "ROU", "MON", "MTV", "MIS", "HOC",
                                                "HOG", "OOS", "VLI", "BUU", "LIE", "WAR", "WES", "KEV", "HAR", "PEE", "BOS",
-                                               "WYT", "PIP", "EDM"),
+                                               "WYT", "PIL", "EDM", "AMM"),
                                      output_type = "R")
   }else{
     stop(paste0('Operating system ', OS, ' not supported'))
