@@ -195,7 +195,7 @@ test_that("Location_data returns an expected outcome...", {
   #Nest box "011" should be type "NB"
   expect_equal(subset(SSQ_data, LocationID == "011")$LocationType, "NB")
   #Latitude and longitude should be 13.5 and 37.6
-  expect_equal(round(subset(SSQ_data, LocationID == "011")$Latitude, 1), 13.5)
-  expect_equal(round(subset(SSQ_data, LocationID == "011")$Longitude, 1), 37.6)
+  expect_equal(round(subset(SSQ_data, LocationID == "011")$Latitude, 1) %>% setNames(nm = NULL), 13.5)
+  expect_equal(round(subset(SSQ_data, LocationID == "011")$Longitude, 1) %>% setNames(nm = NULL), 37.6)
 
 })
