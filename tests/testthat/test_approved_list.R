@@ -2,7 +2,7 @@ context("Test that approved_list functions as expected...")
 
 test_that("Approved_list exists in data folder...", {
 
-  expect_true(file.exists(file.path("data", "approved_list.rda")))
+  expect_true(file.exists(here::here("./data/approved_list.rda")))
 
 })
 
