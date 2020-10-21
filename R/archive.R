@@ -89,25 +89,33 @@ archive <- function(data_folder = choose_directory(), update_type = "major", Pop
   #(this may be needed if some data is removed or changed, but it will require changes to the pipelines)
   if (!all(new_data_name %in% current_data_name)) {
 
-    input <- 3
+    if (!interactive()) {
 
-    message("File names of new data and current data do not match!")
+      stop("File names of new data and current data do not match!")
 
-    while (input == 3) {
+    } else {
 
-      input <- menu(title = "\n Do you want to continue with the archiving? This may break the pipelines...",
-                    choices = c("Abort", "Continue", "View filenames"))
+      input <- 3
 
-      if (input == 3) {
+      message("File names of new data and current data do not match!")
 
-        print(data.frame(new_files = new_data_name,
-                         old_files = current_data_name))
+      while (input == 3) {
 
-      }
+        input <- menu(title = "\n Do you want to continue with the archiving? This may break the pipelines...",
+                      choices = c("Abort", "Continue", "View filenames"))
 
-      if (input == 1) {
+        if (input == 3) {
 
-        stop("File names of new data and current data do not match!")
+          print(data.frame(new_files = new_data_name,
+                           old_files = current_data_name))
+
+        }
+
+        if (input == 1) {
+
+          stop("File names of new data and current data do not match!")
+
+        }
 
       }
 
