@@ -118,6 +118,8 @@ If you are still unable to run the pipelines following these setup instructions 
 
 - Restart your computer before running pipelines to ensure R recognises the newly installed software and drivers.
 
+- If R does not recognise Python's *pandas* module, try installing it using ```reticulate::py_install("pandas")```.
+
 - Download the newest version of R [here](https://www.r-project.org/).
 
 - Update all R packages.
