@@ -124,6 +124,7 @@ archive <- function(data_folder = choose_directory(), update_type = "major", Pop
   }
 
   #Move working directory to population subfolder so that we can carry out bash script
+  resetwd <- getwd()
   setwd(pop_subfolder)
 
   #Create an archive folder if it doesn't exist...
@@ -140,7 +141,6 @@ archive <- function(data_folder = choose_directory(), update_type = "major", Pop
   system(paste0("mkdir ./archive/", date_folder_name))
 
   #Move all current data and metadata into the new folder
-  #MetaData should stay in the original folder because it will be adjusted for the new version
   purrr::walk(.x = current_data_path,
               .f = ~{
 
@@ -169,7 +169,9 @@ archive <- function(data_folder = choose_directory(), update_type = "major", Pop
 
   }
 
-  new_metadata <- paste0("Name: ", current_name, "\nPopID: ", PopID, "\nVersion: ", new_version, "\nLastUpdate: ", Sys.Date())
+  new_metadata <- paste0("Name: ", current_name, "\nPopID: ", PopID, "\nVersion: ", new_version, "\nLastUpdate: ", Sys.Date(), "\n")
   write(new_metadata, file = paste0(PopID, "_MetaData.txt"))
+
+  setwd(resetwd)
 
 }
