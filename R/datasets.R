@@ -4,25 +4,25 @@
 #' @format A data frame with 10 rows and 4 variables
 #' \describe{
 #'   \item{SpeciesID}{Species EUring code.}
-#'   \item{Code}{Species letter code.}
+#'   \item{Species}{Species letter code.}
 #'   \item{CommonName}{Common English name.}
 #'   \item{BinomialName}{Genus and species name.}
 #'   }
-#'@name Species_codes
-NULL
+#'@name species_codes
+species_codes <- utils::read.csv(system.file("extdata", "species_codes.csv", package = "pipelines", mustWork = TRUE))
 
 #'Population names and locations
 #'
 #'Information and identifying codes for all populations and data owners.
-#'@format A data frame with 23 rows and 4 variables
+#'@format A data frame with 26 rows and 4 variables
 #'\describe{
-#'  \item{code}{Three-letter population code.}
-#'  \item{name}{Name of population.}
-#'  \item{country}{Name of country where population is situated.}
-#'  \item{owner}{Letter code for data owner. Note, multiple populations can have
+#'  \item{PopID}{Three-letter population code.}
+#'  \item{PopName}{Name of population.}
+#'  \item{Country}{Name of country where population is situated.}
+#'  \item{Owner}{Letter code for data owner. Note, multiple populations can have
 #'  the same data owner.} }
-#'@name pop_names
-NULL
+#'@name pop_codes
+pop_codes <- utils::read.csv(system.file("extdata", "pop_codes.csv", package = "pipelines", mustWork = TRUE))
 
 #'Details for plotting png files of birds
 #'
@@ -89,13 +89,13 @@ NULL
 #'
 #'A data frame with each row containing a unique population
 #'and species combination.
-#'@format A data frame with 60 rows and 2 variables.
+#'@format A data frame with 97 rows and 2 variables.
 #'\describe{
-#'    \item{pop}{Three letter population ID.}
-#'    \item{species}{Six letter species ID.}
+#'    \item{PopCode}{Three letter population ID.}
+#'    \item{SpeciesCode}{Six letter species ID.}
 #'}
 #'@name pop_species_combos
-NULL
+pop_species_combos <- utils::read.csv(system.file("extdata", "pop_species_combos.csv", package = "pipelines", mustWork = TRUE))
 
 #' Quality check dummy data
 #'
@@ -176,13 +176,13 @@ NULL
 
 #' CheckIDs and variable names
 #'
-#' Data frame to link variable names and CheckIDs to be used in whitelisting of previously flagged records.
+#' Data frame to link variable names and CheckIDs to be used in approve-listing of previously flagged records.
 #'
 #' @format Data frame with 2 variables:
 #' \describe{
 #' \item{CheckID}{Unique identifier for individual quality check.}
-#' \item{Var}{Variable name.}
+#' \item{Variable}{Variable name.}
 #' }
 #'
-#' @name checkID_var
-NULL
+#' @name checkID_variable_combos
+checkID_variable_combos <- utils::read.csv(system.file("extdata", "checkID_variable_combos.csv", package = "pipelines", mustWork = TRUE))

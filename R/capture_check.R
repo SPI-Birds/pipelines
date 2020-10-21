@@ -342,7 +342,7 @@ check_values_capture <- function(Capture_data, var) {
 
     # Compare to approved_list
     error_records <- Capture_err %>%
-      dplyr::mutate(CheckID = checkID_var[checkID_var$Var == var,]$CheckID) %>%
+      dplyr::mutate(CheckID = checkID_variable_combos[checkID_variable_combos$Variable == var,]$CheckID) %>%
       dplyr::anti_join(approved_list$Capture_approved_list, by=c("PopID", "CheckID", "CaptureID"))
 
     # Create quality check report statements
@@ -350,7 +350,7 @@ check_values_capture <- function(Capture_data, var) {
                                 .f = ~{
                                   paste0("Record on row ", ..1,
                                          " (CaptureID: ", ..3, "; ",
-                                         Species_codes[Species_codes$Code == ..6, "CommonName"], " ", ..7, ")",
+                                         species_codes[species_codes$Species == ..6, "CommonName"], " ", ..7, ")",
                                          " has an impossible value in ", ..8, " (", ..4, ").")
                                 })
 
@@ -457,7 +457,7 @@ check_values_capture <- function(Capture_data, var) {
 
     # Compare to approved_list
     warning_records <- Capture_war %>%
-      dplyr::mutate(CheckID = checkID_var[checkID_var$Var == var,]$CheckID) %>%
+      dplyr::mutate(CheckID = checkID_variable_combos[checkID_variable_combos$Variable == var,]$CheckID) %>%
       dplyr::anti_join(approved_list$Capture_approved_list, by=c("PopID", "CheckID", "CaptureID"))
 
     # Create quality check report statements
@@ -476,7 +476,7 @@ check_values_capture <- function(Capture_data, var) {
 
                                       paste0("Record on row ", ..1,
                                              " (CaptureID: ", ..3, "; ",
-                                             Species_codes[Species_codes$Code == ..6, "CommonName"], " ", tolower(..7), ")",
+                                             species_codes[species_codes$Species == ..6, "CommonName"], " ", tolower(..7), ")",
                                              " has an unusually ",
                                              ifelse(..4 < wmin,
                                                     paste0("low value in ", ..8, " (", ..4, " < ", round(wmin, 2)),
@@ -487,7 +487,7 @@ check_values_capture <- function(Capture_data, var) {
 
                                       paste0("Record on row ", ..1,
                                              " (CaptureID: ", ..3, "; ",
-                                             Species_codes[Species_codes$Code == ..6, "CommonName"], " ", tolower(..7), ")",
+                                             species_codes[species_codes$Species == ..6, "CommonName"], " ", tolower(..7), ")",
                                              " has an unusually ",
                                              ifelse(..4 < capture_ref_values[[paste(..6, ..7, ..8, sep="_")]]$Value[1],
                                                     paste0("low value in ", ..8, " (", ..4, " < ",
@@ -514,7 +514,7 @@ check_values_capture <- function(Capture_data, var) {
   capture_ref_values <- NULL
   Species <- Age_calc <- NULL
   Variable <- NULL
-  approved_list <- checkID_var <- NULL
+  approved_list <- checkID_variable_combos <- NULL
 }
 
 
@@ -554,7 +554,7 @@ check_chick_age <- function(Capture_data){
     error_output <- purrr::pmap(.l = error_records,
                                 .f = ~{
                                   paste0("Record on row ", ..1,
-                                         " (CaptureID: ", ..3, ", ", Species_codes[Species_codes$Code == ..4, "CommonName"], ")",
+                                         " (CaptureID: ", ..3, ", ", species_codes[species_codes$Species == ..4, "CommonName"], ")",
                                          " has an impossible value in ChickAge (", ..5, ").")
                                 })
   }

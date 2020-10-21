@@ -66,7 +66,7 @@ format_PFN <- function(db = choose_directory(),
   #Determine species codes for filtering
   if(is.null(species)){
 
-    species <- Species_codes$Code
+    species <- species_codes$Species
 
   }
 
@@ -228,13 +228,13 @@ create_brood_EDM <- function(Primary_data, ReRingTable){
     ## 2) Add population ID and reformat colums with equivalent content but different format
     dplyr::mutate(PopID = "EDM",
                   BreedingSeason = as.integer(Year),
-                  Species = dplyr::case_when(.data$Species == "BLUTI" ~ Species_codes[Species_codes$SpeciesID == 14620, ]$Code,
-                                             .data$Species == "PIEFL" ~ Species_codes[Species_codes$SpeciesID == 13490, ]$Code,
-                                             .data$Species == "GRETI" ~ Species_codes[Species_codes$SpeciesID == 14640, ]$Code,
-                                             .data$Species == "REDST" ~ Species_codes[Species_codes$SpeciesID == 11220, ]$Code,
-                                             .data$Species == "MARTI" ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code,
-                                             .data$Species == "NUTHA" ~ Species_codes[Species_codes$SpeciesID == 14790, ]$Code,
-                                             .data$Species == "COATI" ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code,
+                  Species = dplyr::case_when(.data$Species == "BLUTI" ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
+                                             .data$Species == "PIEFL" ~ species_codes[species_codes$SpeciesID == 13490, ]$Species,
+                                             .data$Species == "GRETI" ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
+                                             .data$Species == "REDST" ~ species_codes[species_codes$SpeciesID == 11220, ]$Species,
+                                             .data$Species == "MARTI" ~ species_codes[species_codes$SpeciesID == 14400, ]$Species,
+                                             .data$Species == "NUTHA" ~ species_codes[species_codes$SpeciesID == 14790, ]$Species,
+                                             .data$Species == "COATI" ~ species_codes[species_codes$SpeciesID == 14610, ]$Species,
                                              .data$Species == "WREN" ~ NA_character_, # Missing, 1 observation only
                                              .data$Species == "TREEC" ~ NA_character_), # Missing, 1 observation only
                   ClutchType_observed = dplyr::case_when(.data$CltCd == "1" ~ "first",
@@ -305,8 +305,8 @@ create_brood_EDM <- function(Primary_data, ReRingTable){
                     OriginalTarsusMethod = "Alternative",
                     ExperimentID = NA_character_) %>%
 
-      # 6) Remove broods from species not included in Species_codes
-      dplyr::filter(.data$Species %in% Species_codes$Code) %>%
+      # 6) Remove broods from species not included in species_codes
+      dplyr::filter(.data$Species %in% species_codes$Species) %>%
 
       # 7) Replace non-conclusive male and female IDs with NA
       dplyr::mutate(FemaleID = dplyr::case_when(!(.data$FemaleID%in%badIDs) ~ .data$FemaleID,
@@ -384,13 +384,13 @@ create_capture_EDM <- function(CMR_data, Primary_data, ReRingTable){
     ## 4) Add population ID and reformat colums with equivalent content but different format
   #Capture_data <- Capture_data %>%
     dplyr::mutate(PopID = "EDM",
-                  Species = dplyr::case_when(.data$SPEC == "BLUTI" ~ Species_codes[Species_codes$SpeciesID == 14620, ]$Code,
-                                             .data$SPEC == "PIEFL" ~ Species_codes[Species_codes$SpeciesID == 13490, ]$Code,
-                                             .data$SPEC == "GRETI" ~ Species_codes[Species_codes$SpeciesID == 14640, ]$Code,
-                                             .data$SPEC == "REDST" ~ Species_codes[Species_codes$SpeciesID == 11220, ]$Code,
-                                             .data$SPEC == "MARTI" ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code,
-                                             .data$SPEC == "NUTHA" ~ Species_codes[Species_codes$SpeciesID == 14790, ]$Code,
-                                             .data$SPEC == "COATI" ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code),
+                  Species = dplyr::case_when(.data$SPEC == "BLUTI" ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
+                                             .data$SPEC == "PIEFL" ~ species_codes[species_codes$SpeciesID == 13490, ]$Species,
+                                             .data$SPEC == "GRETI" ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
+                                             .data$SPEC == "REDST" ~ species_codes[species_codes$SpeciesID == 11220, ]$Species,
+                                             .data$SPEC == "MARTI" ~ species_codes[species_codes$SpeciesID == 14400, ]$Species,
+                                             .data$SPEC == "NUTHA" ~ species_codes[species_codes$SpeciesID == 14790, ]$Species,
+                                             .data$SPEC == "COATI" ~ species_codes[species_codes$SpeciesID == 14610, ]$Species),
                     CaptureDate = as.Date(.data$DATE, format = "%d/%m/%Y"),
                     CaptureTime = ifelse(!grepl("00:00", Capture_data$DATE), sub(".* ", "", Capture_data$DATE), NA),
                     ObserverID = dplyr::case_when(!is.na(.data$INIT) ~ .data$INIT,
@@ -458,8 +458,8 @@ create_capture_EDM <- function(CMR_data, Primary_data, ReRingTable){
 
     ## 7) Exclude entries not included in the standard format
 
-    # Remove all individuals from species not included in Species_codes
-    dplyr::filter(.data$Species %in% Species_codes$Code) %>%
+    # Remove all individuals from species not included in species_codes
+    dplyr::filter(.data$Species %in% species_codes$Species) %>%
 
     # Remove all observations not involving a capture/dead recovery (i.e. resightings)
     dplyr::filter(.data$RTYPE != 'O') %>%
