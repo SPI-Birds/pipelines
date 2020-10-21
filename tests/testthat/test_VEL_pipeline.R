@@ -324,8 +324,8 @@ test_that("Location_data returns an expected outcome...", {
   expect_equal(subset(VEL_data, LocationID == "B1")$Habitat, "deciduous")
   #Latitude and Longitude are as expected
   #We use 3 decimal places to clearly distinguish close nest boxes
-  expect_equal(round(subset(VEL_data, LocationID == "B1")$Latitude, 3), 49.552)
-  expect_equal(round(subset(VEL_data, LocationID == "B1")$Longitude, 3), 17.044)
+  expect_equal(round(subset(VEL_data, LocationID == "B1")$Latitude, 3) %>% setNames(nm = NULL), 49.552)
+  expect_equal(round(subset(VEL_data, LocationID == "B1")$Longitude, 3) %>% setNames(nm = NULL), 17.044)
 
   #Test 2: Nestbox evergreen
   #LocationType is as expected
@@ -334,8 +334,8 @@ test_that("Location_data returns an expected outcome...", {
   expect_equal(subset(VEL_data, LocationID == "E9")$Habitat, "evergreen")
   #Latitude and Longitude are as expected
   #We use 3 decimal places to clearly distinguish close nest boxes
-  expect_equal(round(subset(VEL_data, LocationID == "E9")$Latitude, 3), 49.552)
-  expect_equal(round(subset(VEL_data, LocationID == "E9")$Longitude, 3), 17.067)
+  expect_equal(round(subset(VEL_data, LocationID == "E9")$Latitude, 3) %>% setNames(nm = NULL), 49.552)
+  expect_equal(round(subset(VEL_data, LocationID == "E9")$Longitude, 3) %>% setNames(nm = NULL), 17.067)
 
   #Test 3: Nestbox with no coordinates
   #LocationType is as expected
@@ -343,7 +343,7 @@ test_that("Location_data returns an expected outcome...", {
   #Habitat is as expected
   expect_equal(subset(VEL_data, LocationID == "T2")$Habitat, "evergreen")
   #Latitude and longitude are as expected
-  expect_equal(subset(VEL_data, LocationID == "T2")$Latitude, NA_real_)
-  expect_equal(subset(VEL_data, LocationID == "T2")$Longitude, NA_real_)
+  expect_equal(subset(VEL_data, LocationID == "T2")$Latitude %>% setNames(nm = NULL), NA_real_)
+  expect_equal(subset(VEL_data, LocationID == "T2")$Longitude %>% setNames(nm = NULL), NA_real_)
 
 })

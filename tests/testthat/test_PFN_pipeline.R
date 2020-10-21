@@ -213,8 +213,8 @@ test_that("Location_data returns an expected outcome...", {
   #Check that LocationID is in the expected PopID
   expect_equal(subset(PFN_data, LocationID == "HIDE9")$PopID, "EDM")
   #Check that latitude and longitude are as expected
-  expect_equal(round(subset(PFN_data, LocationID == "HIDE9")$Latitude, 2), 278419)
-  expect_equal(round(subset(PFN_data, LocationID == "HIDE9")$Longitude, 2), 78643)
+  expect_equal(round(subset(PFN_data, LocationID == "HIDE9")$Latitude, 2) %>% setNames(nm = NULL), 278419)
+  expect_equal(round(subset(PFN_data, LocationID == "HIDE9")$Longitude, 2) %>% setNames(nm = NULL), 78643)
   #Check that habitat type is correct
   expect_equal(subset(PFN_data, LocationID == "HIDE9")$HabitatType, "deciduous")
 

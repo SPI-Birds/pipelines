@@ -143,6 +143,6 @@ test_that("Single checks function as expected...", {
 test_that("Approved-listing procedure functions as expected...", {
 
   expect_equal(subset(dummy_check$R_data$Brood_data, Row == 0)$Warning, NA)
-  expect_equal(subset(dummy_check$R_data$Brood_data, Row == 0)$Error, NA)
+  expect_equal(subset(dummy_check$R_data$Brood_data, Row == 0)$Error, TRUE)
 
 })

@@ -163,7 +163,7 @@ test_that("Location_data returns an expected outcome...", {
   #Check that LocationID is in the expected PopID
   expect_equal(subset(WYT_data, LocationID == "P1")$PopID, "WYT")
   #Check that latitude and longitude are as expected
-  expect_equal(subset(WYT_data, LocationID == "P1")$Latitude, NA_real_)
-  expect_equal(subset(WYT_data, LocationID == "P1")$Longitude, NA_real_)
+  expect_equal(subset(WYT_data, LocationID == "P1")$Latitude %>% setNames(nm = NULL), NA_real_)
+  expect_equal(subset(WYT_data, LocationID == "P1")$Longitude %>% setNames(nm = NULL), NA_real_)
 
 })

@@ -19,7 +19,7 @@
 
 create_approved_list <- function(new_approved_list){
 
-  if(file.exists("data/approved_list.rda")) {
+  if (file.exists(here::here("./data/approved_list.rda"))) {
 
     # Stop if new_approved_list is missing
     if(missing(new_approved_list)) {
