@@ -55,7 +55,7 @@ dummy_approved_list <- list(Brood_approved_list = tibble::tibble(PopID = "AAA",
 backup_approved_list <- approved_list
 
 # Create dummy
-create_approved_list(dummy_approved_list)
+create_approved_list(dummy_approved_list, dummy = TRUE)
 
 # Run quality check for dummy data and produce no report
 dummy_check <- quality_check(R_data = dummy_data,
