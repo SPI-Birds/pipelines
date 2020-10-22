@@ -80,7 +80,7 @@ quality_check_titlepage_pdf <- "\\renewcommand{\\familydefault}{\\sfdefault}
 % =================
 %	Information
 % =================
-	{\\large Produced by: SPI-Birds team (Antica Culina, Liam D. Bailey, Chlo\\'e R. Nater, Stefan J.G. Vriend \\& Marcel E. Visser)} \\\\
+	{\\large Produced by: SPI-Birds team \\\\(Antica Culina, Liam D. Bailey, Chlo\\'e R. Nater, \\\\Stefan J.G. Vriend, Zuzana Zajkov\\'a \\& Marcel E. Visser)} \\\\
 	\\vfill
 \\end{titlepage}"
 
