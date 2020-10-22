@@ -431,38 +431,38 @@ check_conflicting_sex <- function(Individual_data) {
     {if("Sex" %in% colnames(.)) dplyr::filter(., Sex == "C")
       else dplyr::filter(., Sex_calculated == "C" | Sex_genetic == "C")}
 
-  # No errors
+  # Errors
   err <- FALSE
-  #error_records <- tibble::tibble(Row = NA_character_)
+  error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  # Warnings
-  war <- FALSE
-  warning_records <- tibble::tibble(Row = NA_character_)
-  warning_output <- NULL
-
   if(nrow(Conflicting_sex) > 0) {
-    war <- TRUE
+    err <- TRUE
 
     # Compare to approved_list
-    warning_records <- Conflicting_sex %>%
+    error_records <- Conflicting_sex %>%
       dplyr::mutate(CheckID = "I4") %>%
       dplyr::anti_join(approved_list$Individual_approved_list, by=c("PopID", "CheckID", "IndvID"))
 
     # Create quality check report statements
-    warning_output <- purrr::pmap(.l = warning_records,
+    error_output <- purrr::pmap(.l = error_records,
                                   .f = ~{
                                     paste0("Record on row ", ..1, " (IndvID: ", ..2, ")",
                                            " has conflicting sex.")
                                   })
   }
 
+  # No warnings
+  war <- FALSE
+  #warning_records <- tibble::tibble(Row = NA_character_)
+  warning_output <- NULL
+
   check_list <- tibble::tibble(Warning = war,
                                Error = err)
 
   return(list(CheckList = check_list,
-              WarningRows = warning_records$Row,
-              ErrorRows = NULL,
+              WarningRows = NULL,
+              ErrorRows = error_records$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 
