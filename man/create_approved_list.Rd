@@ -4,10 +4,10 @@
 \alias{create_approved_list}
 \title{Create approved_list}
 \usage{
-create_approved_list(new_approved_list)
+create_approved_list(dummy = FALSE)
 }
 \arguments{
-\item{new_approved_list}{A list of the same format as the approved_list with new verified records.}
+\item{dummy}{\code{TRUE} or \code{FALSE} (default). If \code{TRUE}, a dummy approved_list is created for running tests.}
 }
 \value{
 List of 4 dataframes:
@@ -17,7 +17,7 @@ List of 4 dataframes:
 \item{Location_approved_list}{Approved records in Location_data.}
 }
 \description{
-A function to create a list of values that are verified as correct by data owners but previously marked as warning/error.
+A function to combine data-specific approved lists (stored in .csv files) and create a dummy approved list for package testing.
 }
 \details{
 When a data owner is sent a quality check report, they can determine whether the flagged records are a) unverifiable, b) verifiable and incorrect, or c) verifiable and correct. If a), it cannot be known for certain whether the information should be kept or removed. They are continued to be flagged as improbable/impossible, and it is up to the user to decide how they treat them in analysis. If b), it will continue to be flagged until the data owner changes the value in the raw data. If c), the records will be disregarded for future quality checks.

@@ -370,4 +370,7 @@ quality_check <- function(R_data,
                             Capture_data = Capture_data,
                             Individual_data = Individual_data,
                             Location_data = Location_data)))
+
+  # Satisfy RCMD checks
+  approved_list <- CheckID <- NULL
 }

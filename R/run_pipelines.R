@@ -191,4 +191,7 @@ run_pipelines <- function(path = choose_directory(),
 
   }
 
+  # Satisfy RCMD checks
+  PopCode <- SpeciesCode <- Owner <- NULL
+
 }
