@@ -19,6 +19,7 @@
 #'
 #' @inherit checks_return return
 #'
+#' @import tidyselect
 #' @export
 
 individual_check <- function(Individual_data, Capture_data, Location_data, check_format=TRUE){
@@ -425,8 +426,10 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data) {
 check_conflicting_sex <- function(Individual_data) {
 
   # Select records with conflicting sex
+  # NB: allows v1.0 & v1.1 variable names of the standard format
   Conflicting_sex <- Individual_data %>%
-    dplyr::filter(Sex == "C")
+    {if("Sex" %in% colnames(.)) dplyr::filter(., Sex == "C")
+      else dplyr::filter(., Sex_calculated == "C" | Sex_genetic == "C")}
 
   # No errors
   err <- FALSE
