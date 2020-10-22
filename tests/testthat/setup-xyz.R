@@ -32,30 +32,10 @@ if(file.exists("../../inst/extdata/test_data.RDS")){
     stop(paste0('Operating system ', OS, ' not supported'))
   }
 
-
-
 }
 
-# Create dummy approved_list
-dummy_approved_list <- list(Brood_approved_list = tibble::tibble(PopID = "AAA",
-                                                                 BroodID = "AAA-2020-0",
-                                                                 CheckID = "B4"),
-                            Capture_approved_list = tibble::tibble(PopID = NA_character_,
-                                                                   CaptureID = NA_character_,
-                                                                   CheckID = NA_character_),
-                            Individual_approved_list = tibble::tibble(PopID = NA_character_,
-                                                                      IndvID = NA_character_,
-                                                                      CheckID = NA_character_),
-                            Location_approved_list = tibble::tibble(PopID = NA_character_,
-                                                                    LocationID = NA_character_,
-                                                                    CheckID = NA_character_)
-                            )
-
-# Back-up existing approved_list
-backup_approved_list <- approved_list
-
 # Create dummy
-create_approved_list(dummy_approved_list, dummy = TRUE)
+create_approved_list(dummy = TRUE)
 
 # Run quality check for dummy data and produce no report
 dummy_check <- quality_check(R_data = dummy_data,
