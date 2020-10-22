@@ -50,7 +50,7 @@ quality_check <- function(R_data,
   Location_data <- R_data$Location_data
 
   # Add temporary empty CaptureID column to allow procedure to approve previously flagged records
-  if(!(CaptureID %in% colnames(Capture_data))) Capture_data$CaptureID <- NA_character_
+  if(!("CaptureID" %in% colnames(Capture_data))) Capture_data$CaptureID <- NA_character_
   ##FIXME remove after CaptureID column has been added in ALL pipelines
 
   # Run checks

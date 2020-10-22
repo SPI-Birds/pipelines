@@ -708,6 +708,7 @@ compare_hatching_fledging <- function(Brood_data){
 #'
 #' @inherit checks_return return
 #'
+#' @importFrom progress progress_bar
 #' @export
 
 check_values_brood <- function(Brood_data, var) {
@@ -853,7 +854,7 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data) {
   # Select records where number of chicks in Capture_data > brood size in Brood_data
   # (this should not be possible)
   # NB: allows v1.0 & v1.1 variable names of the standard format
-  Brood_err <- Brood_data2 %>%
+  Brood_err <- Brood_data %>%
     dplyr::left_join(Chicks_captured, by=c("BroodID" = "BroodIDLaid")) %>%
     {if("BroodSize" %in% colnames(.)) dplyr::filter(.,  BroodSize < Chicks)
       else dplyr::filter(., BroodSize_observed < Chicks)} %>%
@@ -886,7 +887,6 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data) {
   # Select records where number of chicks in Capture_data < brood size in Brood_data
   # (chicks might have died before measuring/ringing)
   Brood_war <- Brood_data %>%
-    dplyr::left_join(Chicks_captured, by=c("BroodID" = "BroodIDLaid")) %>%
     dplyr::left_join(Chicks_captured, by=c("BroodID" = "BroodIDLaid")) %>%
     {if("BroodSize" %in% colnames(.)) dplyr::filter(.,  BroodSize > Chicks)
       else dplyr::filter(., BroodSize_observed > Chicks)} %>%
