@@ -5,6 +5,8 @@
 #' Should be the same as the folder name where data are saved.
 #' @param new_data_path File path. Updated data to use as current data in the system.
 #' Where a population uses multiple files provide a list of file paths.
+#' @param update_type Character string. Have we received a new year of data ("major")
+#' or data with bug/error fixes ("minor")?
 #'
 #' @return Returns nothing.
 #' @export
@@ -12,7 +14,8 @@
 #' @examples
 archive <- function(data_folder = choose_directory(), update_type = "major", PopID, new_data_path) {
 
-  #Force data folder and new data paths in that order...
+  #Force data folder and new data paths in that order
+  #This is useful if both arguments use file explorer
   force(data_folder)
   force(new_data_path)
 
@@ -34,16 +37,18 @@ archive <- function(data_folder = choose_directory(), update_type = "major", Pop
   all_subfolder <- list.dirs(data_folder)
   pop_subfolder <- all_subfolder[stringr::str_detect(all_subfolder, pattern = paste0(PopID, "_"))]
 
+  #Check that PopID matches one of the subfolders in the data
   if (length(pop_subfolder) == 0) {
 
     stop("No subfolder exists for this population. Do you have the correct PopID?")
 
   }
 
-  #Find all file paths inside the folder that are considered primary data
+  #Find all file paths inside the folder that are considered primary data or metadata.txt
   current_data_path <- list.files(pop_subfolder, pattern = "_PrimaryData_|MetaData.txt", full.names = TRUE)
 
   #Separate filename from paths
+  #Need this to check that names match (regardless of the file location)
   current_data_name <- purrr::map_chr(.x = current_data_path,
                                       .f = ~{
 
@@ -55,11 +60,12 @@ archive <- function(data_folder = choose_directory(), update_type = "major", Pop
                                       })
 
   #Extract meta-data info. We need this for determining new meta-data
-  current_metadata <- read.delim(current_data_path[1], sep = "", header = FALSE)
+  current_metadata <- utils::read.delim(current_data_path[1], sep = "", header = FALSE)
   current_name     <- current_metadata[1, 2]
   current_version  <- as.numeric(current_metadata[3, 2])
 
   #Separate filename of new data from file path
+  #As above, we need this to check that names match (regardless of the file location)
   new_data_name <- purrr::map_chr(.x = new_data_path,
                                   .f = ~{
 
@@ -101,7 +107,7 @@ archive <- function(data_folder = choose_directory(), update_type = "major", Pop
 
       while (input == 3) {
 
-        input <- menu(title = "\n Do you want to continue with the archiving? This may break the pipelines...",
+        input <- utils::menu(title = "\n Do you want to continue with the archiving? This may break the pipelines...",
                       choices = c("Abort", "Continue", "View filenames"))
 
         if (input == 3) {
@@ -134,13 +140,13 @@ archive <- function(data_folder = choose_directory(), update_type = "major", Pop
 
   }
 
-  #Determine the name for the newest
+  #Determine the name for the new archiving subfolder
   date_folder_name <- format(Sys.Date(), format = "%d_%m_%Y")
 
   #Create a new folder with this name inside the archive folder
   system(paste0("mkdir ./archive/", date_folder_name))
 
-  #Move all current data and metadata into the new folder
+  #Move all current data and metadata into the new archive folder
   purrr::walk(.x = current_data_path,
               .f = ~{
 
@@ -157,7 +163,7 @@ archive <- function(data_folder = choose_directory(), update_type = "major", Pop
               })
 
   #Update the meta-data
-  #If it's a major update, the version number is YYYY.00
+  #If it's a major update, the version number is YYYY.00 FIXME: Do we want this, or do we prefer regular version numbers e.g. 1.0, 1.1 etc.
   #If it's a minor update, the version number is current version + .01
   if (update_type == "major") {
 
@@ -172,6 +178,7 @@ archive <- function(data_folder = choose_directory(), update_type = "major", Pop
   new_metadata <- paste0("Name: ", current_name, "\nPopID: ", PopID, "\nVersion: ", new_version, "\nLastUpdate: ", Sys.Date(), "\n")
   write(new_metadata, file = paste0(PopID, "_MetaData.txt"))
 
+  #Set working directory back to the project folder
   setwd(resetwd)
 
 }
