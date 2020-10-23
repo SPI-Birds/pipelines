@@ -646,13 +646,15 @@ create_individual_VEL     <- function(Capture_data){
 #' Create location data table for Velky Kosir.
 #'
 #' Create location data table in standard format for all nest boxes.
+#'
 #' @param Brood_data Data frame. Output of \code{\link{create_brood_VEL}}
 #' @param TIT_data Data frame. Data frame. Tit data from Velky Kosir. This is
 #'   needed to include habitat type information.
+#' @param db Location of database file.
 #'
 #' @return A data frame.
 
-create_location_VEL       <- function(db, Brood_data, TIT_data){
+create_location_VEL <- function(db, Brood_data, TIT_data){
 
   location_data_excel <- readxl::read_excel(paste0(db, "/VEL_PrimaryData_locations.xls"),
                                       col_types = c("text")) %>%

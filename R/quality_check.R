@@ -84,19 +84,19 @@ quality_check <- function(R_data,
   # Subset approved list items
   Brood_approved_list <- approved_list$Brood_approved_list %>%
     dplyr::filter(PopID %in% unique(R_data$Brood_data$PopID)) %>%
-    dplyr::arrange(PopID, BroodID, CheckID)
+    dplyr::arrange(PopID, BroodID, .data$CheckID)
 
   Capture_approved_list <- approved_list$Capture_approved_list %>%
     dplyr::filter(PopID %in% unique(R_data$Brood_data$PopID)) %>%
-    dplyr::arrange(PopID, CaptureID, CheckID)
+    dplyr::arrange(PopID, CaptureID, .data$CheckID)
 
   Individual_approved_list <- approved_list$Individual_approved_list %>%
     dplyr::filter(PopID %in% unique(R_data$Brood_data$PopID)) %>%
-    dplyr::arrange(PopID, IndvID, CheckID)
+    dplyr::arrange(PopID, IndvID, .data$CheckID)
 
   Location_approved_list <- approved_list$Location_approved_list %>%
     dplyr::filter(PopID %in% unique(R_data$Brood_data$PopID)) %>%
-    dplyr::arrange(PopID, LocationID, CheckID)
+    dplyr::arrange(PopID, LocationID, .data$CheckID)
 
 
   # Check messages

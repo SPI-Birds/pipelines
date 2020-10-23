@@ -215,8 +215,8 @@ create_brood_WYT <- function(db, species_filter){
                                                 }
 
                                               }), format = "%d/%m/%Y"),
-                  NumberEggs = num_eggs_weighed,
-                  AvgEggMass = purrr::pmap_dbl(.l = list(total_egg_weight, num_eggs_weighed, legacy_average_egg_weight),
+                  NumberEggs = .data$num_eggs_weighed,
+                  AvgEggMass = purrr::pmap_dbl(.l = list(.data$total_egg_weight, .data$num_eggs_weighed, .data$legacy_average_egg_weight),
                                                .f = ~{
 
                                                  pb$print()$tick()
@@ -246,7 +246,7 @@ create_brood_WYT <- function(db, species_filter){
                                                   .$experiment_codes == "11" ~ "SURVIVAL",
                                                   .$experiment_codes == "12" ~ "SURVIVAL",
                                                   .$experiment_codes == "13" ~ "SURVIVAL"),
-                  BroodID = toupper(pnum)) %>%
+                  BroodID = toupper(.data$pnum)) %>%
     dplyr::arrange(BreedingSeason, FemaleID, LayDate) %>%
     dplyr::mutate(ClutchType_observed = NA,
                   ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE),
@@ -299,18 +299,18 @@ create_capture_WYT <- function(db, Brood_data, species_filter){
                                              toupper(species_code) == "COATI" ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code,
                                              toupper(species_code) == "MARTI" ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code)) %>%
     dplyr::filter(Species %in% species_filter) %>%
-    dplyr::mutate(CaptureDate = janitor::excel_numeric_to_date(as.numeric(date_time)), CaptureTime = NA_character_) %>%
+    dplyr::mutate(CaptureDate = janitor::excel_numeric_to_date(as.numeric(.data$date_time)), CaptureTime = NA_character_) %>%
     dplyr::rowwise() %>%
-    dplyr::mutate(BreedingSeason = ifelse(is.na(CaptureDate), as.numeric(stringr::str_sub(pnum, start = 1, end = 4)),
+    dplyr::mutate(BreedingSeason = ifelse(is.na(CaptureDate), as.numeric(stringr::str_sub(.data$pnum, start = 1, end = 4)),
                                           lubridate::year(CaptureDate))) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(IndvID = toupper(ring_number), CapturePopID = "WYT",
-                  CapturePlot = stringr::str_remove_all(string = toupper(pnum), pattern = "\\d"),
-                  LocationID = stringr::str_sub(toupper(pnum), start = 6),
+                  CapturePlot = stringr::str_remove_all(string = toupper(.data$pnum), pattern = "\\d"),
+                  LocationID = stringr::str_sub(toupper(.data$pnum), start = 6),
                   #Release is just NA for now because we need to find the location with cross-fostering
                   ReleasePopID = "WYT", ReleasePlot = NA_character_,
                   ObserverID = NA_character_,
-                  Mass = as.numeric(weight), WingLength = as.numeric(wing_length),
+                  Mass = as.numeric(.data$weight), WingLength = as.numeric(.data$wing_length),
                   Age_observed = dplyr::case_when(age %in% c("3", "3J") ~ 3L,
                                                   age == "0" ~ NA_integer_,
                                                   age == "1" ~ 1L,
@@ -395,22 +395,22 @@ create_capture_WYT <- function(db, Brood_data, species_filter){
                                              toupper(bto_species_code) == "COATI" ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code,
                                              toupper(bto_species_code) == "MARTI" ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code,
                                              toupper(bto_species_code) == "NUTHA" ~ Species_codes[Species_codes$SpeciesID == 14790, ]$Code),
-                  CaptureDate = janitor::excel_numeric_to_date(as.numeric(date_time) %/% 1),
-                  CaptureTime = paste(stringr::str_pad(string = ((as.numeric(date_time) %% 1) * 24) %/% 1,
+                  CaptureDate = janitor::excel_numeric_to_date(as.numeric(.data$date_time) %/% 1),
+                  CaptureTime = paste(stringr::str_pad(string = ((as.numeric(.data$date_time) %% 1) * 24) %/% 1,
                                                        width = 2, pad = "0"),
-                                      stringr::str_pad(string = round((((as.numeric(date_time) %% 1) * 24) %% 1) * 60),
+                                      stringr::str_pad(string = round((((as.numeric(.data$date_time) %% 1) * 24) %% 1) * 60),
                                                        width = 2, pad = "0"), sep = ":")) %>%
     dplyr::rowwise() %>%
-    dplyr::mutate(BreedingSeason = ifelse(is.na(CaptureDate), as.numeric(stringr::str_sub(pnum, start = 1, end = 4)),
+    dplyr::mutate(BreedingSeason = ifelse(is.na(CaptureDate), as.numeric(stringr::str_sub(.data$pnum, start = 1, end = 4)),
                                           lubridate::year(CaptureDate))) %>%
     dplyr::ungroup() %>%
-    dplyr::mutate(IndvID = toupper(bto_ring), CapturePopID = "WYT",
-                  CapturePlot = stringr::str_remove_all(string = toupper(pnum), pattern = "\\d"),
-                  LocationID = stringr::str_sub(toupper(pnum), start = 6),
+    dplyr::mutate(IndvID = toupper(.data$bto_ring), CapturePopID = "WYT",
+                  CapturePlot = stringr::str_remove_all(string = toupper(.data$pnum), pattern = "\\d"),
+                  LocationID = stringr::str_sub(toupper(.data$pnum), start = 6),
                   #Release is just NA for now because we need to find the location with cross-fostering
                   ReleasePopID = "WYT", ReleasePlot = NA_character_,
                   ObserverID = NA_character_,
-                  Mass = as.numeric(weight), WingLength = as.numeric(wing_length),
+                  Mass = as.numeric(.data$weight), WingLength = as.numeric(.data$wing_length),
                   #Currently just treat ages as is (assume they are EURING codes)
                   Age_observed = as.integer(age)) %>%
     #Add tarsus. We are assuming that when tarsus method is "S" this is Svensson's Alternative and doesn't need conversion

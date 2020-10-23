@@ -40,7 +40,7 @@ in East Dartmoor, UK, administered by PiedFlyNet.
 \details{
 This section provides details on data management choices that are unique to
 this data. For a general description of the standard protocl please see
-\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
+\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 
 \strong{Species}: By default, pipeline outputs will include great tit \emph{Parus
 major}; blue tit \emph{Cyanistes caeruleus}; pied flycatcher \emph{Ficedula
@@ -58,14 +58,16 @@ not been added to the BTO ringing data, the pipeline merges chick trait values f
 into Capture data.
 
 \strong{Unidentified individuals}: Some individuals have not been given unique IDs. They appear
-in the primary data as: "RUNT", "ringed", "ringed left", "ringed right", "unringed", or "Unringed".
-In the Brood data, we assume unknown identity and treat ID as NA. From Capture data and Individual
-data, these individuals are omitted entirely.
+in the primary data as "RUNT", "ringed", "ringed left", "ringed right", "unringed", or "Unringed",
+and the pipeline recognizes them as improper IDs as they do not follow the standard format of ring
+numbers for this data (defined as a sequences of 1-9 letters followed by a sequence of 1-9 integer numbers).
+In the Brood data, we assume unknown identity for individuals with improper IDs and treat ID as NA.
+From Capture data and Individual data, these individuals are omitted entirely.
 
 \strong{Re-ringing events}: Some individuals carry multiple rings (up to 3 in this data) throughout
-their lives, and re-ringing events are recorded in the BTO ringing database. The pipeline identifies
-birds with several rings, and assigns them a new unique individual identifier of the the form
-'MULTIRINGx', where 'x' is an integer number.
+their lives, and re-ringing events are recorded in the BTO ringing database. To correctly link data to
+individuals (not just ring numbers), the pipeline assigns a unique individual identifier defined as
+the number of the first ring ever given to this individual.
 
 \strong{Resightings}: The capture primary data contains some resightings of birds. At present, these
 records are excluded from the outputs because the standard format for capture data cannot distinguish
@@ -74,7 +76,7 @@ may be added to a future update of the standard format.
 
 \strong{LayDate_observed and HatchDate_observed}: Information is provided as date of first egg (DFE) and
 date of hatching (DH). These are given as integer number, and represent days after a set
-starting date (day 0). Day 0 is defined as 31.
+starting date (day 0). Day 0 is defined as 31. March.
 
 \strong{ChickAge}: For every capture, we estimate the age of a chick as the difference between the hatch date
 taken from BroodIDFledged (in Individual_data) and the CaptureDate.

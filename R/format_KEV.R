@@ -98,6 +98,8 @@
 #'mistakes in the primary data.}
 #'
 #'@inheritParams pipeline_params
+#'@param return_errors Logical. Should capture data include those individuals with
+#'errors in ring sequences?
 #'
 #'@return Generates either 4 .csv files or 4 data frames in the standard format.
 #'@export
@@ -191,7 +193,7 @@ format_KEV <- function(db = choose_directory(),
   Parents <- Parents %>%
     dplyr::filter(!BroodID %in% NA_broods) %>%
     tidyr::pivot_wider(names_from = Sex, values_from = IndvID) %>%
-    dplyr::rename(FemaleID = F, MaleID = M)
+    dplyr::rename(FemaleID = .data$F, MaleID = .data$M)
 
   #Join avg measurements and parents to brood data
   Brood_data <- dplyr::left_join(Brood_data, Chick_avg, by = "BroodID") %>%
@@ -370,10 +372,11 @@ create_nestling_KEV <- function(db, Brood_data){
 #'  interest as listed in the
 #'  \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{standard
 #'  protocol}.
+#' @param return_errors Logical. Return those records with errors in the ring sequence.
 #'
 #' @return A data frame.
 
-create_capture_KEV    <- function(db, Brood_data, species_filter, return_errors){
+create_capture_KEV <- function(db, Brood_data, species_filter, return_errors){
 
   Nestling_data <- create_nestling_KEV(db = db, Brood_data = Brood_data)
 
@@ -443,7 +446,7 @@ create_capture_KEV    <- function(db, Brood_data, species_filter, return_errors)
     dplyr::mutate(Brood_ring = paste(BroodID, stringr::str_sub(RingNumber, start = -2), sep = "_")) %>%
     dplyr::anti_join(Nestling_data %>%
                        dplyr::mutate(Brood_ring = paste(BroodID, Last2DigitsRingNr, sep = "_")) %>%
-                       dplyr::select(Brood_ring),
+                       dplyr::select(.data$Brood_ring),
                      by = "Brood_ring") %>%
     dplyr::left_join(select(Brood_data, BroodID, HatchDate), by = "BroodID") %>%
     #Join in Brood_data (with HatchDate) so we can determine ChickAge

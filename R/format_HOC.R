@@ -234,7 +234,7 @@ create_capture_HOC <- function(db){
 
                     }
 
-                  }), Mass = as.numeric(mass_g), WingLength = as.numeric(wing_length_mm),
+                  }), Mass = as.numeric(mass_g), WingLength = as.numeric(.data$wing_length_mm),
                   Tarsus = as.numeric(tarsus_length_mm), OriginalTarsusMethod = "Alternative") %>%
     dplyr::bind_cols(., purrr::pmap_df(.l = list(age_exact = .$age_exact, age_simple = .$age_simple, BreedingSeason = .$BreedingSeason),
 
@@ -272,11 +272,11 @@ create_capture_HOC <- function(db){
   Death_captures <- readxl::read_excel(paste0(db, "/HOC_PrimaryData.xlsx"), sheet = "DeadBirds ID", na = c("", "na"),
                                        col_types = "text") %>%
     janitor::clean_names() %>%
-    dplyr::mutate(CaptureDate = janitor::excel_numeric_to_date(as.numeric(date_found)),
-                  IndvID = ringnumber) %>%
+    dplyr::mutate(CaptureDate = janitor::excel_numeric_to_date(as.numeric(.data$date_found)),
+                  IndvID = .data$ringnumber) %>%
     #Find cases where that individual was not recorded captured on that date
-    dplyr::left_join(x = ., y = (Capture_data %>% dplyr::mutate(in_capt = TRUE) %>% dplyr::select(CaptureDate, IndvID, in_capt)), by = c("CaptureDate", "IndvID")) %>%
-    dplyr::filter(is.na(in_capt)) %>%
+    dplyr::left_join(x = ., y = (Capture_data %>% dplyr::mutate(in_capt = TRUE) %>% dplyr::select(CaptureDate, IndvID, .data$in_capt)), by = c("CaptureDate", "IndvID")) %>%
+    dplyr::filter(is.na(.data$in_capt)) %>%
     dplyr::mutate(Species = "PARMAJ", BreedingSeason = lubridate::year(CaptureDate),
                   CaptureTime = NA_character_, ObserverID = NA_character_,
                   LocationID = NA_character_, CapturePopID = "HOC",
