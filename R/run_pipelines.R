@@ -65,6 +65,35 @@ run_pipelines <- function(path = choose_directory(),
 
   }
 
+  #Determine operating system
+  OS <- tolower(sessionInfo()$running)
+
+  #Drop populations from Access-based primary data if running on Mac
+  PopID_Access <- c("HOG", "OOS", "VLI", "BUU", "LIE", "WAR", "WES", "AMM")
+
+  if(grepl(pattern = 'mac', x = OS)){
+
+    if(length(PopID[which(PopID%in%PopID_Access)] > 0)){
+      warning(paste0('Pipelines not run for the following populations due to OS incopatibility: ',
+                    toString(PopID[which(PopID%in%PopID_Access)]),
+                    ". To obtain standard format data for these populations, please run on a Windows OS.")
+              )
+    }
+
+    PopID <- PopID[which(!(PopID%in%PopID_Access))]
+
+  }else if(grepl(pattern = 'windows', x = OS)){
+
+    PopID <- PopID
+
+  }else{
+    stop(paste0('Operating system ', OS, ' not supported'))
+  }
+
+  if(length(PopID) == 0){
+    stop(paste0('None of the selected pipeline(s) could not be run due to OS incopatibility. Please run on a Windows OS.'))
+  }
+
   #Assign species for filtering
   if(is.null(Species)){
 
@@ -169,7 +198,7 @@ run_pipelines <- function(path = choose_directory(),
 
     if(save){
 
-      saveRDS(output_object, file = paste0(save_path, "\\", filename, ".RDS"))
+      saveRDS(output_object, file = paste0(save_path, "/", filename, ".RDS"))
 
     }
 
@@ -179,13 +208,13 @@ run_pipelines <- function(path = choose_directory(),
 
     message("Saving combined .csv files...")
 
-    utils::write.csv(x = Brood_data, file = paste0(save_path, "\\", filename, "_Brood_data.csv"), row.names = F)
+    utils::write.csv(x = Brood_data, file = paste0(save_path, "/", filename, "_Brood_data.csv"), row.names = F)
 
-    utils::write.csv(x = Capture_data, file = paste0(save_path, "\\", filename, "_Capture_data.csv"), row.names = F)
+    utils::write.csv(x = Capture_data, file = paste0(save_path, "/", filename, "_Capture_data.csv"), row.names = F)
 
-    utils::write.csv(x = Individual_data, file = paste0(save_path, "\\", filename, "Individual_data.csv"), row.names = F)
+    utils::write.csv(x = Individual_data, file = paste0(save_path, "/", filename, "Individual_data.csv"), row.names = F)
 
-    utils::write.csv(x = Location_data, file = paste0(save_path, "\\", filename, "_Location_data.csv"), row.names = F)
+    utils::write.csv(x = Location_data, file = paste0(save_path, "/", filename, "_Location_data.csv"), row.names = F)
 
     invisible(NULL)
 
