@@ -15,6 +15,9 @@
 #' @param Species Character vector of six letter species codes. Include all species that are requested.
 #' @param filter Character vector of unique population species combinations (in the format PopID_Species).
 #' Include all unique population species combinations requested.
+#' @param include_conflicting is FALSE. If include_conflicting = TRUE, individuals of conflicting species which
+#' were identified as a species contained in `Species` at least once are included in the subset of data. If
+#' include_conflicting = FALSE, these individuals are removed.
 #' @param output_type is 'R' and can be set to 'csv'. If output_type is 'csv' 4 .csv files will be created in the save path.
 #' If output_type is 'R' an .RDS file will be created in the save path, and an R object in the
 #' running R session if return_R = TRUE.
@@ -39,16 +42,18 @@
 #'
 #' }
 
-subset_datarqst <- function(PopID = unique(pop_names$code),
+subset_datarqst <- function(file = file.choose(),
+                            PopID = unique(pop_names$code),
                             Species = unique(Species_codes$Code),
                             filter = NULL,
+                            include_conflicting = FALSE,
                             output_type = "R",
                             return_R = FALSE,
                             save = TRUE,
                             test = FALSE){
 
   if(!test){
-    standard_data <- readRDS(file = file.choose())
+    readRDS(file = file)
   }else{
     standard_data <- test_data
   }
@@ -57,6 +62,11 @@ subset_datarqst <- function(PopID = unique(pop_names$code),
   if(!is.null(filter)){
 
     unique_pops <- unique(matrix(unlist(stringr::str_split(string = filter, pattern = "_")), ncol = 2, byrow = T)[,1])
+
+    if(include_conflicting){
+      #filter <- c(filter, paste0(unique_pops, '_CCCCCC')) # Use after pipelines updated to standard format 1.1
+      filter <- c(filter, paste0(unique_pops, '_CCCCCC'), paste0(unique_pops, '_CONFLICTED'))
+    }
 
     output_brood <- standard_data$Brood_data %>%
       dplyr::mutate(Pop_sp = paste(.data$PopID, .data$Species, sep = "_")) %>%
@@ -77,6 +87,11 @@ subset_datarqst <- function(PopID = unique(pop_names$code),
       dplyr::filter(.data$PopID %in% unique_pops)
 
   } else {
+
+    if(include_conflicting){
+      #Species <- c(Species, 'CCCCCC') # Use after pipelines updated to standard format 1.1
+      Species <- c(Species, 'CCCCCC', 'CONFLICTED')
+    }
 
     output_brood <- standard_data$Brood_data %>%
       dplyr::filter(.data$PopID %in% {{PopID}} & .data$Species %in% {{Species}})
@@ -101,13 +116,30 @@ subset_datarqst <- function(PopID = unique(pop_names$code),
 
   }
 
+  #If keeping conflicted species: remove IndvIDs that do not appear in capture data from individual data
+  #(this ensures that only data on individuals identified at least once as one of the species of interest are retained)
+  if(include_conflicting){
+    output_individual <- output_individual %>%
+      dplyr::filter(!(.data$Species %in% c('CONFLICTED', 'CCCCCC') & !(.data$IndvID %in% output_capture$IndvID)))
+  }
+
+  #If removing conflicted species: remove IndvIDs that do not appear in individual data from capture data
+  #(this ensures that individuals identified as different species do not appear in capture data at all, even if
+  #they were identified as one of the species of interest at one or several captures.)
+  if(!include_conflicting){
+    output_capture <- output_capture %>%
+      dplyr::filter(.data$IndvID %in% output_individual$IndvID)
+  }
+  # NOTE: This comes with an assumption that - aside from individuals with conflicting species - all
+  #       individuals that appear in capture data also appear in individual data (they should)
+
   #Combine output into one R object (and return if requested)
   output_data <- list(Brood_data = output_brood,
                       Capture_data = output_capture,
                       Individual_data = output_individual,
                       Location_data = output_location)
 
-  if(return.R){
+  if(return_R){
     return(output_data)
   }
 
@@ -130,7 +162,7 @@ subset_datarqst <- function(PopID = unique(pop_names$code),
 
       message("Output subset as R Data file...")
 
-      saveRDS(output_object, file = paste0(save_path, "/Output_data_", as.character(Sys.Date()), ".RDS"))
+      saveRDS(output_data, file = paste0(save_path, "/Output_data_", as.character(Sys.Date()), ".RDS"))
 
     }else{
 
