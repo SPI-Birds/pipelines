@@ -701,9 +701,9 @@ compare_hatching_fledging <- function(Brood_data){
 #'
 #' Check variable values against population-species-specific reference values in brood data. Reference values are based on the data if the number of observations is sufficiently large (n >= 50). Records for population-species combinations that are low in number (n < 50) are not evaluated by this check.
 #'
-#' \strong{ClutchSize, BroodSize, NumberFledged}: Records are considered unusual if they are larger than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error. Check IDs: B6a-c
+#' \strong{ClutchSize_observed, BroodSize_observed, NumberFledged_observed}: Records are considered unusual if they are larger than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error. Check IDs: B6a-c
 #'
-#' \strong{LayDate}: Date columns are transformed to Julian days to calculate quantiles. Records are considered unusual if they are smaller than the 1th percentile or larger than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are smaller than 1 or larger than 366, and will be flagged as an error. Check IDs: B6d.
+#' \strong{LayDate_observed}: Date columns are transformed to Julian days to calculate quantiles. Records are considered unusual if they are smaller than the 1th percentile or larger than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are smaller than 1 or larger than 366, and will be flagged as an error. Check IDs: B6d.
 #'
 #'
 #' @inheritParams checks_brood_params
@@ -725,7 +725,8 @@ check_values_brood <- function(Brood_data, var) {
 
   # Create reference values from data
   # Numeric & integer columns
-  if(var %in% c("ClutchSize", "BroodSize", "NumberFledged")) {
+  if(var %in% c("ClutchSize", "BroodSize", "NumberFledged",
+                "ClutchSize_observed", "BroodSize_observed", "NumberFledged_observed")) {
 
     ref <- Brood_data %>%
       dplyr::filter(!is.na(!!rlang::sym(var))) %>%
@@ -737,7 +738,7 @@ check_values_brood <- function(Brood_data, var) {
                        n = n())
 
     # Date columns
-  } else if(var %in% c("LayDate")) {
+  } else if(var %in% c("LayDate", "LayDate_observed")) {
 
     ref <- Brood_data %>%
       dplyr::filter(!is.na(!!rlang::sym(var))) %>%
@@ -853,7 +854,8 @@ check_values_brood <- function(Brood_data, var) {
 
                              pb$tick()
 
-                             if(var %in% c("ClutchSize", "BroodSize", "NumberFledged")) {
+                             if(var %in% c("ClutchSize", "BroodSize", "NumberFledged",
+                                           "ClutchSize_observed", "BroodSize_observed", "NumberFledged_observed")) {
 
                                Brood_data %>%
                                  dplyr::filter(Species == ..1 & PopID == ..2 &
@@ -861,7 +863,7 @@ check_values_brood <- function(Brood_data, var) {
                                  dplyr::select(Row, PopID, BroodID, !!rlang::sym(var), Species) %>%
                                  dplyr::mutate(Variable = var)
 
-                             } else if(var %in% c("LayDate")) {
+                             } else if(var %in% c("LayDate", "LayDate_observed")) {
 
                                Brood_data %>%
                                  dplyr::group_by(BreedingSeason) %>%
@@ -907,7 +909,8 @@ check_values_brood <- function(Brood_data, var) {
 
                              pb$tick()
 
-                             if(var %in% c("ClutchSize", "BroodSize", "NumberFledged")) {
+                             if(var %in% c("ClutchSize", "BroodSize", "NumberFledged",
+                                           "ClutchSize_observed", "BroodSize_observed", "NumberFledged_observed")) {
 
                                Brood_data %>%
                                  dplyr::filter(Species == ..1 & PopID == ..2 &
@@ -915,7 +918,7 @@ check_values_brood <- function(Brood_data, var) {
                                  dplyr::select(Row, PopID, BroodID, !!rlang::sym(var), Species) %>%
                                  dplyr::mutate(Variable = var)
 
-                             } else if(var %in% c("LayDate")) {
+                             } else if(var %in% c("LayDate", "LayDate_observed")) {
 
                                Brood_data %>%
                                  dplyr::group_by(BreedingSeason) %>%
