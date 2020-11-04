@@ -719,7 +719,7 @@ compare_hatching_fledging <- function(Brood_data){
 #'
 #' \strong{ClutchSize_observed, BroodSize_observed, NumberFledged_observed}: Records are considered unusual if they are larger than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error. Check IDs: B6a-c
 #'
-#' \strong{LayDate_observed}: Date columns are transformed to Julian days to calculate quantiles. Records are considered unusual if they are smaller than the 1st percentile or larger than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are smaller than 1 or larger than 366, and will be flagged as an error. Check ID: B6d.
+#' \strong{LayDate_observed}: Date columns are transformed to Julian days to calculate quantiles. Records are considered unusual if they are earlier than the 1st percentile or later than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are earlier than January 1st or later than December 31st, and will be flagged as an error. Check ID: B6d.
 #'
 #'
 #' @inheritParams checks_brood_params
