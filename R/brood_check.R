@@ -7,9 +7,9 @@
 #' \item \strong{B1}: Check if the formats of each column in \code{Brood_data} match with the standard format using \code{\link{check_format_brood}}.
 #' \item \strong{B2}: Compare clutch size and brood size per brood using \code{\link{compare_clutch_brood}}.
 #' \item \strong{B3}: Compare brood size and fledgling number per brood using \code{\link{compare_brood_fledglings}}.
-#' \item \strong{B4}: Compare laying date and hatching date per brood using \code{\link{compare_laying_hatching}}.
+#' \item \strong{B4}: Compare lay date and hatching date per brood using \code{\link{compare_laying_hatching}}.
 #' \item \strong{B5}: Compare hatching date and fledging date per brood using \code{\link{compare_hatching_fledging}}.
-#' \item \strong{B6a-c}: Check brood variable values against reference values using \code{\link{check_values_brood}}. Brood variables checked: ClutchSize, BroodSize, NumberFledged.
+#' \item \strong{B6a-d}: Check brood variable values against reference values using \code{\link{check_values_brood}}. Brood variables checked: ClutchSize_observed, BroodSize_observed, NumberFledged_observed, LayDate_observed.
 #' \item \strong{B7}: Compare brood size with number of chicks captured using \code{\link{compare_broodsize_chicknumber}}.
 #' \item \strong{B8}: Check if the IDs of broods are unique using \code{\link{check_unique_BroodID}}.
 #' \item \strong{B9}: Check if the order of clutch types for multiple breeding attempts per female per season is correct using \code{\link{check_clutch_type_order}}.
@@ -29,15 +29,16 @@
 brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
 
   # Create check list with a summary of warnings and errors per check
-  check_list <- tibble::tibble(CheckID = paste0("B", c(1:5, paste0(6, letters[1:3]), 7:12)),
+  check_list <- tibble::tibble(CheckID = paste0("B", c(1:5, paste0(6, letters[1:4]), 7:12)),
                                CheckDescription = c("Check format of brood data",
                                                     "Compare clutch and brood sizes",
                                                     "Compare brood sizes and fledgling numbers",
-                                                    "Compare laying and hatching dates",
-                                                    "Compare hatching and fledging dates",
+                                                    "Compare lay and hatche dates",
+                                                    "Compare hatch and fledge dates",
                                                     "Check clutch size values against reference values",
                                                     "Check brood size values against reference values",
                                                     "Check fledgling number values against reference values",
+                                                    "Check lay date values against reference values",
                                                     "Compare brood size with number of chicks captured",
                                                     "Check that brood IDs are unique",
                                                     "Check clutch type order",
@@ -74,15 +75,15 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
 
   check_list[3,3:4] <- compare_brood_fledglings_output$CheckList
 
-  # - Compare laying and hatching dates
-  message("B4: Comparing laying and hatching dates...")
+  # - Compare lay and hatchdates
+  message("B4: Comparing lay and hatch dates...")
 
   compare_laying_hatching_output <- compare_laying_hatching(Brood_data)
 
   check_list[4,3:4] <- compare_laying_hatching_output$CheckList
 
-  # - Compare hatching and fledging dates
-  message("B5: Comparing hatching and fledging dates...")
+  # - Compare hatch and fledge dates
+  message("B5: Comparing hatch and fledge dates...")
 
   compare_hatching_fledging_output <- compare_hatching_fledging(Brood_data)
 
@@ -91,65 +92,74 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
   # - Check clutch size values against reference values
   message("B6a: Checking clutch size values against reference values...")
 
-  check_values_clutch_size_output <- check_values_brood(Brood_data, "ClutchSize")
+  var_ext <- ifelse("ClutchSize" %in% colnames(Brood_data), "", "_observed")
+
+  check_values_clutch_size_output <- check_values_brood(Brood_data, paste0("ClutchSize", var_ext))
 
   check_list[6,3:4] <- check_values_clutch_size_output$CheckList
 
   # - Check brood size values against reference values
   message("B6b: Checking brood size values against reference values...")
 
-  check_values_brood_size_output <- check_values_brood(Brood_data, "BroodSize")
+  check_values_brood_size_output <- check_values_brood(Brood_data, paste0("BroodSize", var_ext))
 
   check_list[7,3:4] <- check_values_brood_size_output$CheckList
 
   # - Check fledgling number values against reference values
   message("B6c: Checking fledgling number values against reference values...")
 
-  check_values_fledgling_number_output <- check_values_brood(Brood_data, "NumberFledged")
+  check_values_fledgling_number_output <- check_values_brood(Brood_data, paste0("NumberFledged", var_ext))
 
   check_list[8,3:4] <- check_values_fledgling_number_output$CheckList
+
+  # - Check lay date values against reference values
+  message("B6d: Checking lay date values against reference values...")
+
+  check_values_lay_date_output <- check_values_brood(Brood_data, paste0("LayDate", var_ext))
+
+  check_list[9,3:4] <- check_values_lay_date_output$CheckList
 
   # - Compare brood size and number of chicks captured
   message("B7: Comparing brood size and number of chicks captured...")
 
   compare_broodsize_chicknumber_output <- compare_broodsize_chicknumber(Brood_data, Individual_data)
 
-  check_list[9,3:4] <- compare_broodsize_chicknumber_output$CheckList
+  check_list[10,3:4] <- compare_broodsize_chicknumber_output$CheckList
 
   # - Check that BroodIDs are unique
   message("B8: Checking that brood IDs are unique...")
 
   check_unique_BroodID_output <- check_unique_BroodID(Brood_data)
 
-  check_list[10,3:4] <- check_unique_BroodID_output$CheckList
+  check_list[11,3:4] <- check_unique_BroodID_output$CheckList
 
   # - Check clutch type order
   message("B9: Checking that clutch type order is correct..")
 
   check_clutch_type_order_output <- check_clutch_type_order(Brood_data)
 
-  check_list[11,3:4] <- check_clutch_type_order_output$CheckList
+  check_list[12,3:4] <- check_clutch_type_order_output$CheckList
 
   # - Compare species of mother and father
   message("B10: Comparing species of mother and father...")
 
   compare_species_parents_output <- compare_species_parents(Brood_data, Individual_data)
 
-  check_list[12,3:4] <- compare_species_parents_output$CheckList
+  check_list[13,3:4] <- compare_species_parents_output$CheckList
 
   # - Compare species of brood and parents
   message("B11: Comparing species of brood and parents...")
 
   compare_species_brood_parents_output <- compare_species_brood_parents(Brood_data, Individual_data)
 
-  check_list[13,3:4] <- compare_species_brood_parents_output$CheckList
+  check_list[14,3:4] <- compare_species_brood_parents_output$CheckList
 
   # - Compare species of brood and chicks
   message("B12: Comparing species of brood and chicks...")
 
   compare_species_brood_chicks_output <- compare_species_brood_chicks(Brood_data, Individual_data)
 
-  check_list[14,3:4] <- compare_species_brood_chicks_output$CheckList
+  check_list[15,3:4] <- compare_species_brood_chicks_output$CheckList
 
 
   if(check_format) {
@@ -162,6 +172,7 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
                          Check6a = check_values_clutch_size_output$WarningOutput,
                          Check6b = check_values_brood_size_output$WarningOutput,
                          Check6c = check_values_fledgling_number_output$WarningOutput,
+                         Check6d = check_values_lay_date_output$WarningOutput,
                          Check7 = compare_broodsize_chicknumber_output$WarningOutput,
                          Check8 = check_unique_BroodID_output$WarningOutput,
                          Check9 = check_clutch_type_order_output$WarningOutput,
@@ -178,6 +189,7 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
                        Check6a = check_values_clutch_size_output$ErrorOutput,
                        Check6b = check_values_brood_size_output$ErrorOutput,
                        Check6c = check_values_fledgling_number_output$ErrorOutput,
+                       Check6d = check_values_lay_date_output$ErrorOutput,
                        Check7 = compare_broodsize_chicknumber_output$ErrorOutput,
                        Check8 = check_unique_BroodID_output$ErrorOutput,
                        Check9 = check_clutch_type_order_output$ErrorOutput,
@@ -193,6 +205,7 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
                          Check6a = check_values_clutch_size_output$WarningOutput,
                          Check6b = check_values_brood_size_output$WarningOutput,
                          Check6c = check_values_fledgling_number_output$WarningOutput,
+                         Check6d = check_values_lay_date_output$WarningOutput,
                          Check7 = compare_broodsize_chicknumber_output$WarningOutput,
                          Check8 = check_unique_BroodID_output$WarningOutput,
                          Check9 = check_clutch_type_order_output$WarningOutput,
@@ -208,6 +221,7 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
                        Check6a = check_values_clutch_size_output$ErrorOutput,
                        Check6b = check_values_brood_size_output$ErrorOutput,
                        Check6c = check_values_fledgling_number_output$ErrorOutput,
+                       Check6d = check_values_lay_date_output$ErrorOutput,
                        Check7 = compare_broodsize_chicknumber_output$ErrorOutput,
                        Check8 = check_unique_BroodID_output$ErrorOutput,
                        Check9 = check_clutch_type_order_output$ErrorOutput,
@@ -226,6 +240,7 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
                                      check_values_clutch_size_output$WarningRows,
                                      check_values_brood_size_output$WarningRows,
                                      check_values_fledgling_number_output$WarningRows,
+                                     check_values_lay_date_output$WarningRows,
                                      compare_broodsize_chicknumber_output$WarningRows,
                                      check_unique_BroodID_output$WarningRows,
                                      check_clutch_type_order_output$WarningRows,
@@ -239,6 +254,7 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
                                    check_values_clutch_size_output$ErrorRows,
                                    check_values_brood_size_output$ErrorRows,
                                    check_values_fledgling_number_output$ErrorRows,
+                                   check_values_lay_date_output$ErrorRows,
                                    compare_broodsize_chicknumber_output$ErrorRows,
                                    check_unique_BroodID_output$ErrorRows,
                                    check_clutch_type_order_output$ErrorRows,
