@@ -7,8 +7,6 @@
 #' NB: Manually add & edit reference values in the code and run function to
 #' create the necessary files to be used in \code{\link{quality_check}}.
 #'
-#' @param NIOO_data Data in standard format for NIOO populations
-#'
 #' @return
 #' An R data object containing two lists of reference values:
 #' \item{brood_ref_values}{Reference values related to brood data.}
@@ -16,111 +14,81 @@
 #'
 #' @export
 
-create_reference_values <- function(NIOO_data) {
+create_reference_values <- function() {
 
   ## - Brood data
-
-  # Run pipeline for NIOO populations if data is not provided
-  if(missing(NIOO_data)) {
-
-    NIOO_data <- run_pipelines(PopID = pop_names[pop_names$owner == "NIOO", "code"], save = FALSE)
-
-  }
-
-  Brood_data <- NIOO_data$Brood_data
-
-  # Determine reference values for ClutchSize, BroodSize and NumberFledged
-  brood_ref_values <- purrr::map_dfr(.x = c("ClutchSize", "BroodSize", "NumberFledged"),
-                                     .f =   ~{
-
-                                       Brood_data %>%
-                                         dplyr::filter(!is.na(!!rlang::sym(.x))) %>%
-                                         dplyr::group_by(Species) %>%
-                                         dplyr::summarise(Variable = .x,
-                                                          Warning_min = NA,
-                                                          Warning_max = ceiling(quantile(!!rlang::sym(.x), probs = 0.99, na.rm = TRUE)),
-                                                          Error_min = 0,
-                                                          Error_max = 4 * Warning_max,
-                                                          n = n())
-
-                                     }) %>%
-    dplyr::filter(n > 100) # Only keep species with at least 100 observations
-
-  ##FIXME: add reference values for capture data
-
-
-  # brood_ref_values <- list(
-  #   ## -- Parus major (Great tit)
-  #   PARMAJ_ClutchSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-  #                                      Value = c(NA, 14, 0, 28)),
-  #   PARMAJ_BroodSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-  #                                     Value = c(NA, 14, 0, 28)),
-  #   PARMAJ_NumberFledged = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-  #                                         Value = c(NA, 14, 0, 28)),
-  #   ## -- Cyanistes caeruleus (Blue tit)
-  #   CYACAE_ClutchSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-  #                                      Value = c(NA, 14, 0, 28)),
-  #   CYACAE_BroodSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-  #                                     Value = c(NA, 14, 0, 28)),
-  #   CYACAE_NumberFledged = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-  #                                         Value = c(NA, 14, 0, 28)),
-  #   ## -- Ficedula hypoleuca (Pied flycatcher)
-  #   FICHYP_ClutchSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-  #                                      Value = c(NA, 10, 0, 15)),
-  #   FICHYP_BroodSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-  #                                     Value = c(NA, 15, 0, 20)),
-  #   FICHYP_NumberFledged = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-  #                                         Value = c(NA, 15, 0, 20)),
-  #   ## -- Sitta europaea (Eurasian nuthatch)
-  #   SITEUR_ClutchSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-  #                                      Value = c(NA, 10, 0, 15)),
-  #   SITEUR_BroodSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-  #                                     Value = c(NA, 15, 0, 20)),
-  #   SITEUR_NumberFledged = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-  #                                         Value = c(NA, 15, 0, 20)),
-  #   ## -- Periparus ater (Coal tit)
-  #   PERATE_ClutchSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-  #                                      Value = c(NA, 10, 0, 15)),
-  #   PERATE_BroodSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-  #                                     Value = c(NA, 15, 0, 20)),
-  #   PERATE_NumberFledged = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-  #                                         Value = c(NA, 15, 0, 20)),
-  #   ## -- Passer montanus (Eurasian tree sparrow)
-  #   PASMON_ClutchSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-  #                                      Value = c(NA, 10, 0, 15)),
-  #   PASMON_BroodSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-  #                                     Value = c(NA, 15, 0, 20)),
-  #   PASMON_NumberFledged = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-  #                                         Value = c(NA, 15, 0, 20)),
-  #   ## -- Ficedula albicollis (Collared flycatcher)
-  #   FICALB_ClutchSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-  #                                      Value = c(NA, 10, 0, 15)),
-  #   FICALB_BroodSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-  #                                     Value = c(NA, 15, 0, 20)),
-  #   FICALB_NumberFledged = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-  #                                         Value = c(NA, 15, 0, 20)),
-  #   ## -- Poecile palustris (Marsh tit)
-  #   POEPAL_ClutchSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-  #                                      Value = c(NA, 10, 0, 15)),
-  #   POEPAL_BroodSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-  #                                     Value = c(NA, 15, 0, 20)),
-  #   POEPAL_NumberFledged = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-  #                                         Value = c(NA, 15, 0, 20)),
-  #   ## -- Poecile cinctus (Siberian tit)
-  #   POECIN_ClutchSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-  #                                      Value = c(NA, 10, 0, 15)),
-  #   POECIN_BroodSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-  #                                     Value = c(NA, 15, 0, 20)),
-  #   POECIN_NumberFledged = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-  #                                         Value = c(NA, 15, 0, 20)),
-  #   ## -- Phoenicurus phoenicurus (Common redstart)
-  #   PHOPHO_ClutchSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-  #                                      Value = c(NA, 10, 0, 15)),
-  #   PHOPHO_BroodSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-  #                                     Value = c(NA, 15, 0, 20)),
-  #   PHOPHO_NumberFledged = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-  #                                         Value = c(NA, 15, 0, 20))
-  # )
+  brood_ref_values <- list(
+    ## -- Parus major (Great tit)
+    PARMAJ_ClutchSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
+                                       Value = c(NA, 14, 0, 28)),
+    PARMAJ_BroodSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
+                                      Value = c(NA, 14, 0, 28)),
+    PARMAJ_NumberFledged = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
+                                          Value = c(NA, 14, 0, 28)),
+    ## -- Cyanistes caeruleus (Blue tit)
+    CYACAE_ClutchSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
+                                       Value = c(NA, 14, 0, 28)),
+    CYACAE_BroodSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
+                                      Value = c(NA, 14, 0, 28)),
+    CYACAE_NumberFledged = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
+                                          Value = c(NA, 14, 0, 28)),
+    ## -- Ficedula hypoleuca (Pied flycatcher)
+    FICHYP_ClutchSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
+                                       Value = c(NA, 10, 0, 15)),
+    FICHYP_BroodSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
+                                      Value = c(NA, 15, 0, 20)),
+    FICHYP_NumberFledged = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
+                                          Value = c(NA, 15, 0, 20)),
+    ## -- Sitta europaea (Eurasian nuthatch)
+    SITEUR_ClutchSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
+                                       Value = c(NA, 10, 0, 15)),
+    SITEUR_BroodSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
+                                      Value = c(NA, 15, 0, 20)),
+    SITEUR_NumberFledged = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
+                                          Value = c(NA, 15, 0, 20)),
+    ## -- Periparus ater (Coal tit)
+    PERATE_ClutchSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
+                                       Value = c(NA, 10, 0, 15)),
+    PERATE_BroodSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
+                                      Value = c(NA, 15, 0, 20)),
+    PERATE_NumberFledged = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
+                                          Value = c(NA, 15, 0, 20)),
+    ## -- Passer montanus (Eurasian tree sparrow)
+    PASMON_ClutchSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
+                                       Value = c(NA, 10, 0, 15)),
+    PASMON_BroodSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
+                                      Value = c(NA, 15, 0, 20)),
+    PASMON_NumberFledged = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
+                                          Value = c(NA, 15, 0, 20)),
+    ## -- Ficedula albicollis (Collared flycatcher)
+    FICALB_ClutchSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
+                                       Value = c(NA, 10, 0, 15)),
+    FICALB_BroodSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
+                                      Value = c(NA, 15, 0, 20)),
+    FICALB_NumberFledged = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
+                                          Value = c(NA, 15, 0, 20)),
+    ## -- Poecile palustris (Marsh tit)
+    POEPAL_ClutchSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
+                                       Value = c(NA, 10, 0, 15)),
+    POEPAL_BroodSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
+                                      Value = c(NA, 15, 0, 20)),
+    POEPAL_NumberFledged = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
+                                          Value = c(NA, 15, 0, 20)),
+    ## -- Poecile cinctus (Siberian tit)
+    POECIN_ClutchSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
+                                       Value = c(NA, 10, 0, 15)),
+    POECIN_BroodSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
+                                      Value = c(NA, 15, 0, 20)),
+    POECIN_NumberFledged = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
+                                          Value = c(NA, 15, 0, 20)),
+    ## -- Phoenicurus phoenicurus (Common redstart)
+    PHOPHO_ClutchSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
+                                       Value = c(NA, 10, 0, 15)),
+    PHOPHO_BroodSize = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
+                                      Value = c(NA, 15, 0, 20)),
+    PHOPHO_NumberFledged = tibble::tibble(Reference = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
+                                          Value = c(NA, 15, 0, 20))
+  )
 
   ##For PARMAJ and CYACAE chicks, we include age specific capture data for chicks
   #based on chick growth curves calculated from Hoge Veluwe
