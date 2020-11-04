@@ -905,7 +905,7 @@ check_values_brood <- function(Brood_data, var) {
 
     # Compare to approved_list
     error_records <- Brood_err %>%
-      dplyr::mutate(CheckID = checkID_var[checkID_var$Var == var,]$CheckID) %>%
+      dplyr::mutate(CheckID = checkID_variable_combos[checkID_variable_combos$Variable == var,]$CheckID) %>%
       dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID")) %>%
       dplyr::arrange(Row)
 
@@ -914,7 +914,7 @@ check_values_brood <- function(Brood_data, var) {
                                 .f = ~{
                                   paste0("Record on row ", ..1,
                                          " (BroodID: ", ..3, "; ",
-                                         Species_codes[Species_codes$Code == ..5, "CommonName"], ")",
+                                         species_codes[species_codes$Species == ..5, "CommonName"], ")",
                                          " has an impossible value in ", ..6, " (", ..4, ").")
                                 })
   }
@@ -960,7 +960,7 @@ check_values_brood <- function(Brood_data, var) {
 
     # Compare to approved_list
     warning_records <- Brood_war %>%
-      dplyr::mutate(CheckID = checkID_var[checkID_var$Var == var,]$CheckID) %>%
+      dplyr::mutate(CheckID = checkID_variable_combos[checkID_variable_combos$Variable == var,]$CheckID) %>%
       dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID")) %>%
       dplyr::arrange(Row)
 
@@ -969,7 +969,7 @@ check_values_brood <- function(Brood_data, var) {
                                   .f = ~{
                                     paste0("Record on row ", ..1,
                                            " (BroodID: ", ..3, "; ",
-                                           Species_codes[Species_codes$Code == ..5, "CommonName"], ")",
+                                           species_codes[species_codes$Species == ..5, "CommonName"], ")",
                                            " has an unusual value in ", ..6, " (", ..4, ").")
                                   })
   }
@@ -1289,8 +1289,8 @@ compare_species_parents <- function(Brood_data, Individual_data) {
                                   .f = ~{
                                     paste0("Record on row ", ..1, " (BroodID: ", ..3, ")",
                                            " has parents of different species",
-                                           " (Mother: ", Species_codes[Species_codes$Code == ..5, "CommonName"],
-                                           ", father: ", Species_codes[Species_codes$Code == ..7, "CommonName"], ").")
+                                           " (Mother: ", species_codes[species_codes$Species == ..5, "CommonName"],
+                                           ", father: ", species_codes[species_codes$Species == ..7, "CommonName"], ").")
                                   })
   }
 
@@ -1368,8 +1368,8 @@ compare_species_brood_parents <- function(Brood_data, Individual_data) {
                                   .f = ~{
                                     paste0("Record on row ", ..1, " (BroodID: ", ..3, ")",
                                            " is recorded as a different species than any of the parents",
-                                           " (Mother: ", Species_codes[Species_codes$Code == ..6, "CommonName"],
-                                           ", father: ", Species_codes[Species_codes$Code == ..8, "CommonName"], ").")
+                                           " (Mother: ", species_codes[species_codes$Species == ..6, "CommonName"],
+                                           ", father: ", species_codes[species_codes$Species == ..8, "CommonName"], ").")
                                   })
   }
 
