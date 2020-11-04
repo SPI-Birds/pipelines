@@ -712,14 +712,14 @@ check_values_brood <- function(Brood_data, var) {
 
     # Compare to approved_list
     error_records <- Brood_err %>%
-      dplyr::mutate(CheckID = checkID_var[checkID_var$Var == var,]$CheckID) %>%
+      dplyr::mutate(CheckID = checkID_variable_combos[checkID_variable_combos$Variable == var,]$CheckID) %>%
       dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
     error_output <- purrr::pmap(.l = error_records,
                                 .f = ~{
                                   paste0("Record on row ", ..1,
-                                         " (BroodID: ", ..3, "; ", Species_codes[Species_codes$Code == ..5, "CommonName"], ")",
+                                         " (BroodID: ", ..3, "; ", species_codes[species_codes$Species == ..5, "CommonName"], ")",
                                          " has an impossible value in ", ..6, " (", ..4, ").")
                                 })
   }
@@ -750,14 +750,14 @@ check_values_brood <- function(Brood_data, var) {
 
     # Compare to approved_list
     warning_records <- Brood_war %>%
-      dplyr::mutate(CheckID = checkID_var[checkID_var$Var == var,]$CheckID) %>%
+      dplyr::mutate(CheckID = checkID_variable_combos[checkID_variable_combos$Variable == var,]$CheckID) %>%
       dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
     warning_output <- purrr::pmap(.l = warning_records,
                                   .f = ~{
                                     paste0("Record on row ", ..1,
-                                           " (BroodID: ", ..3, "; ", Species_codes[Species_codes$Code == ..5, "CommonName"], ")",
+                                           " (BroodID: ", ..3, "; ", species_codes[species_codes$Species == ..5, "CommonName"], ")",
                                            " has an unusually high value in ", ..6, " (", ..4, " > ",
                                            selected_ref_values[[paste(..5, ..6, sep="_")]]$Value[2],")")
                                   })
@@ -836,8 +836,8 @@ check_parent_species <- function(Brood_data, Individual_data) {
                                 .f = ~{
                                   paste0("Record on row ", ..1, " (BroodID: ", ..3, ")",
                                          " has parents of different species",
-                                         " (Mother: ", Species_codes[Species_codes$Code == ..5, "CommonName"],
-                                         ", father: ", Species_codes[Species_codes$Code == ..7, "CommonName"], ").")
+                                         " (Mother: ", species_codes[species_codes$Species == ..5, "CommonName"],
+                                         ", father: ", species_codes[species_codes$Species == ..7, "CommonName"], ").")
                                 })
   }
 

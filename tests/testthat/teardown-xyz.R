@@ -7,4 +7,4 @@
 #              })
 
 # Restore approved list
-create_approved_list(backup_approved_list)
+create_approved_list()
