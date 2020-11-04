@@ -17,12 +17,6 @@
 
 create_reference_values <- function(NIOO_data) {
 
-  Warning_max <- NIOO_Brood_data %>%
-    dplyr::group_by(Species) %>%
-    dplyr::summarise(ClutchSize = round(quantile(ClutchSize, probs=0.999, na.rm=TRUE)),
-                     BroodSize = round(quantile(BroodSize, probs=0.999, na.rm=TRUE)),
-                     NumberFledged = round(quantile(NumberFledged, probs=0.999, na.rm=TRUE)))
-
   ## - Brood data
 
   # Run pipeline for NIOO populations if data is not provided
@@ -232,62 +226,4 @@ create_reference_values <- function(NIOO_data) {
   ## Save as lists in /data folder
   usethis::use_data(brood_ref_values, overwrite=TRUE)
   usethis::use_data(capture_ref_values, overwrite=TRUE)
-}
-
-
-#' Visualize the brood refence values that are based on data
-#'
-#' Part of the reference values in \code{\link{create_refence_values}} are based on data. This function helps in making the creation of those reference values visible and transparent.
-#'
-#' Currently ClutchSize, BroodSize and NumberFledged for great tit, blue tit and pied flycatcher are based on data from NIOO populations. Warning_max is set at the 99.9% quantile.
-#'
-#' @param NIOO_Brood_data Data frame with brood data from NIOO populations for great tit, blue tit and pied flycatcher
-#' @param var Brood_data variable to plot. Options: ClutchSize, BroodSize, NumberFledged.
-#'
-#' @return A plot with species-specific histograms of the selected variable, including a mark of the 99.9% quantile.
-#'
-#' @export
-
-plot_ref_values <- function(NIOO_Brood_data, var){
-
-  p <- purrr::map(.x = unique(NIOO_Brood_data$Species),
-                  .f =  ~{
-
-                    wm <- NIOO_Brood_data %>%
-                      dplyr::filter(!is.na(!!dplyr::sym(var)), Species == .x) %>%
-                      dplyr::summarise(round(stats::quantile(!!dplyr::sym(var),
-                                                probs=0.999))) %>%
-                                  dplyr::pull()
-
-                    p <- NIOO_Brood_data %>%
-                      dplyr::filter(!is.na(!!dplyr::sym(var)), Species == .x) %>%
-                      ggplot2::ggplot(ggplot2::aes(x=!!dplyr::sym(var))) +
-                      ggplot2::geom_histogram(ggplot2::aes(y=..density..), binwidth = 1,
-                                              color="black", fill="#656565") +
-                      ggplot2::geom_vline(ggplot2::aes(xintercept = wm),
-                                          color="#920309") +
-                      ggplot2::scale_x_continuous(breaks=seq(0, 30, 2)) +
-                      ggplot2::labs(title = paste0(.x, ": ",
-                                                  Species_codes[Species_codes$Code == .x,
-                                                                "CommonName"]),
-                                    subtitle = paste0("Warning_max (99.9% quantile) = ",
-                                                      wm),
-                                    caption = "Data source: NIOO",
-                                    y = "Density") +
-                      ggplot2::theme_classic() +
-                      ggplot2::theme(
-                        plot.title = ggplot2::element_text(size = 13, face = "bold"),
-                        plot.subtitle = ggplot2::element_text(color = "#920309", size=10)
-                      )
-
-                    if("Dubai" %in% extrafont::fonts()){
-                      p + ggplot2::theme(text = ggplot2::element_text(family = "Dubai"))
-                    } else {
-                      p + ggplot2::theme(text = ggplot2::element_text(family = "serif"))
-                    }
-
-                  })
-
-  cowplot::plot_grid(plotlist = p, align="v")
-
 }
