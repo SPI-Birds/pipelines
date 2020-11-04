@@ -75,7 +75,7 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
 
   check_list[3,3:4] <- compare_brood_fledglings_output$CheckList
 
-  # - Compare lay and hatchdates
+  # - Compare lay and hatch dates
   message("B4: Comparing lay and hatch dates...")
 
   compare_laying_hatching_output <- compare_laying_hatching(Brood_data)
@@ -745,7 +745,7 @@ check_values_brood <- function(Brood_data, var) {
                 "ClutchSize_observed", "BroodSize_observed", "NumberFledged_observed")) {
 
     ref <- Brood_data %>%
-      dplyr::filter(!is.na(!!rlang::sym(var))) %>%
+      dplyr::filter(!is.na(!!rlang::sym(var)) & !is.na(Species)) %>%
       dplyr::group_by(Species, PopID) %>%
       dplyr::summarise(Warning_min = NA,
                        Warning_max = ceiling(quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE)),
@@ -757,7 +757,7 @@ check_values_brood <- function(Brood_data, var) {
   } else if(var %in% c("LayDate", "LayDate_observed")) {
 
     ref <- Brood_data %>%
-      dplyr::filter(!is.na(!!rlang::sym(var))) %>%
+      dplyr::filter(!is.na(!!rlang::sym(var)) & !is.na(Species)) %>%
       dplyr::group_by(BreedingSeason) %>%
       # Transform dates to julian days to calculate quantiles
       dplyr::mutate(!!paste0(var, "_julian") := lubridate::yday(!!rlang::sym(var))) %>%
