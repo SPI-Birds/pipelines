@@ -15,6 +15,8 @@
 #'
 #' @export
 
+##FIXME: remove this function if check_values_capture is updated.
+
 create_reference_values <- function(NIOO_data) {
 
   ## - Brood data
@@ -44,9 +46,6 @@ create_reference_values <- function(NIOO_data) {
 
                                      }) %>%
     dplyr::filter(n > 100) # Only keep species with at least 100 observations
-
-  ##FIXME: add reference values for capture data
-
 
   # brood_ref_values <- list(
   #   ## -- Parus major (Great tit)
