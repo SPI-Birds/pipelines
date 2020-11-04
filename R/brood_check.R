@@ -759,7 +759,7 @@ check_values_brood <- function(Brood_data, var) {
     ref <- Brood_data %>%
       dplyr::filter(!is.na(!!rlang::sym(var)) & !is.na(Species)) %>%
       dplyr::group_by(BreedingSeason) %>%
-      # Transform dates to julian days to calculate quantiles
+      # Transform dates to Julian days to calculate quantiles
       dplyr::mutate(!!paste0(var, "_julian") := lubridate::yday(!!rlang::sym(var))) %>%
       dplyr::ungroup() %>%
       dplyr::group_by(Species, PopID) %>%
@@ -883,7 +883,7 @@ check_values_brood <- function(Brood_data, var) {
 
                                Brood_data %>%
                                  dplyr::group_by(BreedingSeason) %>%
-                                 # Transform dates to julian days to compare to julian day reference values
+                                 # Transform dates to Julian days to compare to Julian day reference values
                                  dplyr::mutate(!!paste0(var, "_julian") := lubridate::yday(!!rlang::sym(var))) %>%
                                  dplyr::ungroup() %>%
                                  dplyr::filter(Species == ..1 & PopID == ..2 &
@@ -938,7 +938,7 @@ check_values_brood <- function(Brood_data, var) {
 
                                Brood_data %>%
                                  dplyr::group_by(BreedingSeason) %>%
-                                 # Transform dates to julian days to compare to julian day reference values
+                                 # Transform dates to Julian days to compare to Julian day reference values
                                  dplyr::mutate(!!paste0(var, "_julian") := lubridate::yday(!!rlang::sym(var))) %>%
                                  dplyr::ungroup() %>%
                                  dplyr::filter(Species == ..1 & PopID == ..2 &
@@ -984,7 +984,6 @@ check_values_brood <- function(Brood_data, var) {
               ErrorOutput = unlist(error_output)))
 
   # Satisfy RCMD Checks
-  brood_ref_values <- selected_ref_values <- ref_names <- NULL
   Species <- Variable <- NULL
   approved_list <- checkID_var <- NULL
 
