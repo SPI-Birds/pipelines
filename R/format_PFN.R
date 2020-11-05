@@ -20,7 +20,9 @@
 #'has his own pipeline to convert the new BTO ringing database format to the old one.
 #'Since all chick measurements are complete in the brood table/nest monitoring data but some have
 #'not been added to the BTO ringing data, the pipeline merges chick trait values from the former
-#'into Capture data.
+#'into Capture data. Similarly, parent age information is more detailed in the brood table/nest
+#'monitoring data, and therefore merged into Capture data (and given priority over age information
+#'from the BTO ringing data).
 #'
 #'\strong{Unidentified individuals}: Some individuals have not been given unique IDs. They appear
 #'in the primary data as "RUNT", "ringed", "ringed left", "ringed right", "unringed", or "Unringed",
@@ -38,6 +40,11 @@
 #' records are excluded from the outputs because the standard format for capture data cannot distinguish
 #' between recaptures and resightings in its current state. Functionality do do this (i.e. via a "capture type" variable)
 #' may be added to a future update of the standard format.
+#'
+#'\strong{Age calculation}: The age of each bird is estimated based on its history of ringing and recaptures.
+#'Since some birds that breed in East Dartmoor may have been ringed in another study sites (= immigrants), the
+#'pipeline calculates age based on capture histories from the entire BTO ringing database, not just ringing/captures
+#'in locations within the East Dartmoor study site.
 #'
 #'\strong{LayDate_observed and HatchDate_observed}: Information is provided as date of first egg (DFE) and
 #'date of hatching (DH). These are given as integer number, and represent days after a set
@@ -371,8 +378,8 @@ create_capture_EDM <- function(CMR_data, Primary_data, ReRingTable){
     dplyr::mutate(RING = ifelse(is.na(.data$ReRingID), .data$RING, .data$ReRingID))
 
   ## 2) Subset ringing database to contain only captures relevant to population
-  LocationList <- unique(Primary_data$Popn)
-  Capture_data <- subset(Capture_data, PLACE %in% LocationList)
+  #LocationList <- unique(Primary_data$Popn)
+  #Capture_data <- subset(Capture_data, PLACE %in% LocationList)
 
   ## 3) Rename columns that are equivalent (content and format) to columns in the standard format
   Capture_data <- Capture_data %>%
@@ -454,9 +461,67 @@ create_capture_EDM <- function(CMR_data, Primary_data, ReRingTable){
                                           TRUE ~ NA_real_),
                   Tarsus = dplyr::case_when(!is.na(.data$Tarsus_CMR) ~ .data$Tarsus_CMR,
                                             is.na(.data$Tarsus_CMR) & !is.na(.data$Tarsus_B) & .data$Age_observed == 1 ~ .data$Tarsus_B,
-                                            TRUE ~ NA_real_)) %>%
+                                            TRUE ~ NA_real_))
 
-    ## 7) Exclude entries not included in the standard format
+    ## 7) Add additional age data from brood table (primary data)
+
+    # Extract female age from brood table
+    FemaleAge_Brood <- Primary_data %>%
+      # Get relevant data
+      dplyr::select(.data$Year, .data$FemaleID, .data$FemaleMinAge, .data$FemaleStatus) %>%
+      dplyr::filter(!is.na(.data$FemaleID)) %>%
+      # Assign unique ID
+      dplyr::rename('RING' = .data$FemaleID,
+                    'BreedingSeason' = .data$Year) %>%
+      dplyr::left_join(ReRingTable, by = 'RING') %>%
+      dplyr::mutate(RING = ifelse(is.na(.data$ReRingID), .data$RING, .data$ReRingID)) %>%
+      # Determine age within each breeding season
+      dplyr::group_by(.data$RING, .data$BreedingSeason) %>%
+        dplyr::mutate(AgeSum = suppressWarnings(max(.data$FemaleMinAge, na.rm = T))) %>%
+      dplyr::ungroup() %>%
+      dplyr::distinct(.data$BreedingSeason, .data$RING, .keep_all = T) %>%
+      dplyr::mutate(AgeBrood = dplyr::case_when(is.na(.data$AgeSum) ~ 4L,
+                                                .data$FemaleStatus == 'R' ~ as.integer(.data$AgeSum)*2L + 3L,
+                                                TRUE ~ as.integer(.data$AgeSum)*2L + 2L),
+                    IndvID = .data$RING,
+                    BreedingSeason = as.integer(BreedingSeason)) %>%
+      dplyr::select(.data$IndvID, .data$BreedingSeason, .data$AgeBrood)
+
+    # Extract male age from brood table
+    MaleAge_Brood <- Primary_data %>%
+      # Get relevant data
+      dplyr::select(.data$Year, .data$MaleID, .data$MaleMinAge, .data$MaleStatus) %>%
+      dplyr::filter(!is.na(.data$MaleID)) %>%
+      # Assign unique ID
+      dplyr::rename('RING' = .data$MaleID,
+                    'BreedingSeason' = .data$Year) %>%
+      dplyr::left_join(ReRingTable, by = 'RING') %>%
+      dplyr::mutate(RING = ifelse(is.na(.data$ReRingID), .data$RING, .data$ReRingID)) %>%
+      # Determine age within each breeding season
+      dplyr::group_by(.data$RING, .data$BreedingSeason) %>%
+      dplyr::mutate(AgeSum = suppressWarnings(max(.data$MaleMinAge, na.rm = T))) %>%
+      dplyr::ungroup() %>%
+      dplyr::distinct(.data$BreedingSeason, .data$RING, .keep_all = T) %>%
+      dplyr::mutate(AgeBrood = dplyr::case_when(is.na(.data$AgeSum) ~ 4L,
+                                                .data$MaleStatus == 'R' ~ as.integer(.data$AgeSum)*2L + 3L,
+                                                TRUE ~ as.integer(.data$AgeSum)*2L + 2L),
+                    IndvID = .data$RING,
+                    BreedingSeason = as.integer(BreedingSeason)) %>%
+      dplyr::select(.data$IndvID, .data$BreedingSeason, .data$AgeBrood)
+
+
+    # Combine male and female ages and assign unique identifier
+    Age_Brood <- bind_rows(FemaleAge_Brood, MaleAge_Brood)
+
+    # Merge age information from brood data into capture data
+    Capture_data <- Capture_data %>%
+      dplyr::left_join(Age_Brood, by = c("IndvID", "BreedingSeason")) %>%
+      dplyr::mutate(Age_observed = dplyr::case_when(is.na(AgeBrood) ~ Age_observed,
+                                                     Age_observed == 1 ~ Age_observed,
+                                                     Age_observed != AgeBrood ~ AgeBrood,
+                                                     Age_observed == AgeBrood ~ Age_observed)) %>%
+
+    ## 8) Exclude entries not included in the standard format
 
     # Remove all individuals from species not included in species_codes
     dplyr::filter(.data$Species %in% species_codes$Species) %>%
@@ -467,22 +532,27 @@ create_capture_EDM <- function(CMR_data, Primary_data, ReRingTable){
     # NOTE: For now, we are excluding "resightings" from the output.
     #       However, we may change this following a future update of the standard protocol with the inclusion of a "CaptureType" variable (which will allow to distinguish recaptures and resightings)
 
-    ## 8) Calculate age at capture
+    ## 9) Calculate age at capture
 
     # Sort chronologically within individual
     dplyr::arrange(.data$IndvID, .data$CaptureDate, .data$CaptureTime) %>%
 
-      #Calculate age at each capture based on first capture
+    #Calculate age at each capture based on first capture
     calc_age(ID = .data$IndvID, Age = .data$Age_observed, Date = .data$CaptureDate, Year = .data$BreedingSeason) %>%
 
-    ## 9) Make CaptureID
+
+    ## 2) Subset ringing database to contain only captures relevant to population
+    dplyr::filter(CapturePlot %in% unique(Primary_data$Popn)) %>%
+
+
+    ## 10) Make CaptureID
 
     # Write unique capture identifier as IndvID-CaptureNumber
     dplyr::group_by(.data$IndvID) %>%
     dplyr::mutate(CaptureID = paste0(.data$IndvID, '-', dplyr::row_number())) %>%
     dplyr::ungroup() %>%
 
-    ## 10) Select required columns
+    ## 11) Select required columns
     dplyr::select(.data$CaptureID, .data$IndvID, .data$Species, .data$Sex_observed,
                   .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime, .data$ObserverID,
                   .data$LocationID, .data$CaptureAlive, .data$ReleaseAlive,
@@ -491,7 +561,7 @@ create_capture_EDM <- function(CMR_data, Primary_data, ReRingTable){
                   .data$Age_observed, .data$Age_calculated, .data$ExperimentID,
                   .data$BroodID)
 
-  ## 11) Return data
+  ## 12) Return data
   return(Capture_data)
 }
 
