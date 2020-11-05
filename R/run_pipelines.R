@@ -91,7 +91,7 @@ run_pipelines <- function(path = choose_directory(),
   }
 
   if(length(PopID) == 0){
-    stop(paste0('None of the selected pipeline(s) could not be run due to OS incopatibility. Please run on a Windows OS.'))
+    stop(paste0('None of the selected pipeline(s) could not be run due to OS incompatibility. Please run on a Windows OS.'))
   }
 
   #Assign species for filtering
