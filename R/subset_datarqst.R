@@ -15,9 +15,9 @@
 #' @param Species Character vector of six letter species codes. Include all species that are requested.
 #' @param filter Character vector of unique population species combinations (in the format PopID_Species).
 #' Include all unique population species combinations requested.
-#' @param include_conflicting is FALSE. If include_conflicting = TRUE, individuals of conflicting species which
-#' were identified as a species contained in `Species` at least once are included in the subset of data. If
-#' include_conflicting = FALSE, these individuals are removed.
+#' @param If include_conflicting = TRUE, individuals with conflicting species information
+#' are included in the subset of data. If
+#' include_conflicting = FALSE (default), these individuals are removed.
 #' @param output_type is 'R' and can be set to 'csv'. If output_type is 'csv' 4 .csv files will be created in the save path.
 #' If output_type is 'R' an .RDS file will be created in the save path, and an R object in the
 #' running R session if return_R = TRUE.
