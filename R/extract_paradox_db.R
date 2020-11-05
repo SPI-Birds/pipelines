@@ -20,7 +20,7 @@ extract_paradox_db <- function(path, file_name){
 
   #Write full pathname
   # When running on Mac OS, the path in extract_paradox_db may not contain "~"
-  path_full <- paste0(dirname(path), "/", basename(path))
+  path_full <- normalizePath(path)
 
   output_file <- py$extract_paradox(path = path_full, file_name = file_name)
 
