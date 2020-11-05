@@ -82,10 +82,6 @@ run_pipelines <- function(path = choose_directory(),
 
     PopID <- PopID[which(!(PopID%in%PopID_Access))]
 
-  }else if(grepl(pattern = 'windows', x = OS)){
-
-    PopID <- PopID
-
   }else{
     stop(paste0('Operating system ', OS, ' not supported'))
   }
