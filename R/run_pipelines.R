@@ -74,7 +74,7 @@ run_pipelines <- function(path = choose_directory(),
   if(grepl(pattern = 'mac', x = OS)){
 
     if(length(PopID[which(PopID%in%PopID_Access)] > 0)){
-      warning(paste0('Pipelines not run for the following populations due to OS incopatibility: ',
+      warning(paste0('Pipelines not run for the following populations due to OS incompatibility: ',
                     toString(PopID[which(PopID%in%PopID_Access)]),
                     ". To obtain standard format data for these populations, please run on a Windows OS.")
               )
