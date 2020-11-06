@@ -18,8 +18,10 @@
 #' @param filter Character vector of unique population species combinations (in the format PopID_Species).
 #' Include all unique population species combinations requested. Can be used instead of `PopID` and `Species` arguments.
 #' @param include_conflicting = TRUE, individuals with conflicting species information
-#' are included in the subset of data. If
-#' include_conflicting = FALSE (default), these individuals are removed.
+#' are included in the subset of data. If include_conflicting = FALSE (default), these individuals are removed.
+#' Note that this applies only to conflicted species individuals that were identified at least once as any
+#' of the species specified in `Species` or `filter`. Data on conflicted species individuals that were never
+#' identified as any of the species specified in `Species` or `filter` is never returned.
 #' @param output_type is 'R' and can be set to 'csv'. If output_type is 'csv' 4 .csv files will be created in the save path.
 #' If output_type is 'R' an .RDS file will be created in the save path, and an R object in the
 #' running R session if return_R = TRUE.
@@ -56,13 +58,15 @@ subset_datarqst <- function(file = file.choose(),
   if(!test){
     readRDS(file = file)
   }else{
-    standard_data <- test_data
+    standard_data <- pipeline_output
   }
 
 
   if(!is.null(filter)){
 
-    unique_pops <- unique(matrix(unlist(stringr::str_split(string = filter, pattern = "_")), ncol = 2, byrow = T)[,1])
+    filter_original <- filter
+
+    unique_pops <- unique(stringr::str_split(string = filter, pattern = "_", simplify = TRUE)[,1])
 
     if(include_conflicting){
       #filter <- c(filter, paste0(unique_pops, '_CCCCCC')) # Use after pipelines updated to standard format 1.1
@@ -74,20 +78,20 @@ subset_datarqst <- function(file = file.choose(),
       dplyr::filter(.data$Pop_sp %in% filter) %>%
       dplyr::select(-.data$Pop_sp)
 
-    output_capture <- standard_data$Capture_data %>%
-      dplyr::mutate(Pop_sp = paste(.data$CapturePopID, .data$Species, sep = "_")) %>%
-      dplyr::filter(.data$Pop_sp %in% filter) %>%
-      dplyr::select(-.data$Pop_sp)
-
     output_individual <- standard_data$Individual_data %>%
       dplyr::mutate(Pop_sp = paste(.data$PopID, .data$Species, sep = "_")) %>%
       dplyr::filter(.data$Pop_sp %in% filter) %>%
       dplyr::select(-.data$Pop_sp)
 
+    output_capture <- standard_data$Capture_data %>%
+      dplyr::filter(.data$IndvID %in% output_individual$IndvID)
+
     output_location <- standard_data$Location_data %>%
       dplyr::filter(.data$PopID %in% unique_pops)
 
   } else {
+
+    Species_original <- Species
 
     if(include_conflicting){
       #Species <- c(Species, 'CCCCCC') # Use after pipelines updated to standard format 1.1
@@ -97,11 +101,12 @@ subset_datarqst <- function(file = file.choose(),
     output_brood <- standard_data$Brood_data %>%
       dplyr::filter(.data$PopID %in% {{PopID}} & .data$Species %in% {{Species}})
 
-    output_capture <- standard_data$Capture_data %>%
-      dplyr::filter(.data$CapturePopID %in% {{PopID}} & .data$Species %in% {{Species}})
-
     output_individual <- standard_data$Individual_data %>%
       dplyr::filter(.data$PopID %in% {{PopID}} & .data$Species %in% {{Species}})
+
+    output_capture <- standard_data$Capture_data %>%
+      dplyr::filter(.data$IndvID %in% output_individual$IndvID)
+
 
     if(!all(unique(Species_codes$Code) %in% Species) & all(unique(pop_names$code) %in% PopID)){
 
@@ -117,22 +122,45 @@ subset_datarqst <- function(file = file.choose(),
 
   }
 
-  #If keeping conflicted species: remove IndvIDs that do not appear in capture data from individual data
-  #(this ensures that only data on individuals identified at least once as one of the species of interest are retained)
+  #If keeping conflicted species: identify conflicted species individuals that were
+  # never identified as one of the species of interest and remove them from output
   if(include_conflicting){
-    output_individual <- output_individual %>%
-      dplyr::filter(!(.data$Species %in% c('CONFLICTED', 'CCCCCC') & !(.data$IndvID %in% output_capture$IndvID)))
-  }
 
-  #If removing conflicted species: remove IndvIDs that do not appear in individual data from capture data
-  #(this ensures that individuals identified as different species do not appear in capture data at all, even if
-  #they were identified as one of the species of interest at one or several captures.)
-  if(!include_conflicting){
+    #Set species of interest
+    if(!is.null(filter)){
+      SpeciesInt <- unique(stringr::str_split(string = filter_original, pattern = "_", simplify = TRUE)[,2])
+    }else{
+      SpeciesInt <- Species_original
+    }
+
+    #Determine which individuals were never identified as a species of interest
+    Irrelevant_IndvIDs <- output_capture %>%
+      dplyr::arrange(.data$IndvID, .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
+      dplyr::group_by(.data$IndvID) %>%
+      dplyr::summarise(Relevant = purrr::map_chr(.x = list(unique(na.omit(.data$Species))), .f = ~{
+
+        if(any((..1) %in% SpeciesInt)){
+
+          return("yes")
+
+        } else {
+
+          return("no")
+
+        }
+
+      })) %>%
+      dplyr::rowwise() %>%
+      dplyr::ungroup() %>%
+      dplyr::filter(.data$Relevant == "no")
+
+    #Remove individuals never identified as one of the species of interest
+    output_individual <- output_individual %>%
+      filter(!(.data$IndvID %in% Irrelevant_IndvIDs$IndvID))
+
     output_capture <- output_capture %>%
-      dplyr::filter(.data$IndvID %in% output_individual$IndvID)
+      filter(!(.data$IndvID %in% Irrelevant_IndvIDs$IndvID))
   }
-  # NOTE: This comes with an assumption that - aside from individuals with conflicting species - all
-  #       individuals that appear in capture data also appear in individual data (they should)
 
   #Combine output into one R object (and return it)
   output_data <- list(Brood_data = output_brood,
@@ -140,8 +168,7 @@ subset_datarqst <- function(file = file.choose(),
                       Individual_data = output_individual,
                       Location_data = output_location)
 
-    return(output_data)
-
+  return(output_data)
 
   if(save){
 

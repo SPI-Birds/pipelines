@@ -1,13 +1,10 @@
 context("Test that subset_datarqst() functions as expected...")
 
-test_PopIDs <- c('CHO', 'BAN', 'VEL', 'SSQ', 'HOC', 'PIL', 'EDM')
-test_data <- run_pipelines(PopID = test_PopIDs, save = FALSE)
-
 request_PopIDs <- c('CHO', 'HOC', 'EDM', 'PIL')
 request_Species <- c('PARMAJ', 'FICHYP')
 request_filter <- paste(expand.grid(request_PopIDs, request_Species)[,1], expand.grid(request_PopIDs, request_Species)[,2], sep = '_')
 
-request_data <- subset_datarqst(PopID = request_PopIDs, Species = request_Species, return_R = TRUE, test = TRUE, save = FALSE)
+request_data <- subset_datarqst(PopID = request_PopIDs, Species = request_Species, test = TRUE, save = FALSE)
 
 
 test_that("All 4 tables are retained...", {
@@ -21,16 +18,16 @@ test_that("All 4 tables are retained...", {
 
 
 test_that("All tables contain correct columns...", {
-  expect_identical(colnames(request_data$Brood_data), colnames(test_data$Brood_data))
-  expect_identical(colnames(request_data$Capture_data), colnames(test_data$Capture_data))
-  expect_identical(colnames(request_data$Individual_data), colnames(test_data$Individual_data))
-  expect_identical(colnames(request_data$Location_data), colnames(test_data$Location_data))
+  expect_identical(colnames(request_data$Brood_data), colnames(pipeline_output$Brood_data))
+  expect_identical(colnames(request_data$Capture_data), colnames(pipeline_output$Capture_data))
+  expect_identical(colnames(request_data$Individual_data), colnames(pipeline_output$Individual_data))
+  expect_identical(colnames(request_data$Location_data), colnames(pipeline_output$Location_data))
 })
 
 
 test_that("Subset output is identical when 'PopID' and 'Species' or 'filter' is used...", {
 
-  request_data_filter <- subset_datarqst(filter = request_filter, return_R = TRUE, test = TRUE, save = FALSE)
+  request_data_filter <- subset_datarqst(filter = request_filter, test = TRUE, save = FALSE)
 
   expect_identical(request_data$Brood_data, request_data_filter$Brood_data)
   expect_identical(request_data$Capture_data, request_data_filter$Capture_data)
@@ -43,7 +40,7 @@ test_that("Subset output is identical when 'PopID' and 'Species' or 'filter' is 
 test_that("Conflicted species individuals are only included when prompted...", {
 
   request_data_C <- subset_datarqst(PopID = request_PopIDs, Species = request_Species,
-                                  include_conflicting = TRUE, return_R = TRUE, test = TRUE, save = FALSE)
+                                  include_conflicting = TRUE, test = TRUE, save = FALSE)
 
   expect_length(subset(request_data$Individual_data, IndvID == 'V56449')$IndvID, 0)
   expect_length(subset(request_data$Capture_data, IndvID == 'V56449')$IndvID, 0)
