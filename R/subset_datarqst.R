@@ -56,7 +56,7 @@ subset_datarqst <- function(file = file.choose(),
                             test = FALSE){
 
   if(!test){
-    readRDS(file = file)
+    standard_data <- readRDS(file = file)
   }else{
     standard_data <- pipeline_output
   }
