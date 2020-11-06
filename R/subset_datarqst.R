@@ -8,22 +8,24 @@
 #'
 #' When a request is made, `subset_datarqst` can be used
 #' to take a subset of this larger file to cover the specific
-#' populations/species requested by a user.
+#' populations/species requested by a user. The request can be specified
+#' either through the \code{PopID} and \code{Species} arguments, or through
+#' the \code{filter} argument.
 #'
 #' @param file The location of the file in the standard format (.RDS file). This file is created using `run_pipelines`.
 #' @param PopID Character vector of three letter population codes. Include all populations that are requested.
 #' @param Species Character vector of six letter species codes. Include all species that are requested.
 #' @param filter Character vector of unique population species combinations (in the format PopID_Species).
-#' Include all unique population species combinations requested.
-#' @param If include_conflicting = TRUE, individuals with conflicting species information
+#' Include all unique population species combinations requested. Can be used instead of `PopID` and `Species` arguments.
+#' @param include_conflicting = TRUE, individuals with conflicting species information
 #' are included in the subset of data. If
 #' include_conflicting = FALSE (default), these individuals are removed.
 #' @param output_type is 'R' and can be set to 'csv'. If output_type is 'csv' 4 .csv files will be created in the save path.
 #' If output_type is 'R' an .RDS file will be created in the save path, and an R object in the
 #' running R session if return_R = TRUE.
-#' @param return_R is FALSE. If return R = TRUE, the subset of data is also saved to the current
-#' R Session as an R object (list).
 #' @param save is TRUE. If save = FALSE, the subset of data is not saved into the save path.
+#' @param test If FALSE (default), subset is created from the most recent version of the SPI-Birds standard format.
+#' If TRUE, subset is created from R object `pipeline_output` which is created temporarily during package testing.
 #' @return Creates 1 RDS or 4 .csv files in a folder at the location of the standard data. Folder and files
 #' will be given a unique identifier in the form of the date when the subset was performed.
 #' @export
@@ -48,7 +50,6 @@ subset_datarqst <- function(file = file.choose(),
                             filter = NULL,
                             include_conflicting = FALSE,
                             output_type = "R",
-                            return_R = FALSE,
                             save = TRUE,
                             test = FALSE){
 
@@ -133,15 +134,13 @@ subset_datarqst <- function(file = file.choose(),
   # NOTE: This comes with an assumption that - aside from individuals with conflicting species - all
   #       individuals that appear in capture data also appear in individual data (they should)
 
-  #Combine output into one R object (and return if requested)
+  #Combine output into one R object (and return it)
   output_data <- list(Brood_data = output_brood,
                       Capture_data = output_capture,
                       Individual_data = output_individual,
                       Location_data = output_location)
 
-  if(return_R){
     return(output_data)
-  }
 
 
   if(save){
@@ -176,10 +175,9 @@ subset_datarqst <- function(file = file.choose(),
 
       utils::write.csv(x = output_location, file = paste0(save_path, "/Location_data_", as.character(Sys.Date()), ".csv"), row.names = F)
 
+      invisible(NULL)
     }
 
   }
-
-invisible(NULL)
 
 }
