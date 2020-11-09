@@ -18,13 +18,13 @@
 #'   of column with observed age of individual in each capture. Must be in
 #'   EURING codes.
 #' @param Date Unquoted expression (i.e. character without quotation marks).
-#'   Name of column with CaptureDate information. Must be in format dd/mm/yyyy.
+#'   Name of column with CaptureDate information. Must be in format YYY-MM-DD.
 #' @param Year Unquoted expression (i.e. character without quotation marks).
 #'   Name of column with year information. N.B. This could be different to
 #'   CaptureDate if we are dealing with species that breed over two year (e.g.
 #'   Southern Hemisphere species).
 #' @param showpb Logical. Should a progress bar be shown?
-#' @return A data frame with calculated age.
+#' @return A vector with calculated age.
 #' @export
 #'
 #' @examples
@@ -35,10 +35,12 @@
 #' CaptureDate = as.Date(paste(SampleYear, 3, 31, sep = "-"), format = "%Y-%m-%d")
 #' + sample(1:30, 100, replace = TRUE),
 #' Age_obsv = sample(c(1L, 4L), 100, replace = TRUE)) %>%
-#' calc_age(ID = IndvID, Age = Age_obsv, Date = CaptureDate, Year = SampleYear)
+#' mutate(Age_calculated = Age_calculated = calc_age(data = ., ID = IndvID, Age = Age_obsv,
+#' Date = CaptureDate, Year = SampleYear))
+
 calc_age <- function(data, ID, Age, Date, Year, showpb = TRUE){
 
-  pb <- dplyr::progress_estimated(n = nrow(data))
+  pb <- progress::progress_bar$new(total = nrow(data))
 
   output <- data %>%
     dplyr::arrange({{ID}}, {{Year}}, {{Date}}) %>%
@@ -51,7 +53,7 @@ calc_age <- function(data, ID, Age, Date, Year, showpb = TRUE){
 
                                                if(showpb){
 
-                                                 pb$print()$tick()
+                                                 pb$tick()
 
                                                }
 
@@ -97,8 +99,8 @@ calc_age <- function(data, ID, Age, Date, Year, showpb = TRUE){
                                                }
 
                                              })) %>%
-    dplyr::select(-FirstAge:-yr_diff) %>%
-    dplyr::ungroup()
+    dplyr::ungroup() %>%
+    pull(Age_calculated)
 
   return(output)
 
