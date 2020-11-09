@@ -10,18 +10,18 @@
 #' to take a subset of this larger file to cover the specific
 #' populations/species requested by a user. The request can be specified
 #' either through the \code{PopID} and \code{Species} arguments, or through
-#' the \code{filter} argument.
+#' the \code{PopSpec_Filter} argument.
 #'
 #' @param file The location of the file in the standard format (.RDS file). This file is created using `run_pipelines`.
 #' @param PopID Character vector of three letter population codes. Include all populations that are requested.
 #' @param Species Character vector of six letter species codes. Include all species that are requested.
-#' @param filter Character vector of unique population species combinations (in the format PopID_Species).
+#' @param PopSpec_Filter Character vector of unique population species combinations (in the format PopID_Species).
 #' Include all unique population species combinations requested. Can be used instead of `PopID` and `Species` arguments.
 #' @param include_conflicting = TRUE, individuals with conflicting species information
 #' are included in the subset of data. If include_conflicting = FALSE (default), these individuals are removed.
 #' Note that this applies only to conflicted species individuals that were identified at least once as any
-#' of the species specified in `Species` or `filter`. Data on conflicted species individuals that were never
-#' identified as any of the species specified in `Species` or `filter` is never returned.
+#' of the species specified in `Species` or `PopSpec_Filter`. Data on conflicted species individuals that were never
+#' identified as any of the species specified in `Species` or `PopSpec_Filter` is never returned.
 #' @param output_type is 'R' and can be set to 'csv'. If output_type is 'csv' 4 .csv files will be created in the save path.
 #' If output_type is 'R' an .RDS file will be created in the save path, and an R object in the
 #' running R session if return_R = TRUE.
@@ -42,45 +42,49 @@
 #' subset_datarqst(Species = c("PARMAJ", "FICALB"))
 #'
 #' #Create a specific subset of species and population combinations
-#' subset_datarqst(filter = c("HOG_PARMAJ", "VEL_FICALB", "VLI_PARMAJ"))
+#' subset_datarqst(PopSpec_Filter = c("HOG_PARMAJ", "VEL_FICALB", "VLI_PARMAJ"))
 #'
 #' }
 
 subset_datarqst <- function(file = file.choose(),
                             PopID = unique(pop_names$code),
                             Species = unique(Species_codes$Code),
-                            filter = NULL,
+                            PopSpec_Filter = NULL,
                             include_conflicting = FALSE,
                             output_type = "R",
                             save = TRUE,
                             test = FALSE){
 
   if(!test){
+    message(crayon::bold(crayon::green("Select standard data file (RDS format).")))
     standard_data <- readRDS(file = file)
   }else{
+    message(crayon::green("Using 'pipeline_output' as standard data."))
     standard_data <- pipeline_output
   }
 
 
-  if(!is.null(filter)){
+  if(!is.null(PopSpec_Filter)){
 
-    filter_original <- filter
+    message(crayon::green("Filtering data using 'PopSpec_Filter'."))
 
-    unique_pops <- unique(stringr::str_split(string = filter, pattern = "_", simplify = TRUE)[,1])
+    PopSpec_Filter_original <- PopSpec_Filter
+
+    unique_pops <- unique(stringr::str_split(string = PopSpec_Filter, pattern = "_", simplify = TRUE)[,1])
 
     if(include_conflicting){
-      #filter <- c(filter, paste0(unique_pops, '_CCCCCC')) # Use after pipelines updated to standard format 1.1
-      filter <- c(filter, paste0(unique_pops, '_CCCCCC'), paste0(unique_pops, '_CONFLICTED'))
+      #PopSpec_Filter <- c(PopSpec_Filter, paste0(unique_pops, '_CCCCCC')) # Use after pipelines updated to standard format 1.1
+      PopSpec_Filter <- c(PopSpec_Filter, paste0(unique_pops, '_CCCCCC'), paste0(unique_pops, '_CONFLICTED'))
     }
 
     output_brood <- standard_data$Brood_data %>%
       dplyr::mutate(Pop_sp = paste(.data$PopID, .data$Species, sep = "_")) %>%
-      dplyr::filter(.data$Pop_sp %in% filter) %>%
+      dplyr::filter(.data$Pop_sp %in% PopSpec_Filter) %>%
       dplyr::select(-.data$Pop_sp)
 
     output_individual <- standard_data$Individual_data %>%
       dplyr::mutate(Pop_sp = paste(.data$PopID, .data$Species, sep = "_")) %>%
-      dplyr::filter(.data$Pop_sp %in% filter) %>%
+      dplyr::filter(.data$Pop_sp %in% PopSpec_Filter) %>%
       dplyr::select(-.data$Pop_sp)
 
     output_capture <- standard_data$Capture_data %>%
@@ -91,6 +95,7 @@ subset_datarqst <- function(file = file.choose(),
 
   } else {
 
+    message(crayon::green("Filtering data using 'PopID' and 'Species'."))
     Species_original <- Species
 
     if(include_conflicting){
@@ -126,19 +131,27 @@ subset_datarqst <- function(file = file.choose(),
   # never identified as one of the species of interest and remove them from output
   if(include_conflicting){
 
+    message("Identifying relevant conflicting-species individuals...")
+
     #Set species of interest
-    if(!is.null(filter)){
-      SpeciesInt <- unique(stringr::str_split(string = filter_original, pattern = "_", simplify = TRUE)[,2])
+    if(!is.null(PopSpec_Filter)){
+      SpeciesInt <- unique(stringr::str_split(string = PopSpec_Filter_original, pattern = "_", simplify = TRUE)[,2])
     }else{
       SpeciesInt <- Species_original
     }
+
+    # Progress bar
+    pb <- progress::progress_bar$new(total = length(unique(output_capture$IndvID)),
+                                     format = "[:bar] :percent ~:eta remaining",
+                                     clear = FALSE)
 
     #Determine which individuals were never identified as a species of interest
     Irrelevant_IndvIDs <- output_capture %>%
       dplyr::arrange(.data$IndvID, .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
       dplyr::group_by(.data$IndvID) %>%
-      dplyr::summarise(Relevant = purrr::map_chr(.x = list(unique(na.omit(.data$Species))), .f = ~{
-
+      dplyr::summarise(Relevant = purrr::map_chr(.x = list(unique(na.omit(.data$Species))),
+                                                 .f = ~{
+                                                 pb$tick()
         if(any((..1) %in% SpeciesInt)){
 
           return("yes")
@@ -149,9 +162,9 @@ subset_datarqst <- function(file = file.choose(),
 
         }
 
-      })) %>%
+      }), .groups = "drop") %>%
       dplyr::rowwise() %>%
-      dplyr::ungroup() %>%
+      #dplyr::ungroup() %>%
       dplyr::filter(.data$Relevant == "no")
 
     #Remove individuals never identified as one of the species of interest
@@ -168,6 +181,7 @@ subset_datarqst <- function(file = file.choose(),
                       Individual_data = output_individual,
                       Location_data = output_location)
 
+  message(crayon::green("Data subset returned as R object."))
   return(output_data)
 
   if(save){
@@ -186,13 +200,11 @@ subset_datarqst <- function(file = file.choose(),
     #Save output as RDS or .csv files
     if(output_type == "R"){
 
-      message("Output subset as R Data file...")
-
       saveRDS(output_data, file = paste0(save_path, "/Output_data_", as.character(Sys.Date()), ".RDS"))
 
-    }else{
+      message(crayon::cyan(crayon::bold("Data subset saved as R data file (.RDS).")))
 
-      message("Output subset as .csv files...")
+    }else{
 
       utils::write.csv(x = output_brood, file = paste0(save_path, "/Brood_data_", as.character(Sys.Date()), ".csv"), row.names = F)
 
@@ -201,6 +213,8 @@ subset_datarqst <- function(file = file.choose(),
       utils::write.csv(x = output_individual, file = paste0(save_path, "/Individual_data_", as.character(Sys.Date()), ".csv"), row.names = F)
 
       utils::write.csv(x = output_location, file = paste0(save_path, "/Location_data_", as.character(Sys.Date()), ".csv"), row.names = F)
+
+      message(crayon::cyan(crayon::bold("Data subset saved as .csv files.")))
 
       invisible(NULL)
     }

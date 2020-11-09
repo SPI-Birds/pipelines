@@ -8,7 +8,7 @@ subset_datarqst(
   file = file.choose(),
   PopID = unique(pop_names$code),
   Species = unique(Species_codes$Code),
-  filter = NULL,
+  PopSpec_Filter = NULL,
   include_conflicting = FALSE,
   output_type = "R",
   save = TRUE,
@@ -22,14 +22,14 @@ subset_datarqst(
 
 \item{Species}{Character vector of six letter species codes. Include all species that are requested.}
 
-\item{filter}{Character vector of unique population species combinations (in the format PopID_Species).
+\item{PopSpec_Filter}{Character vector of unique population species combinations (in the format PopID_Species).
 Include all unique population species combinations requested. Can be used instead of `PopID` and `Species` arguments.}
 
 \item{include_conflicting}{= TRUE, individuals with conflicting species information
 are included in the subset of data. If include_conflicting = FALSE (default), these individuals are removed.
 Note that this applies only to conflicted species individuals that were identified at least once as any
-of the species specified in `Species` or `filter`. Data on conflicted species individuals that were never
-identified as any of the species specified in `Species` or `filter` is never returned.}
+of the species specified in `Species` or `PopSpec_Filter`. Data on conflicted species individuals that were never
+identified as any of the species specified in `Species` or `PopSpec_Filter` is never returned.}
 
 \item{output_type}{is 'R' and can be set to 'csv'. If output_type is 'csv' 4 .csv files will be created in the save path.
 If output_type is 'R' an .RDS file will be created in the save path, and an R object in the
@@ -56,7 +56,7 @@ When a request is made, `subset_datarqst` can be used
 to take a subset of this larger file to cover the specific
 populations/species requested by a user. The request can be specified
 either through the \code{PopID} and \code{Species} arguments, or through
-the \code{filter} argument.
+the \code{PopSpec_Filter} argument.
 }
 \examples{
 \dontrun{
@@ -68,7 +68,7 @@ subset_datarqst(PopID = c("HOG", "CHO"))
 subset_datarqst(Species = c("PARMAJ", "FICALB"))
 
 #Create a specific subset of species and population combinations
-subset_datarqst(filter = c("HOG_PARMAJ", "VEL_FICALB", "VLI_PARMAJ"))
+subset_datarqst(PopSpec_Filter = c("HOG_PARMAJ", "VEL_FICALB", "VLI_PARMAJ"))
 
 }
 }
