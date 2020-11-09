@@ -11,7 +11,7 @@
 extract_paradox_db <- function(path, file_name){
 
   #Determine operating system
-  OS <- tolower(sessionInfo()$running)
+  OS <- tolower(utils::sessionInfo()$running)
 
   #Set python version if operating system is windows
   #(this should not be necessary to set here when running on MacOS, assuming setup is otherwise fine)

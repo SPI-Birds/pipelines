@@ -66,7 +66,7 @@ run_pipelines <- function(path = choose_directory(),
   }
 
   #Determine operating system
-  OS <- tolower(sessionInfo()$running)
+  OS <- tolower(utils::sessionInfo()$running)
 
   #Drop populations from Access-based primary data if running on Mac
   PopID_Access <- c("HOG", "OOS", "VLI", "BUU", "LIE", "WAR", "WES", "AMM")
