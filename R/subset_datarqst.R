@@ -140,13 +140,19 @@ subset_datarqst <- function(file = file.choose(),
       SpeciesInt <- Species_original
     }
 
-    # Progress bar
-    pb <- progress::progress_bar$new(total = length(unique(output_capture$IndvID)),
+    #Make a list of all individuals with conflicting species
+    ConflSpec_IndvIDs <- output_individual %>%
+      dplyr::filter(.data$Species %in% c('CONFLICTED', 'CCCCCC')) %>%
+      dplyr::select(.data$IndvID)
+
+    #Progress bar
+    pb <- progress::progress_bar$new(total = length(unique(ConflSpec_IndvIDs$IndvID)),
                                      format = "[:bar] :percent ~:eta remaining",
                                      clear = FALSE)
 
     #Determine which individuals were never identified as a species of interest
     Irrelevant_IndvIDs <- output_capture %>%
+      dplyr::filter(.data$IndvID %in% ConflSpec_IndvIDs$IndvID) %>%
       dplyr::arrange(.data$IndvID, .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
       dplyr::group_by(.data$IndvID) %>%
       dplyr::summarise(Relevant = purrr::map_chr(.x = list(unique(na.omit(.data$Species))),
