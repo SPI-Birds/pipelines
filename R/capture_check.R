@@ -366,7 +366,8 @@ check_values_capture <- function(Capture_data, var) {
     error_output <- purrr::pmap(.l = error_records,
                                 .f = ~{
                                   paste0("Record on row ", ..1,
-                                         " (CaptureID: ", ..3, "; ",
+                                         " (PopID: ", ..2, "; ",
+                                         "CaptureID: ", ..3, "; ",
                                          Species_codes[Species_codes$Code == ..6, "CommonName"], " ", ..7, ")",
                                          " has an impossible value in ", ..8, " (", ..4, ").")
                                 })
@@ -492,7 +493,8 @@ check_values_capture <- function(Capture_data, var) {
                                         dplyr::pull(Value)
 
                                       paste0("Record on row ", ..1,
-                                             " (CaptureID: ", ..3, "; ",
+                                             " (PopID: ", ..2, "; ",
+                                             "CaptureID: ", ..3, "; ",
                                              Species_codes[Species_codes$Code == ..6, "CommonName"], " ", tolower(..7), ")",
                                              " has an unusually ",
                                              ifelse(..4 < wmin,
@@ -503,7 +505,8 @@ check_values_capture <- function(Capture_data, var) {
                                     } else {
 
                                       paste0("Record on row ", ..1,
-                                             " (CaptureID: ", ..3, "; ",
+                                             " (PopID: ", ..2, "; ",
+                                             "CaptureID: ", ..3, "; ",
                                              Species_codes[Species_codes$Code == ..6, "CommonName"], " ", tolower(..7), ")",
                                              " has an unusually ",
                                              ifelse(..4 < capture_ref_values[[paste(..6, ..7, ..8, sep="_")]]$Value[1],
@@ -571,7 +574,8 @@ check_chick_age <- function(Capture_data){
     error_output <- purrr::pmap(.l = error_records,
                                 .f = ~{
                                   paste0("Record on row ", ..1,
-                                         " (CaptureID: ", ..3, ", ", Species_codes[Species_codes$Code == ..4, "CommonName"], ")",
+                                         " (PopID: ", ..2,
+                                         "; CaptureID: ", ..3, ", ", Species_codes[Species_codes$Code == ..4, "CommonName"], ")",
                                          " has an impossible value in ChickAge (", ..5, ").")
                                 })
   }
@@ -681,8 +685,9 @@ check_adult_parent_nest <- function(Capture_data, Location_data, Brood_data){
     warning_output <- purrr::pmap(.l = warning_records,
                                   .f = ~{
                                     paste0("Record on row ", ..1,
-                                           " (CaptureID: ", ..2,
-                                           ", IndvID: ", ..3, ")",
+                                           " (PopID: ", ..4,
+                                           "; CaptureID: ", ..2,
+                                           "; IndvID: ", ..3, ")",
                                            " is caught on a location marked as a nest box but is not listed as the parent of that nest in Brood_data.")
                                   })
   }

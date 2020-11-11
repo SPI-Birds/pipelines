@@ -420,15 +420,15 @@ compare_clutch_brood <- function(Brood_data){
     error_records <- Brood_data_non %>%
       dplyr::mutate(CheckID = "B2") %>%
       dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID")) %>%
-      {if(all(c("ClutchSize", "BroodSize") %in% colnames(.))) dplyr::select(., Row, BroodID, ClutchSize, BroodSize)
-        else dplyr::select(., Row, BroodID, ClutchSize_observed, BroodSize_observed)}
+      {if(all(c("ClutchSize", "BroodSize") %in% colnames(.))) dplyr::select(., Row, PopID, BroodID, ClutchSize, BroodSize)
+        else dplyr::select(., Row, PopID, BroodID, ClutchSize_observed, BroodSize_observed)}
 
     # Create quality check report statements
     error_output <- purrr::pmap(.l = error_records,
                                 .f = ~{
-                                  paste0("Record on row ", ..1, " (BroodID: ", ..2, ")",
-                                         " has a larger brood size (", ..4,
-                                         ") than clutch size (", ..3,
+                                  paste0("Record on row ", ..1, " (PopID: ", ..2, "; BroodID: ", ..3, ")",
+                                         " has a larger brood size (", ..5,
+                                         ") than clutch size (", ..4,
                                          "), but was not experimentally manipulated.")
                                 })
   }
@@ -445,15 +445,15 @@ compare_clutch_brood <- function(Brood_data){
     warning_records <- Brood_data_man %>%
       dplyr::mutate(CheckID = "B2") %>%
       dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID")) %>%
-      {if(all(c("ClutchSize", "BroodSize") %in% colnames(.))) dplyr::select(., Row, BroodID, ClutchSize, BroodSize)
-        else dplyr::select(., Row, BroodID, ClutchSize_observed, BroodSize_observed)}
+      {if(all(c("ClutchSize", "BroodSize") %in% colnames(.))) dplyr::select(., Row, PopID, BroodID, ClutchSize, BroodSize)
+        else dplyr::select(., Row, PopID, BroodID, ClutchSize_observed, BroodSize_observed)}
 
     # Create quality check report statements
     warning_output <- purrr::pmap(.l = warning_records,
                                   .f = ~{
-                                    paste0("Record on row ", ..1, " (BroodID: ", ..2, ")",
-                                           " has a larger brood size (", ..4,
-                                           ") than clutch size (", ..3,
+                                    paste0("Record on row ", ..1, " (PopID: ", ..2, "; BroodID: ", ..3, ")",
+                                           " has a larger brood size (", ..5,
+                                           ") than clutch size (", ..4,
                                            "), but was experimentally manipulated.")
                                   })
   }
@@ -511,15 +511,15 @@ compare_brood_fledglings <- function(Brood_data){
     error_records <- Brood_data_non %>%
       dplyr::mutate(CheckID = "B3") %>%
       dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID")) %>%
-      {if(all(c("BroodSize", "NumberFledged") %in% colnames(.))) dplyr::select(., Row, BroodID, BroodSize, NumberFledged)
-        else dplyr::select(., Row, BroodID, BroodSize_observed, NumberFledged_observed)}
+      {if(all(c("BroodSize", "NumberFledged") %in% colnames(.))) dplyr::select(., Row, PopID, BroodID, BroodSize, NumberFledged)
+        else dplyr::select(., Row, PopID, BroodID, BroodSize_observed, NumberFledged_observed)}
 
     # Create quality check report statements
     error_output <- purrr::pmap(.l = error_records,
                                 .f = ~{
-                                  paste0("Record on row ", ..1, " (BroodID: ", ..2, ")",
-                                         " has a larger fledgling number (", ..4,
-                                         ") than brood size (", ..3,
+                                  paste0("Record on row ", ..1, " (PopID: ", ..2, "; BroodID: ", ..3, ")",
+                                         " has a larger fledgling number (", ..5,
+                                         ") than brood size (", ..4,
                                          "), but was not experimentally manipulated.")
                                 })
   }
@@ -536,15 +536,15 @@ compare_brood_fledglings <- function(Brood_data){
     warning_records <- Brood_data_man %>%
       dplyr::mutate(CheckID = "B3") %>%
       dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID")) %>%
-      {if(all(c("BroodSize", "NumberFledged") %in% colnames(.))) dplyr::select(., Row, BroodID, BroodSize, NumberFledged)
-        else dplyr::select(., Row, BroodID, BroodSize_observed, NumberFledged_observed)}
+      {if(all(c("BroodSize", "NumberFledged") %in% colnames(.))) dplyr::select(., Row, PopID, BroodID, BroodSize, NumberFledged)
+        else dplyr::select(., Row, PopID, BroodID, BroodSize_observed, NumberFledged_observed)}
 
     # Create quality check report statements
     warning_output <- purrr::pmap(.l = warning_records,
                                   .f = ~{
-                                    paste0("Record on row ", ..1, " (BroodID: ", ..2, ")",
-                                           " has a larger fledgling number (", ..4,
-                                           ") than brood size (", ..3,
+                                    paste0("Record on row ", ..1, " (PopID: ", ..2, "; BroodID: ", ..3, ")",
+                                           " has a larger fledgling number (", ..5,
+                                           ") than brood size (", ..4,
                                            "), and was experimentally manipulated.")
                                   })
   }
@@ -606,15 +606,15 @@ compare_laying_hatching <- function(Brood_data){
     error_records <- Brood_data_late %>%
       dplyr::mutate(CheckID = "B4") %>%
       dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID")) %>%
-      {if(all(c("LayDate", "HatchDate") %in% colnames(.))) dplyr::select(., Row, BroodID, LayDate, HatchDate)
-        else dplyr::select(., Row, BroodID, LayDate_observed, HatchDate_observed)}
+      {if(all(c("LayDate", "HatchDate") %in% colnames(.))) dplyr::select(., Row, PopID, BroodID, LayDate, HatchDate)
+        else dplyr::select(., Row, PopID, BroodID, LayDate_observed, HatchDate_observed)}
 
     # Create quality check report statements
     error_output <- purrr::pmap(.l = error_records,
                                 .f = ~{
-                                  paste0("Record on row ", ..1, " (BroodID: ", ..2, ")",
-                                         " has a later laying date (", ..3,
-                                         ") than hatching date (", ..4, ").")
+                                  paste0("Record on row ", ..1, " (PopID: ", ..2, "; BroodID: ", ..3, ")",
+                                         " has a later laying date (", ..4,
+                                         ") than hatching date (", ..5, ").")
                                 })
   }
 
@@ -680,15 +680,15 @@ compare_hatching_fledging <- function(Brood_data){
     error_records <- Brood_data_late %>%
       dplyr::mutate(CheckID = "B5") %>%
       dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID")) %>%
-      {if(all(c("HatchDate", "FledgeDate") %in% colnames(.))) dplyr::select(., Row, BroodID, HatchDate, FledgeDate)
-        else dplyr::select(., Row, BroodID, HatchDate_observed, FledgeDate_observed)}
+      {if(all(c("HatchDate", "FledgeDate") %in% colnames(.))) dplyr::select(., Row, PopID, BroodID, HatchDate, FledgeDate)
+        else dplyr::select(., Row, PopID, BroodID, HatchDate_observed, FledgeDate_observed)}
 
     # Create quality check report statements
     error_output <- purrr::pmap(.l = error_records,
                                 .f = ~{
-                                  paste0("Record on row ", ..1, " (BroodID: ", ..2, ")",
-                                         " has a later hatching date (", ..3,
-                                         ") than fledging date (", ..4, ").")
+                                  paste0("Record on row ", ..1, " (PopID: ", ..2, "; BroodID: ", ..3, ")",
+                                         " has a later hatching date (", ..4,
+                                         ") than fledging date (", ..5, ").")
                                 })
   }
 
@@ -913,11 +913,13 @@ check_values_brood <- function(Brood_data, var) {
     error_output <- purrr::pmap(.l = error_records,
                                 .f = ~{
                                   paste0("Record on row ", ..1,
-                                         " (BroodID: ", ..3, "; ",
+                                         " (PopID: ", ..2, "; ",
+                                         "BroodID: ", ..3, "; ",
                                          species_codes[species_codes$Species == ..5, "CommonName"], ")",
                                          " has an impossible value in ", ..6, " (", ..4, ").")
                                 })
   }
+
 
   # Brood-specific warnings
   Brood_war <- purrr::pmap(.l = ref,
@@ -968,10 +970,28 @@ check_values_brood <- function(Brood_data, var) {
     warning_output <- purrr::pmap(.l = warning_records,
                                   .f = ~{
                                     paste0("Record on row ", ..1,
-                                           " (BroodID: ", ..3, "; ",
+                                           " (PopID: ", ..2, "; ",
+                                           "BroodID: ", ..3, "; ",
                                            species_codes[species_codes$Species == ..5, "CommonName"], ")",
                                            " has an unusual value in ", ..6, " (", ..4, ").")
                                   })
+  }
+
+  # Add messages about skipped population-species combinations to warning outputs
+  if(!missing(low_obs)) {
+
+    skipped_output <- purrr::pmap(.l = list(low_obs$Species,
+                                            low_obs$PopID),
+                                  .f = ~{
+
+                                    paste0("Check is skipped for ", ..2, ", ",
+                                           species_codes[species_codes$Species == ..1, "CommonName"],
+                                           ", because the number of records is too low to create reliable reference values.")
+
+                                  })
+
+    warning_output <- c(skipped_output, warning_output)
+
   }
 
   check_list <- tibble::tibble(Warning = war,
@@ -1038,7 +1058,7 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data) {
     # Create quality check report statements
     error_output <- purrr::pmap(.l = error_records,
                                 .f = ~{
-                                  paste0("Record on row ", ..1, " (BroodID: ", ..3, ")",
+                                  paste0("Record on row ", ..1, " (PopID: ", ..2, "; BroodID: ", ..3, ")",
                                          " has a smaller BroodSize (", ..4, ")",
                                          " than the number of chicks in Individual_data (",
                                          ..5, ").")
@@ -1070,7 +1090,7 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data) {
     # Create quality check report statements
     warning_output <- purrr::pmap(.l = warning_records,
                                   .f = ~{
-                                    paste0("Record on row ", ..1, " (BroodID: ", ..3, ")",
+                                    paste0("Record on row ", ..1, " (PopID: ", ..2, "; BroodID: ", ..3, ")",
                                            " has a larger BroodSize (", ..4, ")",
                                            " than the number of chicks in Individual_data (",
                                            ..5, ").")
@@ -1122,7 +1142,8 @@ check_unique_BroodID <- function(Brood_data){
     # Compare to whitelist
     error_records <- Duplicated %>%
       dplyr::mutate(CheckID = "B8") %>%
-      dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
+      dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID")) %>%
+      dplyr::select(Row, BroodID, PopID)
 
     # Create quality check report statements
     error_output <- purrr::map(.x = unique(error_records$BroodID),
@@ -1130,6 +1151,7 @@ check_unique_BroodID <- function(Brood_data){
                                  paste0("Record on row ",
                                         # Duplicated rows
                                         error_records[error_records$BroodID == .x, "Row"][1,],
+                                        " (PopID: ", error_records[error_records$BroodID == .x, "PopID"][1,], ")",
                                         " has the same BroodID (", .x, ") as row(s) ",
                                         # Duplicates (if 1, else more)
                                         ifelse(nrow(error_records[error_records$BroodID == .x, "Row"][-1,]) == 1,
@@ -1179,9 +1201,9 @@ check_clutch_type_order <- function(Brood_data){
     dplyr::filter(!is.na(FemaleID) & !is.na(ClutchType_calculated)) %>%
     dplyr::group_by(PopID, BreedingSeason, FemaleID) %>%
     dplyr::summarise(CTcal = ifelse(any(ClutchType_calculated == "first"),
-                         which(ClutchType_calculated == "first"), NA),
-              BroodID = BroodID[CTcal],
-              Row = Row[CTcal]) %>%
+                                    which(ClutchType_calculated == "first"), NA),
+                     BroodID = BroodID[CTcal],
+                     Row = Row[CTcal]) %>%
     dplyr::filter(!is.na(CTcal) & CTcal > 1) %>%
     dplyr::ungroup()
 
@@ -1201,7 +1223,7 @@ check_clutch_type_order <- function(Brood_data){
 
     error_output <- purrr::pmap(.l = error_records,
                                 .f = ~{
-                                  paste0("Record on row ", ..6, " (BroodID: ", ..5, ")",
+                                  paste0("Record on row ", ..6, " (PopID: ", ..1, "; BroodID: ", ..5, ")",
                                          " has ClutchType_calculated == 'first', but is not the first brood recorded for that female (FemaleID: ", ..3, ") in that season (", ..2, ").")
                                 }
     )
@@ -1286,7 +1308,7 @@ compare_species_parents <- function(Brood_data, Individual_data) {
     # Create quality check report statements
     warning_output <- purrr::pmap(.l = warning_records,
                                   .f = ~{
-                                    paste0("Record on row ", ..1, " (BroodID: ", ..3, ")",
+                                    paste0("Record on row ", ..1, " (PopID: ", ..2, "; BroodID: ", ..3, ")",
                                            " has parents of different species",
                                            " (Mother: ", species_codes[species_codes$Species == ..5, "CommonName"],
                                            ", father: ", species_codes[species_codes$Species == ..7, "CommonName"], ").")
@@ -1365,7 +1387,7 @@ compare_species_brood_parents <- function(Brood_data, Individual_data) {
     # Create quality check report statements
     warning_output <- purrr::pmap(.l = warning_records,
                                   .f = ~{
-                                    paste0("Record on row ", ..1, " (BroodID: ", ..3, ")",
+                                    paste0("Record on row ", ..1, " (PopID: ", ..2, "; BroodID: ", ..3, ")",
                                            " is recorded as a different species than any of the parents",
                                            " (Mother: ", species_codes[species_codes$Species == ..6, "CommonName"],
                                            ", father: ", species_codes[species_codes$Species == ..8, "CommonName"], ").")
@@ -1439,7 +1461,7 @@ compare_species_brood_chicks <- function(Brood_data, Individual_data) {
     # Create quality check report statements
     warning_output <- purrr::pmap(.l = warning_records,
                                   .f = ~{
-                                    paste0("Record on row ", ..3, " (BroodID: ", ..2, ")",
+                                    paste0("Record on row ", ..3, " (PopID: ", ..1, "; BroodID: ", ..2, ")",
                                            " is recorded as a different species than ", ..4, " out of ", ..5, " chicks.")
                                   })
   }

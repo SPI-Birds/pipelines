@@ -277,6 +277,7 @@ check_unique_IndvID <- function(Individual_data){
                                  paste0("Record on row ",
                                         # Duplicated rows
                                         error_records[error_records$IndvID == .x, "Row"][1,],
+                                        " (PopID: ", error_records[error_records$IndvID == .x, "PopID"][1,], ")",
                                         " has the same IndvID (", .x, ") as row(s) ",
                                         # Duplicates (if 1, else more)
                                         ifelse(nrow(error_records[error_records$IndvID == .x, "Row"][-1,]) == 1,
@@ -360,11 +361,11 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data) {
     dplyr::group_by(IndvID) %>%
     dplyr::filter(CaptureDate == dplyr::first(CaptureDate)) %>%
     dplyr::ungroup() %>%
-    dplyr::left_join(Location_data, by=c("CapturePopID" = "PopID", "LocationID"))
+    dplyr::left_join(Location_data, by = c("CapturePopID" = "PopID", "LocationID"))
 
   # Join with individual data
   Ind_cap_loc_data <- Individual_data %>%
-    dplyr::left_join(First_captures, by="IndvID")
+    dplyr::left_join(First_captures, by = c("IndvID", "Species"))
 
   # Errors
   # Select records with chicks caught in a nest box but not associated with a BroodID
@@ -386,7 +387,7 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data) {
     # Create quality check report statements
     error_output <- purrr::pmap(.l = error_records,
                                 .f = ~{
-                                  paste0("Record on row ", ..1, " (IndvID: ", ..2, ")",
+                                  paste0("Record on row ", ..1, " (PopID: ", ..4, "; IndvID: ", ..2, ")",
                                          " has no BroodID.")
                                 })
   }
@@ -447,7 +448,7 @@ check_conflicting_sex <- function(Individual_data) {
     # Create quality check report statements
     error_output <- purrr::pmap(.l = error_records,
                                   .f = ~{
-                                    paste0("Record on row ", ..1, " (IndvID: ", ..2, ")",
+                                    paste0("Record on row ", ..1, " (PopID: ", ..4, "; IndvID: ", ..2, ")",
                                            " has conflicting sex.")
                                   })
   }
@@ -507,7 +508,7 @@ check_conflicting_species <- function(Individual_data) {
     # Create quality check report statements
     error_output <- purrr::pmap(.l = error_records,
                                 .f = ~{
-                                  paste0("Record on row ", ..1," (IndvID: ", ..2, ")",
+                                  paste0("Record on row ", ..1, " (PopID: ", ..4, "; IndvID: ", ..2, ")",
                                          " has conflicting species.")
                                 })
   }
@@ -569,7 +570,7 @@ check_individuals_captures <- function(Individual_data, Capture_data){
     # Create quality check report statements
     error_output <- purrr::pmap(.l = error_records,
                                 .f = ~{
-                                  paste0("Record on row ", ..1," (IndvID: ", ..2, ")",
+                                  paste0("Record on row ", ..1, " (PopID: ", ..4, "; IndvID: ", ..2, ")",
                                          " does not appear in Capture_data.")
                                 })
   }
