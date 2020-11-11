@@ -202,12 +202,12 @@ create_dummy_data <- function(overwrite=TRUE) {
   # B5: Comparing hatching and fledging dates
   B5_rows <- Brood_data %>%
     dplyr::mutate( # Probable
-      HatchDate = as.Date("2020-04-18"),
-      FledgeDate = as.Date("2020-05-01")
+      HatchDate_observed = as.Date("2020-04-18"),
+      FledgeDate_observed = as.Date("2020-05-01")
     ) %>%
     dplyr::add_row( # Impossible (error)
-      HatchDate = as.Date("2020-05-01"),
-      FledgeDate = as.Date("2020-04-18")
+      HatchDate_observed = as.Date("2020-05-01"),
+      FledgeDate_observed = as.Date("2020-04-18")
     ) %>%
     dplyr::mutate(
       PopID = "AAA",
@@ -479,15 +479,18 @@ create_dummy_data <- function(overwrite=TRUE) {
     # ChickAge known
     dplyr::mutate( # Probable
       Mass = as.integer(20),
-      ChickAge = 12
+      ChickAge = 12,
+      Age_calculated = 1
     ) %>%
     dplyr::add_row( # Improbable (warning)
       Mass = as.integer(30),
-      ChickAge = 12
+      ChickAge = 12,
+      Age_calculated = 1
     ) %>%
     dplyr::add_row( # Impossible (error)
       Mass = as.integer(100),
-      ChickAge = 12
+      ChickAge = 12,
+      Age_calculated = 1
     ) %>%
     # ChickAge unknown, age_calculated == 3 (ChickAge becomes 30)
     dplyr::add_row( # Probable
@@ -876,8 +879,8 @@ create_dummy_data <- function(overwrite=TRUE) {
   al_rows <- Brood_data %>%
     dplyr::mutate(
       Row = as.integer(0),
-      LayDate = as.Date("2020-06-24"),
-      HatchDate = as.Date("2020-06-11")
+      LayDate_observed = as.Date("2020-06-24"),
+      HatchDate_observed = as.Date("2020-06-11")
     ) %>%
     dplyr::mutate(
       PopID = "AAA",

@@ -238,6 +238,8 @@ check_format_capture <- function(Capture_data){
 #'
 #' @export
 
+
+## FIXME: Update check to format check_values_brood
 check_values_capture <- function(Capture_data, var) {
 
   # Stop if var is missing
@@ -295,7 +297,6 @@ check_values_capture <- function(Capture_data, var) {
                                        dplyr::filter(Species == .y[1])
 
                                      sel <- Capture_data3 %>%
-                                       dplyr::filter(Species == .y[1]) %>%
                                        dplyr::mutate(error = purrr::pmap_lgl(.l = list(Mass, ChickAge, Age_calculated),
                                                                              .f = function(Mass, ChickAge, Age_calculated, Ref_values){
 
@@ -303,9 +304,7 @@ check_values_capture <- function(Capture_data, var) {
 
                                            current_chick_age <- 30
 
-                                         } else {
-
-                                           if(Age_calculated == 1 | is.na(ChickAge) | ChickAge < 0 | ChickAge > 30){
+                                         } else if(Age_calculated == 1 & (is.na(ChickAge) | ChickAge < 0 | ChickAge > 30)){
 
                                              current_chick_age <- 14
 
@@ -314,8 +313,6 @@ check_values_capture <- function(Capture_data, var) {
                                              current_chick_age <- ChickAge
 
                                            }
-
-                                         }
 
                                          return(Mass < Ref_values$Value[which(Ref_values$ChickAge == current_chick_age & Ref_values$Reference == "Error_min")] |
                                                   Mass > Ref_values$Value[which(Ref_values$ChickAge == current_chick_age & Ref_values$Reference == "Error_max")])
@@ -417,9 +414,7 @@ check_values_capture <- function(Capture_data, var) {
 
                                                                                  current_chick_age <- 30
 
-                                                                               } else {
-
-                                                                                 if(is.na(ChickAge) | ChickAge < 0 | ChickAge > 30){
+                                                                               } else if(Age_calculated == 1 & (is.na(ChickAge) | ChickAge < 0 | ChickAge > 30)){
 
                                                                                    current_chick_age <- 14
 
@@ -428,8 +423,6 @@ check_values_capture <- function(Capture_data, var) {
                                                                                    current_chick_age <- ChickAge
 
                                                                                  }
-
-                                                                               }
 
                                                                                return((Mass < Ref_values$Value[which(Ref_values$ChickAge == current_chick_age & Ref_values$Reference == "Warning_min")] & Mass >= Ref_values$Value[which(Ref_values$ChickAge == current_chick_age & Ref_values$Reference == "Error_min")]) |
                                                                                         (Mass > Ref_values$Value[which(Ref_values$ChickAge == current_chick_age & Ref_values$Reference == "Warning_max")] & Mass <= Ref_values$Value[which(Ref_values$ChickAge == current_chick_age & Ref_values$Reference == "Error_max")]))
