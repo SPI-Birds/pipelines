@@ -58,7 +58,8 @@ make_IndIdentifier = function(raw_data){
       dplyr::filter(!is.na(!!as.symbol(names(.)[ncol(.)]))) %>%
       #Only use the last 2 columns
       #We're only interested in whether there are any remaining cases where a left join could be appropriate
-      dplyr::select((ncol(.)-1):ncol(.))
+      dplyr::select((ncol(.)-1):ncol(.)) %>%
+      dplyr::filter(.[1] != .[2])
 
     #Change the name of the columns to use in the next loop (i.e. next time we want to add RING4)
     colnames(check_data) <- paste0("RING", c(N, N + 1))
