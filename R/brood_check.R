@@ -759,8 +759,8 @@ check_values_brood <- function(Brood_data, var) {
     ref <- Brood_data %>%
       dplyr::filter(!is.na(!!rlang::sym(var)) & !is.na(Species)) %>%
       dplyr::group_by(BreedingSeason) %>%
-      # Transform dates to Julian days to calculate quantiles
-      dplyr::mutate(!!paste0(var, "_julian") := lubridate::yday(!!rlang::sym(var))) %>%
+      # Transform dates to Julian days (while accounting for year) to calculate quantiles
+      dplyr::mutate(!!paste0(var, "_julian") := lubridate::yday(!!rlang::sym(var)) + (lubridate::year(!!rlang::sym(var)) - BreedingSeason) * 365) %>%
       dplyr::ungroup() %>%
       dplyr::group_by(Species, PopID) %>%
       dplyr::summarise(Warning_min = floor(quantile(!!rlang::sym(paste0(var, "_julian")), probs = 0.01, na.rm = TRUE)),
@@ -883,8 +883,9 @@ check_values_brood <- function(Brood_data, var) {
 
                                Brood_data %>%
                                  dplyr::group_by(BreedingSeason) %>%
-                                 # Transform dates to Julian days to compare to Julian day reference values
-                                 dplyr::mutate(!!paste0(var, "_julian") := lubridate::yday(!!rlang::sym(var))) %>%
+                                 # Transform dates to Julian days (while accounting for year)
+                                 # to compare to Julian day reference values
+                                 dplyr::mutate(!!paste0(var, "_julian") := lubridate::yday(!!rlang::sym(var)) + (lubridate::year(!!rlang::sym(var)) - BreedingSeason) * 365) %>%
                                  dplyr::ungroup() %>%
                                  dplyr::filter(Species == ..1 & PopID == ..2 &
                                                  (!!rlang::sym(paste0(var, "_julian")) < ..5 | !!rlang::sym(paste0(var, "_julian")) > ..6)) %>%
@@ -940,8 +941,9 @@ check_values_brood <- function(Brood_data, var) {
 
                                Brood_data %>%
                                  dplyr::group_by(BreedingSeason) %>%
-                                 # Transform dates to Julian days to compare to Julian day reference values
-                                 dplyr::mutate(!!paste0(var, "_julian") := lubridate::yday(!!rlang::sym(var))) %>%
+                                 # Transform dates to Julian days (while accounting for year)
+                                 # to compare to Julian day reference values
+                                 dplyr::mutate(!!paste0(var, "_julian") := lubridate::yday(!!rlang::sym(var)) + (lubridate::year(!!rlang::sym(var)) - BreedingSeason) * 365) %>%
                                  dplyr::ungroup() %>%
                                  dplyr::filter(Species == ..1 & PopID == ..2 &
                                                  ((!!rlang::sym(paste0(var, "_julian")) > ..4 & !!rlang::sym(paste0(var, "_julian")) <= ..6) | (!!rlang::sym(paste0(var, "_julian")) < ..3 & !!rlang::sym(paste0(var, "_julian")) >= ..5))) %>%
@@ -978,7 +980,7 @@ check_values_brood <- function(Brood_data, var) {
   }
 
   # Add messages about skipped population-species combinations to warning outputs
-  if(!missing(low_obs)) {
+  if(exists("low_obs")) {
 
     skipped_output <- purrr::pmap(.l = list(low_obs$Species,
                                             low_obs$PopID),
