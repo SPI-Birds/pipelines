@@ -780,7 +780,7 @@ check_values_brood <- function(Brood_data, var) {
 
       purrr::pwalk(.l = list(low_obs$Species,
                              low_obs$PopID,
-                             rep(var, length(low_obs))),
+                             rep(var, nrow(low_obs))),
                    .f = ~{
 
                      message(paste0("Number of ", ..3, " records for ", ..2, ": ", ..1,
@@ -902,6 +902,7 @@ check_values_brood <- function(Brood_data, var) {
   error_output <- NULL
 
   if(nrow(Brood_err) > 0) {
+
     err <- TRUE
 
     # Compare to approved_list
@@ -960,6 +961,7 @@ check_values_brood <- function(Brood_data, var) {
   warning_output <- NULL
 
   if(nrow(Brood_war) > 0) {
+
     war <- TRUE
 
     # Compare to approved_list
