@@ -1,176 +1,269 @@
 #' Determine chick growth curves
 #'
-#' Fit logistic and gompertz growth curves
-#' to chick mass data for great and blue tits.
+#' Fit logistic growth curve to chick mass data to calculate age-specific reference values.
 #'
-#' We fit this using data from Hoge Veluwe. See example for data extraction.
+#' @param Capture_data Data frame with capture data on chicks of 1 species in 1 population
+#' @param plot Create plot of mass data and logistic growth curve. Default: FALSE.
 #'
-#' @param HOG_chick_data Data frame with chick age and mass of Hoge Veluwe great and blue tits
-#'
-#' @return A data frame with cutoffs values at each age
+#' @return A data frame with reference values for mass at each age
 #' @export
-#' @importFrom stats na.omit nls
+#' @importFrom stats nls
 #'
 #' @examples
 #' \dontrun{
-#' #run pipeline for Hoge Veluwe great and blue tits
-#' HOG <- run_pipelines(PopID = "HOG", Species = c("PARMAJ", "CYACAE"), output_type = "R")
+#' # Run pipeline for Hoge Veluwe great tits
+#' HOG_PARMAJ_data <- run_pipelines(PopID = "HOG", Species = "PARMAJ", output_type = "R")
 #'
-#' Subset relevant columns
-#' HOG_chick_data <- HOG$Capture_data %>%
-#' dplyr::filter(!is.na(ChickAge) & !is.na(Mass), BreedingSeason <= 2019) %>%
-#' dplyr::select(ChickAge, Mass, Species)
-#'
-#' calculate_chick_mass_cutoffs(HOG_chick_data)
+#' # Calculate reference values using logistic growth model
+#' calculate_chick_mass_cutoffs(HOG_PARMAJ_data, plot = TRUE)
 #' }
-calculate_chick_mass_cutoffs <- function(HOG_chick_data){
 
-  #For great tit
-  data <- dplyr::filter(HOG_chick_data, !is.na(Mass) & Species == "PARMAJ")
+calculate_chick_mass_cutoffs <- function(Capture_data, plot = FALSE) {
 
-  #Remove the obvious outlier
-  data <- dplyr::filter(data, Mass < 25)
+  # Capture_data should be of one species in one population
+  if(length(unique(Capture_data$Species)) > 1) {
 
-  #Fit a logistic regression
+    stop("Capture_data contains data on more than 1 species. Select data on 1 species only.")
 
-  #Starting values based on fitted lm
-  logistic_model <- nls(Mass ~ a*(1+b*(exp(-c*ChickAge)))^-1,
-                        start = list(a = 17, b = 0.1, c = 0.25), data = data, trace = TRUE)
+  }
 
-  #Fit Gompertz curve
-  gompertz_model <- nls(Mass ~ a*exp(-b*exp(-c*ChickAge)),
-                        start=list(a = 25, b = 2, c = 0.1), data = data, trace = TRUE)
+  if(length(unique(Capture_data$CapturePopID)) > 1) {
 
-  #Gompertz curve fits fine
-  # ggplot() +
-  #   geom_point(data = data, aes(x = ChickAge, y = Mass), shape = 21, size = 3, alpha = 0.75) +
-  #   geom_line(aes(x = seq(0, 30, 1), y = predict(gompertz_model, newdata = data.frame(ChickAge = seq(0, 30, 1)))), size = 1) +
-  #   theme_classic()
+    stop("Capture_data contains data on more than 1 population Select data on 1 population only.")
 
-  #Use predictNLS function from RBlogger to get 95% CIs for both models
-  #Made redundant. Code is stored below out of interest.
-  # newdata <- data.frame(ChickAge = seq(0, 30, 1))
-  # logistic_pred <- as.data.frame(predictNLS(logistic_model, newdata = newdata, level = 0.999))
-  # gompertz_pred <- as.data.frame(predictNLS(gompertz_model, newdata = newdata, level = 0.999))
+  }
 
-  #Look at the same approach assuming error around the predicted line is normally distributed (i.e. 1.96*SE)
-  logistic_pred$upper <- logistic_pred$fit + (summary(logistic_model)$sigma*1.96)
-  logistic_pred$lower <- logistic_pred$fit - (summary(logistic_model)$sigma*1.96)
+  # Filter data
+  data <- Capture_data %>%
+    dplyr::filter(!is.na(ChickAge), !is.na(Mass))
 
-  gompertz_pred$upper <- gompertz_pred$fit + (summary(gompertz_model)$sigma*1.96)
-  gompertz_pred$lower <- gompertz_pred$fit - (summary(gompertz_model)$sigma*1.96)
+  # Set initial values for logistic model
+  initial_values <- list(a = {data %>% dplyr::filter(ChickAge == max(ChickAge)) %>% dplyr::summarise(M = max(Mass)) %>% dplyr::pull(M)},
+                         b = 5,
+                         c = 0.1)
 
-  #Plot both
-  # logistic_plot <- ggplot()+
-  #   geom_point(data = data, aes(x = ChickAge, y = Mass), shape = 21, size = 3) +
-  #   geom_line(data = logistic_pred, aes(x = newdata$ChickAge, y = lower), colour = "black", lty = 2) +
-  #   geom_line(data = logistic_pred, aes(x = newdata$ChickAge, y = upper), colour = "black", lty = 2) +
-  #   geom_line(data = logistic_pred, aes(x = newdata$ChickAge, y = `0.05%`), colour = "black", lty = 1) +
-  #   geom_line(data = logistic_pred, aes(x = newdata$ChickAge, y = `99.95%`), colour = "black", lty = 1) +
-  #   geom_line(data = logistic_pred, aes(x = newdata$ChickAge, y = fit), size = 1)+
-  #   theme_classic()
+  # Run logistic model
+  logistic_model <- nls(Mass ~ a / (1 + b * (exp(-c * ChickAge))), data = data,
+                        start = initial_values, trace = TRUE)
 
-  # gompertz_plot <- ggplot()+
-  #   geom_point(data = data, aes(x = ChickAge, y = Mass), shape = 21, size = 3) +
-  #   geom_line(data = gompertz_pred, aes(x = newdata$ChickAge, y = lower), colour = "black", lty = 2) +
-  #   geom_line(data = gompertz_pred, aes(x = newdata$ChickAge, y = upper), colour = "black", lty = 2) +
-  #   geom_line(data = gompertz_pred, aes(x = newdata$ChickAge, y = `0.05%`), colour = "black", lty = 1) +
-  #   geom_line(data = gompertz_pred, aes(x = newdata$ChickAge, y = `99.95%`), colour = "black", lty = 1) +
-  #   geom_line(data = gompertz_pred, aes(x = newdata$ChickAge, y = fit), size = 1)+
-  #   theme_classic()
+  # Predict and calculate 1st and 99th quantiles
+  newdata <- data.frame(ChickAge = seq(0, max(data$ChickAge), by = 1))
+  logistic_pred <- tibble::tibble(fit = predict(logistic_model, newdata = newdata),
+                                  x = newdata$ChickAge) %>%
+    dplyr::mutate(upper = fit + summary(logistic_model)$sigma * qnorm(0.99, 0, 1),
+                  lower = fit + summary(logistic_model)$sigma * qnorm(0.01, 0, 1))
 
-  # print(cowplot::plot_grid(logistic_plot, gompertz_plot, nrow = 1))
 
-  #Observing the fit, it seems that logistic model fits better (it better models
-  #the asymptote at ~17g) The boostrap CIs for the marginal model predications are
-  #very tight because there's simply so much data We will instead used the 1.96*SE
-  #as these are wider. This is a crude method and we will need to limit our
-  #cut-offs to 0 at the youngest ages It will work for now.
-  PARMAJ_cutoffs <- tibble(Species = "PARMAJ", ChickAge = seq(0, 30, 1),
-                         Warning_min = ifelse(logistic_pred$lower < 0, NA, logistic_pred$lower),
-                         Warning_max = logistic_pred$upper)
+  if(plot == TRUE) {
 
-  #For blue tit
-  data <- dplyr::filter(HOG_chick_data, !is.na(Mass) & Species == "CYACAE")
+    # Plot logistic growth curve and data
+    ggplot2::ggplot() +
+      ggplot2::geom_jitter(data = data, ggplot2::aes(x = ChickAge, y = Mass), shape = 21, alpha = 0.4, width = 0.2) +
+      ggplot2::geom_line(data = logistic_pred, ggplot2::aes(x = x, y = lower), colour = "darkred", lty = 2) +
+      ggplot2::geom_line(data = logistic_pred, ggplot2::aes(x = x, y = upper), colour = "darkred", lty = 2) +
+      ggplot2::geom_line(data = logistic_pred, ggplot2::aes(x = x, y = fit), size = 1, colour = "darkred") +
+      ggplot2::labs(title = paste0(unique(data$CapturePopID), ": ", unique(data$Species))) +
+      ggplot2::theme_classic()
 
-  data <- dplyr::filter(data, ChickAge < 20)
+  }
 
-  #Plot info if needed
-  # data %>%
-  #   ggplot() +
-  #   geom_point(aes(x = ChickAge, y = Mass), shape = 21, size = 3, alpha = 0.75) +
-  #   geom_smooth(aes(x = ChickAge, y = Mass)) +
-  #   theme_classic()
+  # Create day-specific reference values
+  ref_values <- tibble::tibble(Species = rep(unique(Capture_data$Species), length(logistic_pred$x)),
+                               PopID = rep(unique(Capture_data$CapturePopID), length(logistic_pred$x)),
+                               Stage = as.character(logistic_pred$x),
+                               Warning_min = ifelse(logistic_pred$lower < 0, NA, logistic_pred$lower),
+                               Warning_max = logistic_pred$upper,
+                               Error_min = 0,
+                               Error_max = 4 * Warning_max,
+                               n =   {data %>%
+                                   dplyr::group_by(ChickAge) %>%
+                                   dplyr::summarise(N = n()) %>%
+                                   tidyr::complete(ChickAge = logistic_pred$x) %>%
+                                   dplyr::pull(N)}
+  )
 
-  #Fit a logistic regression
-
-  #Starting values based on fitted lm
-  logistic_model <- nls(Mass ~ a*(1+b*(exp(-c*ChickAge)))^-1,
-                        start = list(a = 17, b = 5, c = 0.15), data = data, trace = TRUE)
-
-  #Fit Gompertz curve
-  gompertz_model <- nls(Mass ~ a*exp(-b*exp(-c*ChickAge)),
-                        start=list(a = 25, b = 5, c = 0.1), data = data, trace = TRUE)
-
-  #Gompertz curve fits fine
-  # ggplot() +
-  #   geom_point(data = data, aes(x = ChickAge, y = Mass), shape = 21, size = 3, alpha = 0.75) +
-  #   geom_line(aes(x = seq(0, 30, 1), y = predict(gompertz_model, newdata = data.frame(ChickAge = seq(0, 30, 1)))), size = 1) +
-  #   theme_classic()
-
-  #Use predictNLS function from RBlogger to get 95% CIs for both models
-  #As above, no longer used
-  # newdata <- data.frame(ChickAge = seq(0, 30, 1))
-  # logistic_pred <- as.data.frame(predictNLS(logistic_model, newdata = newdata, level = 0.999))
-  # gompertz_pred <- as.data.frame(predictNLS(gompertz_model, newdata = newdata, level = 0.999))
-
-  #Look at the same approach assuming error around the predicted line is normally distributed (i.e. 1.96*SE)
-  logistic_pred$upper <- logistic_pred$fit + (summary(logistic_model)$sigma*1.96)
-  logistic_pred$lower <- logistic_pred$fit - (summary(logistic_model)$sigma*1.96)
-
-  gompertz_pred$upper <- gompertz_pred$fit + (summary(gompertz_model)$sigma*1.96)
-  gompertz_pred$lower <- gompertz_pred$fit - (summary(gompertz_model)$sigma*1.96)
-
-  #Plot both
-  # logistic_plot <- ggplot()+
-  #   geom_point(data = data, aes(x = ChickAge, y = Mass), shape = 21, size = 3) +
-  #   geom_line(data = logistic_pred, aes(x = newdata$ChickAge, y = lower), colour = "black", lty = 2) +
-  #   geom_line(data = logistic_pred, aes(x = newdata$ChickAge, y = upper), colour = "black", lty = 2) +
-  #   geom_line(data = logistic_pred, aes(x = newdata$ChickAge, y = `0.05%`), colour = "black", lty = 1) +
-  #   geom_line(data = logistic_pred, aes(x = newdata$ChickAge, y = `99.95%`), colour = "black", lty = 1) +
-  #   geom_line(data = logistic_pred, aes(x = newdata$ChickAge, y = fit), size = 1)+
-  #   theme_classic()
-  #
-  # gompertz_plot <- ggplot()+
-  #   geom_point(data = data, aes(x = ChickAge, y = Mass), shape = 21, size = 3) +
-  #   geom_line(data = gompertz_pred, aes(x = newdata$ChickAge, y = lower), colour = "black", lty = 2) +
-  #   geom_line(data = gompertz_pred, aes(x = newdata$ChickAge, y = upper), colour = "black", lty = 2) +
-  #   geom_line(data = gompertz_pred, aes(x = newdata$ChickAge, y = `0.05%`), colour = "black", lty = 1) +
-  #   geom_line(data = gompertz_pred, aes(x = newdata$ChickAge, y = `99.95%`), colour = "black", lty = 1) +
-  #   geom_line(data = gompertz_pred, aes(x = newdata$ChickAge, y = fit), size = 1)+
-  #   theme_classic()
-  #
-  # print(cowplot::plot_grid(logistic_plot, gompertz_plot, nrow = 1))
-
-  #Observing the fit, it seems that logistic model fits better (it better models
-  #the asymptote at ~17g) The boostrap CIs for the marginal model predications are
-  #very tight because there's simply so much data We will instead used the 1.96*SE
-  #as these are wider. This is a crude method and we will need to limit our
-  #cut-offs to 0 at the youngest ages It will work for now.
-  CYACAE_cutoffs <- tibble(Species = "CYACAE", ChickAge = seq(0, 30, 1),
-                           Warning_min = ifelse(logistic_pred$lower < 0, NA, logistic_pred$lower),
-                           Warning_max = logistic_pred$upper)
-
-  chick_mass_cutoffs <- dplyr::bind_rows(PARMAJ_cutoffs, CYACAE_cutoffs) %>%
-    dplyr::mutate(Error_min = 0) %>%
-    dplyr::rowwise() %>%
-    dplyr::mutate(Error_max = ifelse(Species == "PARMAJ", 44, 27)) %>%
-    tidyr::pivot_longer(cols = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
-                        names_to = "Reference", values_to = "Value")
-
-  return(chick_mass_cutoffs)
+  return(ref_values)
 
 }
+
+
+## OLD FUNCTION
+
+# Determine chick growth curves
+
+# Fit logistic and gompertz growth curves
+# to chick mass data for great and blue tits.
+
+# We fit this using data from Hoge Veluwe. See example for data extraction.
+
+# @param HOG_chick_data Data frame with chick age and mass of Hoge Veluwe great and blue tits
+
+# @return A data frame with cutoffs values at each age
+# @export
+# @importFrom stats na.omit nls
+
+# @examples
+# \dontrun{
+# #run pipeline for Hoge Veluwe great and blue tits
+# HOG <- run_pipelines(PopID = "HOG", Species = c("PARMAJ", "CYACAE"), output_type = "R")
+
+# Subset relevant columns
+# HOG_chick_data <- HOG$Capture_data %>%
+# dplyr::filter(!is.na(ChickAge) & !is.na(Mass), BreedingSeason <= 2019) %>%
+# dplyr::select(ChickAge, Mass, Species)
+
+# calculate_chick_mass_cutoffs(HOG_chick_data)
+# }
+
+
+# calculate_chick_mass_cutoffs <- function(HOG_chick_data){
+#
+#   #For great tit
+#   data <- dplyr::filter(HOG_chick_data, !is.na(Mass) & Species == "PARMAJ")
+#
+#   #Remove the obvious outlier
+#   data <- dplyr::filter(data, Mass < 25)
+#
+#   #Fit a logistic regression
+#
+#   #Starting values based on fitted lm
+#   logistic_model <- nls(Mass ~ a*(1+b*(exp(-c*ChickAge)))^-1,
+#                         start = list(a = 17, b = 0.1, c = 0.25), data = data, trace = TRUE)
+#
+#   #Fit Gompertz curve
+#   gompertz_model <- nls(Mass ~ a*exp(-b*exp(-c*ChickAge)),
+#                         start=list(a = 25, b = 2, c = 0.1), data = data, trace = TRUE)
+#
+#   #Gompertz curve fits fine
+#   # ggplot() +
+#   #   geom_point(data = data, aes(x = ChickAge, y = Mass), shape = 21, size = 3, alpha = 0.75) +
+#   #   geom_line(aes(x = seq(0, 30, 1), y = predict(gompertz_model, newdata = data.frame(ChickAge = seq(0, 30, 1)))), size = 1) +
+#   #   theme_classic()
+#
+#   #Use predictNLS function from RBlogger to get 95% CIs for both models
+#   #Made redundant. Code is stored below out of interest.
+#   # newdata <- data.frame(ChickAge = seq(0, 30, 1))
+#   # logistic_pred <- as.data.frame(predictNLS(logistic_model, newdata = newdata, level = 0.999))
+#   # gompertz_pred <- as.data.frame(predictNLS(gompertz_model, newdata = newdata, level = 0.999))
+#
+#   #Look at the same approach assuming error around the predicted line is normally distributed (i.e. 1.96*SE)
+#   logistic_pred$upper <- logistic_pred$fit + (summary(logistic_model)$sigma*1.96)
+#   logistic_pred$lower <- logistic_pred$fit - (summary(logistic_model)$sigma*1.96)
+#
+#   gompertz_pred$upper <- gompertz_pred$fit + (summary(gompertz_model)$sigma*1.96)
+#   gompertz_pred$lower <- gompertz_pred$fit - (summary(gompertz_model)$sigma*1.96)
+#
+#   #Plot both
+#   # logistic_plot <- ggplot()+
+#   #   geom_point(data = data, aes(x = ChickAge, y = Mass), shape = 21, size = 3) +
+#   #   geom_line(data = logistic_pred, aes(x = newdata$ChickAge, y = lower), colour = "black", lty = 2) +
+#   #   geom_line(data = logistic_pred, aes(x = newdata$ChickAge, y = upper), colour = "black", lty = 2) +
+#   #   geom_line(data = logistic_pred, aes(x = newdata$ChickAge, y = `0.05%`), colour = "black", lty = 1) +
+#   #   geom_line(data = logistic_pred, aes(x = newdata$ChickAge, y = `99.95%`), colour = "black", lty = 1) +
+#   #   geom_line(data = logistic_pred, aes(x = newdata$ChickAge, y = fit), size = 1)+
+#   #   theme_classic()
+#
+#   # gompertz_plot <- ggplot()+
+#   #   geom_point(data = data, aes(x = ChickAge, y = Mass), shape = 21, size = 3) +
+#   #   geom_line(data = gompertz_pred, aes(x = newdata$ChickAge, y = lower), colour = "black", lty = 2) +
+#   #   geom_line(data = gompertz_pred, aes(x = newdata$ChickAge, y = upper), colour = "black", lty = 2) +
+#   #   geom_line(data = gompertz_pred, aes(x = newdata$ChickAge, y = `0.05%`), colour = "black", lty = 1) +
+#   #   geom_line(data = gompertz_pred, aes(x = newdata$ChickAge, y = `99.95%`), colour = "black", lty = 1) +
+#   #   geom_line(data = gompertz_pred, aes(x = newdata$ChickAge, y = fit), size = 1)+
+#   #   theme_classic()
+#
+#   # print(cowplot::plot_grid(logistic_plot, gompertz_plot, nrow = 1))
+#
+#   #Observing the fit, it seems that logistic model fits better (it better models
+#   #the asymptote at ~17g) The boostrap CIs for the marginal model predications are
+#   #very tight because there's simply so much data We will instead used the 1.96*SE
+#   #as these are wider. This is a crude method and we will need to limit our
+#   #cut-offs to 0 at the youngest ages It will work for now.
+#   PARMAJ_cutoffs <- tibble(Species = "PARMAJ", ChickAge = seq(0, 30, 1),
+#                          Warning_min = ifelse(logistic_pred$lower < 0, NA, logistic_pred$lower),
+#                          Warning_max = logistic_pred$upper)
+#
+#   #For blue tit
+#   data <- dplyr::filter(HOG_chick_data, !is.na(Mass) & Species == "CYACAE")
+#
+#   data <- dplyr::filter(data, ChickAge < 20)
+#
+#   #Plot info if needed
+#   # data %>%
+#   #   ggplot() +
+#   #   geom_point(aes(x = ChickAge, y = Mass), shape = 21, size = 3, alpha = 0.75) +
+#   #   geom_smooth(aes(x = ChickAge, y = Mass)) +
+#   #   theme_classic()
+#
+#   #Fit a logistic regression
+#
+#   #Starting values based on fitted lm
+#   logistic_model <- nls(Mass ~ a*(1+b*(exp(-c*ChickAge)))^-1,
+#                         start = list(a = 17, b = 5, c = 0.15), data = data, trace = TRUE)
+#
+#   #Fit Gompertz curve
+#   gompertz_model <- nls(Mass ~ a*exp(-b*exp(-c*ChickAge)),
+#                         start=list(a = 25, b = 5, c = 0.1), data = data, trace = TRUE)
+#
+#   #Gompertz curve fits fine
+#   # ggplot() +
+#   #   geom_point(data = data, aes(x = ChickAge, y = Mass), shape = 21, size = 3, alpha = 0.75) +
+#   #   geom_line(aes(x = seq(0, 30, 1), y = predict(gompertz_model, newdata = data.frame(ChickAge = seq(0, 30, 1)))), size = 1) +
+#   #   theme_classic()
+#
+#   #Use predictNLS function from RBlogger to get 95% CIs for both models
+#   #As above, no longer used
+#   # newdata <- data.frame(ChickAge = seq(0, 30, 1))
+#   # logistic_pred <- as.data.frame(predictNLS(logistic_model, newdata = newdata, level = 0.999))
+#   # gompertz_pred <- as.data.frame(predictNLS(gompertz_model, newdata = newdata, level = 0.999))
+#
+#   #Look at the same approach assuming error around the predicted line is normally distributed (i.e. 1.96*SE)
+#   logistic_pred$upper <- logistic_pred$fit + (summary(logistic_model)$sigma*1.96)
+#   logistic_pred$lower <- logistic_pred$fit - (summary(logistic_model)$sigma*1.96)
+#
+#   gompertz_pred$upper <- gompertz_pred$fit + (summary(gompertz_model)$sigma*1.96)
+#   gompertz_pred$lower <- gompertz_pred$fit - (summary(gompertz_model)$sigma*1.96)
+#
+#   #Plot both
+#   # logistic_plot <- ggplot()+
+#   #   geom_point(data = data, aes(x = ChickAge, y = Mass), shape = 21, size = 3) +
+#   #   geom_line(data = logistic_pred, aes(x = newdata$ChickAge, y = lower), colour = "black", lty = 2) +
+#   #   geom_line(data = logistic_pred, aes(x = newdata$ChickAge, y = upper), colour = "black", lty = 2) +
+#   #   geom_line(data = logistic_pred, aes(x = newdata$ChickAge, y = `0.05%`), colour = "black", lty = 1) +
+#   #   geom_line(data = logistic_pred, aes(x = newdata$ChickAge, y = `99.95%`), colour = "black", lty = 1) +
+#   #   geom_line(data = logistic_pred, aes(x = newdata$ChickAge, y = fit), size = 1)+
+#   #   theme_classic()
+#   #
+#   # gompertz_plot <- ggplot()+
+#   #   geom_point(data = data, aes(x = ChickAge, y = Mass), shape = 21, size = 3) +
+#   #   geom_line(data = gompertz_pred, aes(x = newdata$ChickAge, y = lower), colour = "black", lty = 2) +
+#   #   geom_line(data = gompertz_pred, aes(x = newdata$ChickAge, y = upper), colour = "black", lty = 2) +
+#   #   geom_line(data = gompertz_pred, aes(x = newdata$ChickAge, y = `0.05%`), colour = "black", lty = 1) +
+#   #   geom_line(data = gompertz_pred, aes(x = newdata$ChickAge, y = `99.95%`), colour = "black", lty = 1) +
+#   #   geom_line(data = gompertz_pred, aes(x = newdata$ChickAge, y = fit), size = 1)+
+#   #   theme_classic()
+#   #
+#   # print(cowplot::plot_grid(logistic_plot, gompertz_plot, nrow = 1))
+#
+#   #Observing the fit, it seems that logistic model fits better (it better models
+#   #the asymptote at ~17g) The boostrap CIs for the marginal model predications are
+#   #very tight because there's simply so much data We will instead used the 1.96*SE
+#   #as these are wider. This is a crude method and we will need to limit our
+#   #cut-offs to 0 at the youngest ages It will work for now.
+#   CYACAE_cutoffs <- tibble(Species = "CYACAE", ChickAge = seq(0, 30, 1),
+#                            Warning_min = ifelse(logistic_pred$lower < 0, NA, logistic_pred$lower),
+#                            Warning_max = logistic_pred$upper)
+#
+#   chick_mass_cutoffs <- dplyr::bind_rows(PARMAJ_cutoffs, CYACAE_cutoffs) %>%
+#     dplyr::mutate(Error_min = 0) %>%
+#     dplyr::rowwise() %>%
+#     dplyr::mutate(Error_max = ifelse(Species == "PARMAJ", 44, 27)) %>%
+#     tidyr::pivot_longer(cols = c("Warning_min", "Warning_max", "Error_min", "Error_max"),
+#                         names_to = "Reference", values_to = "Value")
+#
+#   return(chick_mass_cutoffs)
+#
+# }
 #
 # predictNLS <- function(
 #   object,
