@@ -361,11 +361,12 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data) {
     dplyr::group_by(IndvID) %>%
     dplyr::filter(CaptureDate == dplyr::first(CaptureDate)) %>%
     dplyr::ungroup() %>%
+    #dplyr::select(IndvID, Species, CapturePopID, LocationID) %>%
     dplyr::left_join(Location_data, by = c("CapturePopID" = "PopID", "LocationID"))
 
   # Join with individual data
   Ind_cap_loc_data <- Individual_data %>%
-    dplyr::left_join(First_captures, by = c("IndvID", "Species"))
+    dplyr::left_join(First_captures, by = c("IndvID", "Species", "PopID" = "CapturePopID"))
 
   # Errors
   # Select records with chicks caught in a nest box but not associated with a BroodID
@@ -490,7 +491,7 @@ check_conflicting_species <- function(Individual_data) {
 
   # Select individuals with conflicting species
   Conflicting_species <- Individual_data %>%
-    dplyr::filter(Species == "CONFLICTED")
+    dplyr::filter(Species %in% c("CONFLICTED", "CCCCCC"))
 
   # Errors
   err <- FALSE

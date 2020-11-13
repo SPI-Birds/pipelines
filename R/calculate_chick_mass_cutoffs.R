@@ -57,7 +57,7 @@ calculate_chick_mass_cutoffs <- function(Capture_data, plot = FALSE) {
   if(plot == TRUE) {
 
     # Plot logistic growth curve and data
-    ggplot2::ggplot() +
+    p <- ggplot2::ggplot() +
       ggplot2::geom_jitter(data = data, ggplot2::aes(x = ChickAge, y = Mass), shape = 21, alpha = 0.4, width = 0.2) +
       ggplot2::geom_line(data = logistic_pred, ggplot2::aes(x = x, y = lower), colour = "darkred", lty = 2) +
       ggplot2::geom_line(data = logistic_pred, ggplot2::aes(x = x, y = upper), colour = "darkred", lty = 2) +
@@ -82,7 +82,16 @@ calculate_chick_mass_cutoffs <- function(Capture_data, plot = FALSE) {
                                    dplyr::pull(N)}
   )
 
-  return(ref_values)
+
+  if(plot == TRUE) {
+
+    return(p)
+
+  } else {
+
+    return(ref_values)
+
+  }
 
 }
 

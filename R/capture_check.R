@@ -255,7 +255,7 @@ check_values_capture <- function(Capture_data, var) {
   if(var == "Tarsus") {
 
     # Create reference values for adults & chicks from data
-    ref <- VEL$Capture_data %>%
+    ref <- Capture_data %>%
       dplyr::filter(!is.na(!!rlang::sym(var)), !is.na(Species)) %>%
       dplyr::mutate(Stage = dplyr::case_when(
         Age_calculated > 3 ~ "Adult",
@@ -341,7 +341,7 @@ check_values_capture <- function(Capture_data, var) {
           out <- tryCatch(
             expr = {
 
-              calculate_chick_mass_cutoffs(..1)
+              cutoffs <- calculate_chick_mass_cutoffs(..1)
 
               message(paste0("Age-specific reference values calculated for ", unique(..1$CapturePopID), ": ", unique(..1$Species)))
 
@@ -355,7 +355,7 @@ check_values_capture <- function(Capture_data, var) {
               message(paste0("NB: Chick mass reference values for ", unique(..1$CapturePopID), ": ", unique(..1$Species),
                              " are only created for ", length(unique(..1$ChickAge)), " ages"))
 
-              ..1 %>%
+              cutoffs <- ..1 %>%
                 dplyr::mutate(Stage = as.character(ChickAge)) %>%
                 dplyr::group_by(Species, CapturePopID, Stage) %>%
                 dplyr::summarise(Warning_min = quantile(!!rlang::sym(var), probs = 0.01, na.rm = TRUE),
@@ -364,6 +364,10 @@ check_values_capture <- function(Capture_data, var) {
                                  Error_max = 4 * Warning_max,
                                  n = n()) %>%
                 dplyr::rename(PopID = CapturePopID)
+
+            }, finally = {
+
+              return(cutoffs)
 
             })
 
@@ -412,11 +416,11 @@ check_values_capture <- function(Capture_data, var) {
 
       ref <- dplyr::bind_rows(ref_adults_f, ref_chicks_f)
 
-    } else if(nrow(ref_adult) > 0 & nrow(ref_chicks) == 0) {
+    } else if(nrow(ref_adults) > 0 & nrow(ref_chicks) == 0) {
 
       ref <- ref_adults_f
 
-    } else if(nrow(ref_adult) == 0 & nrow(ref_chicks) > 0) {
+    } else if(nrow(ref_adults) == 0 & nrow(ref_chicks) > 0) {
 
       ref <- ref_chicks_f
 
@@ -445,10 +449,10 @@ check_values_capture <- function(Capture_data, var) {
     # we create a new Column with CurrentChickAge, which follows the following rules:
     Capture_data <- Capture_data %>%
       dplyr::mutate(CurrentChickAge = dplyr::case_when(
-        Age_calculated > 3 ~ NA_integer_, # Adults have no chick age
-        Age_calculated == 3 ~ as.integer(max(Capture_data$ChickAge, na.rm = TRUE)), # Chicks age 3 have the maximum chick age
-        Age_calculated == 1 & is.na(ChickAge) ~ 14L, # Chicks age 1 and unknown chick age: 14
-        Age_calculated == 1 & ChickAge < 0 ~ 14L, # Chicks age 1 and impossible chick age: 14
+        Age_calculated > 3 ~ NA_real_, # Adults have no chick age
+        Age_calculated == 3 ~ as.numeric(max(Capture_data$ChickAge, na.rm = TRUE)), # Chicks age 3 have the maximum chick age
+        Age_calculated == 1 & is.na(ChickAge) ~ 14, # Chicks age 1 and unknown chick age: 14
+        Age_calculated == 1 & ChickAge < 0 ~ 14, # Chicks age 1 and impossible chick age: 14
         TRUE ~ ChickAge # Remaining chicks (hicks with known chick age) get recorded chick age
       )) %>%
       dplyr::mutate(CaptureID = as.character(1:nrow(Capture_data)))
