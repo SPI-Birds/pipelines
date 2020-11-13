@@ -79,7 +79,8 @@ calculate_chick_mass_cutoffs <- function(Capture_data, plot = FALSE) {
                                    dplyr::group_by(ChickAge) %>%
                                    dplyr::summarise(N = n()) %>%
                                    tidyr::complete(ChickAge = logistic_pred$x) %>%
-                                   dplyr::pull(N)}
+                                   dplyr::pull(N)},
+                               Logis = TRUE
   )
 
 

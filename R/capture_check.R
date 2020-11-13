@@ -252,7 +252,7 @@ check_values_capture <- function(Capture_data, var) {
   }
 
   # Tarsus reference values
-  if(var == "Tarsus") {
+  if(var == "Tarsus" & !all(is.na(Capture_data[,var]))) {
 
     # Create reference values for adults & chicks from data
     ref <- Capture_data %>%
@@ -282,7 +282,7 @@ check_values_capture <- function(Capture_data, var) {
                              rep(var, nrow(low_obs))),
                    .f = ~{
 
-                     message(paste0("Number of ", ..3, " ", ..4, " records for ", ..2, ": ", ..1,
+                     message(paste0("Number of ", tolower(..4), " records for ", tolower(..3), " in ", ..2, ": ", ..1,
                                     " is too low (< 50) to create reliable reference values.",
                                     " Check will be skipped for this population-species combination."))
 
@@ -293,7 +293,7 @@ check_values_capture <- function(Capture_data, var) {
   }
 
   # Mass reference values
-  if(var == "Mass") {
+  if(var == "Mass" & !all(is.na(Capture_data[,var]))) {
 
     # Create reference values for adults from data
     ref_adults <- Capture_data %>%
@@ -304,7 +304,8 @@ check_values_capture <- function(Capture_data, var) {
                        Warning_max = quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE),
                        Error_min = 0,
                        Error_max = 4 * Warning_max,
-                       n = n()) %>%
+                       n = n(),
+                       Logis = FALSE) %>%
       dplyr::rename(PopID = CapturePopID)
 
     # Print message for population-species combinations with too low number of observations for adults
@@ -335,64 +336,62 @@ check_values_capture <- function(Capture_data, var) {
       dplyr::group_split(Species, CapturePopID) %>%
       purrr::pmap_dfr(.l = list(.), .f = ~{
 
-        if(nrow(..1) >= 500) {
+        # Try to run logistic growth model
+        out <- tryCatch(
+          expr = {
 
-          # Try to run logistic growth model
-          out <- tryCatch(
-            expr = {
+            message(paste0("Trying to fit a logistic growth model to calculate reference values for ",
+                           unique(..1$CapturePopID), ": ", unique(..1$Species), "..."))
 
-              cutoffs <- calculate_chick_mass_cutoffs(..1)
+            calculate_chick_mass_cutoffs(..1)
 
-              message(paste0("Age-specific reference values calculated for ", unique(..1$CapturePopID), ": ", unique(..1$Species)))
+          },
+          # If fails, calculate age-specific reference values in the same way as adult reference values are created
+          error = function(e){
 
-            },
-            # If fails, calculate age-specific reference values in the same way as adult reference values are created
-            error = function(e){
+            message("FAILED. Could not fit logistic growth model, because of error:")
 
-              message("Could not create logistic growth model, because of error:")
-              message(paste0(e))
+            message(paste0(e))
 
-              message(paste0("NB: Chick mass reference values for ", unique(..1$CapturePopID), ": ", unique(..1$Species),
-                             " are only created for ", length(unique(..1$ChickAge)), " ages"))
+            message(paste0("Chick mass reference values for ", unique(..1$CapturePopID), ": ", unique(..1$Species),
+                           " are created per age instead."))
 
-              cutoffs <- ..1 %>%
-                dplyr::mutate(Stage = as.character(ChickAge)) %>%
-                dplyr::group_by(Species, CapturePopID, Stage) %>%
-                dplyr::summarise(Warning_min = quantile(!!rlang::sym(var), probs = 0.01, na.rm = TRUE),
-                                 Warning_max = quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE),
-                                 Error_min = 0,
-                                 Error_max = 4 * Warning_max,
-                                 n = n()) %>%
-                dplyr::rename(PopID = CapturePopID)
+            ..1 %>%
+              dplyr::mutate(Stage = as.character(ChickAge)) %>%
+              dplyr::group_by(Species, CapturePopID, Stage) %>%
+              dplyr::summarise(Warning_min = quantile(!!rlang::sym(var), probs = 0.01, na.rm = TRUE),
+                               Warning_max = quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE),
+                               Error_min = 0,
+                               Error_max = 4 * Warning_max,
+                               n = n(),
+                               Logis = FALSE) %>%
+              dplyr::rename(PopID = CapturePopID)
 
-            }, finally = {
+          })
 
-              return(cutoffs)
-
-            })
-
-          return(out)
-
-        } else {
-
-          message(paste0("Number of chick Mass records for ", unique(..1$CapturePopID), ": ", unique(..1$Species),
-                         " is too low (< 500) to create reliable reference values.",
-                         " Check will be skipped for this population-species combination."))
-
-          tibble::tibble(Species = unique(..1$Species),
-                         PopID =  unique(..1$CapturePopID),
-                         Stage = NA,
-                         Warning_min = NA,
-                         Warning_max = NA,
-                         Error_min = NA,
-                         Error_max = NA,
-                         n = nrow(..1)
-          )
-
-        }
+        return(out)
 
       })
 
+    # Print message for population-species combinations with too low number of observations for chicks
+    if(any(ref_chicks$Logis == FALSE & ref_chicks$n < 50)) {
+
+      low_obs_chicks <- ref_chicks %>%
+        dplyr::filter(Logis == FALSE & n < 50) %>%
+        dplyr::select(Species, PopID, Stage)
+
+      purrr::pwalk(.l = list(low_obs_chicks$Species,
+                             low_obs_chicks$PopID,
+                             low_obs_chicks$Stage),
+                   .f = ~{
+
+                     message(paste0("Number of mass records for ", ..3, "-day-old chicks in ", ..2, ": ", ..1,
+                                    " is too low (< 50) to create reliable reference values.",
+                                    " Check will be skipped for these records."))
+
+                   })
+
+    }
 
     # If reference values have been created, filter the reference values that are based on enough observations
     if(nrow(ref_adults) > 0) {
@@ -406,7 +405,7 @@ check_values_capture <- function(Capture_data, var) {
     if(nrow(ref_chicks) > 0) {
 
       ref_chicks_f <- ref_chicks %>%
-        dplyr::filter(!is.na(Stage)) %>%
+        dplyr::filter(!is.na(Stage) | !(Logis == FALSE & n < 50)) %>%
         dplyr::arrange(PopID, Species)
 
     }
@@ -438,7 +437,7 @@ check_values_capture <- function(Capture_data, var) {
   warning_output <- NULL
 
 
-  if(nrow(ref) > 0) {
+  if(nrow(ref) > 0 & !all(is.na(Capture_data[,var]))) {
 
     # Create progress bar
     pb <- progress::progress_bar$new(total = 2*nrow(ref),
@@ -453,9 +452,9 @@ check_values_capture <- function(Capture_data, var) {
         Age_calculated == 3 ~ as.numeric(max(Capture_data$ChickAge, na.rm = TRUE)), # Chicks age 3 have the maximum chick age
         Age_calculated == 1 & is.na(ChickAge) ~ 14, # Chicks age 1 and unknown chick age: 14
         Age_calculated == 1 & ChickAge < 0 ~ 14, # Chicks age 1 and impossible chick age: 14
-        TRUE ~ ChickAge # Remaining chicks (hicks with known chick age) get recorded chick age
+        TRUE ~ as.numeric(ChickAge) # Remaining chicks (chicks with known chick age) get recorded chick age
       )) %>%
-      dplyr::mutate(CaptureID = as.character(1:nrow(Capture_data)))
+      dplyr::mutate(CaptureID = as.character(1:nrow(Capture_data))) ##FIXME: remove after merge with master
 
     # Errors
     Capture_err <- purrr::pmap(.l = ref,
@@ -584,23 +583,33 @@ check_values_capture <- function(Capture_data, var) {
           dplyr::select(Species, PopID) %>%
           dplyr::mutate(Stage = "adults")
 
+        skipped_adults_output <- purrr::pmap(.l = list(low_obs_adults$Species,
+                                                       low_obs_adults$PopID,
+                                                       low_obs_adults$Stage),
+                                             .f = ~{
+
+                                               paste0("Check is skipped for ", species_codes[species_codes$Species == ..1, "CommonName"],
+                                                      " ", ..3, " in ", ..2,
+                                                      ", because the number of records is too low to create reliable reference values.")
+
+                                             })
+
         low_obs_chicks <- ref_chicks %>%
-          dplyr::filter(is.na(Stage)) %>%
-          dplyr::select(Species, PopID) %>%
-          dplyr::mutate(Stage = "chicks")
+          dplyr::filter(is.na(Stage) | (Logis == FALSE & n < 50)) %>%
+          dplyr::select(Species, PopID)
 
-        skipped_output <- purrr::pmap(.l = list(c(low_obs_adults$Species, low_obs_chicks$Species),
-                                                c(low_obs_adults$PopID, low_obs_chicks$PopID),
-                                                c(low_obs_adults$Stage, low_obs_chicks$Stage)),
-                                      .f = ~{
+        skipped_chicks_output <- purrr::pmap(.l = list(low_obs_chicks$Species,
+                                                       low_obs_chicks$PopID,
+                                                       low_obs_chicks$Stage),
+                                             .f = ~{
 
-                                        paste0("Check is skipped for ", species_codes[species_codes$Species == ..1, "CommonName"],
-                                               " ", ..3, " in ", ..2,
-                                               ", because the number of records is too low to create reliable reference values.")
+                                               paste0("Check is skipped for ", species_codes[species_codes$Species == ..1, "CommonName"],
+                                                      " ", ..3, "-day-old chicks in ", ..2,
+                                                      ", because the number of records is too low to create reliable reference values.")
 
-                                      })
+                                             })
 
-        warning_output <- c(skipped_output, warning_output)
+        warning_output <- c(skipped_adults_output, skipped_chicks_output, warning_output)
 
       }
 
