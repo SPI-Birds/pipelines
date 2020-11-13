@@ -49,56 +49,56 @@ calc_age <- function(data, ID, Age, Date, Year, showpb = TRUE){
                   FirstYear = as.integer(first({{Year}}))) %>%
     dplyr::mutate(yr_diff   = as.integer({{Year}}) - FirstYear,
                   Age_calculated = purrr::pmap_int(.l = list(FirstAge, yr_diff, {{Age}}, {{ID}}),
-                                             .f = ~{
+                                                   .f = ~{
 
-                                               if(showpb){
+                                                     if(showpb){
 
-                                                 pb$tick()
+                                                       pb$tick()
 
-                                               }
+                                                     }
 
-                                               if(is.na(..4)){
+                                                     if(is.na(..4)){
 
-                                                 return(NA_integer_)
+                                                       return(NA_integer_)
 
-                                               }
+                                                     }
 
-                                               #If the capture has no age or the age is greater than 3
-                                               #where 3 is within first year...
-                                               if(is.na(..1) | ..1 > 3) {
+                                                     #If the capture has no age or the age is greater than 3
+                                                     #where 3 is within first year...
+                                                     if(is.na(..1) | ..1 > 3) {
 
-                                                 #Give an age which is at least >1yo
-                                                 return(4L + 2L*..2)
+                                                       #Give an age which is at least >1yo
+                                                       return(4L + 2L*..2)
 
-                                               #If the age is 2 (i.e. can't even tell if it's a chick/adult)...
-                                               } else if(..1 == 2){
+                                                       #If the age is 2 (i.e. can't even tell if it's a chick/adult)...
+                                                     } else if(..1 == 2){
 
-                                                 #Start at 2 instead of 4
-                                                 return(2L + 2L*..2)
+                                                       #Start at 2 instead of 4
+                                                       return(2L + 2L*..2)
 
-                                               } else {
+                                                     } else {
 
-                                                 #Otherwise, if it was first caught as a chick
-                                                 #and it's the same year of chick capture.
-                                                 if(..2 == 0L){
+                                                       #Otherwise, if it was first caught as a chick
+                                                       #and it's the same year of chick capture.
+                                                       if(..2 == 0L){
 
-                                                   #Return the recorded age
-                                                   #This is important because it could also have been
-                                                   #captured as a fledgling that year, in which
-                                                   #case we don't want to give it a value of 1 (pullus)
-                                                   return(..3)
+                                                         #Return the recorded age
+                                                         #This is important because it could also have been
+                                                         #captured as a fledgling that year, in which
+                                                         #case we don't want to give it a value of 1 (pullus)
+                                                         return(..3)
 
-                                                 } else {
+                                                       } else {
 
-                                                   #If it's later than the year of birth,
-                                                   #give it a known age.
-                                                   return(3L + 2L*..2)
+                                                         #If it's later than the year of birth,
+                                                         #give it a known age.
+                                                         return(3L + 2L*..2)
 
-                                                 }
+                                                       }
 
-                                               }
+                                                     }
 
-                                             })) %>%
+                                                   })) %>%
     dplyr::ungroup() %>%
     pull(Age_calculated)
 
@@ -108,3 +108,6 @@ calc_age <- function(data, ID, Age, Date, Year, showpb = TRUE){
   FirstYear <- FirstAge <- yr_diff <- NULL
 
 }
+
+
+
