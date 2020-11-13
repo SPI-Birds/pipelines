@@ -128,22 +128,26 @@ test_that("Single checks function as expected...", {
   expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B12")$Error, c(NA, NA))
 
   # Test 15: C2a
+  # adults
   expect_equal(subset(dummy_check$R_data$Capture_data, CheckID == "C2a_adults")$Warning[c(1, 152, 153)],
                c(NA, TRUE, NA))
   expect_equal(subset(dummy_check$R_data$Capture_data, CheckID == "C2a_adults")$Error[c(1, 152, 153)],
                c(NA, NA, TRUE))
 
+  # chicks
   expect_equal(subset(dummy_check$R_data$Capture_data, CheckID == "C2a_chicks")$Warning[1:9],
                c(NA, TRUE, NA, NA, TRUE, NA, NA, TRUE, NA))
   expect_equal(subset(dummy_check$R_data$Capture_data, CheckID == "C2a_chicks")$Error[1:9],
                c(NA, NA, TRUE, NA, NA, TRUE, NA, NA, TRUE))
 
   # Test 16: C2b
+  # adults
   expect_equal(subset(dummy_check$R_data$Capture_data, CheckID == "C2b_adults")$Warning[c(1, 152, 153)],
                c(NA, TRUE, NA))
   expect_equal(subset(dummy_check$R_data$Capture_data, CheckID == "C2b_adults")$Error[c(1, 152, 153)],
                c(NA, NA, TRUE))
 
+  # chicks
   expect_equal(subset(dummy_check$R_data$Capture_data, CheckID == "C2b_chicks")$Warning[c(1, 152, 153)],
                c(NA, TRUE, NA))
   expect_equal(subset(dummy_check$R_data$Capture_data, CheckID == "C2b_chicks")$Error[c(1, 152, 153)],
