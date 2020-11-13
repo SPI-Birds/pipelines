@@ -42,7 +42,7 @@ calculate_chick_mass_cutoffs <- function(Capture_data, plot = FALSE) {
                          b = 5,
                          c = 0.1)
 
-  # Run logistic model
+  # Fit logistic model
   logistic_model <- nls(Mass ~ a / (1 + b * (exp(-c * ChickAge))), data = data,
                         start = initial_values, trace = TRUE)
 
@@ -95,7 +95,6 @@ calculate_chick_mass_cutoffs <- function(Capture_data, plot = FALSE) {
   }
 
 }
-
 
 ## OLD FUNCTION
 
