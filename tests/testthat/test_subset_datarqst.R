@@ -2,9 +2,10 @@ context("Test that subset_datarqst() functions as expected...")
 
 request_PopIDs <- c('CHO', 'HOC', 'EDM', 'PIL')
 request_Species <- c('PARMAJ', 'FICHYP')
-request_filter <- paste(expand.grid(request_PopIDs, request_Species)[,1], expand.grid(request_PopIDs, request_Species)[,2], sep = '_')
+request_PopSpec <- paste(expand.grid(request_PopIDs, request_Species)[,1], expand.grid(request_PopIDs, request_Species)[,2], sep = '_')
 
-request_data <- subset_datarqst(PopID = request_PopIDs, Species = request_Species, test = TRUE, save = FALSE)
+request_data <- subset_datarqst(PopID = request_PopIDs, Species = request_Species,
+                                test = TRUE, save = FALSE)
 
 
 test_that("All 4 tables are retained...", {
@@ -27,7 +28,7 @@ test_that("All tables contain correct columns...", {
 
 test_that("Subset output is identical when 'PopID' and 'Species' or 'filter' is used...", {
 
-  request_data_filter <- subset_datarqst(filter = request_filter, test = TRUE, save = FALSE)
+  request_data_filter <- subset_datarqst(PopSpec = request_PopSpec, test = TRUE, save = FALSE)
 
   expect_identical(request_data$Brood_data, request_data_filter$Brood_data)
   expect_identical(request_data$Capture_data, request_data_filter$Capture_data)
