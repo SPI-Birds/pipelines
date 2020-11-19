@@ -233,7 +233,7 @@ subset_datarqst <- function(file = file.choose(),
 
       message(crayon::cyan(crayon::bold("Data subset saved as R data file (.RDS).")))
 
-    }else{
+}else if(output_type == "csv"){
 
       utils::write.csv(x = output_brood, file = paste0(save_path, "/Brood_data_", as.character(Sys.Date()), ".csv"), row.names = F)
 
