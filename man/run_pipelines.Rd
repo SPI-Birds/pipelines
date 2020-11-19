@@ -9,7 +9,7 @@ run_pipelines(
   PopID = NULL,
   Species = NULL,
   output_type = "R",
-  save = TRUE,
+  save = FALSE,
   save_path = NULL,
   filename = "standard_format"
 )
