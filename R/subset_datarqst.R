@@ -88,6 +88,7 @@ subset_datarqst <- function(file = file.choose(),
       dplyr::select(-.data$Pop_sp)
 
     output_capture <- standard_data$Capture_data %>%
+      dplyr::filter(.data$CapturePopID %in% {{PopID}} & .data$ReleasePopID %in% {{PopID}}) %>%
       dplyr::filter(.data$IndvID %in% output_individual$IndvID)
 
     output_location <- standard_data$Location_data %>%
