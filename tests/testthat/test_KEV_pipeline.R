@@ -181,7 +181,7 @@ test_that("Location_data returns an expected outcome...", {
   #Check that LocationID is in the expected PopID
   expect_equal(subset(KEV_data, LocationID == "0001")$PopID, "KEV")
   #Check that latitude and longitude are as expected
-  expect_equal(round(subset(KEV_data, LocationID == "0001")$Latitude, 2), 69.76)
-  expect_equal(round(subset(KEV_data, LocationID == "0001")$Longitude, 2), 27.01)
+  expect_equal(round(subset(KEV_data, LocationID == "0001")$Latitude, 2) %>% setNames(nm = NULL), 69.76)
+  expect_equal(round(subset(KEV_data, LocationID == "0001")$Longitude, 2) %>% setNames(nm = NULL), 27.01)
 
 })

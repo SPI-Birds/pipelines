@@ -7,6 +7,7 @@
 #' To prevent verified records from flagged in future quality checks, there are two pieces of information we use: the unique identifier of the record (e.g., BroodID in Brood_data) and the unique identifier of the quality check that resulted in the original warning/error (e.g., B2).
 #'
 #' @param new_approved_list A list of the same format as the approved_list with new verified records.
+#' @param overwrite Overwrite existing file. Default: TRUE
 #'
 #' @return
 #' List of 4 dataframes:
@@ -17,9 +18,9 @@
 #'
 #' @export
 
-create_approved_list <- function(new_approved_list){
+create_approved_list <- function(new_approved_list, overwrite = TRUE){
 
-  if(file.exists("data/approved_list.rda")) {
+  if (file.exists(here::here("./data/approved_list.rda"))) {
 
     # Stop if new_approved_list is missing
     if(missing(new_approved_list)) {
@@ -35,8 +36,6 @@ create_approved_list <- function(new_approved_list){
                                                  new_approved_list$Individual_approved_list)
     Location_approved_list <- dplyr::bind_rows(approved_list$Location_approved_list,
                                                new_approved_list$Location_approved_list)
-
-    overwrite <- TRUE
 
   } else {
 
@@ -60,7 +59,6 @@ create_approved_list <- function(new_approved_list){
                                              LocationID = NA_character_,
                                              CheckID = NA_character_)
 
-    overwrite <- FALSE
   }
 
   # Combine data-specific approved_lists into one list object
@@ -69,5 +67,5 @@ create_approved_list <- function(new_approved_list){
                         Individual_approved_list = Individual_approved_list,
                         Location_approved_list = Location_approved_list)
 
-  usethis::use_data(approved_list, overwrite=overwrite)
+  usethis::use_data(approved_list, overwrite = overwrite)
 }

@@ -498,7 +498,7 @@ check_values_capture <- function(Capture_data, var) {
                                     paste0("Record on row ", ..1,
                                            " (PopID: ", ..2, "; ",
                                            "CaptureID: ", ..3, "; ",
-                                           species_codes[species_codes$Species == ..5, "CommonName"], ")",
+                                           Species_codes[Species_codes$Code == ..5, "CommonName"], ")",
                                            " has an impossible value in ", ..6, " (", ..4, ").")
                                   })
     }
@@ -546,7 +546,7 @@ check_values_capture <- function(Capture_data, var) {
                                       paste0("Record on row ", ..1,
                                              " (PopID: ", ..2, "; ",
                                              "BroodID: ", ..3, "; ",
-                                             species_codes[species_codes$Species == ..5, "CommonName"], ")",
+                                             Species_codes[Species_codes$Code == ..5, "CommonName"], ")",
                                              " has an unusual value in ", ..6, " (", ..4, ").")
                                     })
     }
@@ -563,7 +563,7 @@ check_values_capture <- function(Capture_data, var) {
                                               low_obs$Stage),
                                     .f = ~{
 
-                                      paste0("Check is skipped for ", species_codes[species_codes$Species == ..1, "CommonName"],
+                                      paste0("Check is skipped for ", Species_codes[Species_codes$Code == ..1, "CommonName"],
                                              " ", paste0(tolower(..3), "s"), " in ", ..2,
                                              ", because the number of records is too low to create reliable reference values.")
 
@@ -587,7 +587,7 @@ check_values_capture <- function(Capture_data, var) {
                                                        low_obs_adults$Stage),
                                              .f = ~{
 
-                                               paste0("Check is skipped for ", species_codes[species_codes$Species == ..1, "CommonName"],
+                                               paste0("Check is skipped for ", Species_codes[Species_codes$Code == ..1, "CommonName"],
                                                       " ", ..3, " in ", ..2,
                                                       ", because the number of records is too low to create reliable reference values.")
 
@@ -602,7 +602,7 @@ check_values_capture <- function(Capture_data, var) {
                                                        low_obs_chicks$Stage),
                                              .f = ~{
 
-                                               paste0("Check is skipped for ", species_codes[species_codes$Species == ..1, "CommonName"],
+                                               paste0("Check is skipped for ", Species_codes[Species_codes$Code == ..1, "CommonName"],
                                                       " ", ..3, "-day-old chicks in ", ..2,
                                                       ", because the number of records is too low to create reliable reference values.")
 

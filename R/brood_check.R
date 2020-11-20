@@ -917,7 +917,7 @@ check_values_brood <- function(Brood_data, var) {
                                   paste0("Record on row ", ..1,
                                          " (PopID: ", ..2, "; ",
                                          "BroodID: ", ..3, "; ",
-                                         species_codes[species_codes$Species == ..5, "CommonName"], ")",
+                                         Species_codes[Species_codes$Code == ..5, "CommonName"], ")",
                                          " has an impossible value in ", ..6, " (", ..4, ").")
                                 })
   }
@@ -976,7 +976,7 @@ check_values_brood <- function(Brood_data, var) {
                                     paste0("Record on row ", ..1,
                                            " (PopID: ", ..2, "; ",
                                            "BroodID: ", ..3, "; ",
-                                           species_codes[species_codes$Species == ..5, "CommonName"], ")",
+                                           Species_codes[Species_codes$Code == ..5, "CommonName"], ")",
                                            " has an unusual value in ", ..6, " (", ..4, ").")
                                   })
   }
@@ -989,7 +989,7 @@ check_values_brood <- function(Brood_data, var) {
                                   .f = ~{
 
                                     paste0("Check is skipped for ", ..2, ", ",
-                                           species_codes[species_codes$Species == ..1, "CommonName"],
+                                           Species_codes[Species_codes$Code == ..1, "CommonName"],
                                            ", because the number of records is too low to create reliable reference values.")
 
                                   })
@@ -1314,8 +1314,8 @@ compare_species_parents <- function(Brood_data, Individual_data) {
                                   .f = ~{
                                     paste0("Record on row ", ..1, " (PopID: ", ..2, "; BroodID: ", ..3, ")",
                                            " has parents of different species",
-                                           " (Mother: ", species_codes[species_codes$Species == ..5, "CommonName"],
-                                           ", father: ", species_codes[species_codes$Species == ..7, "CommonName"], ").")
+                                           " (Mother: ", Species_codes[Species_codes$Code == ..5, "CommonName"],
+                                           ", father: ", Species_codes[Species_codes$Code == ..7, "CommonName"], ").")
                                   })
   }
 
@@ -1393,8 +1393,8 @@ compare_species_brood_parents <- function(Brood_data, Individual_data) {
                                   .f = ~{
                                     paste0("Record on row ", ..1, " (PopID: ", ..2, "; BroodID: ", ..3, ")",
                                            " is recorded as a different species than any of the parents",
-                                           " (Mother: ", species_codes[species_codes$Species == ..6, "CommonName"],
-                                           ", father: ", species_codes[species_codes$Species == ..8, "CommonName"], ").")
+                                           " (Mother: ", Species_codes[Species_codes$Code == ..6, "CommonName"],
+                                           ", father: ", Species_codes[Species_codes$Code == ..8, "CommonName"], ").")
                                   })
   }
 

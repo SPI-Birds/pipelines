@@ -264,7 +264,7 @@ create_brood_PIL <- function(PIL_data, species_filter){
                   ClutchType_observed = NA_character_, ClutchSizeError = NA_real_,
                   LayDateError = NA_real_, HatchDateError = NA_real_,
                   BroodSizeError = NA_real_,
-                  FledgeDate = NA_real_, FledgeDateError = NA_real_,
+                  FledgeDate = as.Date(NA), FledgeDateError = NA_real_,
                   NumberFledgedError = NA_real_, AvgEggMass = NA_real_,
                   NumberEggs = NA_integer_) %>%
     dplyr::filter(Species %in% species_filter) %>%
