@@ -760,7 +760,7 @@ check_values_brood <- function(Brood_data, var) {
       dplyr::filter(!is.na(!!rlang::sym(var)) & !is.na(Species)) %>%
       dplyr::group_by(BreedingSeason) %>%
       # Transform dates to Julian days (while accounting for year) to calculate quantiles
-      dplyr::mutate(!!paste0(var, "_julian") := lubridate::yday(!!rlang::sym(var)) + (lubridate::year(!!rlang::sym(var)) - BreedingSeason) * 365) %>%
+      dplyr::mutate(!!paste0(var, "_julian") := as.numeric(!!rlang::sym(var) - lubridate::ymd(paste(BreedingSeason, "1", "1", sep = "-")) + 1)) %>%
       dplyr::ungroup() %>%
       dplyr::group_by(Species, PopID) %>%
       dplyr::summarise(Warning_min = floor(quantile(!!rlang::sym(paste0(var, "_julian")), probs = 0.01, na.rm = TRUE)),
@@ -885,7 +885,7 @@ check_values_brood <- function(Brood_data, var) {
                                  dplyr::group_by(BreedingSeason) %>%
                                  # Transform dates to Julian days (while accounting for year)
                                  # to compare to Julian day reference values
-                                 dplyr::mutate(!!paste0(var, "_julian") := lubridate::yday(!!rlang::sym(var)) + (lubridate::year(!!rlang::sym(var)) - BreedingSeason) * 365) %>%
+                                 dplyr::mutate(!!paste0(var, "_julian") := as.numeric(!!rlang::sym(var) - lubridate::ymd(paste(BreedingSeason, "1", "1", sep = "-")) + 1)) %>%
                                  dplyr::ungroup() %>%
                                  dplyr::filter(Species == ..1 & PopID == ..2 &
                                                  (!!rlang::sym(paste0(var, "_julian")) < ..5 | !!rlang::sym(paste0(var, "_julian")) > ..6)) %>%
@@ -944,7 +944,7 @@ check_values_brood <- function(Brood_data, var) {
                                  dplyr::group_by(BreedingSeason) %>%
                                  # Transform dates to Julian days (while accounting for year)
                                  # to compare to Julian day reference values
-                                 dplyr::mutate(!!paste0(var, "_julian") := lubridate::yday(!!rlang::sym(var)) + (lubridate::year(!!rlang::sym(var)) - BreedingSeason) * 365) %>%
+                                 dplyr::mutate(!!paste0(var, "_julian") := as.numeric(!!rlang::sym(var) - lubridate::ymd(paste(BreedingSeason, "1", "1", sep = "-")) + 1)) %>%
                                  dplyr::ungroup() %>%
                                  dplyr::filter(Species == ..1 & PopID == ..2 &
                                                  ((!!rlang::sym(paste0(var, "_julian")) > ..4 & !!rlang::sym(paste0(var, "_julian")) <= ..6) | (!!rlang::sym(paste0(var, "_julian")) < ..3 & !!rlang::sym(paste0(var, "_julian")) >= ..5))) %>%
