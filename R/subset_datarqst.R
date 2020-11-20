@@ -183,7 +183,6 @@ subset_datarqst <- function(file = file.choose(),
 
       }), .groups = "drop") %>%
       dplyr::rowwise() %>%
-      #dplyr::ungroup() %>%
       dplyr::filter(.data$Relevant == "no")
 
     #Remove individuals never identified as one of the species of interest
@@ -196,16 +195,21 @@ subset_datarqst <- function(file = file.choose(),
 
   #Arrange outputs chronologically
   output_brood <- output_brood %>%
-    dplyr::arrange(.data$PopID, .data$BreedingSeason, .data$Species, .data$BroodID)
+    dplyr::arrange(.data$PopID, .data$BreedingSeason, .data$Species, .data$BroodID) %>%
+    dplyr::mutate(Row = seq(1, n()))
 
   output_capture <- output_capture %>%
-    dplyr::arrange(.data$CapturePopID, .data$Species, .data$IndvID, .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime)
+    dplyr::ungroup() %>%
+    dplyr::arrange(.data$CapturePopID, .data$Species, .data$IndvID, .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
+    dplyr::mutate(Row = seq(1, n()))
 
   output_individual <- output_individual %>%
-    dplyr::arrange(.data$PopID, .data$Species, .data$IndvID)
+    dplyr::arrange(.data$PopID, .data$Species, .data$IndvID) %>%
+    dplyr::mutate(Row = seq(1, n()))
 
   output_location <- output_location %>%
-    dplyr::arrange(.data$PopID, .data$LocationType, .data$StartSeason, .data$EndSeason, .data$LocationID)
+    dplyr::arrange(.data$PopID, .data$LocationType, .data$StartSeason, .data$EndSeason, .data$LocationID) %>%
+    dplyr::mutate(Row = seq(1, n()))
 
   #Combine output into one R object
   output_data <- list(Brood_data = output_brood,
