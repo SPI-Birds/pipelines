@@ -1,6 +1,5 @@
 #### Tests for calc_age function
 
-library(dplyr)
 
 #### Old dummy data from the calc_age function
 # set.seed(666)
@@ -76,7 +75,6 @@ test_that("The output is correctly calculated...", {
   expect_equal(filter(Capture_data, IndvID == "A9") %>% pull(Age_calculated) %>% last(), 6)
 
 })
-
 
 
 

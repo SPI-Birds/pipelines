@@ -18,7 +18,7 @@
 #'   of column with observed age of individual in each capture. Must be in
 #'   EURING codes.
 #' @param Date Unquoted expression (i.e. character without quotation marks).
-#'   Name of column with CaptureDate information. Must be in format YYY-MM-DD.
+#'   Name of column with CaptureDate information. Must be of class date.
 #' @param Year Unquoted expression (i.e. character without quotation marks).
 #'   Name of column with year information. N.B. This could be different to
 #'   CaptureDate if we are dealing with species that breed over two year (e.g.
@@ -108,6 +108,5 @@ calc_age <- function(data, ID, Age, Date, Year, showpb = TRUE){
   FirstYear <- FirstAge <- yr_diff <- NULL
 
 }
-
 
 
