@@ -251,13 +251,6 @@ format_PFN <- function(db = choose_directory(),
   badIDs <- unique(allIDs[!stringr::str_detect(allIDs, pattern = "^[A-Z]{1,}[0-9]{1,}$")])
 
 
-  # TODO: In KAT, I still have this record of "E079216/E079250" in the nest file
-  #       This is a case of two females being caught in the same active nest, and according to
-  #       Malcolm this may happen in some other datasets too.
-  #       Whenever this happens, we assign NA as the mother ID in brood data
-  #       but we will have to find a way to split this into two captures in capture data
-
-
   #-------------------------------------#
   # CREATING STANDARD FORMAT BROOD DATA #
   #-------------------------------------#
@@ -298,6 +291,8 @@ format_PFN <- function(db = choose_directory(),
 
   message("Functionality for compiling location data not yet supported")
 
+  Location_data <- NULL
+
   #TODO: Add functionality to generate location data
 
 
@@ -334,7 +329,8 @@ format_PFN <- function(db = choose_directory(),
     dplyr::select(-.data$ChickAge, -.data$BroodSize_IPMR)
 
   Capture_data <- Capture_data %>%
-    dplyr::select(-.data$BroodID, -.data$PULALIV)
+    dplyr::select(-.data$BroodID, -.data$PULALIV) %>%
+    dplyr::relocate(.data$ExperimentID, .after = .data$ChickAge)
 
 
   #-----------------------------#
@@ -355,7 +351,7 @@ format_PFN <- function(db = choose_directory(),
 
     utils::write.csv(x = Capture_data %>% select(-Sex, -BroodID), file = paste0(path, "\\Capture_data_PFN.csv"), row.names = F)
 
-    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_PFN.csv"), row.names = F)
+    #utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_PFN.csv"), row.names = F)
 
     invisible(NULL)
 
@@ -369,7 +365,6 @@ format_PFN <- function(db = choose_directory(),
                 Capture_data = Capture_data,
                 Individual_data = Individual_data,
                 Location_data = Location_data))
-
   }
 
 }
@@ -1016,19 +1011,22 @@ create_capture_Nest_PFN <- function(Nest_data, ReRingTable, badIDs){
   # 4) Combine data
   Capture_data <- dplyr::bind_rows(Chick_Capture_data, Male_Capture_data, Female_Capture_data) %>%
 
-    # 5) Remove all individuals with missing IDs and/or from species not included in Species_codes
+    # 5) Split captures for cases in which two individuals were reported in the same field (IDs separates by "/")
+    tidyr::separate_rows(.data$IndvID, sep = '/') %>%
+
+    # 6) Remove all individuals with missing IDs and/or from species not included in Species_codes
     dplyr::filter(Species_Nest %in% species_codes$Species & !is.na(IndvID) & !(IndvID%in%badIDs)) %>%
 
-    # 6) Add a unique row identifier
+    # 7) Add a unique row identifier
     dplyr::mutate(rowNo_Nest = dplyr::row_number())
 
-  # 7) Adjust IndvID for re-ringed individuals
+  # 8) Adjust IndvID for re-ringed individuals
   Capture_data <- left_join(Capture_data, ReRingTable, by = c('IndvID' = 'RingNr')) %>%
     dplyr::mutate(IndvID = dplyr::case_when(is.na(.data$ReRingID) ~ .data$IndvID,
                                             .data$IndvID != .data$ReRingID ~ .data$ReRingID,
                                             .data$IndvID == .data$ReRingID ~ .data$IndvID))
 
-  # 8) Return data
+  # 9) Return data
   return(Capture_data)
 
 }
