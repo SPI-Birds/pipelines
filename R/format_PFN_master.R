@@ -105,7 +105,9 @@ format_PFN <- function(db = choose_directory(),
 
   ## Dinas (DIN)
   Nest_DIN <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_Nest_DIN.csv"), na.strings = c("", "?"), colClasses = "character") %>%
-    dplyr::mutate(PopID = 'DIN')
+    dplyr::mutate(PopID = 'DIN',
+                  Box = stringr::str_replace(string = .data$Box, pattern = 'DV', replacement = 'DOV'), # Standardize naming convention
+                  Box = stringr::str_replace(string = .data$Box, pattern = 'TN', replacement = 'TYN')) # Standardize naming convention
 
   ## Teign (TEI)
   Nest_TEI <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_Nest_TEI.csv"), na.strings = c("", "?"), colClasses = "character") %>%
@@ -140,9 +142,21 @@ format_PFN <- function(db = choose_directory(),
 
   ## Scotland (KAT)
   IPMR_KAT <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_IPMR_KAT.csv"), na.strings = c("", "?", "UNK", "-"), colClasses = "character") %>%
-    dplyr::mutate(PopID = 'KAT') %>%
+    dplyr::mutate(PopID = 'KAT',
+                  PLACE = dplyr::case_when(.data$PLACE == "HRA" ~ "BR.W",
+                                           .data$PLACE == "HRB" ~ "BR.E",
+                                           .data$PLACE == "HRC" ~ "STR",
+                                           .data$PLACE == "HRE" ~ "TOP",
+                                           .data$PLACE == "HRF" ~ "MID",
+                                           .data$PLACE == "HRG" ~ "TOP",
+                                           .data$PLACE == "HRJ" ~ "Rh",
+                                           .data$PLACE == "HRK" ~ "SF",
+                                           .data$PLACE == "HRO" ~ "BR.E",
+                                           .data$PLACE == "NN6002" ~ "CR",
+                                           .data$PLACE == "NS5997" ~ "PoG",
+                                           TRUE ~ .data$PLACE),
+                  SITE = NA_character_) %>%
     dplyr::rename(SPEC = .data$SPNAME,
-                  SITE = .data$PLNAME,
                   SCHEME = .data$COUNTRY)
   # NOTE: The KAT IPMR data has some different column names and formats than the
   #      other IPMR input data file, so these need to be adjusted here.
@@ -157,6 +171,8 @@ format_PFN <- function(db = choose_directory(),
                   SITE_DIN = stringr::str_replace(string = .data$SITE_DIN, pattern = 'DINAS', replacement = 'DIN'), # Replace "DINAS" with "DIN"
                   SITE_DIN = dplyr::case_when(stringr::str_detect(.data$SITE_DIN, "[[:lower:]]") ~ NA_character_,
                                               TRUE ~ .data$SITE_DIN), # Set all to NA that contain lower case letters (mostly part of comments)
+                  SITE_DIN = stringr::str_replace(string = .data$SITE_DIN, pattern = 'DV', replacement = 'DOV'), # Standardize naming convention
+                  SITE_DIN = stringr::str_replace(string = .data$SITE_DIN, pattern = 'TN', replacement = 'TYN'), # Standardize naming convention
                   RING2 = dplyr::case_when(grepl("rering", .data$USERV1) ~ stringr::str_extract(string = .data$USERV1, pattern = regex("[A-Z]{1,}[0-9]{1,}")),
                                                 TRUE ~ .data$RING2)
                   )
@@ -237,7 +253,7 @@ format_PFN <- function(db = choose_directory(),
 
   # TODO: In KAT, I still have this record of "E079216/E079250" in the nest file
   #       This is a case of two females being caught in the same active nest, and according to
-  #       Malcolm this may happen in some other dataset too.
+  #       Malcolm this may happen in some other datasets too.
   #       Whenever this happens, we assign NA as the mother ID in brood data
   #       but we will have to find a way to split this into two captures in capture data
 
@@ -253,9 +269,9 @@ format_PFN <- function(db = choose_directory(),
                                  badIDs = badIDs)
 
 
-  #-------------------------------------#
+  #---------------------------------------#
   # CREATING STANDARD FORMAT CAPTURE DATA #
-  #-------------------------------------#
+  #---------------------------------------#
 
   message("Compiling capture data....")
 
@@ -282,25 +298,44 @@ format_PFN <- function(db = choose_directory(),
 
   message("Functionality for compiling location data not yet supported")
 
+  #TODO: Add functionality to generate location data
+
 
   #-------------------------------------------#
   # STANDARD FORMAT DATA WRANGLING FOR EXPORT #
   #-------------------------------------------#
+
+  # Brood data: Add and consolidate brood size information from IPMR
+  IPMRBroodSize_data <- Capture_data[,c('BroodID', 'PULALIV')] %>%
+    dplyr::mutate(PULALIV = as.integer(.data$PULALIV)) %>%
+    dplyr::filter(!is.na(.data$PULALIV) & !is.na(.data$BroodID)) %>%
+    dplyr::group_by(.data$BroodID) %>%
+    dplyr::summarise(BroodSize_IPMR = max(.data$PULALIV), .groups = "drop")
+
+  Brood_data <- dplyr::left_join(Brood_data, IPMRBroodSize_data, by = 'BroodID') %>%
+    dplyr::mutate(BroodSize_observed = dplyr::case_when(
+      is.na(.data$BroodSize_observed) ~ .data$BroodSize_IPMR,
+      is.na(.data$BroodSize_IPMR) ~ .data$BroodSize_observed,
+      .data$BroodSize_observed == .data$BroodSize_IPMR ~ .data$BroodSize_observed,
+      .data$BroodSize_observed > .data$BroodSize_IPMR ~ .data$BroodSize_observed,
+      #.data$BroodSize_observed == 0 ~ .data$BroodSize_IPMR,
+      .data$BroodSize_observed < .data$BroodSize_IPMR ~ .data$BroodSize_IPMR
+    ))
+
+  # TODO: Verify criteria for consolidating BroodSize information from Nest vs. IPMR with Malcolm.
 
   # Capture data: Merge in information on ChickAge (from Brood_data) & remove unnecessary columns
   ChickAge_data <- Brood_data[,c('BroodID', 'ChickAge')]
   Capture_data <- dplyr::left_join(Capture_data, ChickAge_data, by = 'BroodID')
   Capture_data$ChickAge[which(Capture_data$Age_observed > 3)] <- NA_integer_ #***
 
-  Capture_data <- Capture_data %>%
-    dplyr::select(-.data$BroodID)
-
-  # Brood data: Remove unnecessary columns
+  # Remove unnecessary columns
   Brood_data <- Brood_data %>%
-    dplyr::select(-.data$ChickAge)
+    dplyr::select(-.data$ChickAge, -.data$BroodSize_IPMR)
 
-  # NOTE: There is additional information on BroodSize in IPMR data (PULALIV = BroodSize, PULRING = number of chicks ringed). This can potentially be matched to BroodID via IndvID and BreedingSeason of birth. If more chicks are recorded in IPMR than in Nest, the higher number should be given priority as BroodSize.
-  # TODO: Consolidate information on BroodSize from IPMR when available.
+  Capture_data <- Capture_data %>%
+    dplyr::select(-.data$BroodID, -.data$PULALIV)
+
 
   #-----------------------------#
   # STANDARD FORMAT DATA EXPORT #
@@ -743,9 +778,10 @@ create_capture_PFN <- function(Nest_data, IPMR_data, ReRingTable, badIDs){
         .data$LocationID_Nest != .data$LocationID_IPMR & !.data$UnconfirmedNestMatch ~ .data$LocationID_Nest,
         .data$LocationID_Nest != .data$LocationID_IPMR & .data$UnconfirmedNestMatch ~ .data$LocationID_IPMR
       ),
-      # MB: Nest data priority here (spent a lot of time cleaning this in Nest files)
+      # MB: Generally Nest data priority here (spent a lot of time cleaning this in Nest files).
+      #     Currently exception for conflicts in unconfirmed matches: IPMR priority
+      #     (We may revisit the latter decision at a later point)
 
-      #TODO: Double-check the second assumption with Malcolm
 
       # 3.4) CapturePopID & ReleasePopID
       CapturePopID = dplyr::case_when(
@@ -810,15 +846,13 @@ create_capture_PFN <- function(Nest_data, IPMR_data, ReRingTable, badIDs){
         .data$Age_observed_Nest == .data$Age_observed_IPMR ~ .data$Age_observed_Nest,
         .data$Age_observed_Nest < 4 & .data$Age_observed_IPMR < 4 ~ .data$Age_observed_Nest,
         .data$Age_observed_Nest >= 4 & .data$Age_observed_IPMR >= 4 ~ .data$Age_observed_Nest
-        # Here, I may have to find a way to deal with situations in which there is conflicting
-        # info on whether an individual was a chick (>4) or an adult (>=4)
+        # In situations in which there is conflicting info on whether an individual was
+        # a chick (>4) or an adult (>=4), Age_observed is currently set to NA.
+        # These records are always mistakes in the raw data, and are best pointed out and resolved there.
       ),
 
       # MB: There should not be age classes 2 or 3 in a nest capture --> if we have nest data age 1, we should always stick with that (--> are there even any cases where this happens?)
       # MB: some ringers think they can age birds >4 in the field (-> IPMR data), but they are often not correct
-      # MB: we can also do that with the Scotland and Wales populations
-
-      # TODO: Check with MB what to do with conflicting info on chick vs. adults
 
       # 3.8) Sex_observed
       Sex_observed = dplyr::case_when(
@@ -1023,8 +1057,8 @@ create_capture_IPMR_PFN <- function(IPMR_data, Nest_data, ReRingTable){
                                                   .data$SPEC == "NUTHA" ~ species_codes[species_codes$SpeciesID == 14790, ]$Species,
                                                   .data$SPEC == "COATI" ~ species_codes[species_codes$SpeciesID == 14610, ]$Species),
 
-                  LocationID_IPMR = dplyr::case_when(.data$SITE == "311A" ~ "311", # Specific EDM location
-                                                     .data$SITE == "MILL" ~ "Foxworthy Mill", # Specific EDM location
+                  LocationID_IPMR = dplyr::case_when(.data$SITE == "MILL" ~ "Foxworthy Mill", # Specific EDM location
+                                                     .data$SITE == "HIDE2" ~ "HIDE1D", # Specific EDM location
                                                      .data$PopID == "EDM" ~ .data$SITE, # Remaining EDM locations (perfect matches)
                                                      .data$PopID == "DIN" ~ .data$SITE_DIN,
                                                      #.data$PopID %in% c("TEI", "OKE") & stringr::str_detect(.data$SITE, "[[:digit:]]") ~ as.character(readr::parse_number(.data$SITE)), # TEI and OKE locations (number match)
