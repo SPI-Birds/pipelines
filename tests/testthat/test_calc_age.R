@@ -58,7 +58,6 @@ Capture_data <-
 
 
 #### Tests
-library(testthat)
 
 context("Test the calc_age function")
 
