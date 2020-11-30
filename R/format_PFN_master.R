@@ -313,11 +313,9 @@ format_PFN <- function(db = choose_directory(),
       is.na(.data$BroodSize_IPMR) ~ .data$BroodSize_observed,
       .data$BroodSize_observed == .data$BroodSize_IPMR ~ .data$BroodSize_observed,
       .data$BroodSize_observed > .data$BroodSize_IPMR ~ .data$BroodSize_observed,
-      #.data$BroodSize_observed == 0 ~ .data$BroodSize_IPMR,
       .data$BroodSize_observed < .data$BroodSize_IPMR ~ .data$BroodSize_IPMR
     ))
 
-  # TODO: Verify criteria for consolidating BroodSize information from Nest vs. IPMR with Malcolm.
 
   # Capture data: Merge in information on ChickAge (from Brood_data) & remove unnecessary columns
   ChickAge_data <- Brood_data[,c('BroodID', 'ChickAge')]
@@ -1139,8 +1137,8 @@ create_individual_PFN <- function(Capture_data){
 
   #Take capture data and determine summary data for each individual
   Indv_data <- Capture_data %>%
-    dplyr::arrange(.data$IndvID, .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
-    dplyr::group_by(.data$IndvID) %>%
+    dplyr::arrange(.data$CapturePopID, .data$IndvID, .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
+    dplyr::group_by(.data$CapturePopID, .data$IndvID) %>%
 
 
     dplyr::summarise(Species = purrr::map_chr(.x = list(unique(na.omit(.data$Species))), .f = ~{
@@ -1160,7 +1158,7 @@ create_individual_PFN <- function(Capture_data){
       }
 
     }),
-    PopID = "OKE",
+    PopID = first(.data$CapturePopID),
     BroodIDLaid = purrr::map_chr(.x = list(unique(na.omit(.data$BroodID))), .f = ~{
 
       if(length(..1) == 0){
@@ -1197,7 +1195,7 @@ create_individual_PFN <- function(Capture_data){
 
       }
 
-    })) %>%
+    }), .groups = "keep") %>%
     dplyr::rowwise() %>%
 
 
