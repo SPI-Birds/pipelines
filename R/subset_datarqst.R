@@ -68,12 +68,13 @@ subset_datarqst <- function(file = file.choose(),
     message(crayon::green("Filtering data using 'PopSpec'."))
 
     #Check that Species and PopID that make up PopSpec are all correct
-    check_pop(stringr::str_extract(PopSpec, pattern = "^[A-Z]*"))
-    check_species(stringr::str_extract(PopSpec, pattern = "[A-Z]*$"))
+    split <- stringr::str_split(string = PopSpec, pattern = "_", simplify = TRUE)
+    check_pop(split[, 1])
+    check_species(split[, 2])
 
     PopSpec_original <- PopSpec
 
-    unique_pops <- unique(stringr::str_split(string = PopSpec, pattern = "_", simplify = TRUE)[,1])
+    unique_pops <- unique(split[,1])
 
     if(include_conflicting){
       #PopSpec <- c(PopSpec, paste0(unique_pops, '_CCCCCC')) # Use after pipelines updated to standard format 1.1
