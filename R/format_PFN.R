@@ -81,13 +81,13 @@ format_PFN <- function(db = choose_directory(),
   start_time <- Sys.time()
 
   #Load primary brood data
-  Primary_data <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_EDartmoor.csv"), na.strings = c("", "?"), colClasses = "character")
+  Primary_data <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_Nest_EDM.csv"), na.strings = c("", "?"), colClasses = "character")
 
   #Load complete PiedFlyNet ringing database
-  CMR_data <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_All_CMR.csv"), na.strings = c("", "?", "UNK", "-"), colClasses = "character") # TODO:Confirm with Malcolm that SITE = "UNK" refers to unknown/unassigned locations
+  CMR_data <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_IPMR_PFN.csv"), na.strings = c("", "?", "UNK", "-"), colClasses = "character") # TODO:Confirm with Malcolm that SITE = "UNK" refers to unknown/unassigned locations
 
   #Load additional data on nestboxes (locations)
-  Location_details <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_EDartmoor_Nestboxes.csv"), na.strings = c("", "?"), colClasses = "character", fileEncoding="UTF-8-BOM")
+  Location_details <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_Locations_EDM.csv"), na.strings = c("", "?"), colClasses = "character", fileEncoding="UTF-8-BOM")
 
 
   # PREPARATION: ASSIGNING INDIVIDUAL IDENTITIY (relevant for re-ringed birds)
