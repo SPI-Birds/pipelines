@@ -51,5 +51,29 @@ test_that("Conflicted species individuals are only included when prompted...", {
 
 })
 
+test_that("We get correct errors when wrong Species, Pop_ID or PopSpec given...", {
+
+  message1 <- tryCatch(subset_datarqst(Species = "WRONG", test = TRUE),
+                      error = function(e) e$message )
+
+  expect_true(stringr::str_detect(message1, pattern = "^\n Species code is incorrect:"))
+
+  message2 <- tryCatch(subset_datarqst(PopID = "WRONG", test = TRUE),
+                      error = function(e) e$message )
+
+  expect_true(stringr::str_detect(message2, pattern = "^\n PopID is incorrect:"))
+
+  message3 <- tryCatch(subset_datarqst(PopSpec = "AMM_WRONG", test = TRUE),
+                       error = function(e) e$message )
+
+  expect_true(stringr::str_detect(message3, pattern = "^\n Species code is incorrect:"))
+
+  message4 <- tryCatch(subset_datarqst(PopSpec = "WRONG_AMM", test = TRUE),
+                       error = function(e) e$message )
+
+  expect_true(stringr::str_detect(message4, pattern = "^\n PopID is incorrect:"))
+
+})
+
 
 

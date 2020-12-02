@@ -63,10 +63,13 @@ subset_datarqst <- function(file = file.choose(),
     standard_data <- pipeline_output
   }
 
-
   if(!is.null(PopSpec)){
 
     message(crayon::green("Filtering data using 'PopSpec'."))
+
+    #Check that Species and PopID that make up PopSpec are all correct
+    check_pop(stringr::str_extract(PopSpec, pattern = "^[A-Z]*"))
+    check_species(stringr::str_extract(PopSpec, pattern = "[A-Z]*$"))
 
     PopSpec_original <- PopSpec
 
@@ -101,7 +104,10 @@ subset_datarqst <- function(file = file.choose(),
   } else {
 
     message(crayon::green("Filtering data using 'PopID' and 'Species'."))
-    Species_original <- Species
+
+    #Check that Species and PopID are correct
+    Species_original <- check_species(Species)
+    PopID            <- check_pop(PopID)
 
     if(include_conflicting){
       #Species <- c(Species, 'CCCCCC') # Use after pipelines updated to standard format 1.1
