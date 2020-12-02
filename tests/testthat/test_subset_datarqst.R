@@ -51,24 +51,46 @@ test_that("Conflicted species individuals are only included when prompted...", {
 
 })
 
+test_that("Conflicted species individuals return all capture records (even non-focal species)...", {
+
+  request_data_C <- subset_datarqst(PopID = "HAR", Species = "PARMAJ",
+                                    include_conflicting = TRUE, test = TRUE, save = FALSE)
+
+  focal_indv <- request_data_C$Capture_data %>%
+    filter(IndvID == "X-396693")
+
+  expect_equal(nrow(focal_indv), 3)
+  expect_equal(focal_indv$Species, c("FICHYP", "FICHYP", "PARMAJ"))
+
+  request_data_C2 <- subset_datarqst(PopSpec = "HAR_PARMAJ",
+                                    include_conflicting = TRUE, test = TRUE, save = FALSE)
+
+  focal_indv2 <- request_data_C2$Capture_data %>%
+    filter(IndvID == "X-396693")
+
+  expect_equal(nrow(focal_indv2), 3)
+  expect_equal(focal_indv2$Species, c("FICHYP", "FICHYP", "PARMAJ"))
+
+})
+
 test_that("We get correct errors when wrong Species, Pop_ID or PopSpec given...", {
 
-  message1 <- tryCatch(subset_datarqst(Species = "WRONG", test = TRUE),
+  message1 <- tryCatch(subset_datarqst(Species = "WRONG", test = TRUE, save = FALSE),
                       error = function(e) e$message )
 
   expect_true(stringr::str_detect(message1, pattern = "^\n Species code is incorrect:"))
 
-  message2 <- tryCatch(subset_datarqst(PopID = "WRONG", test = TRUE),
+  message2 <- tryCatch(subset_datarqst(PopID = "WRONG", test = TRUE, save = FALSE),
                       error = function(e) e$message )
 
   expect_true(stringr::str_detect(message2, pattern = "^\n PopID is incorrect:"))
 
-  message3 <- tryCatch(subset_datarqst(PopSpec = "AMM_WRONG", test = TRUE),
+  message3 <- tryCatch(subset_datarqst(PopSpec = "AMM_WRONG", test = TRUE, save = FALSE),
                        error = function(e) e$message )
 
   expect_true(stringr::str_detect(message3, pattern = "^\n Species code is incorrect:"))
 
-  message4 <- tryCatch(subset_datarqst(PopSpec = "WRONG_AMM", test = TRUE),
+  message4 <- tryCatch(subset_datarqst(PopSpec = "WRONG_AMM", test = TRUE, save = FALSE),
                        error = function(e) e$message )
 
   expect_true(stringr::str_detect(message4, pattern = "^\n PopID is incorrect:"))
