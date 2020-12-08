@@ -240,7 +240,7 @@ check_format_individual <- function(Individual_data){
 
 #' Check unique individual identifiers
 #'
-#' Check that the individual identifiers (IndvID) are unique. Records with individual identifiers that are not unique among populations will result in a warning. Records with individual identifiers that are not unique within populations will result in an error.
+#' Check that the individual identifiers (IndvID) are unique. Records with individual identifiers that are not unique within populations will result in an error.
 #'
 #' Check ID: I2.
 #'
@@ -288,48 +288,16 @@ check_unique_IndvID <- function(Individual_data){
                                })
   }
 
-  # Warnings
-  # Select records with IndvIDs that are duplicated among populations
-  Duplicated_among <- Individual_data %>%
-    dplyr::group_by(IndvID) %>%
-    dplyr::filter(!duplicated(PopID) & n() > 1) %>%
-    dplyr::filter(n() > 1)
-
+  # No warnings
   war <- FALSE
-  warning_records <- tibble::tibble(Row = NA_character_)
+  #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
-
-  if(nrow(Duplicated_among) > 0) {
-    war <- TRUE
-
-    # Compare to approved_list
-    warning_records <- Duplicated_among %>%
-      dplyr::mutate(CheckID = "I2") %>%
-      dplyr::anti_join(approved_list$Individual_approved_list, by=c("PopID", "CheckID", "IndvID"))
-
-    # Create quality check report statements
-    warning_output <- purrr::map(.x = unique(warning_records$IndvID),
-                                 .f = ~{
-                                   paste0("Record on row ",
-                                          # Duplicated rows
-                                          warning_records[warning_records$IndvID == .x, "Row"][1,],
-                                          " (IndvID: ", .x, ", ", "PopID: ",
-                                          warning_records[warning_records$IndvID == .x, "PopID"][1,],")",
-                                          " has the same IndvID as row(s) ",
-                                          # Duplicates (if 1, else more)
-                                          ifelse(nrow(warning_records[warning_records$IndvID == .x, "Row"][-1,]) == 1,
-                                                 warning_records[warning_records$IndvID == .x, "Row"][-1,],
-                                                 gsub("^c\\(|\\)$", "",
-                                                      warning_records[warning_records$IndvID == .x, "Row"][-1,])),
-                                          " (PopID: ", warning_records[warning_records$IndvID == .x, "PopID"][-1,],").")
-                                 })
-  }
 
   check_list <- tibble::tibble(Warning = war,
                                Error = err)
 
   return(list(CheckList = check_list,
-              WarningRows = warning_records$Row,
+              WarningRows = NULL,
               ErrorRows = error_records$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
@@ -477,7 +445,7 @@ check_conflicting_sex <- function(Individual_data) {
 
 #' Check conflicting species
 #'
-#' Check that the species of individuals in Individual_data is recorded consistently. Individuals who have been recorded as two different species will have conflicting species ('CONFLICTED') in Individual_data.
+#' Check that the species of individuals in Individual_data is recorded consistently. Individuals who have been recorded as two different species will have conflicting species ('CONFLICTED' or 'CCCCCC') in Individual_data.
 #'
 #' Check ID: I5.
 #'

@@ -693,7 +693,7 @@ check_chick_age <- function(Capture_data){
 
 #' Check that adults captured on a nest are listed as parents of that nest
 #'
-#' Check that adults captured on a nest are are listed as the parents of that nest in Brood_data. If not, records will be flagged as a warning. Adults can be caught near a nest box
+#' Check that adults captured on a nest are are listed as the parents of that nest in Brood_data. If not, records will be flagged as a warning. Adults can be caught near a nest box.
 #'
 #' Check ID: C4.
 #'
