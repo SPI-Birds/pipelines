@@ -43,7 +43,7 @@ archive <- function(data_folder = choose_directory(), update_type = "major", Own
 
   #Extract existing file information.
   #Find the subfolder corresponding to the population...
-  all_subfolder <- list.dirs(data_folder)
+  all_subfolder <- list.dirs(data_folder, recursive = FALSE)
   pop_subfolder <- all_subfolder[stringr::str_detect(all_subfolder, pattern = paste0(OwnerID, "_"))]
 
   #Check that OwnerID matches one of the subfolders in the data
@@ -224,7 +224,7 @@ archive <- function(data_folder = choose_directory(), update_type = "major", Own
     }
 
     new_metadata <- paste0("Name: ", current_name,
-                           "\nOwnerID: ", OwnerID,
+                           "\nOwner: ", OwnerID,
                            "\nVersion: ", new_version,
                            "\nLastUpdate: ", new_data_date, "\n")
     write(new_metadata, file = paste0(OwnerID, "_ArchiveMetaData.txt"))
