@@ -123,7 +123,7 @@ subset_datarqst <- function(file = file.choose(),
       dplyr::filter(.data$PopID %in% {{PopID}} & .data$Species %in% {{Species}})
 
     output_capture <- standard_data$Capture_data %>%
-      dplyr::filter(.data$CapturePopID %in% {{PopID}}  & .data$Species %in% {{Species}}) %>%
+      dplyr::filter(.data$CapturePopID %in% {{PopID}}) %>%
       dplyr::mutate(PopID_IndvID = paste(.data$CapturePopID, .data$IndvID, sep = "_")) %>%
       dplyr::filter(.data$PopID_IndvID %in% output_individual$PopID_IndvID) %>%
       dplyr::select(-.data$PopID_IndvID)
