@@ -58,7 +58,7 @@ format_PIL <- function(db = choose_directory(),
   #Determine species codes for filtering
   if(is.null(species)){
 
-    species <- Species_codes$Code
+    species <- species_codes$Species
 
   }
 
@@ -246,13 +246,13 @@ create_brood_PIL <- function(PIL_data, species_filter){
                   #They give this a unique species ID.
                   #Currently, we're just including the major species with > 100 broods
                   #(CYACAE, FICALB, PARMAJ, SITEUR)
-                  #Note, we still use our Species_codes table even though they use the same 6 letter codes
+                  #Note, we still use our species_codes table even though they use the same 6 letter codes
                   #This is because it will be easier to change if e.g. species are renamed
-                  #because we can just update the Species_codes table once.
-                  Species = dplyr::case_when(species == "CYACAE" ~ Species_codes$Code[Species_codes$SpeciesID == 14620],
-                                             species == "PARMAJ" ~ Species_codes$Code[Species_codes$SpeciesID == 14640],
-                                             species == "FICALB" ~ Species_codes$Code[Species_codes$SpeciesID == 13480],
-                                             species == "SITEUR" ~ Species_codes$Code[Species_codes$SpeciesID == 14790]),
+                  #because we can just update the species_codes table once.
+                  Species = dplyr::case_when(species == "CYACAE" ~ species_codes$Species[species_codes$SpeciesID == 14620],
+                                             species == "PARMAJ" ~ species_codes$Species[species_codes$SpeciesID == 14640],
+                                             species == "FICALB" ~ species_codes$Species[species_codes$SpeciesID == 13480],
+                                             species == "SITEUR" ~ species_codes$Species[species_codes$SpeciesID == 14790]),
                   ExperimentID = dplyr::case_when(exp == "0" ~ NA_character_,
                                                   exp == "1" ~ "COHORT",
                                                   exp == "2" ~ "COHORT;PHENOLOGY",
@@ -332,10 +332,10 @@ create_capture_PIL <- function(PIL_data, species_filter){
 
   chick_capture_data <- PIL_data %>%
     #Remove unwanted species
-    dplyr::mutate(Species = dplyr::case_when(species == "CYACAE" ~ Species_codes$Code[Species_codes$SpeciesID == 14620],
-                                             species == "PARMAJ" ~ Species_codes$Code[Species_codes$SpeciesID == 14640],
-                                             species == "FICALB" ~ Species_codes$Code[Species_codes$SpeciesID == 13480],
-                                             species == "SITEUR" ~ Species_codes$Code[Species_codes$SpeciesID == 14790])) %>%
+    dplyr::mutate(Species = dplyr::case_when(species == "CYACAE" ~ species_codes$Species[species_codes$SpeciesID == 14620],
+                                             species == "PARMAJ" ~ species_codes$Species[species_codes$SpeciesID == 14640],
+                                             species == "FICALB" ~ species_codes$Species[species_codes$SpeciesID == 13480],
+                                             species == "SITEUR" ~ species_codes$Species[species_codes$SpeciesID == 14790])) %>%
     dplyr::filter(Species %in% species_filter) %>%
     #Remove cases where no chicks were ever ringed
     dplyr::filter_at(.vars = vars(contains("nestling_ring")), .vars_predicate = any_vars(!is.na(.))) %>%

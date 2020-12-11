@@ -17,7 +17,5 @@ List of 4 dataframes:
 \item{Location_data}{Dummy location data.}
 }
 \description{
-Create dummy pipeline output (\code{dummy_data}) to be tested in \code{\link{quality_check}}.
-In each data frame, rows are specifically created to test single checks from \code{\link{quality_check}}.
-See a detailed description of which rows correspond to which checks in \code{\link{dummy_data}}.
+Create dummy pipeline output (\code{dummy_data}) to be tested in \code{\link{quality_check}}. In each dataframe, rows are created to test single checks from \code{\link{quality_check}}. A CheckID column is added to each dataframe to mark which rows serve to test each check. See a detailed description of the dummy data in \code{\link{dummy_data}}.
 }

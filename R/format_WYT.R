@@ -70,7 +70,7 @@ format_WYT <- function(db = choose_directory(),
   #Determine species codes for filtering
   if(is.null(species)){
 
-    species <- Species_codes$Code
+    species <- species_codes$Species
 
   }
 
@@ -192,11 +192,11 @@ create_brood_WYT <- function(db, species_filter){
     #Rename columns to meet our standard format
     dplyr::mutate(BreedingSeason = year, LocationID = toupper(nestbox),
                   PopID = "WYT", Plot = toupper(section),
-                  Species = dplyr::case_when(.$species == "b" ~ Species_codes[Species_codes$SpeciesID == 14620, ]$Code,
-                                             .$species == "g" ~ Species_codes[Species_codes$SpeciesID == 14640, ]$Code,
-                                             .$species == "c" ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code,
-                                             .$species == "n" ~ Species_codes[Species_codes$SpeciesID == 14790, ]$Code,
-                                             .$species == "m" ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code)) %>%
+                  Species = dplyr::case_when(.$species == "b" ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
+                                             .$species == "g" ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
+                                             .$species == "c" ~ species_codes[species_codes$SpeciesID == 14610, ]$Species,
+                                             .$species == "n" ~ species_codes[species_codes$SpeciesID == 14790, ]$Species,
+                                             .$species == "m" ~ species_codes[species_codes$SpeciesID == 14400, ]$Species)) %>%
     dplyr::filter(Species %in% species_filter) %>%
     dplyr::mutate(LayDate = as.Date(lay_date, format = "%d/%m/%Y"),
                   HatchDate = as.Date(purrr::pmap_chr(.l = list(hatch_date, legacy_april_hatch_date),
@@ -294,10 +294,10 @@ create_capture_WYT <- function(db, Brood_data, species_filter){
   chick_old_pb <- dplyr::progress_estimated(n = nrow(Chick_captures_old))
 
   Chick_captures_old <- Chick_captures_old %>%
-    dplyr::mutate(Species = dplyr::case_when(toupper(species_code) == "GRETI" ~ Species_codes[Species_codes$SpeciesID == 14640, ]$Code,
-                                             toupper(species_code) == "BLUTI" ~ Species_codes[Species_codes$SpeciesID == 14620, ]$Code,
-                                             toupper(species_code) == "COATI" ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code,
-                                             toupper(species_code) == "MARTI" ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code)) %>%
+    dplyr::mutate(Species = dplyr::case_when(toupper(species_code) == "GRETI" ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
+                                             toupper(species_code) == "BLUTI" ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
+                                             toupper(species_code) == "COATI" ~ species_codes[species_codes$SpeciesID == 14610, ]$Species,
+                                             toupper(species_code) == "MARTI" ~ species_codes[species_codes$SpeciesID == 14400, ]$Species)) %>%
     dplyr::filter(Species %in% species_filter) %>%
     dplyr::mutate(CaptureDate = janitor::excel_numeric_to_date(as.numeric(.data$date_time)), CaptureTime = NA_character_) %>%
     dplyr::rowwise() %>%
@@ -390,13 +390,13 @@ create_capture_WYT <- function(db, Brood_data, species_filter){
   chick_new_pb <- dplyr::progress_estimated(n = nrow(Chick_captures_new))
 
   Chick_captures_new <- Chick_captures_new %>%
-    dplyr::mutate(Species = dplyr::case_when(toupper(bto_species_code) == "GRETI" ~ Species_codes[Species_codes$SpeciesID == 14640, ]$Code,
-                                             toupper(bto_species_code) == "BLUTI" ~ Species_codes[Species_codes$SpeciesID == 14620, ]$Code,
-                                             toupper(bto_species_code) == "COATI" ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code,
-                                             toupper(bto_species_code) == "MARTI" ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code,
-                                             toupper(bto_species_code) == "NUTHA" ~ Species_codes[Species_codes$SpeciesID == 14790, ]$Code),
-                  CaptureDate = janitor::excel_numeric_to_date(as.numeric(.data$date_time) %/% 1),
-                  CaptureTime = paste(stringr::str_pad(string = ((as.numeric(.data$date_time) %% 1) * 24) %/% 1,
+    dplyr::mutate(Species = dplyr::case_when(toupper(bto_species_code) == "GRETI" ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
+                                             toupper(bto_species_code) == "BLUTI" ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
+                                             toupper(bto_species_code) == "COATI" ~ species_codes[species_codes$SpeciesID == 14610, ]$Species,
+                                             toupper(bto_species_code) == "MARTI" ~ species_codes[species_codes$SpeciesID == 14400, ]$Species,
+                                             toupper(bto_species_code) == "NUTHA" ~ species_codes[species_codes$SpeciesID == 14790, ]$Species),
+                  CaptureDate = janitor::excel_numeric_to_date(as.numeric(date_time) %/% 1),
+                  CaptureTime = paste(stringr::str_pad(string = ((as.numeric(date_time) %% 1) * 24) %/% 1,
                                                        width = 2, pad = "0"),
                                       stringr::str_pad(string = round((((as.numeric(.data$date_time) %% 1) * 24) %% 1) * 60),
                                                        width = 2, pad = "0"), sep = ":")) %>%

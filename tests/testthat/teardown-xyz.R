@@ -1,5 +1,5 @@
 # Restore approved list
-create_approved_list(backup_approved_list)
+create_approved_list()
 
 #Move archiving test data back to its original location for future tests
 oldwd <- getwd()
