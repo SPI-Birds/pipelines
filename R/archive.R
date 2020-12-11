@@ -45,7 +45,7 @@ archive <- function(data_folder = choose_directory(), update_type = "major", Pop
   }
 
   #Find all file paths inside the folder that are considered primary data or metadata.txt
-  current_data_path <- list.files(pop_subfolder, pattern = "_PrimaryData_|MetaData.txt", full.names = TRUE)
+  current_data_path <- list.files(pop_subfolder, pattern = "_PrimaryData|MetaData.txt", full.names = TRUE)
 
   #Separate filename from paths
   #Need this to check that names match (regardless of the file location)
@@ -176,7 +176,7 @@ archive <- function(data_folder = choose_directory(), update_type = "major", Pop
   }
 
   new_metadata <- paste0("Name: ", current_name, "\nPopID: ", PopID, "\nVersion: ", new_version, "\nLastUpdate: ", Sys.Date(), "\n")
-  write(new_metadata, file = paste0(PopID, "_MetaData.txt"))
+  write(new_metadata, file = paste0(PopID, "_ArchiveMetaData.txt"))
 
   #Set working directory back to the project folder
   setwd(resetwd)
