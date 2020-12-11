@@ -13,7 +13,7 @@ test_that("We get correct errors...", {
 
 test_that("Test archiving works when no archiving folder exists...", {
 
-  date_folder    <- format(Sys.Date(), format = "%d_%m_%Y")
+  date_folder    <- format(Sys.Date(), format = "%Y_%m_%d")
   main_folder    <- here::here("./inst/extdata/test_archiving")
 
   archive(data_folder = main_folder, PopID = "POP", new_data_path = here::here("./inst/extdata/POP_PrimaryData_XXX.csv"))
@@ -29,7 +29,7 @@ test_that("Test archiving works when no archiving folder exists...", {
   expect_equal(read.csv(paste0(main_folder, "/POP_testpop/archive/", date_folder, "/POP_PrimaryData_XXX.csv")) %>% pull(Col2), c(1, 2, 3))
 
   #Check that meta-data is correct
-  expect_equal(read.delim(paste0(main_folder, "/POP_testpop/archive/", date_folder, "/POP_MetaData.txt"), sep = "", header = FALSE),
+  expect_equal(read.delim(paste0(main_folder, "/POP_testpop/archive/", date_folder, "/POP_ArchiveMetaData.txt"), sep = "", header = FALSE),
                structure(list(V1 = c("Name:", "PopID:", "Version:", "LastUpdate:"),
                               V2 = c("Population", "POP", "2019.00", "2019-01-01")),
                          class = "data.frame", row.names = c(NA, -4L)))
