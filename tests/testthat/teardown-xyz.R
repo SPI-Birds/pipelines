@@ -1,8 +1,6 @@
 # Restore approved list
 create_approved_list()
 
-browser()
-
 #Delete output of archiving tests
 oldwd <- getwd()
 setwd(here::here("./inst/extdata"))
