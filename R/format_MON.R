@@ -662,7 +662,7 @@ create_individual_MON <- function(capture_data, brood_data, verbose){
     dplyr::filter(!is.na(BroodIDLaid) | !is.na(BroodIDFledged))
 
   #Create progress bar to track cross-foster assignment
-  pb <- dplyr::progress_estimated(n = nrow(Cross_foster))
+  pb <- progress::progress_bar$new(total = nrow(Cross_foster))
 
   Cross_foster  <- Cross_foster %>%
     dplyr::select(IndvID, LocationID, CaptureDate, BroodIDLaid, BroodIDFledged) %>%

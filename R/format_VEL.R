@@ -392,7 +392,7 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
 
   ## Make progress bar. Needs to be twice as long as rows because chicks are
   ## captured at 6 and 13 days.
-  pb <- dplyr::progress_estimated(n = nrow(FICALB_chicks)*2)
+  pb <- progress::progress_bar$new(total = nrow(FICALB_chicks)*2)
 
   FICALB_chicks <- FICALB_chicks %>%
     dplyr::group_by(ChickNr) %>%
@@ -584,7 +584,7 @@ create_capture_VEL_TIT    <- function(TIT_data) {
 
 create_individual_VEL     <- function(Capture_data){
 
-  pb <- dplyr::progress_estimated(n = length(unique(Capture_data$IndvID)) * 2)
+  pb <- progress::progress_bar$new(total = length(unique(Capture_data$IndvID)) * 2)
 
   Indvidual_data <- Capture_data %>%
     dplyr::group_by(IndvID) %>%

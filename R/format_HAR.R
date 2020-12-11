@@ -562,7 +562,7 @@ create_capture_HAR    <- function(db, Brood_data, species_filter, return_errors)
   flat_multi_chick_capture <- chick_data %>%
     dplyr::filter(!is.na(LastRingNumber))
 
-  ring_pb <- dplyr::progress_estimated(n = nrow(flat_multi_chick_capture))
+  ring_pb <- progress::progress_bar$new(total = nrow(flat_multi_chick_capture))
 
   expanded_multi_chick_capture <- flat_multi_chick_capture %>%
     #Split data into rowwise list

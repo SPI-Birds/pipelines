@@ -164,7 +164,7 @@ format_SSQ <- function(db = choose_directory(),
 create_brood_SSQ <- function(data){
 
   #Determine ClutchType_calculated
-  clutchtype <- dplyr::progress_estimated(n = nrow(data))
+  clutchtype <- progress::progress_bar$new(total = nrow(data))
 
   Brood_data <- data %>%
     #Arrange data for use with ClutchType_calculated (should be chronological)

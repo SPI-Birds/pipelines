@@ -186,7 +186,7 @@ create_brood_WYT <- function(db, species_filter){
                               sep = ",", stringsAsFactors = FALSE) %>%
     janitor::clean_names()
 
-  pb <- dplyr::progress_estimated(n = nrow(Brood_data_raw)*3)
+  pb <- progress::progress_bar$new(total = nrow(Brood_data_raw)*3)
 
   Brood_data <- Brood_data_raw %>%
     #Rename columns to meet our standard format
@@ -291,7 +291,7 @@ create_capture_WYT <- function(db, Brood_data, species_filter){
                                           na = c("unringed", "unrrunt", "UNRRUNT")) %>%
     janitor::clean_names()
 
-  chick_old_pb <- dplyr::progress_estimated(n = nrow(Chick_captures_old))
+  chick_old_pb <- progress::progress_bar$new(total = nrow(Chick_captures_old))
 
   Chick_captures_old <- Chick_captures_old %>%
     dplyr::mutate(Species = dplyr::case_when(toupper(species_code) == "GRETI" ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
@@ -387,7 +387,7 @@ create_capture_WYT <- function(db, Brood_data, species_filter){
                                           na = c("unringed", "unrrunt", "UNRRUNT")) %>%
     janitor::clean_names()
 
-  chick_new_pb <- dplyr::progress_estimated(n = nrow(Chick_captures_new))
+  chick_new_pb <- progress::progress_bar$new(total = nrow(Chick_captures_new))
 
   Chick_captures_new <- Chick_captures_new %>%
     dplyr::mutate(Species = dplyr::case_when(toupper(bto_species_code) == "GRETI" ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
@@ -494,7 +494,7 @@ create_capture_WYT <- function(db, Brood_data, species_filter){
 
 create_individual_WYT <- function(Capture_data){
 
-  indv_pb <- dplyr::progress_estimated(n = length(unique(na.omit(Capture_data$IndvID))) * 4 + 1)
+  indv_pb <- progress::progress_bar$new(total = length(unique(na.omit(Capture_data$IndvID))) * 4 + 1)
 
   #For every individual determine their unchanged individual information
   Individual_data <- Capture_data %>%
