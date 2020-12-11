@@ -95,7 +95,6 @@ subset_datarqst <- function(file = file.choose(),
     output_capture <- standard_data$Capture_data %>%
       dplyr::mutate(PopID_Species = paste(.data$CapturePopID, .data$Species, sep = "_"),
                     PopID_IndvID = paste(.data$CapturePopID, .data$IndvID, sep = "_")) %>%
-      dplyr::filter(.data$PopID_Species %in% {{PopSpec}}) %>%
       dplyr::filter(.data$PopID_IndvID %in% output_individual$PopID_IndvID) %>%
       dplyr::select(-.data$PopID_Species, -.data$PopID_IndvID)
 
