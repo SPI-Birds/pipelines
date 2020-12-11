@@ -60,7 +60,7 @@ test_that("Conflicted species individuals return all capture records (even non-f
     filter(IndvID == "X-396693")
 
   expect_equal(nrow(focal_indv), 3)
-  expect_equal(focal_indv$Species, c("FICHYP", "FICHYP", "PARMAJ"))
+  expect_equal(unname(focal_indv$Species), c("FICHYP", "FICHYP", "PARMAJ"))
 
   request_data_C2 <- subset_datarqst(PopSpec = "HAR_PARMAJ",
                                     include_conflicting = TRUE, test = TRUE, save = FALSE)
@@ -69,7 +69,7 @@ test_that("Conflicted species individuals return all capture records (even non-f
     filter(IndvID == "X-396693")
 
   expect_equal(nrow(focal_indv2), 3)
-  expect_equal(focal_indv2$Species, c("FICHYP", "FICHYP", "PARMAJ"))
+  expect_equal(unname(focal_indv2$Species), c("FICHYP", "FICHYP", "PARMAJ"))
 
 })
 
