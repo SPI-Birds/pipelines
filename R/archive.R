@@ -141,7 +141,7 @@ archive <- function(data_folder = choose_directory(), update_type = "major", Pop
   }
 
   #Determine the name for the new archiving subfolder
-  date_folder_name <- format(Sys.Date(), format = "%d_%m_%Y")
+  date_folder_name <- format(Sys.Date(), format = "%Y_%m_%d")
 
   #Create a new folder with this name inside the archive folder
   system(paste0("mkdir ./archive/", date_folder_name))
