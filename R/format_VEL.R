@@ -392,7 +392,7 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
 
   ## Make progress bar. Needs to be twice as long as rows because chicks are
   ## captured at 6 and 13 days.
-  pb <- dplyr::progress_estimated(n = nrow(FICALB_chicks)*2)
+  pb <- progress::progress_bar$new(total = nrow(FICALB_chicks)*2)
 
   FICALB_chicks <- FICALB_chicks %>%
     dplyr::group_by(ChickNr) %>%
@@ -584,7 +584,7 @@ create_capture_VEL_TIT    <- function(TIT_data) {
 
 create_individual_VEL     <- function(Capture_data){
 
-  pb <- dplyr::progress_estimated(n = length(unique(Capture_data$IndvID)) * 2)
+  pb <- progress::progress_bar$new(total = length(unique(Capture_data$IndvID)) * 2)
 
   Indvidual_data <- Capture_data %>%
     dplyr::group_by(IndvID) %>%
@@ -646,13 +646,15 @@ create_individual_VEL     <- function(Capture_data){
 #' Create location data table for Velky Kosir.
 #'
 #' Create location data table in standard format for all nest boxes.
+#'
 #' @param Brood_data Data frame. Output of \code{\link{create_brood_VEL}}
 #' @param TIT_data Data frame. Data frame. Tit data from Velky Kosir. This is
 #'   needed to include habitat type information.
+#' @param db Location of database file.
 #'
 #' @return A data frame.
 
-create_location_VEL       <- function(db, Brood_data, TIT_data){
+create_location_VEL <- function(db, Brood_data, TIT_data){
 
   location_data_excel <- readxl::read_excel(paste0(db, "/VEL_PrimaryData_locations.xls"),
                                       col_types = c("text")) %>%

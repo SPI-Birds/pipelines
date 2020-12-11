@@ -41,7 +41,13 @@ Imports: dplyr,
          magrittr,
          maps,
          stats,
-         rgdal
+         rgdal,
+         here,
+         progress,
+         rgeos,
+         rstudioapi,
+         sp,
+         usethis
 RoxygenNote: 7.1.1
 Suggests: 
     knitr,

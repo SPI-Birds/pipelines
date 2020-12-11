@@ -307,7 +307,7 @@ create_brood_UAN <- function(data, CAPTURE_info, species_filter){
     dplyr::select(-TarsusAlt, -TarsusStd)
 
   #Create a table with brood information.
-  clutchtype <- dplyr::progress_estimated(n = nrow(data))
+  clutchtype <- progress::progress_bar$new(total = nrow(data))
 
   Brood_data <- data %>%
     #Convert columns to expected values
@@ -383,7 +383,7 @@ create_capture_UAN <- function(data, species_filter){
   #like mass, tarsus etc.). This will include first capture as nestling (for
   #residents) This means there will be multiple records for a single individual.
 
-  pb <- dplyr::progress_estimated(n = nrow(data) * 2)
+  pb <- progress::progress_bar$new(total = nrow(data) * 2)
 
   Capture_data <- data %>%
     #Adjust species and PopID

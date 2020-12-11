@@ -15,7 +15,7 @@ choose_directory <- function() {
   #Otherwise, check if choose.dir is available (i.e. Windows) and use this instead
   } else if(rstudioapi::hasFun("choose.dir")) {
 
-    choose.dir(caption = 'Select data directory')
+    utils::choose.dir(caption = 'Select data directory')
 
   } else {
 

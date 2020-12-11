@@ -47,15 +47,15 @@ subset_datarqst <- function(file = file.choose(),
 
     output_brood <- standard_data$Brood_data %>%
       dplyr::mutate(Pop_sp = paste(PopID, Species, sep = "_")) %>%
-      dplyr::filter(Pop_sp %in% filter)
+      dplyr::filter(.data$Pop_sp %in% filter)
 
     output_capture <- standard_data$Capture_data %>%
       dplyr::mutate(Pop_sp = paste(CapturePopID, Species, sep = "_")) %>%
-      dplyr::filter(Pop_sp %in% filter)
+      dplyr::filter(.data$Pop_sp %in% filter)
 
     output_individual <- standard_data$Individual_data %>%
       dplyr::mutate(Pop_sp = paste(PopID, Species, sep = "_")) %>%
-      dplyr::filter(Pop_sp %in% filter)
+      dplyr::filter(.data$Pop_sp %in% filter)
 
     output_location <- standard_data$Location_data %>%
       dplyr::filter(PopID %in% unique_pops)

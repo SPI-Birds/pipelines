@@ -378,8 +378,8 @@ create_capture_EDM <- function(CMR_data, Primary_data, ReRingTable){
     dplyr::mutate(RING = ifelse(is.na(.data$ReRingID), .data$RING, .data$ReRingID))
 
   ## 2) Subset ringing database to contain only captures relevant to population
-  #LocationList <- unique(Primary_data$Popn)
-  #Capture_data <- subset(Capture_data, PLACE %in% LocationList)
+  LocationList <- unique(Primary_data$Popn)
+  Capture_data <- subset(Capture_data, .data$PLACE %in% LocationList)
 
   ## 3) Rename columns that are equivalent (content and format) to columns in the standard format
   Capture_data <- Capture_data %>%
