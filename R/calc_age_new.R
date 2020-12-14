@@ -18,13 +18,13 @@
 #'   of column with observed age of individual in each capture. Must be in
 #'   EURING codes.
 #' @param Date Unquoted expression (i.e. character without quotation marks).
-#'   Name of column with CaptureDate information. Must be of class date.
+#'   Name of column with CaptureDate information. Must be in format YYYY-MM-DD.
 #' @param Year Unquoted expression (i.e. character without quotation marks).
 #'   Name of column with year information. N.B. This could be different to
 #'   CaptureDate if we are dealing with species that breed over two year (e.g.
 #'   Southern Hemisphere species).
 #' @param showpb Logical. Should a progress bar be shown?
-#' @return A vector with calculated age.
+#' @return A data frame with calculated age.
 #' @export
 #'
 #' @examples
@@ -36,7 +36,8 @@
 #' + sample(1:30, 100, replace = TRUE),
 #' Age_obsv = sample(c(1L, 4L), 100, replace = TRUE)) %>%
 #' mutate(Age_calculated = calc_age(data = ., ID = IndvID, Age = Age_obsv,
-#' Date = CaptureDate, Year = SampleYear))
+#' Date = CaptureDate, Year = SampleYear)
+
 
 calc_age <- function(data, ID, Age, Date, Year, showpb = TRUE){
 
@@ -102,11 +103,10 @@ calc_age <- function(data, ID, Age, Date, Year, showpb = TRUE){
     dplyr::ungroup() %>%
     pull(Age_calculated)
 
+
   return(output)
 
   #Satisfy RCMD Checks
   FirstYear <- FirstAge <- yr_diff <- NULL
 
 }
-
-
