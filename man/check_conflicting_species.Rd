@@ -18,7 +18,7 @@ A list of:
 \item{Errors}{A list of row-by-row errors.}
 }
 \description{
-Check that the species of individuals in Individual_data is recorded consistently. Individuals who have been recorded as two different species will have conflicting species ('CONFLICTED') in Individual_data.
+Check that the species of individuals in Individual_data is recorded consistently. Individuals who have been recorded as two different species will have conflicting species ('CONFLICTED' or 'CCCCCC') in Individual_data.
 }
 \details{
 Check ID: I5.

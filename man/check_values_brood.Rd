@@ -20,10 +20,20 @@ A list of:
 \item{Errors}{A list of row-by-row errors.}
 }
 \description{
-Check variable values against population-species-specific reference values in brood data. Reference values are based on the data if the number of observations is sufficiently large (n >= 50). Records for population-species combinations that are low in number (n < 50) are not evaluated by this check.
+Check variable values against population-species-specific reference values in brood data. Reference values are based on the data if the number of observations is sufficiently large. Records for population-species combinations that are too low in number are only compared to reference values that are not data generated (see Details below).
 }
 \details{
-\strong{ClutchSize_observed, BroodSize_observed, NumberFledged_observed}: Records are considered unusual if they are larger than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error. Check IDs: B6a-c
+\strong{ClutchSize_observed, BroodSize_observed, NumberFledged_observed} \cr
+Check IDs: B6a-c \cr
+\itemize{
+\item{\emph{n >= 100}\cr}{Records are considered unusual if they are larger than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error.}
+\item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as an error.}
+}
 
-\strong{LayDate_observed}: Date columns are transformed to Julian days to calculate quantiles. Records are considered unusual if they are earlier than the 1st percentile or later than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are earlier than January 1st or later than December 31st, and will be flagged as an error. Check ID: B6d.
+\strong{LayDate_observed} \cr
+Check ID: B6d \cr
+\itemize{
+\item{\emph{n >= 100}\cr}{Date columns are transformed to Julian days to calculate percentiles. Records are considered unusual if they are earlier than the 1st percentile or later than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are earlier than January 1st or later than December 31st, and will be flagged as an error.}
+\item{\emph{n < 100}\cr}{Date columns are transformed to Julian days to calculate percentiles. Records are considered impossible if they are earlier than January 1st or later than December 31st, and will be flagged as an error.}
+}
 }

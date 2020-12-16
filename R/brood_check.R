@@ -715,7 +715,7 @@ compare_hatching_fledging <- function(Brood_data){
 
 #' Check brood variable values against reference values
 #'
-#' Check variable values against population-species-specific reference values in brood data. Reference values are based on the data if the number of observations is sufficiently large (n >= 100). Records for population-species combinations that are low in number (n < 100) are only compared to reference values that are not data generated (see Details below).
+#' Check variable values against population-species-specific reference values in brood data. Reference values are based on the data if the number of observations is sufficiently large. Records for population-species combinations that are too low in number are only compared to reference values that are not data generated (see Details below).
 #'
 #' \strong{ClutchSize_observed, BroodSize_observed, NumberFledged_observed} \cr
 #' Check IDs: B6a-c \cr

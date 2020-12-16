@@ -20,12 +20,29 @@ A list of:
 \item{Errors}{A list of row-by-row errors.}
 }
 \description{
-Check variable values against population-species-specific reference values in capture data. Reference values are based on the data if the number of observations is sufficiently large. Records for population-species combinations that are low in number are not evaluated by this check.
+Check variable values against population-species-specific reference values in capture data. Reference values are based on the data if the number of observations is sufficiently large. Records for population-species combinations that are too low in number are only compared to reference values that are not data generated (see Details below).
 }
 \details{
-\strong{Mass, adults}: Records are considered unusual if they are smaller than the 1st percentile or larger than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error. Check ID: C2a
+\strong{Mass} \cr
+Check ID: C2a \cr
+\itemize{
+\item{Adults}
+\itemize{
+\item{\emph{n >= 100}\cr}{Records are considered unusual if they are smaller than the 1st percentile or larger than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error.}
+\item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as an error.}
+}
+\item{Chicks}
+\itemize{
+\item{Reference values for chicks are calculated for each age (in days). This function tries to fit a logistic growth model to determine reference values to each day. If this model fails, reference values are determined per age if the number of observations is sufficiently large (n >= 100). Records are considered unusual if they are smaller than the 1st percentile or larger than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error.}
+\item{In case the logistic growth model fails and the number of observations for an age are too low (n < 100), records are considered impossible if they are negative, and will be flagged as an error.}
+}
+}
 
-\strong{Mass, chicks}: Reference values for chicks are calculated for each age (in days). If the number of observations is sufficiently large (n > 500), this function tries to fit a logistic growth model to determine reference values to each day. If this model fails, reference values are determined per age if the number of observations for chicks of that age is sufficiently large (n > 50). Records are considered unusual if they are smaller than the 1st percentile or larger than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error. Check ID: C2a
 
-\strong{Tarsus}: : Records are considered unusual if they are smaller than the 1st percentile or larger than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error. Check ID: C2b
+\strong{Tarsus} \cr
+Check ID: C2b \cr
+\itemize{
+\item{\emph{n >= 100}\cr}{Records are considered unusual if they are smaller than the 1st percentile or larger than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error.}
+\item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as an error.}
+}
 }
