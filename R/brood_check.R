@@ -715,12 +715,21 @@ compare_hatching_fledging <- function(Brood_data){
 
 #' Check brood variable values against reference values
 #'
-#' Check variable values against population-species-specific reference values in brood data. Reference values are based on the data if the number of observations is sufficiently large (n >= 50). Records for population-species combinations that are low in number (n < 50) are not evaluated by this check.
+#' Check variable values against population-species-specific reference values in brood data. Reference values are based on the data if the number of observations is sufficiently large (n >= 100). Records for population-species combinations that are low in number (n < 100) are only compared to reference values that are not data generated (see Details below).
 #'
-#' \strong{ClutchSize_observed, BroodSize_observed, NumberFledged_observed}: Records are considered unusual if they are larger than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error. Check IDs: B6a-c
+#' \strong{ClutchSize_observed, BroodSize_observed, NumberFledged_observed} \cr
+#' Check IDs: B6a-c \cr
+#' \itemize{
+#' \item{\emph{n >= 100}\cr}{Records are considered unusual if they are larger than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error.}
+#' \item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as an error.}
+#' }
 #'
-#' \strong{LayDate_observed}: Date columns are transformed to Julian days to calculate quantiles. Records are considered unusual if they are earlier than the 1st percentile or later than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are earlier than January 1st or later than December 31st, and will be flagged as an error. Check ID: B6d.
-#'
+#' \strong{LayDate_observed} \cr
+#' Check ID: B6d \cr
+#' \itemize{
+#' \item{\emph{n >= 100}\cr}{Date columns are transformed to Julian days to calculate percentiles. Records are considered unusual if they are earlier than the 1st percentile or later than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are earlier than January 1st or later than December 31st, and will be flagged as an error.}
+#' \item{\emph{n < 100}\cr}{Date columns are transformed to Julian days to calculate percentiles. Records are considered impossible if they are earlier than January 1st or later than December 31st, and will be flagged as an error.}
+#' }
 #'
 #' @inheritParams checks_brood_params
 #' @param var Character. Variable to check against reference values.
@@ -751,7 +760,8 @@ check_values_brood <- function(Brood_data, var) {
                        Warning_max = ceiling(quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE)),
                        Error_min = 0,
                        Error_max = 4 * Warning_max,
-                       n = n())
+                       n = n()) %>%
+      dplyr::arrange(PopID, Species)
 
     # Date columns
   } else if(var %in% c("LayDate", "LayDate_observed")) {
@@ -765,17 +775,19 @@ check_values_brood <- function(Brood_data, var) {
       dplyr::group_by(Species, PopID) %>%
       dplyr::summarise(Warning_min = floor(quantile(!!rlang::sym(paste0(var, "_julian")), probs = 0.01, na.rm = TRUE)),
                        Warning_max = ceiling(quantile(!!rlang::sym(paste0(var, "_julian")), probs = 0.99, na.rm = TRUE)),
+                       ##TODO: this error is specific to spring/summer breeders, make more general when species with other types of breeding system enter the pipelines.
                        Error_min = 1,
                        Error_max = 366,
-                       n = n())
+                       n = n()) %>%
+      dplyr::arrange(PopID, Species)
   }
 
 
   # Print message for population-species combinations with too low number of observations
-  if(any(ref$n < 50)) {
+  if(any(ref$n < 100)) {
 
     low_obs <- ref %>%
-      dplyr::filter(n < 50) %>%
+      dplyr::filter(n < 100) %>%
       dplyr::select(Species, PopID)
 
       purrr::pwalk(.l = list(low_obs$Species,
@@ -784,80 +796,11 @@ check_values_brood <- function(Brood_data, var) {
                    .f = ~{
 
                      message(paste0("Number of ", ..3, " records for ", ..2, ": ", ..1,
-                                    " is too low (< 50) to create reliable reference values.",
-                                    " Check will be skipped for this population-species combination."))
+                                    " is too low (< 100) to create reliable reference values."))
 
                    })
 
-    ### Alternative solution if number of observations is low. ###
-
-    # If number of records is too low, replace reference values by data from Hoge Veluwe (HOG)
-    #
-    # # Select species-population combination whose reference values will be replaced by NIOO data
-    # replaced_species_pops <- ref %>%
-    #   dplyr::filter(n < 50) %>%
-    #   dplyr::select(Species, PopID)
-    #
-    # present_values <- NULL
-    #
-    # # For species present in HOG data, select associated reference values
-    # if(any(replaced_species_pops$Species %in% unique(brood_ref_values$Species))) {
-    #
-    #   species_present <- replaced_species_pops[replaced_species_pops$Species %in% unique(brood_ref_values$Species),]
-    #
-    #   # Select new reference values
-    #   replaced_values <- purrr::pmap_dfr(.l = list(species_present$Species,
-    #                                                species_present$PopID,
-    #                                                rep(var, nrow(species_present))),
-    #                                      .f = ~{
-    #
-    #                                        # Print message
-    #                                        message(paste0("Number of ", ..3, " records for ", ..2, ": ", ..1,
-    #                                                       " is too low (< 50) to create reliable reference values.",
-    #                                                       " Reference values are based on NIOO data instead."))
-    #
-    #                                        # Select new reference values
-    #                                        brood_ref_values %>%
-    #                                          dplyr::filter(Species == ..1 & Variable == var) %>%
-    #                                          dplyr::mutate(PopID = ..2) %>%
-    #                                          dplyr::select(Species, PopID, Warning_min,
-    #                                                        Warning_max, Error_min, Error_max, n)
-    #
-    #                                      })
-    #
-    # }
-    #
-    # # For species not present in HOG data, skip check.
-    # if(any(!(replaced_species_pops$Species %in% unique(brood_ref_values$Species)))) {
-    #
-    #   species_absent <- replaced_species[!(replaced_species_pops$Species %in% unique(brood_ref_values$Species))]
-    #
-    #   # Print message
-    #   purrr::pwalk(.l = list(species_absent$Species,
-    #                          species_absent$PopID,
-    #                          rep(var, length(species_absent))),
-    #                .f = ~{
-    #
-    #                  message(paste0("Number of ", ..3, " records for ", ..2, ": ", ..1,
-    #                                 " is too low (< 50) to create reliable reference values.",
-    #                                 " There are no reference values available from Hoge Veluwe data.",
-    #                                 " Check will be skipped for this species."))
-    #
-    #                })
-    #
-    # }
-    #
-    # ref <- ref %>%
-    #   dplyr::filter(n >= 50) %>%
-    #   dplyr::bind_rows(replaced_values) %>%
-    #   dplyr::arrange(PopID, Species)
-
   }
-
-  # Filter references for population-species combinations based on at least 50 observations
-  ref <- ref %>%
-    dplyr::filter(n >= 50) %>%
-    dplyr::arrange(PopID, Species)
 
   # Progress bar
   pb <- progress::progress_bar$new(total = 2*nrow(ref),
@@ -870,14 +813,30 @@ check_values_brood <- function(Brood_data, var) {
 
                              pb$tick()
 
+
                              if(var %in% c("ClutchSize", "BroodSize", "NumberFledged",
                                            "ClutchSize_observed", "BroodSize_observed", "NumberFledged_observed")) {
 
-                               Brood_data %>%
-                                 dplyr::filter(Species == ..1 & PopID == ..2 &
-                                                 (!!rlang::sym(var) < ..5 | !!rlang::sym(var) > ..6)) %>%
-                                 dplyr::select(Row, PopID, BroodID, !!rlang::sym(var), Species) %>%
-                                 dplyr::mutate(Variable = var)
+                               # If number of observations is large enough, compare brood values
+                               # to all reference values
+                               if(..7 >= 100) {
+
+                                 Brood_data %>%
+                                   dplyr::filter(Species == ..1 & PopID == ..2 &
+                                                   (!!rlang::sym(var) < ..5 | !!rlang::sym(var) > ..6)) %>%
+                                   dplyr::select(Row, PopID, BroodID, !!rlang::sym(var), Species) %>%
+                                   dplyr::mutate(Variable = var)
+
+                                 # If number of observations is too low, only compare brood values
+                                 # to reference values not based on quantiles
+                               } else {
+
+                                 Brood_data %>%
+                                   dplyr::filter(Species == ..1 & PopID == ..2 & !!rlang::sym(var) < ..5) %>%
+                                   dplyr::select(Row, PopID, BroodID, !!rlang::sym(var), Species) %>%
+                                   dplyr::mutate(Variable = var)
+
+                               }
 
                              } else if(var %in% c("LayDate", "LayDate_observed")) {
 
@@ -924,7 +883,11 @@ check_values_brood <- function(Brood_data, var) {
 
 
   # Brood-specific warnings
-  Brood_war <- purrr::pmap(.l = ref,
+  # Warnings are only checked for population-species combinations with at least 100 observations
+  warning_ref <- ref %>%
+    dplyr::filter(n >= 100)
+
+  Brood_war <- purrr::pmap(.l = warning_ref,
                            .f = ~{
 
                              pb$tick()
@@ -981,16 +944,16 @@ check_values_brood <- function(Brood_data, var) {
                                   })
   }
 
-  # Add messages about skipped population-species combinations to warning outputs
+  # Add messages about population-species combinations with low n to warning outputs
   if(exists("low_obs")) {
 
     skipped_output <- purrr::pmap(.l = list(low_obs$Species,
                                             low_obs$PopID),
                                   .f = ~{
 
-                                    paste0("Check is skipped for ", ..2, ", ",
+                                    paste0("Number of records for ", ..2, ", ",
                                            species_codes[species_codes$Species == ..1, "CommonName"],
-                                           ", because the number of records is too low to create reliable reference values.")
+                                           ", is too low to create reliable reference values, so records are only checked for impossible/negative values.")
 
                                   })
 
