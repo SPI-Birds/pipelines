@@ -55,7 +55,9 @@ The format of this ringing data is IPMR, the 'old' BTO ringing database format, 
 has his own pipeline to convert the new BTO ringing database format to the old one.
 Since all chick measurements are complete in the brood table/nest monitoring data but some have
 not been added to the BTO ringing data, the pipeline merges chick trait values from the former
-into Capture data.
+into Capture data. Similarly, parent age information is more detailed in the brood table/nest
+monitoring data, and therefore merged into Capture data (and given priority over age information
+from the BTO ringing data).
 
 \strong{Unidentified individuals}: Some individuals have not been given unique IDs. They appear
 in the primary data as "RUNT", "ringed", "ringed left", "ringed right", "unringed", or "Unringed",
@@ -73,6 +75,11 @@ the number of the first ring ever given to this individual.
 records are excluded from the outputs because the standard format for capture data cannot distinguish
 between recaptures and resightings in its current state. Functionality do do this (i.e. via a "capture type" variable)
 may be added to a future update of the standard format.
+
+\strong{Age calculation}: The age of each bird is estimated based on its history of ringing and recaptures.
+Since some birds that breed in East Dartmoor may have been ringed in another study sites (= immigrants), the
+pipeline calculates age based on capture histories from the entire BTO ringing database, not just ringing/captures
+in locations within the East Dartmoor study site.
 
 \strong{LayDate_observed and HatchDate_observed}: Information is provided as date of first egg (DFE) and
 date of hatching (DH). These are given as integer number, and represent days after a set

@@ -55,7 +55,7 @@ format_CHO <- function(db = choose_directory(),
   #Assign species for filtering
   if(is.null(species)){
 
-    species <- Species_codes$Code
+    species <- species_codes$Species
 
   }
 

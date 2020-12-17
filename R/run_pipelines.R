@@ -5,7 +5,7 @@
 #'
 #' @param path File path. Location of all folders for data owners. Note, the
 #'   folders for each data owner must include the unique code of the data owner
-#'   as seen in pop_names.
+#'   as seen in pop_codes.
 #' @param PopID The three-letter code of populations to format as listed in the
 #'   \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{standard
 #'    protocol}.
@@ -61,7 +61,7 @@ run_pipelines <- function(path = choose_directory(),
   #If PopID is NULL use all populations
   if(is.null(PopID)){
 
-    PopID <- pop_names$code
+    PopID <- pop_codes$PopID
 
   }
 
@@ -93,26 +93,26 @@ run_pipelines <- function(path = choose_directory(),
   #Assign species for filtering
   if(is.null(Species)){
 
-    Species <- Species_codes$Code
+    Species <- species_codes$Species
 
-  } else if(all(!Species %in% Species_codes$Code)){
+  } else if(all(!Species %in% species_codes$Species)){
 
-    stop("Species provided are not included in the pipelines. Please select from species listed in Species_codes")
+    stop("Species provided are not included in the pipelines. Please select from species listed in species_codes")
 
   }
 
   #Firstly, check if there are any cases where a requested population does not have any info on a given species
   missing_species <- pop_species_combos %>%
-    dplyr::filter(pop %in% PopID) %>%
-    dplyr::group_by(pop) %>%
-    dplyr::summarise(total_sp = sum(species %in% Species))
+    dplyr::filter(PopCode %in% PopID) %>%
+    dplyr::group_by(PopCode) %>%
+    dplyr::summarise(total_sp = sum(SpeciesCode %in% Species))
 
   #If there are any with missing data, give a warning message
   if(any(missing_species$total_sp == 0)){
 
     missing_species %>%
       dplyr::filter(total_sp == 0) %>%
-      purrr::pwalk(.l = list(.$pop),
+      purrr::pwalk(.l = list(.$PopCode),
                    .f = ~{
 
                      message(glue::glue('Population {..1} has no information on the focal species and has been excluded.'))
@@ -123,22 +123,22 @@ run_pipelines <- function(path = choose_directory(),
 
   #Now just work with those populations where the population and species are present
   pop_species_subset <- pop_species_combos %>%
-    dplyr::filter(pop %in% PopID & species %in% Species) %>%
-    dplyr::left_join(dplyr::select(pop_names, code, owner), by = c("pop" = "code")) %>%
-    dplyr::group_by(owner) %>%
-    dplyr::summarise(species = list(c(unique(species))),
-                     pops = list(c(unique(pop))))
+    dplyr::filter(PopCode %in% PopID & SpeciesCode %in% Species) %>%
+    dplyr::left_join(dplyr::select(pop_codes, PopID, Owner), by = c("PopCode" = "PopID")) %>%
+    dplyr::group_by(Owner) %>%
+    dplyr::summarise(Species = list(c(unique(SpeciesCode))),
+                     Pops = list(c(unique(PopCode))))
 
   #Find the file path for each of the data owners of interest
   all_dirs <- list.dirs(path = path, full.names = TRUE, recursive = FALSE)
-  all_dirs <- all_dirs[grepl(pattern = paste(pop_species_subset$owner, collapse = "|"), all_dirs)]
+  all_dirs <- all_dirs[grepl(pattern = paste(pop_species_subset$Owner, collapse = "|"), all_dirs)]
   all_dirs <- gsub(pattern = "\\", replacement = "/", x = all_dirs, fixed = TRUE)
 
   #For each data owner, run the pipeline using the populations requested
   #Return R lists rather than generating .csv files
-  R_objects <- purrr::pmap(.l = list(dirs = all_dirs, owner = pop_species_subset$owner,
-                                     pops = pop_species_subset$pops,
-                                     species = pop_species_subset$species),
+  R_objects <- purrr::pmap(.l = list(dirs = all_dirs, owner = pop_species_subset$Owner,
+                                     pops = pop_species_subset$Pops,
+                                     species = pop_species_subset$Species),
                            .f = function(dirs, owner, pops, species){
 
                            eval(parse(text = glue::glue('format_{owner}(db = dirs, pop = pops, species = species,
@@ -215,5 +215,8 @@ run_pipelines <- function(path = choose_directory(),
     invisible(NULL)
 
   }
+
+  # Satisfy RCMD checks
+  PopCode <- SpeciesCode <- Owner <- NULL
 
 }

@@ -15,6 +15,8 @@ create_capture_HAR(db, Brood_data, species_filter, return_errors)
 interest as listed in the
 \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{standard
 protocol}.}
+
+\item{return_errors}{Logical. Return those records with errors in the ring sequence.}
 }
 \value{
 A data frame.

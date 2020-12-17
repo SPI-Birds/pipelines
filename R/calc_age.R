@@ -38,7 +38,7 @@
 #' calc_age(ID = IndvID, Age = Age_obsv, Date = CaptureDate, Year = SampleYear)
 calc_age <- function(data, ID, Age, Date, Year, showpb = TRUE){
 
-  pb <- dplyr::progress_estimated(n = nrow(data))
+  pb <- progress::progress_bar$new(total = nrow(data))
 
   output <- data %>%
     dplyr::arrange({{ID}}, {{Year}}, {{Date}}) %>%

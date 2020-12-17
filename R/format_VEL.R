@@ -59,7 +59,7 @@ format_VEL <- function(db = choose_directory(),
   #Add species filter
   if(is.null(species)){
 
-    species <- Species_codes$Code
+    species <- species_codes$Species
 
   }
 
@@ -121,7 +121,7 @@ format_VEL <- function(db = choose_directory(),
     ## CHANGE COL NAMES TO MATCH STANDARD FORMAT
     dplyr::mutate(PopID = "VEL",
                   BreedingSeason = as.integer(year),
-                  Species = Species_codes[which(Species_codes$SpeciesID == 13480), ]$Code,
+                  Species = species_codes[which(species_codes$SpeciesID == 13480), ]$Species,
                   Plot = plot,
                   LocationID = paste0(toupper(stringr::str_sub(plot, end = 1)), nest),
                   BroodID = paste(BreedingSeason, plot, stringr::str_pad(string = nest, width = 2, pad = "0"),
@@ -201,8 +201,8 @@ format_VEL <- function(db = choose_directory(),
 
   TIT_data <- TIT_data %>%
     dplyr::mutate(BreedingSeason = as.integer(year),
-                  Species = dplyr::case_when(.$species == "blue tit" ~ Species_codes[which(Species_codes$SpeciesID == 14620), ]$Code,
-                                             .$species == "great tit" ~ Species_codes[which(Species_codes$SpeciesID == 14640), ]$Code),
+                  Species = dplyr::case_when(.$species == "blue tit" ~ species_codes[which(species_codes$SpeciesID == 14620), ]$Species,
+                                             .$species == "great tit" ~ species_codes[which(species_codes$SpeciesID == 14640), ]$Species),
                   PopID = "VEL",
                   Plot = plot,
                   LocationID = paste0(toupper(stringr::str_sub(plot, end = 1)), nest_box),
@@ -392,7 +392,7 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
 
   ## Make progress bar. Needs to be twice as long as rows because chicks are
   ## captured at 6 and 13 days.
-  pb <- dplyr::progress_estimated(n = nrow(FICALB_chicks)*2)
+  pb <- progress::progress_bar$new(total = nrow(FICALB_chicks)*2)
 
   FICALB_chicks <- FICALB_chicks %>%
     dplyr::group_by(ChickNr) %>%
@@ -543,8 +543,8 @@ create_capture_VEL_TIT    <- function(TIT_data) {
   ## Assume that an individual was caught at the start of incubation.
   TIT_capture <- TIT_data %>%
     dplyr::filter(!is.na(FemaleID)) %>%
-    dplyr::mutate(Species = dplyr::case_when(.$species == "blue tit" ~ Species_codes[which(Species_codes$SpeciesID == 14620), ]$Code,
-                                             .$species == "great tit" ~ Species_codes[which(Species_codes$SpeciesID == 14640), ]$Code),
+    dplyr::mutate(Species = dplyr::case_when(.$species == "blue tit" ~ species_codes[which(species_codes$SpeciesID == 14620), ]$Species,
+                                             .$species == "great tit" ~ species_codes[which(species_codes$SpeciesID == 14640), ]$Species),
                   ## Make the capture date the date that incubation would start (laying date + clutch size)
                   CaptureDate = LayDate + ClutchSize,
                   IndvID = FemaleID,
@@ -584,7 +584,7 @@ create_capture_VEL_TIT    <- function(TIT_data) {
 
 create_individual_VEL     <- function(Capture_data){
 
-  pb <- dplyr::progress_estimated(n = length(unique(Capture_data$IndvID)) * 2)
+  pb <- progress::progress_bar$new(total = length(unique(Capture_data$IndvID)) * 2)
 
   Indvidual_data <- Capture_data %>%
     dplyr::group_by(IndvID) %>%
@@ -646,13 +646,15 @@ create_individual_VEL     <- function(Capture_data){
 #' Create location data table for Velky Kosir.
 #'
 #' Create location data table in standard format for all nest boxes.
+#'
 #' @param Brood_data Data frame. Output of \code{\link{create_brood_VEL}}
 #' @param TIT_data Data frame. Data frame. Tit data from Velky Kosir. This is
 #'   needed to include habitat type information.
+#' @param db Location of database file.
 #'
 #' @return A data frame.
 
-create_location_VEL       <- function(db, Brood_data, TIT_data){
+create_location_VEL <- function(db, Brood_data, TIT_data){
 
   location_data_excel <- readxl::read_excel(paste0(db, "/VEL_PrimaryData_locations.xls"),
                                       col_types = c("text")) %>%

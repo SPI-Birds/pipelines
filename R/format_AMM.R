@@ -54,7 +54,7 @@ format_AMM <- function(db = choose_directory(),
   #If no species are specified, all species are included
   if(is.null(species)){
 
-    species_filter <- Species_codes$Code
+    species_filter <- species_codes$Species
 
   } else {
 
@@ -158,7 +158,8 @@ format_AMM <- function(db = choose_directory(),
 #' Create brood data table for Ammersee, Germany.
 #'
 #' Create brood data table in standard format for data from Ammersee, Germany.
-#' @param data Data frame. Primary data from Ammersee.
+#'
+#' @param connection Connection the SQL database.
 #'
 #' @return A data frame.
 
@@ -189,7 +190,7 @@ create_brood_AMM   <- function(connection) {
     #Remove -99 and replace with NA
     dplyr::mutate_all(~dplyr::na_if(., -99)) %>%
     #For day data, remove any cases >= 500. These equate to NA
-    dplyr::mutate_at(vars(HatchDay, FledgeDay), ~{
+    dplyr::mutate_at(vars(.data$HatchDay, .data$FledgeDay), ~{
 
       dplyr::case_when(. >= 500 ~ NA_integer_,
                        TRUE ~ .)
@@ -217,10 +218,10 @@ create_brood_AMM   <- function(connection) {
                   NumberFledged_observed = .data$NumberFledged,
                   NumberFledged_minimum = .data$NumberFledged,
                   NumberFledged_maximum = .data$NumberFledged + .data$FledgedError,
-                  Species = dplyr::case_when(.data$Species == 1L ~ !!Species_codes$Code[Species_codes$SpeciesID == "14640"],
-                                             .data$Species == 2L ~ !!Species_codes$Code[Species_codes$SpeciesID == "14620"],
-                                             .data$Species == 3L ~ !!Species_codes$Code[Species_codes$SpeciesID == "14610"],
-                                             .data$Species == 4L ~ !!Species_codes$Code[Species_codes$SpeciesID == "14790"]),
+                  Species = dplyr::case_when(.data$Species == 1L ~ !!species_codes$Species[species_codes$SpeciesID == "14640"],
+                                             .data$Species == 2L ~ !!species_codes$Species[species_codes$SpeciesID == "14620"],
+                                             .data$Species == 3L ~ !!species_codes$Species[species_codes$SpeciesID == "14610"],
+                                             .data$Species == 4L ~ !!species_codes$Species[species_codes$SpeciesID == "14790"]),
                   AvgEggMass = NA_real_,
                   NumberEggs = NA_integer_,
                   AvgChickMass = NA_integer_,
@@ -265,7 +266,9 @@ create_brood_AMM   <- function(connection) {
 #' Create capture data table for Ammersee, Germany
 #'
 #' Create capture data table in standard format for data from Ammersee, Germany.
-#' @param data Data frame. Primary data from Ammersee.
+#'
+#' @param Brood_data Data frame. Output from \code{\link{create_brood_AMM}}.
+#' @param connection Connection the SQL database.
 #'
 #' @return A data frame.
 
@@ -282,10 +285,10 @@ create_capture_AMM <- function(Brood_data, connection) {
   Adult_capture <- Catches_table %>%
     dplyr::left_join(Nestbox_capture, by = "NestBox") %>%
     dplyr::collect() %>%
-    dplyr::mutate(Species = dplyr::case_when(.data$CatchSpecies == 1L ~ !!Species_codes$Code[Species_codes$SpeciesID == "14640"],
-                                   .data$CatchSpecies == 2L ~ !!Species_codes$Code[Species_codes$SpeciesID == "14620"],
-                                   .data$CatchSpecies == 3L ~ !!Species_codes$Code[Species_codes$SpeciesID == "14610"],
-                                   .data$CatchSpecies == 4L ~ !!Species_codes$Code[Species_codes$SpeciesID == "14790"]),
+    dplyr::mutate(Species = dplyr::case_when(.data$CatchSpecies == 1L ~ !!species_codes$Species[species_codes$SpeciesID == "14640"],
+                                   .data$CatchSpecies == 2L ~ !!species_codes$Species[species_codes$SpeciesID == "14620"],
+                                   .data$CatchSpecies == 3L ~ !!species_codes$Species[species_codes$SpeciesID == "14610"],
+                                   .data$CatchSpecies == 4L ~ !!species_codes$Species[species_codes$SpeciesID == "14790"]),
                   CaptureTime = dplyr::na_if(paste(lubridate::hour(.data$CatchTimeField),
                                       lubridate::minute(.data$CatchTimeField), sep = ":"), "NA:NA"),
                   IndvID = as.character(.data$BirdID),
@@ -335,7 +338,7 @@ create_capture_AMM <- function(Brood_data, connection) {
                   .data$BroodID)
 
   Chick_capture <- Chick_catch_tables %>%
-    dplyr::filter(Egg %in% c(-99L, 0L, 2L)) %>%
+    dplyr::filter(.data$Egg %in% c(-99L, 0L, 2L)) %>%
     dplyr::left_join(Nestbox_capture, by = "NestBox") %>%
     dplyr::left_join(Nestbox_release, by = c("SwapToNestBox" = "NestBox")) %>%
     dplyr::mutate(EndMarch = as.Date(paste(.data$ChickYear, "03", "31", sep = "-")),
@@ -345,7 +348,7 @@ create_capture_AMM <- function(Brood_data, connection) {
     dplyr::mutate(HatchDay = dplyr::case_when((.data$HatchDay >= 500 | .data$HatchDay < 0) ~ NA_integer_,
                                               TRUE ~ .data$HatchDay),
                   # All chicks are GT
-                  Species = Species_codes$Code[Species_codes$SpeciesID == 14640],
+                  Species = species_codes$Species[species_codes$SpeciesID == 14640],
                   Sex_observed = NA_character_) %>%
     dplyr::select(.data$Species, .data$Sex_observed, .data$BirdID, .data$ChickYear, .data$EndMarch, .data$NestBox, .data$BroodID,
                   .data$CapturePlot, .data$ReleasePlot,
@@ -406,6 +409,7 @@ create_capture_AMM <- function(Brood_data, connection) {
 #'
 #' @param Capture_data Data frame. Output from \code{\link{create_capture_AMM}}.
 #' @param Brood_data Data frame. Output from \code{\link{create_brood_AMM}}.
+#' @param connection Connection the SQL database.
 #'
 #' @return A data frame.
 
@@ -478,22 +482,24 @@ create_individual_AMM <- function(Capture_data, Brood_data, connection) {
 #' Create location data table for Ammersee, Germany.
 #'
 #' Create location data table in standard format for data from Ammersee, Germany.
-#' @param data Data frame. Primary data from Ammersee.
+#'
+#' @param Capture_data Data frame. Output from \code{\link{create_capture_AMM}}.
+#' @param connection Connection the SQL database.
 #'
 #' @return A data frame.
 
 create_location_AMM <- function(Capture_data, connection) {
 
   Habitat_data <- dplyr::tbl(connection, "HabitatDescription") %>%
-    dplyr::select(NestBox, Beech:OtherTree) %>%
+    dplyr::select(.data$NestBox, .data$Beech:.data$OtherTree) %>%
     dplyr::collect() %>%
-    dplyr::group_by(NestBox) %>%
+    dplyr::group_by(.data$NestBox) %>%
     dplyr::summarise(across(everything(), ~sum(.x, na.rm = TRUE)), .groups = "keep") %>%
-    dplyr::summarise(DEC = sum(c(Beech, Larch, Maple, Birch, Oak, Willow, Poplar, Alder, AshTree)),
-                     EVE = sum(c(Spruce, Pine))) %>%
-    dplyr::mutate(perc_dec = DEC/(DEC + EVE),
-                  dominant_sp = dplyr::case_when(perc_dec >= 0.66 ~ "DEC",
-                                                 perc_dec < 0.33 ~ "EVE",
+    dplyr::summarise(DEC = sum(c(.data$Beech, .data$Larch, .data$Maple, .data$Birch, .data$Oak, .data$Willow, .data$Poplar, .data$Alder, .data$AshTree)),
+                     EVE = sum(c(.data$Spruce, .data$Pine))) %>%
+    dplyr::mutate(perc_dec = .data$DEC/(.data$DEC + .data$EVE),
+                  dominant_sp = dplyr::case_when(.data$perc_dec >= 0.66 ~ "DEC",
+                                                 .data$perc_dec < 0.33 ~ "EVE",
                                                  TRUE ~ "MIX"))
 
   #The vast majority of nestboxes (90%) of nestboxes are surrounded by deciduous or mixed stands. Therefore,
@@ -513,7 +519,7 @@ create_location_AMM <- function(Capture_data, connection) {
                   Longitude = as.numeric(.data$CoordinateLongitude2013), ## named vectors, not regular numeric vectors
                   LocationType = "NB",
                   PopID = "AMM",
-                  StartSeason = start_year,
+                  StartSeason = .data$start_year,
                   EndSeason = dplyr::case_when(nchar(.data$NestboxID) == 4 & stringr::str_sub(.data$NestboxID, 1, 2) == "16" ~ 2016L,
                                                TRUE ~ 2019L),
                   HabitatType = "DEC") %>%

@@ -21,5 +21,5 @@ A list of:
 Check that the brood identifiers (BroodID) are unique within populations. Records with brood identifiers that are not unique within populations will result in an error.
 }
 \details{
-Check ID: B9.
+Check ID: B8.
 }

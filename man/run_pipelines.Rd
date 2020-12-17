@@ -17,7 +17,7 @@ run_pipelines(
 \arguments{
 \item{path}{File path. Location of all folders for data owners. Note, the
 folders for each data owner must include the unique code of the data owner
-as seen in pop_names.}
+as seen in pop_codes.}
 
 \item{PopID}{The three-letter code of populations to format as listed in the
 \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{standard

@@ -72,7 +72,7 @@ format_UAN <- function(db = choose_directory(),
   #Assign species for filtering
   if(is.null(species)){
 
-    species <- Species_codes$Code
+    species <- species_codes$Species
 
   }
 
@@ -307,14 +307,14 @@ create_brood_UAN <- function(data, CAPTURE_info, species_filter){
     dplyr::select(-TarsusAlt, -TarsusStd)
 
   #Create a table with brood information.
-  clutchtype <- dplyr::progress_estimated(n = nrow(data))
+  clutchtype <- progress::progress_bar$new(total = nrow(data))
 
   Brood_data <- data %>%
     #Convert columns to expected values
     dplyr::mutate(PopID = dplyr::case_when(.$PopID == "FR" ~ "BOS",
                                            .$PopID == "PB" ~ "PEE"),
-                  Species = dplyr::case_when(.$Species == "pm" ~ Species_codes[which(Species_codes$SpeciesID == 14640), ]$Code,
-                                             .$Species == "pc" ~ Species_codes[which(Species_codes$SpeciesID == 14620), ]$Code),
+                  Species = dplyr::case_when(.$Species == "pm" ~ species_codes[which(species_codes$SpeciesID == 14640), ]$Species,
+                                             .$Species == "pc" ~ species_codes[which(species_codes$SpeciesID == 14620), ]$Species),
                   ClutchType_observed = dplyr::case_when(.$ClutchType_observed %in% c(1, 9) ~ "first",
                                                          .$ClutchType_observed %in% c(2, 6, 7) ~ "second",
                                                          .$ClutchType_observed %in% c(3, 4, 5, 8) ~ "replacement"),
@@ -383,14 +383,14 @@ create_capture_UAN <- function(data, species_filter){
   #like mass, tarsus etc.). This will include first capture as nestling (for
   #residents) This means there will be multiple records for a single individual.
 
-  pb <- dplyr::progress_estimated(n = nrow(data) * 2)
+  pb <- progress::progress_bar$new(total = nrow(data) * 2)
 
   Capture_data <- data %>%
     #Adjust species and PopID
     dplyr::mutate(CapturePopID = dplyr::case_when(.$CapturePopID == "FR" ~ "BOS",
                                                   .$CapturePopID == "PB" ~ "PEE"),
-                  Species = dplyr::case_when(.$Species == "pm" ~ Species_codes[which(Species_codes$SpeciesID == 14640), ]$Code,
-                                             .$Species == "pc" ~ Species_codes[which(Species_codes$SpeciesID == 14620), ]$Code)) %>%
+                  Species = dplyr::case_when(.$Species == "pm" ~ species_codes[which(species_codes$SpeciesID == 14640), ]$Species,
+                                             .$Species == "pc" ~ species_codes[which(species_codes$SpeciesID == 14620), ]$Species)) %>%
     #Filter by species
     dplyr::filter(Species %in% species_filter) %>%
     #Make tarsus length into standard method (Svensson Alt)
@@ -539,8 +539,8 @@ create_individual_UAN <- function(data, CAPTURE_info, species_filter){
     #Add and filter by species
     dplyr::mutate(PopID = dplyr::case_when(.$PopID == "FR" ~ "BOS",
                                            .$PopID == "PB" ~ "PEE"),
-                  Species = dplyr::case_when(.$Species == "pm" ~ Species_codes[which(Species_codes$SpeciesID == 14640), ]$Code,
-                                             .$Species == "pc" ~ Species_codes[which(Species_codes$SpeciesID == 14620), ]$Code),
+                  Species = dplyr::case_when(.$Species == "pm" ~ species_codes[which(species_codes$SpeciesID == 14640), ]$Species,
+                                             .$Species == "pc" ~ species_codes[which(species_codes$SpeciesID == 14620), ]$Species),
                   Sex = dplyr::case_when(.$Sex %in% c(1, 3) ~ "M",
                                          .$Sex %in% c(2, 4) ~ "F")) %>%
     dplyr::filter(!is.na(Species) & Species %in% species_filter) %>%

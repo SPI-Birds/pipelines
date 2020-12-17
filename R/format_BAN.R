@@ -67,7 +67,7 @@ format_BAN <- function(db = choose_directory(),
   #If no species are specified, all species are included
   if(is.null(species)){
 
-    species_filter <- Species_codes$Code
+    species_filter <- species_codes$Species
 
   } else {
 
@@ -91,9 +91,9 @@ format_BAN <- function(db = choose_directory(),
                                                #Create a unique LocationID using plot and box number
                                                LocationID = paste(Plot, stringr::str_pad(string = box_number, width = 3, pad = "0"), sep = "_"),
                                                #Ignore uncertainty in species (e.g. GRETI?)
-                                               Species = dplyr::case_when(grepl(pattern = "GRETI", x = .$species) ~ Species_codes[Species_codes$SpeciesID == 14640, ]$Code,
-                                                                          grepl(pattern = "BLUTI", x = .$species) ~ Species_codes[Species_codes$SpeciesID == 14620, ]$Code,
-                                                                          grepl(pattern = "COATI", x = .$species) ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code),
+                                               Species = dplyr::case_when(grepl(pattern = "GRETI", x = .$species) ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
+                                                                          grepl(pattern = "BLUTI", x = .$species) ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
+                                                                          grepl(pattern = "COATI", x = .$species) ~ species_codes[species_codes$SpeciesID == 14610, ]$Species),
                                                #Ignore uncertainty in clutch type (e.g. 2(MAYBE))
                                                ClutchType_observed = dplyr::case_when(grepl(pattern = 1, x = .$nest_attempt) ~ "first",
                                                                                       grepl(pattern = 2, x = .$nest_attempt) ~ "second"),

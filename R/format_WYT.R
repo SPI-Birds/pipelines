@@ -70,7 +70,7 @@ format_WYT <- function(db = choose_directory(),
   #Determine species codes for filtering
   if(is.null(species)){
 
-    species <- Species_codes$Code
+    species <- species_codes$Species
 
   }
 
@@ -186,17 +186,17 @@ create_brood_WYT <- function(db, species_filter){
                               sep = ",", stringsAsFactors = FALSE) %>%
     janitor::clean_names()
 
-  pb <- dplyr::progress_estimated(n = nrow(Brood_data_raw)*3)
+  pb <- progress::progress_bar$new(total = nrow(Brood_data_raw)*3)
 
   Brood_data <- Brood_data_raw %>%
     #Rename columns to meet our standard format
     dplyr::mutate(BreedingSeason = year, LocationID = toupper(nestbox),
                   PopID = "WYT", Plot = toupper(section),
-                  Species = dplyr::case_when(.$species == "b" ~ Species_codes[Species_codes$SpeciesID == 14620, ]$Code,
-                                             .$species == "g" ~ Species_codes[Species_codes$SpeciesID == 14640, ]$Code,
-                                             .$species == "c" ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code,
-                                             .$species == "n" ~ Species_codes[Species_codes$SpeciesID == 14790, ]$Code,
-                                             .$species == "m" ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code)) %>%
+                  Species = dplyr::case_when(.$species == "b" ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
+                                             .$species == "g" ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
+                                             .$species == "c" ~ species_codes[species_codes$SpeciesID == 14610, ]$Species,
+                                             .$species == "n" ~ species_codes[species_codes$SpeciesID == 14790, ]$Species,
+                                             .$species == "m" ~ species_codes[species_codes$SpeciesID == 14400, ]$Species)) %>%
     dplyr::filter(Species %in% species_filter) %>%
     dplyr::mutate(LayDate = as.Date(lay_date, format = "%d/%m/%Y"),
                   HatchDate = as.Date(purrr::pmap_chr(.l = list(hatch_date, legacy_april_hatch_date),
@@ -215,8 +215,8 @@ create_brood_WYT <- function(db, species_filter){
                                                 }
 
                                               }), format = "%d/%m/%Y"),
-                  NumberEggs = num_eggs_weighed,
-                  AvgEggMass = purrr::pmap_dbl(.l = list(total_egg_weight, num_eggs_weighed, legacy_average_egg_weight),
+                  NumberEggs = .data$num_eggs_weighed,
+                  AvgEggMass = purrr::pmap_dbl(.l = list(.data$total_egg_weight, .data$num_eggs_weighed, .data$legacy_average_egg_weight),
                                                .f = ~{
 
                                                  pb$print()$tick()
@@ -246,7 +246,7 @@ create_brood_WYT <- function(db, species_filter){
                                                   .$experiment_codes == "11" ~ "SURVIVAL",
                                                   .$experiment_codes == "12" ~ "SURVIVAL",
                                                   .$experiment_codes == "13" ~ "SURVIVAL"),
-                  BroodID = toupper(pnum)) %>%
+                  BroodID = toupper(.data$pnum)) %>%
     dplyr::arrange(BreedingSeason, FemaleID, LayDate) %>%
     dplyr::mutate(ClutchType_observed = NA,
                   ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE),
@@ -291,26 +291,26 @@ create_capture_WYT <- function(db, Brood_data, species_filter){
                                           na = c("unringed", "unrrunt", "UNRRUNT")) %>%
     janitor::clean_names()
 
-  chick_old_pb <- dplyr::progress_estimated(n = nrow(Chick_captures_old))
+  chick_old_pb <- progress::progress_bar$new(total = nrow(Chick_captures_old))
 
   Chick_captures_old <- Chick_captures_old %>%
-    dplyr::mutate(Species = dplyr::case_when(toupper(species_code) == "GRETI" ~ Species_codes[Species_codes$SpeciesID == 14640, ]$Code,
-                                             toupper(species_code) == "BLUTI" ~ Species_codes[Species_codes$SpeciesID == 14620, ]$Code,
-                                             toupper(species_code) == "COATI" ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code,
-                                             toupper(species_code) == "MARTI" ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code)) %>%
+    dplyr::mutate(Species = dplyr::case_when(toupper(species_code) == "GRETI" ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
+                                             toupper(species_code) == "BLUTI" ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
+                                             toupper(species_code) == "COATI" ~ species_codes[species_codes$SpeciesID == 14610, ]$Species,
+                                             toupper(species_code) == "MARTI" ~ species_codes[species_codes$SpeciesID == 14400, ]$Species)) %>%
     dplyr::filter(Species %in% species_filter) %>%
-    dplyr::mutate(CaptureDate = janitor::excel_numeric_to_date(as.numeric(date_time)), CaptureTime = NA_character_) %>%
+    dplyr::mutate(CaptureDate = janitor::excel_numeric_to_date(as.numeric(.data$date_time)), CaptureTime = NA_character_) %>%
     dplyr::rowwise() %>%
-    dplyr::mutate(BreedingSeason = ifelse(is.na(CaptureDate), as.numeric(stringr::str_sub(pnum, start = 1, end = 4)),
+    dplyr::mutate(BreedingSeason = ifelse(is.na(CaptureDate), as.numeric(stringr::str_sub(.data$pnum, start = 1, end = 4)),
                                           lubridate::year(CaptureDate))) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(IndvID = toupper(ring_number), CapturePopID = "WYT",
-                  CapturePlot = stringr::str_remove_all(string = toupper(pnum), pattern = "\\d"),
-                  LocationID = stringr::str_sub(toupper(pnum), start = 6),
+                  CapturePlot = stringr::str_remove_all(string = toupper(.data$pnum), pattern = "\\d"),
+                  LocationID = stringr::str_sub(toupper(.data$pnum), start = 6),
                   #Release is just NA for now because we need to find the location with cross-fostering
                   ReleasePopID = "WYT", ReleasePlot = NA_character_,
                   ObserverID = NA_character_,
-                  Mass = as.numeric(weight), WingLength = as.numeric(wing_length),
+                  Mass = as.numeric(.data$weight), WingLength = as.numeric(.data$wing_length),
                   Age_observed = dplyr::case_when(age %in% c("3", "3J") ~ 3L,
                                                   age == "0" ~ NA_integer_,
                                                   age == "1" ~ 1L,
@@ -387,30 +387,30 @@ create_capture_WYT <- function(db, Brood_data, species_filter){
                                           na = c("unringed", "unrrunt", "UNRRUNT")) %>%
     janitor::clean_names()
 
-  chick_new_pb <- dplyr::progress_estimated(n = nrow(Chick_captures_new))
+  chick_new_pb <- progress::progress_bar$new(total = nrow(Chick_captures_new))
 
   Chick_captures_new <- Chick_captures_new %>%
-    dplyr::mutate(Species = dplyr::case_when(toupper(bto_species_code) == "GRETI" ~ Species_codes[Species_codes$SpeciesID == 14640, ]$Code,
-                                             toupper(bto_species_code) == "BLUTI" ~ Species_codes[Species_codes$SpeciesID == 14620, ]$Code,
-                                             toupper(bto_species_code) == "COATI" ~ Species_codes[Species_codes$SpeciesID == 14610, ]$Code,
-                                             toupper(bto_species_code) == "MARTI" ~ Species_codes[Species_codes$SpeciesID == 14400, ]$Code,
-                                             toupper(bto_species_code) == "NUTHA" ~ Species_codes[Species_codes$SpeciesID == 14790, ]$Code),
+    dplyr::mutate(Species = dplyr::case_when(toupper(bto_species_code) == "GRETI" ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
+                                             toupper(bto_species_code) == "BLUTI" ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
+                                             toupper(bto_species_code) == "COATI" ~ species_codes[species_codes$SpeciesID == 14610, ]$Species,
+                                             toupper(bto_species_code) == "MARTI" ~ species_codes[species_codes$SpeciesID == 14400, ]$Species,
+                                             toupper(bto_species_code) == "NUTHA" ~ species_codes[species_codes$SpeciesID == 14790, ]$Species),
                   CaptureDate = janitor::excel_numeric_to_date(as.numeric(date_time) %/% 1),
                   CaptureTime = paste(stringr::str_pad(string = ((as.numeric(date_time) %% 1) * 24) %/% 1,
                                                        width = 2, pad = "0"),
-                                      stringr::str_pad(string = round((((as.numeric(date_time) %% 1) * 24) %% 1) * 60),
+                                      stringr::str_pad(string = round((((as.numeric(.data$date_time) %% 1) * 24) %% 1) * 60),
                                                        width = 2, pad = "0"), sep = ":")) %>%
     dplyr::rowwise() %>%
-    dplyr::mutate(BreedingSeason = ifelse(is.na(CaptureDate), as.numeric(stringr::str_sub(pnum, start = 1, end = 4)),
+    dplyr::mutate(BreedingSeason = ifelse(is.na(CaptureDate), as.numeric(stringr::str_sub(.data$pnum, start = 1, end = 4)),
                                           lubridate::year(CaptureDate))) %>%
     dplyr::ungroup() %>%
-    dplyr::mutate(IndvID = toupper(bto_ring), CapturePopID = "WYT",
-                  CapturePlot = stringr::str_remove_all(string = toupper(pnum), pattern = "\\d"),
-                  LocationID = stringr::str_sub(toupper(pnum), start = 6),
+    dplyr::mutate(IndvID = toupper(.data$bto_ring), CapturePopID = "WYT",
+                  CapturePlot = stringr::str_remove_all(string = toupper(.data$pnum), pattern = "\\d"),
+                  LocationID = stringr::str_sub(toupper(.data$pnum), start = 6),
                   #Release is just NA for now because we need to find the location with cross-fostering
                   ReleasePopID = "WYT", ReleasePlot = NA_character_,
                   ObserverID = NA_character_,
-                  Mass = as.numeric(weight), WingLength = as.numeric(wing_length),
+                  Mass = as.numeric(.data$weight), WingLength = as.numeric(.data$wing_length),
                   #Currently just treat ages as is (assume they are EURING codes)
                   Age_observed = as.integer(age)) %>%
     #Add tarsus. We are assuming that when tarsus method is "S" this is Svensson's Alternative and doesn't need conversion
@@ -494,7 +494,7 @@ create_capture_WYT <- function(db, Brood_data, species_filter){
 
 create_individual_WYT <- function(Capture_data){
 
-  indv_pb <- dplyr::progress_estimated(n = length(unique(na.omit(Capture_data$IndvID))) * 4 + 1)
+  indv_pb <- progress::progress_bar$new(total = length(unique(na.omit(Capture_data$IndvID))) * 4 + 1)
 
   #For every individual determine their unchanged individual information
   Individual_data <- Capture_data %>%

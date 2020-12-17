@@ -50,11 +50,17 @@ quality_check <- function(R_data,
   Location_data <- R_data$Location_data
 
   # Add temporary empty CaptureID column to allow procedure to approve previously flagged records
-  Capture_data$CaptureID <- NA_character_ ##FIXME remove after CaptureID column has been added in pipelines
+  if(!("CaptureID" %in% colnames(Capture_data))) Capture_data$CaptureID <- NA_character_
+  ##FIXME remove after CaptureID column has been added in ALL pipelines
+
+  # Load approved list
+  message("Loading approved list...")
+  create_approved_list()
 
   # Run checks
+  message("Running quality checks...")
   Brood_checks <- brood_check(Brood_data, Individual_data, check_format)
-  Capture_checks <- capture_check(Capture_data, check_format)
+  Capture_checks <- capture_check(Capture_data, Location_data, Brood_data, check_format)
   Individual_checks <- individual_check(Individual_data, Capture_data, Location_data, check_format)
   Location_checks <- location_check(Location_data, check_format)
 
@@ -84,19 +90,19 @@ quality_check <- function(R_data,
   # Subset approved list items
   Brood_approved_list <- approved_list$Brood_approved_list %>%
     dplyr::filter(PopID %in% unique(R_data$Brood_data$PopID)) %>%
-    dplyr::arrange(PopID, BroodID, CheckID)
+    dplyr::arrange(PopID, BroodID, .data$CheckID)
 
   Capture_approved_list <- approved_list$Capture_approved_list %>%
     dplyr::filter(PopID %in% unique(R_data$Brood_data$PopID)) %>%
-    dplyr::arrange(PopID, CaptureID, CheckID)
+    dplyr::arrange(PopID, CaptureID, .data$CheckID)
 
   Individual_approved_list <- approved_list$Individual_approved_list %>%
     dplyr::filter(PopID %in% unique(R_data$Brood_data$PopID)) %>%
-    dplyr::arrange(PopID, IndvID, CheckID)
+    dplyr::arrange(PopID, IndvID, .data$CheckID)
 
   Location_approved_list <- approved_list$Location_approved_list %>%
     dplyr::filter(PopID %in% unique(R_data$Brood_data$PopID)) %>%
-    dplyr::arrange(PopID, LocationID, CheckID)
+    dplyr::arrange(PopID, LocationID, .data$CheckID)
 
 
   # Check messages
@@ -370,4 +376,7 @@ quality_check <- function(R_data,
                             Capture_data = Capture_data,
                             Individual_data = Individual_data,
                             Location_data = Location_data)))
+
+  # Satisfy RCMD checks
+  approved_list <- CheckID <- NULL
 }

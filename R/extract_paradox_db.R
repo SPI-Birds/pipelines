@@ -24,7 +24,7 @@ extract_paradox_db <- function(path, file_name){
 
   output_file <- py$extract_paradox(path = path_full, file_name = file_name)
 
-  pb <- dplyr::progress_estimated(n = length(output_file))
+  pb <- progress::progress_bar$new(total = length(output_file))
 
   data_frame_output <- purrr::map_dfr(.x = output_file, .f = function(row){
 
