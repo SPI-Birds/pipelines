@@ -19,7 +19,6 @@
 #'
 #' @inherit checks_return return
 #'
-#' @import tidyselect
 #' @export
 
 individual_check <- function(Individual_data, Capture_data, Location_data, check_format=TRUE){
