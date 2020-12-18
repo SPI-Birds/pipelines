@@ -519,7 +519,7 @@ create_location_AMM <- function(Capture_data, connection) {
                   Longitude = as.numeric(.data$CoordinateLongitude2013), ## named vectors, not regular numeric vectors
                   LocationType = "NB",
                   PopID = "AMM",
-                  StartSeason = .data$start_year,
+                  StartSeason = start_year,
                   EndSeason = dplyr::case_when(nchar(.data$NestboxID) == 4 & stringr::str_sub(.data$NestboxID, 1, 2) == "16" ~ 2016L,
                                                TRUE ~ 2019L),
                   HabitatType = "DEC") %>%
