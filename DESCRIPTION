@@ -51,4 +51,6 @@ Suggests:
     knitr,
     rmarkdown,
     testthat
+Enhances:
+    ggplot2
 VignetteBuilder: knitr
