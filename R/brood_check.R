@@ -1274,13 +1274,14 @@ compare_species_parents <- function(Brood_data, Individual_data) {
     dplyr::filter((.data$FemaleSpecies == "PARMAJ" & .data$MaleSpecies == "CYACAE") |
                     (.data$FemaleSpecies == "CYACAE" & .data$MaleSpecies == "PARMAJ") |
                     (.data$FemaleSpecies == "FICALB" & .data$MaleSpecies == "FICHYP") |
-                    (.data$FemaleSpecies == "FICHYP" & .data$MaleSpecis == "FICALB"))
+                    (.data$FemaleSpecies == "FICHYP" & .data$MaleSpecies == "FICALB"))
 
   war <- FALSE
   warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
   if(nrow(common_multi_species) > 0) {
+
     war <- TRUE
 
     # Compare to approved_list
@@ -1291,11 +1292,14 @@ compare_species_parents <- function(Brood_data, Individual_data) {
     # Create quality check report statements
     warning_output <- purrr::pmap(.l = warning_records,
                                   .f = ~{
+
                                     paste0("Record on row ", ..1, " (PopID: ", ..2, "; BroodID: ", ..3, ")",
                                            " has parents of different species",
                                            " (Mother: ", species_codes[species_codes$Species == ..5, "CommonName"],
-                                           ", father: ", species_codes[species_codes$Species == ..7, "CommonName"], ").")
+                                           ", father: ", species_codes[species_codes$Species == ..7, "CommonName"], "), which are known to cross-foster/hybridize.")
+
                                   })
+
   }
 
 
@@ -1305,13 +1309,14 @@ compare_species_parents <- function(Brood_data, Individual_data) {
     dplyr::filter(!((.data$FemaleSpecies == "PARMAJ" & .data$MaleSpecies == "CYACAE") |
                       (.data$FemaleSpecies == "CYACAE" & .data$MaleSpecies == "PARMAJ") |
                       (.data$FemaleSpecies == "FICALB" & .data$MaleSpecies == "FICHYP") |
-                      (.data$FemaleSpecies == "FICHYP" & .data$MaleSpecis == "FICALB")))
+                      (.data$FemaleSpecies == "FICHYP" & .data$MaleSpecies == "FICALB")))
 
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
   if(nrow(uncommon_multi_species) > 0) {
+
     err <- TRUE
 
     # Compare to approved_list
@@ -1322,11 +1327,14 @@ compare_species_parents <- function(Brood_data, Individual_data) {
     # Create quality check report statements
     error_output <- purrr::pmap(.l = error_records,
                                 .f = ~{
+
                                   paste0("Record on row ", ..1, " (PopID: ", ..2, "; BroodID: ", ..3, ")",
                                          " has parents of different species",
                                          " (Mother: ", species_codes[species_codes$Species == ..5, "CommonName"],
-                                         ", father: ", species_codes[species_codes$Species == ..7, "CommonName"], ").")
+                                         ", father: ", species_codes[species_codes$Species == ..7, "CommonName"], "), which do not commonly cross-foster/hybridize.")
+
                                 })
+
   }
 
 
@@ -1357,60 +1365,111 @@ compare_species_parents <- function(Brood_data, Individual_data) {
 compare_species_brood_parents <- function(Brood_data, Individual_data) {
 
   # Find species information of mothers
-  Females <- Brood_data %>%
-    dplyr::filter(!is.na(FemaleID) & !is.na(MaleID)) %>%
-    dplyr::select(Row, PopID, BroodID, FemaleID, BroodSpecies = Species) %>%
+  females <- Brood_data %>%
+    dplyr::filter(!is.na(.data$FemaleID) & !is.na(.data$MaleID)) %>%
+    dplyr::select(.data$Row, .data$PopID, .data$BroodID,
+                  .data$FemaleID, "BroodSpecies" = .data$Species) %>%
     dplyr::left_join(Individual_data[,c("IndvID", "Species")],
                      by=c("FemaleID" = "IndvID")) %>%
-    dplyr::rename(FemaleSpecies = Species)
+    dplyr::rename("FemaleSpecies" = .data$Species)
 
   # Find species information of fathers
-  Males <- Brood_data %>%
-    dplyr::filter(!is.na(FemaleID) & !is.na(MaleID)) %>%
-    dplyr::select(Row, PopID, BroodID, MaleID, BroodSpecies = Species) %>%
+  males <- Brood_data %>%
+    dplyr::filter(!is.na(.data$FemaleID) & !is.na(.data$MaleID)) %>%
+    dplyr::select(.data$Row, .data$PopID, .data$BroodID,
+                  .data$MaleID, "BroodSpecies" = .data$Species) %>%
     dplyr::left_join(Individual_data[,c("IndvID", "Species")],
                      by=c("MaleID" = "IndvID")) %>%
-    dplyr::rename(MaleSpecies = Species)
+    dplyr::rename("MaleSpecies" = .data$Species)
 
-  # No errors
-  err <- FALSE
-  #error_records <- tibble::tibble(Row = NA_character_)
-  error_output <- NULL
+  # Select records where parents are not of the same species as the brood
+  multi_species_broods <- dplyr::left_join(females, males,
+                                           by=c("Row", "PopID", "BroodID", "BroodSpecies")) %>%
+    dplyr::filter(.data$FemaleSpecies != .data$BroodSpecies | .data$MaleSpecies != .data$BroodSpecies)
 
   # Warnings
-  # Select records where parents are not of the same species as the brood
-  Multi_species_broods <- dplyr::left_join(Females, Males,
-                                           by=c("Row", "PopID", "BroodID", "BroodSpecies")) %>%
-    dplyr::filter(FemaleSpecies != BroodSpecies | MaleSpecies != BroodSpecies)
+  # Common cross-fostering and hybrids are considered "warnings"
+  common_multi_species <- multi_species_broods %>%
+    dplyr::filter((.data$FemaleSpecies == "PARMAJ" & .data$BroodSpecies == "CYACAE") |
+                    (.data$MaleSpecies == "PARMAJ" & .data$BroodSpecies == "CYACAE") |
+                    (.data$FemaleSpecies == "CYACAE" & .data$BroodSpecies == "PARMAJ") |
+                    (.data$MaleSpecies == "CYACAE" & .data$BroodSpecies == "PARMAJ") |
+                    (.data$FemaleSpecies == "FICALB" & .data$BroodSpecies == "FICHYP") |
+                    (.data$MaleSpecies == "FICALB" & .data$BroodSpecies == "FICHYP") |
+                    (.data$FemaleSpecies == "FICHYP" & .data$BroodSpecies == "FICALB") |
+                    (.data$MaleSpecies == "FICHYP" & .data$BroodSpecies == "FICALB"))
 
   war <- FALSE
   warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
-  if(nrow(Multi_species_broods) > 0) {
+  if(nrow(common_multi_species) > 0) {
+
     war <- TRUE
 
     # Compare to approved_list
-    warning_records <- Multi_species_broods %>%
+    warning_records <- common_multi_species %>%
       dplyr::mutate(CheckID = "B11") %>%
       dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
     warning_output <- purrr::pmap(.l = warning_records,
                                   .f = ~{
+
                                     paste0("Record on row ", ..1, " (PopID: ", ..2, "; BroodID: ", ..3, ")",
                                            " is recorded as a different species than any of the parents",
                                            " (Mother: ", species_codes[species_codes$Species == ..6, "CommonName"],
-                                           ", father: ", species_codes[species_codes$Species == ..8, "CommonName"], ").")
+                                           ", father: ", species_codes[species_codes$Species == ..8, "CommonName"], "). Species are known to cross-foster/hybridize.")
+
                                   })
+
   }
+
+  # Errors
+  # Uncommon cross-fostering and hybrids are considered "errors"
+  uncommon_multi_species <- multi_species_broods %>%
+    dplyr::filter(!((.data$FemaleSpecies == "PARMAJ" & .data$BroodSpecies == "CYACAE") |
+                      (.data$MaleSpecies == "PARMAJ" & .data$BroodSpecies == "CYACAE") |
+                      (.data$FemaleSpecies == "CYACAE" & .data$BroodSpecies == "PARMAJ") |
+                      (.data$MaleSpecies == "CYACAE" & .data$BroodSpecies == "PARMAJ") |
+                      (.data$FemaleSpecies == "FICALB" & .data$BroodSpecies == "FICHYP") |
+                      (.data$MaleSpecies == "FICALB" & .data$BroodSpecies == "FICHYP") |
+                      (.data$FemaleSpecies == "FICHYP" & .data$BroodSpecies == "FICALB") |
+                      (.data$MaleSpecies == "FICHYP" & .data$BroodSpecies == "FICALB")))
+
+  err <- FALSE
+  error_records <- tibble::tibble(Row = NA_character_)
+  error_output <- NULL
+
+  if(nrow(uncommon_multi_species) > 0) {
+
+    err <- TRUE
+
+    # Compare to approved_list
+    error_records <- uncommon_multi_species %>%
+      dplyr::mutate(CheckID = "B11") %>%
+      dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
+
+    # Create quality check report statements
+    error_output <- purrr::pmap(.l = error_records,
+                                .f = ~{
+
+                                  paste0("Record on row ", ..1, " (PopID: ", ..2, "; BroodID: ", ..3, ")",
+                                         " is recorded as a different species than any of the parents",
+                                         " (Mother: ", species_codes[species_codes$Species == ..6, "CommonName"],
+                                         ", father: ", species_codes[species_codes$Species == ..8, "CommonName"], "). Species do not commonly cross-foster/hybridize.")
+
+                                })
+
+  }
+
 
   check_list <- tibble::tibble(Warning = war,
                                Error = err)
 
   return(list(CheckList = check_list,
               WarningRows = warning_records$Row,
-              ErrorRows = NULL,
+              ErrorRows = error_records$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 
@@ -1435,46 +1494,98 @@ compare_species_brood_parents <- function(Brood_data, Individual_data) {
 
 compare_species_brood_chicks <- function(Brood_data, Individual_data) {
 
-  Individuals <- Individual_data %>%
+  individuals <- Individual_data %>%
     # Do not select individuals without BroodID and conflicted species
     # The latter is evaluated in check I5.
-    dplyr::filter(!is.na(BroodIDLaid) & (Species != "CONFLICTED" | Species != "CCCCCC")) %>%
-    dplyr::select(IndvID, IndvSpecies = Species, BroodIDLaid, PopID)
+    dplyr::filter(!is.na(.data$BroodIDLaid) & (.data$Species != "CONFLICTED" | .data$Species != "CCCCCC")) %>%
+    dplyr::select(.data$IndvID, "IndvSpecies" = .data$Species, .data$BroodIDLaid, .data$PopID)
 
   # Select records where chicks are not of the same species as the brood
-  Multi_species_broods <- Brood_data %>%
-    dplyr::left_join(Individuals, by=c("BroodID" = "BroodIDLaid", "PopID")) %>%
-    dplyr::mutate(SpeciesComp = Species != IndvSpecies) %>%
-    dplyr::group_by(PopID, BroodID, Row) %>%
-    dplyr::summarise(OtherSpeciesChicks = sum(SpeciesComp),
+  multi_species_broods <- Brood_data %>%
+    dplyr::left_join(individuals, by=c("BroodID" = "BroodIDLaid", "PopID")) %>%
+    dplyr::mutate(SpeciesComp = .data$Species != .data$IndvSpecies) %>%
+    dplyr::group_by(.data$PopID, .data$BroodID, .data$Row) %>%
+    dplyr::summarise(OtherSpeciesChicks = sum(.data$SpeciesComp),
                      Chicks = n()) %>%
     dplyr::ungroup() %>%
-    dplyr::filter(OtherSpeciesChicks > 0)
-
-  # No errors
-  err <- FALSE
-  #error_records <- tibble::tibble(Row = NA_character_)
-  error_output <- NULL
+    dplyr::filter(.data$OtherSpeciesChicks > 0)
 
   # Warnings
+  # Common cross-fostering and hybrids are considered "warnings"
+  common_multi_species <- Brood_data %>%
+    dplyr::left_join(individuals, by=c("BroodID" = "BroodIDLaid", "PopID")) %>%
+    dplyr::mutate(SpeciesComp = .data$Species != .data$IndvSpecies) %>%
+    dplyr::filter((.data$Species == "PARMAJ" & .data$IndvSpecies == "CYACAE") |
+                    (.data$Species == "CYACAE" & .data$IndvSpecies == "PARMAJ") |
+                    (.data$Species == "FICHYP" & .data$IndvSpecies == "FICALB") |
+                    (.data$Species == "FICALB" & .data$IndvSpecies == "FICHYP")) %>%
+    dplyr::group_by(.data$PopID, .data$BroodID, .data$Row) %>%
+    dplyr::summarise(OtherSpeciesChicks = sum(.data$SpeciesComp),
+                     Chicks = n(),
+                     .groups = "drop") %>%
+    dplyr::filter(.data$OtherSpeciesChicks > 0)
+
   war <- FALSE
   warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
-  if(nrow(Multi_species_broods) > 0) {
+  if(nrow(common_multi_species) > 0) {
+
     war <- TRUE
 
     # Compare to approved_list
-    warning_records <- Multi_species_broods %>%
+    warning_records <- common_multi_species %>%
       dplyr::mutate(CheckID = "B12") %>%
       dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
     warning_output <- purrr::pmap(.l = warning_records,
                                   .f = ~{
+
                                     paste0("Record on row ", ..3, " (PopID: ", ..1, "; BroodID: ", ..2, ")",
-                                           " is recorded as a different species than ", ..4, " out of ", ..5, " chicks.")
+                                           " is recorded as a different species than ", ..4, " out of ", ..5, " chicks, but species are known to cross-foster/hybridize.")
+
                                   })
+
+  }
+
+  # Errors
+  # Uncommon cross-fostering and hybrids are considered "warnings"
+  uncommon_multi_species <- Brood_data %>%
+    dplyr::left_join(individuals, by=c("BroodID" = "BroodIDLaid", "PopID")) %>%
+    dplyr::mutate(SpeciesComp = .data$Species != .data$IndvSpecies) %>%
+    dplyr::filter(!((.data$Species == "PARMAJ" & .data$IndvSpecies == "CYACAE") |
+                      (.data$Species == "CYACAE" & .data$IndvSpecies == "PARMAJ") |
+                      (.data$Species == "FICHYP" & .data$IndvSpecies == "FICALB") |
+                      (.data$Species == "FICALB" & .data$IndvSpecies == "FICHYP"))) %>%
+    dplyr::group_by(.data$PopID, .data$BroodID, .data$Row) %>%
+    dplyr::summarise(OtherSpeciesChicks = sum(.data$SpeciesComp),
+                     Chicks = n(),
+                     .groups = "drop") %>%
+    dplyr::filter(.data$OtherSpeciesChicks > 0)
+
+  err <- FALSE
+  error_records <- tibble::tibble(Row = NA_character_)
+  error_output <- NULL
+
+  if(nrow(uncommon_multi_species) > 0) {
+
+    err <- TRUE
+
+    # Compare to approved_list
+    error_records <- uncommon_multi_species %>%
+      dplyr::mutate(CheckID = "B12") %>%
+      dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
+
+    # Create quality check report statements
+    error_output <- purrr::pmap(.l = error_records,
+                                .f = ~{
+
+                                  paste0("Record on row ", ..3, " (PopID: ", ..1, "; BroodID: ", ..2, ")",
+                                         " is recorded as a different species than ", ..4, " out of ", ..5, " chicks, but species do not commonly cross-foster/hybridize.")
+
+                                })
+
   }
 
   check_list <- tibble::tibble(Warning = war,
@@ -1482,12 +1593,11 @@ compare_species_brood_chicks <- function(Brood_data, Individual_data) {
 
   return(list(CheckList = check_list,
               WarningRows = warning_records$Row,
-              ErrorRows = NULL,
+              ErrorRows = error_records$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 
   # Satisfy RCMD Checks
-  FemaleSpecies <- MaleSpecies <- NULL
   approved_list <- NULL
 
 }
