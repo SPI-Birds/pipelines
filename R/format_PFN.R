@@ -379,7 +379,7 @@ create_capture_EDM <- function(CMR_data, Primary_data, ReRingTable){
 
   ## 2) Subset ringing database to contain only captures relevant to population
   LocationList <- unique(Primary_data$Popn)
-  Capture_data <- subset(Capture_data, .data$PLACE %in% LocationList)
+  Capture_data <- subset(Capture_data, PLACE %in% LocationList)
 
   ## 3) Rename columns that are equivalent (content and format) to columns in the standard format
   Capture_data <- Capture_data %>%
@@ -399,7 +399,7 @@ create_capture_EDM <- function(CMR_data, Primary_data, ReRingTable){
                                              .data$SPEC == "NUTHA" ~ species_codes[species_codes$SpeciesID == 14790, ]$Species,
                                              .data$SPEC == "COATI" ~ species_codes[species_codes$SpeciesID == 14610, ]$Species),
                     CaptureDate = as.Date(.data$DATE, format = "%d/%m/%Y"),
-                    CaptureTime = ifelse(!grepl("00:00", Capture_data$DATE), sub(".* ", "", Capture_data$DATE), NA),
+                    CaptureTime = ifelse(!grepl("00:00", Capture_data$DATE), sub(".* ", "", Capture_data$DATE), NA_character_),
                     ObserverID = dplyr::case_when(!is.na(.data$INIT) ~ .data$INIT,
                                                   is.na(.data$INIT) & !is.na(.data$RINGINIT) ~ .data$RINGINIT),
                     CapturePopID = "EDM",
