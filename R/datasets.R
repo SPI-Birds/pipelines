@@ -24,18 +24,6 @@ species_codes <- utils::read.csv(system.file("extdata", "species_codes.csv", pac
 #'@name pop_codes
 pop_codes <- utils::read.csv(system.file("extdata", "pop_codes.csv", package = "pipelines", mustWork = TRUE))
 
-#'Details for plotting png files of birds
-#'
-#'@format A data frame with 6 rows and 5 variables
-#'\describe{
-#'  \item{species}{Six-letter species code.}
-#'  \item{label}{English common name of species, used to create labels below .png files.}
-#'  \item{scale}{Size of png relative to the size of great tit.}
-#'  \item{base_colour}{Colour used to plot data from this species (based on plumage colour).}
-#'  \item{top_colour}{Secondary colour used to plot data from this species (based on plumage colour).}}
-#'@name bird_png_data
-NULL
-
 #'Spatial data polygon of great tit distribution.
 #'
 #'Distribution of great tits used for plotting all populations.
