@@ -188,9 +188,11 @@ create_brood_CHO <- function(data){
                                           .f = ~ifelse(grepl(pattern = "ring", .x), NA, .x))) %>%
     #Reshape data so that we have a MaleID and FemaleID column
     #Rather than an individual row for each parent capture
-    reshape2::melt(id = c("BroodID", "Sex")) %>%
-    reshape2::dcast(BroodID ~ Sex) %>%
-    dplyr::rename(FemaleID = `F`, MaleID = `M`)
+    tidyr::pivot_longer(cols = c(IndvID)) %>%
+    tidyr::pivot_wider(names_from = Sex, values_from = value) %>%
+    dplyr::rename(FemaleID = `F`, MaleID = `M`) %>%
+    select(-name) %>%
+    arrange(BroodID)
 
   #Determine whether clutches are 2nd clutch
   #Determine if there is mean egg mass data
@@ -227,9 +229,8 @@ create_brood_CHO <- function(data){
     #Melt and cast data so that we return the first value of relevant data for each brood
     #e.g. laying date, clutch size etc.
     #I've checked manually and the first value is always correct in each brood
-    reshape2::melt(id = c("BroodID", "Species", "Year", "Site", "Box", "FemaleID", "MaleID")) %>%
-    reshape2::dcast(BroodID + Species + Year + Site + Box + FemaleID + MaleID ~ ...,
-                    fun.aggregate = first) %>%
+    group_by(BroodID, Species, Year, Site, Box, FemaleID, MaleID) %>%
+    summarise(across(.cols = everything(), .fns = first), .groups = "drop") %>%
     #Add in population/plot info
     #Convert LayDate and HatchDate to date objects
     dplyr::mutate(FledgeDate = as.Date(NA),
