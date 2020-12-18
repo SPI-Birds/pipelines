@@ -4,12 +4,11 @@
 #'
 #' @return A pathname.
 #' @export
-#'
 
-choose_directory <- function(caption = 'Select data directory') {
+choose_directory <- function() {
   if (exists('utils::choose.dir')) {
-    choose.dir(caption = caption)
+    utils::choose.dir()
   } else {
-    tk_choose.dir(caption = caption)
+    tcltk::tk_choose.dir()
   }
 }
