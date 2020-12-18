@@ -86,8 +86,8 @@ check_format_location <- function(Location_data){
 
   ## Mismatches between Location data and standard protocol
   ## Column format "logical" refers to unmeasured/undetermined variables (NA)
-  Location_data_mismatch <- dplyr::left_join(Location_data_standard, Location_data_col, by="Variable") %>%
-    filter(Format != "logical" & Format_standard != Format)
+  Location_data_mismatch <- dplyr::left_join(Location_data_standard, Location_data_col, by = "Variable") %>%
+    filter(.data$Format != "logical" & .data$Format_standard != .data$Format)
 
   # Errors
   err <- FALSE
