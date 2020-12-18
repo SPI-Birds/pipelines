@@ -1,9 +1,9 @@
 # #Check for existing data file in extdata
 # #Only save this here for efficiency when testing quality check
 # #Do not save to github repo as it contains primary data
-if (system.file("extdata", "test_data.RDS", package = "pipelines") != "") {
+if (file.exists(here::here("inst/extdata/test_data.RDS"))) {
 
-  pipeline_output <- readRDS(system.file("extdata", "test_data.RDS", package = "pipelines"))
+  pipeline_output <- readRDS(here::here("inst/extdata/test_data.RDS"))
 
 } else {
 
