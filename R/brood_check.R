@@ -14,8 +14,8 @@
 #' \item \strong{B8}: Check if the IDs of broods are unique using \code{\link{check_unique_BroodID}}.
 #' \item \strong{B9}: Check if the order of clutch types for multiple breeding attempts per female per season is correct using \code{\link{check_clutch_type_order}}.
 #' \item \strong{B10}: Check if parents of a brood are the same species using \code{\link{compare_species_parents}}.
-#' \item \strong{B11}: Check if the brood and the parents of that brood are recorded as the same species using \code{\link{compare_brood_parents_species}}.
-#' \item \strong{B12}: Check if the brood and the chicks in that brood are recorded as the same species using \code{\link{compare_brood_chicks_species}}.
+#' \item \strong{B11}: Check if the brood and the parents of that brood are recorded as the same species using \code{\link{compare_species_brood_parents}}.
+#' \item \strong{B12}: Check if the brood and the chicks in that brood are recorded as the same species using \code{\link{compare_species_brood_chicks}}.
 #' }
 #'
 #' @inheritParams checks_brood_params
