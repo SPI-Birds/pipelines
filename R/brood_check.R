@@ -1235,7 +1235,7 @@ check_clutch_type_order <- function(Brood_data){
 
 #' Compare species of parents
 #'
-#' Check that the parents of broods are of the same species. Broods with parents of different species are flagged as 'warning' because multi-species broods are known to exist.
+#' Check that the parents of broods are of the same species. Common, biologically possible multi-species broods are flagged as ‘warning’. Other combinations of species are flagged as ‘potential error’.
 #'
 #' Check ID: B10.
 #'
@@ -1249,40 +1249,42 @@ check_clutch_type_order <- function(Brood_data){
 compare_species_parents <- function(Brood_data, Individual_data) {
 
   # Find species information of mothers
-  Females <- Brood_data %>%
-    dplyr::filter(!is.na(FemaleID) & !is.na(MaleID)) %>%
-    dplyr::select(Row, PopID, BroodID, FemaleID) %>%
+  females <- Brood_data %>%
+    dplyr::filter(!is.na(.data$FemaleID) & !is.na(.data$MaleID)) %>%
+    dplyr::select(.data$Row, .data$PopID, .data$BroodID, .data$FemaleID) %>%
     dplyr::left_join(Individual_data[,c("IndvID", "Species")], by=c("FemaleID" = "IndvID")) %>%
     dplyr::rename(FemaleSpecies = Species)
 
   # Find species information of fathers
-  Males <- Brood_data %>%
-    dplyr::filter(!is.na(FemaleID) & !is.na(MaleID)) %>%
-    dplyr::select(Row, PopID, BroodID, MaleID) %>%
+  males <- Brood_data %>%
+    dplyr::filter(!is.na(.data$FemaleID) & !is.na(.data$MaleID)) %>%
+    dplyr::select(.data$Row, .data$PopID, .data$BroodID, .data$MaleID) %>%
     dplyr::left_join(Individual_data[,c("IndvID", "Species")],
                      by=c("MaleID" = "IndvID")) %>%
-    dplyr::rename(MaleSpecies = Species)
+    dplyr::rename(MaleSpecies = .data$Species)
 
-  # No errors
-  err <- FALSE
-  #error_records <- tibble::tibble(Row = NA_character_)
-  error_output <- NULL
+  # Select records where parents are different species
+  multi_species_broods <- dplyr::left_join(females, males,
+                                           by=c("Row", "PopID", "BroodID")) %>%
+    dplyr::filter(.data$FemaleSpecies != .data$MaleSpecies)
 
   # Warnings
-  # Select records where parents are different species
-  Multi_species_broods <- dplyr::left_join(Females, Males,
-                                           by=c("Row", "PopID", "BroodID")) %>%
-    dplyr::filter(FemaleSpecies != MaleSpecies)
+  # Common cross-fostering and hybrids are considered "warnings"
+  common_multi_species <- multi_species_broods %>%
+    dplyr::filter((.data$FemaleSpecies == "PARMAJ" & .data$MaleSpecies == "CYACAE") |
+                    (.data$FemaleSpecies == "CYACAE" & .data$MaleSpecies == "PARMAJ") |
+                    (.data$FemaleSpecies == "FICALB" & .data$MaleSpecies == "FICHYP") |
+                    (.data$FemaleSpecies == "FICHYP" & .data$MaleSpecis == "FICALB"))
 
   war <- FALSE
   warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
-  if(nrow(Multi_species_broods) > 0) {
+  if(nrow(common_multi_species) > 0) {
     war <- TRUE
 
     # Compare to approved_list
-    warning_records <- Multi_species_broods %>%
+    warning_records <- common_multi_species %>%
       dplyr::mutate(CheckID = "B10") %>%
       dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
 
@@ -1296,18 +1298,46 @@ compare_species_parents <- function(Brood_data, Individual_data) {
                                   })
   }
 
+
+  # Errors
+  # Uncommon multi-species broods (other than above) are considered "errors"
+  uncommon_multi_species <- multi_species_broods %>%
+    dplyr::filter(!((.data$FemaleSpecies == "PARMAJ" & .data$MaleSpecies == "CYACAE") |
+                      (.data$FemaleSpecies == "CYACAE" & .data$MaleSpecies == "PARMAJ") |
+                      (.data$FemaleSpecies == "FICALB" & .data$MaleSpecies == "FICHYP") |
+                      (.data$FemaleSpecies == "FICHYP" & .data$MaleSpecis == "FICALB")))
+
+  err <- FALSE
+  error_records <- tibble::tibble(Row = NA_character_)
+  error_output <- NULL
+
+  if(nrow(uncommon_multi_species) > 0) {
+    err <- TRUE
+
+    # Compare to approved_list
+    error_records <- uncommon_multi_species %>%
+      dplyr::mutate(CheckID = "B10") %>%
+      dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
+
+    # Create quality check report statements
+    error_output <- purrr::pmap(.l = error_records,
+                                .f = ~{
+                                  paste0("Record on row ", ..1, " (PopID: ", ..2, "; BroodID: ", ..3, ")",
+                                         " has parents of different species",
+                                         " (Mother: ", species_codes[species_codes$Species == ..5, "CommonName"],
+                                         ", father: ", species_codes[species_codes$Species == ..7, "CommonName"], ").")
+                                })
+  }
+
+
   check_list <- tibble::tibble(Warning = war,
                                Error = err)
 
   return(list(CheckList = check_list,
               WarningRows = warning_records$Row,
-              ErrorRows = NULL,
+              ErrorRows = error_records$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
-
-  # Satisfy RCMD Checks
-  FemaleSpecies <- MaleSpecies <- NULL
-  approved_list <- NULL
 
 }
 
@@ -1465,7 +1495,7 @@ compare_species_brood_chicks <- function(Brood_data, Individual_data) {
 
 #' Check sex of parents
 #'
-#' Check that the parents listed under FemaleID are female and the parents listed under MaleID are male. Individuals with conflicted sex ("C") are ignored and checked in check I4.
+#' Check that the individuals listed under FemaleID are female and the individuals listed under MaleID are male. Individuals with conflicted sex ("C") are ignored and checked in check I4.
 #'
 #' Check ID: B13.
 #'
@@ -1480,24 +1510,25 @@ check_sex_parents <- function(Brood_data, Individual_data) {
 
   # Select parents from Individual_data
   parents <- Individual_data %>%
-    dplyr::filter(RingAge == "adult") %>%
+    dplyr::filter(.data$RingAge == "adult") %>%
     {if("Sex" %in% colnames(.)) dplyr::select(., IndvID, PopID, Sex)
       else dplyr::select(., IndvID, PopID, Sex = Sex_calculated)}
 
   # Males listed under FemaleID
   males <- Brood_data %>%
     dplyr::left_join(parents, by = c("PopID", "FemaleID" = "IndvID")) %>%
-    dplyr::filter(Sex == "M")
+    dplyr::filter(.data$Sex == "M")
 
   # Females listed under MaleID
   females <- Brood_data %>%
     dplyr::left_join(parents, by = c("PopID", "MaleID" = "IndvID")) %>%
-    dplyr::filter(Sex == "F")
+    dplyr::filter(.data$Sex == "F")
 
   # Combine
   males_females <- dplyr::bind_rows(males, females) %>%
-    dplyr::select(Row, BroodID, PopID, FemaleID, MaleID, Sex) %>%
-    dplyr::arrange(Row)
+    dplyr::select(.data$Row, .data$BroodID, .data$PopID,
+                  .data$FemaleID, .data$MaleID, .data$Sex) %>%
+    dplyr::arrange(.data$Row)
 
   # Errors
   err <- FALSE
