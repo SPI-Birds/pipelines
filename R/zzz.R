@@ -295,4 +295,10 @@ utils::globalVariables(c(".", "AvgChickTarsus", "AvgChickMass", "AvgTarsus", "Po
                          "physiological_manipulation", "rearing_nest_id",
                          "ring_number", "sirka_delka_hddd_mm_mmm", "social_female_bird_id",
                          "social_male_bird_id", "status", "tarsus_length_mm", "time_capture",
-                         "unique_nest_id", "wing_lengh_mm", "x1st_egg_lay_date"))
+                         "unique_nest_id", "wing_lengh_mm", "x1st_egg_lay_date",
+                         "M", "fit", "x", "lower", "upper", "Warning_max", "N",
+                         "CTcal", "Sex_calculated", "Sex_genetic", "Warning_max",
+                         "Stage", "Logis", "BroodSize_observed", "NumberFledged_observed",
+                         "ClutchSize_observed", "HatchDate_observed", "FledgeDate_observed",
+                         "LayDate_observed", "IndvSpecies", "SpeciesComp",
+                         "OtherSpeciesChicks", "date_time"))
