@@ -283,7 +283,8 @@ check_values_capture <- function(Capture_data, var) {
                        Warning_max = quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE),
                        Error_min = 0,
                        Error_max = 4 * Warning_max,
-                       n = n()) %>%
+                       n = n(),
+                       Logis = FALSE) %>%
       dplyr::rename(PopID = CapturePopID)
 
     # Print message for population-species combinations with too low number of observations
