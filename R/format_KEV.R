@@ -563,7 +563,7 @@ create_capture_KEV <- function(db, Brood_data, species_filter, return_errors){
     #map over each row
     purrr::map_dfr(function(current_row){
 
-      ring_pb$print()$tick()
+      ring_pb$tick()
 
       #Determine first part of Ringnumber
       ring_start <- stringr::str_sub(current_row["RingNumber"], end = -6)

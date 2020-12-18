@@ -417,7 +417,7 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
                                                        CaptureDate = purrr::pmap(.l = list(LayDate, ClutchSize, HatchDate, ChickAge),
                                                                                  .f = ~{
 
-                                                                                   pb$print()$tick()
+                                                                                   pb$tick()
 
                                                                                    if(!is.na(..3)){
 
@@ -597,7 +597,7 @@ create_individual_VEL     <- function(Capture_data){
                      Sex = purrr::map_chr(.x = list(unique(Sex)),
                                           .f = ~{
 
-                                            pb$print()$tick()
+                                            pb$tick()
 
                                             if(all(c("F", "M") %in% ..1)){
 
@@ -622,7 +622,7 @@ create_individual_VEL     <- function(Capture_data){
     dplyr::mutate(BroodIDLaid = purrr::pmap_chr(.l = list(RingAge, FirstBroodID),
                                                .f = ~{
 
-                                                 pb$print()$tick()
+                                                 pb$tick()
 
                                                  if(is.na(..1) | (..1 == "adult")){
 

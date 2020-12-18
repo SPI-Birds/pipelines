@@ -20,7 +20,7 @@ extract_paradox_db <- function(path, file_name){
 
   data_frame_output <- purrr::map_dfr(.x = output_file, .f = function(row){
 
-    pb$print()$tick()
+    pb$tick()
 
     row <- purrr::map(.x = row, function(.x){
 

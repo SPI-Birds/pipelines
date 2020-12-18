@@ -674,7 +674,7 @@ create_individual_MON <- function(capture_data, brood_data, verbose){
     #Use apply because it doesn't coerce dates to numbers!!!!!
     apply(1, function(x, brood_data){
 
-      pb$tick()$print()
+      pb$tick()
 
       #If the destination brood has been given
       if(!is.na(x["BroodIDFledged"])){

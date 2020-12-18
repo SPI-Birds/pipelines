@@ -401,7 +401,7 @@ create_capture_UAN <- function(data, species_filter){
     dplyr::bind_cols(purrr::pmap_dfr(.l = list(SvenStd = .$TarsusStandard, SvenAlt = .$TarsusAlt),
                                      function(SvenStd, SvenAlt){
 
-                                       pb$print()$tick()
+                                       pb$tick()
 
                                        if(!is.na(SvenAlt)){
 
@@ -428,7 +428,7 @@ create_capture_UAN <- function(data, species_filter){
     dplyr::bind_cols(purrr::pmap_dfr(.l = list(.$Age_observed, .$CaptureMethod),
                                      .f = ~{
 
-                                       pb$print()$tick()
+                                       pb$tick()
 
                                        # If Age (LT) was not recorded
                                        # instead estimate age from the capture type:
