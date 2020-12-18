@@ -262,8 +262,8 @@ check_values_capture <- function(Capture_data, var) {
         TRUE ~ "Chick"
       )) %>%
       dplyr::group_by(Species, CapturePopID, Stage) %>%
-      dplyr::summarise(Warning_min = quantile(!!rlang::sym(var), probs = 0.01, na.rm = TRUE),
-                       Warning_max = quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE),
+      dplyr::summarise(Warning_min = stats::quantile(!!rlang::sym(var), probs = 0.01, na.rm = TRUE),
+                       Warning_max = stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE),
                        Error_min = 0,
                        Error_max = 4 * Warning_max,
                        n = n()) %>%
@@ -300,8 +300,8 @@ check_values_capture <- function(Capture_data, var) {
       dplyr::filter(!is.na(!!rlang::sym(var)), !is.na(Species), Age_calculated > 3) %>%
       dplyr::group_by(Species, CapturePopID) %>%
       dplyr::summarise(Stage = "Adult",
-                       Warning_min = quantile(!!rlang::sym(var), probs = 0.01, na.rm = TRUE),
-                       Warning_max = quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE),
+                       Warning_min = stats::quantile(!!rlang::sym(var), probs = 0.01, na.rm = TRUE),
+                       Warning_max = stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE),
                        Error_min = 0,
                        Error_max = 4 * Warning_max,
                        n = n(),
@@ -359,8 +359,8 @@ check_values_capture <- function(Capture_data, var) {
             ..1 %>%
               dplyr::mutate(Stage = as.character(ChickAge)) %>%
               dplyr::group_by(Species, CapturePopID, Stage) %>%
-              dplyr::summarise(Warning_min = quantile(!!rlang::sym(var), probs = 0.01, na.rm = TRUE),
-                               Warning_max = quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE),
+              dplyr::summarise(Warning_min = stats::quantile(!!rlang::sym(var), probs = 0.01, na.rm = TRUE),
+                               Warning_max = stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE),
                                Error_min = 0,
                                Error_max = 4 * Warning_max,
                                n = n(),

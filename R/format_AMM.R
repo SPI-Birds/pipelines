@@ -448,7 +448,7 @@ create_individual_AMM <- function(Capture_data, Brood_data, connection) {
 
   Capture_data %>%
     dplyr::group_by(.data$IndvID) %>%
-    dplyr::summarise(Species = purrr::map_chr(.x = list(unique(na.omit(.data$Species))), .f = ~{
+    dplyr::summarise(Species = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Species))), .f = ~{
 
       if(length(..1) == 0){
 

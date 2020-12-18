@@ -765,7 +765,7 @@ create_individual_MON <- function(capture_data, brood_data, verbose){
   Individual_data <- capture_data %>%
     dplyr::arrange(IndvID, CaptureDate) %>%
     dplyr::group_by(IndvID) %>%
-    dplyr::summarise(Species = purrr::map_chr(.x = list(na.omit(unique(Species))),
+    dplyr::summarise(Species = purrr::map_chr(.x = list(stats::na.omit(unique(Species))),
                                             .f = ~{
 
                                               if(length(..1) == 1){
@@ -804,20 +804,20 @@ create_individual_MON <- function(capture_data, brood_data, verbose){
 
                                           #Firstly, check genetic sex results
                                           #Are there any non-NA cases?
-                                          if(length(na.omit(..2)) > 0){
+                                          if(length(stats::na.omit(..2)) > 0){
 
                                             #If there's just one sex record return it
-                                            if(length(na.omit(..2)) == 1){
+                                            if(length(stats::na.omit(..2)) == 1){
 
-                                              return(na.omit(..2))
+                                              return(stats::na.omit(..2))
 
                                             #Otherwise, check if we can use observed sex instead
                                             } else {
 
                                               #If there is one record of observed sex use this
-                                              if(length(na.omit(..1)) == 1){
+                                              if(length(stats::na.omit(..1)) == 1){
 
-                                                return(na.omit(..1))
+                                                return(stats::na.omit(..1))
 
                                               #Otherwise, we need to say the sex is conflicted
                                               } else {
@@ -832,12 +832,12 @@ create_individual_MON <- function(capture_data, brood_data, verbose){
                                           } else {
 
                                             #Check if there are any non-NA observed records
-                                            if(length(na.omit(..1)) > 0){
+                                            if(length(stats::na.omit(..1)) > 0){
 
                                               #If there is just one, return that
-                                              if(length(na.omit(..1)) == 1){
+                                              if(length(stats::na.omit(..1)) == 1){
 
-                                                return(na.omit(..1))
+                                                return(stats::na.omit(..1))
 
                                               } else {
 

@@ -748,7 +748,7 @@ check_values_brood <- function(Brood_data, var) {
       dplyr::filter(!is.na(!!rlang::sym(var)) & !is.na(Species)) %>%
       dplyr::group_by(Species, PopID) %>%
       dplyr::summarise(Warning_min = NA,
-                       Warning_max = ceiling(quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE)),
+                       Warning_max = ceiling(stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE)),
                        Error_min = 0,
                        Error_max = 4 * Warning_max,
                        n = n())
@@ -763,8 +763,8 @@ check_values_brood <- function(Brood_data, var) {
       dplyr::mutate(!!paste0(var, "_julian") := as.numeric(!!rlang::sym(var) - lubridate::ymd(paste(BreedingSeason, "1", "1", sep = "-")) + 1)) %>%
       dplyr::ungroup() %>%
       dplyr::group_by(Species, PopID) %>%
-      dplyr::summarise(Warning_min = floor(quantile(!!rlang::sym(paste0(var, "_julian")), probs = 0.01, na.rm = TRUE)),
-                       Warning_max = ceiling(quantile(!!rlang::sym(paste0(var, "_julian")), probs = 0.99, na.rm = TRUE)),
+      dplyr::summarise(Warning_min = floor(stats::quantile(!!rlang::sym(paste0(var, "_julian")), probs = 0.01, na.rm = TRUE)),
+                       Warning_max = ceiling(stats::quantile(!!rlang::sym(paste0(var, "_julian")), probs = 0.99, na.rm = TRUE)),
                        Error_min = 1,
                        Error_max = 366,
                        n = n())

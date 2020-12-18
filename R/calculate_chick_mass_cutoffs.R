@@ -48,10 +48,10 @@ calculate_chick_mass_cutoffs <- function(Capture_data, plot = FALSE) {
 
   # Predict and calculate 1st and 99th quantiles
   newdata <- data.frame(ChickAge = seq(0, max(data$ChickAge), by = 1))
-  logistic_pred <- tibble::tibble(fit = predict(logistic_model, newdata = newdata),
+  logistic_pred <- tibble::tibble(fit = stats::predict(logistic_model, newdata = newdata),
                                   x = newdata$ChickAge) %>%
-    dplyr::mutate(upper = fit + summary(logistic_model)$sigma * qnorm(0.99, 0, 1),
-                  lower = fit + summary(logistic_model)$sigma * qnorm(0.01, 0, 1))
+    dplyr::mutate(upper = fit + summary(logistic_model)$sigma * stats::qnorm(0.99, 0, 1),
+                  lower = fit + summary(logistic_model)$sigma * stats::qnorm(0.01, 0, 1))
 
 
   if(plot == TRUE) {

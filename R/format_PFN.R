@@ -216,7 +216,7 @@ create_brood_EDM <- function(Primary_data, ReRingTable){
   ## Pre) Determine a vector of "bad" (nonconclusive) IDs
   #This will be used downstream in point 7)
   #Create a vector of all non-NA ID records for both males and females (need for chicks too?)
-  allIDs <- na.omit(c(Primary_data$MaleID, Primary_data$FemaleID, Primary_data$Young1,
+  allIDs <- stats::na.omit(c(Primary_data$MaleID, Primary_data$FemaleID, Primary_data$Young1,
                       Primary_data$Young2, Primary_data$Young3, Primary_data$Young4,
                       Primary_data$Young5, Primary_data$Young6, Primary_data$Young7,
                       Primary_data$Young8, Primary_data$Young9, Primary_data$Young10, Primary_data$Young11))
@@ -580,7 +580,7 @@ create_individual_EDM <- function(Capture_data){
 
     #* CN: Loop over the species assigned to each individual and check the number of different assignments
 
-    dplyr::summarise(Species = purrr::map_chr(.x = list(unique(na.omit(.data$Species))), .f = ~{
+    dplyr::summarise(Species = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Species))), .f = ~{
 
       if(length(..1) == 0){
 
@@ -601,7 +601,7 @@ create_individual_EDM <- function(Capture_data){
     BroodIDFledged = .data$BroodIDLaid, # Identical, as no cross-fostering experiments were made
     RingSeason = first(.data$BreedingSeason),
     RingAge = ifelse(any(.data$Age_calculated %in% c(1, 3)), "chick", ifelse(min(.data$Age_calculated) == 2, NA_character_, "adult")),
-    Sex_calculated = purrr::map_chr(.x = list(unique(na.omit(.data$Sex_observed))), .f = ~{
+    Sex_calculated = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Sex_observed))), .f = ~{
 
       if(length(..1) == 0){
 
