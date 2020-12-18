@@ -16,6 +16,7 @@
 #' \item \strong{B10}: Check if parents of a brood are the same species using \code{\link{compare_species_parents}}.
 #' \item \strong{B11}: Check if the brood and the parents of that brood are recorded as the same species using \code{\link{compare_brood_parents_species}}.
 #' \item \strong{B12}: Check if the brood and the chicks in that brood are recorded as the same species using \code{\link{compare_brood_chicks_species}}.
+#' \item \strong{B13}: Check if the sex of parents listed under FemaleID and MaleID is correct (i.e., female and male, respectively) using \code{\link{check_sex_parents}}.
 #' }
 #'
 #' @inheritParams checks_brood_params
