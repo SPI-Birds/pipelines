@@ -44,7 +44,8 @@ Imports: dplyr,
          rgeos,
          rstudioapi,
          sp,
-         usethis
+         usethis,
+         rlang
 RoxygenNote: 7.1.1
 Suggests: 
     knitr,

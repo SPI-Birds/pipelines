@@ -728,6 +728,8 @@ compare_hatching_fledging <- function(Brood_data){
 #' @inherit checks_return return
 #'
 #' @importFrom progress progress_bar
+#' @import rlang
+#'
 #' @export
 
 check_values_brood <- function(Brood_data, var) {
