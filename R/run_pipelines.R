@@ -116,6 +116,8 @@ run_pipelines <- function(path = choose_directory(),
                                      species = pop_species_subset$Species),
                            .f = function(dirs, owner, pops, species){
 
+                             message(glue::glue('Running {owner} pipeline'))
+
                            eval(parse(text = glue::glue('format_{owner}(db = dirs, pop = pops, species = species,
                                                 output_type = "R")')))
 
