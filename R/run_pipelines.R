@@ -40,7 +40,7 @@ run_pipelines <- function(path = choose_directory(),
                           PopID = NULL,
                           Species = NULL,
                           output_type = "R",
-                          save = TRUE, save_path = NULL,
+                          save = FALSE, save_path = NULL,
                           filename = "standard_format"){
 
   #Force choose_directory()
