@@ -9,13 +9,18 @@
 #'
 #' @return A jpeg file in the working directory
 #' @export
-#' @import ggplot2
 #'
 #' @examples
 #' #Create jpeg map
 #' plot_popmap()
 #' file.remove("Population_map.jpg")
 plot_popmap <- function(scale = 2, filename = NULL){
+
+  if (!requireNamespace(package = "ggplot2", quietly = TRUE)) {
+
+    stop("Require ggplot2 for plotting.")
+
+  }
 
   pop_locations <- utils::read.csv(system.file("extdata", "pop_locations.csv", package = "pipelines", mustWork = TRUE))
 
