@@ -21,7 +21,7 @@ provided.
 }
 \examples{
 #Create jpeg map
-if (is_attached("package:ggplot2")) {
+if (requireNamespace("ggplot2", quietly = TRUE)) {
     plot_popmap()
     file.remove("Population_map.jpg")
 }
