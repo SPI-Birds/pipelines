@@ -189,9 +189,9 @@ create_brood_CHO <- function(data){
     #Reshape data so that we have a MaleID and FemaleID column
     #Rather than an individual row for each parent capture
     tidyr::pivot_longer(cols = c(IndvID)) %>%
-    tidyr::pivot_wider(names_from = Sex, values_from = value) %>%
+    tidyr::pivot_wider(names_from = .data$Sex, values_from = .data$value) %>%
     dplyr::rename(FemaleID = `F`, MaleID = `M`) %>%
-    select(-name) %>%
+    select(-.data$name) %>%
     arrange(BroodID)
 
   #Determine whether clutches are 2nd clutch

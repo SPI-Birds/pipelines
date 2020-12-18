@@ -204,7 +204,7 @@ create_capture_SSQ <- function(data){
   Adult_captures <- data %>%
     dplyr::select(BreedingSeason, PopID, Plot, LocationID, Species, LayDate, FemaleID, FAge, MaleID, MAge) %>%
     #Combine column FemaleID and MaleID
-    reshape2::melt(measure.vars = c("FemaleID", "MaleID"), value.name = "IndvID") %>%
+    tidyr::pivot_longer(cols = c("FemaleID", "MaleID"), values_to = "IndvID", names_to = "variable") %>%
     #Remove all NAs, we're only interested in cases where parents were ID'd.
     dplyr::filter(!is.na(IndvID)) %>%
     #Make a single Age column. If variable == "FemaleID", then use FAge and visa versa
@@ -227,7 +227,7 @@ create_capture_SSQ <- function(data){
   Chick_captures <- data %>%
     dplyr::select(BreedingSeason, Species, PopID, Plot, LocationID, LayDate, ClutchSize, Chick1Id:Chick13Id) %>%
     #Create separate rows for every chick ID
-    reshape2::melt(id.vars = c("BreedingSeason", "Species", "PopID", "Plot", "LocationID", "LayDate", "ClutchSize"), value.name = "IndvID") %>%
+    tidyr::pivot_longer(cols = c(Chick1Id:Chick13Id), names_to = "variable", values_to = "IndvID") %>%
     #Remove NAs
     dplyr::filter(!is.na(IndvID)) %>%
     dplyr::rename(CapturePopID = PopID, CapturePlot = Plot) %>%
@@ -272,7 +272,7 @@ create_individual_SSQ <- function(data, Capture_data, Brood_data){
   #Create a list of all chicks
   Chick_IDs <- data %>%
     dplyr::select(BroodID, Chick1Id:Chick13Id) %>%
-    reshape2::melt(id.vars = "BroodID", value.name = "IndvID") %>%
+    tidyr::pivot_longer(cols = c(-BroodID), names_to = "variable", values_to = "IndvID") %>%
     dplyr::filter(!is.na(IndvID)) %>%
     dplyr::select(-variable, BroodIDLaid = BroodID)
 
