@@ -116,16 +116,16 @@ test_that("Single checks function as expected...", {
   expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B9")$Error, c(NA, NA, NA, NA, NA, TRUE))
 
   # Test check B10
-  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B10")$Warning, c(NA, TRUE))
-  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B10")$Error, c(NA, NA))
+  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B10")$Warning, c(NA, TRUE, NA))
+  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B10")$Error, c(NA, NA, TRUE))
 
   # Test check B11
-  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B11")$Warning, c(NA, TRUE))
-  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B11")$Error, c(NA, NA))
+  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B11")$Warning, c(NA, TRUE, NA))
+  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B11")$Error, c(NA, NA, TRUE))
 
   # Test check B12
-  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B12")$Warning, c(NA, TRUE))
-  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B12")$Error, c(NA, NA))
+  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B12")$Warning, c(NA, TRUE, NA))
+  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B12")$Error, c(NA, NA, TRUE))
 
   # Test check B13
   expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B13")$Warning, c(NA, NA))

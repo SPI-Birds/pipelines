@@ -435,6 +435,9 @@ create_dummy_data <- function(overwrite=TRUE) {
     dplyr::add_row( # Improbable (warning)
       Row = max(B9_rows$Row) + 2
     ) %>%
+    dplyr::add_row( # Impossible (error)
+      Row = max(B9_rows$Row) + 3
+    ) %>%
     dplyr::mutate(
       PopID = "AAA",
       BreedingSeason = as.integer(2020),
@@ -461,6 +464,14 @@ create_dummy_data <- function(overwrite=TRUE) {
     dplyr::add_row( # Improbable (warning)
       IndvID = B10_brood_rows$MaleID[2],
       Species = "CYACAE"
+    ) %>%
+    dplyr::add_row( # Impossible (error)
+      IndvID = B10_brood_rows$FemaleID[3],
+      Species = "PARMAJ"
+    ) %>%
+    dplyr::add_row( # Impossible (error)
+      IndvID = B10_brood_rows$MaleID[3],
+      Species = "POEPAL"
     ) %>%
     dplyr::mutate(
       PopID = "AAA",
@@ -936,6 +947,9 @@ create_dummy_data <- function(overwrite=TRUE) {
     dplyr::add_row( # Improbable (warning)
       Species = "CYACAE"
     ) %>%
+    dplyr::add_row( # Impossible (error)
+      Species = "PARMAJ"
+    ) %>%
     dplyr::mutate(
       PopID = "AAA",
       BreedingSeason = as.integer(2020),
@@ -963,6 +977,14 @@ create_dummy_data <- function(overwrite=TRUE) {
       IndvID = B11_brood_rows$MaleID[2],
       Species = "PARMAJ"
     ) %>%
+    dplyr::add_row( # Impossible (error)
+      IndvID = B11_brood_rows$FemaleID[3],
+      Species = "PARMAJ"
+    ) %>%
+    dplyr::add_row( # Impossible (error)
+      IndvID = B11_brood_rows$MaleID[3],
+      Species = "POEPAL"
+    ) %>%
     dplyr::mutate(
       Row = seq(max(I6_indv_rows$Row) + 1, length.out = n()),
       PopID = "AAA",
@@ -977,6 +999,9 @@ create_dummy_data <- function(overwrite=TRUE) {
     ) %>%
     dplyr::add_row( # Improbable (warning)
       Species = "CYACAE"
+    ) %>%
+    dplyr::add_row( # Impossible (error)
+      Species = "PARMAJ"
     ) %>%
     dplyr::mutate(
       PopID = "AAA",
@@ -1002,6 +1027,14 @@ create_dummy_data <- function(overwrite=TRUE) {
     dplyr::add_row( # Improbable (warning)
       BroodIDLaid = B12_brood_rows$BroodID[2],
       Species = "PARMAJ"
+    ) %>%
+    dplyr::add_row( # Impossible (error)
+      BroodIDLaid = B12_brood_rows$BroodID[3],
+      Species = "PARMAJ"
+    ) %>%
+    dplyr::add_row( # Impossible (error)
+      BroodIDLaid = B12_brood_rows$BroodID[3],
+      Species = "POEPAL"
     ) %>%
     dplyr::mutate(
       Row = seq(max(B11_indv_rows$Row) + 1, length.out = n()),
