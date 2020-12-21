@@ -2,158 +2,213 @@
 #' Actively started 27/11/2020
 
 
-
-#### ---------------------------------------------------------------------------------------~
-#### BEFORE CLOSING THE SCRIPT/PROJECT, COMMENT ALL ROWS, TO BE ABLE TO LOAD ALL FUNCTIONS NEXT TIME
-#### ---------------------------------------------------------------------------------------~
-
-
-
-# #### ---------------------------------------------------------------------------------------~
-# #### SHOULD BE BASED ON THE NEW V. 1.1.0 OF THE STANDARD PROTOCOL
-# #### GET ALL THE VARIABLES FROM THE PROTOCOL PDF
-# line <- readLines("C:/Users/ZuzanaZ/Dropbox/GITHUB_PROJECTS/SPI-Birds/notes_zz/prot_names_v110.txt")
-# prot_names <- gsub(pattern = "[[:digit:]]", replacement = "", x = line)
-# prot_names <- gsub(pattern = "\\.", replacement = "", x = prot_names)
-# prot_names <- trimws(prot_names)
-#
-# prot_names
-#
-# Individual_data_names <- prot_names[2:10]
-# Brood_data_names      <- prot_names[12:47]
-# Capture_data_names    <- prot_names[49:71]
-# Location_data_names   <- prot_names[73:81]
-# #### ---------------------------------------------------------------------------------------~
-
-
-
-
-
 #### ---------------------------------------------------------------------------------------~
 #### Questions/Doubts DATA OWNERS
 # What is "Neophobia Transponder"?
 # OriginalTarsusMethod
 # Do they have coordinates for each nestbox?
 # End season in location data: 2019 or NA (do they remove them or not?)
-
-
-#### Questions/Doubts TEAM
-# calc_clutchsize only for old version of protocol names of variables?
+# Do Observation hours correspond only to experimental data? Keep or remove them?
 
 
 
 #### ---------------------------------------------------------------------------------------~
-
 #### HELPDOC
-# What do do with observations without ID?
+# Observations without ID?
 # pew_data %>%
 #   filter(is.na(IndvID)) %>%
-#   # View()
 #   pull(NestboxID)
 # There are 4 observations without ID, we remove those observations,
 # as any additional information is provided (body measurements, etc.)
 # Observations are from 2017, nestboxes 97, 98, 102, kk12.
-
-
+#
+#
 #### NOTES:
 #### Experiment "BSM - Griffioen et al. 2019 PeerJ" was done with hatched nestlings, not with eggs.
-
-
 #### ---------------------------------------------------------------------------------------~
 
+# pew <- format_PEW()
 
-library(pipelines)
-# Suppress summarise info
-options(dplyr.summarise.inform = FALSE)
+format_PEW <- function(db = choose_directory(),
+                       species = NULL,
+                       pop = NULL,
+                       path = ".",
+                       output_type = "R"){
 
-db <- choose_directory() ## temp copy in C:\Users\ZuzanaZ\Dropbox\POSTDOC\POSTDOC_NIOO_NETHERLANDS_2020\SPI-birds_project\data_pipeline_temp_copy\PEW_PEWrdsbosWest_Belgium
-db <- paste0(db, "/PEW_PrimaryData.xlsx")
+  # Force user to select directory
+  force(db)
 
-message("Importing primary data...")
+  # Determine species codes for filtering
+  if(is.null(species)){
 
-pew_data <- readxl::read_excel(db,
-                               col_types = c("text", "text", "text",
-                                             "text", "text", "numeric", "date",
-                                             "text", "text", "text", "text", "text",
-                                             "text", "text", "text", "text", "text",
-                                             "text", "text", "text", "text", "text",
-                                             "text", "numeric", "date", "date",
-                                             "text", "date", "numeric", "numeric",
-                                             "text", "numeric", "numeric", "numeric",
-                                             "numeric", "numeric", "numeric",
-                                             "numeric", "numeric", "numeric")) %>%
-  janitor::clean_names(case = "upper_camel") %>%
-  janitor::remove_empty(which = "rows") %>%
-  #### Solve NA values (some are explicitly stated as character "NA")
-  dplyr::mutate(across(where(is.character), .fns = ~replace(., . ==  "NA" , NA))) %>%
-  #### Convert to corresponding format and rename
-  dplyr::mutate(BreedingSeason = as.integer(Year),
-                CaptureDate = as.Date(Date),
-                Tarsus = as.numeric(Tarsus),
-                Mass = as.numeric(Mass),
-                TarsusPartner = as.numeric(TarsusPartner),
-                MassPartner = as.numeric(MassPartner),
-                ClutchSize = as.integer(ClutchSize),
-                DateEgg1 = as.Date(DateEgg1),
-                HatchDateD0 = as.Date(HatchDateD0),
-                NumberOfRingedChicks = as.integer(NumberOfRingedChicks),
-                DateRingingChicks = as.Date(DateRingingChicks),
-                NoOfChicksD3 = as.integer(NoOfChicksD3),
-                BroodMassD3 = as.numeric(BroodMassD3),
-                ObservationTimeH = as.numeric(ObservationTimeH),
-                # Seks = substr(Seks, 1, 1),
-                Species = "CYACAE",
-                PopID = "PEW",
-                NestboxID = tolower(Nest),
-                BroodID = ifelse(Method %in% c("Catch adults nestbox", "ChickRinging"),
-                                 paste(Year, NestboxID, "PEW", sep = "_"), NA)) %>%
-  #### Rename variables to standardized format
-  dplyr::rename(IndvID = Id,
-                Sex =  Seks,
-                ObserverID = Measurer) %>%
-  #### Remove columns which we do not store in the standardized format
-  dplyr::select(-FeatherCollection ,
-                -BreathRateTime50Breaths,
-                -FeathersPartner,
-                -BreathRatePartnerTime50Breaths,
-                -BloodSample,
-                -TimeBloodSample,
-                -BloodSampleDuration,
-                -VisitRateVisitsH,
-                -VrPartner,
-                -VisitsAlternated,
-                -VisitsAlternatedPartner,
-                -VisitsSync10,
-                -ChickAgeOfBehavObserv,
-                -MateStrategy,
-                -Nest) %>%
-  #### Reorder columns
-  dplyr::select(BreedingSeason,
-                Species,
-                PopID,
-                IndvID,
-                Sex,
-                Age,
-                everything()) %>%
-  #### Remove observations without ID
-  dplyr::filter(!is.na(IndvID)) %>%
-  #### Details
-  dplyr::mutate(PartnerId = ifelse(PartnerId == "MetalRing_FemK89_2019",
-                                   "MetalRing_F2019_K89", PartnerId))
+    species <- species_codes$Species
+
+  }
+
+  start_time <- Sys.time()
+
+  #### Primary data
+
+  message("Importing primary data...")
+
+  pew_data <- readxl::read_excel(path =  paste0(db, "/PEW_PrimaryData.xlsx"),
+                                 col_types = c("text", "text", "text",
+                                               "text", "text", "numeric", "date",
+                                               "text", "text", "text", "text", "text",
+                                               "text", "text", "text", "text", "text",
+                                               "text", "text", "text", "text", "text",
+                                               "text", "numeric", "date", "date",
+                                               "text", "date", "numeric", "numeric",
+                                               "text", "numeric", "numeric", "numeric",
+                                               "numeric", "numeric", "numeric",
+                                               "numeric", "numeric", "numeric")) %>%
+    janitor::clean_names(case = "upper_camel") %>%
+    janitor::remove_empty(which = "rows") %>%
+    #### Solve NA values (some are explicitly stated as character "NA")
+    dplyr::mutate(across(where(is.character), .fns = ~replace(., . ==  "NA" , NA))) %>%
+    #### Convert to corresponding format and rename
+    dplyr::mutate(BreedingSeason = as.integer(Year),
+                  CaptureDate = as.Date(Date),
+                  Tarsus = as.numeric(Tarsus),
+                  Mass = as.numeric(Mass),
+                  TarsusPartner = as.numeric(TarsusPartner),
+                  MassPartner = as.numeric(MassPartner),
+                  ClutchSize = as.integer(ClutchSize),
+                  DateEgg1 = as.Date(DateEgg1),
+                  HatchDateD0 = as.Date(HatchDateD0),
+                  NumberOfRingedChicks = as.integer(NumberOfRingedChicks),
+                  DateRingingChicks = as.Date(DateRingingChicks),
+                  NoOfChicksD3 = as.integer(NoOfChicksD3),
+                  BroodMassD3 = as.numeric(BroodMassD3),
+                  ObservationTimeH = as.numeric(ObservationTimeH),
+                  Species = "CYACAE",
+                  PopID = "PEW",
+                  NestboxID = tolower(Nest),
+                  BroodID = ifelse(Method %in% c("Catch adults nestbox", "ChickRinging"),
+                                   paste(Year, NestboxID, "PEW", sep = "_"), NA)) %>%
+    #### Rename variables to standardized format
+    dplyr::rename(IndvID = Id,
+                  Sex =  Seks,
+                  ObserverID = Measurer) %>%
+    #### Remove columns which we do not store in the standardized format
+    dplyr::select(-FeatherCollection ,
+                  -BreathRateTime50Breaths,
+                  -FeathersPartner,
+                  -BreathRatePartnerTime50Breaths,
+                  -BloodSample,
+                  -TimeBloodSample,
+                  -BloodSampleDuration,
+                  -VisitRateVisitsH,
+                  -VrPartner,
+                  -VisitsAlternated,
+                  -VisitsAlternatedPartner,
+                  -VisitsSync10,
+                  -ChickAgeOfBehavObserv,
+                  -MateStrategy,
+                  -Nest) %>%
+    #### Reorder columns
+    dplyr::select(BreedingSeason,
+                  Species,
+                  PopID,
+                  IndvID,
+                  Sex,
+                  Age,
+                  everything()) %>%
+    #### Remove observations without ID
+    dplyr::filter(!is.na(IndvID)) %>%
+    #### Details
+    dplyr::mutate(PartnerId = ifelse(PartnerId == "MetalRing_FemK89_2019",
+                                     "MetalRing_F2019_K89", PartnerId))
+
+
+  #### BROOD DATA
+  #### done, need check
+
+  message("Compiling brood information...")
+
+  Brood_data <- create_brood_PEW(data = pew_data)
+
+
+  #### CAPTURUE DATA
+  #### done
+
+  # AGE_CALCULATED SEEMS NOT CORRECT ?
+  # (maybe also because the Age_observed was not correctly assigned?)
+  #
+  # Liam:
+  #   Seems to me that there are some records that are not captures (i.e. they don't have a date)
+  #   but just include brood information. So, I would explicitly remove the records with no date
+  #   from Capture_data but still use them in Brood_data.
+  #   In other cases where there are multiple captures in a year (with dates)
+  #   these should be treated as legitimate multiple captures.
+
+  message("Compiling capture information...")
+
+  Capture_data <- create_capture_PEW(pew_data, Brood_data)
+
+
+  #### INDIVIDUAL DATA
+
+  message("Compiling individual information...")
+
+  Individual_data <- create_individual_PEW(Capture_data)
+
+
+  #### LOCATION DATA
+  #### done, check with data owner
+
+  message("Compiling location information...")
+
+  Location_data <- create_location_PEW(pew_data)
+
+  #### FINAL ARRANGEMENT
+  Capture_data <-
+    Capture_data %>%
+    dplyr::filter(!is.na(CaptureDate))
+
+  time <- difftime(Sys.time(), start_time, units = "sec")
+
+  message(paste0("All tables generated in ", round(time, 2), " seconds"))
+
+  #### EXPORT DATA
+
+  if(output_type == "csv"){
+
+    message("Saving .csv files...")
+
+    utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_PEW.csv"), row.names = F)
+
+    utils::write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_PEW.csv"), row.names = F)
+
+    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_PEW.csv"), row.names = F)
+
+    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_PEW.csv"), row.names = F)
+
+    invisible(NULL)
+
+  }
+
+  if(output_type == "R"){
+
+    message("Returning R objects...")
+
+    return(list(Brood_data = Brood_data,
+                Capture_data = Capture_data,
+                Individual_data = Individual_data,
+                Location_data = Location_data))
+
+  }
+
+
+}
 
 
 
 
 
-#### --------------------------------------~
-#### BROOD DATA                         #### done, need check
-#### --------------------------------------~
-
-
-message("Compiling brood information...")
-
-Brood_data <- create_brood_PEW(data = pew_data)
-
+#### --------------------------------------------------------------------------~
+#### FUNCTIONS
+#### --------------------------------------------------------------------------~
 
 create_brood_PEW <- function(data) {
 
@@ -193,7 +248,7 @@ create_brood_PEW <- function(data) {
                                                 Experiment == "2h Temp D4 + Handicaping Male: Griffioen et al. 2019 Front Ecol&Evol" ~
                                                   "SURVIVAL; PARENTAGE")) %>%
     #### Remove unnecessary variables which may cause duplicated rows
-    #### Exlcude also Date column, as for few broods, there may be
+    #### Exclude also Date column, as for few broods, there may be
     #### several catches of parents, but the brood parameters are the same
     dplyr::select(-c(Date, IndvID, Sex, Age, PartnerId, NumberTransponder,
                      NewRing, CaptureDate, NeophobiaTransponder,
@@ -202,9 +257,9 @@ create_brood_PEW <- function(data) {
     #### Remove duplicated rows (as we get one row for males and females for the same brood)
     dplyr::distinct() %>%
     #### Remove rows with no information about the brood
-    filter(!(is.na(ClutchSize) & is.na(DateEgg1) & is.na(HatchDateD0) &
-               is.na(NumberOfRingedChicks) & is.na(DateRingingChicks) &
-               is.na(NoOfChicksD3) & is.na(BroodMassD3))) %>%
+    dplyr::filter(!(is.na(ClutchSize) & is.na(DateEgg1) & is.na(HatchDateD0) &
+                    is.na(NumberOfRingedChicks) & is.na(DateRingingChicks) &
+                    is.na(NoOfChicksD3) & is.na(BroodMassD3))) %>%
 
     #### CHECK: Remove this after solving the issue below
     #### Identify possible errors or duplicates (rank >1)
@@ -262,7 +317,7 @@ create_brood_PEW <- function(data) {
                   NumberEggs = NA_integer_,
                   #### Metadata states that only the first clutches are recorded
                   ClutchType_observed = "first") %>%
-  dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE))
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE))
 
 
   #### Get chick measurements per brood
@@ -309,32 +364,6 @@ create_brood_PEW <- function(data) {
 
 }
 
-#### VARIABLES
-# cat(Brood_data_names, sep = "\n")
-
-
-
-
-#### --------------------------------------~
-#### CAPTURUE DATA                      #### done
-#### --------------------------------------~
-
-# AGE_CALCULATED SEEMS NOT CORRECT
-# (maybe also because the Age_observed was not correctly assigned?)
-
-# Liam:
-#   Seems to me that there are some records that are not captures (i.e. they don't have a date)
-#   but just include brood information. So, I would explicitly remove the records with no date
-#   from Capture_data but still use them in Brood_data.
-#   In other cases where there are multiple captures in a year (with dates)
-#   these should be treated as legitimate multiple captures.
-
-
-
-
-Capture_data <- create_capture_PEW(pew_data, Brood_data)
-
-
 create_capture_PEW <- function(pew_data, Brood_data) {
 
   Brood_data_sel <-
@@ -348,7 +377,6 @@ create_capture_PEW <- function(pew_data, Brood_data) {
     #### Rename variables
     dplyr::rename(LocationID = NestboxID) %>%
     dplyr::select(-DateRingingChicks) %>%
-
     #### Create new variables
     dplyr::mutate(#### ASSUMPTION: There is no captureID info, so I made this up
                   CaptureID = paste(IndvID, LocationID,
@@ -406,8 +434,11 @@ create_capture_PEW <- function(pew_data, Brood_data) {
     # dplyr::mutate(Age_calculated = calc_age())
 
     #### OLD VERSION OF THE FUNCTION
-    calc_age(ID = IndvID, Age = Age_observed, Date = CaptureDate,
-             Year = BreedingSeason, showpb = TRUE) %>%
+    calc_age(ID = IndvID,
+             Age = Age_observed,
+             Date = CaptureDate,
+             Year = BreedingSeason,
+             showpb = TRUE) %>%
     #### Final arrangement
     dplyr::select(CaptureID, IndvID, Species, Sex_observed, BreedingSeason,
                   CaptureDate, CaptureTime, ObserverID, LocationID,
@@ -415,57 +446,25 @@ create_capture_PEW <- function(pew_data, Brood_data) {
                   ReleasePopID, ReleasePlot, Mass, Tarsus, OriginalTarsusMethod,
                   WingLength, Age_observed, Age_calculated, ChickAge, ExperimentID)
 
-    # #### NOTE: KEEP IN CAPTURE DATA TO BE INCLUDED IN INDIVIDUAL INFORMATION,
-    # #### BUT REMOVE IT BEFORE FINAL OUPUT!!
     # #### Remove records with no date
     # #### CHECK: doing this, almost 500 records of chicks will be removed,
     # #### as there is no CaptureDate !!!
     # filter(!is.na(CaptureDate))
+    # #### NOTE: KEEP IN CAPTURE DATA TO BE INCLUDED IN INDIVIDUAL INFORMATION,
+    # #### BUT REMOVE IT BEFORE FINAL OUPUT!!
 
   return(Capture_data)
 
 }
 
-#### VARIABLES
-# cat(Capture_data_names, sep="\n")
-
-
-#### --------------------------------------~
-#### INDIVIDUAL DATA                    #### IN PROCESS, need to check
-#### --------------------------------------~
-
-#### Still to solve:
-# There are some individuals (for example 13617043), where the rows of data related
-# to the same individual seem complementary, but are in two rows with
-# insufficient information when treating the rows separately.
-# How to deal with that?
-# >>> So far, I remove duplicated rows at the end of the function,
-# but there are some rows still maintained, as there is some difference in one
-# of the columns of the dataframe.
-#
-# Remove data with no date in the primary data?
-
-
-
-message("Compiling individual information...")
-
-Individual_data <- create_individual_PEW(Capture_data)
-
-# dplyr::filter(Species %in% species)
-
-
-
-#### change the function to get input from Capture data, not from pew data
-
-
-create_individual_PEW <- function(data = Capture_data){
+create_individual_PEW <- function(data){
 
   Individual_data <-
     data %>%
     #### NOTE: Keep rows without Capture date
     #### Format and create new data columns
     dplyr::mutate(RingAge = ifelse(Age_observed == 1, "chick", "adult"),
-                  #### Theoretical, we actually do not have LaidDate, for several nests
+                  #### We actually do not have LaidDate, for several nests
                   # there is only DateEgg1.
                   # In metadata, there is a note that second and other broods are not recorded,
                   # so can we assume that each brood is the first and only one?
@@ -494,6 +493,7 @@ create_individual_PEW <- function(data = Capture_data){
     dplyr::arrange(CaptureDate) %>%
     dplyr::summarize(Species = first(Species),
                      PopID = "PEW",
+                     IndvID = first(IndvID),
                      RingSeason = first(BreedingSeason),
                      RingAge = first(RingAge),
                      BroodIDLaid = first(BroodIDLaid),
@@ -503,30 +503,11 @@ create_individual_PEW <- function(data = Capture_data){
     dplyr::ungroup() %>%
     #### Final arrangement
     dplyr::select(IndvID, Species, PopID, BroodIDLaid, BroodIDFledged,
-                  RingSeason, RingAge, Sex_calculated, Sex_genetic) %>%
-    # #### Remove duplicated rows (CHECK)
-    dplyr::distinct()
+                  RingSeason, RingAge, Sex_calculated, Sex_genetic)
 
   return(Individual_data)
 
   }
-
-
-#### VARIABLES
-# cat(Individual_data_names, sep="\n")
-
-
-
-#### --------------------------------------~
-#### LOCATION DATA                      #### done, check with data owner
-#### --------------------------------------~
-
-#### There is no information about coordinates of nestboxes
-# >> use the same ? >> ask Data owner
-
-message("Compiling location information...")
-Location_data <- create_location_PEW(pew_data)
-
 
 create_location_PEW <- function(data) {
 
@@ -556,7 +537,5 @@ create_location_PEW <- function(data) {
 
 }
 
-#### VARIABLES
-# cat(Location_data_names, sep="\n")
 
 
