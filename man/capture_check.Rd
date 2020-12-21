@@ -4,7 +4,13 @@
 \alias{capture_check}
 \title{Perform quality checks on capture data}
 \usage{
-capture_check(Capture_data, Location_data, Brood_data, check_format = TRUE)
+capture_check(
+  Capture_data,
+  Location_data,
+  Brood_data,
+  check_format = TRUE,
+  approved_list
+)
 }
 \arguments{
 \item{Capture_data}{Data frame. Capture data output from pipeline.}

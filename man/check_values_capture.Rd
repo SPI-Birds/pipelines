@@ -4,7 +4,7 @@
 \alias{check_values_capture}
 \title{Check capture variable values against reference values}
 \usage{
-check_values_capture(Capture_data, var)
+check_values_capture(Capture_data, var, approved_list)
 }
 \arguments{
 \item{Capture_data}{Data frame. Capture data output from pipeline.}

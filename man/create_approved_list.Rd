@@ -4,14 +4,10 @@
 \alias{create_approved_list}
 \title{Create approved_list}
 \usage{
-create_approved_list(dummy = FALSE, save = TRUE, overwrite = TRUE)
+create_approved_list(dummy = FALSE)
 }
 \arguments{
 \item{dummy}{\code{TRUE} or \code{FALSE} (default). If \code{TRUE}, a dummy approved_list is created for running tests.}
-
-\item{save}{Should the approved list be saved as a data object in the package?}
-
-\item{overwrite}{If save is TRUE. Should existing version of the approved list be overwritten?}
 }
 \value{
 List of 4 dataframes:

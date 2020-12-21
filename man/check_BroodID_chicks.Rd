@@ -4,7 +4,12 @@
 \alias{check_BroodID_chicks}
 \title{Check that chicks have BroodID}
 \usage{
-check_BroodID_chicks(Individual_data, Capture_data, Location_data)
+check_BroodID_chicks(
+  Individual_data,
+  Capture_data,
+  Location_data,
+  approved_list
+)
 }
 \arguments{
 \item{Individual_data}{Data frame. Individual data output from pipeline.}

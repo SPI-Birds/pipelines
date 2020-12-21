@@ -4,7 +4,7 @@
 \alias{check_adult_parent_nest}
 \title{Check that adults captured on a nest are listed as parents of that nest}
 \usage{
-check_adult_parent_nest(Capture_data, Location_data, Brood_data)
+check_adult_parent_nest(Capture_data, Location_data, Brood_data, approved_list)
 }
 \arguments{
 \item{Capture_data}{Data frame. Capture data output from pipeline.}

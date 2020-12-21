@@ -4,7 +4,7 @@
 \alias{check_format_individual}
 \title{Check format of individual data}
 \usage{
-check_format_individual(Individual_data)
+check_format_individual(Individual_data, approved_list)
 }
 \arguments{
 \item{Individual_data}{Data frame. Individual data output from pipeline.}

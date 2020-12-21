@@ -4,7 +4,7 @@
 \alias{check_format_capture}
 \title{Check format of capture data}
 \usage{
-check_format_capture(Capture_data)
+check_format_capture(Capture_data, approved_list)
 }
 \arguments{
 \item{Capture_data}{Data frame. Capture data output from pipeline.}

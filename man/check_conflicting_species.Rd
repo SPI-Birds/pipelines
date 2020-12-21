@@ -4,7 +4,7 @@
 \alias{check_conflicting_species}
 \title{Check conflicting species}
 \usage{
-check_conflicting_species(Individual_data)
+check_conflicting_species(Individual_data, approved_list)
 }
 \arguments{
 \item{Individual_data}{Data frame. Individual data output from pipeline.}

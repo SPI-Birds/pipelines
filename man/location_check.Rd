@@ -4,7 +4,7 @@
 \alias{location_check}
 \title{Perform quality checks on location data}
 \usage{
-location_check(Location_data, check_format = TRUE)
+location_check(Location_data, check_format = TRUE, approved_list)
 }
 \arguments{
 \item{Location_data}{Data frame. Location data output from pipeline.}

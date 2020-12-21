@@ -4,7 +4,7 @@
 \alias{check_individuals_captures}
 \title{Check that all individuals in Individual_data appear in Capture_data}
 \usage{
-check_individuals_captures(Individual_data, Capture_data)
+check_individuals_captures(Individual_data, Capture_data, approved_list)
 }
 \arguments{
 \item{Individual_data}{Data frame. Individual data output from pipeline.}

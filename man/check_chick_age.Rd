@@ -4,7 +4,7 @@
 \alias{check_chick_age}
 \title{Check chick age}
 \usage{
-check_chick_age(Capture_data)
+check_chick_age(Capture_data, approved_list)
 }
 \arguments{
 \item{Capture_data}{Data frame. Capture data output from pipeline.}

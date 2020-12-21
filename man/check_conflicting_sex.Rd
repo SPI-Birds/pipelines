@@ -4,7 +4,7 @@
 \alias{check_conflicting_sex}
 \title{Check conflicting sex}
 \usage{
-check_conflicting_sex(Individual_data)
+check_conflicting_sex(Individual_data, approved_list)
 }
 \arguments{
 \item{Individual_data}{Data frame. Individual data output from pipeline.}

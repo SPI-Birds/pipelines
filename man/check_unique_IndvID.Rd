@@ -4,7 +4,7 @@
 \alias{check_unique_IndvID}
 \title{Check unique individual identifiers}
 \usage{
-check_unique_IndvID(Individual_data)
+check_unique_IndvID(Individual_data, approved_list)
 }
 \arguments{
 \item{Individual_data}{Data frame. Individual data output from pipeline.}

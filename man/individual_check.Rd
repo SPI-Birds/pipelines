@@ -8,7 +8,8 @@ individual_check(
   Individual_data,
   Capture_data,
   Location_data,
-  check_format = TRUE
+  check_format = TRUE,
+  approved_list
 )
 }
 \arguments{
