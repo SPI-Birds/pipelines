@@ -114,6 +114,8 @@ NULL
 #' Parameter documentation for brood data checks
 #'
 #' @param Brood_data Data frame. Brood data output from pipeline.
+#' @param approved_list List object. List of approved records from brood_approved_list.csv,
+#' capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv
 #'
 #'@name checks_brood_params
 NULL
@@ -121,6 +123,8 @@ NULL
 #' Parameter documentation for capture data checks
 #'
 #' @param Capture_data Data frame. Capture data output from pipeline.
+#' @param approved_list List object. List of approved records from brood_approved_list.csv,
+#' capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv
 #'
 #'@name checks_capture_params
 NULL
@@ -128,6 +132,8 @@ NULL
 #' Parameter documentation for individual data checks
 #'
 #' @param Individual_data Data frame. Individual data output from pipeline.
+#' @param approved_list List object. List of approved records from brood_approved_list.csv,
+#' capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv
 #'
 #'@name checks_individual_params
 NULL
@@ -135,6 +141,8 @@ NULL
 #' Parameter documentation for location data checks
 #'
 #' @param Location_data Data frame. Location data output from pipeline.
+#' @param approved_list List object. List of approved records from brood_approved_list.csv,
+#' capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv
 #'
 #'@name checks_location_params
 NULL
