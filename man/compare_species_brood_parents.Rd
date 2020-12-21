@@ -10,6 +10,9 @@ compare_species_brood_parents(Brood_data, Individual_data, approved_list)
 \item{Brood_data}{Data frame. Brood data output from pipeline.}
 
 \item{Individual_data}{Data frame. Individual data output from pipeline.}
+
+\item{approved_list}{List object. List of approved records from brood_approved_list.csv,
+capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv}
 }
 \value{
 A list of:
