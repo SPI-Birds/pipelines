@@ -9,6 +9,8 @@
 #' @param output \code{TRUE} or \code{FALSE}. If \code{TRUE}, a report is produced. Default: \code{TRUE}.
 #' @param output_format A character. Format of output report. Options: \code{"html"}, \code{"pdf"}, or \code{"both"}. Default: \code{"both"}.
 #' @param check_format \code{TRUE} or \code{FALSE}. If \code{TRUE}, the checks on variable format (i.e. \code{\link{check_format_brood}}, \code{\link{check_format_capture}}, \code{\link{check_format_individual}} and \code{\link{check_format_location}}) are included in the quality check. Default: \code{TRUE}.
+#' @param test Logical. Is `quality_check` being used inside package tests? If TRUE, `R_data` is ignored and
+#' dummy data will be used instead.
 #'
 #' @return
 #' A list of:
@@ -33,13 +35,52 @@
 quality_check <- function(R_data,
                           output = TRUE,
                           output_format = "both",
-                          check_format = TRUE){
+                          check_format = TRUE,
+                          test = FALSE){
 
   start_time <- Sys.time()
 
   if(output_format == "both"){
 
     output_format <- c("html", "pdf")
+
+  }
+
+  if (test) {
+
+    R_data <- dummy_data
+
+    approved_list <- list(Brood_approved_list = tibble::tibble(PopID = "AAA",
+                                                               BroodID = "AAA-2020-0",
+                                                               CheckID = "B4"),
+                          Capture_approved_list = tibble::tibble(PopID = NA_character_,
+                                                                 CaptureID = NA_character_,
+                                                                 CheckID = NA_character_),
+                          Individual_approved_list = tibble::tibble(PopID = NA_character_,
+                                                                    IndvID = NA_character_,
+                                                                    CheckID = NA_character_),
+                          Location_approved_list = tibble::tibble(PopID = NA_character_,
+                                                                  LocationID = NA_character_,
+                                                                  CheckID = NA_character_))
+
+  } else {
+
+    approved_list <- list(Brood_approved_list = utils::read.csv(system.file("extdata",
+                                                                            "brood_approved_list.csv",
+                                                                            package = "pipelines",
+                                                                            mustWork = TRUE)),
+                          Capture_approved_list = utils::read.csv(system.file("extdata",
+                                                                              "capture_approved_list.csv",
+                                                                              package = "pipelines",
+                                                                              mustWork = TRUE)),
+                          Individual_approved_list = utils::read.csv(system.file("extdata",
+                                                                                 "individual_approved_list.csv",
+                                                                                 package = "pipelines",
+                                                                                 mustWork = TRUE)),
+                          Location_approved_list = utils::read.csv(system.file("extdata",
+                                                                               "location_approved_list.csv",
+                                                                               package = "pipelines",
+                                                                               mustWork = TRUE)))
 
   }
 
@@ -54,15 +95,18 @@ quality_check <- function(R_data,
   ##FIXME remove after CaptureID column has been added in ALL pipelines
 
   # Load approved list
-  message("Loading approved list...")
-  create_approved_list()
+  # message("Loading approved list...")
+  # create_approved_list()
 
   # Run checks
   message("Running quality checks...")
-  Brood_checks <- brood_check(Brood_data, Individual_data, check_format)
-  Capture_checks <- capture_check(Capture_data, Location_data, Brood_data, check_format)
-  Individual_checks <- individual_check(Individual_data, Capture_data, Location_data, check_format)
-  Location_checks <- location_check(Location_data, check_format)
+  Brood_checks <- brood_check(Brood_data, Individual_data, check_format, approved_list)
+  message("Check capture data...")
+  Capture_checks <- capture_check(Capture_data, Location_data, Brood_data, check_format, approved_list)
+  message("Check individual data...")
+  Individual_checks <- individual_check(Individual_data, Capture_data, Location_data, check_format, approved_list)
+  message("Check location data...")
+  Location_checks <- location_check(Location_data, check_format, approved_list)
 
   #Add warning and error columns to each data frame
   #We don't do this for location because there are currently now rowwise checks

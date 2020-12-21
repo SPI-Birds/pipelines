@@ -19,7 +19,7 @@
 #'
 #' @export
 
-capture_check <- function(Capture_data, Location_data, Brood_data, check_format=TRUE){
+capture_check <- function(Capture_data, Location_data, Brood_data, check_format=TRUE, approved_list){
 
   # Create check list with a summary of warnings and errors per check
   check_list <- tibble::tibble(CheckID = paste0("C", c(1, paste0(2, letters[1:2]), 3:4)),
@@ -38,7 +38,7 @@ capture_check <- function(Capture_data, Location_data, Brood_data, check_format=
   if(check_format) {
     message("C1: Checking format of capture variables...")
 
-    check_format_capture_output <- check_format_capture(Capture_data)
+    check_format_capture_output <- check_format_capture(Capture_data, approved_list)
 
     check_list[1,3:4] <- check_format_capture_output$CheckList
   }
@@ -46,28 +46,28 @@ capture_check <- function(Capture_data, Location_data, Brood_data, check_format=
   # - Check mass values against reference values
   message("C2a: Checking mass values against reference values...")
 
-  check_values_mass_output <- check_values_capture(Capture_data, "Mass")
+  check_values_mass_output <- check_values_capture(Capture_data, "Mass", approved_list)
 
   check_list[2,3:4] <- check_values_mass_output$CheckList
 
   # - Check tarsus values against reference values
   message("C2b: Checking tarsus values against reference values...")
 
-  check_values_tarsus_output <- check_values_capture(Capture_data, "Tarsus")
+  check_values_tarsus_output <- check_values_capture(Capture_data, "Tarsus", approved_list)
 
   check_list[3,3:4] <- check_values_tarsus_output$CheckList
 
   # - Check chick age values
   message("C3: Checking chick age values...")
 
-  check_chick_age_output <- check_chick_age(Capture_data)
+  check_chick_age_output <- check_chick_age(Capture_data, approved_list)
 
   check_list[4,3:4] <- check_chick_age_output$CheckList
 
   # - Check that adults caught on nest are listed are the parents
   message("C4: Checking that adults caught on nest are listed are the parents...")
 
-  check_adult_parent_nest_output <- check_adult_parent_nest(Capture_data, Location_data, Brood_data)
+  check_adult_parent_nest_output <- check_adult_parent_nest(Capture_data, Location_data, Brood_data, approved_list)
 
   check_list[5,3:4] <- check_adult_parent_nest_output$CheckList
 
@@ -126,7 +126,7 @@ capture_check <- function(Capture_data, Location_data, Brood_data, check_format=
 #'
 #' @export
 
-check_format_capture <- function(Capture_data){
+check_format_capture <- function(Capture_data, approved_list){
 
   ## Data frame with column names and formats according to the standard protocol
   Capture_data_standard <- tibble::tibble(Variable = c("Row", "IndvID", "Species", "BreedingSeason",
@@ -242,7 +242,7 @@ check_format_capture <- function(Capture_data){
 #'
 #' @export
 
-check_values_capture <- function(Capture_data, var) {
+check_values_capture <- function(Capture_data, var, approved_list) {
 
   # Stop if "var" is missing
   if(missing(var)) {
@@ -642,7 +642,7 @@ check_values_capture <- function(Capture_data, var) {
 #'
 #' @export
 
-check_chick_age <- function(Capture_data){
+check_chick_age <- function(Capture_data, approved_list){
 
   # Errors
   # Select records with chick age < 0 OR > 30
@@ -705,7 +705,7 @@ check_chick_age <- function(Capture_data){
 #'
 #' @export
 
-check_adult_parent_nest <- function(Capture_data, Location_data, Brood_data){
+check_adult_parent_nest <- function(Capture_data, Location_data, Brood_data, approved_list){
 
   # Select adults
   Adults <- Capture_data %>%

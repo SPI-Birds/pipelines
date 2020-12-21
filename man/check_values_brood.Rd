@@ -4,7 +4,7 @@
 \alias{check_values_brood}
 \title{Check brood variable values against reference values}
 \usage{
-check_values_brood(Brood_data, var)
+check_values_brood(Brood_data, var, approved_list)
 }
 \arguments{
 \item{Brood_data}{Data frame. Brood data output from pipeline.}

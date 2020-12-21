@@ -4,7 +4,7 @@
 \alias{compare_clutch_brood}
 \title{Compare clutch and brood sizes}
 \usage{
-compare_clutch_brood(Brood_data)
+compare_clutch_brood(Brood_data, approved_list)
 }
 \arguments{
 \item{Brood_data}{Data frame. Brood data output from pipeline.}

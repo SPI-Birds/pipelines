@@ -4,7 +4,7 @@
 \alias{compare_species_parents}
 \title{Compare species of parents}
 \usage{
-compare_species_parents(Brood_data, Individual_data)
+compare_species_parents(Brood_data, Individual_data, approved_list)
 }
 \arguments{
 \item{Brood_data}{Data frame. Brood data output from pipeline.}

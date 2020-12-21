@@ -4,7 +4,7 @@
 \alias{check_clutch_type_order}
 \title{Check clutch type order}
 \usage{
-check_clutch_type_order(Brood_data)
+check_clutch_type_order(Brood_data, approved_list)
 }
 \arguments{
 \item{Brood_data}{Data frame. Brood data output from pipeline.}

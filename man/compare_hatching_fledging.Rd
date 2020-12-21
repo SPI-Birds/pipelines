@@ -4,7 +4,7 @@
 \alias{compare_hatching_fledging}
 \title{Compare hatching and fledging dates}
 \usage{
-compare_hatching_fledging(Brood_data)
+compare_hatching_fledging(Brood_data, approved_list)
 }
 \arguments{
 \item{Brood_data}{Data frame. Brood data output from pipeline.}

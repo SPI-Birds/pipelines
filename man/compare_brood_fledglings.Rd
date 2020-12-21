@@ -4,7 +4,7 @@
 \alias{compare_brood_fledglings}
 \title{Compare brood sizes and fledgling numbers}
 \usage{
-compare_brood_fledglings(Brood_data)
+compare_brood_fledglings(Brood_data, approved_list)
 }
 \arguments{
 \item{Brood_data}{Data frame. Brood data output from pipeline.}

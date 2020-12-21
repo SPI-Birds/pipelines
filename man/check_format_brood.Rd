@@ -4,7 +4,7 @@
 \alias{check_format_brood}
 \title{Check format of brood data}
 \usage{
-check_format_brood(Brood_data)
+check_format_brood(Brood_data, approved_list)
 }
 \arguments{
 \item{Brood_data}{Data frame. Brood data output from pipeline.}

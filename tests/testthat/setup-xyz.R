@@ -35,9 +35,11 @@ if (file.exists(here::here("inst/extdata/test_data.RDS"))) {
 }
 
 # Create dummy
-create_approved_list(dummy = TRUE)
+# message("Create dummy data approved list...")
+approved_list <- create_approved_list(dummy = TRUE)
 
 # Run quality check for dummy data and produce no report
-dummy_check <- quality_check(R_data = dummy_data,
+message("Create dummy data quality check output...")
+dummy_check <- quality_check(test = TRUE,
                              output = FALSE,
                              check_format = FALSE)
