@@ -1,27 +1,77 @@
-PopID,PopName,Country,Owner
-CHO,Choupal,Portugal,CHO
-HAR,Harjavalta,Finland,HAR
-BAN,Bandon Valley,Ireland,BAN
-VEL,Velky Kosir,Czechia,VEL
-HOG,Hoge Veluwe,Netherlands,NIOO
-OOS,Oosterhout,Netherlands,NIOO
-VLI,Vlieland,Netherlands,NIOO
-BUU,Buunderkamp,Netherlands,NIOO
-LIE,Liesbos,Netherlands,NIOO
-WAR,Warnsborn,Netherlands,NIOO
-WES,Westerheide,Netherlands,NIOO
-SSQ,Santo Stefano Quisquina,Italy,SSQ
-BOS,Boshoek,Belgium,UAN
-PEE,Peerdsbos,Belgium,UAN
-WYT,Wytham Woods,UK,WYT
-MIS,Miscellaneous populations,France,MON
-ROU,Rouviere,France,MON
-MON,Montpellier city,France,MON
-MTV,Mont Ventoux,France,MON
-MUR,Muro,France,MON
-PIR,Pirio,France,MON
-KEV,Kevo,Finland,KEV
-HOC,Hochstadt,Germany,HOC
-PIL,Pilis-Visegrad Mountains,Hungary,PIL
-AMM,Ammersee,Germany,AMM
-EDM,East Dartmoor,UK,PFN
+PopID,PopName,Country,Owner,OwnerName
+AMM,Ammersee,Germany,AMM,Ammersee
+BAN,Bandon Valley,Ireland,BAN,Bandon Valley
+CHO,Choupal,Portugal,CHO,Choupal
+HAR,Harjavalta,Finland,HAR,Harjavalta
+HOC,Hochstadt,Germany,HOC,Hochstadt
+KEV,Kevo,Finland,KEV,Kevo
+MIS,Miscellaneous populations,France,MON,Montpellier
+MON,Montpellier city,France,MON,Montpellier
+MTV,Mont Ventoux,France,MON,Montpellier
+MUR,Muro,France,MON,Montpellier
+PIR,Pirio,France,MON,Montpellier
+ROU,Rouviere,France,MON,Montpellier
+BUU,Buunderkamp,Netherlands,NIOO,NIOO
+HOG,Hoge Veluwe,Netherlands,NIOO,NIOO
+LIE,Liesbos,Netherlands,NIOO,NIOO
+OOS,Oosterhout,Netherlands,NIOO,NIOO
+VLI,Vlieland,Netherlands,NIOO,NIOO
+WAR,Warnsborn,Netherlands,NIOO,NIOO
+WES,Westerheide,Netherlands,NIOO,NIOO
+EDM,East Dartmoor,UK,PFN,PiedFlyNet
+PIL,Pilis-Visegrad Mountains,Hungary,PIL,Pilis-Visegrad Mountains
+SSQ,Santo Stefano Quisquina,Italy,SSQ,Santo Stefano Quisquina
+BOS,Boshoek,Belgium,UAN,University of Antwerp
+PEE,Peerdsbos,Belgium,UAN,University of Antwerp
+VEL,Velky Kosir,Czechia,VEL,Velky Kosir
+WYT,Wytham Woods,UK,WYT,Wytham Woods
+ASK,Askainen,Finland,ASK,Askainen
+BER,Berkenheuvel,Netherlands,RUG,Rijksuniversiteit Groningen
+BRG,Bergen,Norway,BRG,Bergen
+CAN,Cañada de los pájaros,Spain,CAN,Cañada de los pájaros
+CAC,Can Catà,Spain,CAC,Can Catà
+DAE,Daeli,Norway,DAE,Daeli
+DAL,Dalmeny,UK,DAL,Dalmeny
+DAZ,Dazinj,Croatia,DAZ,Dazinj
+DLO,Dlouhá Lou?ka,Czechia,DLO,Dlouhá Lou?ka
+DON,Doñana,Spain,DON,Doñana
+DUN,Dunedin,New Zealand,DUN,Dunedin
+FOR,Forstenrieder Park,Germany,FOR,Forstenrieder Park
+GAR,Garscube campus,UK,GLA,Glasgow
+GLI,Glimmen,Netherlands,GLI,Glimmen
+GRO,Grobla - Niepo?omice Forest,Poland,GRO,Grobla - Niepo?omice Forest
+LAH,La Hiruela,Spain,LAH,La Hiruela
+KIL,Kilingi-Nõmme,Estonia,KIL,Kilingi-Nõmme
+KUU,Kuusamo,Finland,KUU,Kuusamo
+LAK,Lakselvdalen Troms,Norway,LAK,Lakselvdalen Troms
+LAN,Lancaster,UK,LAN,Lancaster
+LAS,Lasy Szwalewskie,Poland,LAS,Lasy Szwalewskie
+LUN,Lundy Island,UK,LUN,Lundy Island
+MAL,Malmo,Sweden,MAL,Malmo
+MAR,Mariola,Spain,MAR,Mariola
+MAY,Mayachino,Russia,MAY,Mayachino
+MET,Metu,Turkey,MET,Metu
+MIE,Mierzeja Wi?lana,Poland,MIE,Mierzeja Wi?lana
+MOU,Moulis,France,MOU,Moulis
+MTA,MTA-PE Evolutionary Ecology Group,Hungary,MTA,MTA-PE Evolutionary Ecology Group
+MUR,Murcia,Spain,MUR,Murcia
+OUL,Oulu,Finland,OUL,Oulu
+PET,Petrozevodsk,Russia,PET,Petrozevodsk
+PEW,Peerdsbos West,Belgium,PEW,Peerdsbos West
+RAD,Radofzell,Germany,RAD,Radofzell
+REV,Revinge,Sweden,REV,Revinge
+SAG,Sagunto,Spain,SAG,Sagunto
+SFL,Schopfl,Austria,SFL,Schopfl
+SKG,Schiermonnikoog,Netherlands,SKG,Schiermonnikoog
+SIL,Silwood,UK,SIL,Silwood
+STR,Strasbourg,France,STR,Strasbourg
+TOM,Tomakomai,Japan,TOM,Tomakomai
+VAL,Valsein,Spain,VAL,Valsein
+VOM,Vomb Fure,Sweden,VOM,Vomb Fure
+VOS,Vosbergen,Netherlands,VOS,Vosbergen
+WAR,Warshav,Poland,WAR,Warshav
+WHV,Wilhelmshaven,Germany,WHV,Wilhelmshaven
+WHZ,Westerholtz,Germany,WHZ,Westerholtz
+WIL,Wilrijk,Belgium,WIL,Wilrijk
+ZVE,Zvenigorod,Russia,ZVE,Zvenigorod
+GOT,Gotland,Sweden,GOT,Gotland
