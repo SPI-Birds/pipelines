@@ -13,6 +13,8 @@ test_that("We get correct errors...", {
 
 test_that("Test archiving works when no archiving folder exists...", {
 
+  testthat::skip(message = "Skipped in devtools::test(). Run manually to test archiving")
+
   date_folder    <- format(Sys.Date(), format = "%Y_%m_%d")
   main_folder    <- here::here("./inst/extdata/test_archiving")
 
@@ -38,5 +40,21 @@ test_that("Test archiving works when no archiving folder exists...", {
                structure(list(V1 = c("Name:", "PopID:", "Version:", "LastUpdate:"),
                               V2 = c("Population", "POP", paste0(lubridate::year(Sys.Date()), ".00"), as.character(Sys.Date()))),
                          class = "data.frame", row.names = c(NA, -4L)))
+
+  #Switch back to original state
+  workd <- getwd()
+
+  #Move new data back outside of the folder
+  system(paste0("mv ", workd, "/inst/extdata/test_archiving/POP_testpop/POP_PrimaryData_XXX.csv ", workd, "/"))
+
+  #Delete new meta-data
+  system(paste0("rm ", workd, "/inst/extdata/test_archiving/POP_testpop/POP_ArchiveMetaData.txt"))
+
+  #Move current primary and meta data back to original location
+  system(paste0("mv ", workd, "/inst/extdata/test_archiving/POP_testpop/archive/", format(Sys.Date(), "%Y_%m_%d"), "/POP_PrimaryData_XXX.csv ", workd, "/inst/extdata/test_archiving/POP_testpop/"))
+  system(paste0("mv ", workd, "/inst/extdata/test_archiving/POP_testpop/archive/", format(Sys.Date(), "%Y_%m_%d"), "/POP_ArchiveMetaData.txt ", workd, "/inst/extdata/test_archiving/POP_testpop/"))
+
+  #Delete archiving folder
+  system(paste0("rm -r ", workd, "/inst/extdata/test_archiving/POP_testpop/archive"))
 
 })
