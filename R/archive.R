@@ -10,8 +10,7 @@
 #'
 #' @return Returns nothing.
 #' @export
-#'
-#' @examples
+
 archive <- function(data_folder = choose_directory(), update_type = "major", PopID, new_data_path) {
 
   #Force data folder and new data paths in that order
