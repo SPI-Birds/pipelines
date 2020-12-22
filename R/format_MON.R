@@ -344,7 +344,7 @@ create_capture_MON <- function(db, species_filter, pop_filter){
 
       } else {
 
-        if(grepl(x = ..1, pattern = "voliére|volière")){
+        if(grepl(x = ..1, pattern = "voli")){
 
           return("aviary")
 
@@ -683,7 +683,7 @@ create_individual_MON <- function(capture_data, brood_data, verbose){
         CaptureDate <- as.Date(x["CaptureDate"])
 
         #If it has been transferred to an aviary, list this
-        if(split_info[1] == "volièreMontpellier"){
+        if (stringr::str_detect(string = split_info[1], pattern = "voli")) {
 
           return(tibble(IndvID = x["IndvID"], BroodIDFledged = "aviary"))
 
@@ -1039,7 +1039,7 @@ identify_PopID_MON <- function(variable){
                    variable %in% c("hs", "aul", "mes", "aig", "bon", "cap", "crt", "gen", "mal",
                                  "mau", "mrt", "olm", "pac", "pie", "pog", "pon",
                                  "pre", "pue", "sfl", "stb", "tcb", "tcv", "vic", "vol") ~ "MIS",
-                   grepl(x = variable, pattern = "voliére|volière|aviary") ~ "aviary")
+                   grepl(x = variable, pattern = "voli|aviary") ~ "aviary")
 
 }
 
