@@ -42,6 +42,13 @@ test_that("Initial archiving works...", {
                               V2 = c(NA, "NEW", paste0("2020.00"), "2020-01-01")),
                          class = "data.frame", row.names = c(NA, -4L)))
 
+  #Switch back to original state
+  workd <- getwd()
+
+  #Delete new archiving created
+  system(paste0("rm -r ", workd, "/inst/extdata/test_archiving/NEW_testpop/archive"))
+  system(paste0("rm ", workd, "/inst/extdata/test_archiving/NEW_testpop/NEW_ArchiveMetaData.txt"))
+
 })
 
 test_that("Test archiving works when an archiving folder already exists...", {
