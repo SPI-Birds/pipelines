@@ -67,7 +67,7 @@ format_UAN <- function(db = choose_directory(),
                        output_type = "R"){
 
   #Force choose_directory() if used
-  db <- force(paste(db, "UAN_PrimaryData", sep = "/"))
+  db <- force(db)
 
   #Assign species for filtering
   if(is.null(species)){
