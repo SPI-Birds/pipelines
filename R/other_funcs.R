@@ -14,10 +14,10 @@
 
 check_species <- function(Species) {
 
-  if (any(!Species %in% Species_codes$Code)) {
+  if (any(!Species %in% species_codes$Species)) {
 
     stop(paste("\n Species code is incorrect:",
-               crayon::yellow(Species[!Species %in% Species_codes$Code])))
+               crayon::yellow(Species[!Species %in% species_codes$Species])))
 
   }
 
@@ -41,10 +41,10 @@ check_species <- function(Species) {
 
 check_pop <- function(PopID) {
 
-  if (any(!PopID %in% pop_names$code)) {
+  if (any(!PopID %in% pop_codes$PopID)) {
 
     stop(paste("\n PopID is incorrect:",
-               crayon::yellow(PopID[!PopID %in% pop_names$code])))
+               crayon::yellow(PopID[!PopID %in% pop_codes$PopID])))
 
   }
 
