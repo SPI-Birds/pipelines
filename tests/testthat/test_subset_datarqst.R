@@ -4,8 +4,8 @@ request_PopIDs <- c('CHO', 'HOC', 'EDM', 'PIL')
 request_Species <- c('PARMAJ', 'FICHYP')
 request_PopSpec <- paste(expand.grid(request_PopIDs, request_Species)[,1], expand.grid(request_PopIDs, request_Species)[,2], sep = '_')
 
-request_data <- subset_datarqst(PopID = request_PopIDs, Species = request_Species,
-                                test = TRUE, save = FALSE)
+request_data <- subset_datarqst(file = pipeline_output, PopID = request_PopIDs, Species = request_Species,
+                                save = FALSE)
 
 
 test_that("All 4 tables are retained...", {

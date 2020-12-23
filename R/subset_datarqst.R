@@ -26,8 +26,6 @@
 #' If output_type is 'R' an .RDS file will be created in the save path, and an R object in the
 #' running R session if return_R = TRUE.
 #' @param save is TRUE. If save = FALSE, the subset of data is not saved into the save path.
-#' @param test If FALSE (default), subset is created from the most recent version of the SPI-Birds standard format.
-#' If TRUE, subset is created from R object `pipeline_output` which is created temporarily during package testing.
 #' @return Creates 1 RDS or 4 .csv files in a folder at the location of the standard data. Folder and files
 #' will be given a unique identifier in the form of the date when the subset was performed.
 #' @export
@@ -52,15 +50,16 @@ subset_datarqst <- function(file = file.choose(),
                             PopSpec = NULL,
                             include_conflicting = FALSE,
                             output_type = "R",
-                            save = TRUE,
-                            test = FALSE){
+                            save = TRUE){
 
-  if(!test){
-    message(crayon::bold(crayon::green("Select standard data file (RDS format).")))
+  file <- force(file)
+
+  if (stringr::str_detect(file, ".RDS$")) {
+    message(crayon::bold(crayon::green("Loading standard data file (RDS format).")))
     standard_data <- readRDS(file = file)
   }else{
-    message(crayon::green("Using 'pipeline_output' as standard data."))
-    standard_data <- pipeline_output
+    message(crayon::green("Using local R object as standard data."))
+    standard_data <- file
   }
 
   if(!is.null(PopSpec)){
@@ -174,7 +173,7 @@ subset_datarqst <- function(file = file.choose(),
       dplyr::filter(.data$IndvID %in% ConflSpec_IndvIDs$IndvID) %>%
       dplyr::arrange(.data$IndvID, .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
       dplyr::group_by(.data$IndvID) %>%
-      dplyr::summarise(Relevant = purrr::map_chr(.x = list(unique(na.omit(.data$Species))),
+      dplyr::summarise(Relevant = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Species))),
                                                  .f = ~{
                                                  pb$tick()
         if(any((..1) %in% SpeciesInt)){

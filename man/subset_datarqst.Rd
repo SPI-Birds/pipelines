@@ -11,8 +11,7 @@ subset_datarqst(
   PopSpec = NULL,
   include_conflicting = FALSE,
   output_type = "R",
-  save = TRUE,
-  test = FALSE
+  save = TRUE
 )
 }
 \arguments{
@@ -36,9 +35,6 @@ If output_type is 'R' an .RDS file will be created in the save path, and an R ob
 running R session if return_R = TRUE.}
 
 \item{save}{is TRUE. If save = FALSE, the subset of data is not saved into the save path.}
-
-\item{test}{If FALSE (default), subset is created from the most recent version of the SPI-Birds standard format.
-If TRUE, subset is created from R object `pipeline_output` which is created temporarily during package testing.}
 }
 \value{
 Creates 1 RDS or 4 .csv files in a folder at the location of the standard data. Folder and files
