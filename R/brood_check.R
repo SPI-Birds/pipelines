@@ -23,7 +23,8 @@
 #' @param check_format \code{TRUE} or \code{FALSE}. If \code{TRUE}, the check on variable format (i.e. \code{\link{check_format_brood}}) is included in the quality check. Default: \code{TRUE}.
 #'
 #' @inherit checks_return return
-#'
+#' @importFrom rlang sym `:=`
+#' @importFrom progress progress_bar
 #' @export
 
 brood_check <- function(Brood_data, Individual_data, check_format=TRUE, approved_list){
@@ -726,9 +727,6 @@ compare_hatching_fledging <- function(Brood_data, approved_list){
 #' @param var Character. Variable to check against reference values.
 #'
 #' @inherit checks_return return
-#'
-#' @importFrom progress progress_bar
-#' @import rlang
 #'
 #' @export
 
