@@ -7,15 +7,13 @@
 #' Where a population uses multiple files provide a list of file paths.
 #' @param update_type Character string. Have we received a new year of data ("major")
 #' or data with bug/error fixes ("minor")?
-#' @param new_data_date. Date (YYYY-MM-DD). The date at which data was last updated. If NULL,
-#' will use todays date.
 #' @param initial Logical. Are we creating the initial archiving information? If TRUE, will create
 #' a MetaData.txt file and copy all information into an archive folder.
+#' @param new_data_date Date at which archiving should be recorded (i.e. the name of the folder
+#' where archived data will be stored.)
 #'
 #' @return Returns nothing.
 #' @export
-
-archive <- function(data_folder = choose_directory(), update_type = "major", PopID, new_data_path) {
 
 archive <- function(data_folder = choose_directory(), update_type = "major", OwnerID, new_data_path,
                     new_data_date = NULL, initial = FALSE) {

@@ -20,7 +20,8 @@ species_codes <- utils::read.csv(system.file("extdata", "species_codes.csv", pac
 #'  \item{PopName}{Name of population.}
 #'  \item{Country}{Name of country where population is situated.}
 #'  \item{Owner}{Letter code for data owner. Note, multiple populations can have
-#'  the same data owner.} }
+#'  the same data owner.}
+#'  \item{OwnerName}{Name of owner.}}
 #'@name pop_codes
 pop_codes <- utils::read.csv(system.file("extdata", "pop_codes.csv", package = "pipelines", mustWork = TRUE))
 
