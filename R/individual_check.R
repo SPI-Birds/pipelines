@@ -19,10 +19,9 @@
 #'
 #' @inherit checks_return return
 #'
-#' @import tidyselect
 #' @export
 
-individual_check <- function(Individual_data, Capture_data, Location_data, check_format=TRUE){
+individual_check <- function(Individual_data, Capture_data, Location_data, check_format=TRUE, approved_list){
 
   # Create check list with a summary of warnings and errors per check
   check_list <- tibble::tibble(CheckID = paste0("I", 1:6),
@@ -42,7 +41,7 @@ individual_check <- function(Individual_data, Capture_data, Location_data, check
   if(check_format) {
     message("I1: Checking format of individual data...")
 
-    check_format_individual_output <- check_format_individual(Individual_data)
+    check_format_individual_output <- check_format_individual(Individual_data, approved_list)
 
     check_list[1, 3:4] <- check_format_individual_output$CheckList
   }
@@ -50,35 +49,35 @@ individual_check <- function(Individual_data, Capture_data, Location_data, check
   # - Check unique individual IDs
   message("I2: Checking that individual IDs are unique...")
 
-  check_unique_IndvID_output <- check_unique_IndvID(Individual_data)
+  check_unique_IndvID_output <- check_unique_IndvID(Individual_data, approved_list)
 
   check_list[2, 3:4] <- check_unique_IndvID_output$CheckList
 
   # - Check that chicks have BroodIDs
   message("I3: Checking that chicks have BroodIDs...")
 
-  check_BroodID_chicks_output <- check_BroodID_chicks(Individual_data, Capture_data, Location_data)
+  check_BroodID_chicks_output <- check_BroodID_chicks(Individual_data, Capture_data, Location_data, approved_list)
 
   check_list[3, 3:4] <- check_BroodID_chicks_output$CheckList
 
   # - Check that individuals have no conflicting sex
   message("I4: Checking that individuals have no conflicting sex...")
 
-  check_conflicting_sex_output <- check_conflicting_sex(Individual_data)
+  check_conflicting_sex_output <- check_conflicting_sex(Individual_data, approved_list)
 
   check_list[4, 3:4] <- check_conflicting_sex_output$CheckList
 
   # - Check that individuals have no conflicting species
   message("I5: Checking that individuals have no conflicting species...")
 
-  check_conflicting_species_output <- check_conflicting_species(Individual_data)
+  check_conflicting_species_output <- check_conflicting_species(Individual_data, approved_list)
 
   check_list[5, 3:4] <- check_conflicting_species_output$CheckList
 
   # - Check that individuals in Individual_data also appear in Capture_data
   message("I6: Checking that individuals in Individual_data also appear in Capture_data...")
 
-  check_individuals_captures_output <- check_individuals_captures(Individual_data, Capture_data)
+  check_individuals_captures_output <- check_individuals_captures(Individual_data, Capture_data, approved_list)
 
   check_list[6, 3:4] <- check_individuals_captures_output$CheckList
 
@@ -145,7 +144,7 @@ individual_check <- function(Individual_data, Capture_data, Location_data, check
 #'
 #' @export
 
-check_format_individual <- function(Individual_data){
+check_format_individual <- function(Individual_data, approved_list){
 
   # Data frame with column names and formats according to the standard protocol
   Individual_data_standard <- tibble::tibble(Variable = c("Row", "IndvID", "Species", "PopID",
@@ -250,7 +249,7 @@ check_format_individual <- function(Individual_data){
 #'
 #' @export
 
-check_unique_IndvID <- function(Individual_data){
+check_unique_IndvID <- function(Individual_data, approved_list){
 
   # Errors
   # Select records with IndvIDs that are duplicated within populations
@@ -354,7 +353,7 @@ check_unique_IndvID <- function(Individual_data){
 #'
 #' @export
 
-check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data) {
+check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data, approved_list) {
 
   # Select first captures and link to the information of their locations
   First_captures <- Capture_data %>%
@@ -425,7 +424,7 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data) {
 #'
 #' @export
 
-check_conflicting_sex <- function(Individual_data) {
+check_conflicting_sex <- function(Individual_data, approved_list) {
 
   # Select records with conflicting sex
   # NB: allows v1.0 & v1.1 variable names of the standard format
@@ -487,7 +486,7 @@ check_conflicting_sex <- function(Individual_data) {
 #'
 #' @export
 
-check_conflicting_species <- function(Individual_data) {
+check_conflicting_species <- function(Individual_data, approved_list) {
 
   # Select individuals with conflicting species
   Conflicting_species <- Individual_data %>%
@@ -549,7 +548,7 @@ check_conflicting_species <- function(Individual_data) {
 #'
 #' @export
 
-check_individuals_captures <- function(Individual_data, Capture_data){
+check_individuals_captures <- function(Individual_data, Capture_data, approved_list){
 
   # Errors
   Missing_individuals <- Individual_data %>%

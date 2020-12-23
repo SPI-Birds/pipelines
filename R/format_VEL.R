@@ -383,11 +383,11 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
   ## First create a table for flycatcher chick captures on the nest
   FICALB_chicks <- FICALB_data %>%
     dplyr::select(BreedingSeason, Species, Plot, BroodID, LocationID, LayDate, ClutchSize, HatchDate, x1_young_ring:x8y_wing) %>%
-    reshape2::melt(measure.vars = c("x1_young_ring", "x2_young_ring",
-                                    "x3_young_ring", "x4_young_ring",
-                                    "x5_young_ring", "x6_young_ring",
-                                    "x7_young_ring", "x8_young_ring"),
-                   value.name = "IndvID", variable.name = "ChickNr") %>%
+    tidyr::pivot_longer(cols = c("x1_young_ring", "x2_young_ring",
+                                 "x3_young_ring", "x4_young_ring",
+                                 "x5_young_ring", "x6_young_ring",
+                                 "x7_young_ring", "x8_young_ring"),
+                        values_to = "IndvID", names_to = "ChickNr") %>%
     dplyr::filter(!is.na(IndvID))
 
   ## Make progress bar. Needs to be twice as long as rows because chicks are
@@ -404,7 +404,7 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
 
                                        output <- ..2 %>%
                                          dplyr::select(BreedingSeason:HatchDate, IndvID, contains(..1)) %>%
-                                         reshape2::melt(id.vars = c(1:9, 11, 13), value.name = "Mass") %>%
+                                         tidyr::pivot_longer(cols = contains("_mass"), values_to = "Mass", names_to = "variable") %>%
                                          ## Rename tarsus and wing to remove name of chick
                                          dplyr::rename_at(.vars = vars(contains("tarsus")), .funs = ~{"Tarsus"}) %>%
                                          dplyr::rename_at(.vars = vars(contains("wing")), .funs = ~{"WingLength"}) %>%
@@ -417,7 +417,7 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
                                                        CaptureDate = purrr::pmap(.l = list(LayDate, ClutchSize, HatchDate, ChickAge),
                                                                                  .f = ~{
 
-                                                                                   pb$print()$tick()
+                                                                                   pb$tick()
 
                                                                                    if(!is.na(..3)){
 
@@ -464,7 +464,7 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
   FICALB_adults <- FICALB_data %>%
     dplyr::select(BreedingSeason, Species, Plot, LocationID, LayDate, BroodID, LayDate, FemaleID, date_of_capture_52, tarsus_53:wing_55,
                   MaleID, date_of_capture_57, age:wing_61) %>%
-    reshape2::melt(measure.vars = c("FemaleID", "MaleID"), value.name = "IndvID", variable.name = "Sex") %>%
+    tidyr::pivot_longer(cols = c("FemaleID", "MaleID"), values_to = "IndvID", names_to = "Sex") %>%
     dplyr::filter(!is.na(IndvID))
 
   FICALB_adults <- FICALB_adults %>%
@@ -597,7 +597,7 @@ create_individual_VEL     <- function(Capture_data){
                      Sex = purrr::map_chr(.x = list(unique(Sex)),
                                           .f = ~{
 
-                                            pb$print()$tick()
+                                            pb$tick()
 
                                             if(all(c("F", "M") %in% ..1)){
 
@@ -622,7 +622,7 @@ create_individual_VEL     <- function(Capture_data){
     dplyr::mutate(BroodIDLaid = purrr::pmap_chr(.l = list(RingAge, FirstBroodID),
                                                .f = ~{
 
-                                                 pb$print()$tick()
+                                                 pb$tick()
 
                                                  if(is.na(..1) | (..1 == "adult")){
 

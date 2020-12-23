@@ -20,21 +20,10 @@ species_codes <- utils::read.csv(system.file("extdata", "species_codes.csv", pac
 #'  \item{PopName}{Name of population.}
 #'  \item{Country}{Name of country where population is situated.}
 #'  \item{Owner}{Letter code for data owner. Note, multiple populations can have
-#'  the same data owner.} }
+#'  the same data owner.}
+#'  \item{OwnerName}{Name of owner.}}
 #'@name pop_codes
 pop_codes <- utils::read.csv(system.file("extdata", "pop_codes.csv", package = "pipelines", mustWork = TRUE))
-
-#'Details for plotting png files of birds
-#'
-#'@format A data frame with 6 rows and 5 variables
-#'\describe{
-#'  \item{species}{Six-letter species code.}
-#'  \item{label}{English common name of species, used to create labels below .png files.}
-#'  \item{scale}{Size of png relative to the size of great tit.}
-#'  \item{base_colour}{Colour used to plot data from this species (based on plumage colour).}
-#'  \item{top_colour}{Secondary colour used to plot data from this species (based on plumage colour).}}
-#'@name bird_png_data
-NULL
 
 #'Spatial data polygon of great tit distribution.
 #'
@@ -155,3 +144,18 @@ NULL
 #'
 #' @name checkID_variable_combos
 checkID_variable_combos <- utils::read.csv(system.file("extdata", "checkID_variable_combos.csv", package = "pipelines", mustWork = TRUE))
+
+
+#' List of cutoffs used to define errors and warnings for chick mass
+#'
+#'
+#' @format Data frame with 4 variables and 248 rows:
+#' \describe{
+#' \item{Species}{6 letter code to identify species}
+#' \item{ChickAge}{Age at which cutoff is applied}
+#' \item{Reference}{In what context should the cutoff be used (e.g. warning, error)}
+#' \item{Value}{Value of the cutoff}
+#' }
+#'
+#' @name chick_mass_cutoffs
+NULL

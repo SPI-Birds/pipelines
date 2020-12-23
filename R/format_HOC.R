@@ -91,9 +91,9 @@ format_HOC <- function(db = choose_directory(),
     dplyr::filter(!is.na(ChickAge) & between(ChickAge, 14, 16)) %>%
     dplyr::group_by(BroodID) %>%
     dplyr::summarise(AvgChickMass = mean(Mass, na.rm = TRUE),
-                     NumberChicksMass = dplyr::na_if(length(na.omit(Mass)), 0),
+                     NumberChicksMass = dplyr::na_if(length(stats::na.omit(Mass)), 0),
                      AvgTarsus = mean(Tarsus, na.rm = TRUE),
-                     NumberChicksTarsus = dplyr::na_if(length(na.omit(Tarsus)), 0)) %>%
+                     NumberChicksTarsus = dplyr::na_if(length(stats::na.omit(Tarsus)), 0)) %>%
     dplyr::mutate(OriginalTarsusMethod = ifelse(!is.na(AvgTarsus), "Alternative", NA_character_))
 
   brood_exp <- Capture_data %>%
@@ -228,7 +228,7 @@ create_capture_HOC <- function(db){
 
                     } else {
 
-                      boxnumber <- na.omit(dplyr::na_if(unlist(strsplit(..1, split = "[^0-9]+")), ""))
+                      boxnumber <- stats::na.omit(dplyr::na_if(unlist(strsplit(..1, split = "[^0-9]+")), ""))
 
                       return(paste0("H", boxnumber))
 

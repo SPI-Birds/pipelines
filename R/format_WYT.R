@@ -202,7 +202,7 @@ create_brood_WYT <- function(db, species_filter){
                   HatchDate = as.Date(purrr::pmap_chr(.l = list(hatch_date, legacy_april_hatch_date),
                                               .f = ~{
 
-                                                pb$print()$tick()
+                                                pb$tick()
 
                                                 if(!is.na(..1)){
 
@@ -219,7 +219,7 @@ create_brood_WYT <- function(db, species_filter){
                   AvgEggMass = purrr::pmap_dbl(.l = list(.data$total_egg_weight, .data$num_eggs_weighed, .data$legacy_average_egg_weight),
                                                .f = ~{
 
-                                                 pb$print()$tick()
+                                                 pb$tick()
 
                                                  if(!is.na(..1) & !is.na(..2)){
 
@@ -324,7 +324,7 @@ create_capture_WYT <- function(db, Brood_data, species_filter){
     dplyr::bind_cols(purrr::map2_df(.x = .$tarsus_length, .y = .$tarsus_length_method,
                                     .f = ~{
 
-                                      chick_old_pb$tick()$print()
+                                      chick_old_pb$tick()
 
                                       if(is.na(..1)){
 
@@ -419,7 +419,7 @@ create_capture_WYT <- function(db, Brood_data, species_filter){
     dplyr::bind_cols(purrr::map2_df(.x = .$tarsus_length, .y = .$tarsus_length_method,
                                     .f = ~{
 
-                                      chick_new_pb$tick()$print()
+                                      chick_new_pb$tick()
 
                                       if(is.na(..1)){
 
@@ -494,15 +494,15 @@ create_capture_WYT <- function(db, Brood_data, species_filter){
 
 create_individual_WYT <- function(Capture_data){
 
-  indv_pb <- progress::progress_bar$new(total = length(unique(na.omit(Capture_data$IndvID))) * 4 + 1)
+  indv_pb <- progress::progress_bar$new(total = length(unique(stats::na.omit(Capture_data$IndvID))) * 4 + 1)
 
   #For every individual determine their unchanged individual information
   Individual_data <- Capture_data %>%
     dplyr::filter(!is.na(IndvID)) %>%
     dplyr::group_by(IndvID) %>%
-    dplyr::summarise(Species = purrr::map_chr(.x = list(unique(na.omit(Species))), .f = ~{
+    dplyr::summarise(Species = purrr::map_chr(.x = list(unique(stats::na.omit(Species))), .f = ~{
 
-      indv_pb$tick()$print()
+      indv_pb$tick()
 
       if(length(..1) == 0){
 
@@ -519,9 +519,9 @@ create_individual_WYT <- function(Capture_data){
       }
 
     }), PopID = "WYT",
-    BroodIDLaid = purrr::map_chr(.x = list(unique(na.omit(BroodIDLaid))), .f = ~{
+    BroodIDLaid = purrr::map_chr(.x = list(unique(stats::na.omit(BroodIDLaid))), .f = ~{
 
-      indv_pb$tick()$print()
+      indv_pb$tick()
 
       if(length(..1) == 0){
 
@@ -538,9 +538,9 @@ create_individual_WYT <- function(Capture_data){
       }
 
     }),
-    BroodIDFledged = purrr::map_chr(.x = list(unique(na.omit(BroodIDFledged))), .f = ~{
+    BroodIDFledged = purrr::map_chr(.x = list(unique(stats::na.omit(BroodIDFledged))), .f = ~{
 
-      indv_pb$tick()$print()
+      indv_pb$tick()
 
       if(length(..1) == 0){
 
@@ -559,9 +559,9 @@ create_individual_WYT <- function(Capture_data){
     }),
     RingSeason = first(BreedingSeason),
     RingAge = ifelse(all(is.na(Age_calculated)), NA_character_, ifelse(any(Age_calculated %in% c(1, 3)), "chick", ifelse(min(Age_calculated) == 2, NA_character_, "adult"))),
-    Sex = purrr::map_chr(.x = list(unique(na.omit(Sex))), .f = ~{
+    Sex = purrr::map_chr(.x = list(unique(stats::na.omit(Sex))), .f = ~{
 
-      indv_pb$tick()$print()
+      indv_pb$tick()
 
       if(length(..1) == 0){
 

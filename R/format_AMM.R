@@ -448,7 +448,7 @@ create_individual_AMM <- function(Capture_data, Brood_data, connection) {
 
   Capture_data %>%
     dplyr::group_by(.data$IndvID) %>%
-    dplyr::summarise(Species = purrr::map_chr(.x = list(unique(na.omit(.data$Species))), .f = ~{
+    dplyr::summarise(Species = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Species))), .f = ~{
 
       if(length(..1) == 0){
 
@@ -519,7 +519,7 @@ create_location_AMM <- function(Capture_data, connection) {
                   Longitude = as.numeric(.data$CoordinateLongitude2013), ## named vectors, not regular numeric vectors
                   LocationType = "NB",
                   PopID = "AMM",
-                  StartSeason = .data$start_year,
+                  StartSeason = start_year,
                   EndSeason = dplyr::case_when(nchar(.data$NestboxID) == 4 & stringr::str_sub(.data$NestboxID, 1, 2) == "16" ~ 2016L,
                                                TRUE ~ 2019L),
                   HabitatType = "DEC") %>%

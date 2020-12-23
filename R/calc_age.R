@@ -51,7 +51,7 @@ calc_age <- function(data, ID, Age, Date, Year, showpb = TRUE){
 
                                                if(showpb){
 
-                                                 pb$print()$tick()
+                                                 pb$tick()
 
                                                }
 

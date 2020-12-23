@@ -344,7 +344,7 @@ create_capture_MON <- function(db, species_filter, pop_filter){
 
       } else {
 
-        if(grepl(x = ..1, pattern = "voliére|volière")){
+        if(grepl(x = ..1, pattern = "voli")){
 
           return("aviary")
 
@@ -674,7 +674,7 @@ create_individual_MON <- function(capture_data, brood_data, verbose){
     #Use apply because it doesn't coerce dates to numbers!!!!!
     apply(1, function(x, brood_data){
 
-      pb$tick()$print()
+      pb$tick()
 
       #If the destination brood has been given
       if(!is.na(x["BroodIDFledged"])){
@@ -683,7 +683,7 @@ create_individual_MON <- function(capture_data, brood_data, verbose){
         CaptureDate <- as.Date(x["CaptureDate"])
 
         #If it has been transferred to an aviary, list this
-        if(split_info[1] == "volièreMontpellier"){
+        if (stringr::str_detect(string = split_info[1], pattern = "voli")) {
 
           return(tibble(IndvID = x["IndvID"], BroodIDFledged = "aviary"))
 
@@ -765,7 +765,7 @@ create_individual_MON <- function(capture_data, brood_data, verbose){
   Individual_data <- capture_data %>%
     dplyr::arrange(IndvID, CaptureDate) %>%
     dplyr::group_by(IndvID) %>%
-    dplyr::summarise(Species = purrr::map_chr(.x = list(na.omit(unique(Species))),
+    dplyr::summarise(Species = purrr::map_chr(.x = list(stats::na.omit(unique(Species))),
                                             .f = ~{
 
                                               if(length(..1) == 1){
@@ -804,20 +804,20 @@ create_individual_MON <- function(capture_data, brood_data, verbose){
 
                                           #Firstly, check genetic sex results
                                           #Are there any non-NA cases?
-                                          if(length(na.omit(..2)) > 0){
+                                          if(length(stats::na.omit(..2)) > 0){
 
                                             #If there's just one sex record return it
-                                            if(length(na.omit(..2)) == 1){
+                                            if(length(stats::na.omit(..2)) == 1){
 
-                                              return(na.omit(..2))
+                                              return(stats::na.omit(..2))
 
                                             #Otherwise, check if we can use observed sex instead
                                             } else {
 
                                               #If there is one record of observed sex use this
-                                              if(length(na.omit(..1)) == 1){
+                                              if(length(stats::na.omit(..1)) == 1){
 
-                                                return(na.omit(..1))
+                                                return(stats::na.omit(..1))
 
                                               #Otherwise, we need to say the sex is conflicted
                                               } else {
@@ -832,12 +832,12 @@ create_individual_MON <- function(capture_data, brood_data, verbose){
                                           } else {
 
                                             #Check if there are any non-NA observed records
-                                            if(length(na.omit(..1)) > 0){
+                                            if(length(stats::na.omit(..1)) > 0){
 
                                               #If there is just one, return that
-                                              if(length(na.omit(..1)) == 1){
+                                              if(length(stats::na.omit(..1)) == 1){
 
-                                                return(na.omit(..1))
+                                                return(stats::na.omit(..1))
 
                                               } else {
 
@@ -1039,7 +1039,7 @@ identify_PopID_MON <- function(variable){
                    variable %in% c("hs", "aul", "mes", "aig", "bon", "cap", "crt", "gen", "mal",
                                  "mau", "mrt", "olm", "pac", "pie", "pog", "pon",
                                  "pre", "pue", "sfl", "stb", "tcb", "tcv", "vic", "vol") ~ "MIS",
-                   grepl(x = variable, pattern = "voliére|volière|aviary") ~ "aviary")
+                   grepl(x = variable, pattern = "voli|aviary") ~ "aviary")
 
 }
 
