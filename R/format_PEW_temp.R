@@ -53,7 +53,7 @@ format_PEW <- function(db = choose_directory(),
 
   pew_data <- readxl::read_excel(path =  paste0(db, "/PEW_PrimaryData.xlsx"),
                                  col_types = c("text", "text", "text",
-                                               "text", "text", "numeric", "date",
+                                               "text", "text", "numeric", "text",
                                                "text", "text", "text", "text", "text",
                                                "text", "text", "text", "text", "text",
                                                "text", "text", "text", "text", "text",
@@ -61,14 +61,16 @@ format_PEW <- function(db = choose_directory(),
                                                "text", "date", "numeric", "numeric",
                                                "text", "numeric", "numeric", "numeric",
                                                "numeric", "numeric", "numeric",
-                                               "numeric", "numeric", "numeric")) %>%
+                                               "numeric", "numeric", "numeric"),
+                                 na = "NA") %>%
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
-    #### Solve NA values (some are explicitly stated as character "NA")
-    dplyr::mutate(across(where(is.character), .fns = ~replace(., . ==  "NA" , NA))) %>%
     #### Convert to corresponding format and rename
     dplyr::mutate(BreedingSeason = as.integer(Year),
-                  CaptureDate = as.Date(Date),
+                  Date_temp = ifelse(Date == "D14", NA_character_, Date),
+                  D14Chicks = ifelse(Date == "D14", "yes", "no"),
+                  CaptureDate = janitor::excel_numeric_to_date(as.numeric(Date_temp),
+                                                      date_system = "modern"),
                   Tarsus = as.numeric(Tarsus),
                   Mass = as.numeric(Mass),
                   TarsusPartner = as.numeric(TarsusPartner),
@@ -81,10 +83,12 @@ format_PEW <- function(db = choose_directory(),
                   NoOfChicksD3 = as.integer(NoOfChicksD3),
                   BroodMassD3 = as.numeric(BroodMassD3),
                   ObservationTimeH = as.numeric(ObservationTimeH),
+                  NewRing = toupper(NewRing),
                   Species = "CYACAE",
                   PopID = "PEW",
                   NestboxID = tolower(Nest),
-                  BroodID = ifelse(Method %in% c("Catch adults nestbox", "ChickRinging"),
+                  BroodID = ifelse(Method %in% c("Catch adults nestbox", "ChickRinging",
+                                                 "Catch incubation"),
                                    paste(Year, NestboxID, "PEW", sep = "_"), NA)) %>%
     #### Rename variables to standardized format
     dplyr::rename(IndvID = Id,
@@ -105,7 +109,9 @@ format_PEW <- function(db = choose_directory(),
                   -VisitsSync10,
                   -ChickAgeOfBehavObserv,
                   -MateStrategy,
-                  -Nest) %>%
+                  -Nest,
+                  -Date,
+                  -Date_temp) %>%
     #### Reorder columns
     dplyr::select(BreedingSeason,
                   Species,
@@ -215,10 +221,8 @@ create_brood_PEW <- function(data) {
   parents_brood_data <-
     data %>%
     #### Exclude non-breeding data, exclude chicks
-    #### Use only CatchAdultsNestbox, where all relevant information is.
-    #### However, for one nest in the clutch size is only in the CatchIncubation Method !!
-    #### Ignore for now
-    filter(Method == "Catch adults nestbox") %>%
+    #### Trying to use both
+    filter(Method %in% c("Catch adults nestbox", "Catch incubation")) %>%
     #### Rename variables
     dplyr::rename(LocationID = NestboxID) %>%
 
@@ -250,16 +254,18 @@ create_brood_PEW <- function(data) {
     #### Remove unnecessary variables which may cause duplicated rows
     #### Exclude also Date column, as for few broods, there may be
     #### several catches of parents, but the brood parameters are the same
-    dplyr::select(-c(Date, IndvID, Sex, Age, PartnerId, NumberTransponder,
+    dplyr::select(-c(IndvID, Sex, Age, PartnerId, NumberTransponder,
                      NewRing, CaptureDate, NeophobiaTransponder,
                      Tarsus, Mass, AgePartner, TarsusPartner, MassPartner,
-                     ObserverID, ObservationTimeH, Experiment)) %>%
+                     ObserverID, ObservationTimeH, Experiment, D14Chicks)) %>%
     #### Remove duplicated rows (as we get one row for males and females for the same brood)
     dplyr::distinct() %>%
     #### Remove rows with no information about the brood
     dplyr::filter(!(is.na(ClutchSize) & is.na(DateEgg1) & is.na(HatchDateD0) &
                     is.na(NumberOfRingedChicks) & is.na(DateRingingChicks) &
                     is.na(NoOfChicksD3) & is.na(BroodMassD3))) %>%
+    #### Remove one specific case causing doble register for the same BroodID
+    dplyr::filter(!(BroodID == "2017_109_PEW" & Method == "Catch incubation")) %>%
 
     #### CHECK: Remove this after solving the issue below
     #### Identify possible errors or duplicates (rank >1)
@@ -378,16 +384,15 @@ create_capture_PEW <- function(pew_data, Brood_data) {
     dplyr::rename(LocationID = NestboxID) %>%
     dplyr::select(-DateRingingChicks) %>%
     #### Create new variables
-    dplyr::mutate(#### ASSUMPTION: There is no captureID info, so I made this up
-                  CaptureID = paste(IndvID, LocationID,
-                                    paste0(lubridate::year(CaptureDate),
-                                           sprintf("%02d", lubridate::month(CaptureDate)),
-                                           sprintf("%02d", lubridate::day(CaptureDate))),
-                                    sep = "_"),
+    dplyr::group_by(IndvID) %>%
+    dplyr::arrange(Year, CaptureDate) %>%
+    dplyr::mutate(CaptureID = paste(IndvID, row_number(), sep = "_")) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(
       #### ASSUMPTION: Some times are strange, to simplify, round to whole hour
       #### ? do they correspond only to the experimental observations? keep/remove?
       CaptureTime = ifelse(is.na(ObservationTimeH),
-                           NA,
+                           NA_character_,
                            paste(sprintf("%02d", round(ObservationTimeH, 0)),
                                  "00", sep = ":")),
       Sex_observed = ifelse(Sex == "Chick", NA_character_, substr(Sex, 1, 1)),
@@ -395,29 +400,27 @@ create_capture_PEW <- function(pew_data, Brood_data) {
       #### ASSUMPTION: the same as CaptureAlive, as there is no additional data
       ReleaseAlive = CaptureAlive,
       CapturePopID = PopID,
-      CapturePlot = NA_character_,
+      CapturePlot  = NA_character_,
       ReleasePopID = ifelse(ReleaseAlive == TRUE, CapturePopID, NA_character_),
-      ReleasePlot = ifelse(ReleaseAlive == TRUE, CapturePlot, NA_character_),
+      ReleasePlot  = ifelse(ReleaseAlive == TRUE, CapturePlot, NA_character_),
       #### ASSUMPTION: use NA, as there is no information
       OriginalTarsusMethod = NA_character_,
-      WingLength = NA,
+      WingLength = NA_real_,
       ExperimentID = dplyr::case_when(Experiment == "BSM - Griffioen et al. 2019 PeerJ" ~
                                         "COHORT; PARENTAGE",
                                       Experiment == "2h Temp D4" ~ "SURVIVAL",
                                       Experiment == "2h Temp D4 + Handicaping Male: Griffioen et al. 2019 Front Ecol&Evol" ~
                                         "SURVIVAL; PARENTAGE"),
-      #### NOT SURE ABOUT THIS
-      Age_observed = case_when(Age == "0" & Method == "ChickRinging" ~ 1,
-                               Age == "1" ~ 5,
-                               Age == ">=2" ~ 7,
-                               #### Account for controls in December
+      Age_observed = case_when(Age == "0" & Method == "ChickRinging" ~ 1L,
+                               Age == "1" ~ 5L,
+                               Age == ">=2" ~ 6L,
+                               #### Account for controls in January & February
                                Age == "1" & Method == "Night Control Winter" &
-                                 lubridate::month(CaptureDate) == 12 ~ 6,
+                                 lubridate::month(CaptureDate) %in% c(1, 2) ~ 6L,
                                #### Account for controls in January & February
                                Age == ">=2" & Method == "Night Control Winter" &
-                                 lubridate::month(CaptureDate) %in% c(1, 2) ~ 8,
-                               is.na(Age) ~ 5),
-      Age_observed = as.integer(Age_observed))
+                                 lubridate::month(CaptureDate) %in% c(1, 2) ~ 8L,
+                               is.na(Age) ~ 4L))
 
 
   Capture_data <-
@@ -516,7 +519,7 @@ create_location_PEW <- function(data) {
     dplyr::select(BreedingSeason, Date, NestboxID, PopID) %>%
     group_by(NestboxID) %>%
     arrange(BreedingSeason, Date) %>%
-    dplyr::summarise(StartSeason = first(BreedingSeason),
+    dplyr::summarise(StartSeason = min(BreedingSeason, na.rm = TRUE),
                      #### CHECK WITH DATA OWNER
                      #### EndSeason = last(BreedingSeason))
                      EndSeason = NA_character_,
