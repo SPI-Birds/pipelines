@@ -67,36 +67,36 @@ test_that("Brood_data returns an expected outcome...", {
 
   #Test 1: Brood where (calculated) clutch type = first
   #From early data
-  expect_equal(subset(VAL_data, BroodID == "186_1998a")$Species, "FICHYP")
-  expect_equal(subset(VAL_data, BroodID == "186_1998a")$ClutchType_calculated, "first")
-  expect_equal(subset(VAL_data, BroodID == "186_1998a")$LayDate_observed, as.Date("1998-04-13"))
-  expect_equal(subset(VAL_data, BroodID == "186_1998a")$ClutchSize_observed, NA_integer_)
-  expect_equal(subset(VAL_data, BroodID == "186_1998a")$BroodSize_observed, NA_integer_)
-  expect_equal(subset(VAL_data, BroodID == "186_1998a")$NumberFledged_observed, NA_integer_)
-  expect_equal(subset(VAL_data, BroodID == "186_1998a")$AvgChickMass, NA_real_)
-  expect_equal(subset(VAL_data, BroodID == "186_1998a")$AvgTarsus, NA_real_)
+  expect_equal(subset(VAL_data, BroodID == "186_1998_1")$Species, "FICHYP")
+  expect_equal(subset(VAL_data, BroodID == "186_1998_1")$ClutchType_calculated, "first")
+  expect_equal(subset(VAL_data, BroodID == "186_1998_1")$LayDate_observed, as.Date("1998-04-13"))
+  expect_equal(subset(VAL_data, BroodID == "186_1998_1")$ClutchSize_observed, NA_integer_)
+  expect_equal(subset(VAL_data, BroodID == "186_1998_1")$BroodSize_observed, NA_integer_)
+  expect_equal(subset(VAL_data, BroodID == "186_1998_1")$NumberFledged_observed, NA_integer_)
+  expect_equal(subset(VAL_data, BroodID == "186_1998_1")$AvgChickMass, NA_real_)
+  expect_equal(subset(VAL_data, BroodID == "186_1998_1")$AvgTarsus, NA_real_)
 
   #Test 2: Brood where (calculated) clutch type = replacement (due to failed nest)
   #From early data
-  expect_equal(subset(VAL_data, BroodID == "34_2000b")$Species, "FICHYP")
-  expect_equal(subset(VAL_data, BroodID == "34_2000b")$ClutchType_calculated, "replacement")
-  expect_equal(subset(VAL_data, BroodID == "34_2000b")$LayDate_observed, as.Date("2000-04-17"))
-  expect_equal(subset(VAL_data, BroodID == "34_2000b")$ClutchSize_observed, 13L)
-  expect_equal(subset(VAL_data, BroodID == "34_2000b")$BroodSize_observed, 4L)
-  expect_equal(subset(VAL_data, BroodID == "34_2000b")$NumberFledged_observed, 3L)
-  expect_equal(subset(VAL_data, BroodID == "34_2000b")$AvgChickMass, NA_real_)
-  expect_equal(subset(VAL_data, BroodID == "34_2000b")$AvgTarsus, NA_real_)
+  expect_equal(subset(VAL_data, BroodID == "34_2000_2")$Species, "FICHYP")
+  expect_equal(subset(VAL_data, BroodID == "34_2000_2")$ClutchType_calculated, "replacement")
+  expect_equal(subset(VAL_data, BroodID == "34_2000_2")$LayDate_observed, as.Date("2000-04-17"))
+  expect_equal(subset(VAL_data, BroodID == "34_2000_2")$ClutchSize_observed, 13L)
+  expect_equal(subset(VAL_data, BroodID == "34_2000_2")$BroodSize_observed, 4L)
+  expect_equal(subset(VAL_data, BroodID == "34_2000_2")$NumberFledged_observed, 3L)
+  expect_equal(subset(VAL_data, BroodID == "34_2000_2")$AvgChickMass, NA_real_)
+  expect_equal(subset(VAL_data, BroodID == "34_2000_2")$AvgTarsus, NA_real_)
 
   #Test 3: Brood where (calculated) clutch type = first
   #From late data
-  expect_equal(subset(VAL_data, BroodID == "37_2017a")$Species, "FICHYP")
-  expect_equal(subset(VAL_data, BroodID == "37_2017a")$ClutchType_calculated, "first")
-  expect_equal(subset(VAL_data, BroodID == "37_2017a")$LayDate_observed, as.Date("2017-05-25"))
-  expect_equal(subset(VAL_data, BroodID == "37_2017a")$ClutchSize_observed, 1L)
-  expect_equal(subset(VAL_data, BroodID == "37_2017a")$BroodSize_observed, NA_integer_)
-  expect_equal(subset(VAL_data, BroodID == "37_2017a")$NumberFledged_observed, NA_integer_)
-  expect_equal(subset(VAL_data, BroodID == "37_2017a")$AvgChickMass, NA_real_)
-  expect_equal(subset(VAL_data, BroodID == "37_2017a")$AvgTarsus, NA_real_)
+  expect_equal(subset(VAL_data, BroodID == "37_2017_1")$Species, "FICHYP")
+  expect_equal(subset(VAL_data, BroodID == "37_2017_1")$ClutchType_calculated, "first")
+  expect_equal(subset(VAL_data, BroodID == "37_2017_1")$LayDate_observed, as.Date("2017-05-25"))
+  expect_equal(subset(VAL_data, BroodID == "37_2017_1")$ClutchSize_observed, 1L)
+  expect_equal(subset(VAL_data, BroodID == "37_2017_1")$BroodSize_observed, NA_integer_)
+  expect_equal(subset(VAL_data, BroodID == "37_2017_1")$NumberFledged_observed, NA_integer_)
+  expect_equal(subset(VAL_data, BroodID == "37_2017_1")$AvgChickMass, NA_real_)
+  expect_equal(subset(VAL_data, BroodID == "37_2017_1")$AvgTarsus, NA_real_)
 
 })
 
@@ -138,7 +138,7 @@ test_that("Location_data returns an expected outcome...", {
 
   #Test 1: Nest no longer in use
   expect_equal(subset(VAL_data, LocationID == 1)$StartSeason, 1991)
-  expect_equal(subset(VAL_data, LocationID == 1)$EndSeason, 2018)
+  expect_equal(subset(VAL_data, LocationID == 1)$EndSeason, NA_integer_)
 
   #Test 2: Nest still in use
   expect_equal(subset(VAL_data, LocationID == 3)$StartSeason, 1991)
