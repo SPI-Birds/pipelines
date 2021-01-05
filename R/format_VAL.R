@@ -154,7 +154,7 @@ create_brood_VAL <- function(early_broods, late_broods, chick_data){
                   PopID = "VAL",
                   BreedingSeason = .data$year,
                   Species = Species_codes$Code[Species_codes$SpeciesID == 13490],
-                  Plot = NA_character_,
+                  Plot = "A", ##FIXME: Nests with no letter prefix are given plot A. Check with Alex if they have a name.
                   LocationID = .data$nido,
                   FemaleID = .data$female,
                   MaleID = .data$male,
@@ -196,7 +196,7 @@ create_brood_VAL <- function(early_broods, late_broods, chick_data){
                   PopID = "VAL",
                   BreedingSeason = .data$year,
                   Species = Species_codes$Code[Species_codes$SpeciesID == 13490],
-                  Plot = NA_character_, #FIXME: Are there separate plots? Yes, there is plot B. ~3km away from main plot.
+                  Plot = tidyr::replace_na(stringr::str_extract(late_broods$nest, "[A-Z]"), replace = "A"), #FIXME: Check what other plots are called
                   LocationID = .data$nest,
                   FemaleID = .data$female,
                   MaleID = .data$male,
