@@ -215,7 +215,15 @@ create_brood_VAL <- function(early_broods, late_broods, chick_data){
                   FledgeDate_observed = as.Date(NA),
                   FledgeDate_min = as.Date(NA),
                   FledgeDate_max = as.Date(NA),
-                  NumberFledged_observed = as.integer(.data$cs * .data$fled_suc/100), #FIXME: Is this proportion of clutch that fledge or of brood? Proportion of hatchlings that fledge.
+                  NumberFledged_observed = NA_integer_, #FIXME: Alex says this is proportion of hatchlings that fledge.
+                  #However, in some cases this cannot be possible!
+                  #e.g. 103_2011, CS = 7, hatchsuccess = 57.14, fledgesuccess = 57.14.
+                  #If fledgesuccess is a proportion of hatchings then BS = 7 * 0.5714 = 4
+                  #NrFledge = 4 * 0.5714 = 2.29.
+                  #In other cases, it must be true!
+                  #e.g. 8_2013, CS = 5, hatchsuccess = 80, fledgesuccess = 100.
+                  #If fledge success is proportion of CS then there are more fledglings than hatchling!
+                  #So, when is it one or the other?! For now, just leave this blank.
                   NumberFledged_min = NA_integer_,
                   NumberFledged_max = NA_integer_,
                   AvgEggMass = NA_real_,
