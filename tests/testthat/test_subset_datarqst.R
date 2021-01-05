@@ -28,7 +28,7 @@ test_that("All tables contain correct columns...", {
 
 test_that("Subset output is identical when 'PopID' and 'Species' or 'filter' is used...", {
 
-  request_data_filter <- subset_datarqst(PopSpec = request_PopSpec, test = TRUE, save = FALSE)
+  request_data_filter <- subset_datarqst(file = pipeline_output, PopSpec = request_PopSpec, save = FALSE)
 
   expect_identical(request_data$Brood_data, request_data_filter$Brood_data)
   expect_identical(request_data$Capture_data, request_data_filter$Capture_data)
@@ -40,8 +40,8 @@ test_that("Subset output is identical when 'PopID' and 'Species' or 'filter' is 
 
 test_that("Conflicted species individuals are only included when prompted...", {
 
-  request_data_C <- subset_datarqst(PopID = request_PopIDs, Species = request_Species,
-                                  include_conflicting = TRUE, test = TRUE, save = FALSE)
+  request_data_C <- subset_datarqst(file = pipeline_output, PopID = request_PopIDs, Species = request_Species,
+                                  include_conflicting = TRUE, save = FALSE)
 
   expect_length(subset(request_data$Individual_data, IndvID == 'V56449')$IndvID, 0)
   expect_length(subset(request_data$Capture_data, IndvID == 'V56449')$IndvID, 0)
@@ -53,8 +53,8 @@ test_that("Conflicted species individuals are only included when prompted...", {
 
 test_that("Conflicted species individuals return all capture records (even non-focal species)...", {
 
-  request_data_C <- subset_datarqst(PopID = "HAR", Species = "PARMAJ",
-                                    include_conflicting = TRUE, test = TRUE, save = FALSE)
+  request_data_C <- subset_datarqst(file = pipeline_output, PopID = "HAR", Species = "PARMAJ",
+                                    include_conflicting = TRUE, save = FALSE)
 
   focal_indv <- request_data_C$Capture_data %>%
     filter(IndvID == "X-396693")
@@ -62,8 +62,8 @@ test_that("Conflicted species individuals return all capture records (even non-f
   expect_equal(nrow(focal_indv), 3)
   expect_equal(unname(focal_indv$Species), c("FICHYP", "FICHYP", "PARMAJ"))
 
-  request_data_C2 <- subset_datarqst(PopSpec = "HAR_PARMAJ",
-                                    include_conflicting = TRUE, test = TRUE, save = FALSE)
+  request_data_C2 <- subset_datarqst(file = pipeline_output, PopSpec = "HAR_PARMAJ",
+                                    include_conflicting = TRUE, save = FALSE)
 
   focal_indv2 <- request_data_C2$Capture_data %>%
     filter(IndvID == "X-396693")
@@ -75,22 +75,22 @@ test_that("Conflicted species individuals return all capture records (even non-f
 
 test_that("We get correct errors when wrong Species, Pop_ID or PopSpec given...", {
 
-  message1 <- tryCatch(subset_datarqst(Species = "WRONG", test = TRUE, save = FALSE),
+  message1 <- tryCatch(subset_datarqst(file = pipeline_output, Species = "WRONG", save = FALSE),
                       error = function(e) e$message )
 
   expect_true(stringr::str_detect(message1, pattern = "^\n Species code is incorrect:"))
 
-  message2 <- tryCatch(subset_datarqst(PopID = "WRONG", test = TRUE, save = FALSE),
+  message2 <- tryCatch(subset_datarqst(file = pipeline_output, PopID = "WRONG", save = FALSE),
                       error = function(e) e$message )
 
   expect_true(stringr::str_detect(message2, pattern = "^\n PopID is incorrect:"))
 
-  message3 <- tryCatch(subset_datarqst(PopSpec = "AMM_WRONG", test = TRUE, save = FALSE),
+  message3 <- tryCatch(subset_datarqst(file = pipeline_output, PopSpec = "AMM_WRONG", save = FALSE),
                        error = function(e) e$message )
 
   expect_true(stringr::str_detect(message3, pattern = "^\n Species code is incorrect:"))
 
-  message4 <- tryCatch(subset_datarqst(PopSpec = "WRONG_AMM", test = TRUE, save = FALSE),
+  message4 <- tryCatch(subset_datarqst(file = pipeline_output, PopSpec = "WRONG_AMM", save = FALSE),
                        error = function(e) e$message )
 
   expect_true(stringr::str_detect(message4, pattern = "^\n PopID is incorrect:"))
