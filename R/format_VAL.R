@@ -190,15 +190,16 @@ create_brood_VAL <- function(early_broods, late_broods, chick_data){
 
   late_broods_format <- late_broods %>%
     dplyr::mutate(MarchDay = as.Date(paste(.data$year, "03", "31", sep = "-")),
-                  BroodID = paste(.data$nest, .data$year, sep = "_"),
+                  BroodID = paste(stringr::str_remove(.data$nest, "bis"), .data$year, sep = "_"), #Remove 'bis' this is record that the clutch was a replacement.
                   PopID = "VAL",
                   BreedingSeason = .data$year,
                   Species = Species_codes$Code[Species_codes$SpeciesID == 13490],
                   Plot = tidyr::replace_na(stringr::str_extract(late_broods$nest, "[A-Z]"), replace = "A"), #FIXME: Check what other plots are called
-                  LocationID = .data$nest,
+                  LocationID = stringr::str_remove(.data$nest, "bis"), #Remove 'bis' this is record that the clutch was a replacement.
                   FemaleID = .data$female,
                   MaleID = .data$male,
-                  ClutchType_observed = NA_character_,
+                  ClutchType_observed = dplyr::case_when(stringr::str_detect(.data$nest, "bis") ~ "replacement",
+                                                         TRUE ~ "first"), #Assume nests are first unless they have bis, then replacement.
                   LayDate_observed = .data$MarchDay + floor(.data$ld),
                   LayDate_min = as.Date(NA),
                   LayDate_max = as.Date(NA),
