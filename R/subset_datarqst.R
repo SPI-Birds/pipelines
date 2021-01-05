@@ -54,12 +54,20 @@ subset_datarqst <- function(file = file.choose(),
 
   file <- force(file)
 
-  if (stringr::str_detect(file, ".RDS$")) {
-    message(crayon::bold(crayon::green("Loading standard data file (RDS format).")))
-    standard_data <- readRDS(file = file)
-  }else{
+  if (is.list(file)) {
+
     message(crayon::green("Using local R object as standard data."))
     standard_data <- file
+
+  } else if (stringr::str_detect(file, ".RDS$")) {
+
+    message(crayon::bold(crayon::green("Loading standard data file (RDS format).")))
+    standard_data <- readRDS(file = file)
+
+  } else {
+
+   stop("File should a list object or RDS file containing pipeline output in the standard format.")
+
   }
 
   if(!is.null(PopSpec)){
