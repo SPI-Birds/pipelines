@@ -159,24 +159,22 @@ create_brood_VAL <- function(early_broods, late_broods, chick_data){
                   FemaleID = .data$female,
                   MaleID = .data$male,
                   ClutchType_observed = NA_character_,
-                  LayDate_observed = .data$MarchDay + floor(.data$tmed_ld), #FIXME: Is xxx_ld laying date info? How can there be broods in the same box with similar LD (e.g. 1997_117)?
-                                                                            #FPUESTA is LD and PUESTA is clutch size
-                  LayDate_min = .data$MarchDay + floor(.data$tmin_ld), #FIXME: These represent error in laying date?
-                  LayDate_max = .data$MarchDay + floor(.data$tmax_ld),
-                  ClutchSize_observed = .data$incub, #FIXME: The number of eggs being incubated? This is comparable to CS in newer data? NO!
-                                                     #FIXME: How is this affected by clutch size manipulation? Is it before or after? CS is before brood size manipulation.
+                  LayDate_observed = .data$MarchDay + floor(.data$ld),
+                  LayDate_min = as.Date(NA),
+                  LayDate_max = as.Date(NA),
+                  ClutchSize_observed = .data$cs, ## CS is before brood size manipulation.
                   ClutchSize_min = NA_integer_,
                   ClutchSize_max = NA_integer_,
                   HatchDate_observed = .data$MarchDay + .data$hdate,
                   HatchDate_min = as.Date(NA),
                   HatchDate_max = as.Date(NA),
-                  BroodSize_observed = .data$hatchl, #FIXME: Number of hatchlings observed? Correct.
+                  BroodSize_observed = .data$hatchl,
                   BroodSize_min = NA_integer_,
                   BroodSize_max = NA_integer_,
                   FledgeDate_observed = as.Date(NA),
                   FledgeDate_min = as.Date(NA),
                   FledgeDate_max = as.Date(NA),
-                  NumberFledged_observed = .data$fledgl, #FIXME: Number of fledlgings observed? Correct.
+                  NumberFledged_observed = .data$fledgl,
                   NumberFledged_min = NA_integer_,
                   NumberFledged_max = NA_integer_,
                   ExperimentID = dplyr::case_when(manip %in% c("aumentado", "reducido") ~ c("COHORT;PARENTAGE"))) %>% #FIXME: What do the other experiment values mean? Alex will check these.
