@@ -45,7 +45,7 @@ format_VAL <- function(db = choose_directory(),
   #Last sheet is the experiment sheet
   all_sheets      <- readxl::excel_sheets(data_file)
   chick_sheet_nrs <- which(stringr::str_detect(all_sheets, pattern = "Chicks"))
-  chick_sheet_yrs <- as.numeric(stringr::str_extract(all_sheets[chick_sheet_nrs], "[0-9]+"))
+  chick_sheet_yrs <- as.integer(stringr::str_extract(all_sheets[chick_sheet_nrs], "[0-9]+"))
   early_broods    <- readxl::read_excel(data_file, sheet = 1, na = c("", "-")) %>%
     janitor::clean_names()
   late_broods     <- readxl::read_excel(data_file, sheet = 2, na = c("", "-")) %>% #FIXME: Are - NA or 0? e.g. 37_2017 Check with data owner. Alex will check.
@@ -346,7 +346,7 @@ create_capture_VAL <- function(early_broods, late_broods, chick_data){
                   IndvID = .data$anilla,
                   Species = Species_codes$Code[Species_codes$SpeciesID == 13490],
                   Sex_observed = NA_character_,
-                  BreedingSeason = .data$year,
+                  BreedingSeason = as.integer(.data$year),
                   CaptureDate = .data$Date,
                   CaptureTime = .data$hora,
                   ObserverID = NA_character_,
