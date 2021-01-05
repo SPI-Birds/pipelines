@@ -59,7 +59,10 @@ format_VAL <- function(db = choose_directory(),
                                                   Date = janitor::excel_numeric_to_date(as.numeric(.data$fecha))) %>%
                                     dplyr::mutate(tidyr::fill(., .data$NestboxID, .direction = "down"))
 
-                                })
+                                    })
+  experiment_data <- readxl::read_excel(data_file, sheet = length(all_sheets), na = c("", "-")) %>%
+    janitor::clean_names() %>%
+    dplyr::rename(ExperimentID = spi_code)
 
   GPS_2014 <- sf::st_read(paste0(db, "/VAL_PrimaryData_GPS2014.gpx"), layer = "waypoints")
   GPS_2015 <- sf::st_read(paste0(db, "/VAL_PrimaryData_GPS2015.gpx"), layer = "waypoints")
