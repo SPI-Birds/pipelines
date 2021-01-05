@@ -61,6 +61,11 @@ format_VAL <- function(db = choose_directory(),
 
                                 })
 
+  GPS_2014 <- sf::st_read(paste0(db, "/VAL_PrimaryData_GPS2014.gpx"), layer = "waypoints")
+  GPS_2015 <- sf::st_read(paste0(db, "/VAL_PrimaryData_GPS2015.gpx"), layer = "waypoints")
+
+  All_GPS <- dplyr::bind_rows(GPS_2014, GPS_2015)
+
   # BROOD DATA
   #Extract Valsein brood data
 
@@ -84,7 +89,7 @@ format_VAL <- function(db = choose_directory(),
 
   message("Compiling location data...")
 
-  Location_data <- create_location_VAL(Brood_data = Brood_data, Capture_data = Capture_data)
+  Location_data <- create_location_VAL(Brood_data = Brood_data, Capture_data = Capture_data, GPS = All_GPS)
 
   # EXPORT DATA
 
@@ -434,26 +439,35 @@ create_individual_VAL <- function(Capture_data){
 #' Create full location data table in standard format for data from Valsein, Spain.
 #'
 #' @param Brood_data Output of \code{\link{create_brood_VAL}}.
-#' @param Capture_data Output of \code{\link{create_capture_VAL}}.
+#' @param GPS GPS data file.
 #'
 #' @return A data frame.
 #' @export
 
-create_location_VAL <- function(Brood_data, Capture_data){
+create_location_VAL <- function(Brood_data, GPS){
+
+  #Extract latitude and longitude from gps file
+  GPS <- GPS %>%
+    dplyr::bind_cols(as_tibble(sf::st_coordinates(.))) %>%
+    dplyr::rename(Longitude = X, Latitude = Y) %>%
+    dplyr::select(NestboxID = name, Longitude, Latitude) %>%
+    sf::st_drop_geometry() %>%
+    #Where there are multiple records from the same box, just take the first one
+    #There is no box movement so these are duplicate
+    dplyr::group_by(NestboxID) %>%
+    slice(1)
 
   Location_data <- Brood_data %>%
     dplyr::group_by(LocationID) %>%
     dplyr::summarise(NestboxID = first(.data$LocationID),
                   LocationType = "NB",
                   PopID = "VAL",
-                  Latitude = NA_real_, #FIXME: Is this data available? Alex will send a file.
-                  Longitude = NA_real_,
-                  StartSeason = min(.data$BreedingSeason),
-                  EndSeason = ifelse(max(.data$BreedingSeason) == max(Capture_data$BreedingSeason), NA_integer_, max(.data$BreedingSeason)), # FIXME: When year is missing does this mean the box is no longer used?
-                                                                                                                                             # Some boxes may be used by BT/GT and they could be using the nest box
-                                                                                                                                             # This data is collected by other researcher. Alex will contact/give me his contact.
-                  HabitatType = "DEC", #FIXME: Taken from meta-data. Is this correct? Yes!
-                  .groups = "drop")
+                  StartSeason = as.integer(min(.data$BreedingSeason)),
+                  EndSeason = NA_integer_, # Boxes are not removed. Some boxes may be used by BT/GT so aren't found here. GT/BT data is collected by other researcher. Alex will contact/give me his contact.
+                  HabitatType = "DEC",
+                  .groups = "drop") %>%
+    dplyr::left_join(GPS, by = "NestboxID") %>%
+    dplyr::select(LocationID:PopID, Latitude, Longitude, everything())
 
   return(Location_data)
 
