@@ -6,8 +6,8 @@
 \usage{
 subset_datarqst(
   file = file.choose(),
-  PopID = unique(pop_names$code),
-  Species = unique(Species_codes$Code),
+  PopID = unique(pop_codes$PopID),
+  Species = unique(species_codes$Species),
   PopSpec = NULL,
   include_conflicting = FALSE,
   output_type = "R",
