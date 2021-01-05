@@ -39,25 +39,32 @@ format_VAL <- function(db = choose_directory(),
 
   #Load all data
   data_file    <- paste0(db, "/VAL_PrimaryData.xlsx")
-  early_broods <- readxl::read_excel(data_file, sheet = 1, na = c("", "-")) %>%
-    janitor::clean_names()
-  late_broods  <- readxl::read_excel(data_file, sheet = 2, na = c("", "-")) %>% #FIXME: Are - NA or 0? e.g. 37_2017 Check with data owner. Alex will check.
-    janitor::clean_names()
-  chick_data   <- purrr::map_df(.x = 3:9,
-                                .f = ~{
 
-                                  readxl::read_excel(data_file,
-                                                     sheet = ..1,
-                                                     col_type = "text") %>%
-                                    janitor::clean_names() %>%
-                                    #Remove the row with summary data (it will have no ring value)
-                                    dplyr::filter(!is.na(.data$anilla)) %>%
-                                    #Add the year (starting at 2011)
-                                    dplyr::mutate(year = (2011 - 3 + ..1),
-                                                  NestboxID = stringr::str_remove(.data$nido, pattern = "[A-Z]"), ##FIXME: What does the letter before the nest mean? Are B1 and 1 the same nestbox?
-                                                                                                                  ## 'B' is a different plot. The laying date data is stored separately.
-                                                  Date = janitor::excel_numeric_to_date(as.numeric(.data$fecha))) %>%
-                                    dplyr::mutate(tidyr::fill(., .data$NestboxID, .direction = "down"))
+  #Need to know sheets to load chick data
+  #Number of sheets will increase each year
+  #Last sheet is the experiment sheet
+  all_sheets      <- readxl::excel_sheets(data_file)
+  chick_sheet_nrs <- which(stringr::str_detect(all_sheets, pattern = "Chicks"))
+  chick_sheet_yrs <- as.numeric(stringr::str_extract(all_sheets[chick_sheet_nrs], "[0-9]+"))
+  early_broods    <- readxl::read_excel(data_file, sheet = 1, na = c("", "-")) %>%
+    janitor::clean_names()
+  late_broods     <- readxl::read_excel(data_file, sheet = 2, na = c("", "-")) %>% #FIXME: Are - NA or 0? e.g. 37_2017 Check with data owner. Alex will check.
+    janitor::clean_names()
+  chick_data      <- purrr::map2_df(.x = chick_sheet_nrs,
+                                    .y = chick_sheet_yrs,
+                                    .f = ~{
+
+                                      readxl::read_excel(data_file,
+                                                         sheet = ..1,
+                                                         col_type = "text") %>%
+                                        janitor::clean_names() %>%
+                                        #Remove the row with summary data (it will have no ring value)
+                                        dplyr::filter(!is.na(.data$anilla)) %>%
+                                        #Add the year (taken from sheet name)
+                                        dplyr::mutate(year = ..2,
+                                                      NestboxID = .data$nido, ##Nestboxes have the same number in different plots (i.e. 1 and B1 are nestboxes in different plots)
+                                                      Date = janitor::excel_numeric_to_date(as.numeric(.data$fecha))) %>%
+                                        dplyr::mutate(tidyr::fill(., .data$NestboxID, .direction = "down"))
 
                                     })
   experiment_data <- readxl::read_excel(data_file, sheet = length(all_sheets), na = c("", "-")) %>%
