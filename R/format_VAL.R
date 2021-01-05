@@ -99,7 +99,7 @@ format_VAL <- function(db = choose_directory(),
 
   message("Compiling location data...")
 
-  Location_data <- create_location_VAL(Brood_data = Brood_data, Capture_data = Capture_data, GPS = All_GPS)
+  Location_data <- create_location_VAL(Brood_data = Brood_data, GPS = All_GPS)
 
   # EXPORT DATA
 
