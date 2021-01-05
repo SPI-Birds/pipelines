@@ -208,7 +208,7 @@ create_brood_VAL <- function(early_broods, late_broods, chick_data){
                   NumberEggs = NA_integer_,
                   AvgChickMass = .data$chicks_wight, #FIXME: This data is not available in any other cases?
                   AvgTarsus = .data$chicks_tarsus,
-                  OriginalTarsusMethod = NA_character_,
+                  OriginalTarsusMethod = "Alternative",
                   ExperimentID = NA_character_) %>% #FIXME: Translate 'treatment' column to experimentID
     #When there are multiple nests in a brood in a year, give them different letter suffixes
     dplyr::arrange(.data$FemaleID, .data$LayDate_observed) %>%
@@ -275,7 +275,7 @@ create_capture_VAL <- function(early_broods, late_broods, chick_data){
                                           .data$Sex_observed == "M" ~ .data$mpeso),
                   Tarsus = dplyr::case_when(.data$Sex_observed == "F" ~ .data$ftarso,
                                             .data$Sex_observed == "M" ~ .data$mtarso),
-                  OriginalTarsusMethod = NA_character_, ##FIXME: Check with data owner what method they use. Send Alex the word document.
+                  OriginalTarsusMethod = "Alternative",
                   WingLength = dplyr::case_when(.data$Sex_observed == "F" ~ .data$fala,
                                                 .data$Sex_observed == "M" ~ .data$mala),
                   Age_observed = dplyr::case_when(.data$Sex_observed == "F" ~ as.integer(4 + (.data$fage - 1)*2),
@@ -307,7 +307,7 @@ create_capture_VAL <- function(early_broods, late_broods, chick_data){
                                           .data$Sex_observed == "M" ~ .data$m_weight),
                   Tarsus = dplyr::case_when(.data$Sex_observed == "F" ~ .data$f_tarsus,
                                             .data$Sex_observed == "M" ~ .data$m_tarsus),
-                  OriginalTarsusMethod = NA_character_, ##FIXME: Check with data owner what method they use. Send word doc.
+                  OriginalTarsusMethod = "Alternative",
                   WingLength = dplyr::case_when(.data$Sex_observed == "F" ~ .data$f_wing,
                                                 .data$Sex_observed == "M" ~ .data$m_wing),
                   Age_observed = dplyr::case_when(.data$Sex_observed == "F" ~ as.integer(4 + (.data$f_age * 2)),
@@ -334,7 +334,7 @@ create_capture_VAL <- function(early_broods, late_broods, chick_data){
                   ReleasePopID = "VAL", ReleasePlot = NA_character_,
                   Mass = as.numeric(.data$peso),
                   Tarsus = as.numeric(.data$tarso),
-                  OriginalTarsusMethod = NA_character_, ## FIXME: Check with data owner. Send Alex word doc.
+                  OriginalTarsusMethod = "Alternative",
                   WingLength = as.numeric(.data$ala),
                   Age_observed = 1L, # FIXME: Assume all are chicks (pre-fledgling). Always caught in nest.
                   ChickAge = NA_integer_, # FIXME: What age are chicks caught/ringed? 13 days? Correct, 13 days.
@@ -358,7 +358,7 @@ create_capture_VAL <- function(early_broods, late_broods, chick_data){
                   ReleasePopID = "VAL", ReleasePlot = NA_character_,
                   Mass = NA_real_, #FIXME: These chicks are not measured? Alex will provide this for the last 3 years.
                   Tarsus = NA_real_,
-                  OriginalTarsusMethod = NA_character_,
+                  OriginalTarsusMethod = "Alternative",
                   WingLength = NA_real_,
                   Age_observed = 1L,
                   ChickAge = 13L,
