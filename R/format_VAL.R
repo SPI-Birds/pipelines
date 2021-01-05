@@ -81,7 +81,7 @@ format_VAL <- function(db = choose_directory(),
 
   message("Compiling brood data....")
 
-  Brood_data <- create_brood_VAL(early_broods, late_broods, chick_data) #FIXME: Still need to add in average chick tarsus/mass measures.
+  Brood_data <- create_brood_VAL(early_broods, late_broods, chick_data)
 
   # CAPTURE DATA
 
@@ -149,7 +149,7 @@ format_VAL <- function(db = choose_directory(),
 create_brood_VAL <- function(early_broods, late_broods, chick_data){
 
   early_broods_format <- early_broods %>%
-    dplyr::mutate(MarchDay = as.Date(paste(.data$year, "03", "31", sep = "-")), #FIXME: Are dates April days? i.e. 1 = April 1st. Correct.
+    dplyr::mutate(MarchDay = as.Date(paste(.data$year, "03", "31", sep = "-")),
                   BroodID = paste(.data$nido, .data$year, sep = "_"),
                   PopID = "VAL",
                   BreedingSeason = .data$year,
@@ -177,8 +177,8 @@ create_brood_VAL <- function(early_broods, late_broods, chick_data){
                   NumberFledged_observed = .data$fledgl,
                   NumberFledged_min = NA_integer_,
                   NumberFledged_max = NA_integer_,
-                  ExperimentID = dplyr::case_when(manip %in% c("aumentado", "reducido") ~ c("COHORT;PARENTAGE"))) %>% #FIXME: What do the other experiment values mean? Alex will check these.
-    #When there are multiple nests in a brood in a year, give them different letter suffixes
+                  ExperimentID = dplyr::case_when(manip %in% c("aumentado", "reducido") ~ c("COHORT;PARENTAGE"))) %>% #FIXME: What do the other experiment values mean? Alex will check these. Need to check with him again, experiment IDs don't match!
+    #When there are multiple nests in a brood in a year, give them different number suffixes
     dplyr::arrange(.data$FemaleID, .data$LayDate_observed) %>%
     dplyr::group_by(.data$BroodID) %>%
     dplyr::mutate(BroodID = paste0(.data$BroodID, "_", 1:n())) %>%
@@ -209,7 +209,7 @@ create_brood_VAL <- function(early_broods, late_broods, chick_data){
                   HatchDate_observed = .data$MarchDay + floor(.data$hd),
                   HatchDate_min = as.Date(NA),
                   HatchDate_max = as.Date(NA),
-                  BroodSize_observed = as.integer(.data$cs * .data$hatching_suc/100), #FIXME: Is this proportion of clutch that hatch? Correct.
+                  BroodSize_observed = as.integer(.data$cs * .data$hatching_suc/100),
                   BroodSize_min = NA_integer_,
                   BroodSize_max = NA_integer_,
                   FledgeDate_observed = as.Date(NA),
@@ -228,10 +228,10 @@ create_brood_VAL <- function(early_broods, late_broods, chick_data){
                   NumberFledged_max = NA_integer_,
                   AvgEggMass = NA_real_,
                   NumberEggs = NA_integer_,
-                  AvgChickMass = .data$chicks_wight, #FIXME: This data is not available in any other cases?
+                  AvgChickMass = .data$chicks_weight,
                   AvgTarsus = .data$chicks_tarsus,
                   OriginalTarsusMethod = "Alternative",
-                  ExperimentID = NA_character_) %>% #FIXME: Translate 'treatment' column to experimentID
+                  ExperimentID = NA_character_) %>% #FIXME: Translate 'treatment' column to experimentID. Need to check further with Alex about these
     #When there are multiple nests in a brood in a year, give them different letter suffixes
     dplyr::arrange(.data$FemaleID, .data$LayDate_observed) %>%
     dplyr::group_by(.data$BroodID) %>%
@@ -277,33 +277,31 @@ create_capture_VAL <- function(early_broods, late_broods, chick_data){
 
   #Extract info on adult captures
   early_adult_captures <- early_broods %>%
-    dplyr::select(year, nido, female, ano_anilla_52, fage, surv_fem, fdia, ftarso, fala, fpeso,
-                  male, ano_anilla_84, mage, surv_man, mdia, mtarso, mala, mpeso) %>%
+    dplyr::select(year, nido, female, ano_anilla_52, fage, surv_fem, fcapture, ftarsus, fwing, fweight,
+                  male, ano_anilla_84, mage, surv_man, mcapture, mtarsus, mwing, mweight) %>%
     tidyr::pivot_longer(cols = c(female, male), names_to = "Sex_observed", values_to = "IndvID") %>%
     dplyr::mutate(MarchDay = as.Date(paste(.data$year, "03", "31", sep = "-")),
                   Species = Species_codes$Code[Species_codes$SpeciesID == 13490],
                   BreedingSeason = .data$year,
                   Sex_observed = dplyr::case_when(.data$Sex_observed == "female" ~ "F",
                                                   .data$Sex_observed == "male" ~ "M"),
-                  CaptureDate = dplyr::case_when(Sex_observed == "F" ~ .data$MarchDay + tidyr::replace_na(.data$fdia, 0),
-                                                 Sex_observed == "M" ~ .data$MarchDay + tidyr::replace_na(.data$mdia, 0)), # FIXME: What is the capture date? Is it from fdia/mdia? Correct.
+                  CaptureDate = dplyr::case_when(Sex_observed == "F" ~ .data$MarchDay + tidyr::replace_na(.data$fcapture, 0),
+                                                 Sex_observed == "M" ~ .data$MarchDay + tidyr::replace_na(.data$mcapture, 0)),
                   CaptureTime = NA_character_,
                   ObservedID = NA_character_,
                   LocationID = .data$nido,
                   CaptureAlive = TRUE, ReleaseAlive = TRUE,
                   CapturePopID = "VAL", CapturePlot = NA_character_,
                   ReleasePopID = "VAL", ReleasePlot = NA_character_,
-                  Mass = dplyr::case_when(.data$Sex_observed == "F" ~ .data$fpeso,
-                                          .data$Sex_observed == "M" ~ .data$mpeso),
-                  Tarsus = dplyr::case_when(.data$Sex_observed == "F" ~ .data$ftarso,
-                                            .data$Sex_observed == "M" ~ .data$mtarso),
+                  Mass = dplyr::case_when(.data$Sex_observed == "F" ~ .data$fweight,
+                                          .data$Sex_observed == "M" ~ .data$mweight),
+                  Tarsus = dplyr::case_when(.data$Sex_observed == "F" ~ .data$ftarsus,
+                                            .data$Sex_observed == "M" ~ .data$mtarsus),
                   OriginalTarsusMethod = "Alternative",
-                  WingLength = dplyr::case_when(.data$Sex_observed == "F" ~ .data$fala,
-                                                .data$Sex_observed == "M" ~ .data$mala),
-                  Age_observed = dplyr::case_when(.data$Sex_observed == "F" ~ as.integer(4 + (.data$fage - 1)*2),
-                                                  .data$Sex_observed == "M" ~ as.integer(4 + (.data$mage - 1)*2)), ## FIXME: What age measurement is this? Real age (i.e. 1 is born previous year)
-                  ## For now, I assume it's starting at 4 (>1yo) and going up in units of year.
-                  ## i.e. 1 = age 4; 2 = age 6
+                  WingLength = dplyr::case_when(.data$Sex_observed == "F" ~ .data$fwing,
+                                                .data$Sex_observed == "M" ~ .data$mwing),
+                  Age_observed = dplyr::case_when(.data$Sex_observed == "F" ~ as.integer(5 + (.data$fage - 1)*2),
+                                                  .data$Sex_observed == "M" ~ as.integer(5 + (.data$mage - 1)*2)), ## This is real age (i.e. 1 is known to be born previous year = 5)
                   ChickAge = NA_integer_,
                   ExperimentID = NA_character_) %>%   ## FIXME: Does the MANIP column apply also to adults? Yes, Alex will specify this.
     dplyr::select(IndvID, Species, Sex_observed, BreedingSeason:ExperimentID)
@@ -340,7 +338,7 @@ create_capture_VAL <- function(early_broods, late_broods, chick_data){
                   ExperimentID = NA_character_) %>%   ## FIXME: Does the treatment column apply also to adults? Can affect adults too.
     dplyr::select(IndvID, Species, Sex_observed, BreedingSeason:ExperimentID)
 
-  #FIXME: No information on chick rings before 2011. Were chicks not ringed before this or the data is missing? This data is not digitised.
+  #No information on chick rings before 2011. This data is not digitised.
   early_chick <- chick_data %>%
     dplyr::mutate(MarchDay = as.Date(paste(.data$year, "03", "31", sep = "-")),
                   IndvID = .data$anilla,
@@ -351,43 +349,19 @@ create_capture_VAL <- function(early_broods, late_broods, chick_data){
                   CaptureTime = .data$hora,
                   ObserverID = NA_character_,
                   LocationID = .data$NestboxID,
-                  CaptureAlive = TRUE, ReleaseAlive = TRUE, ## FIXME: Are these ever FALSE? Chicks died is the difference between BS13 and 3.
+                  CaptureAlive = TRUE, ReleaseAlive = TRUE,
                   CapturePopID = "VAL", CapturePlot = NA_character_,
                   ReleasePopID = "VAL", ReleasePlot = NA_character_,
                   Mass = as.numeric(.data$peso),
                   Tarsus = as.numeric(.data$tarso),
                   OriginalTarsusMethod = "Alternative",
                   WingLength = as.numeric(.data$ala),
-                  Age_observed = 1L, # FIXME: Assume all are chicks (pre-fledgling). Always caught in nest.
-                  ChickAge = NA_integer_, # FIXME: What age are chicks caught/ringed? 13 days? Correct, 13 days.
+                  Age_observed = 1L, #All chicks are caught pre-fledgling (i.e. in nest)
+                  ChickAge = 13L, #Chicks are caught and ringed at 13 days
                   ExperimentID = NA_character_) %>%
     dplyr::select(IndvID:ExperimentID)
 
-  late_chick <- late_broods %>%
-    dplyr::select(.data$nest, .data$year, .data$hd, .data$chick1:last_col()) %>%
-    tidyr::pivot_longer(cols = .data$chick1:last_col(), values_to = "IndvID") %>%
-    dplyr::filter(!is.na(IndvID)) %>%
-    dplyr::mutate(MarchDay = as.Date(paste(.data$year, "03", "31", sep = "-")),
-                  Species = Species_codes$Code[Species_codes$SpeciesID == 13490],
-                  Sex_observed = NA_character_,
-                  BreedingSeason = .data$year,
-                  CaptureDate = MarchDay + .data$hd + 13, #FIXME: Assume chicks are captured on day 13. Check with data owner. Yes, 13 days.
-                  CaptureTime = NA_character_,
-                  ObserverID = NA_character_, #FIXME: Is this the same as one of the female/male observers? Not recorded, Alex will check it.
-                  LocationID = .data$nest,
-                  CaptureAlive = TRUE, ReleaseAlive = TRUE,
-                  CapturePopID = "VAL", CapturePlot = NA_character_,
-                  ReleasePopID = "VAL", ReleasePlot = NA_character_,
-                  Mass = NA_real_, #FIXME: These chicks are not measured? Alex will provide this for the last 3 years.
-                  Tarsus = NA_real_,
-                  OriginalTarsusMethod = "Alternative",
-                  WingLength = NA_real_,
-                  Age_observed = 1L,
-                  ChickAge = 13L,
-                  ExperimentID = NA_character_) %>%
-    dplyr::select(IndvID, Species:ExperimentID)
-
-  all_captures <- dplyr::bind_rows(early_adult_captures, late_adult_captures, early_chick, late_chick) %>%
+  all_captures <- dplyr::bind_rows(early_adult_captures, late_adult_captures, early_chick) %>%
     dplyr::filter(!is.na(.data$IndvID)) %>%
     dplyr::arrange(.data$IndvID, .data$BreedingSeason, .data$CaptureDate) %>%
     calc_age(ID = IndvID, Age = Age_observed, Date = CaptureDate, Year = BreedingSeason) %>%
