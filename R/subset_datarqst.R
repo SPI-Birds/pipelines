@@ -45,8 +45,8 @@
 #' }
 
 subset_datarqst <- function(file = file.choose(),
-                            PopID = unique(pop_names$code),
-                            Species = unique(Species_codes$Code),
+                            PopID = unique(pop_codes$PopID),
+                            Species = unique(species_codes$Species),
                             PopSpec = NULL,
                             include_conflicting = FALSE,
                             output_type = "R",
@@ -127,7 +127,7 @@ subset_datarqst <- function(file = file.choose(),
       dplyr::select(-.data$PopID_IndvID)
 
 
-    if(!all(unique(Species_codes$Code) %in% Species) & all(unique(pop_names$code) %in% PopID)){
+    if(!all(unique(species_codes$Species) %in% Species) & all(unique(pop_codes$PopID) %in% PopID)){
 
       PopID <- pop_species_combos %>%
         dplyr::filter(.data$species %in% {{Species}}) %>%
