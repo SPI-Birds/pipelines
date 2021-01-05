@@ -181,7 +181,7 @@ create_brood_VAL <- function(early_broods, late_broods, chick_data){
     #When there are multiple nests in a brood in a year, give them different letter suffixes
     dplyr::arrange(.data$FemaleID, .data$LayDate_observed) %>%
     dplyr::group_by(.data$BroodID) %>%
-    dplyr::mutate(BroodID = paste0(.data$BroodID, letters[1:n()])) %>% #FIXME: How do we deal with multiple broods? No second clutches, only replacement. XXX bis/b that is a replacement.
+    dplyr::mutate(BroodID = paste0(.data$BroodID, "_", 1:n())) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(.)) %>%
     dplyr::select(.data$BroodID:.data$ClutchType_observed,
@@ -227,7 +227,7 @@ create_brood_VAL <- function(early_broods, late_broods, chick_data){
     #When there are multiple nests in a brood in a year, give them different letter suffixes
     dplyr::arrange(.data$FemaleID, .data$LayDate_observed) %>%
     dplyr::group_by(.data$BroodID) %>%
-    dplyr::mutate(BroodID = paste0(.data$BroodID, letters[1:n()])) %>%
+    dplyr::mutate(BroodID = paste0(.data$BroodID, "_", 1:n())) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(.)) %>%
     dplyr::select(.data$BroodID:.data$ClutchType_observed,
