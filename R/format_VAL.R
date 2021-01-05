@@ -310,14 +310,14 @@ create_capture_VAL <- function(early_broods, late_broods, chick_data){
 
   late_adult_captures <- late_broods %>%
     dplyr::select(year, nest, female, f_age, f_tarsus, f_wing, f_weight, obs_24,
-                  male, m_age, m_tarsus, m_wing, m_weight, obs_38) %>%
+                  male, m_age, m_tarsus, m_wing, m_weight, obs_38, hd) %>%
     tidyr::pivot_longer(cols = c(female, male), names_to = "Sex_observed", values_to = "IndvID") %>%
     dplyr::mutate(MarchDay = as.Date(paste(.data$year, "03", "31", sep = "-")),
                   Species = Species_codes$Code[Species_codes$SpeciesID == 13490],
                   BreedingSeason = .data$year,
                   Sex_observed = dplyr::case_when(.data$Sex_observed == "female" ~ "F",
                                                   .data$Sex_observed == "male" ~ "M"),
-                  CaptureDate = .data$MarchDay, ##FIXME: New brood data doesn't have any info on when adults were captured. When would this be? HD + 7
+                  CaptureDate = .data$MarchDay + .data$hd + 7, ## Adults were captured 7 days after hatching
                   CaptureTime = NA_character_,
                   ObservedID = dplyr::case_when(.data$Sex_observed == "F" ~ .data$obs_24,
                                                 .data$Sex_observed == "M" ~ .data$obs_38),
