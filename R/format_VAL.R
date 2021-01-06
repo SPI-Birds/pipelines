@@ -180,6 +180,13 @@ create_brood_VAL <- function(early_broods, late_broods, chick_data){
                   NumberFledged_observed = .data$fledgl,
                   NumberFledged_min = NA_integer_,
                   NumberFledged_max = NA_integer_,
+                  AvgEggMass = NA_real_,
+                  NumberEggs = NA_integer_,
+                  AvgChickMass = .data$chicks_weight,
+                  # NumberChicksMass = .data$fledgl, ##FIXME: NEED TO FIX THIS.
+                  AvgTarsus = .data$chicks_tarsus,
+                  # NumberChicksTarsus = .data$fledgl,
+                  OriginalTarsusMethod = "Alternative",
                   ExperimentID = dplyr::case_when(manip %in% c("aumentado", "reducido") ~ c("COHORT;PARENTAGE"))) %>% #FIXME: What do the other experiment values mean? Alex will check these. Need to check with him again, experiment IDs don't match!
     #When there are multiple nests in a brood in a year, give them different number suffixes
     dplyr::arrange(.data$FemaleID, .data$LayDate_observed) %>%
