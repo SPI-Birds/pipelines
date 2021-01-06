@@ -10,11 +10,19 @@
 
 extract_paradox_db <- function(path, file_name){
 
-  reticulate::use_python(python = "C:\\Users\\Liam\\AppData\\Local\\Programs\\Python\\Python37")
+  #Determine operating system
+  OS <- tolower(utils::sessionInfo()$running)
+
+  #Set python version if operating system is windows
+  #(this should not be necessary to set here when running on MacOS, assuming setup is otherwise fine)
 
   reticulate::py_run_file(system.file("extdata", "paradox_extract.py", package = "pipelines", mustWork = TRUE))
 
-  output_file <- py$extract_paradox(path = path, file_name = file_name)
+  #Write full pathname
+  # When running on Mac OS, the path in extract_paradox_db may not contain "~"
+  path_full <- normalizePath(path)
+
+  output_file <- py$extract_paradox(path = path_full, file_name = file_name)
 
   pb <- progress::progress_bar$new(total = length(output_file))
 
