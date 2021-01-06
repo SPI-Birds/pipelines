@@ -74,7 +74,10 @@ format_VAL <- function(db = choose_directory(),
   GPS_2014 <- sf::st_read(paste0(db, "/VAL_PrimaryData_GPS2014.gpx"), layer = "waypoints")
   GPS_2015 <- sf::st_read(paste0(db, "/VAL_PrimaryData_GPS2015.gpx"), layer = "waypoints")
 
-  All_GPS <- dplyr::bind_rows(GPS_2014, GPS_2015)
+  All_GPS <- dplyr::bind_rows(GPS_2014, GPS_2015) %>%
+    dplyr::mutate(Plot = tidyr::replace_na(stringr::str_extract(.data$name, "[A-Z]"), replace = "A"),
+                  NestboxID = paste0(.data$Plot, stringr::str_pad(stringr::str_extract(.data$name, "[0-9]+"), width = 3, pad = "0", side = "left")))
+
 
   # BROOD DATA
   #Extract Valsein brood data
@@ -150,12 +153,12 @@ create_brood_VAL <- function(early_broods, late_broods, chick_data){
 
   early_broods_format <- early_broods %>%
     dplyr::mutate(MarchDay = as.Date(paste(.data$year, "03", "31", sep = "-")),
-                  BroodID = paste(.data$nido, .data$year, sep = "_"),
                   PopID = "VAL",
                   BreedingSeason = .data$year,
                   Species = Species_codes$Code[Species_codes$SpeciesID == 13490],
                   Plot = "A", ##FIXME: Nests with no letter prefix are given plot A. Check with Alex if they have a name.
-                  LocationID = .data$nido,
+                  LocationID = paste0("A", stringr::str_pad(.data$nido, width = 3, pad = "0", side = "left")),
+                  BroodID = paste(.data$LocationID, .data$year, sep = "_"),
                   FemaleID = .data$female,
                   MaleID = .data$male,
                   ClutchType_observed = NA_character_,
@@ -184,18 +187,19 @@ create_brood_VAL <- function(early_broods, late_broods, chick_data){
     dplyr::mutate(BroodID = paste0(.data$BroodID, "_", 1:n())) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(.)) %>%
-    dplyr::select(.data$BroodID:.data$ClutchType_observed,
+    dplyr::select(.data$BroodID,
+                  .data$PopID:.data$ClutchType_observed,
                   .data$ClutchType_calculated,
-                  .data$LayDate_observed:.data$NumberFledged_max)
+                  .data$LayDate_observed:.data$ExperimentID)
 
   late_broods_format <- late_broods %>%
     dplyr::mutate(MarchDay = as.Date(paste(.data$year, "03", "31", sep = "-")),
-                  BroodID = paste(stringr::str_remove(.data$nest, "bis"), .data$year, sep = "_"), #Remove 'bis' this is record that the clutch was a replacement.
                   PopID = "VAL",
                   BreedingSeason = .data$year,
                   Species = Species_codes$Code[Species_codes$SpeciesID == 13490],
-                  Plot = tidyr::replace_na(stringr::str_extract(late_broods$nest, "[A-Z]"), replace = "A"), #FIXME: Check what other plots are called
-                  LocationID = stringr::str_remove(.data$nest, "bis"), #Remove 'bis' this is record that the clutch was a replacement.
+                  Plot = tidyr::replace_na(stringr::str_extract(.data$nest, "[A-Z]"), replace = "A"), #FIXME: Check what other plots are called
+                  LocationID = paste0(.data$Plot, stringr::str_pad(stringr::str_extract(.data$nest, "[0-9]+"), width = 3, pad = "0", side = "left")),
+                  BroodID = paste(.data$LocationID, .data$year, sep = "_"),
                   FemaleID = .data$female,
                   MaleID = .data$male,
                   ClutchType_observed = dplyr::case_when(stringr::str_detect(.data$nest, "bis") ~ "replacement",
@@ -238,7 +242,8 @@ create_brood_VAL <- function(early_broods, late_broods, chick_data){
     dplyr::mutate(BroodID = paste0(.data$BroodID, "_", 1:n())) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(.)) %>%
-    dplyr::select(.data$BroodID:.data$ClutchType_observed,
+    dplyr::select(.data$BroodID,
+                  .data$PopID:.data$ClutchType_observed,
                   .data$ClutchType_calculated,
                   .data$LayDate_observed:.data$ExperimentID)
 
@@ -288,11 +293,11 @@ create_capture_VAL <- function(early_broods, late_broods, chick_data){
                   CaptureDate = dplyr::case_when(Sex_observed == "F" ~ .data$MarchDay + tidyr::replace_na(.data$fcapture, 0),
                                                  Sex_observed == "M" ~ .data$MarchDay + tidyr::replace_na(.data$mcapture, 0)),
                   CaptureTime = NA_character_,
-                  ObservedID = NA_character_,
-                  LocationID = .data$nido,
+                  ObserverID = NA_character_,
+                  LocationID = paste0("A", stringr::str_pad(.data$nido, width = 3, pad = "0", side = "left")),
                   CaptureAlive = TRUE, ReleaseAlive = TRUE,
-                  CapturePopID = "VAL", CapturePlot = NA_character_,
-                  ReleasePopID = "VAL", ReleasePlot = NA_character_,
+                  CapturePopID = "VAL", CapturePlot = "A",
+                  ReleasePopID = "VAL", ReleasePlot = "A",
                   Mass = dplyr::case_when(.data$Sex_observed == "F" ~ .data$fweight,
                                           .data$Sex_observed == "M" ~ .data$mweight),
                   Tarsus = dplyr::case_when(.data$Sex_observed == "F" ~ .data$ftarsus,
@@ -317,12 +322,12 @@ create_capture_VAL <- function(early_broods, late_broods, chick_data){
                                                   .data$Sex_observed == "male" ~ "M"),
                   CaptureDate = .data$MarchDay + .data$hd + 7, ## Adults were captured 7 days after hatching
                   CaptureTime = NA_character_,
-                  ObservedID = dplyr::case_when(.data$Sex_observed == "F" ~ .data$obs_24,
+                  ObserverID = dplyr::case_when(.data$Sex_observed == "F" ~ .data$obs_24,
                                                 .data$Sex_observed == "M" ~ .data$obs_38),
-                  LocationID = .data$nest,
                   CaptureAlive = TRUE, ReleaseAlive = TRUE,
-                  CapturePopID = "VAL", CapturePlot = NA_character_,
-                  ReleasePopID = "VAL", ReleasePlot = NA_character_,
+                  CapturePopID = "VAL", CapturePlot = tidyr::replace_na(stringr::str_extract(.data$nest, "[A-Z]"), replace = "A"),
+                  ReleasePopID = "VAL", ReleasePlot = .data$CapturePlot,
+                  LocationID = paste0(.data$CapturePlot, stringr::str_pad(stringr::str_extract(.data$nest, "[0-9]+"), width = 3, pad = "0", side = "left")),
                   Mass = dplyr::case_when(.data$Sex_observed == "F" ~ .data$f_weight,
                                           .data$Sex_observed == "M" ~ .data$m_weight),
                   Tarsus = dplyr::case_when(.data$Sex_observed == "F" ~ .data$f_tarsus,
@@ -336,7 +341,12 @@ create_capture_VAL <- function(early_broods, late_broods, chick_data){
                   ## i.e. 0 = age 4; 1 = age 6
                   ChickAge = NA_integer_,
                   ExperimentID = NA_character_) %>%   ## FIXME: Does the treatment column apply also to adults? Can affect adults too.
-    dplyr::select(IndvID, Species, Sex_observed, BreedingSeason:ExperimentID)
+    dplyr::select(.data$IndvID,
+                  .data$Species,
+                  .data$Sex_observed,
+                  .data$BreedingSeason:.data$ObserverID,
+                  .data$LocationID,
+                  .data$CaptureAlive:.data$ExperimentID)
 
   #No information on chick rings before 2011. This data is not digitised.
   early_chick <- chick_data %>%
@@ -348,10 +358,10 @@ create_capture_VAL <- function(early_broods, late_broods, chick_data){
                   CaptureDate = .data$Date,
                   CaptureTime = .data$hora,
                   ObserverID = NA_character_,
-                  LocationID = .data$NestboxID,
                   CaptureAlive = TRUE, ReleaseAlive = TRUE,
-                  CapturePopID = "VAL", CapturePlot = NA_character_,
-                  ReleasePopID = "VAL", ReleasePlot = NA_character_,
+                  CapturePopID = "VAL", CapturePlot = tidyr::replace_na(stringr::str_extract(.data$NestboxID, "[A-Z]"), replace = "A"),
+                  ReleasePopID = "VAL", ReleasePlot = .data$CapturePlot,
+                  LocationID = paste0(.data$CapturePlot, stringr::str_pad(stringr::str_extract(.data$NestboxID, "[0-9]+"), width = 3, pad = "0", side = "left")),
                   Mass = as.numeric(.data$peso),
                   Tarsus = as.numeric(.data$tarso),
                   OriginalTarsusMethod = "Alternative",
@@ -359,7 +369,9 @@ create_capture_VAL <- function(early_broods, late_broods, chick_data){
                   Age_observed = 1L, #All chicks are caught pre-fledgling (i.e. in nest)
                   ChickAge = 13L, #Chicks are caught and ringed at 13 days
                   ExperimentID = NA_character_) %>%
-    dplyr::select(IndvID:ExperimentID)
+    dplyr::select(.data$IndvID:.data$ObserverID,
+                  .data$LocationID,
+                  .data$CaptureAlive:.data$ExperimentID)
 
   all_captures <- dplyr::bind_rows(early_adult_captures, late_adult_captures, early_chick) %>%
     dplyr::filter(!is.na(.data$IndvID)) %>%
@@ -441,7 +453,7 @@ create_location_VAL <- function(Brood_data, GPS){
   GPS <- GPS %>%
     dplyr::bind_cols(as_tibble(sf::st_coordinates(.))) %>%
     dplyr::rename(Longitude = X, Latitude = Y) %>%
-    dplyr::select(NestboxID = name, Longitude, Latitude) %>%
+    dplyr::select(NestboxID, Longitude, Latitude) %>%
     sf::st_drop_geometry() %>%
     #Where there are multiple records from the same box, just take the first one
     #There is no box movement so these are duplicate
