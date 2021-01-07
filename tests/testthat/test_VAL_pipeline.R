@@ -98,6 +98,17 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(VAL_data, BroodID == "A037_2017_1")$AvgChickMass, NA_real_)
   expect_equal(subset(VAL_data, BroodID == "A037_2017_1")$AvgTarsus, NA_real_)
 
+  #Test 4: Brood where (observed) clutch type = replacement (i.e. nest is 'bis')
+  #From late data
+  expect_equal(subset(VAL_data, BroodID == "A133_2012_1")$Species, "FICHYP")
+  expect_equal(subset(VAL_data, BroodID == "A133_2012_1")$ClutchType_observed, "replacement")
+  expect_equal(subset(VAL_data, BroodID == "A133_2012_1")$LayDate_observed, as.Date("2012-05-26"))
+  expect_equal(subset(VAL_data, BroodID == "A133_2012_1")$ClutchSize_observed, 5L)
+  expect_equal(subset(VAL_data, BroodID == "A133_2012_1")$BroodSize_observed, 5L)
+  expect_equal(subset(VAL_data, BroodID == "A133_2012_1")$NumberFledged_observed, NA_integer_)
+  expect_equal(round(subset(VAL_data, BroodID == "A133_2012_1")$AvgChickMass, 2), 11.31)
+  expect_equal(round(subset(VAL_data, BroodID == "A133_2012_1")$AvgTarsus, 2), 16.08)
+
 })
 
 test_that("Capture_data returns an expected outcome...", {
