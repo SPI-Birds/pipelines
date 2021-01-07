@@ -1041,7 +1041,7 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data) {
   # Select records where number of chicks in Capture_data > brood size in Brood_data
   # (this should not be possible)
   # NB: allows v1.0 & v1.1 variable names of the standard format
-  rood_err <- Brood_data %>%
+  brood_err <- Brood_data %>%
     dplyr::left_join(chicks_captured, by=c("BroodID" = "BroodIDLaid")) %>%
     {if("BroodSize" %in% colnames(.)) dplyr::filter(.,  .data$BroodSize < .data$Chicks)
       else dplyr::filter(., .data$BroodSize_observed < .data$Chicks)} %>%
