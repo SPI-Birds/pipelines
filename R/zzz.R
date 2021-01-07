@@ -80,7 +80,7 @@ quality_check_titlepage_pdf <- "\\renewcommand{\\familydefault}{\\sfdefault}
 % =================
 %	Information
 % =================
-	{\\large Produced by: SPI-Birds team (Antica Culina, Liam D. Bailey, Chlo\\'e R. Nater, Stefan J.G. Vriend \\& Marcel E. Visser)} \\\\
+	{\\large Produced by: SPI-Birds team \\\\(Antica Culina, Liam D. Bailey, Chlo\\'e R. Nater, \\\\Stefan J.G. Vriend, Zuzana Zajkov\\'a \\& Marcel E. Visser)} \\\\
 	\\vfill
 \\end{titlepage}"
 
@@ -114,6 +114,8 @@ NULL
 #' Parameter documentation for brood data checks
 #'
 #' @param Brood_data Data frame. Brood data output from pipeline.
+#' @param approved_list List object. List of approved records from brood_approved_list.csv,
+#' capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv
 #'
 #'@name checks_brood_params
 NULL
@@ -121,6 +123,8 @@ NULL
 #' Parameter documentation for capture data checks
 #'
 #' @param Capture_data Data frame. Capture data output from pipeline.
+#' @param approved_list List object. List of approved records from brood_approved_list.csv,
+#' capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv
 #'
 #'@name checks_capture_params
 NULL
@@ -128,6 +132,8 @@ NULL
 #' Parameter documentation for individual data checks
 #'
 #' @param Individual_data Data frame. Individual data output from pipeline.
+#' @param approved_list List object. List of approved records from brood_approved_list.csv,
+#' capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv
 #'
 #'@name checks_individual_params
 NULL
@@ -135,6 +141,8 @@ NULL
 #' Parameter documentation for location data checks
 #'
 #' @param Location_data Data frame. Location data output from pipeline.
+#' @param approved_list List object. List of approved records from brood_approved_list.csv,
+#' capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv
 #'
 #'@name checks_location_params
 NULL
@@ -295,4 +303,10 @@ utils::globalVariables(c(".", "AvgChickTarsus", "AvgChickMass", "AvgTarsus", "Po
                          "physiological_manipulation", "rearing_nest_id",
                          "ring_number", "sirka_delka_hddd_mm_mmm", "social_female_bird_id",
                          "social_male_bird_id", "status", "tarsus_length_mm", "time_capture",
-                         "unique_nest_id", "wing_lengh_mm", "x1st_egg_lay_date"))
+                         "unique_nest_id", "wing_lengh_mm", "x1st_egg_lay_date",
+                         "M", "fit", "x", "lower", "upper", "Warning_max", "N",
+                         "CTcal", "Sex_calculated", "Sex_genetic", "Warning_max",
+                         "Stage", "Logis", "BroodSize_observed", "NumberFledged_observed",
+                         "ClutchSize_observed", "HatchDate_observed", "FledgeDate_observed",
+                         "LayDate_observed", "IndvSpecies", "SpeciesComp",
+                         "OtherSpeciesChicks", "date_time", "Site", "PLACE", "dummy_data"))

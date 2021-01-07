@@ -7,7 +7,9 @@
 create_capture_AMM(Brood_data, connection)
 }
 \arguments{
-\item{data}{Data frame. Primary data from Ammersee.}
+\item{Brood_data}{Data frame. Output from \code{\link{create_brood_AMM}}.}
+
+\item{connection}{Connection the SQL database.}
 }
 \value{
 A data frame.

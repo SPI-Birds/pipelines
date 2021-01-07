@@ -1,7 +1,23 @@
+##### Table of Contents (general user) 
+[Load the pipeline package](#load)  
+
+[Pipeline documentation](#docs)
+
+[Run the pipelines for yourself](#run)  
+
+
+##### Table of Contents (developers) 
+[Primary data storage](#storage)  
+
+[Recommended workflow](#workflow)
+
+[Dealing with new data](#newdata)  
 
 # SPI-Birds pipeline: Introduction (for the general user)
 
 Welcome to the SPI-Birds pipeline package. This README will give you an introduction on how to load the package, how to find out details about each pipeline, and how to use the package for creating bird data following the [SPI-Birds community data standard](https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf) and generating standard quality checks.
+
+<a name="load"/>
 
 ## Load the pipeline package
 
@@ -12,39 +28,19 @@ devtools::install_github("SPI-Birds/pipelines")
 library(pipelines)
 ```
 
-This will install all pipelines and quality check code on your computer and load the code into your session of R. Individual pipelines are build as separate functions for each data owner (where one data owner can administer multiple populations). Each function is given the name `format_X()` where *X* is the letter code for the data owner. The codes for different data owners and corresponding populations are described below. *Note* in cases where a data owner administers one population, the unique 3 letter population ID code and the data owner code are identical.
+This will install all pipelines and quality check code on your computer and load the code into your session of R. Individual pipelines are build as separate functions for each data owner (where one data owner can administer multiple populations). Each function is given the name `format_X()` where *X* is the letter code for the data owner. The codes for different data owners and corresponding populations are described in the [SPI-Birds standard protocol](https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf). *Note* in cases where a data owner administers one population, the unique 3 letter population ID code and the data owner code are identical.
 
-| Data owner    | Population Name        | Country     |PopID       |
-| -------------:|-----------------------:| -----------:| ----------:|
-| CHO           | Choupal                | Portugal    |CHO         |
-| HAR           | Harjavalta             | Finland     |HAR         |
-| BAN           | Bandon Valley          | Ireland     |BAN         |
-| VEL           | Velky Kosir            | Czechia     |VEL         |
-| NIOO          | Hoge Veluwe            | Netherlands |HOG         |
-| NIOO          | Oosterhout             | Netherlands |OOS         |
-| NIOO          | Vlieland               | Netherlands |VLI         |
-| NIOO          | Buunderkamp            | Netherlands |BUU         |
-| NIOO          | Liesbos                | Netherlands |LIE         |
-| NIOO          | Warnsborn              | Netherlands |WAR         |
-| NIOO          | Westerheide            | Netherlands |WES         |
-| SSQ           | Santo Stefano Quisquina| Italy       |SSQ         |
-| UAN           | Boshoek                | Belgium     |BOS         |
-| UAN           | Peerdsbos              | Belgium     |PEE         |
-| WYT           | Wytham Woods           | UK          |WYT         |
-| MON           | Rouviere               | France      |ROU         |
-| MON           | Montpellier City       | France      |MON         |
-| MON           | Mont Ventoux           | France      |MTV         |
-| MON           | Muro                   | France      |MUR         |
-| MON           | Pirio                  | France      |PIR         |
-| KEV           | Kevo                   | Finland     |KEV         |
+<a name="docs"/>
 
-## Read about a pipeline
+## Pipeline documentation
 
-To process each set of primary data into the structure described in the [SPI-Birds standard protocol](https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf) it is often necessary to make assumptions about how each variable is intepreted. All assumptions made during the pipeline process are described in the help documentation for a given function. This can be accessed using the `?` in R. For example, to read about the assumptions made when processing data from the NIOO, you can use the code:
+To process each set of primary data into the structure described in the [SPI-Birds standard protocol](https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.1.0.pdf) it is often necessary to make assumptions about how each variable is interpreted. All assumptions made during the pipeline process are described in the help documentation for a given function. This can be accessed using the `?` in R. For example, to read about the assumptions made when processing data from the NIOO, you can use the code:
 
 ```
 ?format_NIOO
 ```
+
+<a name="run"/>
 
 ## Run the pipelines for yourself
 
@@ -118,6 +114,8 @@ If you are still unable to run the pipelines following these setup instructions 
 
 - Restart your computer before running pipelines to ensure R recognises the newly installed software and drivers.
 
+- If R does not recognise Python's *pandas* module, try installing it using ```reticulate::py_install("pandas")```.
+
 - Download the newest version of R [here](https://www.r-project.org/).
 
 - Update all R packages.
@@ -140,6 +138,8 @@ format_NIOO(output_type = "R")
 
 This provides additional information for the SPI-Birds team, which isn't relevant for the general user.
 
+<a name="storage"/>
+
 ## Primary data storage
 
 All primary data are stored within a single folder on the NIOO SPI-Birds computer. Primary data is stored following the standard naming approach described above `X_PrimaryData_Y`. In addition, you should ensure that:
@@ -148,13 +148,15 @@ All primary data are stored within a single folder on the NIOO SPI-Birds compute
 * Data from each population should have its own folder. The folder name should include the letter code associated with the data owner (e.g. HAR for Harjavalta, NIOO for NIOO).
 * All populations folders should be stored in the same location.
 
+<a name="workflow"/>
+
 ## Create data in the standard format
 
 Each year when primary data are updated all pipelines will be re-run for all populations. This is done using the function `run_pipelines()`. This function has 4 arguments:
 
 * path: The location of the folder where all population data is stored. Can be left blank and R will prompt you to find the folder.
 * PopID: The population code(s) for the populations where you want to run pipelines.
-* Species: The species code(s) for the species you want to use (e.g. PARMAJ for great tit). See the [SPI-Birds standard protocol](https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf) for all species codes.
+* Species: The species code(s) for the species you want to use (e.g. PARMAJ for great tit). See the [SPI-Birds standard protocol](https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.1.0.pdf) for all species codes.
 * output_type: Should the data be output in R or as separate .csv files
 
 For example, the below code will format great tit data from Harjavalta (Finland) and Choupal (Portugal) and output .csv files in the location where the data are stored.
@@ -187,4 +189,33 @@ quality_check(standard_format, output_format = "pdf")
 
 ```r
 run_pipelines(PopID = "HOG", output_type = "csv")
+```
+
+<a name="newdata"/>
+
+## Dealing with new data
+
+When we get updated data (or get data for a new population) we need to set up the archiving folder on the N drive using the `archive` function.
+
+### New population
+
+1. Create a new folder in N:\Dep.AnE\SPI_Birds\data. It should follow the syntax `<OWNERID>_<PopName>_<Country>`
+2. Rename files.
+    - Primary data should follow the syntax `<OWNERID>_PrimaryData`. If there are multiple primary data files provide different suffixes to differentiate them (e.g. `<OWNERID>_PrimaryData_GTData`
+    - Population meta-data should follow the syntax `<OWNERID>_MetaData`
+    - All other data that is not meta-data or primary data can be named in any way, but should always start with `<OWNERID>_`
+3. Create initial archive. The below code will generate a `ArchiveMetaData.txt` file and generate an archive folder for the new population. **Important**: Make sure you specify that this is the initial archive with `initial = TRUE`.
+```
+archive(data_folder = "N:\Dep.AnE\SPI_Birds\data", OwnerID = <OWNERID>, new_data_date = <DATE WHEN DATA WERE RECEIVED>, initial = TRUE)
+```
+
+### Updated population
+
+1. Rename new files to match existing data files (i.e. with the syntax `<OWNERID>_PrimaryData`). **Important**: Files should have the **exact** same name, otherwise the pipelines may break. If you do need to use new file names (and rework the pipeline) you will be given a prompt to continue.
+2. Decide if we are dealing with a 'minor' update (e.g. fix typos) or a 'major' update (e.g. new year of data).
+2. Run archiving code:
+```
+archive(data_folder = "N:\Dep.AnE\SPI_Birds\data", OwnerID = <OWNERID>, update_type = <"major"/"minor">,
+        new_data_path = <LOCATION OF NEW FILES. Consider using choose.files()>,
+        new_data_date = <DATE WHEN DATA WERE RECEIVED>, initial = FALSE)
 ```

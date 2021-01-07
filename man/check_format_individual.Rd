@@ -4,10 +4,13 @@
 \alias{check_format_individual}
 \title{Check format of individual data}
 \usage{
-check_format_individual(Individual_data)
+check_format_individual(Individual_data, approved_list)
 }
 \arguments{
 \item{Individual_data}{Data frame. Individual data output from pipeline.}
+
+\item{approved_list}{List object. List of approved records from brood_approved_list.csv,
+capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv}
 }
 \value{
 A list of:
@@ -18,5 +21,8 @@ A list of:
 \item{Errors}{A list of row-by-row errors.}
 }
 \description{
-Check that the format of each column in the individual data match with the standard format
+Check that the format of each column in the individual data match with the standard format.
+}
+\details{
+Check ID: I1.
 }

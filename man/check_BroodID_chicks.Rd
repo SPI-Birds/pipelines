@@ -4,7 +4,12 @@
 \alias{check_BroodID_chicks}
 \title{Check that chicks have BroodID}
 \usage{
-check_BroodID_chicks(Individual_data, Capture_data, Location_data)
+check_BroodID_chicks(
+  Individual_data,
+  Capture_data,
+  Location_data,
+  approved_list
+)
 }
 \arguments{
 \item{Individual_data}{Data frame. Individual data output from pipeline.}
@@ -12,6 +17,9 @@ check_BroodID_chicks(Individual_data, Capture_data, Location_data)
 \item{Capture_data}{Data frame. Capture data output from pipeline.}
 
 \item{Location_data}{Data frame. Location data output from pipeline.}
+
+\item{approved_list}{List object. List of approved records from brood_approved_list.csv,
+capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv}
 }
 \value{
 A list of:
@@ -23,4 +31,7 @@ A list of:
 }
 \description{
 Check that all chicks in Individual_data that are caught and ringed in a nest box have a BroodID. Individuals just ringed after fledging are regarded as chicks but are not associated with a BroodID.
+}
+\details{
+Check ID: I3.
 }

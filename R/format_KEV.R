@@ -98,6 +98,8 @@
 #'mistakes in the primary data.}
 #'
 #'@inheritParams pipeline_params
+#'@param return_errors Logical. Should capture data include those individuals with
+#'errors in ring sequences?
 #'
 #'@return Generates either 4 .csv files or 4 data frames in the standard format.
 #'@export
@@ -115,7 +117,7 @@ format_KEV <- function(db = choose_directory(),
   #Determine species codes for filtering
   if(is.null(species)){
 
-    species <- Species_codes$Code
+    species <- species_codes$Species
 
   }
 
@@ -191,7 +193,7 @@ format_KEV <- function(db = choose_directory(),
   Parents <- Parents %>%
     dplyr::filter(!BroodID %in% NA_broods) %>%
     tidyr::pivot_wider(names_from = Sex, values_from = IndvID) %>%
-    dplyr::rename(FemaleID = F, MaleID = M)
+    dplyr::rename(FemaleID = .data$F, MaleID = .data$M)
 
   #Join avg measurements and parents to brood data
   Brood_data <- dplyr::left_join(Brood_data, Chick_avg, by = "BroodID") %>%
@@ -279,10 +281,10 @@ create_brood_KEV <- function(db, species_filter){
     #Create unique BroodID with year_locationID_BroodID
     dplyr::mutate(BroodID = paste(BreedingSeason, LocationID, BroodID, sep = "_")) %>%
     #Convert species codes to letter codes
-    dplyr::mutate(Species = dplyr::case_when(Species == "FICHYP" ~ Species_codes$Code[which(Species_codes$SpeciesID == 13490)],
-                                             Species == "PARMAJ" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14640)],
-                                             Species == "PARCIN" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14480)],
-                                             Species == "PHOPHO" ~ Species_codes$Code[which(Species_codes$SpeciesID == 11220)])) %>%
+    dplyr::mutate(Species = dplyr::case_when(Species == "FICHYP" ~ species_codes$Species[which(species_codes$SpeciesID == 13490)],
+                                             Species == "PARMAJ" ~ species_codes$Species[which(species_codes$SpeciesID == 14640)],
+                                             Species == "PARCIN" ~ species_codes$Species[which(species_codes$SpeciesID == 14480)],
+                                             Species == "PHOPHO" ~ species_codes$Species[which(species_codes$SpeciesID == 11220)])) %>%
     dplyr::filter(!is.na(Species) & Species %in% species_filter) %>%
     #Add pop and plot id
     dplyr::mutate(PopID = "KEV", Plot = NA) %>%
@@ -370,10 +372,11 @@ create_nestling_KEV <- function(db, Brood_data){
 #'  interest as listed in the
 #'  \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{standard
 #'  protocol}.
+#' @param return_errors Logical. Return those records with errors in the ring sequence.
 #'
 #' @return A data frame.
 
-create_capture_KEV    <- function(db, Brood_data, species_filter, return_errors){
+create_capture_KEV <- function(db, Brood_data, species_filter, return_errors){
 
   Nestling_data <- create_nestling_KEV(db = db, Brood_data = Brood_data)
 
@@ -403,10 +406,10 @@ create_capture_KEV    <- function(db, Brood_data, species_filter, return_errors)
                   CaptureDate = as.Date(paste(Day, Month, BreedingSeason, sep = "/"), format = "%d/%m/%Y"),
                   CaptureTime = dplyr::na_if(paste0(Time, ":00"), "NA:00")) %>%
     #Convert species codes to EURING codes and then remove only the major species
-    dplyr::mutate(Species = dplyr::case_when(Species == "FICHYP" ~ Species_codes$Code[which(Species_codes$SpeciesID == 13490)],
-                                             Species == "PARMAJ" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14640)],
-                                             Species == "PARCIN" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14480)],
-                                             Species == "PHOPHO" ~ Species_codes$Code[which(Species_codes$SpeciesID == 11220)])) %>%
+    dplyr::mutate(Species = dplyr::case_when(Species == "FICHYP" ~ species_codes$Species[which(species_codes$SpeciesID == 13490)],
+                                             Species == "PARMAJ" ~ species_codes$Species[which(species_codes$SpeciesID == 14640)],
+                                             Species == "PARCIN" ~ species_codes$Species[which(species_codes$SpeciesID == 14480)],
+                                             Species == "PHOPHO" ~ species_codes$Species[which(species_codes$SpeciesID == 11220)])) %>%
     dplyr::filter(!is.na(Species) & Species %in% species_filter) %>%
     dplyr::mutate(Sex = dplyr::case_when(Sex %in% c("N", "O") ~ "F",
                                          Sex %in% c("K", "L") ~ "M"),
@@ -443,7 +446,7 @@ create_capture_KEV    <- function(db, Brood_data, species_filter, return_errors)
     dplyr::mutate(Brood_ring = paste(BroodID, stringr::str_sub(RingNumber, start = -2), sep = "_")) %>%
     dplyr::anti_join(Nestling_data %>%
                        dplyr::mutate(Brood_ring = paste(BroodID, Last2DigitsRingNr, sep = "_")) %>%
-                       dplyr::select(Brood_ring),
+                       dplyr::select(.data$Brood_ring),
                      by = "Brood_ring") %>%
     dplyr::left_join(select(Brood_data, BroodID, HatchDate), by = "BroodID") %>%
     #Join in Brood_data (with HatchDate) so we can determine ChickAge
@@ -552,7 +555,7 @@ create_capture_KEV    <- function(db, Brood_data, species_filter, return_errors)
   flat_multi_chick_capture <- chick_data %>%
     dplyr::filter(!is.na(LastRingNumber))
 
-  ring_pb <- dplyr::progress_estimated(n = nrow(flat_multi_chick_capture))
+  ring_pb <- progress::progress_bar$new(total = nrow(flat_multi_chick_capture))
 
   expanded_multi_chick_capture <- flat_multi_chick_capture %>%
     #Split data into rowwise list
@@ -560,7 +563,7 @@ create_capture_KEV    <- function(db, Brood_data, species_filter, return_errors)
     #map over each row
     purrr::map_dfr(function(current_row){
 
-      ring_pb$print()$tick()
+      ring_pb$tick()
 
       #Determine first part of Ringnumber
       ring_start <- stringr::str_sub(current_row["RingNumber"], end = -6)
@@ -694,7 +697,7 @@ create_individual_KEV <- function(Capture_data){
     dplyr::filter(!is.na(IndvID)) %>%
     dplyr::arrange(IndvID, BreedingSeason, CaptureDate, CaptureTime) %>%
     dplyr::group_by(IndvID) %>%
-    dplyr::summarise(Species = purrr::map_chr(.x = list(unique(na.omit(Species))), .f = ~{
+    dplyr::summarise(Species = purrr::map_chr(.x = list(unique(stats::na.omit(Species))), .f = ~{
 
       if(length(..1) == 0){
 
@@ -713,7 +716,7 @@ create_individual_KEV <- function(Capture_data){
     }), PopID = "KEV",
     BroodIDLaid = first(BroodID), BroodIDFledged = BroodIDLaid,
     RingSeason = first(BreedingSeason), RingAge = ifelse(any(Age_calculated %in% c(1, 3)), "chick", ifelse(min(Age_calculated) == 2, NA_character_, "adult")),
-    Sex = purrr::map_chr(.x = list(unique(na.omit(Sex))), .f = ~{
+    Sex = purrr::map_chr(.x = list(unique(stats::na.omit(Sex))), .f = ~{
 
       if(length(..1) == 0){
 

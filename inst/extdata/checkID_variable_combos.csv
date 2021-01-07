@@ -1,0 +1,11 @@
+CheckID,Variable
+B6a,ClutchSize
+B6a,ClutchSize_observed
+B6b,BroodSize
+B6b,BroodSize_observed
+B6c,NumberFledged
+B6c,NumberFledged_observed
+B6d,LayDate
+B6d,LayDate_observed
+C2a,Mass
+C2b,Tarsus

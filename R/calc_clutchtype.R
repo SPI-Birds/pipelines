@@ -29,7 +29,7 @@ calc_clutchtype <- function(data, na.rm = FALSE) {
 
     cutoff_dat <- data %>%
       dplyr::group_by(PopID, BreedingSeason, Species) %>%
-      dplyr::mutate(cutoff = tryCatch(expr = min(LayDate_observed, na.rm = TRUE) + lubridate::days(30),
+      dplyr::mutate(cutoff = tryCatch(expr = min(.data$LayDate_observed, na.rm = TRUE) + lubridate::days(30),
                                       warning = function(...) return(NA))) %>%
       # Determine brood type for each nest based on female ID
       dplyr::group_by(BreedingSeason, Species, FemaleID)

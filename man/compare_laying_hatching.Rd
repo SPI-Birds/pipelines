@@ -4,10 +4,13 @@
 \alias{compare_laying_hatching}
 \title{Compare laying and hatching dates}
 \usage{
-compare_laying_hatching(Brood_data)
+compare_laying_hatching(Brood_data, approved_list)
 }
 \arguments{
 \item{Brood_data}{Data frame. Brood data output from pipeline.}
+
+\item{approved_list}{List object. List of approved records from brood_approved_list.csv,
+capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv}
 }
 \value{
 A list of:
@@ -19,4 +22,7 @@ A list of:
 }
 \description{
 Compare laying and hatching date per brood. Broods with laying date later than hatching date will result in an error. Broods with laying date earlier than hatching date but the difference in number of days is smaller than incubation time will result in a warning.
+}
+\details{
+Check ID: B4.
 }

@@ -4,10 +4,13 @@
 \alias{compare_hatching_fledging}
 \title{Compare hatching and fledging dates}
 \usage{
-compare_hatching_fledging(Brood_data)
+compare_hatching_fledging(Brood_data, approved_list)
 }
 \arguments{
 \item{Brood_data}{Data frame. Brood data output from pipeline.}
+
+\item{approved_list}{List object. List of approved records from brood_approved_list.csv,
+capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv}
 }
 \value{
 A list of:
@@ -19,4 +22,7 @@ A list of:
 }
 \description{
 Compare hatching and fledging date per brood. Broods with hatching date later than fledging date will result in an error. Broods with hatching date earlier than fledging date but the difference in number of days is smaller than breeding time will result in a warning.
+}
+\details{
+Check ID: B5.
 }

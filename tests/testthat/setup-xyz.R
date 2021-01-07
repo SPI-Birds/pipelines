@@ -1,44 +1,60 @@
 # #Check for existing data file in extdata
 # #Only save this here for efficiency when testing quality check
 # #Do not save to github repo as it contains primary data
-if(file.exists("../../inst/extdata/test_data.RDS")){
+OS <- tolower(sessionInfo()$running)
 
-  pipeline_output <- readRDS(system.file("extdata", "test_data.RDS", package = "pipelines", mustWork = TRUE))
+#Run pipelines for all populations
+message("Choose the location of the data to run tests...")
 
-} else {
+if (grepl(pattern = 'mac', x = OS)) {
 
-  #Run pipelines for all populations
-  message("Choose the location of the raw data to run tests...")
-  pipeline_output <- run_pipelines(path = choose_directory(),
-                                   PopID = c("SSQ", "BAN", "VEL", "CHO", "MUR", "PIR", "ROU", "MON", "MTV", "MIS", "HOC",
-                                             "HOG", "OOS", "VLI", "BUU", "LIE", "WAR", "WES", "KEV", "HAR", "PEE", "BOS",
-                                             "WYT", "AMM", "VAL"),
-                                   output_type = "R", save_path = choose_directory())
+  path <- tcltk::tk_choose.dir()
+
+} else if (grepl(pattern = 'windows', x = OS)) {
+
+  path <-  utils::choose.dir()
 
 }
 
-# Create dummy approved_list
-dummy_approved_list <- list(Brood_approved_list = tibble::tibble(PopID = "AAA",
-                                                                 BroodID = "AAA-2020-0",
-                                                                 CheckID = "B4"),
-                            Capture_approved_list = tibble::tibble(PopID = NA_character_,
-                                                                   CaptureID = NA_character_,
-                                                                   CheckID = NA_character_),
-                            Individual_approved_list = tibble::tibble(PopID = NA_character_,
-                                                                      IndvID = NA_character_,
-                                                                      CheckID = NA_character_),
-                            Location_approved_list = tibble::tibble(PopID = NA_character_,
-                                                                    LocationID = NA_character_,
-                                                                    CheckID = NA_character_)
-                            )
+#Link to folder with completed pipeline data...
+if ("test_data.RDS" %in% list.files(path)) {
 
-# Back-up existing approved_list
-backup_approved_list <- approved_list
+  message("Loading completed pipeline data...")
+
+  pipeline_output <- readRDS(paste0(path, "/test_data.RDS"))
+
+#Or folder with raw data...
+} else {
+
+  message("Running all pipelines...")
+
+  # Run pipelines depending on operating system
+  # (If running on a Mac, pipelines that use Access databases are not run)
+  if (grepl(pattern = 'mac', x = OS)) {
+    pipeline_output <- run_pipelines(path = path,
+                                     PopID = c("SSQ", "BAN", "VEL", "CHO", "MUR", "PIR", "ROU", "MON", "MTV", "MIS", "HOC",
+                                               "KEV", "HAR", "PEE", "BOS",
+                                               "WYT", "PIL", "EDM"),
+                                     output_type = "R")
+  } else if (grepl(pattern = 'windows', x = OS)) {
+
+    pipeline_output <- run_pipelines(path = path,
+                                     PopID = c("SSQ", "BAN", "VEL", "CHO", "MUR", "PIR", "ROU", "MON", "MTV", "MIS", "HOC",
+                                               "HOG", "OOS", "VLI", "BUU", "LIE", "WAR", "WES", "KEV", "HAR", "PEE", "BOS",
+                                               "WYT", "PIL", "EDM", "AMM"),
+                                     output_type = "R")
+  } else {
+    stop(paste0('Operating system ', OS, ' not supported'))
+  }
+
+}
 
 # Create dummy
-create_approved_list(dummy_approved_list)
+# message("Create dummy data approved list...")
+approved_list <- create_approved_list(dummy = TRUE)
 
 # Run quality check for dummy data and produce no report
-dummy_check <- quality_check(R_data = dummy_data,
+message("Create dummy data quality check output...")
+dummy_check <- quality_check(test = TRUE,
                              output = FALSE,
                              check_format = FALSE)

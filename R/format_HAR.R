@@ -128,7 +128,7 @@ format_HAR <- function(db = choose_directory(),
   #Determine species codes for filtering
   if(is.null(species)){
 
-    species <- Species_codes$Code
+    species <- species_codes$Species
 
   }
 
@@ -269,10 +269,10 @@ create_brood_HAR <- function(db, species_filter){
     #Create unique BroodID with year_locationID_BroodID
     dplyr::mutate(BroodID = paste(BreedingSeason, LocationID, BroodID, sep = "_")) %>%
     #Convert species codes to letter codes
-    dplyr::mutate(Species = dplyr::case_when(Species == "FICHYP" ~ Species_codes$Code[which(Species_codes$SpeciesID == 13490)],
-                                      Species == "PARCAE" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14620)],
-                                      Species == "PARMAJ" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14640)],
-                                      Species == "PARATE" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14610)])) %>%
+    dplyr::mutate(Species = dplyr::case_when(Species == "FICHYP" ~ species_codes$Species[which(species_codes$SpeciesID == 13490)],
+                                      Species == "PARCAE" ~ species_codes$Species[which(species_codes$SpeciesID == 14620)],
+                                      Species == "PARMAJ" ~ species_codes$Species[which(species_codes$SpeciesID == 14640)],
+                                      Species == "PARATE" ~ species_codes$Species[which(species_codes$SpeciesID == 14610)])) %>%
     dplyr::filter(!is.na(Species) & Species %in% species_filter) %>%
     #Add pop and plot id
     dplyr::mutate(PopID = "HAR", Plot = NA) %>%
@@ -378,6 +378,7 @@ create_nestling_HAR <- function(db, Brood_data){
 #'  interest as listed in the
 #'  \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{standard
 #'  protocol}.
+#' @param return_errors Logical. Return those records with errors in the ring sequence.
 #'
 #' @return A data frame.
 
@@ -416,10 +417,10 @@ create_capture_HAR    <- function(db, Brood_data, species_filter, return_errors)
                   CaptureDate = as.Date(paste(Day, Month, BreedingSeason, sep = "/"), format = "%d/%m/%Y"),
                   CaptureTime = dplyr::na_if(paste0(Time, ":00"), "NA:00")) %>%
     #Convert species codes to EUring codes and then remove only the major species
-    dplyr::mutate(Species = dplyr::case_when(Species == "FICHYP" ~ Species_codes$Code[which(Species_codes$SpeciesID == 13490)],
-                                      Species == "PARCAE" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14620)],
-                                      Species == "PARMAJ" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14640)],
-                                      Species == "PARATE" ~ Species_codes$Code[which(Species_codes$SpeciesID == 14610)]),
+    dplyr::mutate(Species = dplyr::case_when(Species == "FICHYP" ~ species_codes$Species[which(species_codes$SpeciesID == 13490)],
+                                      Species == "PARCAE" ~ species_codes$Species[which(species_codes$SpeciesID == 14620)],
+                                      Species == "PARMAJ" ~ species_codes$Species[which(species_codes$SpeciesID == 14640)],
+                                      Species == "PARATE" ~ species_codes$Species[which(species_codes$SpeciesID == 14610)]),
                   ) %>%
     dplyr::filter(!is.na(Species) & Species %in% species_filter) %>%
     dplyr::mutate(Sex = dplyr::case_when(Sex %in% c("N", "O") ~ "F",
@@ -561,7 +562,7 @@ create_capture_HAR    <- function(db, Brood_data, species_filter, return_errors)
   flat_multi_chick_capture <- chick_data %>%
     dplyr::filter(!is.na(LastRingNumber))
 
-  ring_pb <- dplyr::progress_estimated(n = nrow(flat_multi_chick_capture))
+  ring_pb <- progress::progress_bar$new(total = nrow(flat_multi_chick_capture))
 
   expanded_multi_chick_capture <- flat_multi_chick_capture %>%
     #Split data into rowwise list
@@ -569,7 +570,7 @@ create_capture_HAR    <- function(db, Brood_data, species_filter, return_errors)
     #map over each row
     purrr::map_dfr(function(current_row){
 
-      ring_pb$print()$tick()
+      ring_pb$tick()
 
       #Determine first part of Ringnumber
       ring_start <- stringr::str_sub(current_row["RingNumber"], end = -6)
@@ -709,7 +710,7 @@ create_individual_HAR <- function(Capture_data){
     dplyr::filter(!is.na(IndvID)) %>%
     dplyr::arrange(IndvID, BreedingSeason, CaptureDate, CaptureTime) %>%
     dplyr::group_by(IndvID) %>%
-    dplyr::summarise(Species = purrr::map_chr(.x = list(unique(na.omit(Species))), .f = ~{
+    dplyr::summarise(Species = purrr::map_chr(.x = list(unique(stats::na.omit(Species))), .f = ~{
 
       if(length(..1) == 0){
 
@@ -730,7 +731,7 @@ create_individual_HAR <- function(Capture_data){
               BroodIDFledged = BroodIDLaid,
               RingSeason = first(BreedingSeason),
               RingAge = ifelse(any(Age_calculated %in% c(1, 3)), "chick", ifelse(min(Age_calculated) == 2, NA_character_, "adult")),
-              Sex = purrr::map_chr(.x = list(unique(na.omit(Sex))), .f = ~{
+              Sex = purrr::map_chr(.x = list(unique(stats::na.omit(Sex))), .f = ~{
 
                 if(length(..1) == 0){
 

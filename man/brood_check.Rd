@@ -4,7 +4,7 @@
 \alias{brood_check}
 \title{Perform quality checks on brood data}
 \usage{
-brood_check(Brood_data, Individual_data, check_format = TRUE)
+brood_check(Brood_data, Individual_data, check_format = TRUE, approved_list)
 }
 \arguments{
 \item{Brood_data}{Data frame. Brood data output from pipeline.}
@@ -12,6 +12,9 @@ brood_check(Brood_data, Individual_data, check_format = TRUE)
 \item{Individual_data}{Data frame. Individual data output from pipeline.}
 
 \item{check_format}{\code{TRUE} or \code{FALSE}. If \code{TRUE}, the check on variable format (i.e. \code{\link{check_format_brood}}) is included in the quality check. Default: \code{TRUE}.}
+
+\item{approved_list}{List object. List of approved records from brood_approved_list.csv,
+capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv}
 }
 \value{
 A list of:
@@ -30,11 +33,14 @@ The following brood data checks are performed:
 \item \strong{B1}: Check if the formats of each column in \code{Brood_data} match with the standard format using \code{\link{check_format_brood}}.
 \item \strong{B2}: Compare clutch size and brood size per brood using \code{\link{compare_clutch_brood}}.
 \item \strong{B3}: Compare brood size and fledgling number per brood using \code{\link{compare_brood_fledglings}}.
-\item \strong{B4}: Compare laying date and hatching date per brood using \code{\link{compare_laying_hatching}}.
+\item \strong{B4}: Compare lay date and hatching date per brood using \code{\link{compare_laying_hatching}}.
 \item \strong{B5}: Compare hatching date and fledging date per brood using \code{\link{compare_hatching_fledging}}.
-\item \strong{B6a-c}: Check brood variable values against reference values using \code{\link{check_values_brood}}. Brood variables checked: ClutchSize, BroodSize, NumberFledged.
-\item \strong{B7}: Check if parents of a brood are the same species using \code{\link{check_parent_species}}.
-\item \strong{B8}: Compare brood size with number of chicks captured using \code{\link{compare_broodsize_chicknumber}}.
-\item \strong{B9}: Check if the IDs of broods are unique using \code{\link{check_unique_BroodID}}.
+\item \strong{B6a-d}: Check brood variable values against reference values using \code{\link{check_values_brood}}. Brood variables checked: ClutchSize_observed, BroodSize_observed, NumberFledged_observed, LayDate_observed.
+\item \strong{B7}: Compare brood size with number of chicks captured using \code{\link{compare_broodsize_chicknumber}}.
+\item \strong{B8}: Check if the IDs of broods are unique using \code{\link{check_unique_BroodID}}.
+\item \strong{B9}: Check if the order of clutch types for multiple breeding attempts per female per season is correct using \code{\link{check_clutch_type_order}}.
+\item \strong{B10}: Check if parents of a brood are the same species using \code{\link{compare_species_parents}}.
+\item \strong{B11}: Check if the brood and the parents of that brood are recorded as the same species using \code{\link{compare_species_brood_parents}}.
+\item \strong{B12}: Check if the brood and the chicks in that brood are recorded as the same species using \code{\link{compare_species_brood_chicks}}.
 }
 }

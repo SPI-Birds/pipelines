@@ -4,10 +4,13 @@
 \alias{check_chick_age}
 \title{Check chick age}
 \usage{
-check_chick_age(Capture_data)
+check_chick_age(Capture_data, approved_list)
 }
 \arguments{
 \item{Capture_data}{Data frame. Capture data output from pipeline.}
+
+\item{approved_list}{List object. List of approved records from brood_approved_list.csv,
+capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv}
 }
 \value{
 A list of:
@@ -19,4 +22,7 @@ A list of:
 }
 \description{
 Check whether chick ages (in number of days since hatching) are within the range of 0 and 30 days since hatching. Values outside this range will result in an error.
+}
+\details{
+Check ID: C3.
 }

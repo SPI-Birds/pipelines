@@ -47,11 +47,11 @@ format_SSQ <- function(db = choose_directory(),
   #Force user to select directory
   force(db)
 
-  db <- paste0(db, "\\SSQ_PrimaryData.xlsx")
+  db <- paste0(db, "/SSQ_PrimaryData.xlsx")
 
   if(is.null(species)){
 
-    species <- Species_codes$Code
+    species <- species_codes$Species
 
   }
 
@@ -72,8 +72,8 @@ format_SSQ <- function(db = choose_directory(),
                   Plot = HabitatOfRinging,
                   Latitude = YCoord, Longitude = XCoord) %>%
     #Add species codes
-    dplyr::mutate(Species = dplyr::case_when(.$Species == "Parus major" ~ Species_codes[which(Species_codes$SpeciesID == 14640), ]$Code,
-                                             .$Species == "Cyanistes caeruleus" ~ Species_codes[which(Species_codes$SpeciesID == 14620), ]$Code)) %>%
+    dplyr::mutate(Species = dplyr::case_when(.$Species == "Parus major" ~ species_codes[which(species_codes$SpeciesID == 14640), ]$Species,
+                                             .$Species == "Cyanistes caeruleus" ~ species_codes[which(species_codes$SpeciesID == 14620), ]$Species)) %>%
     #Filter species
     dplyr::filter(Species %in% species) %>%
     #Add other missing data:
@@ -88,9 +88,10 @@ format_SSQ <- function(db = choose_directory(),
                   ClutchType_observed = dplyr::case_when(.$Class == 1 ~ "first",
                                                          .$Class == 3 ~ "second",
                                                          .$Class == 2 ~ "replacement"),
-                  FledgeDate = NA, AvgEggMass = NA, NumberEggs = NA, AvgChickMass = NA, NumberChicksMass = NA, AvgTarsus = NA, NumberChicksTarsus = NA,
-                  LayDateError = NA, ClutchSizeError = NA, HatchDateError = NA, BroodSizeError = NA,
-                  FledgeDateError = NA, NumberFledgedError = NA, ExperimentID = NA,
+                  FledgeDate = as.Date(NA), AvgEggMass = NA_real_, NumberEggs = NA_integer_, AvgChickMass = NA_real_,
+                  NumberChicksMass = NA_integer_, AvgTarsus = NA_real_, NumberChicksTarsus = NA_integer_,
+                  LayDateError = NA_integer_, ClutchSizeError = NA_integer_, HatchDateError = NA_integer_, BroodSizeError = NA_integer_,
+                  FledgeDateError = NA_integer_, NumberFledgedError = NA_integer_, ExperimentID = NA_character_,
                   LayDate = as.Date(paste(BreedingSeason, "03-01", sep = "-"), format = "%Y-%m-%d") + LayDate - 1,
                   HatchDate = as.Date(paste(BreedingSeason, "03-01", sep = "-"), format = "%Y-%m-%d") + HatchDate - 1)
 
@@ -164,14 +165,14 @@ format_SSQ <- function(db = choose_directory(),
 create_brood_SSQ <- function(data){
 
   #Determine ClutchType_calculated
-  clutchtype <- dplyr::progress_estimated(n = nrow(data))
+  clutchtype <- progress::progress_bar$new(total = nrow(data))
 
   Brood_data <- data %>%
     #Arrange data for use with ClutchType_calculated (should be chronological)
     dplyr::arrange(BreedingSeason, FemaleID, LayDate) %>%
     #Calculate clutch type
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE),
-                  OriginalTarsusMethod = NA) %>%
+                  OriginalTarsusMethod = NA_character_) %>%
     #Arrange columns to match standard protocol
     dplyr::select(BreedingSeason, Species, PopID, Plot,
                   LocationID, BroodID, FemaleID, MaleID,
@@ -204,7 +205,7 @@ create_capture_SSQ <- function(data){
   Adult_captures <- data %>%
     dplyr::select(BreedingSeason, PopID, Plot, LocationID, Species, LayDate, FemaleID, FAge, MaleID, MAge) %>%
     #Combine column FemaleID and MaleID
-    reshape2::melt(measure.vars = c("FemaleID", "MaleID"), value.name = "IndvID") %>%
+    tidyr::pivot_longer(cols = c("FemaleID", "MaleID"), values_to = "IndvID", names_to = "variable") %>%
     #Remove all NAs, we're only interested in cases where parents were ID'd.
     dplyr::filter(!is.na(IndvID)) %>%
     #Make a single Age column. If variable == "FemaleID", then use FAge and visa versa
@@ -220,14 +221,14 @@ create_capture_SSQ <- function(data){
     #Treat CaptureDate of adults as the Laying Date
     dplyr::mutate(ReleasePopID = CapturePopID, ReleasePlot = CapturePlot,
                   CaptureDate = LayDate,
-                  CaptureTime = NA) %>%
+                  CaptureTime = NA_character_) %>%
     dplyr::select(-variable, -LayDate, -FAge, -MAge)
 
   #Also extract chick capture information
   Chick_captures <- data %>%
     dplyr::select(BreedingSeason, Species, PopID, Plot, LocationID, LayDate, ClutchSize, Chick1Id:Chick13Id) %>%
     #Create separate rows for every chick ID
-    reshape2::melt(id.vars = c("BreedingSeason", "Species", "PopID", "Plot", "LocationID", "LayDate", "ClutchSize"), value.name = "IndvID") %>%
+    tidyr::pivot_longer(cols = c(Chick1Id:Chick13Id), names_to = "variable", values_to = "IndvID") %>%
     #Remove NAs
     dplyr::filter(!is.na(IndvID)) %>%
     dplyr::rename(CapturePopID = PopID, CapturePlot = Plot) %>%
@@ -236,7 +237,7 @@ create_capture_SSQ <- function(data){
     #Chicks were captured and weighed at 12 days old at the latest
     dplyr::mutate(ReleasePopID = CapturePopID, ReleasePlot = CapturePlot,
                   CaptureDate = LayDate + ClutchSize + 27,
-                  CaptureTime = NA, Age_observed = 1, Age = 1L) %>%
+                  CaptureTime = NA_character_, Age_observed = 1, Age = 1L) %>%
     dplyr::select(-variable, -LayDate, -ClutchSize)
 
   #Combine Adult and chick data
@@ -244,9 +245,9 @@ create_capture_SSQ <- function(data){
     dplyr::arrange(IndvID, CaptureDate) %>%
     #Add NA for morphometric measures and chick age
     #ChickAge (in days) is NA because we have no exact CaptureDate
-    dplyr::mutate(Mass = NA, Tarsus = NA, OriginalTarsusMethod = NA,
-                  WingLength = NA,
-                  ChickAge = NA, ObserverID = NA) %>%
+    dplyr::mutate(Mass = NA_real_, Tarsus = NA_real_, OriginalTarsusMethod = NA_character_,
+                  WingLength = NA_real_,
+                  ChickAge = NA_integer_, ObserverID = NA_character_) %>%
     calc_age(ID = IndvID, Age = Age, Date = CaptureDate, Year = BreedingSeason) %>%
   #Order variables to match other data
     dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, ObserverID, IndvID, Species,
@@ -272,7 +273,7 @@ create_individual_SSQ <- function(data, Capture_data, Brood_data){
   #Create a list of all chicks
   Chick_IDs <- data %>%
     dplyr::select(BroodID, Chick1Id:Chick13Id) %>%
-    reshape2::melt(id.vars = "BroodID", value.name = "IndvID") %>%
+    tidyr::pivot_longer(cols = c(-BroodID), names_to = "variable", values_to = "IndvID") %>%
     dplyr::filter(!is.na(IndvID)) %>%
     dplyr::select(-variable, BroodIDLaid = BroodID)
 

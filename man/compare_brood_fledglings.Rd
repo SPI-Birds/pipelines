@@ -4,10 +4,13 @@
 \alias{compare_brood_fledglings}
 \title{Compare brood sizes and fledgling numbers}
 \usage{
-compare_brood_fledglings(Brood_data)
+compare_brood_fledglings(Brood_data, approved_list)
 }
 \arguments{
 \item{Brood_data}{Data frame. Brood data output from pipeline.}
+
+\item{approved_list}{List object. List of approved records from brood_approved_list.csv,
+capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv}
 }
 \value{
 A list of:
@@ -19,4 +22,7 @@ A list of:
 }
 \description{
 Compare brood size and fledgling number per brood. In non-manipulated broods, brood size should be larger or equal to fledgling number. If not, the record will result in an error. In broods with clutch manipulation, brood size might be smaller than fledgling number. If so, the record will result in a warning.
+}
+\details{
+Check ID: B3.
 }

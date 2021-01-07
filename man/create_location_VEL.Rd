@@ -7,6 +7,8 @@
 create_location_VEL(db, Brood_data, TIT_data)
 }
 \arguments{
+\item{db}{Location of database file.}
+
 \item{Brood_data}{Data frame. Output of \code{\link{create_brood_VEL}}}
 
 \item{TIT_data}{Data frame. Data frame. Tit data from Velky Kosir. This is

@@ -205,8 +205,8 @@ test_that("Location_data returns an expected outcome...", {
   #Check that LocationID is in the expected PopID
   expect_equal(subset(UAN_data, LocationID == "BN10")$PopID, "BOS")
   #Check that latitude and longitude are as expected
-  expect_equal(round(subset(UAN_data, LocationID == "BN10")$Latitude, 2), 51.15)
-  expect_equal(round(subset(UAN_data, LocationID == "BN10")$Longitude, 2), 4.52)
+  expect_equal(round(subset(UAN_data, LocationID == "BN10")$Latitude, 2) %>% setNames(nm = NULL), 51.15)
+  expect_equal(round(subset(UAN_data, LocationID == "BN10")$Longitude, 2) %>% setNames(nm = NULL), 4.52)
 
   #Test 2: Nestbox with coordinates in both coordinates. Lambert should take precedence
   #LocationType is as expected
@@ -219,8 +219,8 @@ test_that("Location_data returns an expected outcome...", {
   #Check that LocationID is in the expected PopID
   expect_equal(subset(UAN_data, LocationID == "BW1")$PopID, "BOS")
   #Check that latitude and longitude are as expected
-  expect_equal(round(subset(UAN_data, LocationID == "BW1")$Latitude, 2), 51.14)
-  expect_equal(round(subset(UAN_data, LocationID == "BW1")$Longitude, 2), 4.51)
+  expect_equal(round(subset(UAN_data, LocationID == "BW1")$Latitude, 2) %>% setNames(nm = NULL), 51.14)
+  expect_equal(round(subset(UAN_data, LocationID == "BW1")$Longitude, 2) %>% setNames(nm = NULL), 4.51)
 
   #Test 3: Feeder
   #LocationType is as expected
@@ -233,8 +233,8 @@ test_that("Location_data returns an expected outcome...", {
   #Check that LocationID is in the expected PopID
   expect_equal(subset(UAN_data, LocationID == "TUF_J2")$PopID, "BOS")
   #Check that latitude and longitude are as expected
-  expect_equal(round(subset(UAN_data, LocationID == "TUF_J2")$Latitude, 2), 51.14)
-  expect_equal(round(subset(UAN_data, LocationID == "TUF_J2")$Longitude, 2), 4.52)
+  expect_equal(round(subset(UAN_data, LocationID == "TUF_J2")$Latitude, 2) %>% setNames(nm = NULL), 51.14)
+  expect_equal(round(subset(UAN_data, LocationID == "TUF_J2")$Longitude, 2) %>% setNames(nm = NULL), 4.52)
 
   #Test 4: Nestbox where no type provided
   #LocationType is as expected
@@ -247,7 +247,7 @@ test_that("Location_data returns an expected outcome...", {
   #Check that LocationID is in the expected PopID
   expect_equal(subset(UAN_data, LocationID == "BW11BIS")$PopID, "BOS")
   #Check that latitude and longitude are as expected
-  expect_equal(round(subset(UAN_data, LocationID == "BW11BIS")$Latitude, 2), 51.14)
-  expect_equal(round(subset(UAN_data, LocationID == "BW11BIS")$Longitude, 2), 4.51)
+  expect_equal(round(subset(UAN_data, LocationID == "BW11BIS")$Latitude, 2) %>% setNames(nm = NULL), 51.14)
+  expect_equal(round(subset(UAN_data, LocationID == "BW11BIS")$Longitude, 2) %>% setNames(nm = NULL), 4.51)
 
 })

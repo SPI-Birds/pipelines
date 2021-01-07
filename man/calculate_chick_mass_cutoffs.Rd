@@ -4,31 +4,25 @@
 \alias{calculate_chick_mass_cutoffs}
 \title{Determine chick growth curves}
 \usage{
-calculate_chick_mass_cutoffs(HOG_chick_data)
+calculate_chick_mass_cutoffs(Capture_data, plot = FALSE)
 }
 \arguments{
-\item{HOG_chick_data}{Data frame with chick age and mass of Hoge Veluwe great and blue tits}
+\item{Capture_data}{Data frame with capture data on chicks of 1 species in 1 population}
+
+\item{plot}{Create plot of mass data and logistic growth curve. Default: FALSE.}
 }
 \value{
-A data frame with cutoffs values at each age
+A data frame with reference values for mass at each age
 }
 \description{
-Fit logistic and gompertz growth curves
-to chick mass data for great and blue tits.
-}
-\details{
-We fit this using data from Hoge Veluwe. See example for data extraction.
+Fit logistic growth curve to chick mass data to calculate age-specific reference values.
 }
 \examples{
 \dontrun{
-#run pipeline for Hoge Veluwe great and blue tits
-HOG <- run_pipelines(PopID = "HOG", Species = c("PARMAJ", "CYACAE"), output_type = "R")
+# Run pipeline for Hoge Veluwe great tits
+HOG_PARMAJ_data <- run_pipelines(PopID = "HOG", Species = "PARMAJ", output_type = "R")
 
-Subset relevant columns
-HOG_chick_data <- HOG$Capture_data \%>\%
-dplyr::filter(!is.na(ChickAge) & !is.na(Mass), BreedingSeason <= 2019) \%>\%
-dplyr::select(ChickAge, Mass, Species)
-
-calculate_chick_mass_cutoffs(HOG_chick_data)
+# Calculate reference values using logistic growth model
+calculate_chick_mass_cutoffs(HOG_PARMAJ_data, plot = TRUE)
 }
 }

@@ -7,7 +7,7 @@
 create_brood_AMM(connection)
 }
 \arguments{
-\item{data}{Data frame. Primary data from Ammersee.}
+\item{connection}{Connection the SQL database.}
 }
 \value{
 A data frame.

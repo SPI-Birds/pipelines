@@ -122,7 +122,7 @@ test_that("Location_data returns an expected outcome...", {
   expect_equal(subset(PIL_data, LocationID == "7_49")$StartSeason, 1982L)
   expect_equal(subset(PIL_data, LocationID == "7_49")$EndSeason, NA_integer_)
   expect_equal(subset(PIL_data, LocationID == "7_49")$PopID, "PIL")
-  expect_equal(subset(PIL_data, LocationID == "7_49")$Latitude, NA_real_)
-  expect_equal(subset(PIL_data, LocationID == "7_49")$Longitude, NA_real_)
+  expect_equal(subset(PIL_data, LocationID == "7_49")$Latitude %>% setNames(nm = NULL), NA_real_)
+  expect_equal(subset(PIL_data, LocationID == "7_49")$Longitude %>% setNames(nm = NULL), NA_real_)
 
 })

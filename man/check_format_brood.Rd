@@ -4,10 +4,13 @@
 \alias{check_format_brood}
 \title{Check format of brood data}
 \usage{
-check_format_brood(Brood_data)
+check_format_brood(Brood_data, approved_list)
 }
 \arguments{
 \item{Brood_data}{Data frame. Brood data output from pipeline.}
+
+\item{approved_list}{List object. List of approved records from brood_approved_list.csv,
+capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv}
 }
 \value{
 A list of:
@@ -19,4 +22,7 @@ A list of:
 }
 \description{
 Check that the format of each column in the brood data match with the standard format.
+}
+\details{
+Check ID: B1.
 }

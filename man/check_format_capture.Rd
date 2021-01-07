@@ -4,10 +4,13 @@
 \alias{check_format_capture}
 \title{Check format of capture data}
 \usage{
-check_format_capture(Capture_data)
+check_format_capture(Capture_data, approved_list)
 }
 \arguments{
 \item{Capture_data}{Data frame. Capture data output from pipeline.}
+
+\item{approved_list}{List object. List of approved records from brood_approved_list.csv,
+capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv}
 }
 \value{
 A list of:
@@ -19,4 +22,7 @@ A list of:
 }
 \description{
 Check that the format of each column in the capture data match with the standard format.
+}
+\details{
+Check ID: C1.
 }
