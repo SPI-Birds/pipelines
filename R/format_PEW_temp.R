@@ -1,13 +1,9 @@
 #' Construct standard summary for data from Peerdsbos West, Belgium.
-#' Actively started 27/11/2020
 
 
 #### ---------------------------------------------------------------------------------------~
 #### Questions/Doubts DATA OWNERS
-# OriginalTarsusMethod
-# Do they have coordinates for each nestbox?
-# Do Observation hours correspond only to experimental data? Keep or remove them?
-
+#### SEE EMAIL
 
 
 #### ---------------------------------------------------------------------------------------~
@@ -21,11 +17,33 @@
 # Observations are from 2017, nestboxes 97, 98, 102, kk12.
 #
 #
+
+# NumberFledged
+# The number of fledged nestlings were not consistently monitored.
+# However, nestlings were ringed at day 14, so very close to fledging.
+# In almost all cases, the number of ringed chics will be the same as number of fledged chicks.
+
+
 #### NOTES:
 #### Experiment "BSM - Griffioen et al. 2019 PeerJ" was done with hatched nestlings, not with eggs.
 #### ---------------------------------------------------------------------------------------~
 
 # pew <- format_PEW()
+
+#' Title
+#'
+#' @param db
+#' @param species
+#' @param pop
+#' @param path
+#' @param output_type
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#'
+
 
 format_PEW <- function(db = choose_directory(),
                        species = NULL,
@@ -55,7 +73,7 @@ format_PEW <- function(db = choose_directory(),
                                                "text", "text", "text", "text", "text",
                                                "text", "text", "text", "text", "text",
                                                "text", "text", "text", "text", "text",
-                                               "text", "text", "date", "text",
+                                               "text", "text", "text", "text",
                                                "text", "text", "numeric", "numeric",
                                                "text", "numeric", "numeric", "numeric",
                                                "numeric", "numeric", "numeric",
@@ -70,15 +88,16 @@ format_PEW <- function(db = choose_directory(),
                   Date_temp = ifelse(Date == "D14", NA_character_, Date),
                   D14Chicks = ifelse(Date == "D14", "yes", "no"),
                   CaptureDate = janitor::excel_numeric_to_date(as.numeric(Date_temp),
-                                                      date_system = "modern"),
+                                                               date_system = "modern"),
                   Tarsus = as.numeric(Tarsus),
                   Mass = as.numeric(Mass),
                   ClutchSize = as.integer(stringr::str_replace(string = ClutchSize,
                                                                pattern = "\\?",
                                                                replace = "")),
-                  DateEgg1 = as.Date(DateEgg1),
                   NumberOfRingedChicks = case_when(DateRingingChicks %in% c("verlaten incubatie", "all dead d1") ~ 0L,
                                                    HatchDateD0 %in% c("abandoned", "bumblebee nest", "dead embryos") ~ 0L,
+                                                   NumberOfRingedChicks == "all dead" & Nest %in% c("66", "70") ~ 0L,
+                                                   NumberOfRingedChicks == "all dead" & Nest == "79" ~ 10L,
                                                    TRUE ~ as.integer(NumberOfRingedChicks)),
                   HatchDateD0 = janitor::excel_numeric_to_date(as.numeric(HatchDateD0),
                                                                       date_system = "modern"),
@@ -133,7 +152,11 @@ format_PEW <- function(db = choose_directory(),
     dplyr::mutate(PartnerId = ifelse(PartnerId == "MetalRing_FemK89_2019",
                                      "MetalRing_F2019_K89", PartnerId)) %>%
     #### Corrected information from data owner
-    dplyr::mutate(Sex = ifelse(IndvID == "11714676", "Male", Sex),
+    dplyr::mutate(DateEgg1 = ifelse(BroodID == "2019_78_PEW" & Method == "ChickRinging",
+                                    "43554", DateEgg1),
+                  DateEgg1 = janitor::excel_numeric_to_date(as.numeric(DateEgg1),
+                                                            date_system = "modern"),
+                  Sex = ifelse(IndvID == "11714676", "Male", Sex),
                   PartnerId = ifelse(PartnerId == "12706296" & BroodID == "2016_60_PEW",
                                      NA_character_, PartnerId),
                   # The only couple in 49 in 2017 was 13619466 (female) and  13617031 (male).
@@ -150,8 +173,8 @@ format_PEW <- function(db = choose_directory(),
     dplyr::select(-rem) %>%
     dplyr::distinct()
 
-
-
+#### temp for testing
+# data = pew_data
 
 
   #### BROOD DATA
@@ -298,7 +321,7 @@ create_brood_PEW <- function(data) {
                   FledgeDate_min = NA_character_,
                   FledgeDate_max = NA_character_,
                   # NumberFledged_observed = NumberOfRingedChicks, ## for new version of calc_clutchtype
-                  NumberFledged = NA_integer_,
+                  NumberFledged = ifelse(BroodID == "2015_79_PEW", 0L, NumberOfRingedChicks),
                   NumberFledged_min = NA_integer_,
                   NumberFledged_max = NA_integer_,
                   AvgEggMass = NA,
@@ -318,7 +341,7 @@ create_brood_PEW <- function(data) {
                      NumberChicksMass = sum(!is.na(Mass)),
                      AvgTarsus = mean(as.numeric(Tarsus), na.rm = TRUE),
                      NumberChicksTarsus = sum(!is.na(Tarsus)),
-                     OriginalTarsusMethod = NA_character_) %>%
+                     OriginalTarsusMethod = ifelse(!is.na(AvgTarsus), "Alternative", NA_character_)) %>%
     ungroup() %>%
     dplyr::mutate(AvgTarsus = ifelse(AvgTarsus == "NaN", NA, AvgTarsus),
                   AvgChickMass = ifelse(AvgChickMass == "NaN", NA, AvgChickMass),
@@ -352,6 +375,8 @@ create_brood_PEW <- function(data) {
 
 create_capture_PEW <- function(pew_data, Brood_data) {
 
+
+
   Brood_data_sel <-
     Brood_data %>%
     # dplyr::select(BreedingSeason, Species, PopID, BroodID, LocationID,
@@ -359,6 +384,9 @@ create_capture_PEW <- function(pew_data, Brood_data) {
 
   # >> mirar github comment de Liam
   # parece que habra que poner fecha inventada, dado que no existe hatchdate, ni capture date
+
+  # 14156268	Female	0700EDD2C5	B3	2017		Catch adults nestbox >> use 21 april 2017 (comment in the excel file)
+
 
   Capture_data_temp <-
     pew_data %>%
@@ -378,8 +406,7 @@ create_capture_PEW <- function(pew_data, Brood_data) {
                   CapturePlot  = NA_character_,
                   ReleasePopID = ifelse(ReleaseAlive == TRUE, CapturePopID, NA_character_),
                   ReleasePlot  = ifelse(ReleaseAlive == TRUE, CapturePlot, NA_character_),
-                  #### ASSUMPTION: use NA, as there is no information
-                  OriginalTarsusMethod = NA_character_,
+                  OriginalTarsusMethod = ifelse(!is.na(Tarsus), "Alternative", NA_character_),
                   WingLength = NA_real_,
                   ExperimentID = dplyr::case_when(Experiment == "BSM - Griffioen et al. 2019 PeerJ" ~
                                                     "COHORT; PARENTAGE",

@@ -1,11 +1,6 @@
 #' Construct standard summary for data from Peerdsbos West, Belgium.
 #' Actively started 27/11/2020
 
-#### ---------------------------------------------------------------------------------------~
-#### BEFORE CLOSING THE PROJECT, COMMENT ALL ROWS, TO BE ABLE TO LOAD ALL FUNCTIONS NEXT TIME
-#### ---------------------------------------------------------------------------------------~
-
-
 format_PEW <- function(db = choose_directory(),
                        species = NULL,
                        pop = NULL,
