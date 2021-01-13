@@ -1,10 +1,13 @@
-#' Construct standard summary for data from Peerdsbos West, Belgium.
-
-
-#### ---------------------------------------------------------------------------------------~
-#### Questions/Doubts DATA OWNERS
-#### SEE EMAIL
-
+#' Construct standard format data from Peerdsbos West, Belgium (PEW)
+#'
+#' A pipeline to produce the standard format for bird study population
+#' at the Peerdsbos West, Belgium, administered by Arne Iserbyt.
+#'
+#' @return Generates either 4 .csv files or 4 data frames in the standard format.
+#' @export
+#'
+#' @examples
+#'
 
 #### ---------------------------------------------------------------------------------------~
 #### HELPDOC
@@ -28,22 +31,6 @@
 #### Experiment "BSM - Griffioen et al. 2019 PeerJ" was done with hatched nestlings, not with eggs.
 #### ---------------------------------------------------------------------------------------~
 
-# pew <- format_PEW()
-
-#' Title
-#'
-#' @param db
-#' @param species
-#' @param pop
-#' @param path
-#' @param output_type
-#'
-#' @return
-#' @export
-#'
-#' @examples
-#'
-
 
 format_PEW <- function(db = choose_directory(),
                        species = NULL,
@@ -51,10 +38,10 @@ format_PEW <- function(db = choose_directory(),
                        path = ".",
                        output_type = "R"){
 
-  # Force user to select directory
+  #### Force user to select directory
   force(db)
 
-  # Determine species codes for filtering
+  #### Determine species codes for filtering
   if(is.null(species)){
 
     species <- species_codes$Species
@@ -148,9 +135,9 @@ format_PEW <- function(db = choose_directory(),
                   everything()) %>%
     #### Remove observations without ID
     dplyr::filter(!is.na(IndvID)) %>%
-    #### Details
-    dplyr::mutate(PartnerId = ifelse(PartnerId == "MetalRing_FemK89_2019",
-                                     "MetalRing_F2019_K89", PartnerId)) %>%
+    #### Change ID of unringed individuals to generic "unringed"
+    dplyr::mutate(IndvID = ifelse(nchar(IndvID) > 8, "unringed", IndvID),
+                  PartnerId = ifelse(nchar(PartnerId) > 8, "unringed", PartnerId)) %>%
     #### Corrected information from data owner
     dplyr::mutate(DateEgg1 = ifelse(BroodID == "2019_78_PEW" & Method == "ChickRinging",
                                     "43554", DateEgg1),
@@ -159,11 +146,12 @@ format_PEW <- function(db = choose_directory(),
                   Sex = ifelse(IndvID == "11714676", "Male", Sex),
                   PartnerId = ifelse(PartnerId == "12706296" & BroodID == "2016_60_PEW",
                                      NA_character_, PartnerId),
-                  # The only couple in 49 in 2017 was 13619466 (female) and  13617031 (male).
+                  # Data owner: The only couple in 49 in 2017 was 13619466 (female) and  13617031 (male).
                   # partner 12706106 should be removed (or replaced by the true female 13619466).
                   PartnerId = ifelse(PartnerId == "12706106" & BroodID == "2017_49_PEW",
                                      "13619466", PartnerId),
-                  # 2016_60_PEW:  FEMALE: 12706296 in box 60 in 2016 is erroneous and can be removed from the data.
+                  # (2016_60_PEW) Data owner: FEMALE 12706296 in box 60 in 2016
+                  # is erroneous and can be removed from the data.
                   # Female 13617052 was the only female in box 60 in 2016.
                   # She layed a complete clutch, which never hatched.
                   # The male was never caught and remains unknown.
@@ -173,49 +161,30 @@ format_PEW <- function(db = choose_directory(),
     dplyr::select(-rem) %>%
     dplyr::distinct()
 
+
 #### temp for testing
 # data = pew_data
 
 
   #### BROOD DATA
-  #### done, need check
-
   message("Compiling brood information...")
-
   Brood_data <- create_brood_PEW(data = pew_data)
 
 
-  #### CAPTURUE DATA
-  #### done
-
-  # AGE_CALCULATED SEEMS NOT CORRECT ?
-  # (maybe also because the Age_observed was not correctly assigned?)
-  #
-  # Liam:
-  #   Seems to me that there are some records that are not captures (i.e. they don't have a date)
-  #   but just include brood information. So, I would explicitly remove the records with no date
-  #   from Capture_data but still use them in Brood_data.
-  #   In other cases where there are multiple captures in a year (with dates)
-  #   these should be treated as legitimate multiple captures.
-
+  #### CAPTURE DATA
   message("Compiling capture information...")
-
   Capture_data <- create_capture_PEW(pew_data, Brood_data)
 
 
   #### INDIVIDUAL DATA
-
   message("Compiling individual information...")
-
   Individual_data <- create_individual_PEW(Capture_data)
 
 
   #### LOCATION DATA
-  #### done, check with data owner
-
   message("Compiling location information...")
-
   Location_data <- create_location_PEW(pew_data)
+
 
   #### FINAL ARRANGEMENT
   Capture_data <-
@@ -260,8 +229,6 @@ format_PEW <- function(db = choose_directory(),
 
 
 
-
-
 #### --------------------------------------------------------------------------~
 #### FUNCTIONS
 #### --------------------------------------------------------------------------~
@@ -271,7 +238,6 @@ create_brood_PEW <- function(data) {
   parents_brood_data <-
     data %>%
     #### Exclude non-breeding data, exclude chicks
-    #### Trying to use both
     filter(Method %in% c("Catch adults nestbox", "Catch incubation")) %>%
     #### Rename variables
     dplyr::rename(LocationID = NestboxID) %>%
@@ -283,10 +249,10 @@ create_brood_PEW <- function(data) {
     dplyr::mutate(FemaleID = ifelse(is.na(FemaleID) & !is.na(MaleID), PartnerId, FemaleID),
                   MaleID = ifelse(is.na(MaleID) & !is.na(FemaleID), PartnerId, MaleID)) %>%
     dplyr::mutate(ExperimentID = dplyr::case_when(Experiment == "BSM - Griffioen et al. 2019 PeerJ" ~
-                                                  "COHORT; PARENTAGE",
-                                                Experiment == "2h Temp D4" ~ "SURVIVAL",
-                                                Experiment == "2h Temp D4 + Handicaping Male: Griffioen et al. 2019 Front Ecol&Evol" ~
-                                                  "SURVIVAL; PARENTAGE")) %>%
+                                                    "COHORT; PARENTAGE",
+                                                  Experiment == "2h Temp D4" ~ "SURVIVAL",
+                                                  Experiment == "2h Temp D4 + Handicaping Male: Griffioen et al. 2019 Front Ecol&Evol" ~
+                                                    "SURVIVAL; PARENTAGE")) %>%
     #### Remove unnecessary variables which may cause duplicated rows
     #### Exclude also Date column, as for few broods, there may be
     #### several catches of parents, but the brood parameters are the same
@@ -321,6 +287,7 @@ create_brood_PEW <- function(data) {
                   FledgeDate_min = NA_character_,
                   FledgeDate_max = NA_character_,
                   # NumberFledged_observed = NumberOfRingedChicks, ## for new version of calc_clutchtype
+                  #### Correction regarding one brood from data owner:
                   NumberFledged = ifelse(BroodID == "2015_79_PEW", 0L, NumberOfRingedChicks),
                   NumberFledged_min = NA_integer_,
                   NumberFledged_max = NA_integer_,
@@ -375,17 +342,10 @@ create_brood_PEW <- function(data) {
 
 create_capture_PEW <- function(pew_data, Brood_data) {
 
-
-
   Brood_data_sel <-
     Brood_data %>%
     # dplyr::select(BreedingSeason, Species, PopID, BroodID, LocationID,
     dplyr::select(BroodID, LocationID, HatchDate_observed)
-
-  # >> mirar github comment de Liam
-  # parece que habra que poner fecha inventada, dado que no existe hatchdate, ni capture date
-
-  # 14156268	Female	0700EDD2C5	B3	2017		Catch adults nestbox >> use 21 april 2017 (comment in the excel file)
 
 
   Capture_data_temp <-
@@ -430,21 +390,25 @@ create_capture_PEW <- function(pew_data, Brood_data) {
     left_join(Brood_data_sel,
               by = c("LocationID", "BroodID")) %>%
     #### Calculate Capture date for chicks from Hatch date
-    mutate(CaptureDate = if_else(is.na(CaptureDate) & D14Chicks == "yes",
-                                 HatchDate_observed + 14,
-                                 CaptureDate)) %>%
-
-  #### There are still 340 without capture date
-  # nocd  <- filter(Capture_data, is.na(CaptureDate))
-
-
+    #### Create fake Hatch_date for several broods
+    dplyr::mutate(HatchDate_observed = if_else(is.na(HatchDate_observed) & is.na(CaptureDate) & Method == "ChickRinging",
+                                               as.Date(paste0(BreedingSeason, "-06-01")),
+                                               HatchDate_observed),
+                  CaptureDate = case_when(is.na(CaptureDate) & D14Chicks == "yes" ~ HatchDate_observed + 14,
+                                          #### Create fake capture dates
+                                          is.na(CaptureDate) & Method == "Catch adults nestbox" ~
+                                            as.Date(paste0(BreedingSeason, "-06-01")),
+                                          is.na(CaptureDate) & Method == "Catch incubation" ~
+                                            as.Date(paste0(BreedingSeason, "-04-01")),
+                                          TRUE ~ CaptureDate)) %>%
     #### The age of captured chicks in days since hatching
     dplyr::mutate(ChickAge = if_else(Age_observed == 1,
-                                     as.integer(difftime(CaptureDate, HatchDate_observed)),
+                                     as.integer(difftime(CaptureDate, HatchDate_observed,
+                                                         units = "days")),
                                      NA_integer_),
                   BroodIDLaid = BroodID) %>%
 
-    #### NEW VERSION OF THE FUNCTION (TO FINISH!!)
+    #### USE THE NEW VERSION OF THE FUNCTION
     # dplyr::mutate(Age_calculated = calc_age())
 
     #### OLD VERSION OF THE FUNCTION
@@ -460,13 +424,6 @@ create_capture_PEW <- function(pew_data, Brood_data) {
                   ReleasePopID, ReleasePlot, Mass, Tarsus, OriginalTarsusMethod,
                   WingLength, Age_observed, Age_calculated, ChickAge, ExperimentID)
 
-    # #### Remove records with no date
-    # #### CHECK: doing this, almost 340 records of chicks will be removed,
-    # #### as there is no CaptureDate !!!
-    # filter(!is.na(CaptureDate))
-    # #### NOTE: KEEP IN CAPTURE DATA TO BE INCLUDED IN INDIVIDUAL INFORMATION,
-    # #### BUT REMOVE IT BEFORE FINAL OUPUT!!
-
   return(Capture_data)
 
 }
@@ -475,6 +432,8 @@ create_individual_PEW <- function(data){
 
   Individual_data <-
     data %>%
+    #### Remove unringed individuals
+    filter(IndvID != "unringed") %>%
     #### NOTE: Keep rows without Capture date
     #### Format and create new data columns
     group_by(IndvID) %>%
@@ -531,4 +490,9 @@ create_location_PEW <- function(data) {
 }
 
 
+#### --------------------------------------------------------------------------~
+# pew <- format_PEW()
+# View(pew$Individual_data)
+# View(pew$Capture_data)
+# View(pew$Brood_data)
 
