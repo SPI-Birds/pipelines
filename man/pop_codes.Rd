@@ -11,7 +11,8 @@ A data frame with 26 rows and 4 variables
  \item{PopName}{Name of population.}
  \item{Country}{Name of country where population is situated.}
  \item{Owner}{Letter code for data owner. Note, multiple populations can have
- the same data owner.} }
+ the same data owner.}
+ \item{OwnerName}{Name of owner.}}
 }
 \usage{
 pop_codes

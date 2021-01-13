@@ -4,12 +4,15 @@
 \alias{check_values_capture}
 \title{Check capture variable values against reference values}
 \usage{
-check_values_capture(Capture_data, var)
+check_values_capture(Capture_data, var, approved_list)
 }
 \arguments{
 \item{Capture_data}{Data frame. Capture data output from pipeline.}
 
 \item{var}{Character. Variable to check against reference values.}
+
+\item{approved_list}{List object. List of approved records from brood_approved_list.csv,
+capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv}
 }
 \value{
 A list of:
@@ -20,8 +23,12 @@ A list of:
 \item{Errors}{A list of row-by-row errors.}
 }
 \description{
-Check variable values against species-specific reference values in capture data. Unusual values will result in a warning. Impossible values will result in an error. Variables that are checked for adults and chicks: Mass and Tarsus.
+Check variable values against population-species-specific reference values in capture data. Reference values are based on the data if the number of observations is sufficiently large. Records for population-species combinations that are low in number are not evaluated by this check.
 }
 \details{
-Check IDs: C2a-b.
+\strong{Mass, adults}: Records are considered unusual if they are smaller than the 1st percentile or larger than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error. Check ID: C2a
+
+\strong{Mass, chicks}: Reference values for chicks are calculated for each age (in days). If the number of observations is sufficiently large (n > 500), this function tries to fit a logistic growth model to determine reference values to each day. If this model fails, reference values are determined per age if the number of observations for chicks of that age is sufficiently large (n > 50). Records are considered unusual if they are smaller than the 1st percentile or larger than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error. Check ID: C2a
+
+\strong{Tarsus}: : Records are considered unusual if they are smaller than the 1st percentile or larger than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error. Check ID: C2b
 }

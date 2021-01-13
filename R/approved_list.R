@@ -70,6 +70,6 @@ create_approved_list <- function(dummy = FALSE){
                         Location_approved_list = Location_approved_list)
 
 
-  usethis::use_data(approved_list, overwrite=TRUE)
+  return(approved_list)
 
 }

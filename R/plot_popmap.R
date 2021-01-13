@@ -9,40 +9,50 @@
 #'
 #' @return A jpeg file in the working directory
 #' @export
-#' @import ggplot2
 #'
 #' @examples
 #' #Create jpeg map
-#' plot_popmap()
-#' file.remove("Population_map.jpg")
+#' if (requireNamespace("ggplot2", quietly = TRUE)) {
+#'     plot_popmap()
+#'     file.remove("Population_map.jpg")
+#' }
 plot_popmap <- function(scale = 2, filename = NULL){
+
+  if (!requireNamespace(package = "ggplot2", quietly = TRUE)) {
+
+    stop("Require ggplot2 for plotting.")
+
+  }
 
   pop_locations <- utils::read.csv(system.file("extdata", "pop_locations.csv", package = "pipelines", mustWork = TRUE))
 
-  world_map <- map_data("world")
+  world_map <- ggplot2::map_data("world")
 
-  ggplot()+
-    geom_polygon(data = GT_dist_gg, aes(x = long, y = lat, group = group), fill = "light grey") +
-    geom_polygon(data = map_data("world"), aes(x = long, y = lat, group = group), color = "black", fill = NA) +
-    coord_cartesian(xlim = c(-20, 145), ylim = c(10, 70)) +
-    geom_point(data = pop_locations, aes(x = longitude, y = latitude, fill = data), shape = 21, size = 4) +
+  ggplot2::ggplot()+
+    ggplot2::geom_polygon(data = GT_dist_gg, ggplot2::aes(x = long, y = lat, group = group), fill = "light grey") +
+    ggplot2::geom_polygon(data = world_map,
+                          ggplot2::aes(x = long, y = lat, group = group), color = "black", fill = NA) +
+    ggplot2::coord_cartesian(xlim = c(-20, 145), ylim = c(10, 70)) +
+    ggplot2::geom_point(data = pop_locations,
+                        ggplot2::aes(x = longitude, y = latitude, fill = data), shape = 21, size = 4) +
     #Add a second time to make sure that green points are always on top.
     #These are the ones we want people to see.
-    geom_point(data = dplyr::filter(pop_locations, data == "Yes"), aes(x = longitude, y = latitude), fill = "green",
+    ggplot2::geom_point(data = dplyr::filter(pop_locations, data == "Yes"),
+                        ggplot2::aes(x = longitude, y = latitude), fill = "green",
                shape = 21, size = 4) +
-    scale_fill_manual(breaks = c("Yes", "No"),
+    ggplot2::scale_fill_manual(breaks = c("Yes", "No"),
                       values = c("#CCFFCC", "green"),
                       labels = c("Population meta-data provided", "Meta-data not yet provided")) +
-    theme_classic() +
-    guides(fill = guide_legend(override.aes = list(size = 5, stroke = 1))) +
-    theme(axis.line = element_blank(),
-          axis.text = element_blank(),
-          axis.title = element_blank(),
-          axis.ticks = element_blank(),
+    ggplot2::theme_classic() +
+    ggplot2::guides(fill = ggplot2::guide_legend(override.aes = list(size = 5, stroke = 1))) +
+    ggplot2::theme(axis.line = ggplot2::element_blank(),
+          axis.text = ggplot2::element_blank(),
+          axis.title = ggplot2::element_blank(),
+          axis.ticks = ggplot2::element_blank(),
           legend.position = c(0.265, 0.25),
-          legend.background = element_rect(colour = "black", fill = "white", size = 1),
-          legend.title = element_blank(),
-          legend.text = element_text(size = 14))
+          legend.background = ggplot2::element_rect(colour = "black", fill = "white", size = 1),
+          legend.title = ggplot2::element_blank(),
+          legend.text = ggplot2::element_text(size = 14))
 
   ggplot2::ggsave(filename = ifelse(is.null(filename), "Population_map.jpg", filename),
                   height = (3.58 * scale),

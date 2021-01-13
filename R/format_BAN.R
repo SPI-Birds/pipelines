@@ -267,9 +267,8 @@ create_capture_BAN <- function(data) {
     dplyr::select(Species, BreedingSeason, LocationID, Plot,
                   FemaleCaptureDate, MaleCaptureDate,
                   FemaleID, MaleID) %>%
-    reshape2::melt(measure.vars = c("FemaleID", "MaleID"),
-                   value.name = "IndvID",
-                   variable.name = "Sex") %>%
+    tidyr::pivot_longer(cols = c(FemaleID, MaleID), names_to = "Sex", values_to = "IndvID") %>%
+    dplyr::arrange(Sex) %>%
     dplyr::filter(!is.na(IndvID) & !IndvID %in% c("UNKNOWN", "NA")) %>%
     dplyr::mutate(Sex = dplyr::case_when(grepl(pattern = "Female", .$Sex) ~ "F",
                                          grepl(pattern = "Male", .$Sex) ~ "M"),

@@ -81,13 +81,13 @@ format_PFN <- function(db = choose_directory(),
   start_time <- Sys.time()
 
   #Load primary brood data
-  Primary_data <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_EDartmoor.csv"), na.strings = c("", "?"), colClasses = "character")
+  Primary_data <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_Nest_EDM.csv"), na.strings = c("", "?"), colClasses = "character")
 
   #Load complete PiedFlyNet ringing database
-  CMR_data <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_All_CMR.csv"), na.strings = c("", "?", "UNK", "-"), colClasses = "character") # TODO:Confirm with Malcolm that SITE = "UNK" refers to unknown/unassigned locations
+  CMR_data <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_IPMR_PFN.csv"), na.strings = c("", "?", "UNK", "-"), colClasses = "character") # TODO:Confirm with Malcolm that SITE = "UNK" refers to unknown/unassigned locations
 
   #Load additional data on nestboxes (locations)
-  Location_details <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_EDartmoor_Nestboxes.csv"), na.strings = c("", "?"), colClasses = "character", fileEncoding="UTF-8-BOM")
+  Location_details <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_Locations_EDM.csv"), na.strings = c("", "?"), colClasses = "character", fileEncoding="UTF-8-BOM")
 
 
   # PREPARATION: ASSIGNING INDIVIDUAL IDENTITIY (relevant for re-ringed birds)
@@ -216,7 +216,7 @@ create_brood_EDM <- function(Primary_data, ReRingTable){
   ## Pre) Determine a vector of "bad" (nonconclusive) IDs
   #This will be used downstream in point 7)
   #Create a vector of all non-NA ID records for both males and females (need for chicks too?)
-  allIDs <- na.omit(c(Primary_data$MaleID, Primary_data$FemaleID, Primary_data$Young1,
+  allIDs <- stats::na.omit(c(Primary_data$MaleID, Primary_data$FemaleID, Primary_data$Young1,
                       Primary_data$Young2, Primary_data$Young3, Primary_data$Young4,
                       Primary_data$Young5, Primary_data$Young6, Primary_data$Young7,
                       Primary_data$Young8, Primary_data$Young9, Primary_data$Young10, Primary_data$Young11))
@@ -378,8 +378,8 @@ create_capture_EDM <- function(CMR_data, Primary_data, ReRingTable){
     dplyr::mutate(RING = ifelse(is.na(.data$ReRingID), .data$RING, .data$ReRingID))
 
   ## 2) Subset ringing database to contain only captures relevant to population
-  #LocationList <- unique(Primary_data$Popn)
-  #Capture_data <- subset(Capture_data, PLACE %in% LocationList)
+  LocationList <- unique(Primary_data$Popn)
+  Capture_data <- subset(Capture_data, PLACE %in% LocationList)
 
   ## 3) Rename columns that are equivalent (content and format) to columns in the standard format
   Capture_data <- Capture_data %>%
@@ -399,7 +399,7 @@ create_capture_EDM <- function(CMR_data, Primary_data, ReRingTable){
                                              .data$SPEC == "NUTHA" ~ species_codes[species_codes$SpeciesID == 14790, ]$Species,
                                              .data$SPEC == "COATI" ~ species_codes[species_codes$SpeciesID == 14610, ]$Species),
                     CaptureDate = as.Date(.data$DATE, format = "%d/%m/%Y"),
-                    CaptureTime = ifelse(!grepl("00:00", Capture_data$DATE), sub(".* ", "", Capture_data$DATE), NA),
+                    CaptureTime = ifelse(!grepl("00:00", Capture_data$DATE), sub(".* ", "", Capture_data$DATE), NA_character_),
                     ObserverID = dplyr::case_when(!is.na(.data$INIT) ~ .data$INIT,
                                                   is.na(.data$INIT) & !is.na(.data$RINGINIT) ~ .data$RINGINIT),
                     CapturePopID = "EDM",
@@ -580,7 +580,7 @@ create_individual_EDM <- function(Capture_data){
 
     #* CN: Loop over the species assigned to each individual and check the number of different assignments
 
-    dplyr::summarise(Species = purrr::map_chr(.x = list(unique(na.omit(.data$Species))), .f = ~{
+    dplyr::summarise(Species = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Species))), .f = ~{
 
       if(length(..1) == 0){
 
@@ -601,7 +601,7 @@ create_individual_EDM <- function(Capture_data){
     BroodIDFledged = .data$BroodIDLaid, # Identical, as no cross-fostering experiments were made
     RingSeason = first(.data$BreedingSeason),
     RingAge = ifelse(any(.data$Age_calculated %in% c(1, 3)), "chick", ifelse(min(.data$Age_calculated) == 2, NA_character_, "adult")),
-    Sex_calculated = purrr::map_chr(.x = list(unique(na.omit(.data$Sex_observed))), .f = ~{
+    Sex_calculated = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Sex_observed))), .f = ~{
 
       if(length(..1) == 0){
 
