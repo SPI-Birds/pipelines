@@ -5,6 +5,9 @@
 \title{Parameter documentation for location data checks}
 \arguments{
 \item{Location_data}{Data frame. Location data output from pipeline.}
+
+\item{approved_list}{List object. List of approved records from brood_approved_list.csv,
+capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv}
 }
 \description{
 Parameter documentation for location data checks

@@ -48,22 +48,30 @@ calculate_chick_mass_cutoffs <- function(Capture_data, plot = FALSE) {
 
   # Predict and calculate 1st and 99th quantiles
   newdata <- data.frame(ChickAge = seq(0, max(data$ChickAge), by = 1))
-  logistic_pred <- tibble::tibble(fit = predict(logistic_model, newdata = newdata),
+  logistic_pred <- tibble::tibble(fit = stats::predict(logistic_model, newdata = newdata),
                                   x = newdata$ChickAge) %>%
-    dplyr::mutate(upper = fit + summary(logistic_model)$sigma * qnorm(0.99, 0, 1),
-                  lower = fit + summary(logistic_model)$sigma * qnorm(0.01, 0, 1))
+    dplyr::mutate(upper = fit + summary(logistic_model)$sigma * stats::qnorm(0.99, 0, 1),
+                  lower = fit + summary(logistic_model)$sigma * stats::qnorm(0.01, 0, 1))
 
 
   if(plot == TRUE) {
 
-    # Plot logistic growth curve and data
-    p <- ggplot2::ggplot() +
-      ggplot2::geom_jitter(data = data, ggplot2::aes(x = ChickAge, y = Mass), shape = 21, alpha = 0.4, width = 0.2) +
-      ggplot2::geom_line(data = logistic_pred, ggplot2::aes(x = x, y = lower), colour = "darkred", lty = 2) +
-      ggplot2::geom_line(data = logistic_pred, ggplot2::aes(x = x, y = upper), colour = "darkred", lty = 2) +
-      ggplot2::geom_line(data = logistic_pred, ggplot2::aes(x = x, y = fit), size = 1, colour = "darkred") +
-      ggplot2::labs(title = paste0(unique(data$CapturePopID), ": ", unique(data$Species))) +
-      ggplot2::theme_classic()
+    if (requireNamespace(package = "ggplot2", quietly = TRUE)) {
+
+      # Plot logistic growth curve and data
+      p <- ggplot2::ggplot() +
+        ggplot2::geom_jitter(data = data, ggplot2::aes(x = ChickAge, y = Mass), shape = 21, alpha = 0.4, width = 0.2) +
+        ggplot2::geom_line(data = logistic_pred, ggplot2::aes(x = x, y = lower), colour = "darkred", lty = 2) +
+        ggplot2::geom_line(data = logistic_pred, ggplot2::aes(x = x, y = upper), colour = "darkred", lty = 2) +
+        ggplot2::geom_line(data = logistic_pred, ggplot2::aes(x = x, y = fit), size = 1, colour = "darkred") +
+        ggplot2::labs(title = paste0(unique(data$CapturePopID), ": ", unique(data$Species))) +
+        ggplot2::theme_classic()
+
+    } else {
+
+      warning("ggplot2 is required for plotting. Plotting skipped.")
+
+    }
 
   }
 

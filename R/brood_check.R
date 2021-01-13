@@ -24,10 +24,11 @@
 #' @param check_format \code{TRUE} or \code{FALSE}. If \code{TRUE}, the check on variable format (i.e. \code{\link{check_format_brood}}) is included in the quality check. Default: \code{TRUE}.
 #'
 #' @inherit checks_return return
-#'
+#' @importFrom rlang sym `:=`
+#' @importFrom progress progress_bar
 #' @export
 
-brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
+brood_check <- function(Brood_data, Individual_data, check_format=TRUE, approved_list){
 
   # Create check list with a summary of warnings and errors per check
   check_list <- tibble::tibble(CheckID = paste0("B", c(1:5, paste0(6, letters[1:4]), 7:13)),
@@ -57,7 +58,7 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
   if(check_format) {
     message("B1: Checking format of brood data...")
 
-    check_format_brood_output <- check_format_brood(Brood_data)
+    check_format_brood_output <- check_format_brood(Brood_data, approved_list)
 
     check_list[1,3:4] <- check_format_brood_output$CheckList
 
@@ -66,28 +67,28 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
   # - Compare clutch and brood sizes
   message("B2: Comparing clutch and brood sizes...")
 
-  compare_clutch_brood_output <- compare_clutch_brood(Brood_data)
+  compare_clutch_brood_output <- compare_clutch_brood(Brood_data, approved_list)
 
   check_list[2,3:4] <- compare_clutch_brood_output$CheckList
 
   # - Compare brood sizes and fledgling numbers
   message("B3: Comparing brood sizes and fledgling numbers...")
 
-  compare_brood_fledglings_output <- compare_brood_fledglings(Brood_data)
+  compare_brood_fledglings_output <- compare_brood_fledglings(Brood_data, approved_list)
 
   check_list[3,3:4] <- compare_brood_fledglings_output$CheckList
 
   # - Compare lay and hatch dates
   message("B4: Comparing lay and hatch dates...")
 
-  compare_laying_hatching_output <- compare_laying_hatching(Brood_data)
+  compare_laying_hatching_output <- compare_laying_hatching(Brood_data, approved_list)
 
   check_list[4,3:4] <- compare_laying_hatching_output$CheckList
 
   # - Compare hatch and fledge dates
   message("B5: Comparing hatch and fledge dates...")
 
-  compare_hatching_fledging_output <- compare_hatching_fledging(Brood_data)
+  compare_hatching_fledging_output <- compare_hatching_fledging(Brood_data, approved_list)
 
   check_list[5,3:4] <- compare_hatching_fledging_output$CheckList
 
@@ -96,70 +97,70 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
 
   var_ext <- ifelse("ClutchSize" %in% colnames(Brood_data), "", "_observed")
 
-  check_values_clutch_size_output <- check_values_brood(Brood_data, paste0("ClutchSize", var_ext))
+  check_values_clutch_size_output <- check_values_brood(Brood_data, paste0("ClutchSize", var_ext), approved_list)
 
   check_list[6,3:4] <- check_values_clutch_size_output$CheckList
 
   # - Check brood size values against reference values
   message("B6b: Checking brood size values against reference values...")
 
-  check_values_brood_size_output <- check_values_brood(Brood_data, paste0("BroodSize", var_ext))
+  check_values_brood_size_output <- check_values_brood(Brood_data, paste0("BroodSize", var_ext), approved_list)
 
   check_list[7,3:4] <- check_values_brood_size_output$CheckList
 
   # - Check fledgling number values against reference values
   message("B6c: Checking fledgling number values against reference values...")
 
-  check_values_fledgling_number_output <- check_values_brood(Brood_data, paste0("NumberFledged", var_ext))
+  check_values_fledgling_number_output <- check_values_brood(Brood_data, paste0("NumberFledged", var_ext), approved_list)
 
   check_list[8,3:4] <- check_values_fledgling_number_output$CheckList
 
   # - Check lay date values against reference values
   message("B6d: Checking lay date values against reference values...")
 
-  check_values_lay_date_output <- check_values_brood(Brood_data, paste0("LayDate", var_ext))
+  check_values_lay_date_output <- check_values_brood(Brood_data, paste0("LayDate", var_ext), approved_list)
 
   check_list[9,3:4] <- check_values_lay_date_output$CheckList
 
   # - Compare brood size and number of chicks captured
   message("B7: Comparing brood size and number of chicks captured...")
 
-  compare_broodsize_chicknumber_output <- compare_broodsize_chicknumber(Brood_data, Individual_data)
+  compare_broodsize_chicknumber_output <- compare_broodsize_chicknumber(Brood_data, Individual_data, approved_list)
 
   check_list[10,3:4] <- compare_broodsize_chicknumber_output$CheckList
 
   # - Check that BroodIDs are unique
   message("B8: Checking that brood IDs are unique...")
 
-  check_unique_BroodID_output <- check_unique_BroodID(Brood_data)
+  check_unique_BroodID_output <- check_unique_BroodID(Brood_data, approved_list)
 
   check_list[11,3:4] <- check_unique_BroodID_output$CheckList
 
   # - Check clutch type order
   message("B9: Checking that clutch type order is correct..")
 
-  check_clutch_type_order_output <- check_clutch_type_order(Brood_data)
+  check_clutch_type_order_output <- check_clutch_type_order(Brood_data, approved_list)
 
   check_list[12,3:4] <- check_clutch_type_order_output$CheckList
 
   # - Compare species of mother and father
   message("B10: Comparing species of mother and father...")
 
-  compare_species_parents_output <- compare_species_parents(Brood_data, Individual_data)
+  compare_species_parents_output <- compare_species_parents(Brood_data, Individual_data, approved_list)
 
   check_list[13,3:4] <- compare_species_parents_output$CheckList
 
   # - Compare species of brood and parents
   message("B11: Comparing species of brood and parents...")
 
-  compare_species_brood_parents_output <- compare_species_brood_parents(Brood_data, Individual_data)
+  compare_species_brood_parents_output <- compare_species_brood_parents(Brood_data, Individual_data, approved_list)
 
   check_list[14,3:4] <- compare_species_brood_parents_output$CheckList
 
   # - Compare species of brood and chicks
   message("B12: Comparing species of brood and chicks...")
 
-  compare_species_brood_chicks_output <- compare_species_brood_chicks(Brood_data, Individual_data)
+  compare_species_brood_chicks_output <- compare_species_brood_chicks(Brood_data, Individual_data, approved_list)
 
   check_list[15,3:4] <- compare_species_brood_chicks_output$CheckList
 
@@ -292,7 +293,7 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE){
 #'
 #' @export
 
-check_format_brood <- function(Brood_data){
+check_format_brood <- function(Brood_data, approved_list){
 
   ## Data frame with column names and formats according to the standard protocol
   Brood_data_standard <- tibble::tibble(Variable = c("Row", "BroodID", "PopID", "BreedingSeason", "Species", "Plot",
@@ -408,7 +409,7 @@ check_format_brood <- function(Brood_data){
 #'
 #' @export
 
-compare_clutch_brood <- function(Brood_data){
+compare_clutch_brood <- function(Brood_data, approved_list){
 
   # Non-manipulated broods
   # NB: allows v1.0 & v1.1 variable names of the standard format
@@ -506,7 +507,7 @@ compare_clutch_brood <- function(Brood_data){
 #'
 #' @export
 
-compare_brood_fledglings <- function(Brood_data){
+compare_brood_fledglings <- function(Brood_data, approved_list){
 
   # Non-manipulated broods
   # NB: allows v1.0 & v1.1 variable names of the standard format
@@ -604,7 +605,7 @@ compare_brood_fledglings <- function(Brood_data){
 #'
 #' @export
 
-compare_laying_hatching <- function(Brood_data){
+compare_laying_hatching <- function(Brood_data, approved_list){
 
   # Broods with laying date later than hatching date
   # NB: allows v1.0 & v1.1 variable names of the standard format
@@ -681,7 +682,7 @@ compare_laying_hatching <- function(Brood_data){
 #'
 #' @export
 
-compare_hatching_fledging <- function(Brood_data){
+compare_hatching_fledging <- function(Brood_data, approved_list){
 
   # Broods with laying date later than hatching date
   # NB: allows v1.0 & v1.1 variable names of the standard format
@@ -769,10 +770,9 @@ compare_hatching_fledging <- function(Brood_data){
 #'
 #' @inherit checks_return return
 #'
-#' @importFrom progress progress_bar
 #' @export
 
-check_values_brood <- function(Brood_data, var) {
+check_values_brood <- function(Brood_data, var, approved_list) {
 
   # Stop if "var" is missing
   if(missing(var)) {
@@ -790,7 +790,7 @@ check_values_brood <- function(Brood_data, var) {
       dplyr::filter(!is.na(!!rlang::sym(var)) & !is.na(.data$Species)) %>%
       dplyr::group_by(.data$Species, .data$PopID) %>%
       dplyr::summarise(Warning_min = NA,
-                       Warning_max = ceiling(quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE)),
+                       Warning_max = ceiling(stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE)),
                        Error_min = 0,
                        Error_max = 4 * .data$Warning_max,
                        n = n()) %>%
@@ -806,9 +806,8 @@ check_values_brood <- function(Brood_data, var) {
       dplyr::mutate(!!paste0(var, "_julian") := as.numeric(!!rlang::sym(var) - lubridate::ymd(paste(.data$BreedingSeason, "1", "1", sep = "-")) + 1)) %>%
       dplyr::ungroup() %>%
       dplyr::group_by(.data$Species, .data$PopID) %>%
-      dplyr::summarise(Warning_min = floor(quantile(!!rlang::sym(paste0(var, "_julian")), probs = 0.01, na.rm = TRUE)),
-                       Warning_max = ceiling(quantile(!!rlang::sym(paste0(var, "_julian")), probs = 0.99, na.rm = TRUE)),
-                       ##TODO: this error is specific to spring/summer breeders, make more general when species with other types of breeding system enter the pipelines.
+      dplyr::summarise(Warning_min = floor(stats::quantile(!!rlang::sym(paste0(var, "_julian")), probs = 0.01, na.rm = TRUE)),
+                       Warning_max = ceiling(stats::quantile(!!rlang::sym(paste0(var, "_julian")), probs = 0.99, na.rm = TRUE)),
                        Error_min = 1,
                        Error_max = 366,
                        n = n()) %>%
@@ -1028,7 +1027,7 @@ check_values_brood <- function(Brood_data, var) {
 #'
 #' @export
 
-compare_broodsize_chicknumber <- function(Brood_data, Individual_data) {
+compare_broodsize_chicknumber <- function(Brood_data, Individual_data, approved_list) {
 
   # Link BroodID from Individual_data to each capture in Capture_data
   chicks_captured <- Individual_data %>%
@@ -1136,7 +1135,7 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data) {
 #'
 #' @export
 
-check_unique_BroodID <- function(Brood_data){
+check_unique_BroodID <- function(Brood_data, approved_list){
 
   # Errors
   # Select records that are duplicated within populations
@@ -1210,7 +1209,7 @@ check_unique_BroodID <- function(Brood_data){
 #'
 #' @export
 
-check_clutch_type_order <- function(Brood_data){
+check_clutch_type_order <- function(Brood_data, approved_list){
 
   # Select breeding females with ClutchType_calculated == "first" not as first clutch in a particular breeding season
   brood_err <- Brood_data %>%
@@ -1282,7 +1281,7 @@ check_clutch_type_order <- function(Brood_data){
 #'
 #' @export
 
-compare_species_parents <- function(Brood_data, Individual_data) {
+compare_species_parents <- function(Brood_data, Individual_data, approved_list) {
 
   # Find species information of mothers
   females <- Brood_data %>%
@@ -1398,7 +1397,7 @@ compare_species_parents <- function(Brood_data, Individual_data) {
 #'
 #' @export
 
-compare_species_brood_parents <- function(Brood_data, Individual_data) {
+compare_species_brood_parents <- function(Brood_data, Individual_data, approved_list) {
 
   # Find species information of mothers
   females <- Brood_data %>%
@@ -1526,7 +1525,7 @@ compare_species_brood_parents <- function(Brood_data, Individual_data) {
 #'
 #' @export
 
-compare_species_brood_chicks <- function(Brood_data, Individual_data) {
+compare_species_brood_chicks <- function(Brood_data, Individual_data, approved_list) {
 
   individuals <- Individual_data %>%
     # Do not select individuals without BroodID and conflicted species

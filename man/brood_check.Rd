@@ -4,7 +4,7 @@
 \alias{brood_check}
 \title{Perform quality checks on brood data}
 \usage{
-brood_check(Brood_data, Individual_data, check_format = TRUE)
+brood_check(Brood_data, Individual_data, check_format = TRUE, approved_list)
 }
 \arguments{
 \item{Brood_data}{Data frame. Brood data output from pipeline.}
@@ -12,6 +12,9 @@ brood_check(Brood_data, Individual_data, check_format = TRUE)
 \item{Individual_data}{Data frame. Individual data output from pipeline.}
 
 \item{check_format}{\code{TRUE} or \code{FALSE}. If \code{TRUE}, the check on variable format (i.e. \code{\link{check_format_brood}}) is included in the quality check. Default: \code{TRUE}.}
+
+\item{approved_list}{List object. List of approved records from brood_approved_list.csv,
+capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv}
 }
 \value{
 A list of:

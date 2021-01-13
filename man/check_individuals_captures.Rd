@@ -4,12 +4,15 @@
 \alias{check_individuals_captures}
 \title{Check that all individuals in Individual_data appear in Capture_data}
 \usage{
-check_individuals_captures(Individual_data, Capture_data)
+check_individuals_captures(Individual_data, Capture_data, approved_list)
 }
 \arguments{
 \item{Individual_data}{Data frame. Individual data output from pipeline.}
 
 \item{Capture_data}{Data frame. Capture data output from pipeline.}
+
+\item{approved_list}{List object. List of approved records from brood_approved_list.csv,
+capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv}
 }
 \value{
 A list of:

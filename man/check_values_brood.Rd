@@ -4,12 +4,15 @@
 \alias{check_values_brood}
 \title{Check brood variable values against reference values}
 \usage{
-check_values_brood(Brood_data, var)
+check_values_brood(Brood_data, var, approved_list)
 }
 \arguments{
 \item{Brood_data}{Data frame. Brood data output from pipeline.}
 
 \item{var}{Character. Variable to check against reference values.}
+
+\item{approved_list}{List object. List of approved records from brood_approved_list.csv,
+capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv}
 }
 \value{
 A list of:

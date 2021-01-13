@@ -30,6 +30,9 @@ this argument can be ignored.}
 \item{path}{Location where output csv files will be saved.}
 
 \item{output_type}{Should the pipeline generate .csv files ('csv') or R objects ('R').}
+
+\item{return_errors}{Logical. Should capture data include those individuals with
+errors in ring sequences?}
 }
 \value{
 Generates either 4 .csv files or 4 data frames in the standard format.

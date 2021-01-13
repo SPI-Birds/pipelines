@@ -228,7 +228,7 @@ create_dummy_data <- function(overwrite=TRUE) {
     dplyr::mutate( # Probable
       ClutchSize_observed = 10) %>%
     dplyr::add_row( # Add 150 rows so that reference values can be calculated
-      ClutchSize_observed = round(rnorm(150, 9, 2))) %>%
+      ClutchSize_observed = round(stats::rnorm(150, 9, 2))) %>%
     dplyr::add_row( # Improbable (warning)
       ClutchSize_observed = 30) %>%
     dplyr::add_row( # Impossible (error)
@@ -251,7 +251,7 @@ create_dummy_data <- function(overwrite=TRUE) {
     dplyr::mutate( # Probable
       BroodSize_observed = 9) %>%
     dplyr::add_row( # Add 150 rows so that reference values can be calculated
-      BroodSize_observed = round(rnorm(150, 8, 2))) %>%
+      BroodSize_observed = round(stats::rnorm(150, 8, 2))) %>%
     dplyr::add_row( # Improbable (warning)
       BroodSize_observed = 30) %>%
     dplyr::add_row( # Impossible (error)
@@ -274,7 +274,7 @@ create_dummy_data <- function(overwrite=TRUE) {
     dplyr::mutate( # Probable
       NumberFledged_observed = 9) %>%
     dplyr::add_row( # Add 150 rows so that reference values can be calculated
-      NumberFledged_observed = round(rnorm(150, 8, 2))) %>%
+      NumberFledged_observed = round(stats::rnorm(150, 8, 2))) %>%
     dplyr::add_row( # Improbable (warning)
       NumberFledged_observed = 30) %>%
     dplyr::add_row( # Impossible (error)
@@ -504,7 +504,7 @@ create_dummy_data <- function(overwrite=TRUE) {
       Mass = as.integer(18)
     ) %>%
     dplyr::add_row( # Add 150 rows so that reference values can be calculated
-      Mass = rnorm(150, 16, 3)
+      Mass = stats::rnorm(150, 16, 3)
     ) %>%
     dplyr::add_row( # Improbable (warning)
       Mass = as.integer(30)
@@ -534,9 +534,9 @@ create_dummy_data <- function(overwrite=TRUE) {
     dplyr::group_by(ID) %>%
     dplyr::group_modify(~{
 
-      a <- rnorm(1, mean = 25, sd = 7.5)
-      b <- rnorm(1, mean = 5, sd = 1.5)
-      c <- rnorm(1, mean = 0.15, sd = 0.04)
+      a <- stats::rnorm(1, mean = 25, sd = 7.5)
+      b <- stats::rnorm(1, mean = 5, sd = 1.5)
+      c <- stats::rnorm(1, mean = 0.15, sd = 0.04)
 
       .x %>%
         dplyr:: mutate(Mass =  a / (1 + b * (exp(-c * .x$ChickAge))))
@@ -626,7 +626,7 @@ create_dummy_data <- function(overwrite=TRUE) {
       Tarsus = as.integer(20)
     ) %>%
     dplyr::add_row( # Add 150 rows so that reference values can be calculated
-      Tarsus = rnorm(150, 19, 3)
+      Tarsus = stats::rnorm(150, 19, 3)
     ) %>%
     dplyr::add_row( # Improbable (warning)
       Tarsus = as.integer(45)
@@ -652,7 +652,7 @@ create_dummy_data <- function(overwrite=TRUE) {
       Tarsus = as.integer(17)
     ) %>%
     dplyr::add_row( # Add 150 rows so that reference values can be calculated
-      Tarsus = rnorm(150, 16, 3)
+      Tarsus = stats::rnorm(150, 16, 3)
     ) %>%
     dplyr::add_row( # Improbable (warning)
       Tarsus = as.integer(40)

@@ -20,31 +20,32 @@ Imports: dplyr,
          DBI,
          purrr,
          stringr,
-         ggplot2,
          crayon,
-         egg,
          forcats,
-         gganimate,
          glue,
          lubridate,
          odbc,
-         png,
          reticulate,
          sf,
          snakecase,
          tibble,
          tidyr,
-         utils,
          readxl,
          janitor,
-         reshape2,
          magrittr,
-         maps,
-         stats,
-         rgdal
+         rgdal,
+         here,
+         progress,
+         rgeos,
+         rstudioapi,
+         sp,
+         usethis,
+         rlang
 RoxygenNote: 7.1.1
 Suggests: 
     knitr,
     rmarkdown,
     testthat
+Enhances:
+    ggplot2
 VignetteBuilder: knitr

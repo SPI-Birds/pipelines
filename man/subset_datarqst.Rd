@@ -6,9 +6,12 @@
 \usage{
 subset_datarqst(
   file = file.choose(),
-  PopID = unique(pop_names$code),
-  Species = unique(Species_codes$Code),
-  filter = NULL
+  PopID = unique(pop_codes$PopID),
+  Species = unique(species_codes$Species),
+  PopSpec = NULL,
+  include_conflicting = FALSE,
+  output_type = "R",
+  save = TRUE
 )
 }
 \arguments{
@@ -18,12 +21,24 @@ subset_datarqst(
 
 \item{Species}{Character vector of six letter species codes. Include all species that are requested.}
 
-\item{filter}{Character vector of unique population species combinations (in the format PopID_Species).
-Include all unique population species combinations requested.}
+\item{PopSpec}{Character vector of unique population species combinations (in the format PopID_Species).
+Include all unique population species combinations requested. Can be used instead of `PopID` and `Species` arguments.}
+
+\item{include_conflicting}{= TRUE, individuals with conflicting species information
+are included in the subset of data. If include_conflicting = FALSE (default), these individuals are removed.
+Note that this applies only to conflicted species individuals that were identified at least once as any
+of the species specified in `Species` or `PopSpec`. Data on conflicted species individuals that were never
+identified as any of the species specified in `Species` or `PopSpec` is never returned.}
+
+\item{output_type}{is 'R' and can be set to 'csv'. If output_type is 'csv' 4 .csv files will be created in the save path.
+If output_type is 'R' an .RDS file will be created in the save path, and an R object in the
+running R session if return_R = TRUE.}
+
+\item{save}{is TRUE. If save = FALSE, the subset of data is not saved into the save path.}
 }
 \value{
-Create 4 .csv files at the location of the standard data. Files will be given a unique number
-based on the date when the subset was performed.
+Creates 1 RDS or 4 .csv files in a folder at the location of the standard data. Folder and files
+will be given a unique identifier in the form of the date when the subset was performed.
 }
 \description{
 Create a subset of data stored in the standard format.
@@ -35,7 +50,9 @@ which can be stored locally on the SPI-Birds computer.
 
 When a request is made, `subset_datarqst` can be used
 to take a subset of this larger file to cover the specific
-populations/species requested by a user.
+populations/species requested by a user. The request can be specified
+either through the \code{PopID} and \code{Species} arguments, or through
+the \code{PopSpec} argument.
 }
 \examples{
 \dontrun{
@@ -47,7 +64,7 @@ subset_datarqst(PopID = c("HOG", "CHO"))
 subset_datarqst(Species = c("PARMAJ", "FICALB"))
 
 #Create a specific subset of species and population combinations
-subset_datarqst(filter = c("HOG_PARMAJ", "VEL_FICALB", "VLI_PARMAJ"))
+subset_datarqst(PopSpec = c("HOG_PARMAJ", "VEL_FICALB", "VLI_PARMAJ"))
 
 }
 }

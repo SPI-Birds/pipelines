@@ -4,10 +4,13 @@
 \alias{check_format_location}
 \title{Check format of location data}
 \usage{
-check_format_location(Location_data)
+check_format_location(Location_data, approved_list)
 }
 \arguments{
 \item{Location_data}{Data frame. Location data output from pipeline.}
+
+\item{approved_list}{List object. List of approved records from brood_approved_list.csv,
+capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv}
 }
 \value{
 A list of:

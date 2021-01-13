@@ -58,7 +58,7 @@ format. These still need to be translated into our experimental groups.
 \strong{Tarsus}: Tarsus is measured using Svennson's Standard in early years
 and Svennson's Alternative in later years. When Svennson's Alternative is
 available this is used, otherwise we use converted Svensson's Standard, using
-\code{\link[SPIbirds]{convert_tarsus}}.
+\code{\link[pipelines]{convert_tarsus}}.
 
 \strong{Age}: For Age_observed: \itemize{
 \item If a capture has a recorded

@@ -14,7 +14,7 @@
 #'
 #' @export
 
-location_check <- function(Location_data, check_format=TRUE){
+location_check <- function(Location_data, check_format=TRUE, approved_list){
 
   # Create check list with a summary of warnings and errors per check
   check_list <- tibble::tibble(CheckID = paste0("L", 1),
@@ -29,7 +29,7 @@ location_check <- function(Location_data, check_format=TRUE){
   if(check_format) {
     message("L1: Checking format of location data...")
 
-    check_format_location_output <- check_format_location(Location_data)
+    check_format_location_output <- check_format_location(Location_data, approved_list)
 
     check_list[1,3:4] <- check_format_location_output$CheckList
   }
@@ -70,7 +70,7 @@ location_check <- function(Location_data, check_format=TRUE){
 #'
 #' @export
 
-check_format_location <- function(Location_data){
+check_format_location <- function(Location_data, approved_list){
 
   ## Data frame with column names and formats according to the standard protocol
   Location_data_standard <- tibble::tibble(Variable = c("Row", "LocationID", "NestboxID", "LocationType",

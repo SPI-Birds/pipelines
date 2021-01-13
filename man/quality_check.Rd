@@ -8,7 +8,8 @@ quality_check(
   R_data,
   output = TRUE,
   output_format = "both",
-  check_format = TRUE
+  check_format = TRUE,
+  test = FALSE
 )
 }
 \arguments{
@@ -20,6 +21,9 @@ quality_check(
 \item{output_format}{A character. Format of output report. Options: \code{"html"}, \code{"pdf"}, or \code{"both"}. Default: \code{"both"}.}
 
 \item{check_format}{\code{TRUE} or \code{FALSE}. If \code{TRUE}, the checks on variable format (i.e. \code{\link{check_format_brood}}, \code{\link{check_format_capture}}, \code{\link{check_format_individual}} and \code{\link{check_format_location}}) are included in the quality check. Default: \code{TRUE}.}
+
+\item{test}{Logical. Is `quality_check` being used inside package tests? If TRUE, `R_data` is ignored and
+dummy data will be used instead.}
 }
 \value{
 A list of:

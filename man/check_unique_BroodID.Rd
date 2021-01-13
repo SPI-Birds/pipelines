@@ -4,10 +4,13 @@
 \alias{check_unique_BroodID}
 \title{Check unique brood identifiers}
 \usage{
-check_unique_BroodID(Brood_data)
+check_unique_BroodID(Brood_data, approved_list)
 }
 \arguments{
 \item{Brood_data}{Data frame. Brood data output from pipeline.}
+
+\item{approved_list}{List object. List of approved records from brood_approved_list.csv,
+capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv}
 }
 \value{
 A list of:
