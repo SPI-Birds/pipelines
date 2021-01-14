@@ -19,7 +19,6 @@ test_that("Individual data returns an expected outcome...", {
   #Individual 13617132 should be listed as a female
   expect_equal(subset(PEW_data, IndvID == "13617132")$Sex, "F")
   expect_equal(subset(PEW_data, IndvID == "13617132")$Species, "CYACAE")
-
   expect_equal(subset(PEW_data, IndvID == "13617132")$RingSeason, 2015)
   expect_equal(subset(PEW_data, IndvID == "13617132")$RingAge, "adult")
 

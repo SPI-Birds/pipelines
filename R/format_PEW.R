@@ -163,10 +163,6 @@ format_PEW <- function(db = choose_directory(),
     dplyr::distinct()
 
 
-  #### temp for testing
-  # data = pew_data
-
-
   #### BROOD DATA
   message("Compiling brood information...")
   Brood_data <- create_brood_PEW(data = pew_data)
