@@ -1,6 +1,5 @@
 context("Run data quality check on Peerdsbos West, Belgium, pipeline output")
 
-
 test_that("PEW outputs all files...", {
 
   expect_true("PEW" %in% pipeline_output$Brood_data$PopID)
@@ -17,13 +16,13 @@ test_that("Individual data returns an expected outcome...", {
 
   #Test 1: Adult blue tit female
   #Individual 13617132 should be listed as a female
-  expect_equal(subset(PEW_data, IndvID == "13617132")$Sex, "F")
+  expect_equal(subset(PEW_data, IndvID == "13617132")$Sex_calculated, "F")
   expect_equal(subset(PEW_data, IndvID == "13617132")$Species, "CYACAE")
   expect_equal(subset(PEW_data, IndvID == "13617132")$RingSeason, 2015)
   expect_equal(subset(PEW_data, IndvID == "13617132")$RingAge, "adult")
 
   #Test 2: Bird ringed as chick
-  expect_equal(subset(PEW_data, IndvID == "14154507")$Sex, NA_character_)
+  expect_equal(subset(PEW_data, IndvID == "14154507")$Sex_calculated, NA_character_)
   expect_equal(subset(PEW_data, IndvID == "14154507")$Species, "CYACAE")
   expect_equal(subset(PEW_data, IndvID == "14154507")$BroodIDLaid, "2016_54")
   expect_equal(subset(PEW_data, IndvID == "14154507")$BroodIDFledged, "2016_54")
@@ -72,8 +71,8 @@ test_that("Capture_data returns an expected outcome...", {
   #Test the female has the correct number of capture records (2)
   expect_equal(nrow(subset(PEW_data, IndvID == "12224446")), 2)
   #Test the first capture of the female
-  expect_equal(subset(PEW_data, IndvID == "12224446")$Sex_observed, "F")
-  expect_equal(subset(PEW_data, IndvID == "12224446")$LocationID, "kk21")
+  expect_equal(subset(PEW_data, IndvID == "12224446")$Sex_observed[1], "F")
+  expect_equal(subset(PEW_data, IndvID == "12224446")$LocationID[1], "kk21")
   expect_equal(min(subset(PEW_data, IndvID == "12224446")$CaptureDate, na.rm = TRUE), as.Date("2017-04-22"))
 
 
@@ -81,8 +80,8 @@ test_that("Capture_data returns an expected outcome...", {
   #Test the female has the correct number of capture records (6)
   expect_equal(nrow(subset(PEW_data, IndvID == "12706199")), 6)
   #Test the first capture of the male
-  expect_equal(min(subset(PEW_data, IndvID == "12706199")$Sex_observed), "M")
-  expect_equal(min(subset(PEW_data, IndvID == "12706199")$LocationID), "76")
+  expect_equal(subset(PEW_data, IndvID == "12706199")$Sex_observed[1], "M")
+  expect_equal(subset(PEW_data, IndvID == "12706199")$LocationID[1], "76")
   expect_equal(min(subset(PEW_data, IndvID == "12706199")$CaptureDate, na.rm = TRUE), as.Date("2016-05-17"))
 
 
@@ -97,7 +96,7 @@ test_that("Location_data returns an expected outcome...", {
   #LocationType is as expected
   expect_equal(subset(PEW_data, LocationID == "42")$LocationType, "NB")
   #Habitat is as expected
-  expect_equal(subset(PEW_data, LocationID == "42")$Habitat, "deciduous")
+  expect_equal(subset(PEW_data, LocationID == "42")$HabitatType, "deciduous")
   #Start season
   expect_equal(subset(PEW_data, LocationID == "42")$StartSeason, 2015)
   #End season
