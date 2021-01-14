@@ -787,7 +787,7 @@ check_adult_parent_nest <- function(Capture_data, Location_data, Brood_data, app
                                                  & .data$PopID == ..3) %>%
                                    dplyr::pull(.data$LocationType)
 
-                                 ifelse(is.null(.data$Location_type), NA, .data$Location_type)
+                                 ifelse(is.null(Location_type), NA, Location_type)
 
                                })
 

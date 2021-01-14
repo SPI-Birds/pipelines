@@ -2,8 +2,6 @@
 #'
 #' @description Create dummy pipeline output (\code{dummy_data}) to be tested in \code{\link{quality_check}}. In each dataframe, rows are created to test single checks from \code{\link{quality_check}}. A CheckID column is added to each dataframe to mark which rows serve to test each check. See a detailed description of the dummy data in \code{\link{dummy_data}}.
 #'
-#' @param overwrite Overwrite existing file. Default: TRUE
-#'
 #' @return
 #' List of 4 dataframes:
 #' \item{Brood_data}{Dummy brood data.}
@@ -13,7 +11,7 @@
 #'
 #' @export
 
-create_dummy_data <- function(overwrite=TRUE) {
+create_dummy_data <- function() {
 
   # Set seed for dummy data drawn from distributions
   set.seed(74)
@@ -697,9 +695,6 @@ create_dummy_data <- function(overwrite=TRUE) {
     dplyr::mutate( # Probable
       PopID = "AAA",
       ) %>%
-    dplyr::add_row( # Improbable (warning)
-      PopID = as.character(c("AAA", "BBB")),
-      ) %>%
     dplyr::add_row( # Impossible (error)
       PopID = as.character(c("AAA", "AAA")),
       ) %>%
@@ -711,7 +706,7 @@ create_dummy_data <- function(overwrite=TRUE) {
       RingAge = "adult",
       BroodIDLaid = paste(PopID, RingSeason, Row, "I2", sep = "-"),
       BroodIDFledged = BroodIDLaid,
-      IndvID = paste0("I2_", c(min(Row), min(Row) + 1, min(Row) + 1, min(Row) + 2, min(Row) + 2)),
+      IndvID = paste0("I2_", c(min(Row), min(Row) + 1, min(Row) + 1)),
       CheckID = "I2"
     )
 
@@ -1137,6 +1132,7 @@ create_dummy_data <- function(overwrite=TRUE) {
                      Individual_data = Individual_data,
                      Location_data = Location_data)
 
-  usethis::use_data(dummy_data, overwrite=overwrite)
+  #usethis::use_data(dummy_data, overwrite=overwrite)
+  return(dummy_data)
 
 }

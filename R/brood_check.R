@@ -167,7 +167,7 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE, approved
   # - Check sex of parents
   message("B13: Checking sex of parents...")
 
-  check_sex_parents_output <- check_sex_parents(Brood_data, Individual_data)
+  check_sex_parents_output <- check_sex_parents(Brood_data, Individual_data, approved_list)
 
   check_list[16,3:4] <- check_sex_parents_output$CheckList
 
@@ -1649,7 +1649,7 @@ compare_species_brood_chicks <- function(Brood_data, Individual_data, approved_l
 #'
 #' @export
 
-check_sex_parents <- function(Brood_data, Individual_data) {
+check_sex_parents <- function(Brood_data, Individual_data, approved_list) {
 
   # Select parents from Individual_data
   parents <- Individual_data %>%
