@@ -4,12 +4,25 @@
 \alias{capture_check}
 \title{Perform quality checks on capture data}
 \usage{
-capture_check(Capture_data, check_format = TRUE)
+capture_check(
+  Capture_data,
+  Location_data,
+  Brood_data,
+  check_format = TRUE,
+  approved_list
+)
 }
 \arguments{
 \item{Capture_data}{Data frame. Capture data output from pipeline.}
 
+\item{Location_data}{Data frame. Location data output from pipeline.}
+
+\item{Brood_data}{Data frame. Brood data output from pipeline.}
+
 \item{check_format}{\code{TRUE} or \code{FALSE}. If \code{TRUE}, the check on variable format (i.e. \code{\link{check_format_capture}}) is included in the quality check. Default: \code{TRUE}.}
+
+\item{approved_list}{List object. List of approved records from brood_approved_list.csv,
+capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv}
 }
 \value{
 A list of:
@@ -27,6 +40,7 @@ The following capture data checks are performed:
 \itemize{
 \item \strong{C1}: Check if the formats of each column in \code{Capture_data} match with the standard format using \code{\link{check_format_capture}}.
 \item \strong{C2a-b}: Check capture variable values against reference values using \code{\link{check_values_capture}}. Capture variables checked for adults and chicks: Mass and Tarsus.
-#' \item \strong{C3}: Check chick age (in numbers of days since hatching) using \code{\link{check_chick_age}}.
+\item \strong{C3}: Check chick age (in numbers of days since hatching) using \code{\link{check_chick_age}}.
+\item \strong{C4}: Check that adults caught on nest are listed as parents using \code{\link{check_adult_parent_nest}}.
 }
 }

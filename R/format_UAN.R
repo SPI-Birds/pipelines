@@ -23,7 +23,7 @@
 #'\strong{Tarsus}: Tarsus is measured using Svennson's Standard in early years
 #'and Svennson's Alternative in later years. When Svennson's Alternative is
 #'available this is used, otherwise we use converted Svensson's Standard, using
-#'\code{\link[SPIbirds]{convert_tarsus}}.
+#'\code{\link[pipelines]{convert_tarsus}}.
 #'
 #'\strong{Age}: For Age_observed: \itemize{
 #'\item If a capture has a recorded
@@ -67,7 +67,7 @@ format_UAN <- function(db = choose_directory(),
                        output_type = "R"){
 
   #Force choose_directory() if used
-  db <- force(paste(db, "UAN_PrimaryData", sep = "/"))
+  db <- force(db)
 
   #Assign species for filtering
   if(is.null(species)){
@@ -307,7 +307,7 @@ create_brood_UAN <- function(data, CAPTURE_info, species_filter){
     dplyr::select(-TarsusAlt, -TarsusStd)
 
   #Create a table with brood information.
-  clutchtype <- dplyr::progress_estimated(n = nrow(data))
+  clutchtype <- progress::progress_bar$new(total = nrow(data))
 
   Brood_data <- data %>%
     #Convert columns to expected values
@@ -383,7 +383,7 @@ create_capture_UAN <- function(data, species_filter){
   #like mass, tarsus etc.). This will include first capture as nestling (for
   #residents) This means there will be multiple records for a single individual.
 
-  pb <- dplyr::progress_estimated(n = nrow(data) * 2)
+  pb <- progress::progress_bar$new(total = nrow(data) * 2)
 
   Capture_data <- data %>%
     #Adjust species and PopID
@@ -401,7 +401,7 @@ create_capture_UAN <- function(data, species_filter){
     dplyr::bind_cols(purrr::pmap_dfr(.l = list(SvenStd = .$TarsusStandard, SvenAlt = .$TarsusAlt),
                                      function(SvenStd, SvenAlt){
 
-                                       pb$print()$tick()
+                                       pb$tick()
 
                                        if(!is.na(SvenAlt)){
 
@@ -428,7 +428,7 @@ create_capture_UAN <- function(data, species_filter){
     dplyr::bind_cols(purrr::pmap_dfr(.l = list(.$Age_observed, .$CaptureMethod),
                                      .f = ~{
 
-                                       pb$print()$tick()
+                                       pb$tick()
 
                                        # If Age (LT) was not recorded
                                        # instead estimate age from the capture type:

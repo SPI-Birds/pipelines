@@ -54,11 +54,10 @@ get_MON_metdata <- function(){
     dplyr::summarise(winter_ring = any(lubridate::month(CaptureDate) %in% c(12)))
 
   #Determine area for all populations
-  library(sp)
   Nestbox_data <- MON$Location_data %>%
     dplyr::filter(LocationType == "NB" & !is.na(Latitude)) %>%
-    sp::SpatialPointsDataFrame(data = ., coords = .[, c("Longitude", "Latitude")], proj4string = CRS("+init=epsg:4326")) %>%
-    sp::spTransform(CRSobj = CRS("+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs"))
+    sp::SpatialPointsDataFrame(data = ., coords = .[, c("Longitude", "Latitude")], proj4string = sp::CRS("+init=epsg:4326")) %>%
+    sp::spTransform(CRSobj = sp::CRS("+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs"))
 
   #Split by population
   pop_split <- split(Nestbox_data, as.factor(Nestbox_data$PopID))

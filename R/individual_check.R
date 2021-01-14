@@ -9,6 +9,7 @@
 #' \item \strong{I3}: Check if all chicks have BroodID using \code{\link{check_BroodID_chicks}}.
 #' \item \strong{I4}: Check if individuals have no conflicting sex using \code{\link{check_conflicting_sex}}.
 #' \item \strong{I5}: Check if individuals have no conflicting species using \code{\link{check_conflicting_species}}.
+#' \item \strong{I6}: Check if individuals in Individual_data appear in Capture_data  using \code{\link{check_individuals_captures}}.
 #' }
 #'
 #' @inheritParams checks_individual_params
@@ -20,15 +21,16 @@
 #'
 #' @export
 
-individual_check <- function(Individual_data, Capture_data, Location_data, check_format=TRUE){
+individual_check <- function(Individual_data, Capture_data, Location_data, check_format=TRUE, approved_list){
 
   # Create check list with a summary of warnings and errors per check
-  check_list <- tibble::tibble(CheckID = paste0("I", 1:5),
+  check_list <- tibble::tibble(CheckID = paste0("I", 1:6),
                                CheckDescription = c("Check format of individual data",
                                                     "Check that individual IDs are unique",
                                                     "Check that chicks have BroodIDs",
                                                     "Check that individuals have no conflicting sex",
-                                                    "Check that individuals have no conflicting species"),
+                                                    "Check that individuals have no conflicting species",
+                                                    "Check that individuals in Individual_data also appear in Capture_data"),
                                Warning = NA,
                                Error = NA)
 
@@ -39,7 +41,7 @@ individual_check <- function(Individual_data, Capture_data, Location_data, check
   if(check_format) {
     message("I1: Checking format of individual data...")
 
-    check_format_individual_output <- check_format_individual(Individual_data)
+    check_format_individual_output <- check_format_individual(Individual_data, approved_list)
 
     check_list[1, 3:4] <- check_format_individual_output$CheckList
   }
@@ -47,30 +49,37 @@ individual_check <- function(Individual_data, Capture_data, Location_data, check
   # - Check unique individual IDs
   message("I2: Checking that individual IDs are unique...")
 
-  check_unique_IndvID_output <- check_unique_IndvID(Individual_data)
+  check_unique_IndvID_output <- check_unique_IndvID(Individual_data, approved_list)
 
   check_list[2, 3:4] <- check_unique_IndvID_output$CheckList
 
   # - Check that chicks have BroodIDs
   message("I3: Checking that chicks have BroodIDs...")
 
-  check_BroodID_chicks_output <- check_BroodID_chicks(Individual_data, Capture_data, Location_data)
+  check_BroodID_chicks_output <- check_BroodID_chicks(Individual_data, Capture_data, Location_data, approved_list)
 
   check_list[3, 3:4] <- check_BroodID_chicks_output$CheckList
 
   # - Check that individuals have no conflicting sex
   message("I4: Checking that individuals have no conflicting sex...")
 
-  check_conflicting_sex_output <- check_conflicting_sex(Individual_data)
+  check_conflicting_sex_output <- check_conflicting_sex(Individual_data, approved_list)
 
   check_list[4, 3:4] <- check_conflicting_sex_output$CheckList
 
   # - Check that individuals have no conflicting species
   message("I5: Checking that individuals have no conflicting species...")
 
-  check_conflicting_species_output <- check_conflicting_species(Individual_data)
+  check_conflicting_species_output <- check_conflicting_species(Individual_data, approved_list)
 
   check_list[5, 3:4] <- check_conflicting_species_output$CheckList
+
+  # - Check that individuals in Individual_data also appear in Capture_data
+  message("I6: Checking that individuals in Individual_data also appear in Capture_data...")
+
+  check_individuals_captures_output <- check_individuals_captures(Individual_data, Capture_data, approved_list)
+
+  check_list[6, 3:4] <- check_individuals_captures_output$CheckList
 
 
   if(check_format) {
@@ -79,26 +88,30 @@ individual_check <- function(Individual_data, Capture_data, Location_data, check
                          Check2 = check_unique_IndvID_output$WarningOutput,
                          Check3 = check_BroodID_chicks_output$WarningOutput,
                          Check4 = check_conflicting_sex_output$WarningOutput,
-                         Check5 = check_conflicting_species_output$WarningOutput)
+                         Check5 = check_conflicting_species_output$WarningOutput,
+                         Check6 = check_individuals_captures_output$WarningOutput)
 
     # Error list
     error_list <- list(Check1 = check_format_individual_output$ErrorOutput,
                        Check2 = check_unique_IndvID_output$ErrorOutput,
                        Check3 = check_BroodID_chicks_output$ErrorOutput,
                        Check4 = check_conflicting_sex_output$ErrorOutput,
-                       Check5 = check_conflicting_species_output$ErrorOutput)
+                       Check5 = check_conflicting_species_output$ErrorOutput,
+                       Check6 = check_individuals_captures_output$ErrorOutput)
   } else {
     # Warning list
     warning_list <- list(Check2 = check_unique_IndvID_output$WarningOutput,
                          Check3 = check_BroodID_chicks_output$WarningOutput,
                          Check4 = check_conflicting_sex_output$WarningOutput,
-                         Check5 = check_conflicting_species_output$WarningOutput)
+                         Check5 = check_conflicting_species_output$WarningOutput,
+                         Check6 = check_individuals_captures_output$WarningOutput)
 
     # Error list
     error_list <- list(Check2 = check_unique_IndvID_output$ErrorOutput,
                        Check3 = check_BroodID_chicks_output$ErrorOutput,
                        Check4 = check_conflicting_sex_output$ErrorOutput,
-                       Check5 = check_conflicting_species_output$ErrorOutput)
+                       Check5 = check_conflicting_species_output$ErrorOutput,
+                       Check6 = check_individuals_captures_output$ErrorOutput)
 
     check_list <- check_list[-1,]
   }
@@ -107,11 +120,13 @@ individual_check <- function(Individual_data, Capture_data, Location_data, check
               WarningRows = unique(c(check_unique_IndvID_output$WarningRows,
                                      check_BroodID_chicks_output$WarningRows,
                                      check_conflicting_sex_output$WarningRows,
-                                     check_conflicting_species_output$WarningRows)),
+                                     check_conflicting_species_output$WarningRows,
+                                     check_individuals_captures_output$WarningRows)),
               ErrorRows = unique(c(check_unique_IndvID_output$ErrorRows,
                                    check_BroodID_chicks_output$ErrorRows,
                                    check_conflicting_sex_output$ErrorRows,
-                                   check_conflicting_species_output$ErrorRows)),
+                                   check_conflicting_species_output$ErrorRows,
+                                   check_individuals_captures_output$ErrorRows)),
               Warnings = warning_list,
               Errors = error_list))
 }
@@ -129,7 +144,7 @@ individual_check <- function(Individual_data, Capture_data, Location_data, check
 #'
 #' @export
 
-check_format_individual <- function(Individual_data){
+check_format_individual <- function(Individual_data, approved_list){
 
   # Data frame with column names and formats according to the standard protocol
   Individual_data_standard <- tibble::tibble(Variable = c("Row", "IndvID", "Species", "PopID",
@@ -234,7 +249,7 @@ check_format_individual <- function(Individual_data){
 #'
 #' @export
 
-check_unique_IndvID <- function(Individual_data){
+check_unique_IndvID <- function(Individual_data, approved_list){
 
   # Errors
   # Select records with IndvIDs that are duplicated within populations
@@ -261,6 +276,7 @@ check_unique_IndvID <- function(Individual_data){
                                  paste0("Record on row ",
                                         # Duplicated rows
                                         error_records[error_records$IndvID == .x, "Row"][1,],
+                                        " (PopID: ", error_records[error_records$IndvID == .x, "PopID"][1,], ")",
                                         " has the same IndvID (", .x, ") as row(s) ",
                                         # Duplicates (if 1, else more)
                                         ifelse(nrow(error_records[error_records$IndvID == .x, "Row"][-1,]) == 1,
@@ -337,18 +353,19 @@ check_unique_IndvID <- function(Individual_data){
 #'
 #' @export
 
-check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data) {
+check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data, approved_list) {
 
   # Select first captures and link to the information of their locations
   First_captures <- Capture_data %>%
     dplyr::group_by(IndvID) %>%
     dplyr::filter(CaptureDate == dplyr::first(CaptureDate)) %>%
     dplyr::ungroup() %>%
-    dplyr::left_join(Location_data, by=c("CapturePopID" = "PopID", "LocationID"))
+    #dplyr::select(IndvID, Species, CapturePopID, LocationID) %>%
+    dplyr::left_join(Location_data, by = c("CapturePopID" = "PopID", "LocationID"))
 
   # Join with individual data
   Ind_cap_loc_data <- Individual_data %>%
-    dplyr::left_join(First_captures, by="IndvID")
+    dplyr::left_join(First_captures, by = c("IndvID", "Species", "PopID" = "CapturePopID"))
 
   # Errors
   # Select records with chicks caught in a nest box but not associated with a BroodID
@@ -370,7 +387,7 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data) {
     # Create quality check report statements
     error_output <- purrr::pmap(.l = error_records,
                                 .f = ~{
-                                  paste0("Record on row ", ..1, " (IndvID: ", ..2, ")",
+                                  paste0("Record on row ", ..1, " (PopID: ", ..4, "; IndvID: ", ..2, ")",
                                          " has no BroodID.")
                                 })
   }
@@ -407,44 +424,46 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data) {
 #'
 #' @export
 
-check_conflicting_sex <- function(Individual_data) {
+check_conflicting_sex <- function(Individual_data, approved_list) {
 
   # Select records with conflicting sex
+  # NB: allows v1.0 & v1.1 variable names of the standard format
   Conflicting_sex <- Individual_data %>%
-    dplyr::filter(Sex == "C")
+    {if("Sex" %in% colnames(.)) dplyr::filter(., Sex == "C")
+      else dplyr::filter(., Sex_calculated == "C" | Sex_genetic == "C")}
 
-  # No errors
+  # Errors
   err <- FALSE
-  #error_records <- tibble::tibble(Row = NA_character_)
+  error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  # Warnings
-  war <- FALSE
-  warning_records <- tibble::tibble(Row = NA_character_)
-  warning_output <- NULL
-
   if(nrow(Conflicting_sex) > 0) {
-    war <- TRUE
+    err <- TRUE
 
     # Compare to approved_list
-    warning_records <- Conflicting_sex %>%
+    error_records <- Conflicting_sex %>%
       dplyr::mutate(CheckID = "I4") %>%
       dplyr::anti_join(approved_list$Individual_approved_list, by=c("PopID", "CheckID", "IndvID"))
 
     # Create quality check report statements
-    warning_output <- purrr::pmap(.l = warning_records,
+    error_output <- purrr::pmap(.l = error_records,
                                   .f = ~{
-                                    paste0("Record on row ", ..1, " (IndvID: ", ..2, ")",
+                                    paste0("Record on row ", ..1, " (PopID: ", ..4, "; IndvID: ", ..2, ")",
                                            " has conflicting sex.")
                                   })
   }
+
+  # No warnings
+  war <- FALSE
+  #warning_records <- tibble::tibble(Row = NA_character_)
+  warning_output <- NULL
 
   check_list <- tibble::tibble(Warning = war,
                                Error = err)
 
   return(list(CheckList = check_list,
-              WarningRows = warning_records$Row,
-              ErrorRows = NULL,
+              WarningRows = NULL,
+              ErrorRows = error_records$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 
@@ -467,11 +486,11 @@ check_conflicting_sex <- function(Individual_data) {
 #'
 #' @export
 
-check_conflicting_species <- function(Individual_data) {
+check_conflicting_species <- function(Individual_data, approved_list) {
 
   # Select individuals with conflicting species
   Conflicting_species <- Individual_data %>%
-    dplyr::filter(Species == "CONFLICTED")
+    dplyr::filter(Species %in% c("CONFLICTED", "CCCCCC"))
 
   # Errors
   err <- FALSE
@@ -489,7 +508,7 @@ check_conflicting_species <- function(Individual_data) {
     # Create quality check report statements
     error_output <- purrr::pmap(.l = error_records,
                                 .f = ~{
-                                  paste0("Record on row ", ..1," (IndvID: ", ..2, ")",
+                                  paste0("Record on row ", ..1, " (PopID: ", ..4, "; IndvID: ", ..2, ")",
                                          " has conflicting species.")
                                 })
   }
@@ -513,4 +532,65 @@ check_conflicting_species <- function(Individual_data) {
   Conflicting_species <- NULL
   approved_list <- NULL
 
+}
+
+
+#' Check that all individuals in Individual_data appear in Capture_data
+#'
+#' Check that all individuals recorded in Individual_data appear at least once in Capture_data. This should never occur, because Individual_data is usually a direct product of Capture_data (i.e., all unique individuals from Capture_data). If we find missing individuals, we need to check the pipeline code.
+#'
+#' Check ID: I6.
+#'
+#' @inheritParams checks_individual_params
+#' @inheritParams checks_capture_params
+#'
+#' @inherit checks_return return
+#'
+#' @export
+
+check_individuals_captures <- function(Individual_data, Capture_data, approved_list){
+
+  # Errors
+  Missing_individuals <- Individual_data %>%
+    filter(!(IndvID %in% Capture_data$IndvID))
+
+  # Errors
+  err <- FALSE
+  error_records <- tibble::tibble(Row = NA_character_)
+  error_output <- NULL
+
+  if(nrow(Missing_individuals) > 0) {
+    err <- TRUE
+
+    # Compare to approved_list
+    error_records <- Missing_individuals %>%
+      dplyr::mutate(CheckID = "I6") %>%
+      dplyr::anti_join(approved_list$Individual_approved_list, by=c("PopID", "CheckID", "IndvID"))
+
+    # Create quality check report statements
+    error_output <- purrr::pmap(.l = error_records,
+                                .f = ~{
+                                  paste0("Record on row ", ..1, " (PopID: ", ..4, "; IndvID: ", ..2, ")",
+                                         " does not appear in Capture_data.")
+                                })
+  }
+
+  # No warnings
+  war <- FALSE
+  #warning_records <- tibble::tibble(Row = NA_character_)
+  warning_output <- NULL
+
+
+  check_list <- tibble::tibble(Warning = war,
+                               Error = err)
+
+  return(list(CheckList = check_list,
+              WarningRows = NULL,
+              ErrorRows = error_records$Row,
+              WarningOutput = unlist(warning_output),
+              ErrorOutput = unlist(error_output)))
+
+  # Satisfy RCMD checks
+  Missing_individuals <- NULL
+  approved_list <- NULL
 }

@@ -28,7 +28,7 @@ make_IndIdentifier = function(raw_data){
   duplicateRING <- c(raw_data[which(duplicated(raw_data$RING)),'RING'], raw_data[which(raw_data$RING %in% raw_data$RING2), 'RING'])
 
   raw_data <- raw_data %>%
-    dplyr::filter(!(.data$RING %in% duplicateRING & is.na(RING2)))
+    dplyr::filter(!(.data$RING %in% duplicateRING & is.na(.data$RING2)))
 
   #We will be left joining one set of data to the other
   #so we need to make sure the column names match
