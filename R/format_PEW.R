@@ -268,27 +268,27 @@ create_brood_PEW <- function(data) {
     dplyr::mutate(Plot = NA_character_,
                   # LayDate_observed = DateEgg1, ## for new version of calc_clutchtype
                   LayDate = DateEgg1,
-                  LayDate_min = NA_character_,
-                  LayDate_max = NA_character_,
+                  LayDate_min = as.Date(NA),
+                  LayDate_max = as.Date(NA),
                   ClutchSize_observed = ClutchSize,
                   ClutchSize_min = NA_integer_,
                   ClutchSize_max = NA_integer_,
                   HatchDate_observed = HatchDateD0,
-                  HatchDate_min = NA_character_,
-                  HatchDate_max = NA_character_,
+                  HatchDate_min = as.Date(NA),
+                  HatchDate_max = as.Date(NA),
                   #### For few broods, there is number of chicks on day 3
                   BroodSize_observed = NoOfChicksD3,
                   BroodSize_min = NA_integer_,
                   BroodSize_max = NA_integer_,
-                  FledgeDate_observed = NA_character_,
-                  FledgeDate_min = NA_character_,
-                  FledgeDate_max = NA_character_,
+                  FledgeDate_observed = as.Date(NA),
+                  FledgeDate_min = as.Date(NA),
+                  FledgeDate_max = as.Date(NA),
                   # NumberFledged_observed = NumberOfRingedChicks, ## for new version of calc_clutchtype
                   #### Correction regarding one brood from data owner:
                   NumberFledged = ifelse(BroodID == "2015_79", 0L, NumberOfRingedChicks),
                   NumberFledged_min = NA_integer_,
                   NumberFledged_max = NA_integer_,
-                  AvgEggMass = NA,
+                  AvgEggMass = NA_real_,
                   NumberEggs = NA_integer_,
                   #### Metadata states that only the first clutches are recorded
                   ClutchType_observed = "first") %>%
@@ -468,7 +468,7 @@ create_location_PEW <- function(data) {
     group_by(NestboxID) %>%
     arrange(BreedingSeason, CaptureDate) %>%
     dplyr::summarise(StartSeason = min(BreedingSeason, na.rm = TRUE),
-                     EndSeason = NA_character_,
+                     EndSeason = NA_integer_,
                      LocationID = unique(NestboxID),
                      PopID = unique(PopID)) %>%
     dplyr::ungroup() %>%
