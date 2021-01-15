@@ -3,34 +3,51 @@
 #' A pipeline to produce the standard format for bird study population
 #' at the Peerdsbos West, Belgium, administered by Arne Iserbyt.
 #'
+#'
+#' This section provides details on data management choices that are unique to
+#' this data. For a general description of the standard format please see see
+#'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
+#'
+#' \strong{IndvID}: Generally, the unique ID is an 8-character digit number reflecting
+#' the metal ring number. In 4 cases, this information was not provided (NA), therefore
+#' those observations were removed from the dataset (correspond to chicks ringed in
+#' the year 2017 in the nestboxes 97, 98, 102, kk12).
+#' Several individuals were not identified by the unique ring number, only by the
+#' the information reflecting the sex, nestbox and year (i.e. "Unknown_2019NestK97").
+#' Those IndvID were unified as "unringed" and are not included in the Individual_data.
+#'
+#' \strong{NumberFledged} Information provided by the data owner: The number of
+#' fledged nestlings were not consistently monitored.However, nestlings were
+#' ringed at day 14, so very close to fledging. In almost all cases, the number
+#' of ringed chicks will be the same as number of fledged chicks.
+#'
+#' \strong{BroodSize_observed} We used the information provided in the raw data
+#' in the column indicating the number of chicks at day 3.
+#'
+#'
+#' \strong{HatchDate_observed} For several broods the hatch date was not provided.
+#' When neither hatch date nor capture date were provided, we input fake date
+#' ("breeding season-06-01", 1st of June of the corresponding breeding season).
+#'
+#' \strong{CaptureDate} For several chicks, where the capture date was indicated
+#' as "D14", the capture date was calculated as hatch date + 14 days.
+#' For several adult individuals, where the capture date was missing and the record
+#' corresponded to the only capture (observation) of the individual in the
+#' breeding season, a fake date was input ("breeding season-06-01",
+#' 1st of June of the corresponding breeding season).
+#' For several adult individuals, where the capture data was missing and the
+#' capture method indicated that the capture happened during the incubation period,
+#' the fake date was input ("breeding season, 04-01", 1st of April of the corresponding
+#' breeding season).
+#'
+#' \strong{Latitude, Longitude} Exact coordinates of the nestboxes are not available.
+#' Data owner provided an map of location, which can be georeferenced in the case of
+#' interest or necessity of the data user. Currently only general coordinates
+#' for the location are provided.
+#'
+#' @inheritParams pipeline_params
 #' @return Generates either 4 .csv files or 4 data frames in the standard format.
 #' @export
-#'
-#' @examples
-#'
-
-
-#### ---------------------------------------------------------------------------------------~
-#### HELPDOC
-# Observations without ID?
-# pew_data %>%
-#   filter(is.na(IndvID)) %>%
-#   pull(NestboxID)
-# There are 4 observations without ID, we remove those observations,
-# as any additional information is provided (body measurements, etc.)
-# Observations are from 2017, nestboxes 97, 98, 102, kk12.
-#
-#
-
-# NumberFledged
-# The number of fledged nestlings were not consistently monitored.
-# However, nestlings were ringed at day 14, so very close to fledging.
-# In almost all cases, the number of ringed chics will be the same as number of fledged chicks.
-
-
-#### NOTES:
-#### Experiment "BSM - Griffioen et al. 2019 PeerJ" was done with hatched nestlings, not with eggs.
-#### ---------------------------------------------------------------------------------------~
 
 
 format_PEW <- function(db = choose_directory(),
@@ -223,8 +240,6 @@ format_PEW <- function(db = choose_directory(),
 
 
 }
-
-
 
 #### --------------------------------------------------------------------------~
 #### FUNCTIONS
@@ -431,7 +446,6 @@ create_individual_PEW <- function(data){
     data %>%
     #### Remove unringed individuals
     filter(IndvID != "unringed") %>%
-    #### NOTE: Keep rows without Capture date
     #### Format and create new data columns
     group_by(IndvID) %>%
     dplyr::summarise(Sex_calculated = purrr::map_chr(.x = list(unique(na.omit(Sex_observed))), .f = ~{
@@ -474,8 +488,7 @@ create_location_PEW <- function(data) {
     dplyr::ungroup() %>%
     dplyr::mutate(LocationType = "NB",
                   HabitatType = "deciduous",
-                  #### CHECK WITH DATA OWNER
-                  #### Are there coordinates for each nestbox?
+                  #### Only general coordinates for the location
                   Latitude  = 51.266667,
                   Longitude = 4.466667) %>%
     #### Final arrangement
@@ -485,6 +498,3 @@ create_location_PEW <- function(data) {
   return(Location_data)
 
 }
-
-
-
