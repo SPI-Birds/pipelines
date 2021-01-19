@@ -12,18 +12,18 @@
 #' the metal ring number. In 4 cases, this information was not provided (NA), therefore
 #' those observations were removed from the dataset (correspond to chicks ringed in
 #' the year 2017 in the nestboxes 97, 98, 102, kk12).
-#' Several individuals were not identified by the unique ring number, only by the
-#' the information reflecting the sex, nestbox and year (i.e. "Unknown_2019NestK97").
-#' Those IndvID were unified as "unringed" and are not included in the Individual_data.
+#' Several individuals were not identified by the unique ring number, only by
+#' the information reflecting the sex, nestbox and year (i.e. "Unknown_M2019NestK97").
+#' Those IndvID were unified as "unringed" and are included in the Brood_data,
+#' but not included in the Individual_data.
 #'
 #' \strong{NumberFledged} Information provided by the data owner: The number of
-#' fledged nestlings were not consistently monitored.However, nestlings were
+#' fledged nestlings were not consistently monitored. However, nestlings were
 #' ringed at day 14, so very close to fledging. In almost all cases, the number
 #' of ringed chicks will be the same as number of fledged chicks.
 #'
 #' \strong{BroodSize_observed} We used the information provided in the raw data
 #' in the column indicating the number of chicks at day 3.
-#'
 #'
 #' \strong{HatchDate_observed} For several broods the hatch date was not provided.
 #' When neither hatch date nor capture date were provided, we input fake date
@@ -40,9 +40,9 @@
 #' the fake date was input ("breeding season, 04-01", 1st of April of the corresponding
 #' breeding season).
 #'
-#' \strong{Latitude, Longitude} Exact coordinates of the nestboxes are not available.
-#' Data owner provided an map of location, which can be georeferenced in the case of
-#' interest or necessity of the data user. Currently only general coordinates
+#' \strong{Latitude, Longitude} The exact coordinates of the nestboxes are not available.
+#' Data owner provided an map of the location, which can be georeferenced in the case of
+#' interest or necessity of the data user. Currently, only general coordinates
 #' for the location are provided.
 #'
 #' @inheritParams pipeline_params
@@ -245,6 +245,14 @@ format_PEW <- function(db = choose_directory(),
 #### FUNCTIONS
 #### --------------------------------------------------------------------------~
 
+
+#' Create brood data table for Peerdsbos West, Belgium.
+#'
+#' Create brood data table in standard format for blue tit data from Peerdsbos West, Belgium.
+#' @param pew_data Data frame pew_data with primary data from Peerdsbos West, Belgium.
+#'
+#' @return A data frame.
+
 create_brood_PEW <- function(data) {
 
   parents_brood_data <-
@@ -352,12 +360,19 @@ create_brood_PEW <- function(data) {
 
 }
 
+#' Create capture data table for blue tits in Peerdsbos West, Belgium.
+#'
+#' Create a capture data table in standard format for blue tits in Peerdsbos West, Belgium.
+#' @param pew_data Data frame. Data frame pew_data with primary data from Peerdsbos West, Belgium.
+#' @param Brood_data Data frame. Brood_data from Peerdsbos West, Belgium.
+#' @return A data frame.
+
 create_capture_PEW <- function(pew_data, Brood_data) {
 
   Brood_data_sel <-
     Brood_data %>%
     # dplyr::select(BreedingSeason, Species, PopID, BroodID, LocationID,
-    dplyr::select(BroodID, LocationID, HatchDate_observed)
+    dplyr::select(Species, PopID, BroodID, LocationID, HatchDate_observed)
 
 
   Capture_data_temp <-
@@ -400,7 +415,7 @@ create_capture_PEW <- function(pew_data, Brood_data) {
   Capture_data <-
     Capture_data_temp %>%
     left_join(Brood_data_sel,
-              by = c("LocationID", "BroodID")) %>%
+              by = c("Species", "PopID", "LocationID", "BroodID")) %>%
     #### Calculate Capture date for chicks from Hatch date
     #### Create fake Hatch_date for several broods
     dplyr::mutate(HatchDate_observed = if_else(is.na(HatchDate_observed) & is.na(CaptureDate) & Method == "ChickRinging",
@@ -440,6 +455,14 @@ create_capture_PEW <- function(pew_data, Brood_data) {
 
 }
 
+#' Create individual table for Peerdsbos West, Belgium.
+#'
+#' Create full individual data table in standard format for data from Peerdsbos West, Belgium.
+#'
+#' @param data Capture_data, output of create_capture_PEW function.
+#'
+#' @return A data frame.
+
 create_individual_PEW <- function(data){
 
   Individual_data <-
@@ -448,24 +471,25 @@ create_individual_PEW <- function(data){
     filter(IndvID != "unringed") %>%
     #### Format and create new data columns
     group_by(IndvID) %>%
-    dplyr::summarise(Sex_calculated = purrr::map_chr(.x = list(unique(na.omit(Sex_observed))), .f = ~{
-      if(length(..1) == 0){
-        return(NA_character_)
-      } else if(length(..1) == 1){
-        return(..1)
-      } else {
-        return("C")
-      }
-    }),
-    Sex_genetic = NA_character_,
-    Species = first(Species),
-    PopID = "PEW",
-    RingSeason = min(BreedingSeason),
-    RingAge = ifelse(min(Age_observed) == 1, "chick", "adult"),
-    BroodIDLaid = ifelse(RingAge == "chick",
-                         paste(BreedingSeason, LocationID, sep = "_"),
-                         NA_character_),
-    BroodIDFledged = BroodIDLaid) %>%
+    dplyr::summarise(Sex_calculated = purrr::map_chr(.x = list(unique(na.omit(Sex_observed))),
+                                                     .f = ~{
+                                                       if(length(..1) == 0){
+                                                         return(NA_character_)
+                                                       } else if(length(..1) == 1){
+                                                         return(..1)
+                                                       } else {
+                                                         return("C")
+                                                       }
+                                                     }),
+                     Sex_genetic = NA_character_,
+                     Species = first(Species),
+                     PopID = "PEW",
+                     RingSeason = min(BreedingSeason),
+                     RingAge = ifelse(min(Age_observed) == 1, "chick", "adult"),
+                     BroodIDLaid = ifelse(RingAge == "chick",
+                                          paste(BreedingSeason, LocationID, sep = "_"),
+                                          NA_character_),
+                     BroodIDFledged = BroodIDLaid) %>%
     dplyr::ungroup() %>%
     dplyr::select(IndvID, Species, PopID, BroodIDLaid, BroodIDFledged,
                   RingSeason, RingAge, Sex_calculated, Sex_genetic)
@@ -473,6 +497,15 @@ create_individual_PEW <- function(data){
   return(Individual_data)
 
 }
+
+
+#' Create location data table for Peerdsbos West, Belgium.
+#'
+#' Create location data table in standard format for data from Peerdsbos West, Belgium.
+#'
+#' @param data Data frame pew_data with primary data from Peerdsbos West, Belgium.
+#'
+#' @return A data frame.
 
 create_location_PEW <- function(data) {
 
@@ -482,7 +515,7 @@ create_location_PEW <- function(data) {
     group_by(NestboxID) %>%
     arrange(BreedingSeason, CaptureDate) %>%
     dplyr::summarise(StartSeason = min(BreedingSeason, na.rm = TRUE),
-                     EndSeason = NA_character_,
+                     EndSeason = NA_integer_,
                      LocationID = unique(NestboxID),
                      PopID = unique(PopID)) %>%
     dplyr::ungroup() %>%
