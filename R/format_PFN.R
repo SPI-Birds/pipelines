@@ -1,7 +1,7 @@
-#' Construct standard format for data from East Dartmoor, UK
+#' Construct standard format PiedFlyNet data
 #'
-#'A pipeline to produce the standard format for the hole-nesting bird population
-#'in East Dartmoor, UK, administered by PiedFlyNet.
+#'A pipeline to produce the standard format for the hole-nesting bird populations
+#' monitored/administered by PiedFlyNet.
 #'
 #'This section provides details on data management choices that are unique to
 #'this data. For a general description of the standard protocl please see
@@ -14,44 +14,42 @@
 #'Other minority species are excluded.
 #'
 #'\strong{Primary data sources}: Brood data is extracted from data in a
-#'brood table/nest monitoring format. 'Capture data is extracted from Malcolm Burgess'
-#'version of the BTO ringing database for all birds marked within the PiedFlyNet.
-#'The format of this ringing data is IPMR, the 'old' BTO ringing database format, and Malcolm
+#'brood table/nest monitoring format ("Nest data"). Capture data is extracted from both
+#'Nest data and Malcolm Burgess' version of the BTO ringing database for birds marked within
+#'the PiedFlyNet ("IPMR data"). The format of this ringing data is IPMR, the 'old' BTO ringing database format, and Malcolm
 #'has his own pipeline to convert the new BTO ringing database format to the old one.
-#'Since all chick measurements are complete in the brood table/nest monitoring data but some have
-#'not been added to the BTO ringing data, the pipeline merges chick trait values from the former
-#'into Capture data. Similarly, parent age information is more detailed in the brood table/nest
-#'monitoring data, and therefore merged into Capture data (and given priority over age information
-#'from the BTO ringing data).
+#'Nest data is available for all populations, IPMR data is not.
+#'Some information on captures is present in Nest and IPMR data, while some information is
+#'exclusive to either data source. See the documentation of `create_capture_PFN()` for
+#'a description of how data from Nest and IPMR data is consolidated.
 #'
-#'\strong{Unidentified individuals}: Some individuals have not been given unique IDs. They appear
-#'in the primary data as "RUNT", "ringed", "ringed left", "ringed right", "unringed", or "Unringed",
-#' and the pipeline recognizes them as improper IDs as they do not follow the standard format of ring
-#' numbers for this data (defined as a sequences of 1-9 letters followed by a sequence of 1-9 integer numbers).
+#'\strong{Unidentified individuals}: Some individuals have not been given unique IDs. The pipleline
+#'recognizes these as improper IDs as they do not follow the standard format of ring
+#'numbers for this data (defined as a sequences of 1-9 letters followed by a sequence of 1-9 integer numbers).
 #'In the Brood data, we assume unknown identity for individuals with improper IDs and treat ID as NA.
 #'From Capture data and Individual data, these individuals are omitted entirely.
 #'
 #'\strong{Re-ringing events}: Some individuals carry multiple rings (up to 3 in this data) throughout
-#'their lives, and re-ringing events are recorded in the BTO ringing database. To correctly link data to
+#'their lives, and re-ringing events are recorded in IPMR data. To correctly link data to
 #'individuals (not just ring numbers), the pipeline assigns a unique individual identifier defined as
 #'the number of the first ring ever given to this individual.
 #'
-#'\strong{Resightings}: The capture primary data contains some resightings of birds. At present, these
+#'\strong{Resightings}: The IPMR primary data contains some resightings of birds. At present, these
 #' records are excluded from the outputs because the standard format for capture data cannot distinguish
 #' between recaptures and resightings in its current state. Functionality do do this (i.e. via a "capture type" variable)
 #' may be added to a future update of the standard format.
 #'
 #'\strong{Age calculation}: The age of each bird is estimated based on its history of ringing and recaptures.
-#'Since some birds that breed in East Dartmoor may have been ringed in another study sites (= immigrants), the
-#'pipeline calculates age based on capture histories from the entire BTO ringing database, not just ringing/captures
-#'in locations within the East Dartmoor study site.
+#'Since some birds that breed in one of the focal populations may have been ringed in another study sites (= immigrants), the
+#'pipeline calculates age for birds in any one population based on capture records in all monitored populations,
+#'and not just ringing/captures in locations within the specifc study site.
 #'
 #'\strong{LayDate_observed and HatchDate_observed}: Information is provided as date of first egg (DFE) and
 #'date of hatching (DH). These are given as integer number, and represent days after a set
 #'starting date (day 0). Day 0 is defined as 31. March.
 #'
 #'\strong{ChickAge}: For every capture, we estimate the age of a chick as the difference between the hatch date
-#'taken from BroodIDFledged (in Individual_data) and the CaptureDate.
+#'taken from `BroodIDFledged` (in `Individual_data`) and the `CaptureDate`.
 #'
 #'
 #'@inheritParams pipeline_params
@@ -67,33 +65,147 @@ format_PFN <- function(db = choose_directory(),
                        path = ".",
                        output_type = "R"){
 
-  #Force user to select directory
+  #-------#
+  # SETUP #
+  #-------#
+
+  # Force user to select directory
   force(db)
 
-  #Determine species codes for filtering
+  # Determine species codes for filtering
   if(is.null(species)){
 
     species <- species_codes$Species
 
   }
 
-  #Record start time to estimate processing time.
+  # Record start time to estimate processing time.
   start_time <- Sys.time()
 
-  #Load primary brood data
-  Primary_data <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_Nest_EDM.csv"), na.strings = c("", "?"), colClasses = "character")
+  #----------------------------#
+  # NEST PRIMARY DATA ASSEMBLY #
+  #----------------------------#
 
-  #Load complete PiedFlyNet ringing database
-  CMR_data <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_IPMR_PFN.csv"), na.strings = c("", "?", "UNK", "-"), colClasses = "character") # TODO:Confirm with Malcolm that SITE = "UNK" refers to unknown/unassigned locations
+  # Load Nest data files for all populations
 
-  #Load additional data on nestboxes (locations)
+  ## East Dartmoor (EDM)
+  Nest_EDM <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_Nest_EDM.csv"), na.strings = c("", "?"), colClasses = "character") %>%
+    dplyr::mutate(PopID = 'EDM')
+
+  ## Nags Head (NAG)
+  Nest_NAG <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_Nest_NAG.csv"), na.strings = c("", "?"), colClasses = "character") %>%
+    dplyr::mutate(PopID = 'NAG')
+
+  ## Loch Katrine (KAT)
+  Nest_KAT <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_Nest_KAT.csv"), na.strings = c("", "?"), colClasses = "character") %>%
+    dplyr::mutate(PopID = 'KAT')
+
+  ## Dinas (DIN)
+  Nest_DIN <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_Nest_DIN.csv"), na.strings = c("", "?"), colClasses = "character") %>%
+    dplyr::mutate(PopID = 'DIN',
+                  Box = stringr::str_replace(string = .data$Box, pattern = 'DV', replacement = 'DOV'), # Standardize naming convention
+                  Box = stringr::str_replace(string = .data$Box, pattern = 'TN', replacement = 'TYN')) # Standardize naming convention
+
+  ## Teign (TEI)
+  Nest_TEI <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_Nest_TEI.csv"), na.strings = c("", "?"), colClasses = "character") %>%
+    dplyr::mutate(PopID = 'TEI')
+
+  ## Okehampton (OKE)
+  Nest_OKE <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_Nest_OKE.csv"), na.strings = c("", "?"), colClasses = "character") %>%
+    dplyr::mutate(PopID = 'OKE')
+
+  ## North Wales (NWA)
+  # Nest_NWA <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_Nest_NWA.csv"), na.strings = c("", "?"), colClasses = "character") %>%
+  #   dplyr::mutate(PopID = 'NWA')
+  # NOTE: Data from North Wales (NWA) may be added to SPI-Birds in the future
+
+  # Combine all Nest data files together
+  Nest_data <- dplyr::bind_rows(Nest_EDM,
+                               Nest_NAG,
+                               Nest_KAT,
+                               Nest_DIN,
+                               Nest_TEI,
+                               Nest_OKE#,
+                               #Nest_NWA
+                               )
+
+  #----------------------------#
+  # IPMR PRIMARY DATA ASSEMBLY #
+  #----------------------------#
+
+  # Load Nest data files for all populations
+
+  ## PiedFlyNet collection (EDM, TEI, OKE)
+  IPMR_PFN <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_IPMR_PFN.csv"), na.strings = c("", "?", "UNK", "-"), colClasses = "character")
+
+  ## Scotland (KAT)
+  IPMR_KAT <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_IPMR_KAT.csv"), na.strings = c("", "?", "UNK", "-"), colClasses = "character") %>%
+    dplyr::mutate(PopID = 'KAT',
+                  PLACE = dplyr::case_when(.data$PLACE == "HRA" ~ "BR.W",
+                                           .data$PLACE == "HRB" ~ "BR.E",
+                                           .data$PLACE == "HRC" ~ "STR",
+                                           .data$PLACE == "HRE" ~ "TOP",
+                                           .data$PLACE == "HRF" ~ "MID",
+                                           .data$PLACE == "HRG" ~ "TOP",
+                                           .data$PLACE == "HRJ" ~ "Rh",
+                                           .data$PLACE == "HRK" ~ "SF",
+                                           .data$PLACE == "HRO" ~ "BR.E",
+                                           .data$PLACE == "NN6002" ~ "CR",
+                                           .data$PLACE == "NS5997" ~ "PoG",
+                                           TRUE ~ .data$PLACE),
+                  SITE = NA_character_) %>%
+    dplyr::rename(SPEC = .data$SPNAME,
+                  SCHEME = .data$COUNTRY)
+  # NOTE: The KAT IPMR data has some different column names and formats than the
+  #      other IPMR input data file, so these need to be adjusted here.
+
+  ## Dinas (DIN)
+  IPMR_DIN <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_IPMR_DIN.csv"), na.strings = c("", "?", "UNK", "-"), colClasses = "character") %>%
+    dplyr::mutate(PopID = 'DIN',
+                  SITE_DIN = stringr::str_split(string = .data$USERV1, pattern = c(','), simplify = T)[,1], # Drop everything after the first ","
+                  SITE_DIN = stringr::str_split(string = .data$SITE_DIN, pattern = c(';'), simplify = T)[,1], # Drop everything after the first ";"
+                  SITE_DIN = stringr::str_remove_all(string = .data$SITE_DIN, pattern = ' '), # Remove all spaces
+                  SITE_DIN = stringr::str_remove(string = .data$SITE_DIN, pattern = 'Box'), # Remove "Box"
+                  SITE_DIN = stringr::str_replace(string = .data$SITE_DIN, pattern = 'DINAS', replacement = 'DIN'), # Replace "DINAS" with "DIN"
+                  SITE_DIN = dplyr::case_when(stringr::str_detect(.data$SITE_DIN, "[[:lower:]]") ~ NA_character_,
+                                              TRUE ~ .data$SITE_DIN), # Set all to NA that contain lower case letters (mostly part of comments)
+                  SITE_DIN = stringr::str_replace(string = .data$SITE_DIN, pattern = 'DV', replacement = 'DOV'), # Standardize naming convention
+                  SITE_DIN = stringr::str_replace(string = .data$SITE_DIN, pattern = 'TN', replacement = 'TYN'), # Standardize naming convention
+                  RING2 = dplyr::case_when(grepl("rering", .data$USERV1) ~ stringr::str_extract(string = .data$USERV1, pattern = regex("[A-Z]{1,}[0-9]{1,}")),
+                                                TRUE ~ .data$RING2)
+                  )
+
+  # NOTE 1: Unlike other IPMR data, DIN IPMR data contains information on
+  # capture location (NestboxID) not in the SITE column, but as part of comments
+  # in the USERV1 column. Therefore, I here extract as much of this information
+  # as possible.
+
+  # NOTE 2: The USERV1 column also contains auxiliary information on re-ringing
+  # for a few individuals, so I extract this and move it into the correct column (RING2).
+
+
+  # Combine all IPMR data files together
+  IPMR_data <- dplyr::bind_rows(IPMR_PFN,
+                               IPMR_KAT,
+                               IPMR_DIN)
+
+
+  #--------------------------------#
+  # LOCATION PRIMARY DATA ASSEMBLY #
+  #--------------------------------#
+
   Location_details <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_Locations_EDM.csv"), na.strings = c("", "?"), colClasses = "character", fileEncoding="UTF-8-BOM")
 
+  # NOTE: For now, location details is only available for EDM.
+  #       However, this may be added for other populations later.
 
-  # PREPARATION: ASSIGNING INDIVIDUAL IDENTITIY (relevant for re-ringed birds)
+  #--------------------------------#
+  # ASSIGNING INDIVIDUAL IDENTITIY #
+  #--------------------------------#
+  # This is necessary because some birds have carried several rings during their lifetime (re-ringed)
 
   # Extract ring number (combinations) for all birds
-  RingCombos <- CMR_data[,c('RING', 'RING2', 'DATE')] %>%
+  RingCombos <- IPMR_data[,c('RING', 'RING2', 'DATE')] %>%
     dplyr::mutate(DATE = as.Date(.data$DATE, format = "%d/%m/%Y")) %>%
     dplyr::distinct(.data$RING, .data$RING2, .keep_all = T)
 
@@ -121,52 +233,113 @@ format_PFN <- function(db = choose_directory(),
     dplyr::group_by(.data$Identifier) %>%
     dplyr::mutate(ReRingID = first(.data$RingNr)) %>%
     dplyr::ungroup() %>%
-    dplyr::distinct(.data$RingNr, .data$ReRingID)
+    dplyr::distinct(.data$RingNr, .data$ReRingID) %>%
+    dplyr::distinct(.data$RingNr, .keep_all = T)
+    # NOTE: At the moment, I am using this last line to remove duplicate pairings
+    #       arising from two-way matches in RingCombos. Eventually, this is something
+    #       that the make_IndIdentifier() function should fix.
 
 
-  # CAPTURE DATA
+  #--------------------------------------#
+  # DETERMINING "BAD" (INCONCLUSIVE) IDs #
+  #--------------------------------------#
 
-  message("Compiling capture data....")
+  # Create a vector of all non-NA ID records in the Nest data (males, females, and chicks)
+  allIDs <- na.omit(c(Nest_data$MaleID, Nest_data$FemaleID, Nest_data$Young1,
+                      Nest_data$Young2, Nest_data$Young3, Nest_data$Young4,
+                      Nest_data$Young5, Nest_data$Young6, Nest_data$Young7,
+                      Nest_data$Young8, Nest_data$Young9, Nest_data$Young10,
+                      Nest_data$Young11))
+  #Return only those that don't match the expected ringing format (i.e. XXX9999)
+  #"^[A-Z]{1,}[0-9]{1,}$" is a regular expression that looks for IDs that follow a pattern:
+  #- Starts with at least one capital letter: '^[A-Z]{1,}'
+  #- Ends with at least one number: '[0-9]{1,}$'
+  badIDs <- unique(allIDs[!stringr::str_detect(allIDs, pattern = "^[A-Z]{1,}[0-9]{1,}$")])
 
-  Capture_data <- create_capture_EDM(CMR_data = CMR_data, Primary_data = Primary_data, ReRingTable = ReRingTable)
 
-
-  # BROOD DATA
+  #-------------------------------------#
+  # CREATING STANDARD FORMAT BROOD DATA #
+  #-------------------------------------#
 
   message("Compiling brood data...")
 
-  Brood_data <- create_brood_EDM(Primary_data = Primary_data, ReRingTable = ReRingTable)
+  Brood_data <- create_brood_PFN(Nest_data = Nest_data,
+                                 ReRingTable = ReRingTable,
+                                 badIDs = badIDs)
 
 
-  # INDIVIDUAL DATA
+  #---------------------------------------#
+  # CREATING STANDARD FORMAT CAPTURE DATA #
+  #---------------------------------------#
+
+  message("Compiling capture data....")
+
+  Capture_data <- create_capture_PFN(Nest_data = Nest_data,
+                                     IPMR_data = IPMR_data,
+                                     ReRingTable = ReRingTable,
+                                     badIDs = badIDs)
+
+
+
+
+  #------------------------------------------#
+  # CREATING STANDARD FORMAT INDIVIDUAL DATA #
+  #------------------------------------------#
 
   message("Compiling individual data...")
 
-  Individual_data <- create_individual_EDM(Capture_data = Capture_data)
-
-  # LOCATION DATA
-
-  message("Compiling location data...")
-
-  Location_data <- create_location_EDM(Brood_data = Brood_data, Capture_data = Capture_data, Location_details = Location_details)
+  Individual_data <- create_individual_PFN(Capture_data = Capture_data)
 
 
-  # WRANGLE DATA FOR EXPORT
+  #----------------------------------------#
+  # CREATING STANDARD FORMAT LOCATION DATA #
+  #----------------------------------------#
+
+  message("Functionality for compiling location data not yet supported")
+
+  Location_data <- create_location_PFN(Brood_data = Brood_data,
+                                       Capture_data = Capture_data,
+                                       Location_details = Location_details)
+
+
+  #-------------------------------------------#
+  # STANDARD FORMAT DATA WRANGLING FOR EXPORT #
+  #-------------------------------------------#
+
+  # Brood data: Add and consolidate brood size information from IPMR
+  IPMRBroodSize_data <- Capture_data[,c('BroodID', 'PULALIV')] %>%
+    dplyr::mutate(PULALIV = as.integer(.data$PULALIV)) %>%
+    dplyr::filter(!is.na(.data$PULALIV) & !is.na(.data$BroodID)) %>%
+    dplyr::group_by(.data$BroodID) %>%
+    dplyr::summarise(BroodSize_IPMR = max(.data$PULALIV), .groups = "drop")
+
+  Brood_data <- dplyr::left_join(Brood_data, IPMRBroodSize_data, by = 'BroodID') %>%
+    dplyr::mutate(BroodSize_observed = dplyr::case_when(
+      is.na(.data$BroodSize_observed) ~ .data$BroodSize_IPMR,
+      is.na(.data$BroodSize_IPMR) ~ .data$BroodSize_observed,
+      .data$BroodSize_observed == .data$BroodSize_IPMR ~ .data$BroodSize_observed,
+      .data$BroodSize_observed > .data$BroodSize_IPMR ~ .data$BroodSize_observed,
+      .data$BroodSize_observed < .data$BroodSize_IPMR ~ .data$BroodSize_IPMR
+    ))
+
 
   # Capture data: Merge in information on ChickAge (from Brood_data) & remove unnecessary columns
   ChickAge_data <- Brood_data[,c('BroodID', 'ChickAge')]
   Capture_data <- dplyr::left_join(Capture_data, ChickAge_data, by = 'BroodID')
-  Capture_data$ChickAge[which(Capture_data$Age_observed > 1)] <- NA_integer_
+  Capture_data$ChickAge[which(Capture_data$Age_observed > 3)] <- NA_integer_ #***
+
+  # Remove unnecessary columns
+  Brood_data <- Brood_data %>%
+    dplyr::select(-.data$ChickAge, -.data$BroodSize_IPMR)
 
   Capture_data <- Capture_data %>%
-    dplyr::select(-.data$BroodID) %>%
+    dplyr::select(-.data$BroodID, -.data$PULALIV) %>%
     dplyr::relocate(.data$ExperimentID, .after = .data$ChickAge)
 
-  # Brood data: Remove unnecessary columns
-  Brood_data <- Brood_data %>%
-    dplyr::select(-.data$ChickAge)
 
-  # EXPORT DATA
+  #-----------------------------#
+  # STANDARD FORMAT DATA EXPORT #
+  #-----------------------------#
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
@@ -190,60 +363,50 @@ format_PFN <- function(db = choose_directory(),
 
   if(output_type == "R"){
 
-    message("Returning R objects...")
+    message("Returning R object...")
 
     return(list(Brood_data = Brood_data,
                 Capture_data = Capture_data,
                 Individual_data = Individual_data,
                 Location_data = Location_data))
-
   }
 
 }
 
 
 
-#' Create brood data table for EastDartmoor.
+
+#***********************#
+# BROOD DATA FORMATTING #
+#***********************#
+
+#' Create brood data table for PiedFlyNet populations.
 #'
-#' @param Primary_data Primary data from EastDartmoor.
+#' @param Nest_data Collated Nest primary data from PiedFlyNet populations
 #' @param ReRingTable Table containing ring numbers and unique identifiers for all individuals
-#'
+#' @param badIDs Vector containing non-conslusive IDs (extracted from Nest data)
 #' @return A data frame with Brood data
 
 
-create_brood_EDM <- function(Primary_data, ReRingTable){
+create_brood_PFN <- function(Nest_data, ReRingTable, badIDs){
 
-  ## Pre) Determine a vector of "bad" (nonconclusive) IDs
-  #This will be used downstream in point 7)
-  #Create a vector of all non-NA ID records for both males and females (need for chicks too?)
-  allIDs <- stats::na.omit(c(Primary_data$MaleID, Primary_data$FemaleID, Primary_data$Young1,
-                      Primary_data$Young2, Primary_data$Young3, Primary_data$Young4,
-                      Primary_data$Young5, Primary_data$Young6, Primary_data$Young7,
-                      Primary_data$Young8, Primary_data$Young9, Primary_data$Young10, Primary_data$Young11))
-  #Return only those that don't match the expected ringing format (i.e. XXX9999)
-  #"^[A-Z]{1,}[0-9]{1,}$" is a regular expression that looks for IDs that follow a pattern:
-  #- Starts with at least one capital letter: '^[A-Z]{1,}'
-  #- Ends with at least one number: '[0-9]{1,}$'
-  badIDs <- unique(allIDs[!stringr::str_detect(allIDs, pattern = "^[A-Z]{1,}[0-9]{1,}$")])
-
-
-  ## 1) Rename columns that are equivalent (content and format) to columns in the standard format
-  Brood_data <- Primary_data %>%
+  # 1) Rename columns that are equivalent (content and format) to columns in the standard format
+  Brood_data <- Nest_data %>%
     dplyr::rename(Plot = .data$Popn,
                   LocationID = .data$Box) %>%
 
-    ## 2) Add population ID and reformat colums with equivalent content but different format
-    dplyr::mutate(PopID = "EDM",
+    # 2) Add unique BroodID and reformat columns with equivalent content but different format
+    dplyr::mutate(BroodID = paste0(.data$PopID, "-", .data$BroodID),
                   BreedingSeason = as.integer(Year),
-                  Species = dplyr::case_when(.data$Species == "BLUTI" ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
+                  Species = dplyr::case_when(.data$Species %in% c("BLUTI", "BLUTI ") ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
                                              .data$Species == "PIEFL" ~ species_codes[species_codes$SpeciesID == 13490, ]$Species,
-                                             .data$Species == "GRETI" ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
+                                             .data$Species %in% c("GRETI", "GRETI ") ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
                                              .data$Species == "REDST" ~ species_codes[species_codes$SpeciesID == 11220, ]$Species,
                                              .data$Species == "MARTI" ~ species_codes[species_codes$SpeciesID == 14400, ]$Species,
                                              .data$Species == "NUTHA" ~ species_codes[species_codes$SpeciesID == 14790, ]$Species,
                                              .data$Species == "COATI" ~ species_codes[species_codes$SpeciesID == 14610, ]$Species,
-                                             .data$Species == "WREN" ~ NA_character_, # Missing, 1 observation only
-                                             .data$Species == "TREEC" ~ NA_character_), # Missing, 1 observation only
+                                             .data$Species == "WREN" ~ NA_character_, # Not currently included, 1 observation only
+                                             .data$Species == "TREEC" ~ NA_character_), # Not currently, 1 observation only
                   ClutchType_observed = dplyr::case_when(.data$CltCd == "1" ~ "first",
                                                 .data$CltCd == "2" ~ "replacement",
                                                 .data$CltCd == "3" ~ "second"),
@@ -264,29 +427,39 @@ create_brood_EDM <- function(Primary_data, ReRingTable){
     #                         part of the clutch, but the chances of eggs/chicks having disappeared before the count increases as we move further away from the
     #                         laying date (i.e. number of fledlings (+ number of unhatched eggs) <= number of hatched eggs (+ number of unhatched eggs) <= number of laid eggs)
 
-    # 4) Add columns that are based on calculations
+    # 3) Add columns that are based on calculations
     dplyr::arrange(.data$BreedingSeason, .data$FemaleID, .data$LayDate)
     # --> This sorting is required for the function "calc_clutchtype" to work
 
-    # 4.1) Calculate means and observation numbers for fledgling weight/tarsus length
+  ## 3.1) Calculate and add means and observation numbers for fledgling weight/tarsus length
+  #	IF any chick ages fall into the relevant range
+  if(any(Brood_data$ChickAge %in% c(14:16))){
     Brood_averages <- Brood_data %>%
-    dplyr::filter(between(.data$ChickAge, 14, 16)) %>%  #Remove chicks outside the age range
-    dplyr::select(.data$BroodID, contains("Weight."), contains("Tarsus.")) %>% #Select only weight and tarsus cols
-    tidyr::pivot_longer(cols = -.data$BroodID) %>%  #Rearrange so they're individual rows rather than individual columns
-    dplyr::filter(!is.na(.data$value)) %>% #Remove Nas
-    dplyr::mutate(name = gsub(pattern = "Weight", replacement = "ChickMass", gsub(pattern = ".Y\\d+", replacement = "", x = .data$name))) %>% #Change the names so it's not 'Weight.Y1' and 'Tarsus.Y1' but just 'ChickMass' and 'Tarsus'
-    dplyr::group_by(.data$BroodID, .data$name) %>% #Group by brood, weight and tarsus
-    dplyr::summarise(Avg = mean(as.numeric(.data$value), na.rm = TRUE), Number = n()) %>% #Extract the mean and sample size
-    tidyr::pivot_wider(names_from = .data$name, values_from = c(.data$Avg, .data$Number), names_sep = "") %>% #Move this back into cols so we have AvgChickMass, NumberChickMass etc.
-    dplyr::ungroup()
+  	dplyr::filter(between(.data$ChickAge, 14, 16)) %>%  #Remove chicks outside the age range
+  	dplyr::select(.data$BroodID, contains("Weight."), contains("Tarsus.")) %>% #Select only weight and tarsus cols
+  	tidyr::pivot_longer(cols = -.data$BroodID) %>%  #Rearrange so they're individual rows rather than individual columns
+  	dplyr::filter(!is.na(.data$value)) %>% #Remove Nas
+  	dplyr::mutate(name = gsub(pattern = "Weight", replacement = "ChickMass", gsub(pattern = ".Y\\d+", replacement = "", x = .data$name))) %>% #Change the names so it's not 'Weight.Y1' and 'Tarsus.Y1' but just 'ChickMass' and 'Tarsus'
+  	dplyr::group_by(.data$BroodID, .data$name) %>% #Group by brood, weight and tarsus
+  	dplyr::summarise(Avg = mean(as.numeric(.data$value), na.rm = TRUE), Number = n()) %>% #Extract the mean and sample size
+  	tidyr::pivot_wider(names_from = .data$name, values_from = c(.data$Avg, .data$Number), names_sep = "") %>% #Move this back into cols so we have AvgChickMass, NumberChickMass etc.
+  	dplyr::ungroup()
 
-    # 4.2) Add calculated columns
+  	Brood_data <- Brood_data %>%
+    		dplyr::left_join(Brood_averages, by = "BroodID")
+  }else{
     Brood_data <- Brood_data %>%
-      dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = Brood_data, na.rm = FALSE)) %>%
-      dplyr::left_join(Brood_averages, by = "BroodID")
+      dplyr::mutate(AvgChickMass = NA_real_,
+                    NumberChickMass = NA_integer_,
+                    AvgTarsus = NA_real_,
+                    NumberChicksTarsus = NA_integer_)
+  }
 
+  ## 3.2) Add other calculated columns
+  Brood_data <- Brood_data %>%
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = Brood_data, na.rm = FALSE))
 
-  # 5) Rename columns and add columns without data
+  # 4) Rename columns and add columns without data
   Brood_data <- Brood_data %>%
       dplyr::mutate(NumberChicksMass = .data$NumberChickMass,
                     NumberChicksTarsus = .data$NumberTarsus,
@@ -309,19 +482,19 @@ create_brood_EDM <- function(Primary_data, ReRingTable){
                     NumberFledged_max = NA_integer_,
                     AvgEggMass =  NA_real_,
                     NumberEggs = NA_integer_,
-                    OriginalTarsusMethod = "Alternative",
+                    OriginalTarsusMethod = dplyr::case_when(!is.na(.data$AvgTarsus) ~ "Alternative"),
                     ExperimentID = NA_character_) %>%
 
-      # 6) Remove broods from species not included in species_codes
-      dplyr::filter(.data$Species %in% species_codes$Species) %>%
+    # 5) Remove broods from species not included in Species_codes
+    dplyr::filter(.data$Species %in% species_codes$Species) %>%
 
-      # 7) Replace non-conclusive male and female IDs with NA
-      dplyr::mutate(FemaleID = dplyr::case_when(!(.data$FemaleID%in%badIDs) ~ .data$FemaleID,
-                                                .data$FemaleID%in%badIDs ~ NA_character_),
-                    MaleID = dplyr::case_when(!(.data$MaleID%in%badIDs) ~ .data$MaleID,
-                                              .data$MaleID%in%badIDs ~ NA_character_))
+    # 6) Replace non-conclusive male and female IDs with NA
+    dplyr::mutate(FemaleID = dplyr::case_when(!(.data$FemaleID%in%badIDs) ~ .data$FemaleID,
+                                              .data$FemaleID%in%badIDs ~ NA_character_),
+                  MaleID = dplyr::case_when(!(.data$MaleID%in%badIDs) ~ .data$MaleID,
+                                            .data$MaleID%in%badIDs ~ NA_character_))
 
-  # 8) Convert ring numbers for re-ringed females and males
+  # 7) Convert ring numbers for re-ringed females and males
   ReRingTableF <- ReRingTable %>%
     dplyr::rename(FemaleID = .data$RingNr,
                   FemaleReRingID = .data$ReRingID)
@@ -336,216 +509,407 @@ create_brood_EDM <- function(Primary_data, ReRingTable){
     dplyr::mutate(FemaleID = ifelse(is.na(.data$FemaleReRingID), .data$FemaleID, .data$FemaleReRingID),
                   MaleID = ifelse(is.na(.data$MaleReRingID), .data$MaleID, .data$MaleReRingID)) %>%
 
-      # 9) Select and arrange columns for output
-      dplyr::select(.data$BroodID, .data$PopID, .data$BreedingSeason,
-                    .data$Species, .data$Plot, .data$LocationID, .data$FemaleID, .data$MaleID,
-                    .data$ClutchType_observed, .data$ClutchType_calculated,
-                    .data$LayDate_observed, .data$LayDate_min, .data$LayDate_max,
-                    .data$ClutchSize_observed, .data$ClutchSize_min, .data$ClutchSize_max,
-                    .data$HatchDate_observed, .data$HatchDate_min, .data$HatchDate_max,
-                    .data$BroodSize_observed, .data$BroodSize_min, .data$BroodSize_max,
-                    .data$FledgeDate_observed, .data$FledgeDate_min, .data$FledgeDate_max,
-                    .data$NumberFledged_observed, .data$NumberFledged_min, .data$NumberFledged_max,
-                    .data$AvgEggMass, .data$NumberEggs,
-                    .data$AvgChickMass, .data$NumberChicksMass,
-                    .data$AvgTarsus, .data$NumberChicksTarsus,
-                    .data$OriginalTarsusMethod,
-                    .data$ExperimentID, .data$ChickAge)
+    # 8) Select and arrange columns for output
+    dplyr::select(.data$BroodID, .data$PopID, .data$BreedingSeason,
+                  .data$Species, .data$Plot, .data$LocationID, .data$FemaleID, .data$MaleID,
+                  .data$ClutchType_observed, .data$ClutchType_calculated,
+                  .data$LayDate_observed, .data$LayDate_min, .data$LayDate_max,
+                  .data$ClutchSize_observed, .data$ClutchSize_min, .data$ClutchSize_max,
+                  .data$HatchDate_observed, .data$HatchDate_min, .data$HatchDate_max,
+                  .data$BroodSize_observed, .data$BroodSize_min, .data$BroodSize_max,
+                  .data$FledgeDate_observed, .data$FledgeDate_min, .data$FledgeDate_max,
+                  .data$NumberFledged_observed, .data$NumberFledged_min, .data$NumberFledged_max,
+                  .data$AvgEggMass, .data$NumberEggs,
+                  .data$AvgChickMass, .data$NumberChicksMass,
+                  .data$AvgTarsus, .data$NumberChicksTarsus,
+                  .data$OriginalTarsusMethod,
+                  .data$ExperimentID, .data$ChickAge)
 
-
-  # Return data
+  # 9) Return data
   return(tibble::as_tibble(Brood_data))
 }
 
 
 
-#' Create capture data table for EastDartmoor from ringing data.
+#*************************#
+# CAPTURE DATA FORMATTING #
+#*************************#
+
+#' Create capture data table for PiedFlyNet populations from
+#' consolidated Nest and IPMR primary data sources.
 #'
-#' @param CMR_data Complete raw PiedFlyNet ringing data.
-#' @param Primary_data Primary brood data from EastDartmoor.
+#' Consolidation of information is necessary when Nest and IPMR primary data
+#' contain conflicting information about what is likely the same capture
+#' Captures are matched via `PopID`, `IndvID` and `CaptureDate` when possible.
+#' When `CaptureDate` is missing or incomplete, matching is attempted using
+#' `BreedingSeason` and `LocationID`. If matching is impossible based on available
+#' information, data is not consolidated.
+#' When one of two matched capture records is missing information, equivalent
+#' information from the other record is used. When two matched capture records
+#' contain conflicting information, the entry is either noted as
+#' conflicting (`Species`, `Sex_observed`) or information from the more reliable
+#' data source is used. With the exception of `CaptureAlive` and `ReleaseAlive`,
+#' Nest data is considered as the more reliable data source.
+#'
+#' @param Nest_data Collated Nest primary data from PiedFlyNet populations
+#' @param IPMR_data Collated IPMR primary data from PiedFlyNet populations
 #' @param ReRingTable Table containing ring numbers and unique identifiers for all individuals
-#'
+#' @param badIDs Vector containing non-conslusive IDs (extracted from Nest data)
+
 #' @return A data frame with Capture data
 
-create_capture_EDM <- function(CMR_data, Primary_data, ReRingTable){
+create_capture_PFN <- function(Nest_data, IPMR_data, ReRingTable, badIDs){
 
-  # 1) Add information on re-ringing IDs to capture data
-  ReRingTable <- ReRingTable %>%
-    dplyr::rename(RING = .data$RingNr)
+  # 1) Extract capture data from both nest and IPMR files
+  Capture_data_Nest <- create_capture_Nest_PFN(Nest_data = Nest_data, ReRingTable = ReRingTable, badIDs = badIDs)
+  Capture_data_IPMR <- create_capture_IPMR_PFN(IPMR_data = IPMR_data, ReRingTable = ReRingTable)
 
-  Capture_data <- CMR_data %>%
-    dplyr::left_join(ReRingTable, by = 'RING') %>%
-    dplyr::mutate(RING = ifelse(is.na(.data$ReRingID), .data$RING, .data$ReRingID))
+  # 2) Match and combine unique captures from both data sources
 
-  ## 2) Subset ringing database to contain only captures relevant to population
-  LocationList <- unique(Primary_data$Popn)
-  Capture_data <- subset(Capture_data, PLACE %in% LocationList)
+  ## 2.1) Merge information on identical captures (IndvID-Capture data combos) appearing in both datasets
+  Captures_FullMatch <- dplyr::inner_join(Capture_data_Nest, Capture_data_IPMR, by = c("IndvID", "BreedingSeason", "CaptureDate"))
 
-  ## 3) Rename columns that are equivalent (content and format) to columns in the standard format
-  Capture_data <- Capture_data %>%
-    dplyr::rename(IndvID = .data$RING,
-                  CapturePlot = .data$PLACE,
-                  LocationID = .data$SITE,
-                  Sex_observed = .data$SEX) %>%
+  ## 2.2) Identify Nest and IPMR data captures that have been
+  ##      duplicated/matched >1 time (Full Matches)
 
-    ## 4) Add population ID and reformat colums with equivalent content but different format
-  #Capture_data <- Capture_data %>%
-    dplyr::mutate(PopID = "EDM",
-                  Species = dplyr::case_when(.data$SPEC == "BLUTI" ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
-                                             .data$SPEC == "PIEFL" ~ species_codes[species_codes$SpeciesID == 13490, ]$Species,
-                                             .data$SPEC == "GRETI" ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
-                                             .data$SPEC == "REDST" ~ species_codes[species_codes$SpeciesID == 11220, ]$Species,
-                                             .data$SPEC == "MARTI" ~ species_codes[species_codes$SpeciesID == 14400, ]$Species,
-                                             .data$SPEC == "NUTHA" ~ species_codes[species_codes$SpeciesID == 14790, ]$Species,
-                                             .data$SPEC == "COATI" ~ species_codes[species_codes$SpeciesID == 14610, ]$Species),
-                    CaptureDate = as.Date(.data$DATE, format = "%d/%m/%Y"),
-                    CaptureTime = ifelse(!grepl("00:00", Capture_data$DATE), sub(".* ", "", Capture_data$DATE), NA_character_),
-                    ObserverID = dplyr::case_when(!is.na(.data$INIT) ~ .data$INIT,
-                                                  is.na(.data$INIT) & !is.na(.data$RINGINIT) ~ .data$RINGINIT),
-                    CapturePopID = "EDM",
-                    ReleasePopID = "EDM",
-                    ReleasePlot = .data$CapturePlot,
-                    Mass_CMR = as.numeric(.data$WT),
-                    Tarsus_CMR = dplyr::case_when(is.na(.data$TSMTD) ~ as.numeric(.data$TARSUS),
-                                              .data$TSMTD == "S" ~ as.numeric(.data$TARSUS),
-                                              .data$TSMTD == "M" ~ (x = convert_tarsus(as.numeric(.data$TARSUS), method = "Oxford"))),
-                    OriginalTarsusMethod = dplyr::case_when(is.na(.data$TSMTD) ~ "Alternative",
-                                                            .data$TSMTD == "S" ~ "Alternative",
-                                                            .data$TSMTD == "M" ~ "Oxford"),
-                    WingLength = as.numeric(.data$WING),
-                    Age_observed = as.integer(str_remove(.data$AGE, "J")),
-                    stringsAsFactors = FALSE) %>%
+  Duplicates_Full_Nest <- Captures_FullMatch %>%
+    dplyr::filter(!is.na(.data$rowNo_Nest)) %>%
+    dplyr::mutate(Duplicate_NestCapture = ifelse(duplicated(.data$rowNo_Nest) | duplicated(.data$rowNo_Nest, fromLast = TRUE), 1,0)) %>%
+    dplyr::filter(Duplicate_NestCapture == 1) %>%
 
-    ## 5) Add additional colums that need to be derived from original columns
-    #Capture_data <- Capture_data %>%
-    dplyr::mutate(BreedingSeason = as.integer(format(.data$CaptureDate, "%Y")),
-                  CaptureAlive = ifelse(.data$RTYPE == "X", FALSE, TRUE),
-                  ReleaseAlive = ifelse(.data$RTYPE == "X", FALSE, TRUE),
-                  ExperimentID = dplyr::case_when(.data$COND == "M" ~ "SURVIVAL",
-                                                  is.na(.data$COND) ~ NA_character_)
+    # Determining true matches...
+    dplyr::mutate(TrueMatch_Nest = dplyr::case_when(
+
+      # ...based on location information (whenever available)
+      !is.na(.data$LocationID_IPMR) & .data$LocationID_IPMR == .data$LocationID_Nest ~ 1,
+      !is.na(.data$LocationID_IPMR) & .data$LocationID_IPMR != .data$LocationID_Nest ~ 0,
+
+      # Based on presence of capture time for specific instances in OKE when IPMR entries were duplicated
+      .data$BreedingSeason %in% c(2009, 2017, 2018) & .data$CapturePopID_Nest == "OKE" & !is.na(.data$CaptureTime) ~ 1,
+      .data$BreedingSeason %in% c(2009, 2017, 2018) & .data$CapturePopID_Nest == "OKE" & is.na(.data$CaptureTime) ~ 0,
+
+      # ...based on manual identification of actual multiple captures
+      .data$BreedingSeason == 2011 & .data$CapturePopID_Nest == "OKE"  ~ 1
+      ))
+  # NOTE: With the currently included datasets, this resolves all occurences.
+  #       If new datasets are added, this will have to be updated.
+
+  Duplicates_Full_IPMR <- Captures_FullMatch %>%
+    dplyr::filter(!is.na(.data$rowNo_IPMR)) %>%
+    dplyr::mutate(Duplicate_IPMRCapture = ifelse(duplicated(.data$rowNo_IPMR) | duplicated(.data$rowNo_IPMR, fromLast = TRUE), 1,0)) %>%
+    dplyr::filter(Duplicate_IPMRCapture == 1) %>%
+
+    # Determining true matches...
+
+    # ...based on location information (whenever available)
+    dplyr::mutate(
+      TrueMatch_IPMR = dplyr::case_when(
+        !is.na(.data$LocationID_IPMR) & .data$LocationID_IPMR == .data$LocationID_Nest ~ 1),
+    ) %>%
+
+    #...based on whether another capture in the set was assigned as the true match
+    dplyr::group_by(.data$rowNo_IPMR) %>%
+    dplyr::mutate(
+      MatchedSet = ifelse(any(TrueMatch_IPMR == 1, na.rm = T), TRUE, FALSE)
+    ) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(
+      TrueMatch_IPMR = dplyr::case_when(
+        !is.na(.data$TrueMatch_IPMR) ~ .data$TrueMatch_IPMR,
+        .data$MatchedSet ~ 0
+      )
     )
 
+  ## 2.3) Resolve IPMR and Nest captures that were matched several times if possible, "flag" them otherwise (Full Matches)
+  ##      --> We remove duplicated Nest captures that were determined to definitely NOT match with IPMR (TrueMatch_Nest = 0, NA not an option)
+  ##      --> We flag duplicated IPMR captures whose Nest match could not be definitely confirmed (is.na(TrueMatch_IPMR), 0 not an option)
+  Captures_FullMatch <- Captures_FullMatch %>%
+    dplyr::left_join(Duplicates_Full_IPMR[,c('rowNo_Nest', 'rowNo_IPMR', 'Duplicate_IPMRCapture', 'TrueMatch_IPMR')], by = c("rowNo_Nest", "rowNo_IPMR")) %>%
+    dplyr::left_join(Duplicates_Full_Nest[,c('rowNo_Nest', 'rowNo_IPMR', 'Duplicate_NestCapture', 'TrueMatch_Nest')], by = c("rowNo_Nest", "rowNo_IPMR")) %>%
+
+    dplyr::mutate(DropRecord = dplyr::case_when(.data$TrueMatch_Nest == 0 | .data$TrueMatch_IPMR == 0  ~ TRUE,
+                                                TRUE ~ FALSE),
+                  UnconfirmedIPMRMatch = dplyr::case_when(is.na(.data$Duplicate_IPMRCapture) ~ FALSE,
+                                                         .data$TrueMatch_Nest == 1 ~ FALSE,
+                                                         .data$TrueMatch_IPMR == 1 ~ FALSE,
+                                                         TRUE ~ TRUE)) %>%
+    dplyr::filter(!(DropRecord))
 
 
-  ## 6) Add chick measurement and brood ID data from brood table (primary data)
+  ## 2.4) Remove full matches from both datasets (using row identifiers) & rename CaptureDate columns
+  Capture_data_Nest <- Capture_data_Nest %>%
+    dplyr::filter(!(.data$rowNo_Nest%in%Captures_FullMatch$rowNo_Nest)) %>%
+    dplyr::rename(CaptureDate_Nest = .data$CaptureDate)
 
-  # Extract chick mass, tarsus, and BroodID from brood table
-  Chick_Capture_list <- list()
-  for(i in 1:nrow(Primary_data)){
-    Chick_Capture_list[[i]] <- data.frame(IndvID = unname(t(Primary_data[i, paste0("Young", c(1:11))])),
-                                          BroodID = Primary_data$BroodID[i], # Will be removed later
-                                          #CaptureDate = as.Date(Primary_data$YoungDate[i], format = "%d/%m/%Y"),
+  Capture_data_IPMR <- Capture_data_IPMR %>%
+    dplyr::filter(!(.data$rowNo_IPMR%in%Captures_FullMatch$rowNo_IPMR)) %>%
+    dplyr::rename(CaptureDate_IPMR = .data$CaptureDate)
 
-                                          Mass_B = as.numeric(Primary_data[i, paste0("Weight.Y", c(1:11))]),
-                                          Tarsus_B = as.numeric(Primary_data[i, paste0("Tarsus.Y", c(1:11))]),
-                                          stringsAsFactors = FALSE)
-  }
+  ## 2.5) Identify unique dated captures from Nest data, then remove them from dataset
+  ##      (These are Nest captures that have a CaptureDate, but the date does not match with any date in IPMR)
+  Captures_Nest_unique <- Capture_data_Nest %>%
+    dplyr::filter(!is.na(.data$CaptureDate_Nest))
 
-  Chick_Capture_data <- dplyr::bind_rows(Chick_Capture_list)
-  Chick_Capture_data <- subset(Chick_Capture_data, !is.na(IndvID))
+  Capture_data_Nest <- Capture_data_Nest %>%
+    dplyr::filter(!(.data$rowNo_Nest%in%Captures_Nest_unique$rowNo_Nest))
 
-  # Merge additional chick data into capture data
-  #Capture_data <- Capture_data %>%
-  #  dplyr::left_join(Chick_Capture_data, by = c("IndvID", "CaptureDate")) %>%
 
+  ## 2.6) Merge information on likely identical captures (IndvID-BreedingSeason combos) appearing
+  ##      in both datasets
+  Captures_LikelyMatch <- dplyr::full_join(Capture_data_Nest, Capture_data_IPMR, by = c("IndvID", "BreedingSeason"))
+
+  # ATTENTION:
+  # If the same individual is noted several times within the same year in the nest files,
+  #	but no capture dates are provided there, this approach will lead to duplicated captures
+  #	and an inability to correctly "match" equivalent captures from IPMR.
+  #	Important to check if that may be the case (i.e. through duplicate occurences of row numbers in merged data),
+  # for any given dataset. If such entries are present, it may be possible to "match" the correct data pairs
+  #	by location (all individuals) and/or age/trait information (latter only for chick). Most likely, however,
+  #	we may have to set CaptureDate to NA (most conservatigve). Most importantly, duplicates need to be removed!
+
+
+  ## 2.7) Identify Nest and IPMR data captures that have been
+  ##      duplicated/matched >1 time (Likely Matches)
+
+  Duplicates_Likely_Nest <- Captures_LikelyMatch %>%
+    dplyr::filter(!is.na(.data$rowNo_Nest) & !is.na(.data$rowNo_IPMR)) %>%
+    dplyr::mutate(Duplicate_NestCapture = ifelse(duplicated(.data$rowNo_Nest) | duplicated(.data$rowNo_Nest, fromLast = TRUE), 1,0)) %>%
+    dplyr::filter(Duplicate_NestCapture == 1) %>%
+
+    # Determining true matches...
+
+    # ...based on location information (whenever available)
+    dplyr::mutate(
+      TrueMatch_Nest = dplyr::case_when(
+        !is.na(.data$LocationID_IPMR) & .data$LocationID_IPMR == .data$LocationID_Nest ~ 1),
+    ) %>%
+
+    #...based on whether another capture in the set was assigned as the true match
+    dplyr::group_by(.data$rowNo_Nest) %>%
+    dplyr::mutate(
+      MatchedSet = ifelse(any(TrueMatch_Nest == 1, na.rm = T), TRUE, FALSE)
+    ) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(
+      TrueMatch_Nest2 = dplyr::case_when(
+        !is.na(.data$TrueMatch_Nest) ~ .data$TrueMatch_Nest,
+        .data$MatchedSet ~ 0
+      )
+    )
+
+  Duplicates_Likely_IPMR <- Captures_LikelyMatch %>%
+    dplyr::filter(!is.na(.data$rowNo_Nest) & !is.na(.data$rowNo_IPMR)) %>%
+    dplyr::mutate(Duplicate_IPMRCapture = ifelse(duplicated(.data$rowNo_IPMR) | duplicated(.data$rowNo_IPMR, fromLast = TRUE), 1,0)) %>%
+    dplyr::filter(Duplicate_IPMRCapture == 1) %>%
+
+    # Determining true matches...
+
+    # ...based on location information (whenever available)
+    dplyr::mutate(
+      TrueMatch_IPMR = dplyr::case_when(
+        !is.na(.data$LocationID_IPMR) & .data$LocationID_IPMR == .data$LocationID_Nest ~ 1),
+    ) %>%
+
+    #...based on whether another capture in the set was assigned as the true match
+    dplyr::group_by(.data$rowNo_IPMR) %>%
+    dplyr::mutate(
+      MatchedSet = ifelse(any(TrueMatch_IPMR == 1, na.rm = T), TRUE, FALSE)
+    ) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(
+      TrueMatch_IPMR = dplyr::case_when(
+        !is.na(.data$TrueMatch_IPMR) ~ .data$TrueMatch_IPMR,
+        .data$MatchedSet ~ 0
+      )
+    )
+
+  ## 2.8) Resolve IPMR and Nest captures that were matched several times if possible, "flag" them otherwise (Likely Matches)
+  ##      --> We cannot remove any captures based on the assessment here (as none can be clearly proven to be "wrong")
+  ##      --> We flag duplicated Nest and IPMR captures whose match could not be definitely confirmed (is.na(TrueMatch_Nest) or is.na(TrueMatch_IPMR), 0 not an option)
+  Captures_LikelyMatch <- Captures_LikelyMatch %>%
+    dplyr::left_join(Duplicates_Likely_IPMR[,c('rowNo_Nest', 'rowNo_IPMR', 'Duplicate_IPMRCapture', 'TrueMatch_IPMR')], by = c("rowNo_Nest", "rowNo_IPMR")) %>%
+    dplyr::left_join(Duplicates_Likely_Nest[,c('rowNo_Nest', 'rowNo_IPMR', 'Duplicate_NestCapture', 'TrueMatch_Nest')], by = c("rowNo_Nest", "rowNo_IPMR")) %>%
+
+    dplyr::mutate(DropRecord = dplyr::case_when(.data$TrueMatch_Nest == 0 | .data$TrueMatch_IPMR == 0  ~ TRUE,
+                                                TRUE ~ FALSE),
+                  UnconfirmedIPMRMatch = dplyr::case_when(is.na(.data$Duplicate_IPMRCapture) ~ FALSE,
+                                                          .data$TrueMatch_IPMR == 1 ~ FALSE,
+                                                          TRUE ~ TRUE),
+                  UnconfirmedNestMatch = dplyr::case_when(is.na(.data$Duplicate_NestCapture) ~ FALSE,
+                                                          .data$TrueMatch_Nest == 1 ~ FALSE,
+                                                          TRUE ~ TRUE)) %>%
+    dplyr::filter(!(DropRecord))
+
+
+  ## 2.9) Re-combine CaptureDate- and BreedingSeason-based matches (also including unique IPMR captures), and unique nest captures
+  Capture_data <- dplyr::bind_rows(Captures_FullMatch, Captures_LikelyMatch, Captures_Nest_unique) %>%
+    dplyr::mutate(UnconfirmedIPMRMatch = ifelse(is.na(.data$UnconfirmedIPMRMatch), FALSE, .data$UnconfirmedIPMRMatch),
+                  UnconfirmedNestMatch = ifelse(is.na(.data$UnconfirmedNestMatch), FALSE, .data$UnconfirmedNestMatch),
+                  )
+
+
+  # 3) Consolidate information from Nest and IPMR captures
   Capture_data <- Capture_data %>%
-    dplyr::left_join(Chick_Capture_data, by = "IndvID") %>%
+    dplyr::mutate(
 
-  # Summarise information on chick mass and tarsus measurements
-    #dplyr::mutate(Mass = dplyr::case_when(!is.na(.data$Mass_CMR) ~ .data$Mass_CMR,
-    #                                      is.na(.data$Mass_CMR) & !is.na(.data$Mass_B) ~ .data$Mass_B),
-    #              Tarsus = dplyr::case_when(!is.na(.data$Tarsus_CMR) ~ .data$Tarsus_CMR,
-    #                               is.na(.data$Tarsus_CMR) & !is.na(.data$Tarsus_B) ~ .data$Tarsus_B)) %>%
-    dplyr::mutate(Mass = dplyr::case_when(!is.na(.data$Mass_CMR) ~ .data$Mass_CMR,
-                                          is.na(.data$Mass_CMR) & !is.na(.data$Mass_B) & .data$Age_observed == 1 ~ .data$Mass_B,
-                                          TRUE ~ NA_real_),
-                  Tarsus = dplyr::case_when(!is.na(.data$Tarsus_CMR) ~ .data$Tarsus_CMR,
-                                            is.na(.data$Tarsus_CMR) & !is.na(.data$Tarsus_B) & .data$Age_observed == 1 ~ .data$Tarsus_B,
-                                            TRUE ~ NA_real_))
+      ## 3.1) Capture dates, times & observers
+      ##      (Use IPMR if unavailable from Nest and definitive match is possible)
+      CaptureDate = dplyr::case_when(
+        !is.na(.data$CaptureDate) ~ .data$CaptureDate, # This ensures date from full matches (by date) is used when available
+        .data$UnconfirmedIPMRMatch ~ as.Date(NA),
+        !is.na(.data$CaptureDate_Nest) ~ .data$CaptureDate_Nest,
+        is.na(.data$CaptureDate_Nest) ~ .data$CaptureDate_IPMR
+      ),
 
-    ## 7) Add additional age data from brood table (primary data)
+      CaptureTime = dplyr::case_when(
+        is.na(.data$CaptureDate) ~ NA_character_,
+        .data$CaptureDate == .data$CaptureDate_IPMR ~ .data$CaptureTime,
+        TRUE ~ NA_character_
+      ),
+      # NOTE: Think about having criteria for defining certain types of CaptureTimes as NA (e.g. 00:00)
 
-    # Extract female age from brood table
-    FemaleAge_Brood <- Primary_data %>%
-      # Get relevant data
-      dplyr::select(.data$Year, .data$FemaleID, .data$FemaleMinAge, .data$FemaleStatus) %>%
-      dplyr::filter(!is.na(.data$FemaleID)) %>%
-      # Assign unique ID
-      dplyr::rename('RING' = .data$FemaleID,
-                    'BreedingSeason' = .data$Year) %>%
-      dplyr::left_join(ReRingTable, by = 'RING') %>%
-      dplyr::mutate(RING = ifelse(is.na(.data$ReRingID), .data$RING, .data$ReRingID)) %>%
-      # Determine age within each breeding season
-      dplyr::group_by(.data$RING, .data$BreedingSeason) %>%
-        dplyr::mutate(AgeSum = suppressWarnings(max(.data$FemaleMinAge, na.rm = T))) %>%
-      dplyr::ungroup() %>%
-      dplyr::distinct(.data$BreedingSeason, .data$RING, .keep_all = T) %>%
-      dplyr::mutate(AgeBrood = dplyr::case_when(is.na(.data$AgeSum) ~ 4L,
-                                                .data$FemaleStatus == 'R' ~ as.integer(.data$AgeSum)*2L + 3L,
-                                                TRUE ~ as.integer(.data$AgeSum)*2L + 2L),
-                    IndvID = .data$RING,
-                    BreedingSeason = as.integer(BreedingSeason)) %>%
-      dplyr::select(.data$IndvID, .data$BreedingSeason, .data$AgeBrood)
+      ObserverID = dplyr::case_when(
+        is.na(.data$CaptureDate) ~ NA_character_,
+        .data$CaptureDate == .data$CaptureDate_IPMR ~ .data$ObserverID,
+        TRUE ~ NA_character_
+      ),
 
-    # Extract male age from brood table
-    MaleAge_Brood <- Primary_data %>%
-      # Get relevant data
-      dplyr::select(.data$Year, .data$MaleID, .data$MaleMinAge, .data$MaleStatus) %>%
-      dplyr::filter(!is.na(.data$MaleID)) %>%
-      # Assign unique ID
-      dplyr::rename('RING' = .data$MaleID,
-                    'BreedingSeason' = .data$Year) %>%
-      dplyr::left_join(ReRingTable, by = 'RING') %>%
-      dplyr::mutate(RING = ifelse(is.na(.data$ReRingID), .data$RING, .data$ReRingID)) %>%
-      # Determine age within each breeding season
-      dplyr::group_by(.data$RING, .data$BreedingSeason) %>%
-      dplyr::mutate(AgeSum = suppressWarnings(max(.data$MaleMinAge, na.rm = T))) %>%
-      dplyr::ungroup() %>%
-      dplyr::distinct(.data$BreedingSeason, .data$RING, .keep_all = T) %>%
-      dplyr::mutate(AgeBrood = dplyr::case_when(is.na(.data$AgeSum) ~ 4L,
-                                                .data$MaleStatus == 'R' ~ as.integer(.data$AgeSum)*2L + 3L,
-                                                TRUE ~ as.integer(.data$AgeSum)*2L + 2L),
-                    IndvID = .data$RING,
-                    BreedingSeason = as.integer(BreedingSeason)) %>%
-      dplyr::select(.data$IndvID, .data$BreedingSeason, .data$AgeBrood)
+      # 3.2) Species
+      #      (Set to 'CCCCCC' if conflicting)
+      Species = dplyr::case_when(
+        is.na(.data$Species_Nest) ~ .data$Species_IPMR,
+        is.na(.data$Species_IPMR) ~ .data$Species_Nest,
+        .data$Species_Nest == .data$Species_IPMR  ~ .data$Species_Nest,
+        .data$Species_Nest != .data$Species_IPMR ~ 'CCCCCC'
+      ),
+      # MB: These should be flagged as conflicted and checked manually.
+
+      # 3.3) LocationID
+      #     (Use Nest if conflicting and there is no unconfirmed Nest match)
+      #     (Use IPMR if conflicting and there is an unconfirmed Nest match)
+      LocationID = dplyr::case_when(
+        is.na(.data$LocationID_Nest) ~ .data$LocationID_IPMR,
+        is.na(.data$LocationID_IPMR) ~ .data$LocationID_Nest,
+        .data$LocationID_Nest == .data$LocationID_IPMR ~ .data$LocationID_Nest,
+        .data$LocationID_Nest != .data$LocationID_IPMR & !.data$UnconfirmedNestMatch ~ .data$LocationID_Nest,
+        .data$LocationID_Nest != .data$LocationID_IPMR & .data$UnconfirmedNestMatch ~ .data$LocationID_IPMR
+      ),
+      # MB: Generally Nest data priority here (spent a lot of time cleaning this in Nest files).
+      #     Currently exception for conflicts in unconfirmed matches: IPMR priority
+      #     (We may revisit the latter decision at a later point)
 
 
-    # Combine male and female ages and assign unique identifier
-    Age_Brood <- bind_rows(FemaleAge_Brood, MaleAge_Brood)
+      # 3.4) CapturePopID & ReleasePopID
+      CapturePopID = dplyr::case_when(
+        is.na(.data$CapturePopID_Nest) ~ .data$CapturePopID_IPMR,
+        is.na(.data$CapturePopID_IPMR) ~ .data$CapturePopID_Nest,
+        .data$CapturePopID_Nest == .data$CapturePopID_IPMR ~ .data$CapturePopID_Nest,
+        .data$CapturePopID_Nest != .data$CapturePopID_IPMR ~ .data$CapturePopID_Nest
+      ),
+      ReleasePopID = dplyr::case_when(
+        is.na(.data$ReleasePopID_Nest) ~ .data$ReleasePopID_IPMR,
+        is.na(.data$ReleasePopID_IPMR) ~ .data$ReleasePopID_Nest,
+        .data$ReleasePopID_Nest == .data$ReleasePopID_IPMR ~ .data$ReleasePopID_Nest,
+        .data$ReleasePopID_Nest != .data$ReleasePopID_IPMR ~ .data$ReleasePopID_Nest
+      ),
+      # NOTE: There are no occurrences of conflicts here in the data at the moment.
 
-    # Merge age information from brood data into capture data
-    Capture_data <- Capture_data %>%
-      dplyr::left_join(Age_Brood, by = c("IndvID", "BreedingSeason")) %>%
-      dplyr::mutate(Age_observed = dplyr::case_when(is.na(AgeBrood) ~ Age_observed,
-                                                     Age_observed == 1 ~ Age_observed,
-                                                     Age_observed != AgeBrood ~ AgeBrood,
-                                                     Age_observed == AgeBrood ~ Age_observed)) %>%
+      # 3.5) CapturePlot & ReleasePlot
+      CapturePlot = dplyr::case_when(
+        is.na(.data$CapturePlot_Nest) ~ .data$CapturePlot_IPMR,
+        is.na(.data$CapturePlot_IPMR) ~ .data$CapturePlot_Nest,
+        .data$CapturePlot_Nest == .data$CapturePlot_IPMR ~ .data$CapturePlot_Nest,
+        .data$CapturePlot_Nest != .data$CapturePlot_IPMR ~ .data$CapturePlot_Nest
+      ),
+      ReleasePlot = dplyr::case_when(
+        is.na(.data$ReleasePlot_Nest) ~ .data$ReleasePlot_IPMR,
+        is.na(.data$ReleasePlot_IPMR) ~ .data$ReleasePlot_Nest,
+        .data$ReleasePlot_Nest == .data$ReleasePlot_IPMR ~ .data$ReleasePlot_Nest,
+        .data$ReleasePlot_Nest != .data$ReleasePlot_IPMR ~ .data$ReleasePlot_Nest
+      ),
+      # MB: Nest data priority here too
 
-    ## 8) Exclude entries not included in the standard format
+      # 3.6) Trait measurements (Mass & Tarsus & OriginalTarusMethod)
+      Mass = dplyr::case_when(
+        is.na(.data$Mass_Nest) ~ .data$Mass_IPMR,
+        is.na(.data$Mass_IPMR) ~ .data$Mass_Nest,
+        .data$Mass_Nest == .data$Mass_IPMR ~ .data$Mass_Nest,
+        .data$Mass_Nest != .data$Mass_IPMR ~ .data$Mass_Nest
+      ),
+      # MB: IPMR only lets you record one digit, so go with nest (more information)
 
-    # Remove all individuals from species not included in species_codes
-    dplyr::filter(.data$Species %in% species_codes$Species) %>%
+      Tarsus = dplyr::case_when(
+        is.na(.data$Tarsus_Nest) ~ .data$Tarsus_IPMR,
+        is.na(.data$Tarsus_IPMR) ~ .data$Tarsus_Nest,
+        .data$Tarsus_Nest == .data$Tarsus_IPMR ~ .data$Tarsus_Nest,
+        .data$Tarsus_Nest != .data$Tarsus_IPMR ~ .data$Tarsus_Nest
+      ),
+      # MB: IPMR only lets you record one digit, so go with nest (more information)
 
-    # Remove all observations not involving a capture/dead recovery (i.e. resightings)
-    dplyr::filter(.data$RTYPE != 'O') %>%
+      OriginalTarsusMethod = dplyr::case_when(
+        is.na(.data$Tarsus_Nest) ~ .data$OriginalTarsusMethod_IPMR,
+        is.na(.data$Tarsus_IPMR) ~ .data$OriginalTarsusMethod_Nest,
+        .data$Tarsus_Nest == .data$Tarsus_IPMR ~ .data$OriginalTarsusMethod_Nest,
+        .data$Tarsus_Nest != .data$Tarsus_IPMR ~ .data$OriginalTarsusMethod_Nest
+      ),
 
-    # NOTE: For now, we are excluding "resightings" from the output.
-    #       However, we may change this following a future update of the standard protocol with the inclusion of a "CaptureType" variable (which will allow to distinguish recaptures and resightings)
+      # NOTE: There are no occurrences of conflicts here in the data at the moment.
 
-    ## 9) Calculate age at capture
+      # 3.7) Age_observed
+      Age_observed = dplyr::case_when(
+        is.na(.data$Age_observed_Nest) ~ .data$Age_observed_IPMR,
+        is.na(.data$Age_observed_IPMR) ~ .data$Age_observed_Nest,
+        .data$Age_observed_Nest == .data$Age_observed_IPMR ~ .data$Age_observed_Nest,
+        .data$Age_observed_Nest < 4 & .data$Age_observed_IPMR < 4 ~ .data$Age_observed_Nest,
+        .data$Age_observed_Nest >= 4 & .data$Age_observed_IPMR >= 4 ~ .data$Age_observed_Nest
+        # In situations in which there is conflicting info on whether an individual was
+        # a chick (>4) or an adult (>=4), Age_observed is currently set to NA.
+        # These records are always mistakes in the raw data, and are best pointed out and resolved there.
+      ),
+
+      # MB: There should not be age classes 2 or 3 in a nest capture --> if we have nest data age 1, we should always stick with that (--> are there even any cases where this happens?)
+      # MB: some ringers think they can age birds >4 in the field (-> IPMR data), but they are often not correct
+
+      # 3.8) Sex_observed
+      Sex_observed = dplyr::case_when(
+        is.na(.data$Sex_observed_Nest) ~ .data$Sex_observed_IPMR,
+        is.na(.data$Sex_observed_IPMR) ~ .data$Sex_observed_Nest,
+        .data$Sex_observed_Nest == .data$Sex_observed_IPMR  ~ .data$Sex_observed_Nest,
+        .data$Sex_observed_Nest != .data$Sex_observed_IPMR ~ 'C'
+      ),
+
+      # 3.9) CaptureAlive & ReleaseAlive
+      CaptureAlive = dplyr::case_when(
+        is.na(.data$CaptureAlive_Nest) ~ .data$CaptureAlive_IPMR,
+        is.na(.data$CaptureAlive_IPMR) ~ .data$CaptureAlive_Nest,
+        .data$CaptureAlive_Nest == .data$CaptureAlive_IPMR ~ .data$CaptureAlive_Nest,
+        .data$CaptureAlive_Nest != .data$CaptureAlive_IPMR ~ .data$CaptureAlive_IPMR
+      ),
+      ReleaseAlive = dplyr::case_when(
+        is.na(.data$ReleaseAlive_Nest) ~ .data$ReleaseAlive_IPMR,
+        is.na(.data$ReleaseAlive_IPMR) ~ .data$ReleaseAlive_Nest,
+        .data$ReleaseAlive_Nest == .data$ReleaseAlive_IPMR ~ .data$ReleaseAlive_Nest,
+        .data$ReleaseAlive_Nest != .data$ReleaseAlive_IPMR ~ .data$ReleaseAlive_IPMR
+      )
+      # MB: Priority to IPMR because adults found dead in boxes will still be recorded as breeding males/females in nest file
+
+    ) %>%
+
+
+    ## 4) Calculate age at capture
 
     # Sort chronologically within individual
-    dplyr::arrange(.data$IndvID, .data$CaptureDate, .data$CaptureTime) %>%
+    dplyr::arrange(.data$IndvID, .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
 
     #Calculate age at each capture based on first capture
+    # NOTE: Ideally, this will be done for data from all populations together (to correctly calculate age of known immigrants)
     calc_age(ID = .data$IndvID, Age = .data$Age_observed, Date = .data$CaptureDate, Year = .data$BreedingSeason) %>%
 
 
-    ## 2) Subset ringing database to contain only captures relevant to population
-    dplyr::filter(CapturePlot %in% unique(Primary_data$Popn)) %>%
+    ## 5) Remove captures from individuals not part of any included populations
+    dplyr::filter(!is.na(.data$CapturePopID)) %>%
 
-
-    ## 10) Make CaptureID
+    ## 6) Make CaptureID
 
     # Write unique capture identifier as IndvID-CaptureNumber
     dplyr::group_by(.data$IndvID) %>%
@@ -559,28 +923,261 @@ create_capture_EDM <- function(CMR_data, Primary_data, ReRingTable){
                   .data$CapturePopID, .data$CapturePlot, .data$ReleasePopID, .data$ReleasePlot,
                   .data$Mass, .data$Tarsus, .data$OriginalTarsusMethod, .data$WingLength,
                   .data$Age_observed, .data$Age_calculated, .data$ExperimentID,
-                  .data$BroodID)
+                  .data$BroodID, .data$PULALIV)
 
-  ## 12) Return data
+  # Return complete Capture data
+  return(Capture_data)
+
+}
+
+
+#' Extract capture data table for PiedFlyNet populations from
+#' Nest primary data.
+#'
+#' @param Nest_data Collated Nest primary data from PiedFlyNet populations
+#' @param ReRingTable Table containing ring numbers and unique identifiers for all individuals
+#' @param badIDs Vector containing non-conslusive IDs (extracted from Nest data)
+
+create_capture_Nest_PFN <- function(Nest_data, ReRingTable, badIDs){
+
+  Capture_data <- Nest_data
+
+  # 1) Extract male capture data
+  Male_Capture_data <- data.frame(IndvID = Capture_data$MaleID,
+                                  BroodID = NA_character_, # Will be removed later
+                                  Species_Nest = case_when(Capture_data$Species %in% c("BLUTI", "BLUTI ") ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
+                                                           Capture_data$Species == "PIEFL" ~ species_codes[species_codes$SpeciesID == 13490, ]$Species,
+                                                           Capture_data$Species %in% c("GRETI", "GRETI ") ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
+                                                           Capture_data$Species == "REDST" ~ species_codes[species_codes$SpeciesID == 11220, ]$Species,
+                                                           Capture_data$Species == "MARTI" ~ species_codes[species_codes$SpeciesID == 14400, ]$Species,
+                                                           Capture_data$Species == "NUTHA" ~ species_codes[species_codes$SpeciesID == 14790, ]$Species,
+                                                           Capture_data$Species == "COATI" ~ species_codes[species_codes$SpeciesID == 14610, ]$Species,
+                                                           Capture_data$Species == "WREN" ~ NA_character_, # Not currently included, 1 observation only
+                                                           Capture_data$Species == "TREEC" ~ NA_character_), # Not currently, 1 observation only
+                                  BreedingSeason = as.integer(Capture_data$Year),
+                                  CaptureDate = as.Date(Capture_data$MaleDate, format = "%d/%m/%Y"),
+                                  LocationID_Nest = Capture_data$Box,
+                                  CapturePopID_Nest = Capture_data$PopID,
+                                  CapturePlot_Nest = Capture_data$Popn,
+                                  ReleasePopID_Nest = Capture_data$PopID,
+                                  ReleasePlot_Nest = Capture_data$Popn,
+                                  Mass_Nest = NA_real_,
+                                  Tarsus_Nest = NA_real_,
+                                  OriginalTarsusMethod_Nest = NA_character_,
+                                  #WingLength = NA_real_,
+                                  Age_observed_Nest = dplyr::case_when(is.na(Capture_data$MaleMinAge) ~ 4L,
+                                                                       Capture_data$MaleStatus == 'R' ~ as.integer(Capture_data$MaleMinAge)*2L + 3L,
+                                                                       TRUE ~ as.integer(Capture_data$MaleMinAge)*2L + 2L),
+                                  Sex_observed_Nest = "M",
+                                  CaptureAlive_Nest = TRUE,
+                                  ReleaseAlive_Nest = TRUE)
+
+  # 2) Extract female capture data
+  Female_Capture_data <- data.frame(IndvID = Capture_data$FemaleID,
+                                    BroodID = NA_character_, # Will be removed later
+                                    Species_Nest = case_when(Capture_data$Species %in% c("BLUTI", "BLUTI ") ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
+                                                             Capture_data$Species == "PIEFL" ~ species_codes[species_codes$SpeciesID == 13490, ]$Species,
+                                                             Capture_data$Species %in% c("GRETI", "GRETI ") ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
+                                                             Capture_data$Species == "REDST" ~ species_codes[species_codes$SpeciesID == 11220, ]$Species,
+                                                             Capture_data$Species == "MARTI" ~ species_codes[species_codes$SpeciesID == 14400, ]$Species,
+                                                             Capture_data$Species == "NUTHA" ~ species_codes[species_codes$SpeciesID == 14790, ]$Species,
+                                                             Capture_data$Species == "COATI" ~ species_codes[species_codes$SpeciesID == 14610, ]$Species,
+                                                             Capture_data$Species == "WREN" ~ NA_character_, # Not currently included, 1 observation only
+                                                             Capture_data$Species == "TREEC" ~ NA_character_), # Not currently, 1 observation only
+                                    BreedingSeason = as.integer(Capture_data$Year),
+                                    CaptureDate = as.Date(Capture_data$FemaleDate, format = "%d/%m/%Y"),
+                                    LocationID_Nest = Capture_data$Box,
+                                    CapturePopID_Nest = Capture_data$PopID,
+                                    CapturePlot_Nest = Capture_data$Popn,
+                                    ReleasePopID_Nest = Capture_data$PopID,
+                                    ReleasePlot_Nest = Capture_data$Popn,
+                                    Mass_Nest = NA_real_,
+                                    Tarsus_Nest = NA_real_,
+                                    OriginalTarsusMethod_Nest = NA_character_,
+                                    #WingLength = NA_real_,
+                                    Age_observed_Nest = dplyr::case_when(is.na(Capture_data$FemaleMinAge) ~ 4L,
+                                                                         Capture_data$FemaleStatus == 'R' ~ as.integer(Capture_data$FemaleMinAge)*2L + 3L,
+                                                                         TRUE ~ as.integer(Capture_data$FemaleMinAge)*2L + 2L),
+                                    Sex_observed_Nest = "F",
+                                    CaptureAlive_Nest = TRUE,
+                                    ReleaseAlive_Nest = TRUE)
+
+  # 3) Extract chick capture data
+  Chick_Capture_list <- list()
+  for(i in 1:nrow(Capture_data)){
+    Chick_Capture_list[[i]] <- data.frame(IndvID = unname(t(Capture_data[i, paste0("Young", c(1:11))])),
+                                          BroodID = paste0(Capture_data$PopID[i], "-", Capture_data$BroodID[i]), # Will be removed later
+                                          Species_Nest = case_when(Capture_data$Species[i] %in% c("BLUTI", "BLUTI ") ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
+                                                                   Capture_data$Species[i] == "PIEFL" ~ species_codes[species_codes$SpeciesID == 13490, ]$Species,
+                                                                   Capture_data$Species[i] %in% c("GRETI", "GRETI ") ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
+                                                                   Capture_data$Species[i] == "REDST" ~ species_codes[species_codes$SpeciesID == 11220, ]$Species,
+                                                                   Capture_data$Species[i] == "MARTI" ~ species_codes[species_codes$SpeciesID == 14400, ]$Species,
+                                                                   Capture_data$Species[i] == "NUTHA" ~ species_codes[species_codes$SpeciesID == 14790, ]$Species,
+                                                                   Capture_data$Species[i] == "COATI" ~ species_codes[species_codes$SpeciesID == 14610, ]$Species,
+                                                                   Capture_data$Species[i] == "WREN" ~ NA_character_, # Not currently included, 1 observation only
+                                                                   Capture_data$Species[i] == "TREEC" ~ NA_character_), # Not currently, 1 observation only
+                                          BreedingSeason = as.integer(Capture_data$Year[i]),
+                                          CaptureDate = as.Date(Capture_data$YoungDate[i], format = "%d/%m/%Y"),
+                                          LocationID_Nest = Capture_data$Box[i],
+                                          CapturePopID_Nest = Capture_data$PopID[i],
+                                          CapturePlot_Nest = Capture_data$Popn[i],
+                                          ReleasePopID_Nest = Capture_data$PopID[i],
+                                          ReleasePlot_Nest = Capture_data$Popn[i],
+                                          Mass_Nest = as.numeric(Capture_data[i, paste0("Weight.Y", c(1:11))]),
+                                          Tarsus_Nest = as.numeric(Capture_data[i, paste0("Tarsus.Y", c(1:11))]),
+                                          OriginalTarsusMethod_Nest = "Alternative",
+                                          #WingLength = NA_real_,
+                                          Age_observed_Nest = 1L,
+                                          Sex_observed_Nest = NA_character_,
+                                          CaptureAlive_Nest = TRUE,
+                                          ReleaseAlive_Nest = TRUE)
+  }
+
+  Chick_Capture_data <- dplyr::bind_rows(Chick_Capture_list)
+
+
+  # 4) Combine data
+  Capture_data <- dplyr::bind_rows(Chick_Capture_data, Male_Capture_data, Female_Capture_data) %>%
+
+    # 5) Split captures for cases in which two individuals were reported in the same field (IDs separates by "/")
+    tidyr::separate_rows(.data$IndvID, sep = '/') %>%
+
+    # 6) Remove all individuals with missing IDs and/or from species not included in Species_codes
+    dplyr::filter(Species_Nest %in% species_codes$Species & !is.na(IndvID) & !(IndvID%in%badIDs)) %>%
+
+    # 7) Add a unique row identifier
+    dplyr::mutate(rowNo_Nest = dplyr::row_number())
+
+  # 8) Adjust IndvID for re-ringed individuals
+  Capture_data <- left_join(Capture_data, ReRingTable, by = c('IndvID' = 'RingNr')) %>%
+    dplyr::mutate(IndvID = dplyr::case_when(is.na(.data$ReRingID) ~ .data$IndvID,
+                                            .data$IndvID != .data$ReRingID ~ .data$ReRingID,
+                                            .data$IndvID == .data$ReRingID ~ .data$IndvID))
+
+  # 9) Return data
+  return(Capture_data)
+
+}
+
+
+#' Extract capture data table for PiedFlyNet populations from
+#' IPMR primary data.
+#'
+#' @param IPMR_data Collated IPMR primary data from PiedFlyNet populations
+#' @param Nest_data Collated Nest primary data from PiedFlyNet populations
+#' @param ReRingTable Table containing ring numbers and unique identifiers for all individuals
+
+create_capture_IPMR_PFN <- function(IPMR_data, Nest_data, ReRingTable){
+
+
+  ## 1) Rename columns that are equivalent (content and format) to columns in the standard format
+  Capture_data <- IPMR_data %>%
+    dplyr::rename(IndvID = .data$RING,
+                  CapturePlot_IPMR = .data$PLACE,
+                  Sex_observed_IPMR = .data$SEX) %>%
+
+    ## 2) Add population ID and reformat colums with equivalent content but different format
+    dplyr::mutate(PopID = dplyr::case_when(!is.na(.data$PopID) ~ .data$PopID,
+                                           .data$CapturePlot_IPMR %in% c("YAR", "BVW", "NEA") ~ "EDM",
+                                           .data$CapturePlot_IPMR %in% c("BRWD", "STEPS", "HITCH") ~ "TEI",
+                                           .data$CapturePlot_IPMR %in% c("OKECAS", "MELD", "MELDON", "OKEHAM", "FATOKE", "EASOKE", "BELSTO") ~ "OKE"),
+
+                  Species_IPMR = dplyr::case_when(.data$SPEC == "BLUTI" ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
+                                                  .data$SPEC %in% c("PIEFL", "Pied Flycatcher") ~ species_codes[species_codes$SpeciesID == 13490, ]$Species,
+                                                  .data$SPEC == "GRETI" ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
+                                                  .data$SPEC %in% c("REDST", "Redstart") ~ species_codes[species_codes$SpeciesID == 11220, ]$Species,
+                                                  .data$SPEC == "MARTI" ~ species_codes[species_codes$SpeciesID == 14400, ]$Species,
+                                                  .data$SPEC == "NUTHA" ~ species_codes[species_codes$SpeciesID == 14790, ]$Species,
+                                                  .data$SPEC == "COATI" ~ species_codes[species_codes$SpeciesID == 14610, ]$Species),
+
+                  LocationID_IPMR = dplyr::case_when(.data$SITE == "MILL" ~ "Foxworthy Mill", # Specific EDM location
+                                                     .data$SITE == "HIDE2" ~ "HIDE1D", # Specific EDM location
+                                                     .data$PopID == "EDM" ~ .data$SITE, # Remaining EDM locations (perfect matches)
+                                                     .data$PopID == "DIN" ~ .data$SITE_DIN,
+                                                     #.data$PopID %in% c("TEI", "OKE") & stringr::str_detect(.data$SITE, "[[:digit:]]") ~ as.character(readr::parse_number(.data$SITE)), # TEI and OKE locations (number match)
+                                                     .data$PopID %in% c("TEI", "OKE") & stringr::str_detect(.data$SITE, "[[:digit:]]") ~ gsub(".*?([0-9]+).*", "\\1", .data$SITE),
+                                                     TRUE ~ .data$SITE), # All other conditions
+
+                  CaptureDate = as.Date(.data$DATE, format = "%d/%m/%Y"),
+                  CaptureTime = ifelse(!grepl("00:00", .data$DATE), sub(".* ", "", .data$DATE), NA),
+                  ObserverID = dplyr::case_when(!is.na(.data$INIT) ~ .data$INIT,
+                                                is.na(.data$INIT) & !is.na(.data$RINGINIT) ~ .data$RINGINIT),
+                  CapturePopID_IPMR = .data$PopID,
+                  ReleasePopID_IPMR = .data$PopID,
+                  ReleasePlot_IPMR = .data$CapturePlot_IPMR,
+                  Mass_IPMR = as.numeric(.data$WT),
+                  Tarsus_IPMR = dplyr::case_when(is.na(.data$TSMTD) ~ as.numeric(.data$TARSUS),
+                                                 .data$TSMTD == "S" ~ as.numeric(.data$TARSUS),
+                                                 .data$TSMTD == "M" ~ (x = convert_tarsus(as.numeric(.data$TARSUS), method = "Oxford"))),
+                  OriginalTarsusMethod_IPMR = dplyr::case_when(is.na(.data$TSMTD) ~ "Alternative",
+                                                               .data$TSMTD == "S" ~ "Alternative",
+                                                               .data$TSMTD == "M" ~ "Oxford"),
+                  WingLength = as.numeric(.data$WING),
+                  Age_observed_IPMR = as.integer(str_remove(.data$AGE, "J")),
+                  stringsAsFactors = FALSE) %>%
+
+    ## 3) Add additional columns that need to be derived from original columns
+    dplyr::mutate(BreedingSeason = as.integer(format(.data$CaptureDate, "%Y")),
+                  CaptureAlive_IPMR = ifelse(.data$RTYPE == "X", FALSE, TRUE),
+                  ReleaseAlive_IPMR = ifelse(.data$RTYPE == "X", FALSE, TRUE),
+                  ExperimentID = dplyr::case_when(.data$COND == "M" ~ "SURVIVAL",
+                                                  is.na(.data$COND) ~ NA_character_)
+    ) %>%
+
+
+    ## 4) Exclude entries not included in the standard format
+
+    # Remove all individuals from species not included in Species_codes
+    dplyr::filter(.data$Species_IPMR %in% species_codes$Species) %>%
+
+    # Remove all observations not involving a capture/dead recovery (i.e. resightings)
+    dplyr::filter(.data$RTYPE != 'O') %>%
+
+    # NOTE: For now, we are excluding "resightings" from the output.
+    #       However, we may change this following a future update of the standard protocol with the inclusion of a "CaptureType" variable (which will allow to distinguish recaptures and resightings)
+
+    ## 5) Add a unique row identifier
+    dplyr::mutate(rowNo_IPMR = dplyr::row_number()) %>%
+
+    ## 6) Adjust IndvID for re-ringed individuals
+    dplyr::left_join(ReRingTable, by = c('IndvID' = 'RingNr')) %>%
+    dplyr::mutate(IndvID = dplyr::case_when(is.na(.data$ReRingID) ~ .data$IndvID,
+                                            .data$IndvID != .data$ReRingID ~ .data$ReRingID,
+                                            .data$IndvID == .data$ReRingID ~ .data$IndvID)) %>%
+
+    ## 7) Select required columns
+    dplyr::select(.data$IndvID, .data$Species_IPMR, .data$Sex_observed_IPMR,
+                  .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime, .data$ObserverID,
+                  .data$LocationID_IPMR, .data$CaptureAlive_IPMR, .data$ReleaseAlive_IPMR,
+                  .data$CapturePopID_IPMR, .data$CapturePlot_IPMR, .data$ReleasePopID_IPMR, .data$ReleasePlot_IPMR,
+                  .data$Mass_IPMR, .data$Tarsus_IPMR, .data$OriginalTarsusMethod_IPMR, .data$WingLength,
+                  .data$Age_observed_IPMR, .data$ExperimentID, .data$rowNo_IPMR,
+                  .data$PULALIV)
+
+  ## 7) Return data
   return(Capture_data)
 }
 
-#' Create individual data table for EastDartmoor.
+
+#****************************#
+# INDIVIDUAL DATA FORMATTING #
+#****************************#
+
+#' Create individual data table for PiedFlyNet populations
 #'
-#' @param Capture_data Capture data table generated by create_capture_EDM
+#' @param Capture_data Capture data table generated by `create_capture_PFN`
 #'
 #' @return A data frame with Individual data
 
-create_individual_EDM <- function(Capture_data){
+create_individual_PFN <- function(Capture_data){
 
   #Take capture data and determine summary data for each individual
   Indv_data <- Capture_data %>%
-    dplyr::arrange(.data$IndvID, .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
-    dplyr::group_by(.data$IndvID) %>%
+    dplyr::arrange(.data$CapturePopID, .data$IndvID, .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
+    dplyr::group_by(.data$CapturePopID, .data$IndvID) %>%
 
-    #* CN: Loop over the species assigned to each individual and check the number of different assignments
 
-    dplyr::summarise(Species = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Species))), .f = ~{
+    dplyr::summarise(Species = purrr::map_chr(.x = list(unique(na.omit(.data$Species))), .f = ~{
 
       if(length(..1) == 0){
 
@@ -596,12 +1193,29 @@ create_individual_EDM <- function(Capture_data){
 
       }
 
-    }), PopID = "EDM",
-    BroodIDLaid = first(.data$BroodID),
+    }),
+    PopID = first(.data$CapturePopID),
+    BroodIDLaid = purrr::map_chr(.x = list(unique(na.omit(.data$BroodID))), .f = ~{
+
+      if(length(..1) == 0){
+
+        return(NA_character_)
+
+      } else if(length(..1) == 1){
+
+        return(..1)
+
+      } else {
+
+        return("CONFLICTED")
+
+      }
+
+    }),
     BroodIDFledged = .data$BroodIDLaid, # Identical, as no cross-fostering experiments were made
     RingSeason = first(.data$BreedingSeason),
     RingAge = ifelse(any(.data$Age_calculated %in% c(1, 3)), "chick", ifelse(min(.data$Age_calculated) == 2, NA_character_, "adult")),
-    Sex_calculated = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Sex_observed))), .f = ~{
+    Sex_calculated = purrr::map_chr(.x = list(unique(na.omit(.data$Sex_observed))), .f = ~{
 
       if(length(..1) == 0){
 
@@ -617,7 +1231,7 @@ create_individual_EDM <- function(Capture_data){
 
       }
 
-    })) %>%
+    }), .groups = "keep") %>%
     dplyr::rowwise() %>%
 
 
