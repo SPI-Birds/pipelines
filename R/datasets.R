@@ -159,3 +159,24 @@ checkID_variable_combos <- utils::read.csv(system.file("extdata", "checkID_varia
 #'
 #' @name chick_mass_cutoffs
 NULL
+
+#' List of standard format column names (protocol version 1.1)
+#'
+#' All columns names appearing in the 4 tables of the standard format, organized
+#' in a list.
+#' @format A list with 4 elements. Each element is a character vector.
+#' \describe{
+#'   \item{Brood}{Column names in `Brood_data`.}
+#'   \item{Capture}{Column names in `Capture_data`.}
+#'   \item{Individual}{Column names in `Individual_data`.}
+#'   \item{Location}{Column names in `Location_data`.}
+#'   }
+#'@name column_names_v1.1
+column_names_df_v1.1 <- utils::read.csv(system.file("extdata", "column_names_v1.1.csv", package = "pipelines", mustWork = TRUE), na.strings = "")
+column_names_v1.1 <- list(
+  Brood = column_names_df_v1.1$Brood[which(!is.na(column_names_df_v1.1$Brood))],
+  Capture = column_names_df_v1.1$Capture[which(!is.na(column_names_df_v1.1$Capture))],
+  Individual = column_names_df_v1.1$Individual[which(!is.na(column_names_df_v1.1$Individual))],
+  Location = column_names_df_v1.1$Location[which(!is.na(column_names_df_v1.1$Location))]
+)
+rm(column_names_df_v1.1)
