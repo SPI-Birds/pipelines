@@ -23,10 +23,12 @@
 #'
 #' @examples
 #' library(dplyr)
-#' Brood_data <- tibble::tibble(BroodID = rep(c(1:10), 2), PopID = rep('XXX', 'YYY', each = 2),
-#'                              LocationID = rep(LETTERS[c(1,3,1,1,2,3,1,2,1,2)], 2),
-#'                              BreedingSeason = sort(sample(2012:2016, 10, replace = TRUE)))
-#' calc_birdNBuse(Brood_data)
+#' Brood_data <- tibble::tibble(BroodID = rep(c(1:5), 2),
+#'                             PopID = rep(c('XXX', 'YYY'), each = 5),
+#'                             LocationID = LETTERS[c(1,2,1,1,2,2,1,2,1,2)],
+#'                             BreedingSeason = c(2001, 2001, 2002, 2003, 2003, 1962, 1963, 1963, 1965, 1965))
+#'calc_birdNBuse(Brood_data)
+
 
 calc_birdNBuse <- function(Brood_data){
 
