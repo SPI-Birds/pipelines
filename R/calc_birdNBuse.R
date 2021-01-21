@@ -24,9 +24,10 @@
 #' @examples
 #' library(dplyr)
 #' Brood_data <- tibble::tibble(BroodID = rep(c(1:5), 2),
-#'                             PopID = rep(c('XXX', 'YYY'), each = 5),
-#'                             LocationID = LETTERS[c(1,2,1,1,2,2,1,2,1,2)],
-#'                             BreedingSeason = c(2001, 2001, 2002, 2003, 2003, 1962, 1963, 1963, 1965, 1965))
+#'                              PopID = rep(c('XXX', 'YYY'), each = 5),
+#'                              LocationID = LETTERS[c(1,2,1,1,2,2,1,2,1,2)],
+#'                              BreedingSeason = c(2001, 2001, 2002, 2003, 2003,
+#'                              1962, 1963, 1963, 1965, 1965))
 #'calc_birdNBuse(Brood_data)
 
 

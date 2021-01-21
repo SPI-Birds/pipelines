@@ -2,7 +2,7 @@
 % Please edit documentation in R/format_PFN.R
 \name{format_PFN}
 \alias{format_PFN}
-\title{Construct standard format for data from East Dartmoor, UK}
+\title{Construct standard format PiedFlyNet data}
 \usage{
 format_PFN(
   db = choose_directory(),
@@ -34,8 +34,8 @@ this argument can be ignored.}
 Generates either 4 .csv files or 4 data frames in the standard format.
 }
 \description{
-A pipeline to produce the standard format for the hole-nesting bird population
-in East Dartmoor, UK, administered by PiedFlyNet.
+A pipeline to produce the standard format for the hole-nesting bird populations
+monitored/administered by PiedFlyNet.
 }
 \details{
 This section provides details on data management choices that are unique to
@@ -49,42 +49,49 @@ ater}; marsh tit \emph{Poecile palustris}, and common redstart \emph{Phoenicurus
 Other minority species are excluded.
 
 \strong{Primary data sources}: Brood data is extracted from data in a
-brood table/nest monitoring format. 'Capture data is extracted from Malcolm Burgess'
-version of the BTO ringing database for all birds marked within the PiedFlyNet.
-The format of this ringing data is IPMR, the 'old' BTO ringing database format, and Malcolm
+brood table/nest monitoring format ("Nest data"). Capture data is extracted from both
+Nest data and Malcolm Burgess' version of the BTO ringing database for birds marked within
+the PiedFlyNet ("IPMR data"). The format of this ringing data is IPMR, the 'old' BTO ringing database format, and Malcolm
 has his own pipeline to convert the new BTO ringing database format to the old one.
-Since all chick measurements are complete in the brood table/nest monitoring data but some have
-not been added to the BTO ringing data, the pipeline merges chick trait values from the former
-into Capture data. Similarly, parent age information is more detailed in the brood table/nest
-monitoring data, and therefore merged into Capture data (and given priority over age information
-from the BTO ringing data).
+Nest data is available for all populations, IPMR data is not.
+Some information on captures is present in Nest and IPMR data, while some information is
+exclusive to either data source. See the documentation of `create_capture_PFN()` for
+a description of how data from Nest and IPMR data is consolidated.
 
-\strong{Unidentified individuals}: Some individuals have not been given unique IDs. They appear
-in the primary data as "RUNT", "ringed", "ringed left", "ringed right", "unringed", or "Unringed",
-and the pipeline recognizes them as improper IDs as they do not follow the standard format of ring
+\strong{Unidentified individuals}: Some individuals have not been given unique IDs. The pipleline
+recognizes these as improper IDs as they do not follow the standard format of ring
 numbers for this data (defined as a sequences of 1-9 letters followed by a sequence of 1-9 integer numbers).
 In the Brood data, we assume unknown identity for individuals with improper IDs and treat ID as NA.
 From Capture data and Individual data, these individuals are omitted entirely.
 
 \strong{Re-ringing events}: Some individuals carry multiple rings (up to 3 in this data) throughout
-their lives, and re-ringing events are recorded in the BTO ringing database. To correctly link data to
+their lives, and re-ringing events are recorded in IPMR data. To correctly link data to
 individuals (not just ring numbers), the pipeline assigns a unique individual identifier defined as
 the number of the first ring ever given to this individual.
 
-\strong{Resightings}: The capture primary data contains some resightings of birds. At present, these
+\strong{Resightings}: The IPMR primary data contains some resightings of birds. At present, these
 records are excluded from the outputs because the standard format for capture data cannot distinguish
 between recaptures and resightings in its current state. Functionality do do this (i.e. via a "capture type" variable)
 may be added to a future update of the standard format.
 
 \strong{Age calculation}: The age of each bird is estimated based on its history of ringing and recaptures.
-Since some birds that breed in East Dartmoor may have been ringed in another study sites (= immigrants), the
-pipeline calculates age based on capture histories from the entire BTO ringing database, not just ringing/captures
-in locations within the East Dartmoor study site.
+Since some birds that breed in one of the focal populations may have been ringed in another study sites (= immigrants), the
+pipeline calculates age for birds in any one population based on capture records in all monitored populations,
+and not just ringing/captures in locations within the specifc study site.
 
 \strong{LayDate_observed and HatchDate_observed}: Information is provided as date of first egg (DFE) and
 date of hatching (DH). These are given as integer number, and represent days after a set
 starting date (day 0). Day 0 is defined as 31. March.
 
 \strong{ChickAge}: For every capture, we estimate the age of a chick as the difference between the hatch date
-taken from BroodIDFledged (in Individual_data) and the CaptureDate.
+taken from `BroodIDFledged` (in `Individual_data`) and the `CaptureDate`.
+
+#'\strong{Location information}: This is generated for all nestboxes (from Nest data)
+and all additional capture locations (IPMR data). For East Dartmoor, detailed
+information on location (`Latitude`, `Longitude`) and the period a nestbox has
+been deployed (´StartSeason`, `EndSeason`) is available and incorporated. For
+All other populations, this data is not available at present. Locations for other
+populations therefore have no coordinate information, and `StartSeason` and
+`EndSeason` are calculated as the first and last year in which birds were
+observed to be breeding within a box.
 }

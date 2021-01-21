@@ -253,7 +253,7 @@ format_PFN <- function(db = choose_directory(),
   #--------------------------------------#
 
   # Create a vector of all non-NA ID records in the Nest data (males, females, and chicks)
-  allIDs <- na.omit(c(Nest_data$MaleID, Nest_data$FemaleID, Nest_data$Young1,
+  allIDs <- stats::na.omit(c(Nest_data$MaleID, Nest_data$FemaleID, Nest_data$Young1,
                       Nest_data$Young2, Nest_data$Young3, Nest_data$Young4,
                       Nest_data$Young5, Nest_data$Young6, Nest_data$Young7,
                       Nest_data$Young8, Nest_data$Young9, Nest_data$Young10,
@@ -583,7 +583,7 @@ create_capture_PFN <- function(Nest_data, IPMR_data, ReRingTable, badIDs){
   Duplicates_Full_Nest <- Captures_FullMatch %>%
     dplyr::filter(!is.na(.data$rowNo_Nest)) %>%
     dplyr::mutate(Duplicate_NestCapture = ifelse(duplicated(.data$rowNo_Nest) | duplicated(.data$rowNo_Nest, fromLast = TRUE), 1,0)) %>%
-    dplyr::filter(Duplicate_NestCapture == 1) %>%
+    dplyr::filter(.data$Duplicate_NestCapture == 1) %>%
 
     # Determining true matches...
     dplyr::mutate(TrueMatch_Nest = dplyr::case_when(
@@ -605,7 +605,7 @@ create_capture_PFN <- function(Nest_data, IPMR_data, ReRingTable, badIDs){
   Duplicates_Full_IPMR <- Captures_FullMatch %>%
     dplyr::filter(!is.na(.data$rowNo_IPMR)) %>%
     dplyr::mutate(Duplicate_IPMRCapture = ifelse(duplicated(.data$rowNo_IPMR) | duplicated(.data$rowNo_IPMR, fromLast = TRUE), 1,0)) %>%
-    dplyr::filter(Duplicate_IPMRCapture == 1) %>%
+    dplyr::filter(.data$Duplicate_IPMRCapture == 1) %>%
 
     # Determining true matches...
 
@@ -618,7 +618,7 @@ create_capture_PFN <- function(Nest_data, IPMR_data, ReRingTable, badIDs){
     #...based on whether another capture in the set was assigned as the true match
     dplyr::group_by(.data$rowNo_IPMR) %>%
     dplyr::mutate(
-      MatchedSet = ifelse(any(TrueMatch_IPMR == 1, na.rm = T), TRUE, FALSE)
+      MatchedSet = ifelse(any(.data$TrueMatch_IPMR == 1, na.rm = T), TRUE, FALSE)
     ) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(
@@ -641,7 +641,7 @@ create_capture_PFN <- function(Nest_data, IPMR_data, ReRingTable, badIDs){
                                                          .data$TrueMatch_Nest == 1 ~ FALSE,
                                                          .data$TrueMatch_IPMR == 1 ~ FALSE,
                                                          TRUE ~ TRUE)) %>%
-    dplyr::filter(!(DropRecord))
+    dplyr::filter(!(.data$DropRecord))
 
 
   ## 2.4) Remove full matches from both datasets (using row identifiers) & rename CaptureDate columns
@@ -682,7 +682,7 @@ create_capture_PFN <- function(Nest_data, IPMR_data, ReRingTable, badIDs){
   Duplicates_Likely_Nest <- Captures_LikelyMatch %>%
     dplyr::filter(!is.na(.data$rowNo_Nest) & !is.na(.data$rowNo_IPMR)) %>%
     dplyr::mutate(Duplicate_NestCapture = ifelse(duplicated(.data$rowNo_Nest) | duplicated(.data$rowNo_Nest, fromLast = TRUE), 1,0)) %>%
-    dplyr::filter(Duplicate_NestCapture == 1) %>%
+    dplyr::filter(.data$Duplicate_NestCapture == 1) %>%
 
     # Determining true matches...
 
@@ -695,7 +695,7 @@ create_capture_PFN <- function(Nest_data, IPMR_data, ReRingTable, badIDs){
     #...based on whether another capture in the set was assigned as the true match
     dplyr::group_by(.data$rowNo_Nest) %>%
     dplyr::mutate(
-      MatchedSet = ifelse(any(TrueMatch_Nest == 1, na.rm = T), TRUE, FALSE)
+      MatchedSet = ifelse(any(.data$TrueMatch_Nest == 1, na.rm = T), TRUE, FALSE)
     ) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(
@@ -708,7 +708,7 @@ create_capture_PFN <- function(Nest_data, IPMR_data, ReRingTable, badIDs){
   Duplicates_Likely_IPMR <- Captures_LikelyMatch %>%
     dplyr::filter(!is.na(.data$rowNo_Nest) & !is.na(.data$rowNo_IPMR)) %>%
     dplyr::mutate(Duplicate_IPMRCapture = ifelse(duplicated(.data$rowNo_IPMR) | duplicated(.data$rowNo_IPMR, fromLast = TRUE), 1,0)) %>%
-    dplyr::filter(Duplicate_IPMRCapture == 1) %>%
+    dplyr::filter(.data$Duplicate_IPMRCapture == 1) %>%
 
     # Determining true matches...
 
@@ -721,7 +721,7 @@ create_capture_PFN <- function(Nest_data, IPMR_data, ReRingTable, badIDs){
     #...based on whether another capture in the set was assigned as the true match
     dplyr::group_by(.data$rowNo_IPMR) %>%
     dplyr::mutate(
-      MatchedSet = ifelse(any(TrueMatch_IPMR == 1, na.rm = T), TRUE, FALSE)
+      MatchedSet = ifelse(any(.data$TrueMatch_IPMR == 1, na.rm = T), TRUE, FALSE)
     ) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(
@@ -746,7 +746,7 @@ create_capture_PFN <- function(Nest_data, IPMR_data, ReRingTable, badIDs){
                   UnconfirmedNestMatch = dplyr::case_when(is.na(.data$Duplicate_NestCapture) ~ FALSE,
                                                           .data$TrueMatch_Nest == 1 ~ FALSE,
                                                           TRUE ~ TRUE)) %>%
-    dplyr::filter(!(DropRecord))
+    dplyr::filter(!(.data$DropRecord))
 
 
   ## 2.9) Re-combine CaptureDate- and BreedingSeason-based matches (also including unique IPMR captures), and unique nest captures
@@ -1051,7 +1051,7 @@ create_capture_Nest_PFN <- function(Nest_data, ReRingTable, badIDs){
     tidyr::separate_rows(.data$IndvID, sep = '/') %>%
 
     # 6) Remove all individuals with missing IDs and/or from species not included in Species_codes
-    dplyr::filter(Species_Nest %in% species_codes$Species & !is.na(IndvID) & !(IndvID%in%badIDs)) %>%
+    dplyr::filter(.data$Species_Nest %in% species_codes$Species & !is.na(IndvID) & !(IndvID%in%badIDs)) %>%
 
     # 7) Add a unique row identifier
     dplyr::mutate(rowNo_Nest = dplyr::row_number())
@@ -1199,7 +1199,7 @@ create_individual_PFN <- function(Capture_data){
   Indv_data <- Capture_data %>%
     dplyr::arrange(.data$CapturePopID, .data$IndvID, .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
     dplyr::group_by(.data$IndvID) %>%
-    dplyr::summarise(Species = purrr::map_chr(.x = list(unique(na.omit(.data$Species))), .f = ~{
+    dplyr::summarise(Species = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Species))), .f = ~{
 
       if(length(..1) == 0){
 
@@ -1216,7 +1216,7 @@ create_individual_PFN <- function(Capture_data){
       }
 
     }),
-    BroodIDLaid = purrr::map_chr(.x = list(unique(na.omit(.data$BroodID))), .f = ~{
+    BroodIDLaid = purrr::map_chr(.x = list(unique(stats::na.omit(.data$BroodID))), .f = ~{
 
       if(length(..1) == 0){
 
@@ -1234,7 +1234,7 @@ create_individual_PFN <- function(Capture_data){
 
     }),
     BroodIDFledged = .data$BroodIDLaid, # Identical, as no cross-fostering experiments were made
-    Sex_calculated = purrr::map_chr(.x = list(unique(na.omit(.data$Sex_observed))), .f = ~{
+    Sex_calculated = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Sex_observed))), .f = ~{
 
       if(length(..1) == 0){
 
