@@ -303,7 +303,7 @@ format_PFN <- function(db = choose_directory(),
   # CREATING STANDARD FORMAT LOCATION DATA #
   #----------------------------------------#
 
-  message("Functionality for compiling location data not yet supported")
+  message("Compiling location data...")
 
   Location_data <- create_location_PFN(Brood_data = Brood_data,
                                        Capture_data = Capture_data,
@@ -1179,12 +1179,26 @@ create_capture_IPMR_PFN <- function(IPMR_data, Nest_data, ReRingTable){
 
 create_individual_PFN <- function(Capture_data){
 
-  #Take capture data and determine summary data for each individual
+  # 1) Take capture data and determine basic summary data for each individual (within population)
+  IndvPop_data <- Capture_data %>%
+    dplyr::arrange(.data$CapturePopID, .data$IndvID, .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
+    dplyr::group_by(.data$IndvID, .data$CapturePopID) %>%
+
+
+    dplyr::summarise(
+    PopID = first(.data$CapturePopID),
+    RingSeason = first(.data$BreedingSeason),
+    RingAge = ifelse(any(.data$Age_calculated %in% c(1, 3)), "chick", ifelse(min(.data$Age_calculated) == 2, NA_character_, "adult")),
+    .groups = "keep") %>%
+    dplyr::rowwise() %>%
+
+    #Ungroup
+    dplyr::ungroup()
+
+  # 2) Take capture data and determine basic summary data for each individual (across populations)
   Indv_data <- Capture_data %>%
     dplyr::arrange(.data$CapturePopID, .data$IndvID, .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
-    dplyr::group_by(.data$CapturePopID, .data$IndvID) %>%
-
-
+    dplyr::group_by(.data$IndvID) %>%
     dplyr::summarise(Species = purrr::map_chr(.x = list(unique(na.omit(.data$Species))), .f = ~{
 
       if(length(..1) == 0){
@@ -1202,7 +1216,6 @@ create_individual_PFN <- function(Capture_data){
       }
 
     }),
-    PopID = first(.data$CapturePopID),
     BroodIDLaid = purrr::map_chr(.x = list(unique(na.omit(.data$BroodID))), .f = ~{
 
       if(length(..1) == 0){
@@ -1221,8 +1234,6 @@ create_individual_PFN <- function(Capture_data){
 
     }),
     BroodIDFledged = .data$BroodIDLaid, # Identical, as no cross-fostering experiments were made
-    RingSeason = first(.data$BreedingSeason),
-    RingAge = ifelse(any(.data$Age_calculated %in% c(1, 3)), "chick", ifelse(min(.data$Age_calculated) == 2, NA_character_, "adult")),
     Sex_calculated = purrr::map_chr(.x = list(unique(na.omit(.data$Sex_observed))), .f = ~{
 
       if(length(..1) == 0){
@@ -1242,21 +1253,24 @@ create_individual_PFN <- function(Capture_data){
     }), .groups = "keep") %>%
     dplyr::rowwise() %>%
 
+    #Ungroup
+    dplyr::ungroup()
 
-    #For each individual, if their ring age was 1 or 3 (caught in first breeding year)
-    #Then we take their first BroodID, otherwise it is NA
-    dplyr::mutate(BroodIDLaid = ifelse(.data$RingAge == "chick", .data$BroodIDLaid, NA),
-                  BroodIDFledged = .data$BroodIDLaid) %>%
-    #Ungroup to prevent warnings in debug report
-    dplyr::ungroup() %>%
+
+  # 3) Merge information and format
+  Individual_data <- dplyr::left_join(IndvPop_data, Indv_data, by = c('IndvID')) %>%
 
     # Add a column for genetic sex (not available here)
     dplyr::mutate(Sex_genetic = NA_character_) %>%
 
-    # Sort
-    dplyr::arrange(.data$RingSeason, .data$IndvID)
+    # Order columns and sort
+    dplyr::select(.data$IndvID, .data$Species, .data$PopID,
+                  .data$BroodIDLaid, .data$BroodIDFledged,
+                  .data$RingSeason, .data$RingAge,
+                  .data$Sex_calculated, .data$Sex_genetic) %>%
+    dplyr::arrange(.data$IndvID, .data$PopID, .data$RingSeason, )
 
-  return(Indv_data)
+  return(Individual_data)
 }
 
 
