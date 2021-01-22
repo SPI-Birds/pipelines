@@ -1182,13 +1182,7 @@ create_individual_PFN <- function(Capture_data){
   IndvPop_data <- Capture_data %>%
     dplyr::arrange(.data$CapturePopID, .data$IndvID, .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
     dplyr::group_by(.data$IndvID, .data$CapturePopID) %>%
-
-
-    dplyr::summarise(
-    PopID = first(.data$CapturePopID),
-    RingSeason = first(.data$BreedingSeason),
-    RingAge = ifelse(any(.data$Age_calculated %in% c(1, 3)), "chick", ifelse(min(.data$Age_calculated) == 2, NA_character_, "adult")),
-    .groups = "keep") %>%
+    dplyr::summarise(PopID = first(.data$CapturePopID), .groups = "keep") %>%
     dplyr::rowwise() %>%
 
     #Ungroup
@@ -1196,7 +1190,7 @@ create_individual_PFN <- function(Capture_data){
 
   # 2) Take capture data and determine basic summary data for each individual (across populations)
   Indv_data <- Capture_data %>%
-    dplyr::arrange(.data$CapturePopID, .data$IndvID, .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
+    dplyr::arrange(.data$IndvID, .data$CapturePopID, .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
     dplyr::group_by(.data$IndvID) %>%
     dplyr::summarise(Species = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Species))), .f = ~{
 
@@ -1249,7 +1243,10 @@ create_individual_PFN <- function(Capture_data){
 
       }
 
-    }), .groups = "keep") %>%
+    }),
+    RingSeason = min(.data$BreedingSeason),
+    RingAge = ifelse(any(.data$Age_calculated %in% c(1, 3)), "chick", ifelse(min(.data$Age_calculated) == 2, NA_character_, "adult")),
+    .groups = "keep") %>%
     dplyr::rowwise() %>%
 
     #Ungroup
