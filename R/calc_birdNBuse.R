@@ -37,8 +37,7 @@ calc_birdNBuse <- function(Brood_data){
     dplyr::group_by(.data$PopID, .data$LocationID) %>%
     dplyr::summarise(StartSeason  = as.integer(min(.data$BreedingSeason)),
                   EndSeason  = as.integer(max(.data$BreedingSeason)),
-                  .groups = 'keep') %>%
-    dplyr::ungroup()
+                  .groups = 'drop')
 
   return(output)
 
