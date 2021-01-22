@@ -249,7 +249,7 @@ format_PEW <- function(db = choose_directory(),
 #' Create brood data table for Peerdsbos West, Belgium.
 #'
 #' Create brood data table in standard format for blue tit data from Peerdsbos West, Belgium.
-#' @param pew_data Data frame pew_data with primary data from Peerdsbos West, Belgium.
+#' @param data Data frame pew_data with primary data from Peerdsbos West, Belgium.
 #'
 #' @return A data frame.
 
