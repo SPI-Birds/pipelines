@@ -392,7 +392,7 @@ format_PFN <- function(db = choose_directory(),
 #'
 #' @param Nest_data Collated Nest primary data from PiedFlyNet populations
 #' @param ReRingTable Table containing ring numbers and unique identifiers for all individuals
-#' @param badIDs Vector containing non-conslusive IDs (extracted from Nest data)
+#' @param badIDs Vector containing non-conclusive IDs (extracted from Nest data)
 #' @return A data frame with Brood data
 
 
