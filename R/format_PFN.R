@@ -215,7 +215,7 @@ format_PFN <- function(db = choose_directory(),
   # Extract ring number (combinations) for all birds
   RingCombos <- IPMR_data[,c('RING', 'RING2', 'DATE')] %>%
     dplyr::mutate(DATE = as.Date(.data$DATE, format = "%d/%m/%Y")) %>%
-    dplyr::distinct(.data$RING, .data$RING2, .keep_all = T)
+    dplyr::distinct(.data$RING, .data$RING2, .keep_all = TRUE)
 
   # Collate all ring numbers used for each individual
   ReRingTable <- make_IndIdentifier(raw_data = RingCombos[,c('RING','RING2')])
