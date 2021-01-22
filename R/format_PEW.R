@@ -321,7 +321,7 @@ create_brood_PEW <- function(data) {
   #### Get chick measurements per brood
   chicks_measurements <-
     data %>%
-    dplyr::filter(Method == "ChickRinging") %>%
+    dplyr::filter(.data$Method == "ChickRinging") %>%
     dplyr::select(.data$IndvID, .data$BroodID, .data$Tarsus, .data$Mass) %>%
     dplyr::group_by(.data$BroodID) %>%
     dplyr::summarise(AvgChickMass = mean(as.numeric(.data$Mass), na.rm = TRUE),
@@ -386,8 +386,8 @@ create_capture_PEW <- function(pew_data, Brood_data) {
     dplyr::mutate(CaptureID = paste(.data$IndvID, row_number(), sep = "_")) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(CaptureTime  = NA_character_,
-                  Sex_observed = ifelse(Sex == "Chick", NA_character_, substr(.data$Sex, 1, 1)),
-                  CaptureAlive = ifelse(Method != "Found dead", TRUE, FALSE),
+                  Sex_observed = ifelse(.data$Sex == "Chick", NA_character_, substr(.data$Sex, 1, 1)),
+                  CaptureAlive = ifelse(.data$Method != "Found dead", TRUE, FALSE),
                   ReleaseAlive = .data$CaptureAlive,
                   CapturePopID = .data$PopID,
                   CapturePlot  = NA_character_,
