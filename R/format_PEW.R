@@ -87,96 +87,96 @@ format_PEW <- function(db = choose_directory(),
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
     #### Convert to corresponding format and rename
-    dplyr::mutate(BreedingSeason = as.integer(Year),
+    dplyr::mutate(BreedingSeason = as.integer(.data$Year),
                   #### Handle specifically the date column to preserve the information
                   #### regarding the D14 values for chicks
-                  Date_temp = ifelse(Date == "D14", NA_character_, Date),
-                  D14Chicks = ifelse(Date == "D14", "yes", "no"),
-                  CaptureDate = janitor::excel_numeric_to_date(as.numeric(Date_temp),
+                  Date_temp = ifelse(.data$Date == "D14", NA_character_, .data$Date),
+                  D14Chicks = ifelse(.data$Date == "D14", "yes", "no"),
+                  CaptureDate = janitor::excel_numeric_to_date(as.numeric(.data$Date_temp),
                                                                date_system = "modern"),
-                  Tarsus = as.numeric(Tarsus),
-                  Mass = as.numeric(Mass),
-                  ClutchSize = as.integer(stringr::str_replace(string = ClutchSize,
+                  Tarsus = as.numeric(.data$Tarsus),
+                  Mass = as.numeric(.data$Mass),
+                  ClutchSize = as.integer(stringr::str_replace(string = .data$ClutchSize,
                                                                pattern = "\\?",
                                                                replace = "")),
-                  NumberOfRingedChicks = case_when(DateRingingChicks %in% c("verlaten incubatie", "all dead d1") ~ 0L,
-                                                   HatchDateD0 %in% c("abandoned", "bumblebee nest", "dead embryos") ~ 0L,
-                                                   NumberOfRingedChicks == "all dead" & Nest %in% c("66", "70") ~ 0L,
-                                                   NumberOfRingedChicks == "all dead" & Nest == "79" ~ 10L,
-                                                   TRUE ~ as.integer(NumberOfRingedChicks)),
-                  HatchDateD0 = janitor::excel_numeric_to_date(as.numeric(HatchDateD0),
+                  NumberOfRingedChicks = case_when(.data$DateRingingChicks %in% c("verlaten incubatie", "all dead d1") ~ 0L,
+                                                   .data$HatchDateD0 %in% c("abandoned", "bumblebee nest", "dead embryos") ~ 0L,
+                                                   .data$NumberOfRingedChicks == "all dead" & .data$Nest %in% c("66", "70") ~ 0L,
+                                                   .data$NumberOfRingedChicks == "all dead" & .data$Nest == "79" ~ 10L,
+                                                   TRUE ~ as.integer(.data$NumberOfRingedChicks)),
+                  HatchDateD0 = janitor::excel_numeric_to_date(as.numeric(.data$HatchDateD0),
                                                                date_system = "modern"),
-                  DateRingingChicks = janitor::excel_numeric_to_date(as.numeric(DateRingingChicks),
+                  DateRingingChicks = janitor::excel_numeric_to_date(as.numeric(.data$DateRingingChicks),
                                                                      date_system = "modern"),
-                  NoOfChicksD3 = as.integer(NoOfChicksD3),
-                  BroodMassD3 = as.numeric(BroodMassD3),
-                  NewRing = toupper(NewRing),
+                  NoOfChicksD3 = as.integer(.data$NoOfChicksD3),
+                  BroodMassD3 = as.numeric(.data$BroodMassD3),
+                  NewRing = toupper(.data$NewRing),
                   Species = "CYACAE",
                   PopID = "PEW",
-                  NestboxID = tolower(Nest),
-                  BroodID = ifelse(Method %in% c("Catch adults nestbox", "ChickRinging",
+                  NestboxID = tolower(.data$Nest),
+                  BroodID = ifelse(.data$Method %in% c("Catch adults nestbox", "ChickRinging",
                                                  "Catch incubation"),
-                                   paste(Year, NestboxID, sep = "_"), NA)) %>%
+                                   paste(.data$Year, .data$NestboxID, sep = "_"), NA)) %>%
     #### Rename variables to standardized format
-    dplyr::rename(IndvID = Id,
-                  Sex =  Seks,
-                  ObserverID = Measurer) %>%
+    dplyr::rename(IndvID = .data$Id,
+                  Sex =  .data$Seks,
+                  ObserverID = .data$Measurer) %>%
     #### Remove columns which we do not store in the standardized format
-    dplyr::select(-ObservationTimeH,
-                  -FeatherCollection ,
-                  -BreathRateTime50Breaths,
-                  -FeathersPartner,
-                  -BreathRatePartnerTime50Breaths,
-                  -BloodSample,
-                  -TimeBloodSample,
-                  -BloodSampleDuration,
-                  -VisitRateVisitsH,
-                  -VrPartner,
-                  -VisitsAlternated,
-                  -VisitsAlternatedPartner,
-                  -VisitsSync10,
-                  -ChickAgeOfBehavObserv,
-                  -MateStrategy,
-                  -Nest,
-                  -MassPartner,
-                  -AgePartner,
-                  -TarsusPartner,
-                  -Date,
-                  -Date_temp) %>%
+    dplyr::select(-.data$ObservationTimeH,
+                  -.data$FeatherCollection ,
+                  -.data$BreathRateTime50Breaths,
+                  -.data$FeathersPartner,
+                  -.data$BreathRatePartnerTime50Breaths,
+                  -.data$BloodSample,
+                  -.data$TimeBloodSample,
+                  -.data$BloodSampleDuration,
+                  -.data$VisitRateVisitsH,
+                  -.data$VrPartner,
+                  -.data$VisitsAlternated,
+                  -.data$VisitsAlternatedPartner,
+                  -.data$VisitsSync10,
+                  -.data$ChickAgeOfBehavObserv,
+                  -.data$MateStrategy,
+                  -.data$Nest,
+                  -.data$MassPartner,
+                  -.data$AgePartner,
+                  -.data$TarsusPartner,
+                  -.data$Date,
+                  -.data$Date_temp) %>%
     #### Reorder columns
-    dplyr::select(BreedingSeason,
-                  Species,
-                  PopID,
-                  IndvID,
-                  Sex,
-                  Age,
+    dplyr::select(.data$BreedingSeason,
+                  .data$Species,
+                  .data$PopID,
+                  .data$IndvID,
+                  .data$Sex,
+                  .data$Age,
                   everything()) %>%
     #### Remove observations without ID
-    dplyr::filter(!is.na(IndvID)) %>%
+    dplyr::filter(!is.na(.data$IndvID)) %>%
     #### Change ID of unringed individuals to generic "unringed"
-    dplyr::mutate(IndvID = ifelse(nchar(IndvID) > 8, "unringed", IndvID),
-                  PartnerId = ifelse(nchar(PartnerId) > 8, "unringed", PartnerId)) %>%
+    dplyr::mutate(IndvID = ifelse(nchar(.data$IndvID) > 8, "unringed", .data$IndvID),
+                  PartnerId = ifelse(nchar(.data$PartnerId) > 8, "unringed", .data$PartnerId)) %>%
     #### Corrected information from data owner
-    dplyr::mutate(DateEgg1 = ifelse(BroodID == "2019_78" & Method == "ChickRinging",
-                                    "43554", DateEgg1),
-                  DateEgg1 = janitor::excel_numeric_to_date(as.numeric(DateEgg1),
+    dplyr::mutate(DateEgg1 = ifelse(.data$BroodID == "2019_78" & .data$Method == "ChickRinging",
+                                    "43554", .data$DateEgg1),
+                  DateEgg1 = janitor::excel_numeric_to_date(as.numeric(.data$DateEgg1),
                                                             date_system = "modern"),
-                  Sex = ifelse(IndvID == "11714676", "Male", Sex),
-                  PartnerId = ifelse(PartnerId == "12706296" & BroodID == "2016_60",
-                                     NA_character_, PartnerId),
+                  Sex = ifelse(.data$IndvID == "11714676", "Male", .data$Sex),
+                  PartnerId = ifelse(.data$PartnerId == "12706296" & .data$BroodID == "2016_60",
+                                     NA_character_, .data$PartnerId),
                   # Data owner: The only couple in 49 in 2017 was 13619466 (female) and  13617031 (male).
                   # partner 12706106 should be removed (or replaced by the true female 13619466).
-                  PartnerId = ifelse(PartnerId == "12706106" & BroodID == "2017_49",
-                                     "13619466", PartnerId),
+                  PartnerId = ifelse(.data$PartnerId == "12706106" & .data$BroodID == "2017_49",
+                                     "13619466", .data$PartnerId),
                   # (2016_60) Data owner: FEMALE 12706296 in box 60 in 2016
                   # is erroneous and can be removed from the data.
                   # Female 13617052 was the only female in box 60 in 2016.
                   # She layed a complete clutch, which never hatched.
                   # The male was never caught and remains unknown.
-                  rem = ifelse((IndvID == "12706296" & BroodID == "2016_60"),
+                  rem = ifelse((.data$IndvID == "12706296" & .data$BroodID == "2016_60"),
                                "yes", "no")) %>%
-    dplyr::filter(rem == "no" | is.na(rem)) %>%
-    dplyr::select(-rem) %>%
+    dplyr::filter(.data$rem == "no" | is.na(.data$rem)) %>%
+    dplyr::select(-.data$rem) %>%
     dplyr::distinct()
 
 
@@ -203,7 +203,7 @@ format_PEW <- function(db = choose_directory(),
   #### FINAL ARRANGEMENT
   Capture_data <-
     Capture_data %>%
-    dplyr::filter(!is.na(CaptureDate))
+    dplyr::filter(!is.na(.data$CaptureDate))
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
@@ -258,49 +258,49 @@ create_brood_PEW <- function(data) {
   parents_brood_data <-
     data %>%
     #### Exclude non-breeding data, exclude chicks
-    filter(Method %in% c("Catch adults nestbox", "Catch incubation")) %>%
+    dplyr::filter(.data$Method %in% c("Catch adults nestbox", "Catch incubation")) %>%
     #### Rename variables
-    dplyr::rename(LocationID = NestboxID) %>%
+    dplyr::rename(LocationID = .data$NestboxID) %>%
     #### Get IDs of females and males
-    tidyr::pivot_wider(names_from = Sex,
-                       values_from = IndvID) %>%
-    dplyr::rename(FemaleID = Female,
-                  MaleID = Male) %>%
-    dplyr::mutate(FemaleID = ifelse(is.na(FemaleID) & !is.na(MaleID), PartnerId, FemaleID),
-                  MaleID = ifelse(is.na(MaleID) & !is.na(FemaleID), PartnerId, MaleID)) %>%
-    dplyr::mutate(ExperimentID = dplyr::case_when(Experiment == "BSM - Griffioen et al. 2019 PeerJ" ~
+    tidyr::pivot_wider(names_from = .data$Sex,
+                       values_from = .data$IndvID) %>%
+    dplyr::rename(FemaleID = .data$Female,
+                  MaleID = .data$Male) %>%
+    dplyr::mutate(FemaleID = ifelse(is.na(.data$FemaleID) & !is.na(.data$MaleID), .data$PartnerId, .data$FemaleID),
+                  MaleID = ifelse(is.na(.data$MaleID) & !is.na(.data$FemaleID), .data$PartnerId, .data$MaleID)) %>%
+    dplyr::mutate(ExperimentID = dplyr::case_when(.data$Experiment == "BSM - Griffioen et al. 2019 PeerJ" ~
                                                     "COHORT; PARENTAGE",
-                                                  Experiment == "2h Temp D4" ~ "SURVIVAL",
-                                                  Experiment == "2h Temp D4 + Handicaping Male: Griffioen et al. 2019 Front Ecol&Evol" ~
+                                                  .data$Experiment == "2h Temp D4" ~ "SURVIVAL",
+                                                  .data$Experiment == "2h Temp D4 + Handicaping Male: Griffioen et al. 2019 Front Ecol&Evol" ~
                                                     "SURVIVAL; PARENTAGE")) %>%
     #### Remove unnecessary variables which may cause duplicated rows
     #### Exclude also Date column, as for few broods, there may be
     #### several catches of parents, but the brood parameters are the same
-    dplyr::select(-c(Age, PartnerId, NumberTransponder,
-                     NewRing, CaptureDate, NeophobiaTransponder,
-                     Tarsus, Mass, ObserverID, Experiment, D14Chicks)) %>%
+    dplyr::select(-c(.data$Age, .data$PartnerId, .data$NumberTransponder,
+                     .data$NewRing, .data$CaptureDate, .data$NeophobiaTransponder,
+                     .data$Tarsus, .data$Mass, .data$ObserverID, .data$Experiment, .data$D14Chicks)) %>%
     #### Remove duplicated rows (as we get one row for males and females for the same brood)
     dplyr::distinct() %>%
     #### Remove rows with no information about the brood
-    dplyr::filter(!(is.na(ClutchSize) & is.na(DateEgg1) & is.na(HatchDateD0) &
-                      is.na(NumberOfRingedChicks) & is.na(DateRingingChicks) &
-                      is.na(NoOfChicksD3) & is.na(BroodMassD3))) %>%
+    dplyr::filter(!(is.na(.data$ClutchSize) & is.na(.data$DateEgg1) & is.na(.data$HatchDateD0) &
+                      is.na(.data$NumberOfRingedChicks) & is.na(.data$DateRingingChicks) &
+                      is.na(.data$NoOfChicksD3) & is.na(.data$BroodMassD3))) %>%
     #### Remove one specific case causing double register for the same BroodID
-    dplyr::filter(!(BroodID == "2017_109" & Method == "Catch incubation")) %>%
+    dplyr::filter(!(.data$BroodID == "2017_109" & .data$Method == "Catch incubation")) %>%
     #### Create new variables
     dplyr::mutate(Plot = NA_character_,
                   # LayDate_observed = DateEgg1, ## for new version of calc_clutchtype
-                  LayDate = DateEgg1,
+                  LayDate = .data$DateEgg1,
                   LayDate_min = as.Date(NA),
                   LayDate_max = as.Date(NA),
-                  ClutchSize_observed = ClutchSize,
+                  ClutchSize_observed = .data$ClutchSize,
                   ClutchSize_min = NA_integer_,
                   ClutchSize_max = NA_integer_,
-                  HatchDate_observed = HatchDateD0,
+                  HatchDate_observed = .data$HatchDateD0,
                   HatchDate_min = as.Date(NA),
                   HatchDate_max = as.Date(NA),
                   #### For few broods, there is number of chicks on day 3
-                  BroodSize_observed = NoOfChicksD3,
+                  BroodSize_observed = .data$NoOfChicksD3,
                   BroodSize_min = NA_integer_,
                   BroodSize_max = NA_integer_,
                   FledgeDate_observed = as.Date(NA),
@@ -308,7 +308,7 @@ create_brood_PEW <- function(data) {
                   FledgeDate_max = as.Date(NA),
                   # NumberFledged_observed = NumberOfRingedChicks, ## for new version of calc_clutchtype
                   #### Correction regarding one brood from data owner:
-                  NumberFledged = ifelse(BroodID == "2015_79", 0L, NumberOfRingedChicks),
+                  NumberFledged = ifelse(.data$BroodID == "2015_79", 0L, .data$NumberOfRingedChicks),
                   NumberFledged_min = NA_integer_,
                   NumberFledged_max = NA_integer_,
                   AvgEggMass = NA_real_,
@@ -321,19 +321,19 @@ create_brood_PEW <- function(data) {
   #### Get chick measurements per brood
   chicks_measurements <-
     data %>%
-    filter(Method == "ChickRinging") %>%
-    dplyr::select(IndvID, BroodID, Tarsus, Mass) %>%
-    group_by(BroodID) %>%
-    dplyr::summarise(AvgChickMass = mean(as.numeric(Mass), na.rm = TRUE),
-                     NumberChicksMass = sum(!is.na(Mass)),
-                     AvgTarsus = mean(as.numeric(Tarsus), na.rm = TRUE),
-                     NumberChicksTarsus = sum(!is.na(Tarsus)),
-                     OriginalTarsusMethod = ifelse(!is.na(AvgTarsus), "Alternative", NA_character_)) %>%
-    ungroup() %>%
-    dplyr::mutate(AvgTarsus = ifelse(AvgTarsus == "NaN", NA, AvgTarsus),
-                  AvgChickMass = ifelse(AvgChickMass == "NaN", NA, AvgChickMass),
-                  NumberChicksMass = ifelse(NumberChicksMass == 0, NA, NumberChicksMass),
-                  NumberChicksTarsus = ifelse(NumberChicksTarsus == 0, NA, NumberChicksTarsus))
+    dplyr::filter(Method == "ChickRinging") %>%
+    dplyr::select(.data$IndvID, .data$BroodID, .data$Tarsus, .data$Mass) %>%
+    dplyr::group_by(.data$BroodID) %>%
+    dplyr::summarise(AvgChickMass = mean(as.numeric(.data$Mass), na.rm = TRUE),
+                     NumberChicksMass = sum(!is.na(.data$Mass)),
+                     AvgTarsus = mean(as.numeric(.data$Tarsus), na.rm = TRUE),
+                     NumberChicksTarsus = sum(!is.na(.data$Tarsus)),
+                     OriginalTarsusMethod = ifelse(!is.na(.data$AvgTarsus), "Alternative", NA_character_)) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(AvgTarsus = ifelse(.data$AvgTarsus == "NaN", NA, .data$AvgTarsus),
+                  AvgChickMass = ifelse(.data$AvgChickMass == "NaN", NA, .data$AvgChickMass),
+                  NumberChicksMass = ifelse(.data$NumberChicksMass == 0, NA, .data$NumberChicksMass),
+                  NumberChicksTarsus = ifelse(.data$NumberChicksTarsus == 0, NA, .data$NumberChicksTarsus))
 
 
   #### Join parents and chick data
@@ -341,20 +341,20 @@ create_brood_PEW <- function(data) {
     parents_brood_data %>%
     left_join(chicks_measurements, by = "BroodID") %>%
     #### Rename
-    dplyr::rename(LayDate_observed = LayDate,
-                  NumberFledged_observed = NumberFledged) %>%
+    dplyr::rename(LayDate_observed = .data$LayDate,
+                  NumberFledged_observed = .data$NumberFledged) %>%
     #### Final arrangement
-    dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot, LocationID,
-                  FemaleID, MaleID,
-                  ClutchType_observed, ClutchType_calculated,
-                  LayDate_observed, LayDate_min, LayDate_max,
-                  ClutchSize_observed, ClutchSize_min, ClutchSize_max,
-                  HatchDate_observed, HatchDate_min, HatchDate_max,
-                  BroodSize_observed, BroodSize_min, BroodSize_max,
-                  FledgeDate_observed, FledgeDate_min, FledgeDate_max,
-                  NumberFledged_observed, NumberFledged_min, NumberFledged_max,
-                  AvgEggMass, NumberEggs, AvgChickMass, NumberChicksMass,
-                  AvgTarsus, NumberChicksTarsus, OriginalTarsusMethod, ExperimentID)
+    dplyr::select(.data$BroodID, .data$PopID, .data$BreedingSeason, .data$Species, .data$Plot, .data$LocationID,
+                  .data$FemaleID, .data$MaleID,
+                  .data$ClutchType_observed, .data$ClutchType_calculated,
+                  .data$LayDate_observed, .data$LayDate_min, .data$LayDate_max,
+                  .data$ClutchSize_observed, .data$ClutchSize_min, .data$ClutchSize_max,
+                  .data$HatchDate_observed, .data$HatchDate_min, .data$HatchDate_max,
+                  .data$BroodSize_observed, .data$BroodSize_min, .data$BroodSize_max,
+                  .data$FledgeDate_observed, .data$FledgeDate_min, .data$FledgeDate_max,
+                  .data$NumberFledged_observed, .data$NumberFledged_min, .data$NumberFledged_max,
+                  .data$AvgEggMass, .data$NumberEggs, .data$AvgChickMass, .data$NumberChicksMass,
+                  .data$AvgTarsus, .data$NumberChicksTarsus, .data$OriginalTarsusMethod, .data$ExperimentID)
 
   return(Brood_data)
 
@@ -372,44 +372,44 @@ create_capture_PEW <- function(pew_data, Brood_data) {
   Brood_data_sel <-
     Brood_data %>%
     # dplyr::select(BreedingSeason, Species, PopID, BroodID, LocationID,
-    dplyr::select(Species, PopID, BroodID, LocationID, HatchDate_observed)
+    dplyr::select(.data$Species, .data$PopID, .data$BroodID, .data$LocationID, .data$HatchDate_observed)
 
 
   Capture_data_temp <-
     pew_data %>%
     #### Rename variables
-    dplyr::rename(LocationID = NestboxID) %>%
-    dplyr::select(-DateRingingChicks) %>%
+    dplyr::rename(LocationID = .data$NestboxID) %>%
+    dplyr::select(-.data$DateRingingChicks) %>%
     #### Create new variables
-    dplyr::group_by(IndvID) %>%
-    dplyr::arrange(Year, CaptureDate) %>%
-    dplyr::mutate(CaptureID = paste(IndvID, row_number(), sep = "_")) %>%
+    dplyr::group_by(.data$IndvID) %>%
+    dplyr::arrange(.data$Year, .data$CaptureDate) %>%
+    dplyr::mutate(CaptureID = paste(.data$IndvID, row_number(), sep = "_")) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(CaptureTime  = NA_character_,
-                  Sex_observed = ifelse(Sex == "Chick", NA_character_, substr(Sex, 1, 1)),
+                  Sex_observed = ifelse(Sex == "Chick", NA_character_, substr(.data$Sex, 1, 1)),
                   CaptureAlive = ifelse(Method != "Found dead", TRUE, FALSE),
-                  ReleaseAlive = CaptureAlive,
-                  CapturePopID = PopID,
+                  ReleaseAlive = .data$CaptureAlive,
+                  CapturePopID = .data$PopID,
                   CapturePlot  = NA_character_,
-                  ReleasePopID = ifelse(ReleaseAlive == TRUE, CapturePopID, NA_character_),
-                  ReleasePlot  = ifelse(ReleaseAlive == TRUE, CapturePlot, NA_character_),
-                  OriginalTarsusMethod = ifelse(!is.na(Tarsus), "Alternative", NA_character_),
+                  ReleasePopID = ifelse(.data$ReleaseAlive == TRUE, .data$CapturePopID, NA_character_),
+                  ReleasePlot  = ifelse(.data$ReleaseAlive == TRUE, .data$CapturePlot, NA_character_),
+                  OriginalTarsusMethod = ifelse(!is.na(.data$Tarsus), "Alternative", NA_character_),
                   WingLength = NA_real_,
-                  ExperimentID = dplyr::case_when(Experiment == "BSM - Griffioen et al. 2019 PeerJ" ~
+                  ExperimentID = dplyr::case_when(.data$Experiment == "BSM - Griffioen et al. 2019 PeerJ" ~
                                                     "COHORT; PARENTAGE",
-                                                  Experiment == "2h Temp D4" ~ "SURVIVAL",
-                                                  Experiment == "2h Temp D4 + Handicaping Male: Griffioen et al. 2019 Front Ecol&Evol" ~
+                                                  .data$Experiment == "2h Temp D4" ~ "SURVIVAL",
+                                                  .data$Experiment == "2h Temp D4 + Handicaping Male: Griffioen et al. 2019 Front Ecol&Evol" ~
                                                     "SURVIVAL; PARENTAGE"),
-                  Age_observed = case_when(Age == "0" & Method == "ChickRinging" ~ 1L,
-                                           Age == "1" ~ 5L,
-                                           Age == ">=2" ~ 6L,
+                  Age_observed = case_when(.data$Age == "0" & .data$Method == "ChickRinging" ~ 1L,
+                                           .data$Age == "1" ~ 5L,
+                                           .data$Age == ">=2" ~ 6L,
                                            #### Account for controls in January & February
-                                           Age == "1" & Method == "Night Control Winter" &
-                                             lubridate::month(CaptureDate) %in% c(1, 2) ~ 6L,
+                                           .data$Age == "1" & .data$Method == "Night Control Winter" &
+                                             lubridate::month(.data$CaptureDate) %in% c(1, 2) ~ 6L,
                                            #### Account for controls in January & February
-                                           Age == ">=2" & Method == "Night Control Winter" &
-                                             lubridate::month(CaptureDate) %in% c(1, 2) ~ 8L,
-                                           is.na(Age) ~ 4L))
+                                           .data$Age == ">=2" & .data$Method == "Night Control Winter" &
+                                             lubridate::month(.data$CaptureDate) %in% c(1, 2) ~ 8L,
+                                           is.na(.data$Age) ~ 4L))
 
 
   Capture_data <-
@@ -418,38 +418,38 @@ create_capture_PEW <- function(pew_data, Brood_data) {
               by = c("Species", "PopID", "LocationID", "BroodID")) %>%
     #### Calculate Capture date for chicks from Hatch date
     #### Create fake Hatch_date for several broods
-    dplyr::mutate(HatchDate_observed = if_else(is.na(HatchDate_observed) & is.na(CaptureDate) & Method == "ChickRinging",
-                                               as.Date(paste0(BreedingSeason, "-06-01")),
-                                               HatchDate_observed),
-                  CaptureDate = case_when(is.na(CaptureDate) & D14Chicks == "yes" ~ HatchDate_observed + 14,
+    dplyr::mutate(HatchDate_observed = if_else(is.na(.data$HatchDate_observed) & is.na(.data$CaptureDate) & .data$Method == "ChickRinging",
+                                               as.Date(paste0(.data$BreedingSeason, "-06-01")),
+                                               .data$HatchDate_observed),
+                  CaptureDate = case_when(is.na(.data$CaptureDate) & .data$D14Chicks == "yes" ~ .data$HatchDate_observed + 14,
                                           #### Create fake capture dates
-                                          is.na(CaptureDate) & Method == "Catch adults nestbox" ~
-                                            as.Date(paste0(BreedingSeason, "-06-01")),
-                                          is.na(CaptureDate) & Method == "Catch incubation" ~
-                                            as.Date(paste0(BreedingSeason, "-04-01")),
-                                          TRUE ~ CaptureDate)) %>%
+                                          is.na(.data$CaptureDate) & .data$Method == "Catch adults nestbox" ~
+                                            as.Date(paste0(.data$BreedingSeason, "-06-01")),
+                                          is.na(.data$CaptureDate) & .data$Method == "Catch incubation" ~
+                                            as.Date(paste0(.data$BreedingSeason, "-04-01")),
+                                          TRUE ~ .data$CaptureDate)) %>%
     #### The age of captured chicks in days since hatching
-    dplyr::mutate(ChickAge = if_else(Age_observed == 1,
-                                     as.integer(difftime(CaptureDate, HatchDate_observed,
+    dplyr::mutate(ChickAge = if_else(.data$Age_observed == 1,
+                                     as.integer(difftime(.data$CaptureDate, .data$HatchDate_observed,
                                                          units = "days")),
                                      NA_integer_),
-                  BroodIDLaid = BroodID) %>%
+                  BroodIDLaid = .data$BroodID) %>%
 
     #### USE THE NEW VERSION OF THE FUNCTION
     # dplyr::mutate(Age_calculated = calc_age())
 
     #### OLD VERSION OF THE FUNCTION
-    calc_age(ID = IndvID,
-             Age = Age_observed,
-             Date = CaptureDate,
-             Year = BreedingSeason,
+    calc_age(ID = .data$IndvID,
+             Age = .data$Age_observed,
+             Date = .data$CaptureDate,
+             Year = .data$BreedingSeason,
              showpb = TRUE) %>%
     #### Final arrangement
-    dplyr::select(CaptureID, IndvID, Species, Sex_observed, BreedingSeason,
-                  CaptureDate, CaptureTime, ObserverID, LocationID,
-                  CaptureAlive, ReleaseAlive, CapturePopID, CapturePlot,
-                  ReleasePopID, ReleasePlot, Mass, Tarsus, OriginalTarsusMethod,
-                  WingLength, Age_observed, Age_calculated, ChickAge, ExperimentID)
+    dplyr::select(.data$CaptureID, .data$IndvID, .data$Species, .data$Sex_observed, .data$BreedingSeason,
+                  .data$CaptureDate, .data$CaptureTime, .data$ObserverID, .data$LocationID,
+                  .data$CaptureAlive, .data$ReleaseAlive, .data$CapturePopID, .data$CapturePlot,
+                  .data$ReleasePopID, .data$ReleasePlot, .data$Mass, .data$Tarsus, .data$OriginalTarsusMethod,
+                  .data$WingLength, .data$Age_observed, .data$Age_calculated, .data$ChickAge, .data$ExperimentID)
 
   return(Capture_data)
 
@@ -468,10 +468,10 @@ create_individual_PEW <- function(data){
   Individual_data <-
     data %>%
     #### Remove unringed individuals
-    filter(IndvID != "unringed") %>%
+    dplyr::filter(.data$IndvID != "unringed") %>%
     #### Format and create new data columns
-    group_by(IndvID) %>%
-    dplyr::summarise(Sex_calculated = purrr::map_chr(.x = list(unique(na.omit(Sex_observed))),
+    dplyr::group_by(.data$IndvID) %>%
+    dplyr::summarise(Sex_calculated = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Sex_observed))),
                                                      .f = ~{
                                                        if(length(..1) == 0){
                                                          return(NA_character_)
@@ -482,17 +482,17 @@ create_individual_PEW <- function(data){
                                                        }
                                                      }),
                      Sex_genetic = NA_character_,
-                     Species = first(Species),
+                     Species = first(.data$Species),
                      PopID = "PEW",
-                     RingSeason = min(BreedingSeason),
-                     RingAge = ifelse(min(Age_observed) == 1, "chick", "adult"),
-                     BroodIDLaid = ifelse(RingAge == "chick",
-                                          paste(BreedingSeason, LocationID, sep = "_"),
+                     RingSeason = min(.data$BreedingSeason),
+                     RingAge = ifelse(min(.data$Age_observed) == 1, "chick", "adult"),
+                     BroodIDLaid = ifelse(.data$RingAge == "chick",
+                                          paste(.data$BreedingSeason, .data$LocationID, sep = "_"),
                                           NA_character_),
-                     BroodIDFledged = BroodIDLaid) %>%
+                     BroodIDFledged = .data$BroodIDLaid) %>%
     dplyr::ungroup() %>%
-    dplyr::select(IndvID, Species, PopID, BroodIDLaid, BroodIDFledged,
-                  RingSeason, RingAge, Sex_calculated, Sex_genetic)
+    dplyr::select(.data$IndvID, .data$Species, .data$PopID, .data$BroodIDLaid, .data$BroodIDFledged,
+                  .data$RingSeason, .data$RingAge, .data$Sex_calculated, .data$Sex_genetic)
 
   return(Individual_data)
 
@@ -511,13 +511,13 @@ create_location_PEW <- function(data) {
 
   Location_data <-
     data %>%
-    dplyr::select(BreedingSeason, CaptureDate, NestboxID, PopID) %>%
-    group_by(NestboxID) %>%
-    arrange(BreedingSeason, CaptureDate) %>%
-    dplyr::summarise(StartSeason = min(BreedingSeason, na.rm = TRUE),
+    dplyr::select(.data$BreedingSeason, .data$CaptureDate, .data$NestboxID, .data$PopID) %>%
+    dplyr::group_by(.data$NestboxID) %>%
+    dplyr::arrange(.data$BreedingSeason, .data$CaptureDate) %>%
+    dplyr::summarise(StartSeason = min(.data$BreedingSeason, na.rm = TRUE),
                      EndSeason = NA_integer_,
-                     LocationID = unique(NestboxID),
-                     PopID = unique(PopID)) %>%
+                     LocationID = unique(.data$NestboxID),
+                     PopID = unique(.data$PopID)) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(LocationType = "NB",
                   HabitatType = "deciduous",
@@ -525,8 +525,8 @@ create_location_PEW <- function(data) {
                   Latitude  = 51.266667,
                   Longitude = 4.466667) %>%
     #### Final arrangement
-    dplyr::select(LocationID, NestboxID, LocationType, PopID,
-                  Latitude, Longitude, StartSeason, EndSeason, HabitatType)
+    dplyr::select(.data$LocationID, .data$NestboxID, .data$LocationType, .data$PopID,
+                  .data$Latitude, .data$Longitude, .data$StartSeason, .data$EndSeason, .data$HabitatType)
 
   return(Location_data)
 
