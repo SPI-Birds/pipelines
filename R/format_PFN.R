@@ -1,4 +1,4 @@
-#' Construct standard format PiedFlyNet data
+#' Construct standard format for PiedFlyNet data
 #'
 #'A pipeline to produce the standard format for the hole-nesting bird populations
 #' monitored/administered by PiedFlyNet.
