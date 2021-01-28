@@ -34,6 +34,12 @@
 # Data after 1995: brood 	1997_b130 has male and female ID the same ind. 5748561
 #### --------------------------------------------------------------------------~
 
+# kil_output <- format_KIL()
+View(kil_output$Brood_data)
+View(kil_output$Capture_data)
+View(kil_output$Individual_data)
+View(kil_output$Location_data)
+
 format_KIL <- function(db = choose_directory(),
                        species = NULL,
                        pop = NULL,
@@ -57,7 +63,9 @@ format_KIL <- function(db = choose_directory(),
   # No general primary data, there are 2 excel files for data before 1992 and other
   # for data after 1995.
   # The file before 1992 contains separate sheets with BroodData, AdultData, NestlingData.
-  # The file after 1995 contain only one sheet.
+  # The file after 1995 contains only one sheet.
+
+  message("Importing primary data ...")
 
   #### Load brood data before 1992
   brood_data_til92 <-
@@ -90,7 +98,6 @@ format_KIL <- function(db = choose_directory(),
                   Species = species_codes$Species[1],
                   PopID   = "KIL") %>%
     dplyr::select(-.data$NestlingRingNumber)
-
 
   #### Load data after 1995
   kil_data_95 <-
@@ -142,30 +149,36 @@ format_KIL <- function(db = choose_directory(),
                   -.data$AdultMaleWingMm)
 
 
-
   # BROOD DATA
 
   message("Compiling brood information...")
 
-  Brood_data <- create_brood_KIL()
+  Brood_data <- create_brood_KIL(brood_data_til92,
+                                 kil_data_95)
 
   # CAPTURE DATA
 
   message("Compiling capture information...")
 
-  Capture_data <- create_capture_KIL()
+  Capture_data <- create_capture_KIL(brood_data_til92,
+                                     adults_data_til92,
+                                     chicks_data_til92,
+                                     adults_data_95)
 
   # INDIVIDUAL DATA
 
   message("Compiling individual information...")
 
-  Individual_data <- create_individual_KIL()
+  Individual_data <- create_individual_KIL(adults_data_til92,
+                                           chicks_data_til92,
+                                           adults_data_95)
 
   # LOCATION DATA
 
   message("Compiling nestbox information...")
 
-  Location_data <- create_location_KIL()
+  Location_data <- create_location_KIL(kil_data_95,
+                                       Brood_data)
 
 
   # EXPORT DATA
@@ -211,9 +224,9 @@ format_KIL <- function(db = choose_directory(),
 
 #### BROOD DATA
 
-# Brood_data <- create_brood_KIL()
+# Brood_data <- create_brood_KIL(brood_data_til92, kil_data_95)
 
-create_brood_KIL <- function() {
+create_brood_KIL <- function(brood_data_til92, kil_data_95) {
 
   #### Data from 1971 to 1992
   Brood_data_til92 <-
@@ -379,7 +392,8 @@ create_brood_KIL <- function() {
 
 # Capture_data <- create_capture_KIL()
 
-create_capture_KIL <- function() {
+create_capture_KIL <- function(brood_data_til92, adults_data_til92,
+                               chicks_data_til92, adults_data_95) {
 
   ### Subset brood data to get location (nestbox) ID
   brood_data_til92_temp <-
@@ -510,14 +524,16 @@ create_capture_KIL <- function() {
 
 #### SOLVE: There is no date available, only the year.
 #### Create fake date?
-# CaptureDate = as.Date(paste0(BreedingSeason, "-05-01")),
+# CaptureDate = as.Date(paste0(BreedingSeason, "-05-01"))
 
 
 #### INDIVIDUAL DATA
 
-# Individual_data <- create_individual_KIL()
+# Individual_data <- create_individual_KIL(adults_data_til92, chicks_data_til92,
+#                                          adults_data_95)
 
-create_individual_KIL <- function() {
+create_individual_KIL <- function(adults_data_til92, chicks_data_til92,
+                                  adults_data_95) {
 
   #### Adults
   #### Data from 1971 to 1992
@@ -615,9 +631,9 @@ create_individual_KIL <- function() {
 
 #### LOCATION DATA
 
-Location_data <- create_location_KIL()
+# Location_data <- create_location_KIL(kil_data_95, Brood_data)
 
-create_location_KIL <- function() {
+create_location_KIL <- function(kil_data_95, Brood_data) {
 
   #### Get habitat type for data after 1995
   loc_data_95 <-
@@ -640,7 +656,7 @@ create_location_KIL <- function() {
     dplyr::summarise(StartSeason = first(.data$BreedingSeason),
                      #### CHECK WITH DATA OWNER
                      # EndSeason = last(.data$BreedingSeason))
-                     EndSeason = NA_character_,
+                     EndSeason = NA_integer_,
                      LocationID = unique(.data$LocationID),
                      NestboxID = unique(.data$NestboxID),
                      HabitatType = unique(.data$HabitatType),
