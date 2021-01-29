@@ -13,6 +13,7 @@
 #' until year 1992, the brood has individual numerical ID. In the original primary data from data
 #' after the year 1995, there is no BroodID - therefore we create one using the "Breeding season_NestboxID".
 #'
+#'\strong{AvgTarsus}: Only available for data after 1995, where the measurements at 15 days old chicks are used.
 #'
 #' @inheritParams pipeline_params
 #'
@@ -34,11 +35,6 @@
 # Data after 1995: brood 	1997_b130 has male and female ID the same ind. 5748561
 #### --------------------------------------------------------------------------~
 
-# kil_output <- format_KIL()
-View(kil_output$Brood_data)
-View(kil_output$Capture_data)
-View(kil_output$Individual_data)
-View(kil_output$Location_data)
 
 format_KIL <- function(db = choose_directory(),
                        species = NULL,
@@ -60,8 +56,7 @@ format_KIL <- function(db = choose_directory(),
 
 
   #### Primary data
-  # No general primary data, there are 2 excel files for data before 1992 and other
-  # for data after 1995.
+  # There are 2 excel files for data before 1992 and other for data after 1995.
   # The file before 1992 contains separate sheets with BroodData, AdultData, NestlingData.
   # The file after 1995 contains only one sheet.
 
@@ -224,8 +219,6 @@ format_KIL <- function(db = choose_directory(),
 
 #### BROOD DATA
 
-# Brood_data <- create_brood_KIL(brood_data_til92, kil_data_95)
-
 create_brood_KIL <- function(brood_data_til92, kil_data_95) {
 
   #### Data from 1971 to 1992
@@ -349,9 +342,6 @@ create_brood_KIL <- function(brood_data_til92, kil_data_95) {
                   #### Here we use the measurements at 15 days.
                   AvgChickMass = .data$NestlingMassDay15G,
                   NumberChicksMass = NA_integer_,
-                  #### Average tarsus length in millimeters of all chicks in the brood measured
-                  #### at 14 - 16 days after hatching.
-                  #### Here we use the measurements at 15 days.
                   AvgTarsus = .data$NestlingTarsusDay15Mm,
                   NumberChicksTarsus = NA,
                   #### Ask data owner for the tarsus method
@@ -390,7 +380,10 @@ create_brood_KIL <- function(brood_data_til92, kil_data_95) {
 
 #### CAPTURE DATA
 
-# Capture_data <- create_capture_KIL()
+#### SOLVE: There is no date available, only the year.
+#### Create fake date?
+# CaptureDate = as.Date(paste0(BreedingSeason, "-05-01"))
+
 
 create_capture_KIL <- function(brood_data_til92, adults_data_til92,
                                chicks_data_til92, adults_data_95) {
@@ -411,8 +404,7 @@ create_capture_KIL <- function(brood_data_til92, adults_data_til92,
                   #### ASK DATA OWNER
                   CaptureDate = NA_character_,
                   CaptureTime = NA_character_,
-                  ObserverID = NA_character_,
-                  # LocationID >>> no nestbox info, look into the brood data
+                  ObserverID  = NA_character_,
                   CaptureAlive = TRUE,
                   ReleaseAlive = .data$CaptureAlive,
                   CapturePopID = .data$PopID,
@@ -441,8 +433,7 @@ create_capture_KIL <- function(brood_data_til92, adults_data_til92,
                   #### ASK DATA OWNER
                   CaptureDate = NA_character_,
                   CaptureTime = NA_character_,
-                  ObserverID = NA_character_,
-                  # LocationID >>> no nestbox info, look into the brood data
+                  ObserverID  = NA_character_,
                   CaptureAlive = TRUE,
                   ReleaseAlive = .data$CaptureAlive,
                   CapturePopID = .data$PopID,
@@ -455,7 +446,6 @@ create_capture_KIL <- function(brood_data_til92, adults_data_til92,
                   OriginalTarsusMethod = NA_character_,
                   WingLength = NA_real_,
                   Age_observed = 1L,
-                  # Age_calculated =
                   #### ASK DATA OWNER
                   ChickAge = NA_integer_,
                   ExperimentID = NA_character_)
@@ -488,7 +478,6 @@ create_capture_KIL <- function(brood_data_til92, adults_data_til92,
                   OriginalTarsusMethod = NA_character_,
                   #### ASK DATA OWNER what do the codes mean? Age or Euring codes?
                   # Age_observed = case_when()
-                  # Age_calculated =
                   ChickAge = NA_integer_,
                   ExperimentID = NA_character_)
 
@@ -522,15 +511,7 @@ create_capture_KIL <- function(brood_data_til92, adults_data_til92,
 }
 
 
-#### SOLVE: There is no date available, only the year.
-#### Create fake date?
-# CaptureDate = as.Date(paste0(BreedingSeason, "-05-01"))
-
-
 #### INDIVIDUAL DATA
-
-# Individual_data <- create_individual_KIL(adults_data_til92, chicks_data_til92,
-#                                          adults_data_95)
 
 create_individual_KIL <- function(adults_data_til92, chicks_data_til92,
                                   adults_data_95) {
@@ -631,8 +612,6 @@ create_individual_KIL <- function(adults_data_til92, chicks_data_til92,
 
 #### LOCATION DATA
 
-# Location_data <- create_location_KIL(kil_data_95, Brood_data)
-
 create_location_KIL <- function(kil_data_95, Brood_data) {
 
   #### Get habitat type for data after 1995
@@ -658,7 +637,7 @@ create_location_KIL <- function(kil_data_95, Brood_data) {
                      # EndSeason = last(.data$BreedingSeason))
                      EndSeason = NA_integer_,
                      LocationID = unique(.data$LocationID),
-                     NestboxID = unique(.data$NestboxID),
+                     NestboxID  = unique(.data$NestboxID),
                      HabitatType = unique(.data$HabitatType),
                      PopID = unique(.data$PopID)) %>%
     dplyr::ungroup() %>%

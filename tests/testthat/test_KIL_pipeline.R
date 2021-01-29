@@ -222,3 +222,4 @@ test_that("Location_data returns an expected outcome...", {
   expect_equal(subset(KIL_data, LocationID == "a22")$EndSeason, NA_integer_)
 
 })
+
