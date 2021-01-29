@@ -83,7 +83,7 @@ format_PEW <- function(db = choose_directory(),
                                                "text", "numeric", "numeric", "numeric",
                                                "numeric", "numeric", "numeric",
                                                "numeric", "numeric", "numeric"),
-                                 na = "NA") %>%
+                                 na = c("NA", "na")) %>%
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
     #### Convert to corresponding format and rename
@@ -102,7 +102,8 @@ format_PEW <- function(db = choose_directory(),
                   NumberOfRingedChicks = case_when(DateRingingChicks %in% c("verlaten incubatie", "all dead d1") ~ 0L,
                                                    HatchDateD0 %in% c("abandoned", "bumblebee nest", "dead embryos") ~ 0L,
                                                    NumberOfRingedChicks == "all dead" & Nest %in% c("66", "70") ~ 0L,
-                                                   NumberOfRingedChicks == "all dead" & Nest == "79" ~ 10L,
+                                                   NumberOfRingedChicks == "all dead" & Nest == "79"
+                                                   & "BreedingSeason" == 2015 ~ 10L,
                                                    TRUE ~ as.integer(NumberOfRingedChicks)),
                   HatchDateD0 = janitor::excel_numeric_to_date(as.numeric(HatchDateD0),
                                                                date_system = "modern"),
@@ -111,7 +112,7 @@ format_PEW <- function(db = choose_directory(),
                   NoOfChicksD3 = as.integer(NoOfChicksD3),
                   BroodMassD3 = as.numeric(BroodMassD3),
                   NewRing = toupper(NewRing),
-                  Species = "CYACAE",
+                  Species = species_codes[which(species_codes$SpeciesID == 14620), ]$Species,
                   PopID = "PEW",
                   NestboxID = tolower(Nest),
                   BroodID = ifelse(Method %in% c("Catch adults nestbox", "ChickRinging",
@@ -429,7 +430,7 @@ create_capture_PEW <- function(pew_data, Brood_data) {
                                             as.Date(paste0(BreedingSeason, "-04-01")),
                                           TRUE ~ CaptureDate)) %>%
     #### The age of captured chicks in days since hatching
-    dplyr::mutate(ChickAge = if_else(Age_observed == 1,
+    dplyr::mutate(ChickAge = if_else(Age_observed == 1L,
                                      as.integer(difftime(CaptureDate, HatchDate_observed,
                                                          units = "days")),
                                      NA_integer_),
@@ -522,8 +523,8 @@ create_location_PEW <- function(data) {
     dplyr::mutate(LocationType = "NB",
                   HabitatType = "deciduous",
                   #### Only general coordinates for the location
-                  Latitude  = 51.266667,
-                  Longitude = 4.466667) %>%
+                  Latitude  = NA_real_,
+                  Longitude = NA_real_) %>%
     #### Final arrangement
     dplyr::select(LocationID, NestboxID, LocationType, PopID,
                   Latitude, Longitude, StartSeason, EndSeason, HabitatType)
