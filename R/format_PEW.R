@@ -1,7 +1,8 @@
 #' Construct standard format data from Peerdsbos West, Belgium (PEW)
 #'
 #' A pipeline to produce the standard format for bird study population
-#' at the Peerdsbos West, Belgium, administered by Arne Iserbyt.
+#' at the Peerdsbos West, Belgium, administered by Wendt Müller
+#' (previously by Arne Iserbyt).
 #'
 #'
 #' This section provides details on data management choices that are unique to
@@ -31,12 +32,7 @@
 #'
 #' \strong{CaptureDate} For several chicks, where the capture date was indicated
 #' as "D14", the capture date was calculated as hatch date + 14 days.
-#' For several adult individuals, where the capture date was missing and the record
-#' corresponded to the only capture (observation) of the individual in the
-#' breeding season, a fake date was input ("breeding season-06-01",
-#' 1st of June of the corresponding breeding season).
-#' For several adult individuals, where the capture data was missing and the
-#' capture method indicated that the capture happened during the incubation period,
+#' For several adult individuals, where the capture date was missing,
 #' the fake date was input ("breeding season, 04-01", 1st of April of the corresponding
 #' breeding season).
 #'
@@ -101,9 +97,7 @@ format_PEW <- function(db = choose_directory(),
                                                                replace = "")),
                   NumberOfRingedChicks = case_when(DateRingingChicks %in% c("verlaten incubatie", "all dead d1") ~ 0L,
                                                    HatchDateD0 %in% c("abandoned", "bumblebee nest", "dead embryos") ~ 0L,
-                                                   NumberOfRingedChicks == "all dead" & Nest %in% c("66", "70") ~ 0L,
-                                                   NumberOfRingedChicks == "all dead" & Nest == "79"
-                                                   & "BreedingSeason" == 2015 ~ 10L,
+                                                   NumberOfRingedChicks == "all dead" ~ 0L,
                                                    TRUE ~ as.integer(NumberOfRingedChicks)),
                   HatchDateD0 = janitor::excel_numeric_to_date(as.numeric(HatchDateD0),
                                                                date_system = "modern"),
@@ -424,10 +418,7 @@ create_capture_PEW <- function(pew_data, Brood_data) {
                                                HatchDate_observed),
                   CaptureDate = case_when(is.na(CaptureDate) & D14Chicks == "yes" ~ HatchDate_observed + 14,
                                           #### Create fake capture dates
-                                          is.na(CaptureDate) & Method == "Catch adults nestbox" ~
-                                            as.Date(paste0(BreedingSeason, "-06-01")),
-                                          is.na(CaptureDate) & Method == "Catch incubation" ~
-                                            as.Date(paste0(BreedingSeason, "-04-01")),
+                                          is.na(CaptureDate) ~ as.Date(paste0(BreedingSeason, "-04-01")),
                                           TRUE ~ CaptureDate)) %>%
     #### The age of captured chicks in days since hatching
     dplyr::mutate(ChickAge = if_else(Age_observed == 1L,
@@ -522,7 +513,6 @@ create_location_PEW <- function(data) {
     dplyr::ungroup() %>%
     dplyr::mutate(LocationType = "NB",
                   HabitatType = "deciduous",
-                  #### Only general coordinates for the location
                   Latitude  = NA_real_,
                   Longitude = NA_real_) %>%
     #### Final arrangement
