@@ -13,7 +13,15 @@
 #' until year 1992, the brood has individual numerical ID. In the original primary data from data
 #' after the year 1995, there is no BroodID - therefore we create one using the "Breeding season_NestboxID".
 #'
+#'\strong{LayDate}: In the primary data, laying date is the date on which the first egg of a clutch is laid.
+#'Expressed as days after 31st of March: 1 = April 1st, 31 = May 1st, etc.Use negative numbers for laying dates in March.
+#'
+#'\strong{HatchDate_observed}: In the primary data, hatch date is expressed as days after 31st of March: 1 = April 1st, 31 = May 1st, etc.
+#'
 #'\strong{AvgTarsus}: Only available for data after 1995, where the measurements at 15 days old chicks are used.
+#'
+#'\strong{ChickAge}: Note from data owner for the data until the 1992: Chicks ringed from age of 7-6 day up to fledging, most frequently in age of 8-10 day.
+#'We used 8 days.
 #'
 #' @inheritParams pipeline_params
 #'
@@ -64,7 +72,7 @@ format_KIL <- function(db = choose_directory(),
 
   #### Load brood data before 1992
   brood_data_til92 <-
-    readxl::read_excel(path =  paste0(db, "/KIL_Data_to1992.xlsx"), sheet = "BroodData") %>%
+    readxl::read_excel(path =  paste0(db, "/KIL_PrimaryData_to1992.xlsx"), sheet = "BroodData") %>%
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
     dplyr::mutate(Species = species_codes$Species[1],
@@ -76,7 +84,7 @@ format_KIL <- function(db = choose_directory(),
 
   #### Load adult data before 1992
   adults_data_til92 <-
-    readxl::read_excel(path =  paste0(db, "/KIL_Data_to1992.xlsx"), sheet = "AdultData") %>%
+    readxl::read_excel(path =  paste0(db, "/KIL_PrimaryData_to1992.xlsx"), sheet = "AdultData") %>%
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
     dplyr::mutate(IndvID = as.character(.data$AdultId),
@@ -86,7 +94,7 @@ format_KIL <- function(db = choose_directory(),
 
   #### Load chick data before 1992
   chicks_data_til92 <-
-    readxl::read_excel(path =  paste0(db, "/KIL_Data_to1992.xlsx"), sheet = "NestlingData") %>%
+    readxl::read_excel(path =  paste0(db, "/KIL_PrimaryData_to1992.xlsx"), sheet = "NestlingData") %>%
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
     dplyr::mutate(IndvID = as.character(.data$NestlingRingNumber),
@@ -96,7 +104,7 @@ format_KIL <- function(db = choose_directory(),
 
   #### Load data after 1995
   kil_data_95 <-
-    readxl::read_excel(path =  paste0(db, "/KIL_Data_from1995_GT.xlsx"), sheet = 1) %>%
+    readxl::read_excel(path = paste0(db, "/KIL_PrimaryData_from1995_GT.xlsx"), sheet = 1) %>%
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
     #### Convert to corresponding format and rename
@@ -231,9 +239,6 @@ create_brood_KIL <- function(brood_data_til92, kil_data_95) {
                   MaleID = as.character(.data$MaleId),
                   ClutchType_observed = as.character(tolower(.data$ClutchType)),
                   #### Calculate laying date
-                  # Laying date is the date on which the first egg of a clutch is laid.
-                  # Expressed as days after 31st of March: 1 = April 1st, 31 = May 1st, etc.
-                  # Use negative numbers for laying dates in March.
                   ## for new version of calc_clutchtype
                   # LayDate_observed = as.Date(paste(.data$BreedingSeason, "04-01", sep = "-"),
                   #                            format = "%Y-%m-%d") + .data$LayDate - 1,
@@ -264,6 +269,7 @@ create_brood_KIL <- function(brood_data_til92, kil_data_95) {
                   NumberChicksMass = NA_integer_,
                   AvgTarsus = NA,
                   NumberChicksTarsus = NA,
+                  #### Ask data owner for the tarsus method
                   OriginalTarsusMethod = NA,
                   ExperimentID = NA_character_) %>%
     #### Even though, there are no dates for the clutch type calculation
@@ -417,7 +423,6 @@ create_capture_KIL <- function(brood_data_til92, adults_data_til92,
                   OriginalTarsusMethod = NA_character_,
                   #### ASK DATA OWNER what do the codes mean? Age or Euring codes?
                   # Age_observed = case_when()
-                  # Age_calculated =
                   ChickAge = NA_integer_,
                   ExperimentID = NA_character_)
 
@@ -430,7 +435,7 @@ create_capture_KIL <- function(brood_data_til92, adults_data_til92,
     dplyr::mutate(RingAge = "chick",
                   Sex_observed = .data$Sex,
                   BreedingSeason = as.integer(.data$RingDate),
-                  #### ASK DATA OWNER
+                  #### NO INFORMATION (ONLY IN OLD NOTEBOOKS), CREATE FAKE DATE?
                   CaptureDate = NA_character_,
                   CaptureTime = NA_character_,
                   ObserverID  = NA_character_,
@@ -441,13 +446,11 @@ create_capture_KIL <- function(brood_data_til92, adults_data_til92,
                   ReleasePopID = ifelse(ReleaseAlive == TRUE, CapturePopID, NA_character_),
                   ReleasePlot  = ifelse(ReleaseAlive == TRUE, CapturePlot, NA_character_),
                   Mass = .data$Mass,
-                  Tarsus = .data$Tarsus,
-                  #### ASK DATA OWNER
-                  OriginalTarsusMethod = NA_character_,
+                  Tarsus = .data$Tarsus*0.777 + 6.158,
+                  OriginalTarsusMethod = "Standard",
                   WingLength = NA_real_,
                   Age_observed = 1L,
-                  #### ASK DATA OWNER
-                  ChickAge = NA_integer_,
+                  ChickAge = 8L,
                   ExperimentID = NA_character_)
 
   #### Merge with brood data to get LocationID
@@ -642,8 +645,8 @@ create_location_KIL <- function(kil_data_95, Brood_data) {
                      PopID = unique(.data$PopID)) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(LocationType = "NB",
-                  Latitude  = 58.11667,
-                  Longitude = -25.08333) %>%
+                  Latitude  = NA_real_,
+                  Longitude = NA_real_) %>%
     #### Final arrangement
     dplyr::select(LocationID, NestboxID, LocationType, PopID,
                   Latitude, Longitude, StartSeason, EndSeason, HabitatType)
