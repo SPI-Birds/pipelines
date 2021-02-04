@@ -407,8 +407,8 @@ create_capture_KIL <- function(brood_data_til92, adults_data_til92,
     dplyr::mutate(RingAge = "adult",
                   Sex_observed = .data$Sex,
                   BreedingSeason = as.integer(.data$RingDate),
-                  #### ASK DATA OWNER
-                  CaptureDate = NA_character_,
+                  #### Create the date, as there is no information
+                  CaptureDate = as.Date(paste0(BreedingSeason, "-05-01")),
                   CaptureTime = NA_character_,
                   ObserverID  = NA_character_,
                   CaptureAlive = TRUE,
@@ -435,8 +435,8 @@ create_capture_KIL <- function(brood_data_til92, adults_data_til92,
     dplyr::mutate(RingAge = "chick",
                   Sex_observed = .data$Sex,
                   BreedingSeason = as.integer(.data$RingDate),
-                  #### NO INFORMATION (ONLY IN OLD NOTEBOOKS), CREATE FAKE DATE?
-                  CaptureDate = NA_character_,
+                  #### Create the date, as there is no information
+                  CaptureDate = as.Date(paste0(BreedingSeason, "-05-01")),
                   CaptureTime = NA_character_,
                   ObserverID  = NA_character_,
                   CaptureAlive = TRUE,
