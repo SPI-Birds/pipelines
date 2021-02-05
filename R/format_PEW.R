@@ -7,7 +7,7 @@
 #'
 #' This section provides details on data management choices that are unique to
 #' this data. For a general description of the standard format please see see
-#'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
+#' \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
 #'
 #' \strong{IndvID}: Generally, the unique ID is an 8-character digit number reflecting
 #' the metal ring number. In 4 cases, this information was not provided (NA), therefore
@@ -37,9 +37,32 @@
 #' breeding season).
 #'
 #' \strong{Latitude, Longitude} The exact coordinates of the nestboxes are not available.
-#' Data owner provided an map of the location, which can be georeferenced in the case of
-#' interest or necessity of the data user. Currently, only general coordinates
-#' for the location are provided.
+#' Data owner provided a map of the location, which can be georeferenced in case of
+#' interest or necessity of the data user.
+#'
+#' \strong{NOTES} Until we recive the final data from the data owner, we are aware
+#' of the following issues in the final standardized data:
+#'
+#' There are two records in the Brood_data for the BroodID "2017_109", with different number of chicks and dates
+#' (currently we do not know which one is the correct one).
+#'
+#' There are two records in the Brood_data for the BroodID "2015_24", the correct one is the one where
+#' FemaleID is 13619319 and MaleID is 11714676.
+#'
+#' There are two records in the Brood_data for the BroodID "2016_60", the correct one is the one where
+#' FemaleID is 13617052 and MaleID should be unknow.
+#' Data owner note: Female 12706296 in box 60 in 2016 is erroneous and can be removed from the data.
+#' Female 13617052 was the only female in box 60 in 2016.
+#' She layed a complete clutch, which never hatched.
+#' The male was never caught and remains unknown.
+#'
+#' There are two records in the Brood_data for the BroodID "2017_49", the correct one is the one where
+#' FemaleID 13619466 is and MaleID is 13617031.
+#' Data owner: The only couple in 49 in 2017 was 13619466 (female) and  13617031 (male).
+#' partner 12706106 should be removed (or replaced by the true female 13619466).
+#'
+#' Based on previous comment of data owner, the capture of the IndvID 12706296
+#' in box 60 in 2016 is erroneous and can be removed from the data.
 #'
 #' @inheritParams pipeline_params
 #' @return Generates either 4 .csv files or 4 data frames in the standard format.
@@ -151,27 +174,30 @@ format_PEW <- function(db = choose_directory(),
     #### Change ID of unringed individuals to generic "unringed"
     dplyr::mutate(IndvID = ifelse(nchar(IndvID) > 8, "unringed", IndvID),
                   PartnerId = ifelse(nchar(PartnerId) > 8, "unringed", PartnerId)) %>%
-    #### Corrected information from data owner
-    dplyr::mutate(DateEgg1 = ifelse(BroodID == "2019_78" & Method == "ChickRinging",
-                                    "43554", DateEgg1),
-                  DateEgg1 = janitor::excel_numeric_to_date(as.numeric(DateEgg1),
-                                                            date_system = "modern"),
-                  Sex = ifelse(IndvID == "11714676", "Male", Sex),
-                  PartnerId = ifelse(PartnerId == "12706296" & BroodID == "2016_60",
-                                     NA_character_, PartnerId),
-                  # Data owner: The only couple in 49 in 2017 was 13619466 (female) and  13617031 (male).
-                  # partner 12706106 should be removed (or replaced by the true female 13619466).
-                  PartnerId = ifelse(PartnerId == "12706106" & BroodID == "2017_49",
-                                     "13619466", PartnerId),
-                  # (2016_60) Data owner: FEMALE 12706296 in box 60 in 2016
-                  # is erroneous and can be removed from the data.
-                  # Female 13617052 was the only female in box 60 in 2016.
-                  # She layed a complete clutch, which never hatched.
-                  # The male was never caught and remains unknown.
-                  rem = ifelse((IndvID == "12706296" & BroodID == "2016_60"),
-                               "yes", "no")) %>%
-    dplyr::filter(rem == "no" | is.na(rem)) %>%
-    dplyr::select(-rem) %>%
+
+    #### This part of the code can be removed after fixing the data from data owner
+    # #### Corrected information from data owner
+    # dplyr::mutate(Sex = ifelse(IndvID == "11714676", "Male", Sex),
+    #               PartnerId = ifelse(PartnerId == "12706296" & BroodID == "2016_60",
+    #                                  NA_character_, PartnerId),
+    #               # Data owner: The only couple in 49 in 2017 was 13619466 (female) and  13617031 (male).
+    #               # partner 12706106 should be removed (or replaced by the true female 13619466).
+    #               PartnerId = ifelse(PartnerId == "12706106" & BroodID == "2017_49",
+    #                                  "13619466", PartnerId),
+    #               # (2016_60) Data owner: FEMALE 12706296 in box 60 in 2016
+    #               # is erroneous and can be removed from the data.
+    #               # Female 13617052 was the only female in box 60 in 2016.
+    #               # She layed a complete clutch, which never hatched.
+    #               # The male was never caught and remains unknown.
+    #               rem = ifelse((IndvID == "12706296" & BroodID == "2016_60"),
+    #                            "yes", "no")) %>%
+    # dplyr::filter(rem == "no" | is.na(rem)) %>%
+    # dplyr::select(-rem) %>%
+    #### This part of the code can be removed after fixing the data from data owner
+
+
+    dplyr::mutate(DateEgg1 = janitor::excel_numeric_to_date(as.numeric(DateEgg1),
+                                                            date_system = "modern")) %>%
     dplyr::distinct()
 
 
@@ -280,8 +306,13 @@ create_brood_PEW <- function(data) {
     dplyr::filter(!(is.na(ClutchSize) & is.na(DateEgg1) & is.na(HatchDateD0) &
                       is.na(NumberOfRingedChicks) & is.na(DateRingingChicks) &
                       is.na(NoOfChicksD3) & is.na(BroodMassD3))) %>%
+
+    #### This part of the code can be removed after fixing the data from data owner
     #### Remove one specific case causing double register for the same BroodID
-    dplyr::filter(!(BroodID == "2017_109" & Method == "Catch incubation")) %>%
+    # dplyr::filter(!(BroodID == "2017_109" & Method == "Catch incubation")) %>%
+    #### This part of the code can be removed after fixing the data from data owner
+
+
     #### Create new variables
     dplyr::mutate(Plot = NA_character_,
                   # LayDate_observed = DateEgg1, ## for new version of calc_clutchtype
@@ -375,11 +406,6 @@ create_capture_PEW <- function(pew_data, Brood_data) {
     #### Rename variables
     dplyr::rename(LocationID = NestboxID) %>%
     dplyr::select(-DateRingingChicks) %>%
-    #### Create new variables
-    dplyr::group_by(IndvID) %>%
-    dplyr::arrange(Year, CaptureDate) %>%
-    dplyr::mutate(CaptureID = paste(IndvID, row_number(), sep = "_")) %>%
-    dplyr::ungroup() %>%
     dplyr::mutate(CaptureTime  = NA_character_,
                   Sex_observed = ifelse(Sex == "Chick", NA_character_, substr(Sex, 1, 1)),
                   CaptureAlive = ifelse(Method != "Found dead", TRUE, FALSE),
@@ -407,6 +433,7 @@ create_capture_PEW <- function(pew_data, Brood_data) {
                                            is.na(Age) ~ 4L))
 
 
+
   Capture_data <-
     Capture_data_temp %>%
     left_join(Brood_data_sel,
@@ -418,7 +445,7 @@ create_capture_PEW <- function(pew_data, Brood_data) {
                                                HatchDate_observed),
                   CaptureDate = case_when(is.na(CaptureDate) & D14Chicks == "yes" ~ HatchDate_observed + 14,
                                           #### Create fake capture dates
-                                          is.na(CaptureDate) ~ as.Date(paste0(BreedingSeason, "-04-01")),
+                                          is.na(CaptureDate) ~ as.Date(paste0(BreedingSeason, "-04-01"), "%Y-%m-%d"),
                                           TRUE ~ CaptureDate)) %>%
     #### The age of captured chicks in days since hatching
     dplyr::mutate(ChickAge = if_else(Age_observed == 1L,
@@ -426,6 +453,13 @@ create_capture_PEW <- function(pew_data, Brood_data) {
                                                          units = "days")),
                                      NA_integer_),
                   BroodIDLaid = BroodID) %>%
+    distinct() %>%
+    #### Create CaptureID
+    dplyr::group_by(IndvID) %>%
+    dplyr::arrange(Year, CaptureDate, .by_group = TRUE) %>%
+    dplyr::mutate(CaptureID = paste(IndvID, row_number(), sep = "_")) %>%
+    dplyr::ungroup() %>%
+
 
     #### USE THE NEW VERSION OF THE FUNCTION
     # dplyr::mutate(Age_calculated = calc_age())
@@ -441,7 +475,8 @@ create_capture_PEW <- function(pew_data, Brood_data) {
                   CaptureDate, CaptureTime, ObserverID, LocationID,
                   CaptureAlive, ReleaseAlive, CapturePopID, CapturePlot,
                   ReleasePopID, ReleasePlot, Mass, Tarsus, OriginalTarsusMethod,
-                  WingLength, Age_observed, Age_calculated, ChickAge, ExperimentID)
+                  WingLength, Age_observed, Age_calculated, ChickAge, ExperimentID) %>%
+    distinct()
 
   return(Capture_data)
 
@@ -505,7 +540,7 @@ create_location_PEW <- function(data) {
     data %>%
     dplyr::select(BreedingSeason, CaptureDate, NestboxID, PopID) %>%
     group_by(NestboxID) %>%
-    arrange(BreedingSeason, CaptureDate) %>%
+    arrange(BreedingSeason, CaptureDate, .by_group = TRUE) %>%
     dplyr::summarise(StartSeason = min(BreedingSeason, na.rm = TRUE),
                      EndSeason = NA_integer_,
                      LocationID = unique(NestboxID),
