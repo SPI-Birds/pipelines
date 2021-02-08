@@ -167,3 +167,4 @@ test_that("Location_data returns an expected outcome...", {
   expect_equal(subset(PEW_data, LocationID == "88")$EndSeason, NA_integer_)
 
 })
+
