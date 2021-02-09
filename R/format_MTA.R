@@ -3,18 +3,14 @@
 #' A pipeline to produce the standard format for bird study population
 #' at the MTA-PE Evolutionary Ecology Group, Hungary, administered by
 #' Gabor Seres & András Liker.
-#' The data include 5 sites: Veszprém, Balatonfüred, Szentgál, Vilma-puszta and Gulya-domb.
+#' The data include 5 sites, we treat them as separate populations:
+#' Veszprém VES, Balatonfüred BAL, Szentgál SZE, Vilma-puszta VIL and Gulya-domb GUL.
 #'
 #' This section provides details on data management choices that are unique to
 #' this data. For a general description of the standard format please see see
-#'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
+#'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 #'
 #' \strong{xxx}:
-#'
-#' \strong{Latitude, Longitude} The exact coordinates of the nestboxes are not available.
-#' Data owner provided an map of the location, which can be georeferenced in the case of
-#' interest or necessity of the data user. Currently, only general coordinates
-#' for the location are provided.
 #'
 #' @inheritParams pipeline_params
 #' @return Generates either 4 .csv files or 4 data frames in the standard format.
@@ -30,10 +26,8 @@
 # "alu_gyurus"  "BPAB"  "BPAS" "father_Vi37" "gyurutlen"=="ringless"
 # "A000" ??? appears a lot
 #### OriginalTarsusMethod
-#
-#
-#### QUESTIONS LIAM
-#
+#### Capture date??
+#### Check if date of ringing may be considered as fledge date?
 #
 #### --------------------------------------------------------------------------~
 
@@ -64,17 +58,23 @@ format_MTA <- function(db = choose_directory(),
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
     #### Convert to corresponding format and rename
-    dplyr::mutate(PopID = "MTA",
+    dplyr::mutate(PopID = case_when(.data$Site == "Balatonfured" ~ "BAL",
+                                    .data$Site == "Szentgal_erdo" ~ "SZE",
+                                    .data$Site == "Veszprem" ~ "VES",
+                                    .data$Site == "Vilma.puszta" ~ "VIL",
+                                    .data$Site == "Gulya.domb"~ "GUL"),
                   BreedingSeason = as.integer(.data$Year),
                   NestboxID = toupper(.data$NestboxNumber),
                   BroodID = as.character(.data$BroodId),
-                  LocationID = NestboxID,
+                  LocationID = .data$NestboxID,
                   #### Ask data owner: There are few strange IDs ???
                   # Females: "ZRKA" "mother_Vi27" "mother_Vi37" "ringless"
-                  FemaleID = as.character(if_else(.data$FemaleId %in% c("gyurutlen", "ringless"),
+                  FemaleID = as.character(if_else(.data$FemaleId %in% c("gyurutlen", "ringless",
+                                                                        "alu_gyuru"),
                                                   "unringed", .data$FemaleId)),
                   # Males: "alu_gyurus"  "BPAB"  "BPAS" "father_Vi37" "gyurutlen" "ringless"
-                  MaleID = as.character(if_else(.data$MaleId %in% c("gyurutlen", "ringless"),
+                  MaleID = as.character(if_else(.data$MaleId %in% c("gyurutlen", "ringless",
+                                                                    "alu_gyurus"),
                                                 "unringed", .data$MaleId))) %>%
     #### Remove columns which we do not store in the standardized format
     dplyr::select(-.data$FemaleColorId,
@@ -156,7 +156,7 @@ format_MTA <- function(db = choose_directory(),
 create_brood_MTA <- function(data) {
 
   Brood_data <-
-    data %>%
+    mta_data %>%
     #### Convert to corresponding format and rename
     dplyr::mutate(Plot = .data$Plot,
                   ClutchType_observed = as.character(tolower(.data$ClutchTypeObserved)),
@@ -224,7 +224,6 @@ create_brood_MTA <- function(data) {
 #' Create a capture data table in standard format for blue tits in MTA-PE Evolutionary Ecology Group, Hungary.
 #' @param Brood_data Data frame. Brood_data from MTA-PE Evolutionary Ecology Group, Hungary.
 #' @return A data frame.
-#'
 
 
 create_capture_MTA <- function(data) {
@@ -243,32 +242,34 @@ create_capture_MTA <- function(data) {
     dplyr::filter(!is.na(.data$IndvID)) %>%
     #### Remove unringed individuals
     dplyr::filter(.data$IndvID != "unringed") %>%
-    #### Create capture date
-    dplyr::mutate(CaptureDate = as.Date(paste0(BreedingSeason, "-06-01"))) %>%
+    #### ASK DATA OWNER >> til then create capture date
+    dplyr::mutate(CaptureDate = as.Date(paste0(.data$BreedingSeason, "-06-01"))) %>%
     #### Create new variables
-    dplyr::group_by(IndvID) %>%
-    dplyr::arrange(BreedingSeason, CaptureDate) %>%
-    dplyr::mutate(CaptureID = paste(IndvID, row_number(), sep = "_")) %>%
+    dplyr::group_by(.data$IndvID) %>%
+    dplyr::arrange(.data$BreedingSeason, .data$CaptureDate) %>%
+    dplyr::mutate(CaptureID = paste(.data$IndvID, row_number(), sep = "_")) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(CaptureTime  = NA_character_,
                   CaptureAlive = TRUE,
-                  ReleaseAlive = CaptureAlive,
-                  CapturePopID = PopID,
-                  CapturePlot  = Plot,
-                  ReleasePopID = ifelse(ReleaseAlive == TRUE, CapturePopID, NA_character_),
-                  ReleasePlot  = ifelse(ReleaseAlive == TRUE, CapturePlot, NA_character_),
+                  ReleaseAlive = .data$CaptureAlive,
+                  CapturePopID = .data$PopID,
+                  CapturePlot  = .data$Plot,
+                  ReleasePopID = ifelse(ReleaseAlive == TRUE, .data$CapturePopID, NA_character_),
+                  ReleasePlot  = ifelse(ReleaseAlive == TRUE, .data$CapturePlot, NA_character_),
                   #### Ask data owner
-                  # OriginalTarsusMethod = ifelse(!is.na(Tarsus), "Alternative", NA_character_),
+                  # OriginalTarsusMethod = ifelse(!is.na(.data$Tarsus), "Alternative", NA_character_),
                   WingLength = NA_real_,
                   Age_observed = NA_integer_,
                   ChickAge = NA_integer_,
-                  BroodIDLaid = BroodID,
+                  BroodIDLaid = .data$BroodID,
                   ObserverID = NA_character_,
                   Mass = NA_real_,
                   Tarsus = NA_real_,
                   OriginalTarsusMethod = NA_character_) %>%
+
     #### USE THE NEW VERSION OF THE FUNCTION
     # dplyr::mutate(Age_calculated = calc_age())
+
     #### OLD VERSION OF THE FUNCTION
     calc_age(ID = IndvID,
              Age = Age_observed,
@@ -276,11 +277,16 @@ create_capture_MTA <- function(data) {
              Year = BreedingSeason,
              showpb = TRUE) %>%
     #### Final arrangement
-    dplyr::select(CaptureID, IndvID, Species, Sex_observed, BreedingSeason,
-                  CaptureDate, CaptureTime, ObserverID, LocationID,
-                  CaptureAlive, ReleaseAlive, CapturePopID, CapturePlot,
-                  ReleasePopID, ReleasePlot, Mass, Tarsus, OriginalTarsusMethod,
-                  WingLength, Age_observed, Age_calculated, ChickAge, ExperimentID)
+    dplyr::select(.data$CaptureID, .data$IndvID, .data$Species,
+                  .data$Sex_observed, .data$BreedingSeason,
+                  .data$CaptureDate, .data$CaptureTime,
+                  .data$ObserverID, .data$LocationID,
+                  .data$CaptureAlive, .data$ReleaseAlive,
+                  .data$CapturePopID, .data$CapturePlot,
+                  .data$ReleasePopID, .data$ReleasePlot,
+                  .data$Mass, .data$Tarsus, .data$OriginalTarsusMethod,
+                  .data$WingLength, .data$Age_observed, .data$Age_calculated,
+                  .data$ChickAge, .data$ExperimentID)
 
   return(Capture_data)
 
@@ -303,8 +309,8 @@ create_individual_MTA <- function(data){
   Individual_data <-
     data %>%
     #### Format and create new data columns
-    group_by(IndvID) %>%
-    dplyr::summarise(Sex_calculated = purrr::map_chr(.x = list(unique(na.omit(Sex_observed))),
+    group_by(.data$IndvID) %>%
+    dplyr::summarise(Sex_calculated = purrr::map_chr(.x = list(unique(na.omit(.data$Sex_observed))),
                                                      .f = ~{
                                                        if(length(..1) == 0){
                                                          return(NA_character_)
@@ -315,15 +321,17 @@ create_individual_MTA <- function(data){
                                                        }
                                                      }),
                      Sex_genetic = NA_character_,
-                     Species = first(Species),
+                     Species = first(.data$Species),
                      PopID = "MTA",
-                     RingSeason = min(BreedingSeason),
+                     RingSeason = min(.data$BreedingSeason),
                      RingAge = "adult",
                      BroodIDLaid = NA_character_,
-                     BroodIDFledged = BroodIDLaid) %>%
+                     BroodIDFledged = .data$BroodIDLaid) %>%
     dplyr::ungroup() %>%
-    dplyr::select(IndvID, Species, PopID, BroodIDLaid, BroodIDFledged,
-                  RingSeason, RingAge, Sex_calculated, Sex_genetic)
+    dplyr::select(.data$IndvID, .data$Species, .data$PopID,
+                  .data$BroodIDLaid, .data$BroodIDFledged,
+                  .data$RingSeason, .data$RingAge,
+                  .data$Sex_calculated, .data$Sex_genetic)
 
   return(Individual_data)
 
@@ -339,13 +347,14 @@ create_individual_MTA <- function(data){
 #'
 #' @return A data frame.
 
+
 create_location_MTA <- function(data) {
 
   Location_data <-
     data %>%
     dplyr::select(.data$BreedingSeason, .data$NestboxID, .data$PopID, .data$Site) %>%
     #### Remove cases where no nestbox is indicated >> check with data owner
-    filter(!is.na(NestboxID)) %>%
+    filter(!is.na(.data$NestboxID)) %>%
     group_by(.data$NestboxID) %>%
     arrange(.data$BreedingSeason) %>%
     dplyr::summarise(StartSeason = min(.data$BreedingSeason, na.rm = TRUE),
@@ -355,15 +364,17 @@ create_location_MTA <- function(data) {
                      Site = unique(.data$Site)) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(LocationType = "NB",
-                  HabitatType = case_when(.data$Site %in% c("Veszprem", "Balatonfured") ~ "urban",
-                                          .data$Site %in% c("Vilma.puszta", "Szentgal_erdo") ~ "deciduous",
-                                          .data$Site == "Gulya.domb" ~ NA_character_),
+                  HabitatType = case_when(.data$PopID %in% c("VES", "BAL") ~ "urban",
+                                          .data$PopID %in% c("VIL", "SZE") ~ "deciduous",
+                                          .data$PopID == "GUL" ~ NA_character_),
                   #### Only general coordinates for the location
                   Latitude  = NA_real_,
                   Longitude = NA_real_) %>%
     #### Final arrangement
-    dplyr::select(LocationID, NestboxID, LocationType, PopID,
-                  Latitude, Longitude, StartSeason, EndSeason, HabitatType)
+    dplyr::select(.data$LocationID, .data$NestboxID,
+                  .data$LocationType, .data$PopID,
+                  .data$Latitude, .data$Longitude,
+                  .data$StartSeason, .data$EndSeason, .data$HabitatType)
 
   return(Location_data)
 
