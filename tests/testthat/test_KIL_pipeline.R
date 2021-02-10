@@ -19,7 +19,7 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(subset(KIL_data, IndvID == "1742516")$Species, "PARMAJ")
   expect_equal(subset(KIL_data, IndvID == "1742516")$BroodIDLaid, NA_character_)
   expect_equal(subset(KIL_data, IndvID == "1742516")$BroodIDFledged, NA_character_)
-  expect_equal(subset(KIL_data, IndvID == "1742516")$RingSeason, 1999)
+  expect_equal(subset(KIL_data, IndvID == "1742516")$RingSeason, 1999L)
   expect_equal(subset(KIL_data, IndvID == "1742516")$RingAge, "adult")
 
   #Test 2: Adult tit female
@@ -28,7 +28,7 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(subset(KIL_data, IndvID == "107323")$Species, "PARMAJ")
   expect_equal(subset(KIL_data, IndvID == "107323")$BroodIDLaid, NA_character_)
   expect_equal(subset(KIL_data, IndvID == "107323")$BroodIDFledged, NA_character_)
-  expect_equal(subset(KIL_data, IndvID == "107323")$RingSeason, 1974)
+  expect_equal(subset(KIL_data, IndvID == "107323")$RingSeason, 1974L)
   expect_equal(subset(KIL_data, IndvID == "107323")$RingAge, "adult")
 
   #Test 3: Adult tit male
@@ -37,7 +37,7 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(subset(KIL_data, IndvID == "1697275")$Species, "PARMAJ")
   expect_equal(subset(KIL_data, IndvID == "1697275")$BroodIDLaid, NA_character_)
   expect_equal(subset(KIL_data, IndvID == "1697275")$BroodIDFledged, NA_character_)
-  expect_equal(subset(KIL_data, IndvID == "1697275")$RingSeason, 1997)
+  expect_equal(subset(KIL_data, IndvID == "1697275")$RingSeason, 1997L)
   expect_equal(subset(KIL_data, IndvID == "1697275")$RingAge, "adult")
 
   #Test 4: Adult tit male
@@ -46,7 +46,7 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(subset(KIL_data, IndvID == "5991026")$Species, "PARMAJ")
   expect_equal(subset(KIL_data, IndvID == "5991026")$BroodIDLaid, NA_character_)
   expect_equal(subset(KIL_data, IndvID == "5991026")$BroodIDFledged, NA_character_)
-  expect_equal(subset(KIL_data, IndvID == "5991026")$RingSeason, 1996)
+  expect_equal(subset(KIL_data, IndvID == "5991026")$RingSeason, 1996L)
   expect_equal(subset(KIL_data, IndvID == "5991026")$RingAge, "adult")
 
   #Test 5: Bird ringed as chick
@@ -54,21 +54,21 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(subset(KIL_data, IndvID == "100002")$Species, "PARMAJ")
   expect_equal(subset(KIL_data, IndvID == "100002")$BroodIDLaid, "477")
   expect_equal(subset(KIL_data, IndvID == "100002")$BroodIDFledged, "477")
-  expect_equal(subset(KIL_data, IndvID == "100002")$RingSeason, 1973)
+  expect_equal(subset(KIL_data, IndvID == "100002")$RingSeason, 1973L)
   expect_equal(subset(KIL_data, IndvID == "100002")$RingAge, "chick")
 
   #Test 6: Individual with not clear sex
   expect_equal(subset(KIL_data, IndvID == "100093")$Sex_calculated, "C")
   expect_equal(subset(KIL_data, IndvID == "100093")$BroodIDLaid, "483")
   expect_equal(subset(KIL_data, IndvID == "100093")$BroodIDFledged, "483")
-  expect_equal(subset(KIL_data, IndvID == "100093")$RingSeason, 1973)
+  expect_equal(subset(KIL_data, IndvID == "100093")$RingSeason, 1973L)
   expect_equal(subset(KIL_data, IndvID == "100093")$RingAge, "chick")
 
   #Test 7: Individual with sex unknown
   expect_equal(subset(KIL_data, IndvID == "671705")$Sex_calculated, NA_character_)
   expect_equal(subset(KIL_data, IndvID == "671705")$BroodIDLaid, "3406")
   expect_equal(subset(KIL_data, IndvID == "671705")$BroodIDFledged, "3406")
-  expect_equal(subset(KIL_data, IndvID == "671705")$RingSeason, 1983)
+  expect_equal(subset(KIL_data, IndvID == "671705")$RingSeason, 1983L)
   expect_equal(subset(KIL_data, IndvID == "671705")$RingAge, "chick")
 
 })
@@ -86,8 +86,8 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(KIL_data, BroodID == "82")$FemaleID, "1847")
   expect_equal(subset(KIL_data, BroodID == "82")$MaleID, "26537")
   expect_equal(subset(KIL_data, BroodID == "82")$LocationID, "kn471")
-  expect_equal(subset(KIL_data, BroodID == "82")$BreedingSeason, 1971)
-  expect_equal(subset(KIL_data, BroodID == "82")$ClutchSize_observed, 7)
+  expect_equal(subset(KIL_data, BroodID == "82")$BreedingSeason, 1971L)
+  expect_equal(subset(KIL_data, BroodID == "82")$ClutchSize_observed, 7L)
 
   #Test 2: Tit brood where clutch type = first
   #BroodID 1996_t845
@@ -95,7 +95,7 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(KIL_data, BroodID == "1996_t845")$Species, "PARMAJ")
   expect_equal(subset(KIL_data, BroodID == "1996_t845")$FemaleID, "5990017")
   expect_equal(subset(KIL_data, BroodID == "1996_t845")$MaleID, "5990023")
-  expect_equal(subset(KIL_data, BroodID == "1996_t845")$ClutchSize_observed, 8)
+  expect_equal(subset(KIL_data, BroodID == "1996_t845")$ClutchSize_observed, 8L)
   expect_equal(subset(KIL_data, BroodID == "1996_t845")$HatchDate_observed, as.Date("1996-04-30"))
 
   #Test 3: Tit brood where clutch type = second
@@ -107,7 +107,7 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(KIL_data, BroodID == "96")$MaleID, NA_character_)
   expect_true(is.na(subset(KIL_data, BroodID == "96")$HatchDate_observed))
   expect_equal(subset(KIL_data, BroodID == "96")$ClutchSize_observed, NA_integer_)
-  expect_equal(subset(KIL_data, BroodID == "96")$NumberFledged_observed, 7)
+  expect_equal(subset(KIL_data, BroodID == "96")$NumberFledged_observed, 7L)
   #AvgChickMass and AvgTarsus should be NA, there were no chicks measured
   expect_equal(subset(KIL_data, BroodID == "96")$AvgChickMass, NA_real_)
   expect_equal(subset(KIL_data, BroodID == "96")$AvgTarsus, NA_real_)
@@ -123,7 +123,7 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(KIL_data, BroodID == "259")$MaleID, "70234")
   expect_equal(subset(KIL_data, BroodID == "259")$LayDate_observed, as.Date("1973-06-04"))
   expect_equal(subset(KIL_data, BroodID == "259")$ClutchSize_observed, NA_integer_)
-  expect_equal(subset(KIL_data, BroodID == "259")$NumberFledged_observed, 6)
+  expect_equal(subset(KIL_data, BroodID == "259")$NumberFledged_observed, 6L)
   #AvgChickMass and AvgTarsus should be NA, there were no chicks measured
   expect_equal(subset(KIL_data, BroodID == "259")$AvgChickMass, NA_real_)
   expect_equal(subset(KIL_data, BroodID == "259")$AvgTarsus, NA_real_)
@@ -161,7 +161,7 @@ test_that("Capture_data returns an expected outcome...", {
   expect_equal(subset(KIL_data, IndvID == "100002")$Sex_observed[1], NA_character_)
   expect_equal(subset(KIL_data, IndvID == "100002")$Sex_observed[5], "F")
   expect_equal(subset(KIL_data, IndvID == "100002")$LocationID[1], "kn795")
-  expect_equal(subset(KIL_data, IndvID == "100002")$BreedingSeason[1], 1973)
+  expect_equal(subset(KIL_data, IndvID == "100002")$BreedingSeason[1], 1973L)
   # expect_equal(min(subset(KIL_data, IndvID == "100002")$CaptureDate, na.rm = TRUE), as.Date(""))
 
   #Test 4: Male caught first time as chick
@@ -170,7 +170,7 @@ test_that("Capture_data returns an expected outcome...", {
   #Test the first capture of the male
   expect_equal(subset(KIL_data, IndvID == "884944")$Sex_observed[1], NA_character_)
   expect_equal(subset(KIL_data, IndvID == "884944")$LocationID[1], "kn515")
-  expect_equal(subset(KIL_data, IndvID == "884944")$BreedingSeason[1], 1985)
+  expect_equal(subset(KIL_data, IndvID == "884944")$BreedingSeason[1], 1985L)
   # expect_equal(min(subset(KIL_data, IndvID == "884944")$CaptureDate, na.rm = TRUE), as.Date(""))
 
 })
@@ -187,7 +187,7 @@ test_that("Location_data returns an expected outcome...", {
   #Habitat is as expected
   expect_equal(subset(KIL_data, LocationID == "r18")$HabitatType, "evergreen")
   #Start season
-  expect_equal(subset(KIL_data, LocationID == "r18")$StartSeason, 1995)
+  expect_equal(subset(KIL_data, LocationID == "r18")$StartSeason, 1995L)
   #End season
   expect_equal(subset(KIL_data, LocationID == "r18")$EndSeason, NA_integer_)
 
@@ -197,7 +197,7 @@ test_that("Location_data returns an expected outcome...", {
   #Habitat is as expected
   expect_equal(subset(KIL_data, LocationID == "b170")$HabitatType, "deciduous")
   #Start season
-  expect_equal(subset(KIL_data, LocationID == "b170")$StartSeason, 2000)
+  expect_equal(subset(KIL_data, LocationID == "b170")$StartSeason, 2000L)
   #End season
   expect_equal(subset(KIL_data, LocationID == "b170")$EndSeason, NA_integer_)
 
@@ -207,7 +207,7 @@ test_that("Location_data returns an expected outcome...", {
   #Habitat is as expected
   expect_equal(subset(KIL_data, LocationID == "kn1010")$HabitatType, NA_character_)
   #Start season
-  expect_equal(subset(KIL_data, LocationID == "kn1010")$StartSeason, 1971)
+  expect_equal(subset(KIL_data, LocationID == "kn1010")$StartSeason, 1971L)
   #End season
   expect_equal(subset(KIL_data, LocationID == "kn1010")$EndSeason, NA_integer_)
 
@@ -217,7 +217,7 @@ test_that("Location_data returns an expected outcome...", {
   #Habitat is as expected
   expect_equal(subset(KIL_data, LocationID == "a22")$HabitatType, "evergreen")
   #Start season
-  expect_equal(subset(KIL_data, LocationID == "a22")$StartSeason, 2001)
+  expect_equal(subset(KIL_data, LocationID == "a22")$StartSeason, 2001L)
   #End season
   expect_equal(subset(KIL_data, LocationID == "a22")$EndSeason, NA_integer_)
 
