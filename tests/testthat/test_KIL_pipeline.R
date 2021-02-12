@@ -91,12 +91,12 @@ test_that("Brood_data returns an expected outcome...", {
 
   #Test 2: Tit brood where clutch type = first
   #BroodID 1996_t845
-  expect_equal(subset(KIL_data, BroodID == "1996_t845")$ClutchType_calculated, "first")
-  expect_equal(subset(KIL_data, BroodID == "1996_t845")$Species, "PARMAJ")
-  expect_equal(subset(KIL_data, BroodID == "1996_t845")$FemaleID, "5990017")
-  expect_equal(subset(KIL_data, BroodID == "1996_t845")$MaleID, "5990023")
-  expect_equal(subset(KIL_data, BroodID == "1996_t845")$ClutchSize_observed, 8L)
-  expect_equal(subset(KIL_data, BroodID == "1996_t845")$HatchDate_observed, as.Date("1996-04-30"))
+  expect_equal(subset(KIL_data, BroodID == "1996_t845_1")$ClutchType_calculated, "first")
+  expect_equal(subset(KIL_data, BroodID == "1996_t845_1")$Species, "PARMAJ")
+  expect_equal(subset(KIL_data, BroodID == "1996_t845_1")$FemaleID, "5990017")
+  expect_equal(subset(KIL_data, BroodID == "1996_t845_1")$MaleID, "5990023")
+  expect_equal(subset(KIL_data, BroodID == "1996_t845_1")$ClutchSize_observed, 8L)
+  expect_equal(subset(KIL_data, BroodID == "1996_t845_1")$HatchDate_observed, as.Date("1996-05-30"))
 
   #Test 3: Tit brood where clutch type = second
   #BroodID 96
@@ -144,7 +144,7 @@ test_that("Capture_data returns an expected outcome...", {
   #Test the first capture of the female
   expect_equal(subset(KIL_data, IndvID == "5991287")$Sex_observed[1], "F")
   expect_equal(subset(KIL_data, IndvID == "5991287")$LocationID[1], "n71")
-  # expect_equal(min(subset(KIL_data, IndvID == "5991287")$CaptureDate, na.rm = TRUE), as.Date(""))
+  expect_equal(min(subset(KIL_data, IndvID == "5991287")$CaptureDate, na.rm = TRUE), as.Date("2000-07-10"))
 
   #Test 2: Male caught as adult
   #Test the male has the correct number of capture records
@@ -162,7 +162,7 @@ test_that("Capture_data returns an expected outcome...", {
   expect_equal(subset(KIL_data, IndvID == "100002")$Sex_observed[5], "F")
   expect_equal(subset(KIL_data, IndvID == "100002")$LocationID[1], "kn795")
   expect_equal(subset(KIL_data, IndvID == "100002")$BreedingSeason[1], 1973L)
-  # expect_equal(min(subset(KIL_data, IndvID == "100002")$CaptureDate, na.rm = TRUE), as.Date(""))
+  expect_equal(min(subset(KIL_data, IndvID == "100002")$CaptureDate, na.rm = TRUE), as.Date("1973-05-01"))
 
   #Test 4: Male caught first time as chick
   #Test the male has the correct number of capture records
@@ -171,7 +171,7 @@ test_that("Capture_data returns an expected outcome...", {
   expect_equal(subset(KIL_data, IndvID == "884944")$Sex_observed[1], NA_character_)
   expect_equal(subset(KIL_data, IndvID == "884944")$LocationID[1], "kn515")
   expect_equal(subset(KIL_data, IndvID == "884944")$BreedingSeason[1], 1985L)
-  # expect_equal(min(subset(KIL_data, IndvID == "884944")$CaptureDate, na.rm = TRUE), as.Date(""))
+  expect_equal(min(subset(KIL_data, IndvID == "884944")$CaptureDate, na.rm = TRUE), as.Date("1985-05-01"))
 
 })
 

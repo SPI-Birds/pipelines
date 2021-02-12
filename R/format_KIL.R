@@ -11,12 +11,12 @@
 #'
 #'\strong{BroodID}: BroodID has two formats in the final Brood_data. In the original primary data
 #' until year 1992, the brood has individual numerical ID. In the original primary data from data
-#' after the year 1995, there is no BroodID - therefore we create one using the "Breeding season_NestboxID".
+#' after the year 1995, there is no BroodID - therefore we create one using the "Breeding season_NestboxID_BreedingAttempt".
 #'
 #'\strong{LayDate}: In the primary data, laying date is the date on which the first egg of a clutch is laid.
 #'Expressed as days after 31st of March: 1 = April 1st, 31 = May 1st, etc.Use negative numbers for laying dates in March.
 #'
-#'\strong{HatchDate_observed}: In the primary data, hatch date is expressed as days after 31st of March: 1 = April 1st, 31 = May 1st, etc.
+#'\strong{HatchDate_observed}: In the primary data (only data after 1995), hatch date is expressed as days after 30 of April: 1 = May 1st, 31 = June 1st, etc.
 #'
 #'\strong{AvgTarsus}: Only available for data after 1995, where the measurements at 15 days old chicks are used.
 #'
@@ -30,18 +30,10 @@
 
 #### --------------------------------------------------------------------------~
 #### Questions for data owners
-# OriginalTarsusMethod ? (both datasets)
-# til1992: We assume that the BroodIDLaid is the same as BroodIDFledged, need to ask data owner.
-# Capture date for 1992 data?
-# Dates Laying and Hatching in the data from 1995 seem flipped.
-# Age: "Age of the breeding individual (Euring codes), if individual ringing date is unknown."
-#       However, it is  not clear all values refer to age or to Euring codes:
-#       ("1"   "2"   "2y+" "3"   "3y+" "4"   "4y+" "4Y+" "5"   "5y+" "6"   "6y+" "7"   "7y+" "8y+" "9y+")
-# ChickAge: At what age chicks are ringed?
+# OriginalTarsusMethod ? (1995 datasets)
+# ChickAge: At what age chicks are ringed  (1995 datasets)
 #
-# Data after 1995: brood 	1997_b130 has male and female ID the same ind. 5748561
-
-
+#
 # New questions 1995:
 #   chicks: there is one ring number "0" with tarsus "liigäväike"
 #           there are cases when ring number is blank
@@ -58,11 +50,13 @@
 
 # #### ASK DATA OWNER: Now remove temporarily this record
 # dplyr::filter(.data$NestlingRingNo != 0) %>%
-#   #### ASK DATA OWNER TO CHANGE IN RAW DATA
-#   dplyr::mutate(NestlingTarsus = str_replace(.data$NestlingTarsus,
-#                                              pattern = ",",
-#                                              replacement = ".")) %>%
 
+#### Data 1995: New question
+#### ASK DATA OWNER TO CHANGE IN RAW DATA
+# dplyr::mutate(NestlingTarsus = str_replace(.data$NestlingTarsus,
+#                                            pattern = ",",
+#                                            replacement = ".")) %>%
+#
 #### --------------------------------------------------------------------------~
 
 
@@ -91,11 +85,11 @@ format_KIL <- function(db = choose_directory(),
   # The file after 1995 contains only one sheet, other file from 1995 includes data
   # about nestlings.
 
-  message("Importing primary data ...")
+  message("Importing primary data ... 1/4")
 
   #### Load brood data before 1992
   brood_data_til92 <-
-    readxl::read_excel(path =  paste0(db, "/KIL_PrimaryData_to1992.xlsx"), sheet = "BroodData") %>%
+    readxl::read_excel(path = paste0(db, "/KIL_PrimaryData_to1992.xlsx"), sheet = "BroodData") %>%
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
     dplyr::mutate(Species = species_codes[which(species_codes$SpeciesID == 14640), ]$Species,
@@ -105,29 +99,38 @@ format_KIL <- function(db = choose_directory(),
     dplyr::select(-.data$Year,
                   -.data$NestboxId)
 
+
+  message("Importing primary data ... 2/4")
+
   #### Load adult data before 1992
   adults_data_til92 <-
-    readxl::read_excel(path =  paste0(db, "/KIL_PrimaryData_to1992.xlsx"), sheet = "AdultData") %>%
+    readxl::read_excel(path = paste0(db, "/KIL_PrimaryData_to1992.xlsx"), sheet = "AdultData") %>%
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
-    dplyr::mutate(IndvID = as.character(.data$AdultId),
+    dplyr::mutate(IndvID  = as.character(.data$AdultId),
                   Species = species_codes[which(species_codes$SpeciesID == 14640), ]$Species,
                   PopID   = "KIL",
-                  BreedingSeason = .data$RingDate) %>%
+                  BreedingSeason = .data$RingDate,
+                  Age = tolower(.data$Age)) %>%
     dplyr::select(-.data$AdultId,
                   -.data$RingDate)
 
+
+  message("Importing primary data ... 3/4")
+
   #### Load chick data before 1992
   chicks_data_til92 <-
-    readxl::read_excel(path =  paste0(db, "/KIL_PrimaryData_to1992.xlsx"), sheet = "NestlingData") %>%
+    readxl::read_excel(path = paste0(db, "/KIL_PrimaryData_to1992.xlsx"), sheet = "NestlingData") %>%
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
-    dplyr::mutate(IndvID = as.character(.data$NestlingRingNumber),
+    dplyr::mutate(IndvID  = as.character(.data$NestlingRingNumber),
                   Species = species_codes[which(species_codes$SpeciesID == 14640), ]$Species,
                   PopID   = "KIL",
                   BreedingSeason = .data$RingDate) %>%
     dplyr::select(-.data$NestlingRingNumber,
                   -.data$RingDate)
+
+  message("Importing primary data ... 4/4")
 
   #### Load brood data after 1995
   kil_data_95 <-
@@ -327,7 +330,6 @@ create_brood_KIL <- function(brood_data_til92, kil_data_95) {
                   FemaleID = as.character(.data$FemaleId),
                   MaleID = as.character(.data$MaleId),
                   ClutchType_observed = as.character(tolower(.data$ClutchType)),
-                  #### Calculate laying date
                   ## for new version of calc_clutchtype
                   # LayDate_observed = as.Date(paste(.data$BreedingSeason, "04-01", sep = "-"),
                   #                            format = "%Y-%m-%d") + .data$LayDate - 1,
@@ -358,7 +360,8 @@ create_brood_KIL <- function(brood_data_til92, kil_data_95) {
                   NumberChicksMass = NA_integer_,
                   AvgTarsus = NA_real_,
                   NumberChicksTarsus = NA_integer_,
-                  #### Ask data owner for the tarsus method
+                  #### The method used in this population is the Svensson Standard method, but
+                  #### data were provided
                   OriginalTarsusMethod = NA_character_,
                   ExperimentID = NA_character_) %>%
     #### Even though, there are no dates for the clutch type calculation
@@ -439,7 +442,6 @@ create_brood_KIL <- function(brood_data_til92, kil_data_95) {
                   #### Ask data owner for the tarsus method
                   OriginalTarsusMethod = NA_character_,
                   ExperimentID = NA_character_) %>%
-    #### Even though, there are no dates for the clutch type calculation
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
     #### Rename
     dplyr::rename(LayDate_observed = .data$LayDate,
@@ -447,7 +449,7 @@ create_brood_KIL <- function(brood_data_til92, kil_data_95) {
     #### Final arrangement
     dplyr::select(.data$BroodID, .data$PopID, .data$BreedingSeason, .data$Species,
                   .data$Plot, .data$LocationID,
-                  .data$FemaleID, MaleID,
+                  .data$FemaleID, .data$MaleID,
                   .data$ClutchType_observed, .data$ClutchType_calculated,
                   .data$LayDate_observed, .data$LayDate_min, .data$LayDate_max,
                   .data$ClutchSize_observed, .data$ClutchSize_min, .data$ClutchSize_max,
@@ -455,7 +457,8 @@ create_brood_KIL <- function(brood_data_til92, kil_data_95) {
                   .data$BroodSize_observed, .data$BroodSize_min, .data$BroodSize_max,
                   .data$FledgeDate_observed, .data$FledgeDate_min, .data$FledgeDate_max,
                   .data$NumberFledged_observed, .data$NumberFledged_min, .data$NumberFledged_max,
-                  .data$AvgEggMass, .data$NumberEggs, .data$AvgChickMass, .data$NumberChicksMass,
+                  .data$AvgEggMass, .data$NumberEggs,
+                  .data$AvgChickMass, .data$NumberChicksMass,
                   .data$AvgTarsus, .data$NumberChicksTarsus,
                   .data$OriginalTarsusMethod, .data$ExperimentID)
 
@@ -477,8 +480,11 @@ create_brood_KIL <- function(brood_data_til92, kil_data_95) {
 # CaptureDate = as.Date(paste0(BreedingSeason, "-05-01"))
 
 
-create_capture_KIL <- function(brood_data_til92, adults_data_til92,
-                               chicks_data_til92, adults_data_95) {
+create_capture_KIL <- function(brood_data_til92,
+                               adults_data_til92,
+                               chicks_data_til92,
+                               adults_data_95,
+                               chicks_data_95) {
 
   ### Subset brood data to get location (nestbox) ID
   brood_data_til92_temp <-
@@ -492,7 +498,7 @@ create_capture_KIL <- function(brood_data_til92, adults_data_til92,
     adults_data_til92 %>%
     dplyr::mutate(Sex_observed = .data$Sex,
                   #### Create the date, as there is no information
-                  CaptureDate  = as.Date(paste0(BreedingSeason, "-05-01")), #as.Date(NA),
+                  CaptureDate  = as.Date(paste0(BreedingSeason, "-05-01")),
                   CaptureTime  = NA_character_,
                   ObserverID   = NA_character_,
                   CaptureAlive = TRUE,
@@ -503,13 +509,29 @@ create_capture_KIL <- function(brood_data_til92, adults_data_til92,
                   ReleasePlot  = ifelse(ReleaseAlive == TRUE, CapturePlot, NA_character_),
                   Mass = NA_real_,
                   Tarsus = NA_real_,
-                  #### ASK DATA OWNER
+                  #### The method used in this population is the Svensson Standard method, but
+                  #### for adults no data were provided
                   OriginalTarsusMethod = NA_character_,
-                  #### ASK DATA OWNER what do the codes mean? Age or Euring codes?
-                  # Age_observed = case_when()
+                  Age_observed = case_when(.data$Age == "1" ~ 5L,
+                                           .data$Age == "2" ~ 7L,
+                                           .data$Age == "3" ~ 9L,
+                                           .data$Age == "4" ~ 11L,
+                                           .data$Age == "5" ~ 13L,
+                                           .data$Age == "6" ~ 15L,
+                                           .data$Age == "7" ~ 17L,
+                                           .data$Age == "2y+" ~ 6L,
+                                           .data$Age == "3y+" ~ 8L,
+                                           .data$Age == "4y+" ~ 10L,
+                                           .data$Age == "5y+" ~ 12L,
+                                           .data$Age == "6y+" ~ 14L,
+                                           .data$Age == "7y+" ~ 16L,
+                                           .data$Age == "8y+" ~ 18L,
+                                           .data$Age == "9y+" ~ 20L),
                   ChickAge = NA_integer_,
-                  ExperimentID = NA_character_)
-
+                  ExperimentID = NA_character_) %>%
+    dplyr::select(-.data$Age,
+                  -.data$Sex,
+                  -.data$Status)
 
 
   #### Chicks
@@ -528,13 +550,14 @@ create_capture_KIL <- function(brood_data_til92, adults_data_til92,
                   CapturePlot  = NA_character_,
                   ReleasePopID = ifelse(ReleaseAlive == TRUE, CapturePopID, NA_character_),
                   ReleasePlot  = ifelse(ReleaseAlive == TRUE, CapturePlot, NA_character_),
-                  Mass = .data$Mass,
-                  Tarsus = convert_tarsus(.data$Tarsus, method = "Standard"),
-                  OriginalTarsusMethod = "Standard",
+                  Mass = as.numeric(.data$Mass),
+                  Tarsus = convert_tarsus(as.numeric(.data$Tarsus), method = "Standard"),
+                  OriginalTarsusMethod = if_else(!is.na(.data$Tarsus), "Standard", NA_character_),
                   WingLength = NA_real_,
                   Age_observed = 1L,
                   ChickAge = 8L,
-                  ExperimentID = NA_character_)
+                  ExperimentID = NA_character_) %>%
+    dplyr::select(-.data$Sex)
 
 
   #### Merge with brood data to get LocationID
@@ -543,10 +566,7 @@ create_capture_KIL <- function(brood_data_til92, adults_data_til92,
     dplyr::bind_rows(capture_chicks_til92) %>%
     left_join(brood_data_til92_temp,
               by = c("Species", "PopID", "BreedingSeason", "BroodId")) %>%
-    dplyr::select(-.data$BroodId,
-                  -.data$Status,
-                  -.data$Sex,
-                  -.data$Age)
+    dplyr::select(-.data$BroodId)
 
 
   #### Adults (breeding pairs)
@@ -554,7 +574,6 @@ create_capture_KIL <- function(brood_data_til92, adults_data_til92,
   capture_adults_95 <-
     adults_data_95 %>%
     dplyr::mutate(RingAge = "adult",
-                  #### ASK DATA OWNER
                   ObserverID = NA_character_,
                   LocationID = .data$NestboxID,
                   CaptureAlive = TRUE,
@@ -566,7 +585,6 @@ create_capture_KIL <- function(brood_data_til92, adults_data_til92,
                   #### ASK DATA OWNER
                   OriginalTarsusMethod = NA_character_,
                   WingLength = NA_real_,
-                  #### ASK DATA OWNER what do the codes mean? Age or Euring codes?
                   Age_observed = as.integer(.data$AgeEuringCode),
                   ChickAge = NA_integer_,
                   ExperimentID = NA_character_) %>%
@@ -601,12 +619,11 @@ create_capture_KIL <- function(brood_data_til92, adults_data_til92,
                   -.data$BroodID)
 
 
-  #### Join all data
+  #### Join all capture data
   Capture_data <-
     capture_til92 %>%
     dplyr::bind_rows(capture_adults_95) %>%
     dplyr::bind_rows(capture_chicks_95) %>%
-
     dplyr::group_by(IndvID) %>%
     dplyr::arrange(BreedingSeason, CaptureDate) %>%
     dplyr::mutate(CaptureID = paste(IndvID, row_number(), sep = "_")) %>%
@@ -635,8 +652,10 @@ create_capture_KIL <- function(brood_data_til92, adults_data_til92,
 
 #### INDIVIDUAL DATA
 
-create_individual_KIL <- function(adults_data_til92, chicks_data_til92,
-                                  adults_data_95, chicks_data_95) {
+create_individual_KIL <- function(adults_data_til92,
+                                  chicks_data_til92,
+                                  adults_data_95,
+                                  chicks_data_95) {
 
   #### Adults
   #### Data from 1971 to 1992
@@ -678,10 +697,7 @@ create_individual_KIL <- function(adults_data_til92, chicks_data_til92,
                   .data$Sex_observed)
 
 
-  #### We assume that the BroodIDLaid is the same as BroodIDFledged,
-  #### need to ask data owner.
-
-
+  #### Adults
   #### Data from 1995
   indv_adults_95 <-
     adults_data_95  %>%
@@ -695,6 +711,8 @@ create_individual_KIL <- function(adults_data_til92, chicks_data_til92,
                   .data$RingSeason, .data$RingAge,
                   .data$Sex_observed)
 
+
+  #### Chicks
   #### Data from 1995
   indv_chicks_95 <-
     chicks_data_95  %>%
@@ -708,7 +726,6 @@ create_individual_KIL <- function(adults_data_til92, chicks_data_til92,
                   .data$BroodIDLaid, .data$BroodIDFledged,
                   .data$RingSeason, .data$RingAge,
                   .data$Sex_observed)
-
 
 
   Individual_data <-
