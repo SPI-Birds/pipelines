@@ -58,11 +58,11 @@ format_MTA <- function(db = choose_directory(),
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
     #### Convert to corresponding format and rename
-    dplyr::mutate(PopID = case_when(.data$Site == "Balatonfured" ~ "BAL",
+    dplyr::mutate(PopID = case_when(.data$Site == "Balatonfured"  ~ "BAL",
                                     .data$Site == "Szentgal_erdo" ~ "SZE",
-                                    .data$Site == "Veszprem" ~ "VES",
-                                    .data$Site == "Vilma.puszta" ~ "VIL",
-                                    .data$Site == "Gulya.domb"~ "GUL"),
+                                    .data$Site == "Vilma.puszta"  ~ "VIL",
+                                    .data$Site == "Veszprem"   ~ "VES",
+                                    .data$Site == "Gulya.domb" ~ "GUL"),
                   BreedingSeason = as.integer(.data$Year),
                   NestboxID = toupper(.data$NestboxNumber),
                   BroodID = as.character(.data$BroodId),
@@ -153,6 +153,12 @@ format_MTA <- function(db = choose_directory(),
 
 #### BROOD DATA
 
+#' Create brood data table for blue tits in MTA-PE Evolutionary Ecology Group, Hungary.
+#'
+#' Create a capture data table in standard format for blue tits in MTA-PE Evolutionary Ecology Group, Hungary.
+#' @param mta_data Data frame. Primaty data from MTA-PE Evolutionary Ecology Group, Hungary.
+#' @return A data frame.
+
 create_brood_MTA <- function(data) {
 
   Brood_data <-
@@ -222,14 +228,14 @@ create_brood_MTA <- function(data) {
 #' Create capture data table for blue tits in MTA-PE Evolutionary Ecology Group, Hungary.
 #'
 #' Create a capture data table in standard format for blue tits in MTA-PE Evolutionary Ecology Group, Hungary.
-#' @param Brood_data Data frame. Brood_data from MTA-PE Evolutionary Ecology Group, Hungary.
+#' @param data Data frame. Brood_data from MTA-PE Evolutionary Ecology Group, Hungary.
 #' @return A data frame.
 
 
 create_capture_MTA <- function(data) {
 
   Capture_data <-
-    data %>%
+    Brood_data %>%
     dplyr::select(.data$Species, .data$PopID, .data$BreedingSeason,
                   .data$FemaleID, .data$MaleID,
                   .data$BroodID, .data$LocationID, .data$Plot,
@@ -243,7 +249,7 @@ create_capture_MTA <- function(data) {
     #### Remove unringed individuals
     dplyr::filter(.data$IndvID != "unringed") %>%
     #### ASK DATA OWNER >> til then create capture date
-    dplyr::mutate(CaptureDate = as.Date(paste0(.data$BreedingSeason, "-06-01"))) %>%
+    dplyr::mutate(CaptureDate = as.Date(paste0(.data$BreedingSeason, "-05-01"))) %>%
     #### Create new variables
     dplyr::group_by(.data$IndvID) %>%
     dplyr::arrange(.data$BreedingSeason, .data$CaptureDate) %>%
@@ -307,7 +313,7 @@ create_capture_MTA <- function(data) {
 create_individual_MTA <- function(data){
 
   Individual_data <-
-    data %>%
+    Capture_data %>%
     #### Format and create new data columns
     group_by(.data$IndvID) %>%
     dplyr::summarise(Sex_calculated = purrr::map_chr(.x = list(unique(na.omit(.data$Sex_observed))),
@@ -322,7 +328,7 @@ create_individual_MTA <- function(data){
                                                      }),
                      Sex_genetic = NA_character_,
                      Species = first(.data$Species),
-                     PopID = "MTA",
+                     PopID = first(.data$CapturePopID),
                      RingSeason = min(.data$BreedingSeason),
                      RingAge = "adult",
                      BroodIDLaid = NA_character_,
@@ -351,7 +357,7 @@ create_individual_MTA <- function(data){
 create_location_MTA <- function(data) {
 
   Location_data <-
-    data %>%
+    mta_data %>%
     dplyr::select(.data$BreedingSeason, .data$NestboxID, .data$PopID, .data$Site) %>%
     #### Remove cases where no nestbox is indicated >> check with data owner
     filter(!is.na(.data$NestboxID)) %>%
@@ -367,7 +373,6 @@ create_location_MTA <- function(data) {
                   HabitatType = case_when(.data$PopID %in% c("VES", "BAL") ~ "urban",
                                           .data$PopID %in% c("VIL", "SZE") ~ "deciduous",
                                           .data$PopID == "GUL" ~ NA_character_),
-                  #### Only general coordinates for the location
                   Latitude  = NA_real_,
                   Longitude = NA_real_) %>%
     #### Final arrangement
