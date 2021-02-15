@@ -943,7 +943,7 @@ create_dummy_data <- function() {
       Species = "CYACAE"
     ) %>%
     dplyr::add_row( # Impossible (error)
-      Species = "PARMAJ"
+      Species = "POEPAL"
     ) %>%
     dplyr::mutate(
       PopID = "AAA",
@@ -978,7 +978,7 @@ create_dummy_data <- function() {
     ) %>%
     dplyr::add_row( # Impossible (error)
       IndvID = B11_brood_rows$MaleID[3],
-      Species = "POEPAL"
+      Species = "PARMAJ"
     ) %>%
     dplyr::mutate(
       Row = seq(max(I6_indv_rows$Row) + 1, length.out = n()),

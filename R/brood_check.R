@@ -1412,19 +1412,21 @@ compare_species_brood_parents <- function(Brood_data, Individual_data, approved_
     dplyr::rename("MaleSpecies" = .data$Species)
 
   # Select records where parents are not of the same species as the brood
-  different_species_brood_parents <- dplyr::left_join(females, males,
-                                           by=c("Row", "PopID", "BroodID", "BroodSpecies")) %>%
-    dplyr::filter(.data$FemaleSpecies != .data$BroodSpecies | .data$MaleSpecies != .data$BroodSpecies)
+  females_males <- dplyr::left_join(females, males,
+                                    by=c("Row", "PopID", "BroodID", "BroodSpecies"))
 
   # Warnings
   # Common cross-fostering and hybrids are considered "warnings"
-  common_females <- different_species_brood_parents %>%
+  common_females <- females_males %>%
+    dplyr::filter(.data$FemaleSpecies != .data$BroodSpecies) %>%
     dplyr::semi_join(common_hybrids, by = c("FemaleSpecies" = "Species1", "BroodSpecies" = "Species2"))
 
-  common_males <- different_species_brood_parents %>%
+  common_males <- females_males %>%
+    dplyr::filter(.data$MaleSpecies != .data$BroodSpecies) %>%
     dplyr::semi_join(common_hybrids, by = c("MaleSpecies" = "Species1", "BroodSpecies" = "Species2"))
 
-  common_different_species_brood_parents <- dplyr::bind_rows(common_females, common_males)
+  common_different_species_brood_parents <- dplyr::bind_rows(common_females, common_males) %>%
+    dplyr::distinct()
 
   war <- FALSE
   warning_records <- tibble::tibble(Row = NA_character_)
@@ -1454,13 +1456,16 @@ compare_species_brood_parents <- function(Brood_data, Individual_data, approved_
 
   # Errors
   # Uncommon cross-fostering and hybrids are considered "errors"
-  uncommon_females <- different_species_brood_parents %>%
+  uncommon_females <-  females_males %>%
+    dplyr::filter(.data$FemaleSpecies != .data$BroodSpecies) %>%
     dplyr::anti_join(common_hybrids, by = c("FemaleSpecies" = "Species1", "BroodSpecies" = "Species2"))
 
-  uncommon_males <- different_species_brood_parents %>%
+  uncommon_males <-  females_males %>%
+    dplyr::filter(.data$MaleSpecies != .data$BroodSpecies) %>%
     dplyr::anti_join(common_hybrids, by = c("MaleSpecies" = "Species1", "BroodSpecies" = "Species2"))
 
-  uncommon_different_species_brood_parents <- dplyr::bind_rows(uncommon_females, uncommon_males)
+  uncommon_different_species_brood_parents <- dplyr::bind_rows(uncommon_females, uncommon_males) %>%
+    dplyr::distinct()
 
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
