@@ -75,11 +75,11 @@ format_MTA <- function(db = choose_directory(),
                   #### Ask data owner: There are few strange IDs ???
                   # Females: "ZRKA" "mother_Vi27" "mother_Vi37" "ringless"
                   FemaleID = as.character(if_else(.data$FemaleId %in% c("gyurutlen", "ringless",
-                                                                        "alu_gyuru"),
+                                                                        "alu_gyuru", "A000"),
                                                   "unringed", .data$FemaleId)),
                   # Males: "alu_gyurus"  "BPAB"  "BPAS" "father_Vi37" "gyurutlen" "ringless"
                   MaleID = as.character(if_else(.data$MaleId %in% c("gyurutlen", "ringless",
-                                                                    "alu_gyurus"),
+                                                                    "alu_gyurus", "A000"),
                                                 "unringed", .data$MaleId))) %>%
     #### Remove columns which we do not store in the standardized format
     dplyr::select(-.data$FemaleColorId,
