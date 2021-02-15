@@ -1306,7 +1306,7 @@ compare_species_parents <- function(Brood_data, Individual_data, approved_list) 
   # Warnings
   # Common cross-fostering and hybrids are considered "warnings"
   common_hybrid_broods <- hybrid_broods %>%
-    dplyr::semi_join(common_hybrids, by = c("FemaleSpecies" = "Species1", "MaleSpecies" = "Species 2"))
+    dplyr::semi_join(common_hybrids, by = c("FemaleSpecies" = "Species1", "MaleSpecies" = "Species2"))
 
   war <- FALSE
   warning_records <- tibble::tibble(Row = NA_character_)
@@ -1338,7 +1338,7 @@ compare_species_parents <- function(Brood_data, Individual_data, approved_list) 
   # Errors
   # Uncommon hybrid broods (other than above) are considered "errors"
   uncommon_hybrid_broods <- hybrid_broods %>%
-    dplyr::anti_join(common_hybrids, by = c("FemaleSpecies" = "Species1", "MaleSpecies" = "Species 2"))
+    dplyr::anti_join(common_hybrids, by = c("FemaleSpecies" = "Species1", "MaleSpecies" = "Species2"))
 
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
