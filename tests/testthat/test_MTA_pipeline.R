@@ -1,18 +1,11 @@
 context("Run data quality check on MMTA-PE Evolutionary Ecology Group, University of Pannonia, Hungary, pipeline output")
 
 test_that("MTA outputs all files...", {
-  expect_true("MTA" %in% pipeline_output$Brood_data$PopID)
-  expect_true("MTA" %in% pipeline_output$Capture_data$CapturePopID)
-  expect_true("MTA" %in% pipeline_output$Individual_data$PopID)
-  expect_true("MTA" %in% pipeline_output$Location_data$PopID)
+  expect_true(unique(c("BAL", "SZE", "VES", "VIL", "GUL") %in% pipeline_output$Brood_data$PopID))
+  expect_true(unique(c("BAL", "SZE", "VES", "VIL", "GUL") %in% pipeline_output$Capture_data$CapturePopID))
+  expect_true(unique(c("BAL", "SZE", "VES", "VIL", "GUL") %in% pipeline_output$Individual_data$PopID))
+  expect_true(unique(c("BAL", "SZE", "VES", "VIL", "GUL") %in% pipeline_output$Location_data$PopID))
 })
-
-
-
-### in process >> change all data to MTA populations
-
-
-
 
 test_that("Individual data returns an expected outcome...", {
 
@@ -21,62 +14,62 @@ test_that("Individual data returns an expected outcome...", {
                             PopID %in% c("BAL", "SZE", "VES", "VIL", "GUL"))
 
   #Test 1: Adult tit female
-  #Individual 1742516 should be listed as a female
-  expect_equal(subset(MTA_data, IndvID == "1742516")$Sex_calculated, "F")
-  expect_equal(subset(MTA_data, IndvID == "1742516")$Species, "PARMAJ")
-  expect_equal(subset(MTA_data, IndvID == "1742516")$BroodIDLaid, NA_character_)
-  expect_equal(subset(MTA_data, IndvID == "1742516")$BroodIDFledged, NA_character_)
-  expect_equal(subset(MTA_data, IndvID == "1742516")$RingSeason, 1999L)
-  expect_equal(subset(MTA_data, IndvID == "1742516")$RingAge, "adult")
+  #Individual N194407 should be listed as a female
+  expect_equal(subset(MTA_data, IndvID == "N194407")$Sex_calculated, "F")
+  expect_equal(subset(MTA_data, IndvID == "N194407")$Species, "PARMAJ")
+  expect_equal(subset(MTA_data, IndvID == "N194407")$BroodIDLaid, NA_character_)
+  expect_equal(subset(MTA_data, IndvID == "N194407")$BroodIDFledged, NA_character_)
+  expect_equal(subset(MTA_data, IndvID == "N194407")$RingSeason, 2013L)
+  expect_equal(subset(MTA_data, IndvID == "N194407")$RingAge, "adult")
+  expect_equal(subset(MTA_data, IndvID == "N194407")$PopID, "VIL")
 
   #Test 2: Adult tit female
-  #Individual 107323  should be listed as a female
-  expect_equal(subset(MTA_data, IndvID == "107323")$Sex_calculated, "F")
-  expect_equal(subset(MTA_data, IndvID == "107323")$Species, "PARMAJ")
-  expect_equal(subset(MTA_data, IndvID == "107323")$BroodIDLaid, NA_character_)
-  expect_equal(subset(MTA_data, IndvID == "107323")$BroodIDFledged, NA_character_)
-  expect_equal(subset(MTA_data, IndvID == "107323")$RingSeason, 1974L)
-  expect_equal(subset(MTA_data, IndvID == "107323")$RingAge, "adult")
+  #Individual N194553 should be listed as a female
+  expect_equal(subset(MTA_data, IndvID == "N194553")$Sex_calculated, "F")
+  expect_equal(subset(MTA_data, IndvID == "N194553")$Species, "PARMAJ")
+  expect_equal(subset(MTA_data, IndvID == "N194553")$BroodIDLaid, NA_character_)
+  expect_equal(subset(MTA_data, IndvID == "N194553")$BroodIDFledged, NA_character_)
+  expect_equal(subset(MTA_data, IndvID == "N194553")$RingSeason, 2013L)
+  expect_equal(subset(MTA_data, IndvID == "N194553")$RingAge, "adult")
+  expect_equal(subset(MTA_data, IndvID == "N194553")$PopID, "SZE")
 
   #Test 3: Adult tit male
-  #Individual 1697275 should be listed as a male
-  expect_equal(subset(MTA_data, IndvID == "1697275")$Sex_calculated, "M")
-  expect_equal(subset(MTA_data, IndvID == "1697275")$Species, "PARMAJ")
-  expect_equal(subset(MTA_data, IndvID == "1697275")$BroodIDLaid, NA_character_)
-  expect_equal(subset(MTA_data, IndvID == "1697275")$BroodIDFledged, NA_character_)
-  expect_equal(subset(MTA_data, IndvID == "1697275")$RingSeason, 1997L)
-  expect_equal(subset(MTA_data, IndvID == "1697275")$RingAge, "adult")
+  #Individual N309711 should be listed as a male
+  expect_equal(subset(MTA_data, IndvID == "N309711")$Sex_calculated, "M")
+  expect_equal(subset(MTA_data, IndvID == "N309711")$Species, "PARMAJ")
+  expect_equal(subset(MTA_data, IndvID == "N309711")$BroodIDLaid, NA_character_)
+  expect_equal(subset(MTA_data, IndvID == "N309711")$BroodIDFledged, NA_character_)
+  expect_equal(subset(MTA_data, IndvID == "N309711")$RingSeason, 2018L)
+  expect_equal(subset(MTA_data, IndvID == "N309711")$RingAge, "adult")
+  expect_equal(subset(MTA_data, IndvID == "N309711")$PopID, "BAL")
 
   #Test 4: Adult tit male
-  #Individual 5991026 should be listed as a male
-  expect_equal(subset(MTA_data, IndvID == "5991026")$Sex_calculated, "M")
-  expect_equal(subset(MTA_data, IndvID == "5991026")$Species, "PARMAJ")
-  expect_equal(subset(MTA_data, IndvID == "5991026")$BroodIDLaid, NA_character_)
-  expect_equal(subset(MTA_data, IndvID == "5991026")$BroodIDFledged, NA_character_)
-  expect_equal(subset(MTA_data, IndvID == "5991026")$RingSeason, 1996L)
-  expect_equal(subset(MTA_data, IndvID == "5991026")$RingAge, "adult")
+  #Individual N331771 should be listed as a male
+  expect_equal(subset(MTA_data, IndvID == "N331771")$Sex_calculated, "M")
+  expect_equal(subset(MTA_data, IndvID == "N331771")$Species, "PARMAJ")
+  expect_equal(subset(MTA_data, IndvID == "N331771")$BroodIDLaid, NA_character_)
+  expect_equal(subset(MTA_data, IndvID == "N331771")$BroodIDFledged, NA_character_)
+  expect_equal(subset(MTA_data, IndvID == "N331771")$RingSeason, 2020L)
+  expect_equal(subset(MTA_data, IndvID == "N331771")$RingAge, "adult")
+  expect_equal(subset(MTA_data, IndvID == "N331771")$PopID, "SZE")
 
-  #Test 5: Bird ringed as chick
-  expect_equal(subset(MTA_data, IndvID == "100002")$Sex_calculated, "F")
-  expect_equal(subset(MTA_data, IndvID == "100002")$Species, "PARMAJ")
-  expect_equal(subset(MTA_data, IndvID == "100002")$BroodIDLaid, "477")
-  expect_equal(subset(MTA_data, IndvID == "100002")$BroodIDFledged, "477")
-  expect_equal(subset(MTA_data, IndvID == "100002")$RingSeason, 1973L)
-  expect_equal(subset(MTA_data, IndvID == "100002")$RingAge, "chick")
+  #Test 5: Adult tit male
+  #Individual N350650 should be listed as a male
+  expect_equal(subset(MTA_data, IndvID == "N350650")$Sex_calculated, "M")
+  expect_equal(subset(MTA_data, IndvID == "N350650")$BroodIDLaid, NA_character_)
+  expect_equal(subset(MTA_data, IndvID == "N350650")$BroodIDFledged, NA_character_)
+  expect_equal(subset(MTA_data, IndvID == "N350650")$RingSeason, 2020L)
+  expect_equal(subset(MTA_data, IndvID == "N350650")$RingAge, "adult")
+  expect_equal(subset(MTA_data, IndvID == "N350650")$PopID, "GUL")
 
   #Test 6: Individual with not clear sex
-  expect_equal(subset(MTA_data, IndvID == "100093")$Sex_calculated, "C")
-  expect_equal(subset(MTA_data, IndvID == "100093")$BroodIDLaid, "483")
-  expect_equal(subset(MTA_data, IndvID == "100093")$BroodIDFledged, "483")
-  expect_equal(subset(MTA_data, IndvID == "100093")$RingSeason, 1973L)
-  expect_equal(subset(MTA_data, IndvID == "100093")$RingAge, "chick")
+  expect_equal(subset(MTA_data, IndvID == "N309315")$Sex_calculated, "C")
+  expect_equal(subset(MTA_data, IndvID == "N309315")$BroodIDLaid, NA_character_)
+  expect_equal(subset(MTA_data, IndvID == "N309315")$BroodIDFledged, NA_character_)
+  expect_equal(subset(MTA_data, IndvID == "N309315")$RingSeason, 2017L)
+  expect_equal(subset(MTA_data, IndvID == "N309315")$RingAge, "adult")
+  expect_equal(subset(MTA_data, IndvID == "N309315")$PopID, "SZE")
 
-  #Test 7: Individual with sex unknown
-  expect_equal(subset(MTA_data, IndvID == "671705")$Sex_calculated, NA_character_)
-  expect_equal(subset(MTA_data, IndvID == "671705")$BroodIDLaid, "3406")
-  expect_equal(subset(MTA_data, IndvID == "671705")$BroodIDFledged, "3406")
-  expect_equal(subset(MTA_data, IndvID == "671705")$RingSeason, 1983L)
-  expect_equal(subset(MTA_data, IndvID == "671705")$RingAge, "chick")
 
 })
 
@@ -88,53 +81,64 @@ test_that("Brood_data returns an expected outcome...", {
                             PopID %in% c("BAL", "SZE", "VES", "VIL", "GUL"))
 
   #Test 1: Tit brood where clutch type = first
-  #BroodID 82
-  expect_equal(subset(MTA_data, BroodID == "82")$ClutchType_calculated, "first")
-  expect_equal(subset(MTA_data, BroodID == "82")$Species, "PARMAJ")
-  expect_equal(subset(MTA_data, BroodID == "82")$FemaleID, "1847")
-  expect_equal(subset(MTA_data, BroodID == "82")$MaleID, "26537")
-  expect_equal(subset(MTA_data, BroodID == "82")$LocationID, "kn471")
-  expect_equal(subset(MTA_data, BroodID == "82")$BreedingSeason, 1971L)
-  expect_equal(subset(MTA_data, BroodID == "82")$ClutchSize_observed, 7L)
+  #BroodID 2119
+  expect_equal(subset(MTA_data, BroodID == "2119")$ClutchType_calculated, "first")
+  expect_equal(subset(MTA_data, BroodID == "2119")$Species, "PARMAJ")
+  expect_equal(subset(MTA_data, BroodID == "2119")$FemaleID, "N330892")
+  expect_equal(subset(MTA_data, BroodID == "2119")$MaleID, "N292444")
+  expect_equal(subset(MTA_data, BroodID == "2119")$LocationID, "SZ1")
+  expect_equal(subset(MTA_data, BroodID == "2119")$BreedingSeason, 2019L)
+  expect_equal(subset(MTA_data, BroodID == "2119")$ClutchSize_observed, 10L)
 
   #Test 2: Tit brood where clutch type = first
-  #BroodID 1996_t845
-  expect_equal(subset(MTA_data, BroodID == "1996_t845_1")$ClutchType_calculated, "first")
-  expect_equal(subset(MTA_data, BroodID == "1996_t845_1")$Species, "PARMAJ")
-  expect_equal(subset(MTA_data, BroodID == "1996_t845_1")$FemaleID, "5990017")
-  expect_equal(subset(MTA_data, BroodID == "1996_t845_1")$MaleID, "5990023")
-  expect_equal(subset(MTA_data, BroodID == "1996_t845_1")$ClutchSize_observed, 8L)
-  expect_equal(subset(MTA_data, BroodID == "1996_t845_1")$HatchDate_observed, as.Date("1996-05-30"))
+  #BroodID 545
+  expect_equal(subset(MTA_data, BroodID == "545")$ClutchType_calculated, "first")
+  expect_equal(subset(MTA_data, BroodID == "545")$Species, "PARMAJ")
+  expect_equal(subset(MTA_data, BroodID == "545")$FemaleID, "N172694")
+  expect_equal(subset(MTA_data, BroodID == "545")$MaleID, "N217696")
+  expect_equal(subset(MTA_data, BroodID == "545")$ClutchSize_observed, 11L)
+  expect_equal(subset(MTA_data, BroodID == "545")$HatchDate_observed, as.Date("2014-04-15"))
 
   #Test 3: Tit brood where clutch type = second
-  #BroodID 96
-  expect_equal(subset(MTA_data, BroodID == "96")$ClutchType_observed, "second")
-  expect_equal(subset(MTA_data, BroodID == "96")$ClutchType_calculated, NA_character_)
-  expect_equal(subset(MTA_data, BroodID == "96")$Species, "PARMAJ")
-  expect_equal(subset(MTA_data, BroodID == "96")$FemaleID, "71900")
-  expect_equal(subset(MTA_data, BroodID == "96")$MaleID, NA_character_)
-  expect_true(is.na(subset(MTA_data, BroodID == "96")$HatchDate_observed))
-  expect_equal(subset(MTA_data, BroodID == "96")$ClutchSize_observed, NA_integer_)
-  expect_equal(subset(MTA_data, BroodID == "96")$NumberFledged_observed, 7L)
+  #BroodID 570
+  expect_equal(subset(MTA_data, BroodID == "570")$ClutchType_observed, "second")
+  expect_equal(subset(MTA_data, BroodID == "570")$ClutchType_calculated, "second")
+  expect_equal(subset(MTA_data, BroodID == "570")$Species, "PARMAJ")
+  expect_equal(subset(MTA_data, BroodID == "570")$FemaleID, "N217018")
+  expect_equal(subset(MTA_data, BroodID == "570")$MaleID, "N217752")
+  expect_equal(subset(MTA_data, BroodID == "570")$LayDate_observed, as.Date("2014-05-15"))
+  expect_equal(subset(MTA_data, BroodID == "570")$ClutchSize_observed, 8L)
+  expect_equal(subset(MTA_data, BroodID == "570")$NumberFledged_observed, 7L)
   #AvgChickMass and AvgTarsus should be NA, there were no chicks measured
-  expect_equal(subset(MTA_data, BroodID == "96")$AvgChickMass, NA_real_)
-  expect_equal(subset(MTA_data, BroodID == "96")$AvgTarsus, NA_real_)
+  expect_equal(subset(MTA_data, BroodID == "570")$AvgChickMass, NA_real_)
+  expect_equal(subset(MTA_data, BroodID == "570")$AvgTarsus, NA_real_)
 
-  #### THIS MAY CHANGE AFTER THE NEWS FROM DATA OWNER REGARDING THE FLIPPED DATES OF HATCHING??
 
   #Test 4: Tit brood where clutch type = replacement (due to past cutoff)
-  #BroodID 259
-  expect_equal(subset(MTA_data, BroodID == "259")$Species, "PARMAJ")
-  #BroodID 2013_004_14_06 should have clutch type calculated 'replacement'
-  expect_equal(subset(MTA_data, BroodID == "259")$ClutchType_calculated, "replacement")
-  expect_equal(subset(MTA_data, BroodID == "259")$FemaleID, "70228")
-  expect_equal(subset(MTA_data, BroodID == "259")$MaleID, "70234")
-  expect_equal(subset(MTA_data, BroodID == "259")$LayDate_observed, as.Date("1973-06-04"))
-  expect_equal(subset(MTA_data, BroodID == "259")$ClutchSize_observed, NA_integer_)
-  expect_equal(subset(MTA_data, BroodID == "259")$NumberFledged_observed, 6L)
+  #BroodID 783
+  expect_equal(subset(MTA_data, BroodID == "783")$Species, "PARMAJ")
+  expect_equal(subset(MTA_data, BroodID == "783")$ClutchType_calculated, "replacement")
+  expect_equal(subset(MTA_data, BroodID == "783")$FemaleID, "N254451")
+  expect_equal(subset(MTA_data, BroodID == "783")$MaleID, "N254452")
+  expect_equal(subset(MTA_data, BroodID == "783")$LayDate_observed, as.Date("2015-05-03"))
+  expect_equal(subset(MTA_data, BroodID == "783")$ClutchSize_observed, 6L)
+  expect_equal(subset(MTA_data, BroodID == "783")$NumberFledged_observed, 3L)
   #AvgChickMass and AvgTarsus should be NA, there were no chicks measured
-  expect_equal(subset(MTA_data, BroodID == "259")$AvgChickMass, NA_real_)
-  expect_equal(subset(MTA_data, BroodID == "259")$AvgTarsus, NA_real_)
+  expect_equal(subset(MTA_data, BroodID == "783")$AvgChickMass, NA_real_)
+  expect_equal(subset(MTA_data, BroodID == "783")$AvgTarsus, NA_real_)
+
+
+  #Test 5: Tit brood where no parents are known
+  #BroodID 1001
+  expect_equal(subset(MTA_data, BroodID == "1001")$Species, "PARMAJ")
+  expect_equal(subset(MTA_data, BroodID == "1001")$FemaleID, "unringed")
+  expect_equal(subset(MTA_data, BroodID == "1001")$MaleID, "unringed")
+  expect_equal(subset(MTA_data, BroodID == "1001")$LayDate_observed, as.Date("2016-04-10"))
+  expect_equal(subset(MTA_data, BroodID == "1001")$ClutchSize_observed, 12L)
+  expect_equal(subset(MTA_data, BroodID == "1001")$NumberFledged_observed, 12L)
+  #AvgChickMass and AvgTarsus should be NA, there were no chicks measured
+  expect_equal(subset(MTA_data, BroodID == "1001")$AvgChickMass, NA_real_)
+  expect_equal(subset(MTA_data, BroodID == "1001")$AvgTarsus, NA_real_)
 
 })
 
@@ -148,39 +152,41 @@ test_that("Capture_data returns an expected outcome...", {
                             CapturePopID %in% c("BAL", "SZE", "VES", "VIL", "GUL"))
 
   #Test 1: Female caught as adult
-  #Test the female has the correct number of capture records (2)
-  expect_equal(nrow(subset(MTA_data, IndvID == "5991287")), 2)
+  #Test the female has the correct number of capture records
+  expect_equal(nrow(subset(MTA_data, IndvID == "N194407")), 4L)
   #Test the first capture of the female
-  expect_equal(subset(MTA_data, IndvID == "5991287")$Sex_observed[1], "F")
-  expect_equal(subset(MTA_data, IndvID == "5991287")$LocationID[1], "n71")
-  expect_equal(min(subset(MTA_data, IndvID == "5991287")$CaptureDate, na.rm = TRUE), as.Date("2000-07-10"))
+  expect_equal(subset(MTA_data, IndvID == "N194407")$Sex_observed[1], "F")
+  expect_equal(subset(MTA_data, IndvID == "N194407")$LocationID[1], "VI108")
+  expect_equal(subset(MTA_data, IndvID == "N194407")$CapturePopID[1], "VIL")
+  expect_equal(min(subset(MTA_data, IndvID == "N194407")$CaptureDate, na.rm = TRUE), as.Date("2013-04-01"))
 
   #Test 2: Male caught as adult
   #Test the male has the correct number of capture records
-  expect_equal(nrow(subset(MTA_data, IndvID == "107184")), 3)
+  expect_equal(nrow(subset(MTA_data, IndvID == "N309711")), 2L)
   #Test the first capture of the male
-  expect_equal(subset(MTA_data, IndvID == "107184")$Sex_observed[1], "M")
-  expect_equal(subset(MTA_data, IndvID == "107184")$LocationID[1], "kn328")
-  # expect_equal(min(subset(MTA_data, IndvID == "107184")$CaptureDate, na.rm = TRUE), as.Date(""))
+  expect_equal(subset(MTA_data, IndvID == "N309711")$Sex_observed[1], "M")
+  expect_equal(subset(MTA_data, IndvID == "N309711")$LocationID[1], "B14")
+  expect_equal(subset(MTA_data, IndvID == "N309711")$CapturePopID[1], "BAL")
+  expect_equal(min(subset(MTA_data, IndvID == "N309711")$CaptureDate, na.rm = TRUE), as.Date("2018-04-01"))
 
-  #Test 3: Female caught first time as chick
-  #Test the female has the correct number of capture records
-  expect_equal(nrow(subset(MTA_data, IndvID == "100002")), 5)
-  #Test the first capture of the female
-  expect_equal(subset(MTA_data, IndvID == "100002")$Sex_observed[1], NA_character_)
-  expect_equal(subset(MTA_data, IndvID == "100002")$Sex_observed[5], "F")
-  expect_equal(subset(MTA_data, IndvID == "100002")$LocationID[1], "kn795")
-  expect_equal(subset(MTA_data, IndvID == "100002")$BreedingSeason[1], 1973L)
-  expect_equal(min(subset(MTA_data, IndvID == "100002")$CaptureDate, na.rm = TRUE), as.Date("1973-05-01"))
-
-  #Test 4: Male caught first time as chick
+  #Test 3: Male caught first time as adult
   #Test the male has the correct number of capture records
-  expect_equal(nrow(subset(MTA_data, IndvID == "884944")), 5)
+  expect_equal(nrow(subset(MTA_data, IndvID == "N172849")), 5L)
+  expect_equal(subset(MTA_data, IndvID == "N172849")$Sex_observed[1], "M")
+  expect_equal(subset(MTA_data, IndvID == "N172849")$LocationID[1], "VI108")
+  expect_equal(subset(MTA_data, IndvID == "N172849")$BreedingSeason[1], 2013L)
+  expect_equal(subset(MTA_data, IndvID == "N172849")$CapturePopID[1], "VIL")
+  expect_equal(min(subset(MTA_data, IndvID == "N172849")$CaptureDate, na.rm = TRUE), as.Date("2013-04-01"))
+
+  #Test 4: Female caught first time as adult
+  #Test the female has the correct number of capture records
+  expect_equal(nrow(subset(MTA_data, IndvID == "N172861")), 3L)
   #Test the first capture of the male
-  expect_equal(subset(MTA_data, IndvID == "884944")$Sex_observed[1], NA_character_)
-  expect_equal(subset(MTA_data, IndvID == "884944")$LocationID[1], "kn515")
-  expect_equal(subset(MTA_data, IndvID == "884944")$BreedingSeason[1], 1985L)
-  expect_equal(min(subset(MTA_data, IndvID == "884944")$CaptureDate, na.rm = TRUE), as.Date("1985-05-01"))
+  expect_equal(subset(MTA_data, IndvID == "N172861")$Sex_observed[1], "F")
+  expect_equal(subset(MTA_data, IndvID == "N172861")$LocationID[1], "VI104")
+  expect_equal(subset(MTA_data, IndvID == "N172861")$BreedingSeason[1], 2013L)
+  expect_equal(subset(MTA_data, IndvID == "N172861")$CapturePopID[1], "VIL")
+  expect_equal(min(subset(MTA_data, IndvID == "N172861")$CaptureDate, na.rm = TRUE), as.Date("2013-04-01"))
 
 })
 
@@ -238,3 +244,4 @@ test_that("Location_data returns an expected outcome...", {
   expect_equal(subset(MTA_data, LocationID == "G20")$PopID, "GUL")
 
 })
+

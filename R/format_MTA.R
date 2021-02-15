@@ -10,7 +10,13 @@
 #' this data. For a general description of the standard format please see see
 #'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 #'
-#' \strong{xxx}:
+#' This is a temporary pipeline, as the data owners are updating their storage system.
+#'
+#' \strong{Individual_data}: Currently, only the information about adults is available, there is no
+#' data included regarding chicks ringed.
+#'
+#' \strong{Capture_date}: No capture date is available, we created artificial date as 1st of April of"BreedingSeason_04-01"
+#'
 #'
 #' @inheritParams pipeline_params
 #' @return Generates either 4 .csv files or 4 data frames in the standard format.
@@ -28,7 +34,6 @@
 #### OriginalTarsusMethod
 #### Capture date??
 #### Check if date of ringing may be considered as fledge date?
-#
 #### --------------------------------------------------------------------------~
 
 format_MTA <- function(db = choose_directory(),
@@ -159,7 +164,7 @@ format_MTA <- function(db = choose_directory(),
 #' @param mta_data Data frame. Primaty data from MTA-PE Evolutionary Ecology Group, Hungary.
 #' @return A data frame.
 
-create_brood_MTA <- function(data) {
+create_brood_MTA <- function(mta_data) {
 
   Brood_data <-
     mta_data %>%
@@ -228,11 +233,11 @@ create_brood_MTA <- function(data) {
 #' Create capture data table for blue tits in MTA-PE Evolutionary Ecology Group, Hungary.
 #'
 #' Create a capture data table in standard format for blue tits in MTA-PE Evolutionary Ecology Group, Hungary.
-#' @param data Data frame. Brood_data from MTA-PE Evolutionary Ecology Group, Hungary.
+#' @param Brood_data Data frame. Brood_data from MTA-PE Evolutionary Ecology Group, Hungary.
 #' @return A data frame.
 
 
-create_capture_MTA <- function(data) {
+create_capture_MTA <- function(Brood_data) {
 
   Capture_data <-
     Brood_data %>%
@@ -248,8 +253,8 @@ create_capture_MTA <- function(data) {
     dplyr::filter(!is.na(.data$IndvID)) %>%
     #### Remove unringed individuals
     dplyr::filter(.data$IndvID != "unringed") %>%
-    #### ASK DATA OWNER >> til then create capture date
-    dplyr::mutate(CaptureDate = as.Date(paste0(.data$BreedingSeason, "-05-01"))) %>%
+    #### ASK DATA OWNER >> til they respond, create capture date
+    dplyr::mutate(CaptureDate = as.Date(paste0(.data$BreedingSeason, "-04-01"))) %>%
     #### Create new variables
     dplyr::group_by(.data$IndvID) %>%
     dplyr::arrange(.data$BreedingSeason, .data$CaptureDate) %>%
@@ -262,8 +267,6 @@ create_capture_MTA <- function(data) {
                   CapturePlot  = .data$Plot,
                   ReleasePopID = ifelse(ReleaseAlive == TRUE, .data$CapturePopID, NA_character_),
                   ReleasePlot  = ifelse(ReleaseAlive == TRUE, .data$CapturePlot, NA_character_),
-                  #### Ask data owner
-                  # OriginalTarsusMethod = ifelse(!is.na(.data$Tarsus), "Alternative", NA_character_),
                   WingLength = NA_real_,
                   Age_observed = NA_integer_,
                   ChickAge = NA_integer_,
@@ -271,6 +274,8 @@ create_capture_MTA <- function(data) {
                   ObserverID = NA_character_,
                   Mass = NA_real_,
                   Tarsus = NA_real_,
+                  #### Ask data owner
+                  # OriginalTarsusMethod = ifelse(!is.na(.data$Tarsus), "Alternative", NA_character_),
                   OriginalTarsusMethod = NA_character_) %>%
 
     #### USE THE NEW VERSION OF THE FUNCTION
@@ -304,13 +309,11 @@ create_capture_MTA <- function(data) {
 #' Create individual table for MTA-PE Evolutionary Ecology Group, Hungary.
 #'
 #' Create full individual data table in standard format for data from MTA-PE Evolutionary Ecology Group, Hungary.
-#'
-#' @param data Capture_data, output of create_capture_MTA function.
-#'
+#' @param Capture_data Data frame, output of create_capture_MTA function.
 #' @return A data frame.
 
 
-create_individual_MTA <- function(data){
+create_individual_MTA <- function(Capture_data){
 
   Individual_data <-
     Capture_data %>%
@@ -348,13 +351,11 @@ create_individual_MTA <- function(data){
 #' Create location data table for MTA-PE, Hungary.
 #'
 #' Create location data table in standard format for data from MTA-PE, Hungary.
-#'
 #' @param data Data frame mta_data with primary data from MTA-PE, Hungary.
-#'
 #' @return A data frame.
 
 
-create_location_MTA <- function(data) {
+create_location_MTA <- function(mta_data) {
 
   Location_data <-
     mta_data %>%
@@ -384,4 +385,3 @@ create_location_MTA <- function(data) {
   return(Location_data)
 
 }
-
