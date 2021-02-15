@@ -160,3 +160,16 @@ checkID_variable_combos <- utils::read.csv(system.file("extdata", "checkID_varia
 #'
 #' @name chick_mass_cutoffs
 NULL
+
+#' Common hybrids
+#'
+#' Data frame with common hybrid broods. Can be used in quality checks to compare species across parents, between parents and brood, and between brood and nestlings.
+#'
+#' @format Data frame with 2 variables:
+#' \describe{
+#' \item{Species1}{6 letter code for species of record 1}
+#' \item{Species2}{6 letter code for species of record 2}
+#' }
+#'
+#' @name common_hybrids
+common_hybrids <- utils::read.csv(system.file("extdata", "common_hybrids.csv", package = "pipelines", mustWork = TRUE))
