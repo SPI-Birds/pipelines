@@ -72,6 +72,7 @@ format_MTA <- function(db = choose_directory(),
                   NestboxID = toupper(.data$NestboxNumber),
                   BroodID = as.character(.data$BroodId),
                   LocationID = .data$NestboxID,
+                  Species = species_codes[which(species_codes$SpeciesID == 14640), ]$Species,
                   #### Ask data owner: There are few strange IDs ???
                   # Females: "ZRKA" "mother_Vi27" "mother_Vi37" "ringless"
                   FemaleID = as.character(if_else(.data$FemaleId %in% c("gyurutlen", "ringless",
