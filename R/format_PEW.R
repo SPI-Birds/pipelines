@@ -179,8 +179,8 @@ format_PEW <- function(db = choose_directory(),
     #### Remove observations without ID
     dplyr::filter(!is.na(.data$IndvID)) %>%
     #### Change ID of unringed individuals to generic "unringed"
-    dplyr::mutate(IndvID = ifelse(nchar(.data$IndvID) > 8, "unringed", IndvID),
-                  PartnerId = ifelse(nchar(.data$PartnerId) > 8, "unringed", PartnerId)) %>%
+    dplyr::mutate(IndvID = ifelse(nchar(.data$IndvID) > 8, "unringed", .data$IndvID),
+                  PartnerId = ifelse(nchar(.data$PartnerId) > 8, "unringed", .data$PartnerId)) %>%
 
     # #### This part of the code can be removed after fixing the data from data owner
     # #### Corrected information from data owner

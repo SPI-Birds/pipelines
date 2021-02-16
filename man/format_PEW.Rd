@@ -35,7 +35,8 @@ Generates either 4 .csv files or 4 data frames in the standard format.
 }
 \description{
 A pipeline to produce the standard format for bird study population
-at the Peerdsbos West, Belgium, administered by Arne Iserbyt.
+at the Peerdsbos West, Belgium, administered by Wendt Müller
+(previously by Arne Iserbyt).
 }
 \details{
 This section provides details on data management choices that are unique to
@@ -65,17 +66,41 @@ When neither hatch date nor capture date were provided, we input fake date
 
 \strong{CaptureDate} For several chicks, where the capture date was indicated
 as "D14", the capture date was calculated as hatch date + 14 days.
-For several adult individuals, where the capture date was missing and the record
-corresponded to the only capture (observation) of the individual in the
-breeding season, a fake date was input ("breeding season-06-01",
-1st of June of the corresponding breeding season).
-For several adult individuals, where the capture data was missing and the
-capture method indicated that the capture happened during the incubation period,
+For several adult individuals, where the capture date was missing,
 the fake date was input ("breeding season, 04-01", 1st of April of the corresponding
 breeding season).
 
 \strong{Latitude, Longitude} The exact coordinates of the nestboxes are not available.
-Data owner provided an map of the location, which can be georeferenced in the case of
-interest or necessity of the data user. Currently, only general coordinates
-for the location are provided.
+Data owner provided a map of the location, which can be georeferenced in case of
+interest or necessity of the data user.
+
+\strong{NOTES} Until we recive the final data from the data owner, we are aware
+of the following issues in the final standardized data:
+
+There are two records in the Brood_data for the BroodID "2017_109", with different number of chicks and dates
+(currently we do not know which one is the correct one).
+
+There are two records in the Brood_data for the BroodID "2015_24", the correct one is the one where
+FemaleID is 13619319 and MaleID is 11714676.
+
+There are two records in the Brood_data for the BroodID "2016_60", the correct one is the one where
+FemaleID is 13617052 and MaleID should be unknow.
+Data owner note: Female 12706296 in box 60 in 2016 is erroneous and can be removed from the data.
+Female 13617052 was the only female in box 60 in 2016.
+She layed a complete clutch, which never hatched.
+The male was never caught and remains unknown.
+
+There are two records in the Brood_data for the BroodID "2017_49", the correct one is the one where
+FemaleID 13619466 is and MaleID is 13617031.
+Data owner: The only couple in 49 in 2017 was 13619466 (female) and  13617031 (male).
+partner 12706106 should be removed (or replaced by the true female 13619466).
+
+Based on previous comment of data owner, the capture of the IndvID 12706296
+in box 60 in 2016 is erroneous and can be removed from the data.
+
+In the Capture_data, there are 6 erroneous records related to the nest 109 from 2017
+(related to the Brood_data double record for the BroodID "2017_109"):
+- 1 extra record for the male 13617008
+- 2 extra records for the female 13619461
+- 1 extra record for each chick 14156383, 14156384, 14156385
 }
