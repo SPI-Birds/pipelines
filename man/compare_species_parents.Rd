@@ -23,7 +23,7 @@ A list of:
 \item{Errors}{A list of row-by-row errors.}
 }
 \description{
-Check that the parents of broods are of the same species. Broods with parents of different species are flagged as 'warning' because multi-species broods are known to exist.
+Check that the parents of broods are of the same species. Common, biologically possible hybrid broods (e.g. FICHYP and FICALB) are flagged as ‘warning’. Other combinations of species are flagged as ‘potential error’.
 }
 \details{
 Check ID: B10.

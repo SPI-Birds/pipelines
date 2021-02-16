@@ -4,10 +4,7 @@
 \alias{create_dummy_data}
 \title{Create quality check dummy data}
 \usage{
-create_dummy_data(overwrite = TRUE)
-}
-\arguments{
-\item{overwrite}{Overwrite existing file. Default: TRUE}
+create_dummy_data()
 }
 \value{
 List of 4 dataframes:

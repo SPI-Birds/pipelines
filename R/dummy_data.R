@@ -2,8 +2,6 @@
 #'
 #' @description Create dummy pipeline output (\code{dummy_data}) to be tested in \code{\link{quality_check}}. In each dataframe, rows are created to test single checks from \code{\link{quality_check}}. A CheckID column is added to each dataframe to mark which rows serve to test each check. See a detailed description of the dummy data in \code{\link{dummy_data}}.
 #'
-#' @param overwrite Overwrite existing file. Default: TRUE
-#'
 #' @return
 #' List of 4 dataframes:
 #' \item{Brood_data}{Dummy brood data.}
@@ -13,7 +11,7 @@
 #'
 #' @export
 
-create_dummy_data <- function(overwrite=TRUE) {
+create_dummy_data <- function() {
 
   # Set seed for dummy data drawn from distributions
   set.seed(74)
@@ -435,6 +433,9 @@ create_dummy_data <- function(overwrite=TRUE) {
     dplyr::add_row( # Improbable (warning)
       Row = max(B9_rows$Row) + 2
     ) %>%
+    dplyr::add_row( # Impossible (error)
+      Row = max(B9_rows$Row) + 3
+    ) %>%
     dplyr::mutate(
       PopID = "AAA",
       BreedingSeason = as.integer(2020),
@@ -461,6 +462,14 @@ create_dummy_data <- function(overwrite=TRUE) {
     dplyr::add_row( # Improbable (warning)
       IndvID = B10_brood_rows$MaleID[2],
       Species = "CYACAE"
+    ) %>%
+    dplyr::add_row( # Impossible (error)
+      IndvID = B10_brood_rows$FemaleID[3],
+      Species = "PARMAJ"
+    ) %>%
+    dplyr::add_row( # Impossible (error)
+      IndvID = B10_brood_rows$MaleID[3],
+      Species = "POEPAL"
     ) %>%
     dplyr::mutate(
       PopID = "AAA",
@@ -686,9 +695,6 @@ create_dummy_data <- function(overwrite=TRUE) {
     dplyr::mutate( # Probable
       PopID = "AAA",
       ) %>%
-    dplyr::add_row( # Improbable (warning)
-      PopID = as.character(c("AAA", "BBB")),
-      ) %>%
     dplyr::add_row( # Impossible (error)
       PopID = as.character(c("AAA", "AAA")),
       ) %>%
@@ -700,7 +706,7 @@ create_dummy_data <- function(overwrite=TRUE) {
       RingAge = "adult",
       BroodIDLaid = paste(PopID, RingSeason, Row, "I2", sep = "-"),
       BroodIDFledged = BroodIDLaid,
-      IndvID = paste0("I2_", c(min(Row), min(Row) + 1, min(Row) + 1, min(Row) + 2, min(Row) + 2)),
+      IndvID = paste0("I2_", c(min(Row), min(Row) + 1, min(Row) + 1)),
       CheckID = "I2"
     )
 
@@ -936,6 +942,9 @@ create_dummy_data <- function(overwrite=TRUE) {
     dplyr::add_row( # Improbable (warning)
       Species = "CYACAE"
     ) %>%
+    dplyr::add_row( # Impossible (error)
+      Species = "POEPAL"
+    ) %>%
     dplyr::mutate(
       PopID = "AAA",
       BreedingSeason = as.integer(2020),
@@ -963,6 +972,14 @@ create_dummy_data <- function(overwrite=TRUE) {
       IndvID = B11_brood_rows$MaleID[2],
       Species = "PARMAJ"
     ) %>%
+    dplyr::add_row( # Impossible (error)
+      IndvID = B11_brood_rows$FemaleID[3],
+      Species = "PARMAJ"
+    ) %>%
+    dplyr::add_row( # Impossible (error)
+      IndvID = B11_brood_rows$MaleID[3],
+      Species = "PARMAJ"
+    ) %>%
     dplyr::mutate(
       Row = seq(max(I6_indv_rows$Row) + 1, length.out = n()),
       PopID = "AAA",
@@ -978,6 +995,9 @@ create_dummy_data <- function(overwrite=TRUE) {
     dplyr::add_row( # Improbable (warning)
       Species = "CYACAE"
     ) %>%
+    dplyr::add_row( # Impossible (error)
+      Species = "PARMAJ"
+    ) %>%
     dplyr::mutate(
       PopID = "AAA",
       BreedingSeason = as.integer(2020),
@@ -988,24 +1008,28 @@ create_dummy_data <- function(overwrite=TRUE) {
 
   B12_indv_rows <- Individual_data %>%
     dplyr::mutate( # Probable
-      Row = as.integer(26),
       BroodIDLaid = B12_brood_rows$BroodID[1],
       Species = "PARMAJ"
     ) %>%
     dplyr::add_row( # Probable
-      Row = as.integer(27),
       BroodIDLaid = B12_brood_rows$BroodID[1],
       Species = "PARMAJ"
     ) %>%
     dplyr::add_row( # Improbable (warning)
-      Row = as.integer(28),
       BroodIDLaid = B12_brood_rows$BroodID[2],
       Species = "CYACAE"
     ) %>%
     dplyr::add_row( # Improbable (warning)
-      Row = as.integer(29),
       BroodIDLaid = B12_brood_rows$BroodID[2],
       Species = "PARMAJ"
+    ) %>%
+    dplyr::add_row( # Impossible (error)
+      BroodIDLaid = B12_brood_rows$BroodID[3],
+      Species = "PARMAJ"
+    ) %>%
+    dplyr::add_row( # Impossible (error)
+      BroodIDLaid = B12_brood_rows$BroodID[3],
+      Species = "POEPAL"
     ) %>%
     dplyr::mutate(
       Row = seq(max(B11_indv_rows$Row) + 1, length.out = n()),
@@ -1014,6 +1038,49 @@ create_dummy_data <- function(overwrite=TRUE) {
       RingAge = "chick",
       BroodIDFledged = BroodIDLaid,
       CheckID = "B12"
+    )
+
+  # B13: Checking sex of parents ####
+  B13_brood_rows <- Brood_data %>%
+    dplyr::mutate( # Probable
+      Row = max(B12_brood_rows$Row) + 1
+    ) %>%
+    dplyr::add_row( # Impossible (error)
+      Row = max(B12_brood_rows$Row) + 2
+    ) %>%
+    dplyr::mutate(
+      PopID = "AAA",
+      BreedingSeason = as.integer(2020),
+      Species = "PARMAJ",
+      BroodID = paste(PopID, BreedingSeason, Row, sep="-"),
+      FemaleID = paste0("K", Row),
+      MaleID = paste0("L", Row),
+      CheckID = "B13"
+    )
+
+  B13_indv_rows <- Individual_data %>%
+    dplyr::mutate( # Probable
+      IndvID = B13_brood_rows$FemaleID[1],
+      Sex_calculated = "F"
+    ) %>%
+    dplyr::add_row( # Probable
+      IndvID = B13_brood_rows$MaleID[1],
+      Sex_calculated = "M"
+    ) %>%
+    dplyr::add_row( # Impossible (error)
+      IndvID = B13_brood_rows$FemaleID[2],
+      Sex_calculated = "F"
+    ) %>%
+    dplyr::add_row( # Impossible (error)
+      IndvID = B13_brood_rows$MaleID[2],
+      Sex_calculated = "F"
+    ) %>%
+    dplyr::mutate(
+      Row = seq(max(B12_indv_rows$Row) + 1, length.out = n()),
+      PopID = "AAA",
+      Species = "PARMAJ",
+      RingAge = "adult",
+      CheckID = "B13"
     )
 
   # Approved_list: make sure that our approve-listing procedure works ####
@@ -1037,12 +1104,12 @@ create_dummy_data <- function(overwrite=TRUE) {
   # Combine single check rows per dataframe
   Brood_data <- dplyr::bind_rows(al_rows, B2_rows, B3_rows, B4_rows, B5_rows, B6a_rows, B6b_rows,
                                  B6c_rows, B6d_rows, B7_brood_rows, B8_rows, B9_rows, B10_brood_rows,
-                                 C4_brood_rows, B11_brood_rows, B12_brood_rows)
+                                 C4_brood_rows, B11_brood_rows, B12_brood_rows, B13_brood_rows)
   Capture_data <- dplyr::bind_rows(B7_capture_rows, B10_capture_rows, C2a_adult_rows, C2a_chick_rows,
                                    C2b_adult_rows, C2b_chick_rows,C3_rows, I2_capture_rows,
                                    I3_capture_rows, I4_capture_rows, I5_capture_rows, I6_capture_rows, C4_capture_rows)
   Individual_data <- dplyr::bind_rows(B7_indv_rows, B10_indv_rows, I2_indv_rows, I3_indv_rows, I4_indv_rows,
-                                      I5_indv_rows, I6_indv_rows, B11_indv_rows, B12_indv_rows)
+                                      I5_indv_rows, I6_indv_rows, B11_indv_rows, B12_indv_rows, B13_indv_rows)
   Location_data <- dplyr::bind_rows(I3_location_rows, C4_location_rows)
 
   # Check whether row numbers are unique
@@ -1065,6 +1132,7 @@ create_dummy_data <- function(overwrite=TRUE) {
                      Individual_data = Individual_data,
                      Location_data = Location_data)
 
-  usethis::use_data(dummy_data, overwrite=overwrite)
+  #usethis::use_data(dummy_data, overwrite=overwrite)
+  return(dummy_data)
 
 }

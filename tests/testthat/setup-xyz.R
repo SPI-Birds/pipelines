@@ -49,10 +49,6 @@ if ("test_data.RDS" %in% list.files(path)) {
 
 }
 
-# Create dummy
-# message("Create dummy data approved list...")
-approved_list <- create_approved_list(dummy = TRUE)
-
 # Run quality check for dummy data and produce no report
 message("Create dummy data quality check output...")
 dummy_check <- quality_check(test = TRUE,
