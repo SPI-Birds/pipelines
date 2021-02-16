@@ -520,31 +520,31 @@ create_capture_KEV <- function(db, Brood_data, species_filter, return_errors){
     dplyr::filter(CaptureDate == CaptureDateNestling) %>%
     dplyr::mutate(Mass = purrr::map2_dbl(.x = .$Mass, .y = .$MassNestling, .f = ~{
 
-                    if(is.na(..2)){
+      if(is.na(..2)){
 
-                      return(..1)
+        return(..1)
 
-                    } else {
+      } else {
 
-                      return(..2)
+        return(..2)
 
-                    }
+      }
 
-                  }),
-                  WingLength = purrr::map2_dbl(.x = .$WingLength, .$WingLengthNestling,
-                  ~{
+    }),
+    WingLength = purrr::map2_dbl(.x = .$WingLength, .$WingLengthNestling,
+                                 ~{
 
-                    if(is.na(..2)){
+                                   if(is.na(..2)){
 
-                      return(..1)
+                                     return(..1)
 
-                    } else {
+                                   } else {
 
-                      return(..2)
+                                     return(..2)
 
-                    }
+                                   }
 
-                  })) %>%
+                                 })) %>%
     dplyr::select(IndvID, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, BroodID, Species,
                   Sex, Age, WingLength, Mass, CaptureType, BirdStatus, ChickAge)
 
@@ -583,11 +583,16 @@ create_capture_KEV <- function(db, Brood_data, species_filter, return_errors){
                             Age = current_row["Age"], ObserverID = current_row["ObserverID"],
                             CaptureType = current_row["CaptureType"], BirdStatus = current_row["BirdStatus"]))
 
-                   })
+    })
 
-    #Now, for each recorded chick ring number determine the last 2 digits of the ring
-    multirecord_captures <- expanded_multi_chick_capture %>%
-      dplyr::mutate(Last2DigitsRingNr = stringr::str_sub(RingNumber, start = -2),
+  #Remove names so that it doesn't break tests
+  #We need to come up with a more robust fix for this (i.e. change the above code!)
+  expanded_multi_chick_capture <- expanded_multi_chick_capture %>%
+    mutate(across(.cols = where(~!is.null(names(.))), .fns = ~setNames(., NULL)))
+
+  #Now, for each recorded chick ring number determine the last 2 digits of the ring
+  multirecord_captures <- expanded_multi_chick_capture %>%
+    dplyr::mutate(Last2DigitsRingNr = stringr::str_sub(RingNumber, start = -2),
                   Capture_type = "Chick") %>%
     #Join in all nestling data where the broodID and Last2Digits is the same
     #N.B. We do left_join with BroodID and Last2Digits, so we can get multiple
@@ -773,13 +778,13 @@ create_location_KEV <- function(db){
   #Read location data with coordinates as sf object in Finnish Coordinate system
   #Coordinates are in Finland Uniform Coordinate System (EPSG 2393)
   Location_data_sf <- sf::st_as_sf(Location_data,
-                                         coords = c("Longitude", "Latitude"),
-                                         crs = 2393) %>%
+                                   coords = c("Longitude", "Latitude"),
+                                   crs = 2393) %>%
     sf::st_transform(crs = 4326)
 
   Location_full <- dplyr::bind_cols(dplyr::select(Location_data, -Longitude, -Latitude),
-                                                     tibble(Longitude = sf::st_coordinates(Location_data_sf)[, 1]),
-                                                     tibble(Latitude = sf::st_coordinates(Location_data_sf)[, 2]))
+                                    tibble(Longitude = sf::st_coordinates(Location_data_sf)[, 1]),
+                                    tibble(Latitude = sf::st_coordinates(Location_data_sf)[, 2]))
 
   #In Kevo, it seems each row is a record of a nestbox in a given year
   #This should tell us about nest box changes over time and Start/EndSeason
