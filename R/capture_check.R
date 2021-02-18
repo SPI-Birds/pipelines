@@ -8,6 +8,7 @@
 #' \item \strong{C2a-b}: Check capture variable values against reference values using \code{\link{check_values_capture}}. Capture variables checked for adults and chicks: Mass and Tarsus.
 #' \item \strong{C3}: Check chick age (in numbers of days since hatching) using \code{\link{check_chick_age}}.
 #' \item \strong{C4}: Check that adults caught on nest are listed as parents using \code{\link{check_adult_parent_nest}}.
+#' \item \strong{C5}: Check that the age of subsequent captures of the same individual is correct using \code{\link{check_age_captures}}.
 #' }
 #'
 #' @inheritParams checks_capture_params
@@ -22,12 +23,13 @@
 capture_check <- function(Capture_data, Location_data, Brood_data, check_format=TRUE, approved_list){
 
   # Create check list with a summary of warnings and errors per check
-  check_list <- tibble::tibble(CheckID = paste0("C", c(1, paste0(2, letters[1:2]), 3:4)),
+  check_list <- tibble::tibble(CheckID = paste0("C", c(1, paste0(2, letters[1:2]), 3:5)),
                                CheckDescription = c("Check format of capture data",
                                                     "Check mass values against reference values",
                                                     "Check tarsus values against reference values",
                                                     "Check chick age",
-                                                    "Check that adults caught on nest are listed as the parents"),
+                                                    "Check that adults caught on nest are listed as the parents",
+                                                    "Check the order in age of subsequent captures"),
                                Warning = NA,
                                Error = NA)
 
@@ -71,32 +73,43 @@ capture_check <- function(Capture_data, Location_data, Brood_data, check_format=
 
   check_list[5,3:4] <- check_adult_parent_nest_output$CheckList
 
+  # - Check the order in age of subsequent captures
+  message("C5: Checking that the age of subsequent captures is ordered correctly...")
+
+  check_age_captures_output <- check_age_captures(Capture_data, approved_list)
+
+  check_list[6,3:4] <- check_age_captures_output$CheckList
+
   if(check_format) {
     # Warning list
     warning_list <- list(Check1 = check_format_capture_output$WarningOutput,
                          Check2a = check_values_mass_output$WarningOutput,
                          Check2b = check_values_tarsus_output$WarningOutput,
                          Check3 = check_chick_age_output$WarningOutput,
-                         Check4 = check_adult_parent_nest_output$WarningOutput)
+                         Check4 = check_adult_parent_nest_output$WarningOutput,
+                         Check5 = check_age_captures_output$WarningOutput)
 
     # Error list
     error_list <- list(Check1 = check_format_capture_output$ErrorOutput,
                        Check2a = check_values_mass_output$ErrorOutput,
                        Check2b = check_values_tarsus_output$ErrorOutput,
                        Check3 = check_chick_age_output$ErrorOutput,
-                       CHeck4 = check_adult_parent_nest_output$ErrorOutput)
+                       Check4 = check_adult_parent_nest_output$ErrorOutput,
+                       Check5 = check_age_captures_output$ErrorOutput)
   } else {
     # Warning list
     warning_list <- list(Check2a = check_values_mass_output$WarningOutput,
                          Check2b = check_values_tarsus_output$WarningOutput,
                          Check3 = check_chick_age_output$WarningOutput,
-                         Check4 = check_adult_parent_nest_output$WarningOutput)
+                         Check4 = check_adult_parent_nest_output$WarningOutput,
+                         Check5 = check_age_captures_output$WarningOutput)
 
     # Error list
     error_list <- list(Check2a = check_values_mass_output$ErrorOutput,
                        Check2b = check_values_tarsus_output$ErrorOutput,
                        Check3 = check_chick_age_output$ErrorOutput,
-                       Check4 = check_adult_parent_nest_output$ErrorOutput)
+                       Check4 = check_adult_parent_nest_output$ErrorOutput,
+                       Check5 = check_age_captures_output$ErrorOutput)
 
     check_list <- check_list[-1,]
   }
@@ -105,11 +118,13 @@ capture_check <- function(Capture_data, Location_data, Brood_data, check_format=
               WarningRows = unique(c(check_values_mass_output$WarningRows,
                                      check_values_tarsus_output$WarningRows,
                                      check_chick_age_output$WarningRows,
-                                     check_adult_parent_nest_output$WarningRows)),
+                                     check_adult_parent_nest_output$WarningRows,
+                                     check_age_captures_output$WarningRows)),
               ErrorRows = unique(c(check_values_mass_output$ErrorRows,
                                    check_values_tarsus_output$ErrorRows,
                                    check_chick_age_output$ErrorRows,
-                                   check_adult_parent_nest_output$ErrorRows)),
+                                   check_adult_parent_nest_output$ErrorRows,
+                                   check_age_captures_output$ErrorRows)),
               Warnings = warning_list,
               Errors = error_list))
 }
@@ -862,6 +877,115 @@ check_adult_parent_nest <- function(Capture_data, Location_data, Brood_data, app
   return(list(CheckList = check_list,
               WarningRows = warning_records$Row,
               ErrorRows = NULL,
+              WarningOutput = unlist(warning_output),
+              ErrorOutput = unlist(error_output)))
+
+  # Satisfy RCMD checks
+  approved_list <- NULL
+
+}
+
+
+#' Check age of subsequent captures
+#'
+#' Check that the observed age of chronologically ordered captures is correct. Individuals who have a record as a chick in the same or a later year than a record of an adult will be flagged as an error. Other cases where the age of the subsequent capture is not equal or greater than the previous will be flagged as a warning.
+#'
+#' Check ID: C5.
+#'
+#' @inheritParams checks_capture_params
+#'
+#' @inherit checks_return return
+#'
+#' @export
+
+check_age_captures <- function(Capture_data, approved_list){
+
+  # Warnings
+  # Select records of captures with an age larger than the subsequent capture.
+  # This may happen when age determination and uncertainty vary over time, but should be flagged as a warning.
+  wrong_age_order <- Capture_data %>%
+    dplyr::group_by(.data$IndvID) %>%
+    dplyr::arrange(.data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
+    dplyr::filter(.data$Age_observed > dplyr::lead(.data$Age_observed) &
+                    ((.data$Age_observed <= 3 & dplyr::lead(.data$Age_observed) <= 3) |
+                       (.data$Age_observed > 3 & dplyr::lead(.data$Age_observed) > 3))) %>%
+    dplyr::mutate(Age_observed_next = lead(.data$Age_observed)) %>%
+    dplyr::select(.data$Row, .data$PopID, .data$IndvID, .data$CaptureID, .data$Species,
+                  .data$Age_observed, .data$Age_observed_next)
+
+  war <- FALSE
+  warning_records <- tibble::tibble(Row = NA_character_)
+  warning_output <- NULL
+
+  if(nrow(wrong_age_order) > 0) {
+
+    war <- TRUE
+
+    # Compare to approved_list
+    warning_records <- wrong_age_order %>%
+      dplyr::mutate(CheckID = "C5") %>%
+      dplyr::anti_join(approved_list$Capture_approved_list, by=c("PopID", "CheckID", "CaptureID"))
+
+    # Create quality check report statements
+    warning_output <- purrr::pmap(.l = warning_records,
+                                  .f = ~{
+
+                                    paste0("Record on row ", ..1,
+                                           " (PopID: ", ..2,
+                                           "; IndvID: ", ..3,
+                                           "; CaptureID: ", ..4, "; ", species_codes[species_codes$Species == ..5, "CommonName"], ")",
+                                           " has an older observed age (Age: ", ..6, ") than the next capture of this individual (Age: ", ..7, ").")
+
+                                  })
+
+  }
+
+  # Errors
+  # Select records of chick captures that happened after adult captures of the same individual
+  # This is impossible and should be flagged as an error.
+  chicks_caught_after_adults <- Capture_data %>%
+    dplyr::group_by(.data$IndvID) %>%
+    dplyr::arrange(.data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
+    dplyr::filter(.data$Age_observed > dplyr::lead(.data$Age_observed) &
+                  .data$Age_observed > 3 &
+                  dplyr::lead(.data$Age_observed) <= 3) %>%
+    dplyr::mutate(Age_observed_next = lead(.data$Age_observed)) %>%
+    dplyr::select(.data$Row, .data$PopID, .data$IndvID, .data$CaptureID, .data$Species,
+                  .data$Age_observed, .data$Age_observed_next)
+
+  err <- FALSE
+  error_records <- tibble::tibble(Row = NA_character_)
+  error_output <- NULL
+
+  if(nrow(chicks_caught_after_adults) > 0) {
+
+    err <- TRUE
+
+    # Compare to approved_list
+    error_records <- chicks_caught_after_adults %>%
+      dplyr::mutate(CheckID = "C5") %>%
+      dplyr::anti_join(approved_list$Capture_approved_list, by=c("PopID", "CheckID", "CaptureID"))
+
+    # Create quality check report statements
+    error_output <- purrr::pmap(.l = error_records,
+                                .f = ~{
+
+                                  paste0("Record on row ", ..1,
+                                         " (PopID: ", ..2,
+                                         "; IndvID: ", ..3,
+                                         "; CaptureID: ", ..4, "; ", species_codes[species_codes$Species == ..5, "CommonName"], ")",
+                                         " has been caught as an adult (Age: ", ..6, ") before it was caught as a chick (Age: ", ..7, ").")
+
+                                })
+
+  }
+
+  check_list <- tibble::tibble(Warning = war,
+                               Error = err)
+
+  return(list(CheckList = check_list,
+              WarningRows = warning_records$Row,
+              ErrorRows = error_records$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 
