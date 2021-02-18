@@ -31,6 +31,12 @@
 # Age: what do the numbers refer to? Age in years or some code (different from Euring?)
 # Chicks: rings in the 2019, line V, nestbox 1: XX 84, Ring numbers: 996-85000; 801-805
 #
+#### FICHYP
+# more data? individual capture data, chick measurements
+# Symbols "бк" in the column of Nestling rings?
+# Age of females?
+
+
 #### QUESTIONS LIAM
 # function to extract chick rings from parmaj data
 
@@ -54,7 +60,7 @@ format_PET <- function(db = choose_directory(),
 
   #### Primary data
 
-  message("Importing primary data...")
+  message("Importing primary data Great tit ...")
 
   parmaj_data <- readxl::read_excel(path =  paste0(db, "/PET_PrimaryData.xls"),
                                  na = c("NA", "nA"),
@@ -100,6 +106,87 @@ format_PET <- function(db = choose_directory(),
                   .data$PopID,
                   everything()) %>%
     dplyr::distinct()
+
+
+  message("Importing primary data Pied flycatcher ...")
+
+  fichyp_data <- readxl::read_excel(path =  paste0(db, "/PET_PrimaryData.xls"),
+                                    na = c("NA", "nA"),
+                                    sheet = "Pied flycatcher") %>%
+    janitor::clean_names(case = "upper_camel") %>%
+    janitor::remove_empty(which = "rows") %>%
+    #### Convert to corresponding format and rename
+    dplyr::mutate(PopID = "PET",
+                  BreedingSeason = as.integer(.data$Year),
+                  NestboxID = toupper(.data$NoNestBox),
+                  LocationID = .data$NestboxID,
+                  BroodID = as.character(paste(.data$BreedingSeason, .data$TheLineOfArtificialNestBoxes,
+                                               .data$NestboxID, .data$StartDateOfLaying1May1,
+                                               sep = "_")),
+                  Species = species_codes[which(species_codes$SpeciesID == 13490), ]$Species,
+                  FemaleID = if_else(!is.na(.data$FemalesRingSeries) & !is.na(.data$FemalesRing),
+                                     as.character(paste0(.data$FemalesRingSeries, .data$FemalesRing)),
+                                     NA_character_),
+                  MaleID = NA_character_,
+                  NestlingRings = stringr::str_replace_all(.data$NestlingRings,
+                                                           pattern = " ", replacement = ""),
+                  StartDateOfLaying1May1 = as.integer(.data$StartDateOfLaying1May1),
+                  #### In two cases the hatching date is "0"
+                  HatchingDate1May1 = if_else(HatchingDate1May1 == "0",
+                                              NA_integer_,
+                                              as.integer(.data$HatchingDate1May1))) %>%
+    #### Remove columns which we do not store in the standardized format
+    dplyr::select(-.data$FemalesRingSeries,
+                  -.data$FemalesRing,
+                  -.data$NoString,
+                  -.data$NoNestBox) %>%
+    #### Reorder columns
+    dplyr::select(.data$BreedingSeason,
+                  .data$Species,
+                  .data$PopID,
+                  everything()) %>%
+    dplyr::distinct()
+
+
+  message("Importing primary data Wryneck ...")
+
+  jyntor_data <- readxl::read_excel(path =  paste0(db, "/PET_PrimaryData.xls"),
+                                    na = c("NA", "nA"),
+                                    sheet = "Wryneck") %>%
+    janitor::clean_names(case = "upper_camel") %>%
+    janitor::remove_empty(which = "rows") %>%
+    #### Convert to corresponding format and rename
+    dplyr::mutate(PopID = "PET",
+                  BreedingSeason = as.integer(.data$Year),
+                  NestboxID = toupper(.data$NoNestBox),
+                  LocationID = .data$NestboxID,
+                  BroodID = as.character(paste(.data$BreedingSeason, .data$TheLineOfArtificialNestBoxes,
+                                               .data$NestboxID, .data$StartDateOfLaying1May1,
+                                               sep = "_")),
+                  #### ADD WRYNECK TO SPECIES CODES !!!
+                  # Species = species_codes[which(species_codes$SpeciesID == XXX), ]$Species,
+                  Species = "JYNTOR",
+                  FemalesRingSeries = stringr::str_replace(.data$FemalesRingSeries,
+                                                           pattern = " ", replacement = ""),
+                  FemaleID = if_else(!is.na(.data$FemalesRingSeries) & !is.na(.data$FemalesRing),
+                                     as.character(paste0(.data$FemalesRingSeries, .data$FemalesRing)),
+                                     NA_character_),
+                  MaleID = NA_character_,
+                  NestlingRings = stringr::str_replace_all(.data$NestlingRings,
+                                                           pattern = " ", replacement = ""),
+                  StartDateOfLaying1May1 = as.numeric(.data$StartDateOfLaying1May1)) %>%
+    #### Remove columns which we do not store in the standardized format
+    dplyr::select(-.data$FemalesRingSeries,
+                  -.data$FemalesRing,
+                  -.data$NoString,
+                  -.data$NoNestBox) %>%
+    #### Reorder columns
+    dplyr::select(.data$BreedingSeason,
+                  .data$Species,
+                  .data$PopID,
+                  everything()) %>%
+    dplyr::distinct()
+
 
 
   #### BROOD DATA
@@ -162,7 +249,7 @@ format_PET <- function(db = choose_directory(),
 #' Create brood data table for blue tits in Institute of Biology, Karelian Research Centre, Russian Academy of Sciences, Petrozavodsk, Russia.
 #'
 #' Create a capture data table in standard format for great tits in Institute of Biology, Russia.
-#' @param pet_data Data frame. Primaty data from Institute of Biology, Russia.
+#' @param pet_data Data frame. Primary data from Institute of Biology, Russia.
 #' @return A data frame.
 
 
@@ -233,6 +320,127 @@ create_brood_PET <- function(parmaj_data) {
                   AvgEggMass, NumberEggs, AvgChickMass, NumberChicksMass,
                   AvgTarsus, NumberChicksTarsus, OriginalTarsusMethod, ExperimentID) %>%
     distinct()
+
+
+  Brood_data_fichyp <-
+    fichyp_data %>%
+    #### Convert to corresponding format and rename
+    dplyr::mutate(Plot = .data$TheLineOfArtificialNestBoxes,
+                  ## for new version of calc_clutchtype
+                  # LayDate_observed = as.Date(paste(.data$BreedingSeason, "05-01", sep = "-"),
+                  #                            format = "%Y-%m-%d") + .data$RingDate1May1St - 1,
+                  LayDate = as.Date(paste(.data$BreedingSeason, "05-01", sep = "-"),
+                                    format = "%Y-%m-%d") + .data$StartDateOfLaying1May1 - 1,
+                  LayDate_min = as.Date(NA),
+                  LayDate_max = as.Date(NA),
+                  ClutchSize_observed = as.integer(.data$ClutchSize),
+                  ClutchSize_min = NA_integer_,
+                  ClutchSize_max = NA_integer_,
+                  HatchDate_observed =  as.Date(paste(.data$BreedingSeason, "05-01", sep = "-"),
+                                                format = "%Y-%m-%d") + .data$HatchingDate1May1 - 1,
+                  HatchDate_min = as.Date(NA),
+                  HatchDate_max = as.Date(NA),
+                  BroodSize_observed = as.integer(.data$NumberOfHatchedNestlings),
+                  BroodSize_min = NA_integer_,
+                  BroodSize_max = NA_integer_,
+                  FledgeDate_observed = as.Date(NA),
+                  FledgeDate_min = as.Date(NA),
+                  FledgeDate_max = as.Date(NA),
+                  ## for new version of calc_clutchtype
+                  # NumberFledged_observed = as.integer(.data$NumberOfRingedFledlings),
+                  NumberFledged = as.integer(.data$NumberOfFledlings),
+                  NumberFledged_min = NA_integer_,
+                  NumberFledged_max = NA_integer_,
+                  AvgEggMass = NA_real_,
+                  NumberEggs = NA_integer_,
+                  AvgChickMass = NA_real_,
+                  NumberChicksMass = NA_integer_,
+                  AvgTarsus = NA_real_,
+                  NumberChicksTarsus = NA_integer_,
+                  #### Ask data owner for the tarsus method
+                  OriginalTarsusMethod = NA_character_,
+                  ExperimentID = NA_character_,
+                  ClutchType_observed = NA_character_) %>%
+    #### Calculate clutch type
+    dplyr::arrange(BreedingSeason, FemaleID, LayDate) %>%
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
+    #### Rename
+    dplyr::rename(LayDate_observed = LayDate,
+                  NumberFledged_observed = NumberFledged) %>%
+    #### Final arrangement
+    dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot, LocationID,
+                  FemaleID, MaleID,
+                  ClutchType_observed, ClutchType_calculated,
+                  LayDate_observed, LayDate_min, LayDate_max,
+                  ClutchSize_observed, ClutchSize_min, ClutchSize_max,
+                  HatchDate_observed, HatchDate_min, HatchDate_max,
+                  BroodSize_observed, BroodSize_min, BroodSize_max,
+                  FledgeDate_observed, FledgeDate_min, FledgeDate_max,
+                  NumberFledged_observed, NumberFledged_min, NumberFledged_max,
+                  AvgEggMass, NumberEggs, AvgChickMass, NumberChicksMass,
+                  AvgTarsus, NumberChicksTarsus, OriginalTarsusMethod, ExperimentID) %>%
+    distinct()
+
+
+  Brood_data_jyntor <-
+    jyntor_data %>%
+    #### Convert to corresponding format and rename
+    dplyr::mutate(Plot = .data$TheLineOfArtificialNestBoxes,
+                  ## for new version of calc_clutchtype
+                  # LayDate_observed = as.Date(paste(.data$BreedingSeason, "05-01", sep = "-"),
+                  #                            format = "%Y-%m-%d") + .data$RingDate1May1St - 1,
+                  LayDate = as.Date(paste(.data$BreedingSeason, "05-01", sep = "-"),
+                                    format = "%Y-%m-%d") + .data$StartDateOfLaying1May1 - 1,
+                  LayDate_min = as.Date(NA),
+                  LayDate_max = as.Date(NA),
+                  ClutchSize_observed = as.integer(.data$ClutchSize),
+                  ClutchSize_min = NA_integer_,
+                  ClutchSize_max = NA_integer_,
+                  HatchDate_observed =  as.Date(paste(.data$BreedingSeason, "05-01", sep = "-"),
+                                                format = "%Y-%m-%d") + .data$HatchingDate1May1 - 1,
+                  HatchDate_min = as.Date(NA),
+                  HatchDate_max = as.Date(NA),
+                  BroodSize_observed = as.integer(.data$NumberOfHatchedNestlings),
+                  BroodSize_min = NA_integer_,
+                  BroodSize_max = NA_integer_,
+                  FledgeDate_observed = as.Date(NA),
+                  FledgeDate_min = as.Date(NA),
+                  FledgeDate_max = as.Date(NA),
+                  ## for new version of calc_clutchtype
+                  # NumberFledged_observed = as.integer(.data$NumberOfRingedFledlings),
+                  NumberFledged = as.integer(.data$NumberOfFledlings),
+                  NumberFledged_min = NA_integer_,
+                  NumberFledged_max = NA_integer_,
+                  AvgEggMass = NA_real_,
+                  NumberEggs = NA_integer_,
+                  AvgChickMass = NA_real_,
+                  NumberChicksMass = NA_integer_,
+                  AvgTarsus = NA_real_,
+                  NumberChicksTarsus = NA_integer_,
+                  #### Ask data owner for the tarsus method
+                  OriginalTarsusMethod = NA_character_,
+                  ExperimentID = NA_character_,
+                  ClutchType_observed = NA_character_) %>%
+    #### Calculate clutch type
+    dplyr::arrange(BreedingSeason, FemaleID, LayDate) %>%
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
+    #### Rename
+    dplyr::rename(LayDate_observed = LayDate,
+                  NumberFledged_observed = NumberFledged) %>%
+    #### Final arrangement
+    dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot, LocationID,
+                  FemaleID, MaleID,
+                  ClutchType_observed, ClutchType_calculated,
+                  LayDate_observed, LayDate_min, LayDate_max,
+                  ClutchSize_observed, ClutchSize_min, ClutchSize_max,
+                  HatchDate_observed, HatchDate_min, HatchDate_max,
+                  BroodSize_observed, BroodSize_min, BroodSize_max,
+                  FledgeDate_observed, FledgeDate_min, FledgeDate_max,
+                  NumberFledged_observed, NumberFledged_min, NumberFledged_max,
+                  AvgEggMass, NumberEggs, AvgChickMass, NumberChicksMass,
+                  AvgTarsus, NumberChicksTarsus, OriginalTarsusMethod, ExperimentID) %>%
+    distinct()
+
 
   return(Brood_data)
 
@@ -314,7 +522,73 @@ create_capture_PET <- function(Brood_data) {
                   .data$ChickAge, .data$ExperimentID)
 
 
-  #### NEED TO EXTRAXT RINGS
+
+  Capture_data_fishyp_adults <-
+    fichyp_data %>%
+    dplyr::select(.data$Species, .data$PopID, .data$BreedingSeason,
+                  .data$FemaleID, .data$MaleID,
+                  .data$BroodID, .data$LocationID,
+                  .data$TheLineOfArtificialNestBoxes) %>%
+    tidyr::pivot_longer(cols = c(.data$FemaleID, .data$MaleID),
+                        names_to = "Sex_observed",
+                        values_to = "IndvID") %>%
+    #### Remove records where the partner is not known
+    dplyr::filter(!is.na(.data$IndvID)) %>%
+    ####
+    dplyr::mutate(Sex_observed = substr(.data$Sex_observed, start = 1, stop = 1)) %>%
+    #### ASK DATA OWNER >> til they respond, create capture date
+    dplyr::mutate(CaptureDate = as.Date(paste0(.data$BreedingSeason, "-04-01"))) %>%
+    #### Create new variables
+    dplyr::group_by(.data$IndvID) %>%
+    dplyr::arrange(.data$BreedingSeason, .data$CaptureDate) %>%
+    dplyr::mutate(CaptureID = paste(.data$IndvID, row_number(), sep = "_")) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(Plot = .data$TheLineOfArtificialNestBoxes,
+                  CaptureTime  = NA_character_,
+                  CaptureAlive = TRUE,
+                  ReleaseAlive = .data$CaptureAlive,
+                  CapturePopID = .data$PopID,
+                  CapturePlot  = .data$Plot,
+                  ReleasePopID = ifelse(ReleaseAlive == TRUE, .data$CapturePopID, NA_character_),
+                  ReleasePlot  = ifelse(ReleaseAlive == TRUE, .data$CapturePlot, NA_character_),
+                  WingLength = NA_real_,
+                  ChickAge = NA_integer_,
+                  BroodIDLaid = .data$BroodID,
+                  ObserverID = NA_character_,
+                  Mass = NA_real_,
+                  Tarsus = NA_real_,
+                  #### Ask data owner
+                  # OriginalTarsusMethod = ifelse(!is.na(.data$Tarsus), "Alternative", NA_character_),
+                  OriginalTarsusMethod = NA_character_,
+                  ExperimentID = NA_character_,
+                  #### Ask dataowner
+                  Age_observed = NA_integer_) %>%
+    #### USE THE NEW VERSION OF THE FUNCTION
+    # dplyr::mutate(Age_calculated = calc_age())
+    #### OLD VERSION OF THE FUNCTION
+    calc_age(ID = IndvID,
+             Age = Age_observed,
+             Date = CaptureDate,
+             Year = BreedingSeason,
+             showpb = TRUE) %>%
+    #### Final arrangement
+    dplyr::select(.data$CaptureID, .data$IndvID, .data$Species,
+                  .data$Sex_observed, .data$BreedingSeason,
+                  .data$CaptureDate, .data$CaptureTime,
+                  .data$ObserverID, .data$LocationID,
+                  .data$CaptureAlive, .data$ReleaseAlive,
+                  .data$CapturePopID, .data$CapturePlot,
+                  .data$ReleasePopID, .data$ReleasePlot,
+                  .data$Mass, .data$Tarsus, .data$OriginalTarsusMethod,
+                  .data$WingLength, .data$Age_observed, .data$Age_calculated,
+                  .data$ChickAge, .data$ExperimentID)
+
+
+
+
+
+
+  #### NEED TO EXTRACT RINGS
   #### solve brood 2019_V_1_1 ring number series change
   Capture_data_parmaj_chicks <-
     parmaj_data %>%
@@ -351,20 +625,25 @@ create_capture_PET <- function(Brood_data) {
 
 
 
-  #### Final arrangement
-  dplyr::select(.data$CaptureID, .data$IndvID, .data$Species,
-                .data$Sex_observed, .data$BreedingSeason,
-                .data$CaptureDate, .data$CaptureTime,
-                .data$ObserverID, .data$LocationID,
-                .data$CaptureAlive, .data$ReleaseAlive,
-                .data$CapturePopID, .data$CapturePlot,
-                .data$ReleasePopID, .data$ReleasePlot,
-                .data$Mass, .data$Tarsus, .data$OriginalTarsusMethod,
-                .data$WingLength, .data$Age_observed, .data$Age_calculated,
-                .data$ChickAge, .data$ExperimentID)
+  # #### Final arrangement
+  # dplyr::select(.data$CaptureID, .data$IndvID, .data$Species,
+  #               .data$Sex_observed, .data$BreedingSeason,
+  #               .data$CaptureDate, .data$CaptureTime,
+  #               .data$ObserverID, .data$LocationID,
+  #               .data$CaptureAlive, .data$ReleaseAlive,
+  #               .data$CapturePopID, .data$CapturePlot,
+  #               .data$ReleasePopID, .data$ReleasePlot,
+  #               .data$Mass, .data$Tarsus, .data$OriginalTarsusMethod,
+  #               .data$WingLength, .data$Age_observed, .data$Age_calculated,
+  #               .data$ChickAge, .data$ExperimentID)
 
 
 
+
+  Capture_data <- bind_rows(Capture_data_parmaj_adults,
+                            # Capture_data_parmaj_chicks,
+                            # Capture_data_fishyp_chicks,
+                            Capture_data_fishyp_adults)
 
   return(Capture_data)
 }
@@ -381,10 +660,10 @@ create_capture_PET <- function(Brood_data) {
 
 create_individual_PET <- function(Capture_data){
 
-  ####  temp
-  Capture_data <- Capture_data_parmaj_adults
 
-  Individual_data_parmaj_adults <-
+  ### solve the broodId >> get from input/Brood data
+
+  Individual_data_ <-
     Capture_data %>%
     #### Format and create new data columns
     group_by(.data$IndvID) %>%
@@ -402,8 +681,8 @@ create_individual_PET <- function(Capture_data){
                      Species = first(.data$Species),
                      PopID = first(.data$CapturePopID),
                      RingSeason = min(.data$BreedingSeason),
-                     RingAge = "adult",
-                     BroodIDLaid = NA_character_,
+                     RingAge = if_else(.data$Age_observed == 1L, "chick", "adult"),
+                     BroodIDLaid = if_else(.data$Age_observed == 1L, .data$BroodID, NA_character_),
                      BroodIDFledged = .data$BroodIDLaid) %>%
     dplyr::ungroup() %>%
     dplyr::select(.data$IndvID, .data$Species, .data$PopID,
@@ -427,10 +706,15 @@ create_individual_PET <- function(Capture_data){
 #'
 create_location_PET <- function(pet_data) {
 
+  # Location_data_parmaj <-
   Location_data <-
-    parmaj_data %>%
-    dplyr::select(.data$BreedingSeason, .data$NestboxID, .data$PopID, .data$TheLineOfArtificialNestBoxes) %>%
-    #### Remove cases where no nestbox is indicated >> check with data owner
+    bind_rows(dplyr::select(.data = parmaj_data,
+                            .data$BreedingSeason, .data$NestboxID,
+                            .data$PopID, .data$TheLineOfArtificialNestBoxes),
+              dplyr::select(.data = fichyp_data,
+                            .data$BreedingSeason, .data$NestboxID,
+                            .data$PopID, .data$TheLineOfArtificialNestBoxes)) %>%
+    #### Remove cases where no nestbox is indicated
     filter(!is.na(.data$NestboxID)) %>%
     group_by(.data$TheLineOfArtificialNestBoxes, .data$NestboxID) %>%
     arrange(.data$BreedingSeason) %>%
@@ -449,6 +733,7 @@ create_location_PET <- function(pet_data) {
                   .data$LocationType, .data$PopID,
                   .data$Latitude, .data$Longitude,
                   .data$StartSeason, .data$EndSeason, .data$HabitatType)
+
 
   return(Location_data)
 
