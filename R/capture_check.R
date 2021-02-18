@@ -27,7 +27,7 @@ capture_check <- function(Capture_data, Location_data, Brood_data, check_format=
                                                     "Check mass values against reference values",
                                                     "Check tarsus values against reference values",
                                                     "Check chick age",
-                                                    "Check that adults caught on nest are listed are the parents"),
+                                                    "Check that adults caught on nest are listed as the parents"),
                                Warning = NA,
                                Error = NA)
 
