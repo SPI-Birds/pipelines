@@ -45,6 +45,7 @@ A dummy pipeline output specifically created to test single checks from \code{\l
   \item Rows 1000-1001 are records that are needed to test the functionality of check 'I5:Checking that individuals have no conflicting species' (see \code{\link{check_conflicting_species}}): an individual with certain species, and an individual with uncertain species (i.e. recorded as two different species).
   \item Row 1002 is a record that is needed to test the functionality of check 'I6: Checking that individuals in Individual_data also appear in Capture_data' (see \code{\link{check_individuals_captures}}): an individual in Individual_data that is also recorded in Capture_data.
   \item Rows 1003-1005 are records that test the functionality of check 'C4: Checking that adults caught on nest are listed are the parents' (see \code{\link{check_adult_parent_nest}}): a parent caught on a nest and marked as the parent of that brood, a parent caught in a mistnet, and a parent caught on a nest but not marked as the parent of that brood.
+  \item Rows 1004-1011 are records that test the functionality of check 'C5:Checking that the age of subsequent captures is ordered correctly' (see \code{\link{check_age_captures}}): two captures in subsequent years with correct order of age, two captures in the same year with same age, two captures in subsequent years with incorrect order of age (but both are adults), two captures in subsequent years with incorrect order of age (adult caught before chick).
 }
 
 \strong{Individual data}:
