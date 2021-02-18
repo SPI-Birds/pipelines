@@ -1083,6 +1083,43 @@ create_dummy_data <- function() {
       CheckID = "B13"
     )
 
+  # C5: Checking that the age of subsequent captures is ordered correctly ####
+  C5_capture_rows <- Capture_data %>%
+    dplyr::mutate( # Probable (different year)
+      IndvID = paste0("I", max(C4_capture_rows$Row) + 1),
+      Age_observed = 5,
+      CaptureDate = "2019-05-01"
+    ) %>%
+    dplyr::add_row( # Probable (different year)
+      IndvID = paste0("I", max(C4_capture_rows$Row) + 1),
+      Age_observed = 7,
+      CaptureDate = "2020-05-01"
+    ) %>%
+    dplyr::add_row( # Probable (same year)
+      IndvID = rep(paste0("I", max(C4_capture_rows$Row) + 2), 2),
+      Age_observed = c(5, 5),
+      CaptureDate = c("2020-05-01", "2020-05-17")
+    ) %>%
+    dplyr::add_row( # Improbable (warning)
+      IndvID = rep(paste0("I", max(C4_capture_rows$Row) + 3), 2),
+      Age_observed = c(7, 6),
+      CaptureDate = c("2019-05-01", "2020-05-01")
+    ) %>%
+    dplyr::add_row( # Impossible (error)
+      IndvID = rep(paste0("I", max(C4_capture_rows$Row) + 4), 2),
+      Age_observed = c(5, 1),
+      CaptureDate = c("2019-05-01", "2020-05-01")
+    ) %>%
+    dplyr::mutate(
+      Sex_observed = "F",
+      Row = seq(max(C4_capture_rows$Row) + 1, length.out = n()),
+      CapturePopID = "AAA",
+      BreedingSeason = as.integer(stringr::str_sub(CaptureDate, 1, 4)),
+      Species = "PARMAJ",
+      CaptureID = paste(CapturePopID, IndvID, CaptureDate, sep="_"),
+      CheckID = "C5"
+    )
+
   # Approved_list: make sure that our approve-listing procedure works ####
   # We create a record that violates check B4, but should NOT result in TRUE in Warning & Error columns
   al_rows <- Brood_data %>%
@@ -1107,7 +1144,7 @@ create_dummy_data <- function() {
                                  C4_brood_rows, B11_brood_rows, B12_brood_rows, B13_brood_rows)
   Capture_data <- dplyr::bind_rows(B7_capture_rows, B10_capture_rows, C2a_adult_rows, C2a_chick_rows,
                                    C2b_adult_rows, C2b_chick_rows,C3_rows, I2_capture_rows,
-                                   I3_capture_rows, I4_capture_rows, I5_capture_rows, I6_capture_rows, C4_capture_rows)
+                                   I3_capture_rows, I4_capture_rows, I5_capture_rows, I6_capture_rows, C4_capture_rows, C5_capture_rows)
   Individual_data <- dplyr::bind_rows(B7_indv_rows, B10_indv_rows, I2_indv_rows, I3_indv_rows, I4_indv_rows,
                                       I5_indv_rows, I6_indv_rows, B11_indv_rows, B12_indv_rows, B13_indv_rows)
   Location_data <- dplyr::bind_rows(I3_location_rows, C4_location_rows)

@@ -910,8 +910,8 @@ check_age_captures <- function(Capture_data, approved_list){
                     ((.data$Age_observed <= 3 & dplyr::lead(.data$Age_observed) <= 3) |
                        (.data$Age_observed > 3 & dplyr::lead(.data$Age_observed) > 3))) %>%
     dplyr::mutate(Age_observed_next = lead(.data$Age_observed)) %>%
-    dplyr::select(.data$Row, .data$PopID, .data$IndvID, .data$CaptureID, .data$Species,
-                  .data$Age_observed, .data$Age_observed_next)
+    dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$IndvID, .data$CaptureID,
+                  .data$Species, .data$Age_observed, .data$Age_observed_next)
 
   war <- FALSE
   warning_records <- tibble::tibble(Row = NA_character_)
@@ -950,8 +950,8 @@ check_age_captures <- function(Capture_data, approved_list){
                   .data$Age_observed > 3 &
                   dplyr::lead(.data$Age_observed) <= 3) %>%
     dplyr::mutate(Age_observed_next = lead(.data$Age_observed)) %>%
-    dplyr::select(.data$Row, .data$PopID, .data$IndvID, .data$CaptureID, .data$Species,
-                  .data$Age_observed, .data$Age_observed_next)
+    dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$IndvID, .data$CaptureID,
+                  .data$Species, .data$Age_observed, .data$Age_observed_next)
 
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
