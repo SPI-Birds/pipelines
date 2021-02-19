@@ -906,10 +906,10 @@ check_age_captures <- function(Capture_data, approved_list){
   wrong_age_order <- Capture_data %>%
     dplyr::group_by(.data$IndvID) %>%
     dplyr::arrange(.data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
-    dplyr::filter(.data$Age_observed > dplyr::lead(.data$Age_observed) &
-                    ((.data$Age_observed <= 3 & dplyr::lead(.data$Age_observed) <= 3) |
-                       (.data$Age_observed > 3 & dplyr::lead(.data$Age_observed) > 3))) %>%
     dplyr::mutate(Age_observed_next = lead(.data$Age_observed)) %>%
+    dplyr::filter(.data$Age_observed > .data$Age_observed_next &
+                    ((.data$Age_observed <= 3 & .data$Age_observed_next <= 3) |
+                       (.data$Age_observed > 3 & .data$Age_observed_next > 3))) %>%
     dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$IndvID, .data$CaptureID,
                   .data$Species, .data$Age_observed, .data$Age_observed_next)
 
@@ -946,10 +946,10 @@ check_age_captures <- function(Capture_data, approved_list){
   chicks_caught_after_adults <- Capture_data %>%
     dplyr::group_by(.data$IndvID) %>%
     dplyr::arrange(.data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
-    dplyr::filter(.data$Age_observed > dplyr::lead(.data$Age_observed) &
-                  .data$Age_observed > 3 &
-                  dplyr::lead(.data$Age_observed) <= 3) %>%
     dplyr::mutate(Age_observed_next = lead(.data$Age_observed)) %>%
+    dplyr::filter(.data$Age_observed > .data$Age_observed_next &
+                  .data$Age_observed > 3 &
+                    .data$Age_observed_next <= 3) %>%
     dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$IndvID, .data$CaptureID,
                   .data$Species, .data$Age_observed, .data$Age_observed_next)
 
