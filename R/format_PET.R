@@ -25,14 +25,14 @@
 #### QUESTIONS DATA OWNERS
 ####
 #### PARMAJ
-# BroodID >> seems some broods only differ in few days in laying datae for the same year_nest??
 # Information regarding the individual and capture data: capture date, measurements (weight, tarsus, method used for tarsus measurements)
 # (both adults and chicks)
+# Tarsus method
 # Age: what do the numbers refer to? Age in years or some code (different from Euring?)
 # Chicks: rings in the 2019, line V, nestbox 1: XX 84, Ring numbers: 996-85000; 801-805
 #
 #### FICHYP
-# more data? individual capture data, chick measurements
+# individual capture data, chick measurements?
 # Symbols "бк" in the column of Nestling rings?
 # Age of females?
 
@@ -255,13 +255,6 @@ format_PET <- function(db = choose_directory(),
 
 create_brood_PET <- function(parmaj_data) {
 
-
-  # BroodID >> seems some broods only differ in few days in laying datae for the same year_nest??
-  # group_by(BreedingSeason, Plot, LocationID) %>%
-  # dplyr::arrange(LayDate) %>%
-  # dplyr::mutate(temp = row_number())
-
-
   Brood_data_parmaj <-
     parmaj_data %>%
     #### Convert to corresponding format and rename
@@ -302,7 +295,7 @@ create_brood_PET <- function(parmaj_data) {
                   ExperimentID = NA_character_,
                   ClutchType_observed = NA_character_) %>%
     #### Calculate clutch type
-    dplyr::arrange(BreedingSeason, FemaleID, LayDate) %>%
+    # dplyr::arrange(BreedingSeason, FemaleID, LayDate) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
     #### Rename
     dplyr::rename(LayDate_observed = LayDate,
@@ -441,6 +434,11 @@ create_brood_PET <- function(parmaj_data) {
                   AvgTarsus, NumberChicksTarsus, OriginalTarsusMethod, ExperimentID) %>%
     distinct()
 
+
+  Brood_data <-
+    bind_rows(Brood_data_parmaj,
+              Brood_data_fichyp,
+              Brood_data_jyntor)
 
   return(Brood_data)
 
