@@ -417,6 +417,8 @@ create_capture_PEW <- function(pew_data, Brood_data) {
 
   Capture_data_temp <-
     pew_data %>%
+    #### Remove unringed individuals
+    dplyr::filter(.data$IndvID != "unringed") %>%
     #### Rename variables
     dplyr::rename(LocationID = .data$NestboxID) %>%
     dplyr::select(-.data$DateRingingChicks) %>%
