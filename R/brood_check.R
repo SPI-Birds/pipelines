@@ -853,35 +853,69 @@ check_values_brood <- function(Brood_data, var, approved_list) {
                                # to all reference values
                                if(..7 >= 100) {
 
-                                 Brood_data %>%
-                                   dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 &
-                                                   (!!rlang::sym(var) < ..5 | !!rlang::sym(var) > ..6)) %>%
+                                 # Brood records below lower error threshold
+                                 lower_err <- Brood_data %>%
+                                   dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(var) < ..5) %>%
                                    dplyr::select(.data$Row, .data$PopID, .data$BroodID, !!rlang::sym(var), .data$Species) %>%
-                                   dplyr::mutate(Variable = var)
+                                   dplyr::mutate(Variable = var,
+                                                 Threshold = "L",
+                                                 Ref = ..5)
+
+                                 # Brood records above upper error threshold
+                                 upper_err <- Brood_data %>%
+                                   dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(var) > ..6) %>%
+                                   dplyr::select(.data$Row, .data$PopID, .data$BroodID, !!rlang::sym(var), .data$Species) %>%
+                                   dplyr::mutate(Variable = var,
+                                                 Threshold = "U",
+                                                 Ref = ..6)
+
+                                 dplyr::bind_rows(lower_err, upper_err)
 
                                  # If number of observations is too low, only compare brood values
                                  # to reference values not based on quantiles
                                } else {
 
+                                 # Brood records below lower error threshold
                                  Brood_data %>%
                                    dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(var) < ..5) %>%
                                    dplyr::select(.data$Row, .data$PopID, .data$BroodID, !!rlang::sym(var), .data$Species) %>%
-                                   dplyr::mutate(Variable = var)
+                                   dplyr::mutate(Variable = var,
+                                                 Threshold = "L",
+                                                 Ref = ..5)
 
                                }
 
                              } else if(var %in% c("LayDate", "LayDate_observed")) {
 
-                               Brood_data %>%
+                               # Brood records below lower error threshold
+                               lower_err <- Brood_data %>%
                                  dplyr::group_by(.data$BreedingSeason) %>%
                                  # Transform dates to Julian days (while accounting for year)
                                  # to compare to Julian day reference values
                                  dplyr::mutate(!!paste0(var, "_julian") := as.numeric(!!rlang::sym(var) - lubridate::ymd(paste(.data$BreedingSeason, "1", "1", sep = "-")) + 1)) %>%
                                  dplyr::ungroup() %>%
-                                 dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 &
-                                                 (!!rlang::sym(paste0(var, "_julian")) < ..5 | !!rlang::sym(paste0(var, "_julian")) > ..6)) %>%
-                                 dplyr::select(.data$Row, .data$PopID, .data$BroodID, !!rlang::sym(var), Species) %>%
-                                 dplyr::mutate(Variable = var)
+                                 dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(paste0(var, "_julian")) < ..5) %>%
+                                 dplyr::mutate(Variable = var,
+                                               Threshold = "L",
+                                               Ref = paste(.data$BreedingSeason, "01", "01", sep = "-")) %>%
+                                 dplyr::select(.data$Row, .data$PopID, .data$BroodID, !!rlang::sym(var),
+                                               .data$Species, .data$Variable, .data$Threshold, .data$Ref)
+
+                               # Brood records above upper error threshold
+                               upper_err <- Brood_data %>%
+                                 dplyr::group_by(.data$BreedingSeason) %>%
+                                 # Transform dates to Julian days (while accounting for year)
+                                 # to compare to Julian day reference values
+                                 dplyr::mutate(!!paste0(var, "_julian") := as.numeric(!!rlang::sym(var) - lubridate::ymd(paste(.data$BreedingSeason, "1", "1", sep = "-")) + 1)) %>%
+                                 dplyr::ungroup() %>%
+                                 dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(paste0(var, "_julian")) > ..6) %>%
+                                 dplyr::mutate(Variable = var,
+                                               Threshold = "U",
+                                               Ref = paste(.data$BreedingSeason, "12", "31", sep = "-")) %>%
+                                 dplyr::select(.data$Row, .data$PopID, .data$BroodID, !!rlang::sym(var),
+                                               .data$Species, .data$Variable, .data$Threshold, .data$Ref)
+
+                               dplyr::bind_rows(lower_err, upper_err)
 
                              }
 
@@ -906,11 +940,28 @@ check_values_brood <- function(Brood_data, var, approved_list) {
     error_output <- purrr::pmap(.l = error_records,
                                 .f = ~{
 
-                                  paste0("Record on row ", ..1,
-                                         " (PopID: ", ..2, "; ",
-                                         "BroodID: ", ..3, "; ",
-                                         species_codes[species_codes$Species == ..5, "CommonName"], ")",
-                                         " has an impossible value in ", ..6, " (", ..4, ").")
+                                  if(..6 %in% c("ClutchSize", "BroodSize", "NumberFledged",
+                                                "ClutchSize_observed", "BroodSize_observed", "NumberFledged_observed")) {
+
+                                    paste0("Record on row ", ..1,
+                                           " (PopID: ", ..2, "; ",
+                                           "BroodID: ", ..3, "; ",
+                                           species_codes[species_codes$Species == ..5, "CommonName"], ")",
+                                           " has a ", ifelse(..7 == "U", "larger", "smaller"), " value in ",
+                                           ..6, " (", ..4, ") than the ", ifelse(..7 == "U", "upper", "lower"),
+                                           " reference value (", ..8, "), which is considered impossible.")
+
+                                  } else if(..6 %in% c("LayDate", "LayDate_observed")) {
+
+                                    paste0("Record on row ", ..1,
+                                           " (PopID: ", ..2, "; ",
+                                           "BroodID: ", ..3, "; ",
+                                           species_codes[species_codes$Species == ..5, "CommonName"], ")",
+                                           " has ", ifelse(..7 == "U", "a later", "an earlier"), " value in ",
+                                           ..6, " (", ..4, ") than the ", ifelse(..7 == "U", "upper", "lower"),
+                                           " reference value (", ..8, "), which is considered impossible.")
+
+                                  }
 
                                 })
 
@@ -930,24 +981,46 @@ check_values_brood <- function(Brood_data, var, approved_list) {
                              if(var %in% c("ClutchSize", "BroodSize", "NumberFledged",
                                            "ClutchSize_observed", "BroodSize_observed", "NumberFledged_observed")) {
 
+                               # Brood records above upper warning threshold
                                Brood_data %>%
                                  dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 &
                                                  (!!rlang::sym(var) > ..4 & !!rlang::sym(var) <= ..6)) %>%
                                  dplyr::select(.data$Row, .data$PopID, .data$BroodID, !!rlang::sym(var), .data$Species) %>%
-                                 dplyr::mutate(Variable = var)
+                                 dplyr::mutate(Variable = var,
+                                               Threshold = "U",
+                                               Ref = ..4)
 
                              } else if(var %in% c("LayDate", "LayDate_observed")) {
 
-                               Brood_data %>%
+                               # Brood records below lower warning threshold
+                               lower_war <- Brood_data %>%
                                  dplyr::group_by(.data$BreedingSeason) %>%
                                  # Transform dates to Julian days (while accounting for year)
                                  # to compare to Julian day reference values
                                  dplyr::mutate(!!paste0(var, "_julian") := as.numeric(!!rlang::sym(var) - lubridate::ymd(paste(.data$BreedingSeason, "1", "1", sep = "-")) + 1)) %>%
                                  dplyr::ungroup() %>%
-                                 dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 &
-                                                 ((!!rlang::sym(paste0(var, "_julian")) > ..4 & !!rlang::sym(paste0(var, "_julian")) <= ..6) | (!!rlang::sym(paste0(var, "_julian")) < ..3 & !!rlang::sym(paste0(var, "_julian")) >= ..5))) %>%
-                                 dplyr::select(.data$Row, .data$PopID, .data$BroodID, !!rlang::sym(var), .data$Species) %>%
-                                 dplyr::mutate(Variable = var)
+                                 dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(paste0(var, "_julian")) < ..3 & !!rlang::sym(paste0(var, "_julian")) >= ..5) %>%
+                                 dplyr::mutate(Variable = var,
+                                               Threshold = "L",
+                                               Ref = lubridate::ymd(paste(.data$BreedingSeason, "1", "1", sep = "-")) + ..3 - 1) %>%
+                                 dplyr::select(.data$Row, .data$PopID, .data$BroodID, !!rlang::sym(var),
+                                               .data$Species, .data$Variable, .data$Threshold, .data$Ref)
+
+                               # Brood records above upper warning threshold
+                               upper_war <- Brood_data %>%
+                                 dplyr::group_by(.data$BreedingSeason) %>%
+                                 # Transform dates to Julian days (while accounting for year)
+                                 # to compare to Julian day reference values
+                                 dplyr::mutate(!!paste0(var, "_julian") := as.numeric(!!rlang::sym(var) - lubridate::ymd(paste(.data$BreedingSeason, "1", "1", sep = "-")) + 1)) %>%
+                                 dplyr::ungroup() %>%
+                                 dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(paste0(var, "_julian")) > ..4 & !!rlang::sym(paste0(var, "_julian")) <= ..6) %>%
+                                 dplyr::mutate(Variable = var,
+                                               Threshold = "U",
+                                               Ref = lubridate::ymd(paste(.data$BreedingSeason, "1", "1", sep = "-")) + ..4 - 1) %>%
+                                 dplyr::select(.data$Row, .data$PopID, .data$BroodID, !!rlang::sym(var),
+                                               .data$Species, .data$Variable, .data$Threshold, .data$Ref)
+
+                               dplyr::bind_rows(lower_war, upper_war)
 
                              }
 
@@ -972,11 +1045,28 @@ check_values_brood <- function(Brood_data, var, approved_list) {
     warning_output <- purrr::pmap(.l = warning_records,
                                   .f = ~{
 
-                                    paste0("Record on row ", ..1,
-                                           " (PopID: ", ..2, "; ",
-                                           "BroodID: ", ..3, "; ",
-                                           species_codes[species_codes$Species == ..5, "CommonName"], ")",
-                                           " has an unusual value in ", ..6, " (", ..4, ").")
+                                    if(..6 %in% c("ClutchSize", "BroodSize", "NumberFledged",
+                                                  "ClutchSize_observed", "BroodSize_observed", "NumberFledged_observed")) {
+
+                                      paste0("Record on row ", ..1,
+                                             " (PopID: ", ..2, "; ",
+                                             "BroodID: ", ..3, "; ",
+                                             species_codes[species_codes$Species == ..5, "CommonName"], ")",
+                                             " has a ", ifelse(..7 == "U", "larger", "smaller"), " value in ",
+                                             ..6, " (", ..4, ") than the ", ifelse(..7 == "U", "upper", "lower"),
+                                             " reference value (", ..8, "), which is considered unusual.")
+
+                                    } else if(..6 %in% c("LayDate", "LayDate_observed")) {
+
+                                      paste0("Record on row ", ..1,
+                                             " (PopID: ", ..2, "; ",
+                                             "BroodID: ", ..3, "; ",
+                                             species_codes[species_codes$Species == ..5, "CommonName"], ")",
+                                             " has ", ifelse(..7 == "U", "a later", "an earlier"), " value in ",
+                                             ..6, " (", ..4, ") than the ", ifelse(..7 == "U", "upper", "lower"),
+                                             " reference value (", ..8, "), which is considered unusual.")
+
+                                    }
 
                                   })
 
