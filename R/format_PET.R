@@ -24,18 +24,18 @@
 #### --------------------------------------------------------------------------~
 #### QUESTIONS DATA OWNERS
 ####
-#### PARMAJ
+# ### PARMAJ
 # Information regarding the individual and capture data: capture date, measurements (weight, tarsus, method used for tarsus measurements)
 # (both adults and chicks)
 # Tarsus method
 # Age: what do the numbers refer to? Age in years or some code (different from Euring?)
 # Chicks: rings in the 2019, line V, nestbox 1: XX 84, Ring numbers: 996-85000; 801-805
 #
-#### FICHYP
+# ### FICHYP
 # individual capture data, chick measurements?
 # Symbols "бк" in the column of Nestling rings?
 # Age of females?
-
+#
 
 #### QUESTIONS LIAM
 # function to extract chick rings from parmaj data
@@ -246,14 +246,16 @@ format_PET <- function(db = choose_directory(),
 
 #### BROOD DATA
 
-#' Create brood data table for blue tits in Institute of Biology, Karelian Research Centre, Russian Academy of Sciences, Petrozavodsk, Russia.
+#' Create brood data table for the populations from Institute of Biology, Karelian Research Centre, Russian Academy of Sciences, Petrozavodsk, Russia.
 #'
-#' Create a capture data table in standard format for great tits in Institute of Biology, Russia.
+#' Create a brood data table in standard format for great tits, pied flycatchers and Wryneck in Institute of Biology, Russia.
 #' @param pet_data Data frame. Primary data from Institute of Biology, Russia.
 #' @return A data frame.
 
 
-create_brood_PET <- function(parmaj_data) {
+create_brood_PET <- function(parmaj_data,
+                             fichyp_data,
+                             jyntor_data) {
 
   Brood_data_parmaj <-
     parmaj_data %>%
@@ -447,14 +449,16 @@ create_brood_PET <- function(parmaj_data) {
 
 #### CAPTURE DATA
 
-#' Create capture data table for blue tits in Institute of Biology, Russia.
+#' Create capture data table for the populations from Institute of Biology, Karelian Research Centre, Russian Academy of Sciences, Petrozavodsk, Russia.
 #'
-#' Create a capture data table in standard format for blue tits in Institute of Biology, Russia.
+#' Create a capture data table in standard format for great tits, pied flycatchers and Wryneck in Institute of Biology, Russia.
 #' @param Brood_data Data frame. Brood_data from Institute of Biology, Russia.
 #' @return A data frame.
 
 
-create_capture_PET <- function(Brood_data) {
+create_capture_PET <- function(parmaj_data,
+                               fichyp_data,
+                               jyntor_data) {
 
   Capture_data_parmaj_adults <-
     parmaj_data %>%
@@ -693,15 +697,15 @@ create_individual_PET <- function(Capture_data){
 }
 
 
-
 #### LOCATION DATA
 
-#' Create location data table for MTA-PE, Hungary.
+#' Create location data table for for the populations from Institute of Biology, Karelian Research Centre, Russian Academy of Sciences, Petrozavodsk, Russia.
 #'
-#' Create location data table in standard format for data from MTA-PE, Hungary.
-#' @param data Data frame pet_data with primary data from MTA-PE, Hungary.
+#' Create location data table in standard format for data from Institute of Biology, Russia.
+#' @param data Data frame pet_data with primary data from Institute of Biology, Russia.
 #' @return A data frame.
 #'
+
 create_location_PET <- function(pet_data) {
 
   # Location_data_parmaj <-
@@ -710,6 +714,9 @@ create_location_PET <- function(pet_data) {
                             .data$BreedingSeason, .data$NestboxID,
                             .data$PopID, .data$TheLineOfArtificialNestBoxes),
               dplyr::select(.data = fichyp_data,
+                            .data$BreedingSeason, .data$NestboxID,
+                            .data$PopID, .data$TheLineOfArtificialNestBoxes),
+              dplyr::select(.data = jyntor_data,
                             .data$BreedingSeason, .data$NestboxID,
                             .data$PopID, .data$TheLineOfArtificialNestBoxes)) %>%
     #### Remove cases where no nestbox is indicated
@@ -730,7 +737,8 @@ create_location_PET <- function(pet_data) {
     dplyr::select(.data$LocationID, .data$NestboxID,
                   .data$LocationType, .data$PopID,
                   .data$Latitude, .data$Longitude,
-                  .data$StartSeason, .data$EndSeason, .data$HabitatType)
+                  .data$StartSeason, .data$EndSeason, .data$HabitatType) %>%
+    distinct()
 
 
   return(Location_data)
