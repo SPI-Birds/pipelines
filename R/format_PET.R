@@ -460,13 +460,17 @@ create_capture_PET <- function(parmaj_data,
                                fichyp_data,
                                jyntor_data) {
 
+  #### ADULT DATA
+  #### ------------------------------------------------------------------------~
+
   Capture_data_parmaj_adults <-
     parmaj_data %>%
     dplyr::select(.data$Species, .data$PopID, .data$BreedingSeason,
                   .data$FemaleID, .data$MaleID,
                   .data$FemalesAge, .data$MalesAge,
                   .data$BroodID, .data$LocationID,
-                  .data$TheLineOfArtificialNestBoxes) %>%
+                  .data$TheLineOfArtificialNestBoxes,
+                  .data$StartDateOfLaying1May1) %>%
     tidyr::pivot_longer(cols = c(.data$FemaleID, .data$MaleID),
                         names_to = "Sex_observed",
                         values_to = "IndvID") %>%
@@ -479,7 +483,7 @@ create_capture_PET <- function(parmaj_data,
     dplyr::mutate(CaptureDate = as.Date(paste0(.data$BreedingSeason, "-04-01"))) %>%
     #### Create new variables
     dplyr::group_by(.data$IndvID) %>%
-    dplyr::arrange(.data$BreedingSeason, .data$CaptureDate) %>%
+    dplyr::arrange(.data$BreedingSeason, .data$StartDateOfLaying1May1) %>% ## Use .data$CaptureDate if the data owner provides one. Now use StartDateOfLaying1May1.
     dplyr::mutate(CaptureID = paste(.data$IndvID, row_number(), sep = "_")) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(Plot = .data$TheLineOfArtificialNestBoxes,
@@ -500,7 +504,7 @@ create_capture_PET <- function(parmaj_data,
                   # OriginalTarsusMethod = ifelse(!is.na(.data$Tarsus), "Alternative", NA_character_),
                   OriginalTarsusMethod = NA_character_,
                   ExperimentID = NA_character_,
-                  #### Ask datawoner, this is only temporary solution
+                  #### Ask data owner, this is only a temporary solution
                   Age_observed = case_when(.data$Age == 1L ~ 5L,
                                            .data$Age == 2L ~ 7L)) %>%
     #### USE THE NEW VERSION OF THE FUNCTION
@@ -530,11 +534,12 @@ create_capture_PET <- function(parmaj_data,
     dplyr::select(.data$Species, .data$PopID, .data$BreedingSeason,
                   .data$FemaleID, .data$MaleID,
                   .data$BroodID, .data$LocationID,
-                  .data$TheLineOfArtificialNestBoxes) %>%
+                  .data$TheLineOfArtificialNestBoxes,
+                  .data$StartDateOfLaying1May1) %>%
     tidyr::pivot_longer(cols = c(.data$FemaleID, .data$MaleID),
                         names_to = "Sex_observed",
                         values_to = "IndvID") %>%
-    #### Remove records where the partner is not known
+    #### Remove records where the partner is not known (actually, there are no MaleID for this dataset)
     dplyr::filter(!is.na(.data$IndvID)) %>%
     ####
     dplyr::mutate(Sex_observed = substr(.data$Sex_observed, start = 1, stop = 1)) %>%
@@ -542,7 +547,7 @@ create_capture_PET <- function(parmaj_data,
     dplyr::mutate(CaptureDate = as.Date(paste0(.data$BreedingSeason, "-04-01"))) %>%
     #### Create new variables
     dplyr::group_by(.data$IndvID) %>%
-    dplyr::arrange(.data$BreedingSeason, .data$CaptureDate) %>%
+    dplyr::arrange(.data$BreedingSeason, .data$StartDateOfLaying1May1) %>% ## Use .data$CaptureDate if the data owner provides one. Now use StartDateOfLaying1May1.
     dplyr::mutate(CaptureID = paste(.data$IndvID, row_number(), sep = "_")) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(Plot = .data$TheLineOfArtificialNestBoxes,
@@ -586,12 +591,76 @@ create_capture_PET <- function(parmaj_data,
                   .data$ChickAge, .data$ExperimentID)
 
 
+  Capture_data_jyntor_adults <-
+    jyntor_data %>%
+    dplyr::select(.data$Species, .data$PopID, .data$BreedingSeason,
+                  .data$FemaleID, .data$MaleID,
+                  .data$BroodID, .data$LocationID,
+                  .data$TheLineOfArtificialNestBoxes,
+                  .data$StartDateOfLaying1May1) %>%
+    tidyr::pivot_longer(cols = c(.data$FemaleID, .data$MaleID),
+                        names_to = "Sex_observed",
+                        values_to = "IndvID") %>%
+    dplyr::mutate(Sex_observed = substr(.data$Sex_observed, start = 1, stop = 1),
+                  Age = NA_character_) %>%
+    #### Remove records where the partner is not known
+    dplyr::filter(!is.na(.data$IndvID)) %>%
+    #### ASK DATA OWNER >> til they respond, create capture date
+    dplyr::mutate(CaptureDate = as.Date(paste0(.data$BreedingSeason, "-04-01"))) %>%
+    #### Create new variables
+    dplyr::group_by(.data$IndvID) %>%
+    dplyr::arrange(.data$BreedingSeason, .data$StartDateOfLaying1May1) %>% ## Use .data$CaptureDate if the data owner provides one. Now use StartDateOfLaying1May1.
+    dplyr::mutate(CaptureID = paste(.data$IndvID, row_number(), sep = "_")) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(Plot = .data$TheLineOfArtificialNestBoxes,
+                  CaptureTime  = NA_character_,
+                  CaptureAlive = TRUE,
+                  ReleaseAlive = .data$CaptureAlive,
+                  CapturePopID = .data$PopID,
+                  CapturePlot  = .data$Plot,
+                  ReleasePopID = ifelse(ReleaseAlive == TRUE, .data$CapturePopID, NA_character_),
+                  ReleasePlot  = ifelse(ReleaseAlive == TRUE, .data$CapturePlot, NA_character_),
+                  WingLength = NA_real_,
+                  ChickAge = NA_integer_,
+                  BroodIDLaid = .data$BroodID,
+                  ObserverID = NA_character_,
+                  Mass = NA_real_,
+                  Tarsus = NA_real_,
+                  #### Ask data owner
+                  # OriginalTarsusMethod = ifelse(!is.na(.data$Tarsus), "Alternative", NA_character_),
+                  OriginalTarsusMethod = NA_character_,
+                  ExperimentID = NA_character_,
+                  #### Ask data owner, this is only a temporary solution
+                  Age_observed = case_when(.data$Age == 1L ~ 5L,
+                                           .data$Age == 2L ~ 7L)) %>%
+    #### USE THE NEW VERSION OF THE FUNCTION
+    # dplyr::mutate(Age_calculated = calc_age())
+    #### OLD VERSION OF THE FUNCTION
+    calc_age(ID = IndvID,
+             Age = Age_observed,
+             Date = CaptureDate,
+             Year = BreedingSeason,
+             showpb = TRUE) %>%
+    #### Final arrangement
+    dplyr::select(.data$CaptureID, .data$IndvID, .data$Species,
+                  .data$Sex_observed, .data$BreedingSeason,
+                  .data$CaptureDate, .data$CaptureTime,
+                  .data$ObserverID, .data$LocationID,
+                  .data$CaptureAlive, .data$ReleaseAlive,
+                  .data$CapturePopID, .data$CapturePlot,
+                  .data$ReleasePopID, .data$ReleasePlot,
+                  .data$Mass, .data$Tarsus, .data$OriginalTarsusMethod,
+                  .data$WingLength, .data$Age_observed, .data$Age_calculated,
+                  .data$ChickAge, .data$ExperimentID)
 
 
 
+  #### CHICK DATA
+  #### ------------------------------------------------------------------------~
 
   #### NEED TO EXTRACT RINGS
   #### solve brood 2019_V_1_1 ring number series change
+
   Capture_data_parmaj_chicks <-
     parmaj_data %>%
     dplyr::select(.data$Species, .data$PopID, .data$BreedingSeason,
@@ -601,15 +670,17 @@ create_capture_PET <- function(parmaj_data,
     dplyr::filter(!is.na(.data$SeriesOfNestlingsRings) & !is.na(.data$NestlingRings)) %>%
     #### SOLVE THIS, TEMP REMOVE
     dplyr::filter(BroodID != "2019_V_1_1") %>%
+
     ####
     # tidyr::separate_rows()
 
 
     #### not working as I want
     tidyr::separate(col = .data$SeriesOfNestlingsRings, into = c("series1", "series2"),
-                    sep = ";", remove = FALSE) %>%
+                    sep = ";", remove = FALSE) %>% #OK
     tidyr::separate(col = .data$NestlingRings, into = c("rings1", "rings2"),
-                    sep = ";", remove = FALSE) %>%
+                    sep = ";", remove = FALSE) %>% #OK
+
     tidyr::separate(col = .data$rings1, into = c("rings1_start", "rings1_end"),
                     sep = "-", remove = FALSE, convert = TRUE) %>%
     # dplyr::mutate(fullrings1 = purrr::map_chr(.x = list(.data$series1, .data$rings1_start, .data$rings1_end),
@@ -708,7 +779,6 @@ create_individual_PET <- function(Capture_data){
 
 create_location_PET <- function(pet_data) {
 
-  # Location_data_parmaj <-
   Location_data <-
     bind_rows(dplyr::select(.data = parmaj_data,
                             .data$BreedingSeason, .data$NestboxID,
@@ -730,7 +800,7 @@ create_location_PET <- function(pet_data) {
                      PopID = unique(.data$PopID)) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(LocationType = "NB",
-                  HabitatType = NA_character_, ### it is a botanical garden with pines and deciduous trees...
+                  HabitatType  = NA_character_, ### it is a botanical garden with pines and deciduous trees...
                   Latitude  = NA_real_,
                   Longitude = NA_real_) %>%
     #### Final arrangement
