@@ -23,45 +23,15 @@
 #'\strong{ChickAge}: Note from data owner for the data until the 1992: Chicks ringed from age of 7-6 day up to fledging, most frequently in age of 8-10 day.
 #'We used 8 days.
 #'
+#'\strong{Location_data}: Coordinates of nestboxes can be provided by the data owner, we do not have them at this point.
+#'
 #' @inheritParams pipeline_params
 #'
 #' @return Generates either 4 .csv files or 4 data frames in the standard format.
 #' @export
 
+
 #### --------------------------------------------------------------------------~
-#### Questions for data owners
-# OriginalTarsusMethod ? (1995 datasets)
-# ChickAge: At what age chicks are ringed  (1995 datasets)
-#
-#
-# New questions 1995:
-#   chicks: there is one ring number "0" with tarsus "liigäväike"
-#           there are cases when ring number is blank
-#           there are cases where nestling tarsus and mass are "0". Is it real zero value
-#           or does it mean that it was not measured (and should be noted as NA in the data?)
-#  brood data: the nests have two records which look identical, only few values are missing in several columns.
-#               t968 from	1997
-#               t766a from 1996
-#              the nest t766a from	1996 has two empty records
-#              the nest n167 from 1999 has two second brood records
-#              the nest n91 from 1999 has two second brood records within only 3 days of difference. Is that possible?
-# Could you check that and correct (remove if the record is doubled)
-# Preferably do all those changes in your data first and send me the copy back then.
-
-# #### ASK DATA OWNER: Now remove temporarily this record
-# dplyr::filter(.data$NestlingRingNo != 0) %>%
-
-
-
-
-
-
-#### Data 1995: New question
-#### ASK DATA OWNER TO CHANGE IN RAW DATA
-# dplyr::mutate(NestlingTarsus = str_replace(.data$NestlingTarsus,
-#                                            pattern = ",",
-#                                            replacement = ".")) %>%
-#
 #### --------------------------------------------------------------------------~
 
 
@@ -206,17 +176,14 @@ format_KIL <- function(db = choose_directory(),
 
   #### Load data after 1995 chicks
   chicks_data_95 <-
-    readxl::read_excel(path = paste0(db, "/KIL_PrimaryData_from1995_GT_nestlings.xlsx"),
+    readxl::read_excel(path = paste0(db, "/KIL_PrimaryData_from1995_GT_nestlings.xls"),
                        sheet = 1,
                        col_types = c("numeric", "text", "numeric",
                                      "numeric", "numeric", "numeric",
                                      "numeric", "numeric", "text", "numeric")) %>%
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
-    #### ASK DATA OWNER: Now remove temporarily this record
-    dplyr::filter(.data$NestlingRingNo != 0) %>%
-    #### ASK DATA OWNER TO CHANGE IN RAW DATA
-    dplyr::mutate(NestlingTarsus = str_replace(.data$NestlingTarsus,
+    dplyr::mutate(NestlingTarsus15D = str_replace(.data$NestlingTarsus15D,
                                                pattern = ",",
                                                replacement = ".")) %>%
     #### Convert to corresponding format and rename
@@ -235,8 +202,8 @@ format_KIL <- function(db = choose_directory(),
                                                      replacement = ":")),
                                         NA_character_),
                   AgeEuringCode = 1L,
-                  Mass = as.numeric(.data$NestlingMass),
-                  Tarsus = as.numeric(.data$NestlingTarsus)) %>%
+                  Mass = as.numeric(.data$NestlingMass15D),
+                  Tarsus = as.numeric(.data$NestlingTarsus15D)) %>%
     dplyr::select(-.data$Year,
                   -.data$NestId,
                   -.data$NestlingRingNo,
@@ -444,8 +411,7 @@ create_brood_KIL <- function(brood_data_til92, kil_data_95) {
                   NumberChicksMass = NA_integer_,
                   AvgTarsus = .data$NestlingTarsusDay15Mm,
                   NumberChicksTarsus = NA,
-                  #### Ask data owner for the tarsus method
-                  OriginalTarsusMethod = NA_character_,
+                  OriginalTarsusMethod = if_else(!is.na(.data$AvgTarsus), "alternative", NA_character_),
                   ExperimentID = NA_character_) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
     #### Rename
@@ -587,8 +553,7 @@ create_capture_KIL <- function(brood_data_til92,
                   CapturePlot  = NA_character_,
                   ReleasePopID = ifelse(ReleaseAlive == TRUE, CapturePopID, NA_character_),
                   ReleasePlot  = ifelse(ReleaseAlive == TRUE, CapturePlot, NA_character_),
-                  #### ASK DATA OWNER
-                  OriginalTarsusMethod = NA_character_,
+                  OriginalTarsusMethod = if_else(!is.na(.data$Tarsus), "alternative", NA_character_),
                   WingLength = NA_real_,
                   Age_observed = as.integer(.data$AgeEuringCode),
                   ChickAge = NA_integer_,
@@ -611,14 +576,13 @@ create_capture_KIL <- function(brood_data_til92,
                   CapturePlot  = NA_character_,
                   ReleasePopID = ifelse(ReleaseAlive == TRUE, CapturePopID, NA_character_),
                   ReleasePlot  = ifelse(ReleaseAlive == TRUE, CapturePlot, NA_character_),
-                  #### ASK DATA OWNER
-                  OriginalTarsusMethod = NA_character_,
+                  OriginalTarsusMethod = if_else(!is.na(.data$Tarsus), "alternative", NA_character_),
                   Age_observed = 1L,
-                  ChickAge = NA_integer_,
+                  ChickAge = 15,
                   ExperimentID = NA_character_) %>%
     dplyr::select(-.data$NoFledglings,
-                  -.data$NestlingMass,
-                  -.data$NestlingTarsus,
+                  -.data$NestlingMass15D,
+                  -.data$NestlingTarsus15D,
                   -.data$BreedingAttempt,
                   -.data$AgeEuringCode,
                   -.data$BroodID)
