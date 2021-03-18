@@ -42,6 +42,7 @@
 
 #### --------------------------------------------------------------------------~
 
+# db = "~/Dropbox/POSTDOC/POSTDOC_NIOO_NETHERLANDS_2020/SPI-birds_project/data_pipeline_temp_copy/PET_Petrozavodsk_Russia"
 
 format_PET <- function(db = choose_directory(),
                        species = NULL,
@@ -62,9 +63,9 @@ format_PET <- function(db = choose_directory(),
 
   message("Importing primary data Great tit ...")
 
-  parmaj_data <- readxl::read_excel(path =  paste0(db, "/PET_PrimaryData.xls"),
+  parmaj_data <- readxl::read_excel(path = paste0(db, "/PET_PrimaryData.xls"),
                                  na = c("NA", "nA"),
-                                 sheet = "Great tits") %>%
+                                 sheet = 2) %>%  ## Note: This does not work on Mac: sheet = "Great tits"
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
     #### Convert to corresponding format and rename
@@ -112,7 +113,7 @@ format_PET <- function(db = choose_directory(),
 
   fichyp_data <- readxl::read_excel(path =  paste0(db, "/PET_PrimaryData.xls"),
                                     na = c("NA", "nA"),
-                                    sheet = "Pied flycatcher") %>%
+                                    sheet = 1) %>% ## Note: This does not work on Mac: sheet = "Pied flycatcher"
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
     #### Convert to corresponding format and rename
@@ -152,7 +153,7 @@ format_PET <- function(db = choose_directory(),
 
   jyntor_data <- readxl::read_excel(path =  paste0(db, "/PET_PrimaryData.xls"),
                                     na = c("NA", "nA"),
-                                    sheet = "Wryneck") %>%
+                                    sheet = 3) %>%  ## Note: This does not work on Mac: sheet = "Wryneck"
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
     #### Convert to corresponding format and rename
@@ -528,7 +529,6 @@ create_capture_PET <- function(parmaj_data,
                   .data$ChickAge, .data$ExperimentID)
 
 
-
   Capture_data_fishyp_adults <-
     fichyp_data %>%
     dplyr::select(.data$Species, .data$PopID, .data$BreedingSeason,
@@ -655,68 +655,227 @@ create_capture_PET <- function(parmaj_data,
 
 
 
-  #### CHICK DATA
+  #### CHICK DATA PARMAJ
   #### ------------------------------------------------------------------------~
-
-  #### NEED TO EXTRACT RINGS
   #### solve brood 2019_V_1_1 ring number series change
 
-  Capture_data_parmaj_chicks <-
+  Capture_data_parmaj_chicks_temp <-
     parmaj_data %>%
     dplyr::select(.data$Species, .data$PopID, .data$BreedingSeason,
                   .data$BroodID, .data$LocationID,
                   .data$TheLineOfArtificialNestBoxes,
+                  .data$StartDateOfLaying1May1,
                   .data$SeriesOfNestlingsRings, .data$NestlingRings) %>%
     dplyr::filter(!is.na(.data$SeriesOfNestlingsRings) & !is.na(.data$NestlingRings)) %>%
+
     #### SOLVE THIS, TEMP REMOVE
     dplyr::filter(BroodID != "2019_V_1_1") %>%
 
-    ####
-    # tidyr::separate_rows()
-
-
-    #### not working as I want
+    #### Separate series and ring codes
     tidyr::separate(col = .data$SeriesOfNestlingsRings, into = c("series1", "series2"),
                     sep = ";", remove = FALSE) %>% #OK
     tidyr::separate(col = .data$NestlingRings, into = c("rings1", "rings2"),
                     sep = ";", remove = FALSE) %>% #OK
-
     tidyr::separate(col = .data$rings1, into = c("rings1_start", "rings1_end"),
                     sep = "-", remove = FALSE, convert = TRUE) %>%
-    # dplyr::mutate(fullrings1 = purrr::map_chr(.x = list(.data$series1, .data$rings1_start, .data$rings1_end),
-    #                                           .f = ~ paste0(..1, c(..2:..3)))) %>%
-    dplyr::mutate(fullrings1 = paste0(.data$series1, c(.data$rings1_start : .data$rings1_end)))
+    tidyr::separate(col = .data$rings2, into = c("rings2_start", "rings2_end"),
+                    sep = "-", remove = FALSE, convert = TRUE)
+
+  #### -----------------------------------
+  #### Get the individual rings per brood
+  #### -----------------------------------
+
+  #### Series 1 of rings
+  #### -----------------------------------
+  seqs_rings1 <- mapply(FUN = function(a, b) {
+    (seq(from = a, to = b, by = 1))},
+    a = Capture_data_parmaj_chicks_temp$rings1_start,
+    b = Capture_data_parmaj_chicks_temp$rings1_end)
+
+  names(seqs_rings1) <- Capture_data_parmaj_chicks_temp$BroodID
+
+  #### Transform to data frame
+  seqs_rings1_tib <-
+    seqs_rings1 %>%
+    enframe(name = "BroodID", value = "Ring") %>%
+    unnest(cols = c(Ring))
+
+  captures_parmaj_chicks_rings1 <-
+    Capture_data_parmaj_chicks_temp %>%
+    full_join(seqs_rings1_tib, by = "BroodID") %>%
+    dplyr::mutate(IndvID = paste0(series1, Ring))
+
+  #### Series 2 of rings
+  #### -----------------------------------
+  #### Get numbers of ring series
+  seqs_rings2 <- mapply(FUN = function(a, b) {
+    (seq(from = a, to = b, by = 1))},
+    a = Capture_data_parmaj_chicks_temp$rings2_start[!is.na(Capture_data_parmaj_chicks_temp$rings2)],
+    b = Capture_data_parmaj_chicks_temp$rings2_end[!is.na(Capture_data_parmaj_chicks_temp$rings2)])
+
+  names(seqs_rings2) <- Capture_data_parmaj_chicks_temp$BroodID[!is.na(Capture_data_parmaj_chicks_temp$rings2)]
+
+  #### Transform to data frame
+  seqs_rings2_tib <-
+    seqs_rings2 %>%
+    enframe(name = "BroodID", value = "Ring") %>%
+    unnest(cols = c(Ring))
+
+  captures_parmaj_chicks_rings2 <-
+    Capture_data_parmaj_chicks_temp %>%
+    inner_join(seqs_rings2_tib, by = "BroodID") %>%
+    dplyr::mutate(IndvID = case_when(!is.na(series1) & is.na(series2) ~ paste0(series1, Ring),
+                                     !is.na(series1) & !is.na(series2) ~ paste0(series2, Ring)))
+
+  #### Join both series rings
+  Capture_data_parmaj_chicks <-
+    bind_rows(captures_parmaj_chicks_rings1,
+              captures_parmaj_chicks_rings2) %>%
+  #### ASK DATA OWNER >> til they respond, create capture date
+  dplyr::mutate(CaptureDate = as.Date(paste0(.data$BreedingSeason, "-04-01")),
+                Sex_observed = NA_character_,
+                Age = 1L) %>%
+  #### Create new variables
+  dplyr::group_by(.data$IndvID) %>%
+  dplyr::arrange(.data$BreedingSeason, .data$StartDateOfLaying1May1) %>% ## Use .data$CaptureDate if the data owner provides one. Now use StartDateOfLaying1May1.
+  dplyr::mutate(CaptureID = paste(.data$IndvID, row_number(), sep = "_")) %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(Plot = .data$TheLineOfArtificialNestBoxes,
+                CaptureTime  = NA_character_,
+                CaptureAlive = TRUE,
+                ReleaseAlive = .data$CaptureAlive,
+                CapturePopID = .data$PopID,
+                CapturePlot  = .data$Plot,
+                ReleasePopID = ifelse(ReleaseAlive == TRUE, .data$CapturePopID, NA_character_),
+                ReleasePlot  = ifelse(ReleaseAlive == TRUE, .data$CapturePlot, NA_character_),
+                WingLength = NA_real_,
+                ChickAge = NA_integer_,
+                BroodIDLaid = .data$BroodID,
+                ObserverID = NA_character_,
+                Mass = NA_real_,
+                Tarsus = NA_real_,
+                #### Ask data owner
+                # OriginalTarsusMethod = ifelse(!is.na(.data$Tarsus), "Alternative", NA_character_),
+                OriginalTarsusMethod = NA_character_,
+                ExperimentID = NA_character_,
+                #### Ask data owner, this is only a temporary solution
+                Age_observed = 5L) %>%
+  #### USE THE NEW VERSION OF THE FUNCTION
+  # dplyr::mutate(Age_calculated = calc_age())
+  #### OLD VERSION OF THE FUNCTION
+  calc_age(ID = IndvID,
+           Age = Age_observed,
+           Date = CaptureDate,
+           Year = BreedingSeason,
+           showpb = TRUE) %>%
+  #### Final arrangement
+  dplyr::select(.data$CaptureID, .data$IndvID, .data$Species,
+                .data$Sex_observed, .data$BreedingSeason,
+                .data$CaptureDate, .data$CaptureTime,
+                .data$ObserverID, .data$LocationID,
+                .data$CaptureAlive, .data$ReleaseAlive,
+                .data$CapturePopID, .data$CapturePlot,
+                .data$ReleasePopID, .data$ReleasePlot,
+                .data$Mass, .data$Tarsus, .data$OriginalTarsusMethod,
+                .data$WingLength, .data$Age_observed, .data$Age_calculated,
+                .data$ChickAge, .data$ExperimentID)
 
 
-    # dplyr::mutate(rings1x = stringr::str_replace(.data$rings1,
-    #                                              pattern = "-", replacement = ":"),
-    #               rings1x = seq(rings))
-    #
+  #### CHICK DATA FICHYP
+  #### ------------------------------------------------------------------------~
+  #### solve rings "бк" ring number series change
+
+  #### This ring is probably wrong?? is too long VT76392096
+
+  Capture_data_fichyp_chicks_temp <-
+    fichyp_data %>%
+    dplyr::select(.data$Species, .data$PopID, .data$BreedingSeason,
+                  .data$BroodID, .data$LocationID,
+                  .data$TheLineOfArtificialNestBoxes,
+                  .data$StartDateOfLaying1May1,
+                  .data$NestlingRings) %>%
+    dplyr::filter(!is.na(.data$NestlingRings)) %>%
+
+    #### SOLVE THIS, TEMP REMOVE
+    dplyr::filter(NestlingRings != "бк") %>%
+    dplyr::filter(NestlingRings != "VT76-260-63") %>%
+
+
+    #### Separate series and ring codes
+    tidyr::separate(col = .data$NestlingRings, into = c("rings1", "rings2"),
+                    sep = ";", remove = FALSE) %>%
+    tidyr::separate(col = .data$rings1, into = c("rings1_start", "rings1_end"),
+                    sep = "-", remove = FALSE, convert = TRUE) %>%
+    dplyr::mutate(series1 = str_sub(rings1_start, 1, nchar(rings1_start)-nchar(rings1_end)),
+                  rings1_start = str_sub(rings1_start, nchar(series1)+1, nchar(rings1_start))) %>%
+    tidyr::separate(col = .data$rings2, into = c("rings2_start", "rings2_end"),
+                    sep = "-", remove = FALSE, convert = TRUE) %>%
+    dplyr::mutate(series2 = str_sub(rings2_start, 1, nchar(rings2_start)-nchar(rings2_end)),
+                  rings2_start = str_sub(rings2_start, nchar(series2)+1, nchar(rings2_start)))
+
+  #### -----------------------------------
+  #### Get the individual rings per brood
+  #### -----------------------------------
+
+  #### Series 1 of rings
+  #### -----------------------------------
+  seqs_rings1 <- mapply(FUN = function(a, b) {
+    (seq(from = a, to = b, by = 1))},
+    a = Capture_data_fichyp_chicks_temp$rings1_start[!is.na(Capture_data_fichyp_chicks_temp$series1)],
+    b = Capture_data_fichyp_chicks_temp$rings1_end[!is.na(Capture_data_fichyp_chicks_temp$series1)])
+
+  names(seqs_rings1) <- Capture_data_fichyp_chicks_temp$BroodID[!is.na(Capture_data_fichyp_chicks_temp$series1)]
+
+  #### Transform to data frame
+  seqs_rings1_tib <-
+    seqs_rings1 %>%
+    enframe(name = "BroodID", value = "Ring") %>%
+    unnest(cols = c(Ring))
+
+  captures_fichyp_chicks_rings1 <-
+    Capture_data_fichyp_chicks_temp %>%
+    full_join(seqs_rings1_tib, by = "BroodID") %>%
+    dplyr::mutate(IndvID = case_when(!is.na(series1) ~ paste0(series1, Ring),
+                                     is.na(series1) ~ paste0(rings1)))
+
+
+  #### Series 2 of rings
+  #### -----------------------------------
+  #### Get numbers of ring series
+  seqs_rings2 <- mapply(FUN = function(a, b) {
+    (seq(from = a, to = b, by = 1))},
+    a = Capture_data_fichyp_chicks_temp$rings2_start[!is.na(Capture_data_fichyp_chicks_temp$series2)],
+    b = Capture_data_fichyp_chicks_temp$rings2_end[!is.na(Capture_data_fichyp_chicks_temp$series2)])
+
+  names(seqs_rings2) <- Capture_data_fichyp_chicks_temp$BroodID[!is.na(Capture_data_fichyp_chicks_temp$series2)]
+
+  #### Transform to data frame
+  seqs_rings2_tib <-
+    seqs_rings2 %>%
+    enframe(name = "BroodID", value = "Ring") %>%
+    unnest(cols = c(Ring))
+
+  captures_fichyp_chicks_rings2 <-
+    Capture_data_fichyp_chicks_temp %>%
+    inner_join(seqs_rings2_tib, by = "BroodID") %>%
+    dplyr::mutate(IndvID = paste0(series2, Ring))
+
+
+# here join both and finish
 
 
 
 
 
 
-  # #### Final arrangement
-  # dplyr::select(.data$CaptureID, .data$IndvID, .data$Species,
-  #               .data$Sex_observed, .data$BreedingSeason,
-  #               .data$CaptureDate, .data$CaptureTime,
-  #               .data$ObserverID, .data$LocationID,
-  #               .data$CaptureAlive, .data$ReleaseAlive,
-  #               .data$CapturePopID, .data$CapturePlot,
-  #               .data$ReleasePopID, .data$ReleasePlot,
-  #               .data$Mass, .data$Tarsus, .data$OriginalTarsusMethod,
-  #               .data$WingLength, .data$Age_observed, .data$Age_calculated,
-  #               .data$ChickAge, .data$ExperimentID)
-
-
-
-
+  #### ------------------------
+  #### FINAL CAPTURE DATA
+  #### ------------------------
   Capture_data <- bind_rows(Capture_data_parmaj_adults,
                             # Capture_data_parmaj_chicks,
                             # Capture_data_fishyp_chicks,
-                            Capture_data_fishyp_adults)
+                            Capture_data_fishyp_adults,
+                            Capture_data_jyntor_adults)
 
   return(Capture_data)
 }
@@ -735,6 +894,7 @@ create_individual_PET <- function(Capture_data){
 
 
   ### solve the broodId >> get from input/Brood data
+  ### get for all species
 
   Individual_data_ <-
     Capture_data %>%
@@ -775,7 +935,7 @@ create_individual_PET <- function(Capture_data){
 #' Create location data table in standard format for data from Institute of Biology, Russia.
 #' @param data Data frame pet_data with primary data from Institute of Biology, Russia.
 #' @return A data frame.
-#'
+
 
 create_location_PET <- function(pet_data) {
 
