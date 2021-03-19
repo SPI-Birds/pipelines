@@ -29,19 +29,21 @@
 # (both adults and chicks)
 # Tarsus method
 # Age: what do the numbers refer to? Age in years or some code (different from Euring?)
-# Chicks: rings in the 2019, line V, nestbox 1: XX 84, Ring numbers: 996-85000; 801-805
+# Chicks brood 2019_V_1_1: rings in the 2019, line V, nestbox 1: XX 84, Ring numbers: 996-85000; 801-805
 #
 # ### FICHYP
 # individual capture data, chick measurements?
 # Symbols "бк" in the column of Nestling rings?
 # Age of females?
+# This ring is probably wrong?? is too long VT76392096, was supposed to be VT76392-96??
 #
-
-#### QUESTIONS LIAM
-# function to extract chick rings from parmaj data
-
+# #### JYNTOR
+# Age of adults?
+#
+#
 #### --------------------------------------------------------------------------~
 
+#### Temporal, as I do not have access to NDrive anymore
 # db = "~/Dropbox/POSTDOC/POSTDOC_NIOO_NETHERLANDS_2020/SPI-birds_project/data_pipeline_temp_copy/PET_Petrozavodsk_Russia"
 
 format_PET <- function(db = choose_directory(),
@@ -193,13 +195,17 @@ format_PET <- function(db = choose_directory(),
   #### BROOD DATA
 
   message("Compiling brood information...")
-  Brood_data <- create_brood_PET(pet_data)
+  Brood_data <- create_brood_PET(parmaj_data,
+                                 fichyp_data,
+                                 jyntor_data)
 
 
   #### CAPTURE DATA
 
   message("Compiling capture information...")
-  Capture_data <- create_capture_PET(Brood_data)
+  Capture_data <- create_capture_PET(parmaj_data,
+                                     fichyp_data,
+                                     jyntor_data)
 
 
   #### INDIVIDUAL DATA
@@ -211,7 +217,15 @@ format_PET <- function(db = choose_directory(),
   #### LOCATION DATA
 
   message("Compiling location information...")
-  Location_data <- create_location_PET(pet_data)
+  Location_data <- create_location_PET(parmaj_data,
+                                       fichyp_data,
+                                       jyntor_data)
+
+
+  #### FINAL ARRANGEMENTS
+  Capture_data <-
+    Capture_data %>%
+    dplyr::select(-.data$BroodID)
 
 
   time <- difftime(Sys.time(), start_time, units = "sec")
@@ -464,6 +478,9 @@ create_capture_PET <- function(parmaj_data,
   #### ADULT DATA
   #### ------------------------------------------------------------------------~
 
+  #### PARMAJ
+  #### ----------------------
+
   Capture_data_parmaj_adults <-
     parmaj_data %>%
     dplyr::select(.data$Species, .data$PopID, .data$BreedingSeason,
@@ -480,7 +497,7 @@ create_capture_PET <- function(parmaj_data,
                                   .data$Sex_observed == "M" ~ as.integer(.data$MalesAge))) %>%
     #### Remove records where the partner is not known
     dplyr::filter(!is.na(.data$IndvID)) %>%
-    #### ASK DATA OWNER >> til they respond, create capture date
+    #### ASK DATA OWNER >> until they respond, create capture date
     dplyr::mutate(CaptureDate = as.Date(paste0(.data$BreedingSeason, "-04-01"))) %>%
     #### Create new variables
     dplyr::group_by(.data$IndvID) %>%
@@ -526,10 +543,15 @@ create_capture_PET <- function(parmaj_data,
                   .data$ReleasePopID, .data$ReleasePlot,
                   .data$Mass, .data$Tarsus, .data$OriginalTarsusMethod,
                   .data$WingLength, .data$Age_observed, .data$Age_calculated,
-                  .data$ChickAge, .data$ExperimentID)
+                  .data$ChickAge, .data$ExperimentID,
+                  #### mantain also BroodID needed to create Individual_data, remove at final step
+                  .data$BroodID)
 
 
-  Capture_data_fishyp_adults <-
+  #### FICHYP
+  #### ----------------------
+
+  Capture_data_fichyp_adults <-
     fichyp_data %>%
     dplyr::select(.data$Species, .data$PopID, .data$BreedingSeason,
                   .data$FemaleID, .data$MaleID,
@@ -543,7 +565,7 @@ create_capture_PET <- function(parmaj_data,
     dplyr::filter(!is.na(.data$IndvID)) %>%
     ####
     dplyr::mutate(Sex_observed = substr(.data$Sex_observed, start = 1, stop = 1)) %>%
-    #### ASK DATA OWNER >> til they respond, create capture date
+    #### ASK DATA OWNER >> until they respond, create capture date
     dplyr::mutate(CaptureDate = as.Date(paste0(.data$BreedingSeason, "-04-01"))) %>%
     #### Create new variables
     dplyr::group_by(.data$IndvID) %>%
@@ -569,7 +591,7 @@ create_capture_PET <- function(parmaj_data,
                   OriginalTarsusMethod = NA_character_,
                   ExperimentID = NA_character_,
                   #### Ask dataowner
-                  Age_observed = NA_integer_) %>%
+                  Age_observed = 7L) %>%
     #### USE THE NEW VERSION OF THE FUNCTION
     # dplyr::mutate(Age_calculated = calc_age())
     #### OLD VERSION OF THE FUNCTION
@@ -588,8 +610,13 @@ create_capture_PET <- function(parmaj_data,
                   .data$ReleasePopID, .data$ReleasePlot,
                   .data$Mass, .data$Tarsus, .data$OriginalTarsusMethod,
                   .data$WingLength, .data$Age_observed, .data$Age_calculated,
-                  .data$ChickAge, .data$ExperimentID)
+                  .data$ChickAge, .data$ExperimentID,
+                  #### mantain also BroodID needed to create Individual_data, remove at final step
+                  .data$BroodID)
 
+
+  #### JYNTOR
+  #### ----------------------
 
   Capture_data_jyntor_adults <-
     jyntor_data %>%
@@ -601,11 +628,10 @@ create_capture_PET <- function(parmaj_data,
     tidyr::pivot_longer(cols = c(.data$FemaleID, .data$MaleID),
                         names_to = "Sex_observed",
                         values_to = "IndvID") %>%
-    dplyr::mutate(Sex_observed = substr(.data$Sex_observed, start = 1, stop = 1),
-                  Age = NA_character_) %>%
+    dplyr::mutate(Sex_observed = substr(.data$Sex_observed, start = 1, stop = 1)) %>%
     #### Remove records where the partner is not known
     dplyr::filter(!is.na(.data$IndvID)) %>%
-    #### ASK DATA OWNER >> til they respond, create capture date
+    #### ASK DATA OWNER >> until they respond, create capture date
     dplyr::mutate(CaptureDate = as.Date(paste0(.data$BreedingSeason, "-04-01"))) %>%
     #### Create new variables
     dplyr::group_by(.data$IndvID) %>%
@@ -631,8 +657,7 @@ create_capture_PET <- function(parmaj_data,
                   OriginalTarsusMethod = NA_character_,
                   ExperimentID = NA_character_,
                   #### Ask data owner, this is only a temporary solution
-                  Age_observed = case_when(.data$Age == 1L ~ 5L,
-                                           .data$Age == 2L ~ 7L)) %>%
+                  Age_observed = 7L) %>%
     #### USE THE NEW VERSION OF THE FUNCTION
     # dplyr::mutate(Age_calculated = calc_age())
     #### OLD VERSION OF THE FUNCTION
@@ -651,13 +676,19 @@ create_capture_PET <- function(parmaj_data,
                   .data$ReleasePopID, .data$ReleasePlot,
                   .data$Mass, .data$Tarsus, .data$OriginalTarsusMethod,
                   .data$WingLength, .data$Age_observed, .data$Age_calculated,
-                  .data$ChickAge, .data$ExperimentID)
+                  .data$ChickAge, .data$ExperimentID,
+                  #### mantain also BroodID needed to create Individual_data, remove at final step
+                  .data$BroodID)
 
 
 
-  #### CHICK DATA PARMAJ
+  #### CHICK DATA
   #### ------------------------------------------------------------------------~
-  #### solve brood 2019_V_1_1 ring number series change
+
+  #### PARMAJ
+  #### ----------------------
+
+  #### solve brood 2019_V_1_1 ring number series change >> Ask Data owner
 
   Capture_data_parmaj_chicks_temp <-
     parmaj_data %>%
@@ -681,12 +712,12 @@ create_capture_PET <- function(parmaj_data,
     tidyr::separate(col = .data$rings2, into = c("rings2_start", "rings2_end"),
                     sep = "-", remove = FALSE, convert = TRUE)
 
-  #### -----------------------------------
-  #### Get the individual rings per brood
-  #### -----------------------------------
+  ## -----------------------------------
+  ## Get the individual rings per brood
+  ## -----------------------------------
 
-  #### Series 1 of rings
-  #### -----------------------------------
+  ## Series 1 of rings
+  ## -----------------------------------
   seqs_rings1 <- mapply(FUN = function(a, b) {
     (seq(from = a, to = b, by = 1))},
     a = Capture_data_parmaj_chicks_temp$rings1_start,
@@ -697,17 +728,17 @@ create_capture_PET <- function(parmaj_data,
   #### Transform to data frame
   seqs_rings1_tib <-
     seqs_rings1 %>%
-    enframe(name = "BroodID", value = "Ring") %>%
-    unnest(cols = c(Ring))
+    tibble::enframe(name = "BroodID", value = "Ring") %>%
+    tidyr::unnest(cols = c(Ring))
 
   captures_parmaj_chicks_rings1 <-
     Capture_data_parmaj_chicks_temp %>%
-    full_join(seqs_rings1_tib, by = "BroodID") %>%
+    left_join(seqs_rings1_tib, by = "BroodID") %>%
     dplyr::mutate(IndvID = paste0(series1, Ring))
 
-  #### Series 2 of rings
-  #### -----------------------------------
-  #### Get numbers of ring series
+  ## Series 2 of rings
+  ## -----------------------------------
+  ## Get numbers of ring series
   seqs_rings2 <- mapply(FUN = function(a, b) {
     (seq(from = a, to = b, by = 1))},
     a = Capture_data_parmaj_chicks_temp$rings2_start[!is.na(Capture_data_parmaj_chicks_temp$rings2)],
@@ -718,8 +749,8 @@ create_capture_PET <- function(parmaj_data,
   #### Transform to data frame
   seqs_rings2_tib <-
     seqs_rings2 %>%
-    enframe(name = "BroodID", value = "Ring") %>%
-    unnest(cols = c(Ring))
+    tibble::enframe(name = "BroodID", value = "Ring") %>%
+    tidyr::unnest(cols = c(Ring))
 
   captures_parmaj_chicks_rings2 <-
     Capture_data_parmaj_chicks_temp %>%
@@ -727,7 +758,8 @@ create_capture_PET <- function(parmaj_data,
     dplyr::mutate(IndvID = case_when(!is.na(series1) & is.na(series2) ~ paste0(series1, Ring),
                                      !is.na(series1) & !is.na(series2) ~ paste0(series2, Ring)))
 
-  #### Join both series rings
+  ## Join both series rings
+  ## -----------------------------------
   Capture_data_parmaj_chicks <-
     bind_rows(captures_parmaj_chicks_rings1,
               captures_parmaj_chicks_rings2) %>%
@@ -758,8 +790,7 @@ create_capture_PET <- function(parmaj_data,
                 # OriginalTarsusMethod = ifelse(!is.na(.data$Tarsus), "Alternative", NA_character_),
                 OriginalTarsusMethod = NA_character_,
                 ExperimentID = NA_character_,
-                #### Ask data owner, this is only a temporary solution
-                Age_observed = 5L) %>%
+                Age_observed = 1L) %>%
   #### USE THE NEW VERSION OF THE FUNCTION
   # dplyr::mutate(Age_calculated = calc_age())
   #### OLD VERSION OF THE FUNCTION
@@ -778,14 +809,17 @@ create_capture_PET <- function(parmaj_data,
                 .data$ReleasePopID, .data$ReleasePlot,
                 .data$Mass, .data$Tarsus, .data$OriginalTarsusMethod,
                 .data$WingLength, .data$Age_observed, .data$Age_calculated,
-                .data$ChickAge, .data$ExperimentID)
+                .data$ChickAge, .data$ExperimentID,
+                #### mantain also BroodID needed to create Individual_data, remove at final step
+                .data$BroodID)
 
 
-  #### CHICK DATA FICHYP
-  #### ------------------------------------------------------------------------~
-  #### solve rings "бк" ring number series change
+  #### FICHYP
+  #### ----------------------
 
-  #### This ring is probably wrong?? is too long VT76392096
+  #### solve rings "бк" ring number series change >> Data owner
+
+  #### This ring is probably wrong?? is too long VT76392096 >> Data owner
 
   Capture_data_fichyp_chicks_temp <-
     fichyp_data %>%
@@ -800,7 +834,6 @@ create_capture_PET <- function(parmaj_data,
     dplyr::filter(NestlingRings != "бк") %>%
     dplyr::filter(NestlingRings != "VT76-260-63") %>%
 
-
     #### Separate series and ring codes
     tidyr::separate(col = .data$NestlingRings, into = c("rings1", "rings2"),
                     sep = ";", remove = FALSE) %>%
@@ -813,12 +846,12 @@ create_capture_PET <- function(parmaj_data,
     dplyr::mutate(series2 = str_sub(rings2_start, 1, nchar(rings2_start)-nchar(rings2_end)),
                   rings2_start = str_sub(rings2_start, nchar(series2)+1, nchar(rings2_start)))
 
-  #### -----------------------------------
-  #### Get the individual rings per brood
-  #### -----------------------------------
+  ## -----------------------------------
+  ## Get the individual rings per brood
+  ## -----------------------------------
 
-  #### Series 1 of rings
-  #### -----------------------------------
+  ## Series 1 of rings
+  ## -----------------------------------
   seqs_rings1 <- mapply(FUN = function(a, b) {
     (seq(from = a, to = b, by = 1))},
     a = Capture_data_fichyp_chicks_temp$rings1_start[!is.na(Capture_data_fichyp_chicks_temp$series1)],
@@ -826,11 +859,11 @@ create_capture_PET <- function(parmaj_data,
 
   names(seqs_rings1) <- Capture_data_fichyp_chicks_temp$BroodID[!is.na(Capture_data_fichyp_chicks_temp$series1)]
 
-  #### Transform to data frame
+ ### Transform to data frame
   seqs_rings1_tib <-
     seqs_rings1 %>%
-    enframe(name = "BroodID", value = "Ring") %>%
-    unnest(cols = c(Ring))
+    tibble::enframe(name = "BroodID", value = "Ring") %>%
+    tidyr::unnest(cols = c(Ring))
 
   captures_fichyp_chicks_rings1 <-
     Capture_data_fichyp_chicks_temp %>%
@@ -839,9 +872,9 @@ create_capture_PET <- function(parmaj_data,
                                      is.na(series1) ~ paste0(rings1)))
 
 
-  #### Series 2 of rings
-  #### -----------------------------------
-  #### Get numbers of ring series
+  ## Series 2 of rings
+  ## -----------------------------------
+  ## Get numbers of ring series
   seqs_rings2 <- mapply(FUN = function(a, b) {
     (seq(from = a, to = b, by = 1))},
     a = Capture_data_fichyp_chicks_temp$rings2_start[!is.na(Capture_data_fichyp_chicks_temp$series2)],
@@ -849,11 +882,11 @@ create_capture_PET <- function(parmaj_data,
 
   names(seqs_rings2) <- Capture_data_fichyp_chicks_temp$BroodID[!is.na(Capture_data_fichyp_chicks_temp$series2)]
 
-  #### Transform to data frame
+  ## Transform to data frame
   seqs_rings2_tib <-
     seqs_rings2 %>%
-    enframe(name = "BroodID", value = "Ring") %>%
-    unnest(cols = c(Ring))
+    tibble::enframe(name = "BroodID", value = "Ring") %>%
+    tidyr::unnest(cols = c(Ring))
 
   captures_fichyp_chicks_rings2 <-
     Capture_data_fichyp_chicks_temp %>%
@@ -861,21 +894,175 @@ create_capture_PET <- function(parmaj_data,
     dplyr::mutate(IndvID = paste0(series2, Ring))
 
 
-# here join both and finish
+  ## Join both series rings
+  ## -----------------------------------
+  Capture_data_fichyp_chicks <-
+    bind_rows(captures_fichyp_chicks_rings1,
+              captures_fichyp_chicks_rings2) %>%
+    #### ASK DATA OWNER >> til they respond, create capture date
+    dplyr::mutate(CaptureDate = as.Date(paste0(.data$BreedingSeason, "-04-01")),
+                  Sex_observed = NA_character_,
+                  Age = 1L) %>%
+    #### Create new variables
+    dplyr::group_by(.data$IndvID) %>%
+    dplyr::arrange(.data$BreedingSeason, .data$StartDateOfLaying1May1) %>% ## Use .data$CaptureDate if the data owner provides one. Now use StartDateOfLaying1May1.
+    dplyr::mutate(CaptureID = paste(.data$IndvID, row_number(), sep = "_")) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(Plot = .data$TheLineOfArtificialNestBoxes,
+                  CaptureTime  = NA_character_,
+                  CaptureAlive = TRUE,
+                  ReleaseAlive = .data$CaptureAlive,
+                  CapturePopID = .data$PopID,
+                  CapturePlot  = .data$Plot,
+                  ReleasePopID = ifelse(ReleaseAlive == TRUE, .data$CapturePopID, NA_character_),
+                  ReleasePlot  = ifelse(ReleaseAlive == TRUE, .data$CapturePlot, NA_character_),
+                  WingLength = NA_real_,
+                  ChickAge = NA_integer_,
+                  BroodIDLaid = .data$BroodID,
+                  ObserverID = NA_character_,
+                  Mass = NA_real_,
+                  Tarsus = NA_real_,
+                  #### Ask data owner
+                  # OriginalTarsusMethod = ifelse(!is.na(.data$Tarsus), "Alternative", NA_character_),
+                  OriginalTarsusMethod = NA_character_,
+                  ExperimentID = NA_character_,
+                  Age_observed = 1L) %>%
+    #### USE THE NEW VERSION OF THE FUNCTION
+    # dplyr::mutate(Age_calculated = calc_age())
+    #### OLD VERSION OF THE FUNCTION
+    calc_age(ID = IndvID,
+             Age = Age_observed,
+             Date = CaptureDate,
+             Year = BreedingSeason,
+             showpb = TRUE) %>%
+    #### Final arrangement
+    dplyr::select(.data$CaptureID, .data$IndvID, .data$Species,
+                  .data$Sex_observed, .data$BreedingSeason,
+                  .data$CaptureDate, .data$CaptureTime,
+                  .data$ObserverID, .data$LocationID,
+                  .data$CaptureAlive, .data$ReleaseAlive,
+                  .data$CapturePopID, .data$CapturePlot,
+                  .data$ReleasePopID, .data$ReleasePlot,
+                  .data$Mass, .data$Tarsus, .data$OriginalTarsusMethod,
+                  .data$WingLength, .data$Age_observed, .data$Age_calculated,
+                  .data$ChickAge, .data$ExperimentID,
+                  #### mantain also BroodID needed to create Individual_data, remove at final step
+                  .data$BroodID)
 
 
+  #### JYNTOR
+  #### ----------------------
+
+  Capture_data_jyntor_chicks_temp <-
+    jyntor_data %>%
+    dplyr::select(.data$Species, .data$PopID, .data$BreedingSeason,
+                  .data$BroodID, .data$LocationID,
+                  .data$TheLineOfArtificialNestBoxes,
+                  .data$StartDateOfLaying1May1,
+                  .data$NestlingRings) %>%
+    dplyr::filter(!is.na(.data$NestlingRings)) %>%
+    #### Separate series and ring codes
+    tidyr::separate(col = .data$NestlingRings, into = c("rings1", "rings2"),
+                    sep = ";", remove = FALSE) %>%
+    tidyr::separate(col = .data$rings1, into = c("rings1_start", "rings1_end"),
+                    sep = "-", remove = FALSE, convert = TRUE) %>%
+    dplyr::mutate(series1 = str_sub(rings1_start, 1, nchar(rings1_start)-nchar(rings1_end)),
+                  rings1_start = str_sub(rings1_start, nchar(series1)+1, nchar(rings1_start))) %>%
+    tidyr::separate(col = .data$rings2, into = c("rings2_start", "rings2_end"),
+                    sep = "-", remove = FALSE, convert = TRUE) %>%
+    dplyr::mutate(series2 = str_sub(rings2_start, 1, nchar(rings2_start)-nchar(rings2_end)),
+                  rings2_start = str_sub(rings2_start, nchar(series2)+1, nchar(rings2_start)))
+
+  ## -----------------------------------
+  ## Get the individual rings per brood
+  ## -----------------------------------
+
+  ## Series 1 of rings
+  ## -----------------------------------
+  seqs_rings1 <- mapply(FUN = function(a, b) {
+    (seq(from = a, to = b, by = 1))},
+    a = Capture_data_jyntor_chicks_temp$rings1_start[!is.na(Capture_data_jyntor_chicks_temp$series1)],
+    b = Capture_data_jyntor_chicks_temp$rings1_end[!is.na(Capture_data_jyntor_chicks_temp$series1)])
+
+  names(seqs_rings1) <- Capture_data_jyntor_chicks_temp$BroodID[!is.na(Capture_data_jyntor_chicks_temp$series1)]
+
+  ### Transform to data frame
+  seqs_rings1_tib <-
+    seqs_rings1 %>%
+    tibble::enframe(name = "BroodID", value = "Ring") %>%
+    tidyr::unnest(cols = c(Ring))
+
+  captures_jyntor_chicks_rings1 <-
+    Capture_data_jyntor_chicks_temp %>%
+    full_join(seqs_rings1_tib, by = "BroodID") %>%
+    dplyr::mutate(IndvID = case_when(!is.na(series1) ~ paste0(series1, Ring),
+                                     is.na(series1) ~ paste0(rings1)))
 
 
+  ## Join
+  ## -----------------------------------
+  Capture_data_jyntor_chicks <-
+    captures_jyntor_chicks_rings1 %>%
+    #### ASK DATA OWNER >> til they respond, create capture date
+    dplyr::mutate(CaptureDate = as.Date(paste0(.data$BreedingSeason, "-04-01")),
+                  Sex_observed = NA_character_,
+                  Age = 1L) %>%
+    #### Create new variables
+    dplyr::group_by(.data$IndvID) %>%
+    dplyr::arrange(.data$BreedingSeason, .data$StartDateOfLaying1May1) %>% ## Use .data$CaptureDate if the data owner provides one. Now use StartDateOfLaying1May1.
+    dplyr::mutate(CaptureID = paste(.data$IndvID, row_number(), sep = "_")) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(Plot = .data$TheLineOfArtificialNestBoxes,
+                  CaptureTime  = NA_character_,
+                  CaptureAlive = TRUE,
+                  ReleaseAlive = .data$CaptureAlive,
+                  CapturePopID = .data$PopID,
+                  CapturePlot  = .data$Plot,
+                  ReleasePopID = ifelse(ReleaseAlive == TRUE, .data$CapturePopID, NA_character_),
+                  ReleasePlot  = ifelse(ReleaseAlive == TRUE, .data$CapturePlot, NA_character_),
+                  WingLength = NA_real_,
+                  ChickAge = NA_integer_,
+                  BroodIDLaid = .data$BroodID,
+                  ObserverID = NA_character_,
+                  Mass = NA_real_,
+                  Tarsus = NA_real_,
+                  #### Ask data owner
+                  # OriginalTarsusMethod = ifelse(!is.na(.data$Tarsus), "Alternative", NA_character_),
+                  OriginalTarsusMethod = NA_character_,
+                  ExperimentID = NA_character_,
+                  Age_observed = 1L) %>%
+    #### USE THE NEW VERSION OF THE FUNCTION
+    # dplyr::mutate(Age_calculated = calc_age())
+    #### OLD VERSION OF THE FUNCTION
+    calc_age(ID = IndvID,
+             Age = Age_observed,
+             Date = CaptureDate,
+             Year = BreedingSeason,
+             showpb = TRUE) %>%
+    #### Final arrangement
+    dplyr::select(.data$CaptureID, .data$IndvID, .data$Species,
+                  .data$Sex_observed, .data$BreedingSeason,
+                  .data$CaptureDate, .data$CaptureTime,
+                  .data$ObserverID, .data$LocationID,
+                  .data$CaptureAlive, .data$ReleaseAlive,
+                  .data$CapturePopID, .data$CapturePlot,
+                  .data$ReleasePopID, .data$ReleasePlot,
+                  .data$Mass, .data$Tarsus, .data$OriginalTarsusMethod,
+                  .data$WingLength, .data$Age_observed, .data$Age_calculated,
+                  .data$ChickAge, .data$ExperimentID,
+                  #### mantain also BroodID needed to create Individual_data, remove at final step
+                  .data$BroodID)
 
 
   #### ------------------------
   #### FINAL CAPTURE DATA
   #### ------------------------
   Capture_data <- bind_rows(Capture_data_parmaj_adults,
-                            # Capture_data_parmaj_chicks,
-                            # Capture_data_fishyp_chicks,
-                            Capture_data_fishyp_adults,
-                            Capture_data_jyntor_adults)
+                            Capture_data_parmaj_chicks,
+                            Capture_data_fichyp_adults,
+                            Capture_data_fichyp_chicks,
+                            Capture_data_jyntor_adults,
+                            Capture_data_jyntor_chicks)
 
   return(Capture_data)
 }
@@ -892,11 +1079,7 @@ create_capture_PET <- function(parmaj_data,
 
 create_individual_PET <- function(Capture_data){
 
-
-  ### solve the broodId >> get from input/Brood data
-  ### get for all species
-
-  Individual_data_ <-
+  Individual_data <-
     Capture_data %>%
     #### Format and create new data columns
     group_by(.data$IndvID) %>%
@@ -914,10 +1097,11 @@ create_individual_PET <- function(Capture_data){
                      Species = first(.data$Species),
                      PopID = first(.data$CapturePopID),
                      RingSeason = min(.data$BreedingSeason),
-                     RingAge = if_else(.data$Age_observed == 1L, "chick", "adult"),
-                     BroodIDLaid = if_else(.data$Age_observed == 1L, .data$BroodID, NA_character_),
+                     Age_observed = first(.data$Age_observed),
+                     BroodIDLaid = if_else(.data$Age_observed == 1L, first(.data$BroodID), NA_character_),
                      BroodIDFledged = .data$BroodIDLaid) %>%
     dplyr::ungroup() %>%
+    dplyr::mutate(RingAge = if_else(.data$Age_observed == 1L, "chick", "adult")) %>%
     dplyr::select(.data$IndvID, .data$Species, .data$PopID,
                   .data$BroodIDLaid, .data$BroodIDFledged,
                   .data$RingSeason, .data$RingAge,
@@ -937,7 +1121,9 @@ create_individual_PET <- function(Capture_data){
 #' @return A data frame.
 
 
-create_location_PET <- function(pet_data) {
+create_location_PET <- function(parmaj_data,
+                                fichyp_data,
+                                jyntor_data) {
 
   Location_data <-
     bind_rows(dplyr::select(.data = parmaj_data,
