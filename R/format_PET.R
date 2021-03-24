@@ -500,10 +500,6 @@ create_capture_PET <- function(parmaj_data,
     #### ASK DATA OWNER >> until they respond, create capture date
     dplyr::mutate(CaptureDate = as.Date(paste0(.data$BreedingSeason, "-04-01"))) %>%
     #### Create new variables
-    dplyr::group_by(.data$IndvID) %>%
-    dplyr::arrange(.data$BreedingSeason, .data$StartDateOfLaying1May1) %>% ## Use .data$CaptureDate if the data owner provides one. Now use StartDateOfLaying1May1.
-    dplyr::mutate(CaptureID = paste(.data$IndvID, row_number(), sep = "_")) %>%
-    dplyr::ungroup() %>%
     dplyr::mutate(Plot = .data$TheLineOfArtificialNestBoxes,
                   CaptureTime  = NA_character_,
                   CaptureAlive = TRUE,
@@ -534,7 +530,7 @@ create_capture_PET <- function(parmaj_data,
              Year = BreedingSeason,
              showpb = TRUE) %>%
     #### Final arrangement
-    dplyr::select(.data$CaptureID, .data$IndvID, .data$Species,
+    dplyr::select(.data$IndvID, .data$Species,
                   .data$Sex_observed, .data$BreedingSeason,
                   .data$CaptureDate, .data$CaptureTime,
                   .data$ObserverID, .data$LocationID,
@@ -568,10 +564,6 @@ create_capture_PET <- function(parmaj_data,
     #### ASK DATA OWNER >> until they respond, create capture date
     dplyr::mutate(CaptureDate = as.Date(paste0(.data$BreedingSeason, "-04-01"))) %>%
     #### Create new variables
-    dplyr::group_by(.data$IndvID) %>%
-    dplyr::arrange(.data$BreedingSeason, .data$StartDateOfLaying1May1) %>% ## Use .data$CaptureDate if the data owner provides one. Now use StartDateOfLaying1May1.
-    dplyr::mutate(CaptureID = paste(.data$IndvID, row_number(), sep = "_")) %>%
-    dplyr::ungroup() %>%
     dplyr::mutate(Plot = .data$TheLineOfArtificialNestBoxes,
                   CaptureTime  = NA_character_,
                   CaptureAlive = TRUE,
@@ -601,7 +593,7 @@ create_capture_PET <- function(parmaj_data,
              Year = BreedingSeason,
              showpb = TRUE) %>%
     #### Final arrangement
-    dplyr::select(.data$CaptureID, .data$IndvID, .data$Species,
+    dplyr::select(.data$IndvID, .data$Species,
                   .data$Sex_observed, .data$BreedingSeason,
                   .data$CaptureDate, .data$CaptureTime,
                   .data$ObserverID, .data$LocationID,
@@ -634,10 +626,6 @@ create_capture_PET <- function(parmaj_data,
     #### ASK DATA OWNER >> until they respond, create capture date
     dplyr::mutate(CaptureDate = as.Date(paste0(.data$BreedingSeason, "-04-01"))) %>%
     #### Create new variables
-    dplyr::group_by(.data$IndvID) %>%
-    dplyr::arrange(.data$BreedingSeason, .data$StartDateOfLaying1May1) %>% ## Use .data$CaptureDate if the data owner provides one. Now use StartDateOfLaying1May1.
-    dplyr::mutate(CaptureID = paste(.data$IndvID, row_number(), sep = "_")) %>%
-    dplyr::ungroup() %>%
     dplyr::mutate(Plot = .data$TheLineOfArtificialNestBoxes,
                   CaptureTime  = NA_character_,
                   CaptureAlive = TRUE,
@@ -667,7 +655,7 @@ create_capture_PET <- function(parmaj_data,
              Year = BreedingSeason,
              showpb = TRUE) %>%
     #### Final arrangement
-    dplyr::select(.data$CaptureID, .data$IndvID, .data$Species,
+    dplyr::select(.data$IndvID, .data$Species,
                   .data$Sex_observed, .data$BreedingSeason,
                   .data$CaptureDate, .data$CaptureTime,
                   .data$ObserverID, .data$LocationID,
@@ -768,10 +756,6 @@ create_capture_PET <- function(parmaj_data,
                 Sex_observed = NA_character_,
                 Age = 1L) %>%
   #### Create new variables
-  dplyr::group_by(.data$IndvID) %>%
-  dplyr::arrange(.data$BreedingSeason, .data$StartDateOfLaying1May1) %>% ## Use .data$CaptureDate if the data owner provides one. Now use StartDateOfLaying1May1.
-  dplyr::mutate(CaptureID = paste(.data$IndvID, row_number(), sep = "_")) %>%
-  dplyr::ungroup() %>%
   dplyr::mutate(Plot = .data$TheLineOfArtificialNestBoxes,
                 CaptureTime  = NA_character_,
                 CaptureAlive = TRUE,
@@ -800,7 +784,7 @@ create_capture_PET <- function(parmaj_data,
            Year = BreedingSeason,
            showpb = TRUE) %>%
   #### Final arrangement
-  dplyr::select(.data$CaptureID, .data$IndvID, .data$Species,
+  dplyr::select(.data$IndvID, .data$Species,
                 .data$Sex_observed, .data$BreedingSeason,
                 .data$CaptureDate, .data$CaptureTime,
                 .data$ObserverID, .data$LocationID,
@@ -812,6 +796,29 @@ create_capture_PET <- function(parmaj_data,
                 .data$ChickAge, .data$ExperimentID,
                 #### mantain also BroodID needed to create Individual_data, remove at final step
                 .data$BroodID)
+
+
+  Capture_data_parmaj <-
+    bind_rows(Capture_data_parmaj_adults,
+              Capture_data_parmaj_chicks) %>%
+    #### Create new variables
+    dplyr::group_by(.data$IndvID) %>%
+    dplyr::arrange(.data$BreedingSeason, .data$CaptureDate) %>% ## Use .data$CaptureDate if the data owner provides one. Now use StartDateOfLaying1May1.
+    dplyr::mutate(CaptureID = paste(.data$IndvID, row_number(), sep = "_")) %>%
+    dplyr::ungroup() %>%
+    #### Final arrangement
+    dplyr::select(.data$CaptureID, .data$IndvID, .data$Species,
+                  .data$Sex_observed, .data$BreedingSeason,
+                  .data$CaptureDate, .data$CaptureTime,
+                  .data$ObserverID, .data$LocationID,
+                  .data$CaptureAlive, .data$ReleaseAlive,
+                  .data$CapturePopID, .data$CapturePlot,
+                  .data$ReleasePopID, .data$ReleasePlot,
+                  .data$Mass, .data$Tarsus, .data$OriginalTarsusMethod,
+                  .data$WingLength, .data$Age_observed, .data$Age_calculated,
+                  .data$ChickAge, .data$ExperimentID,
+                  #### mantain also BroodID needed to create Individual_data, remove at final step
+                  .data$BroodID)
 
 
   #### FICHYP
@@ -904,10 +911,6 @@ create_capture_PET <- function(parmaj_data,
                   Sex_observed = NA_character_,
                   Age = 1L) %>%
     #### Create new variables
-    dplyr::group_by(.data$IndvID) %>%
-    dplyr::arrange(.data$BreedingSeason, .data$StartDateOfLaying1May1) %>% ## Use .data$CaptureDate if the data owner provides one. Now use StartDateOfLaying1May1.
-    dplyr::mutate(CaptureID = paste(.data$IndvID, row_number(), sep = "_")) %>%
-    dplyr::ungroup() %>%
     dplyr::mutate(Plot = .data$TheLineOfArtificialNestBoxes,
                   CaptureTime  = NA_character_,
                   CaptureAlive = TRUE,
@@ -935,6 +938,30 @@ create_capture_PET <- function(parmaj_data,
              Date = CaptureDate,
              Year = BreedingSeason,
              showpb = TRUE) %>%
+    ungroup() %>%
+    #### Final arrangement
+    dplyr::select(.data$IndvID, .data$Species,
+                  .data$Sex_observed, .data$BreedingSeason,
+                  .data$CaptureDate, .data$CaptureTime,
+                  .data$ObserverID, .data$LocationID,
+                  .data$CaptureAlive, .data$ReleaseAlive,
+                  .data$CapturePopID, .data$CapturePlot,
+                  .data$ReleasePopID, .data$ReleasePlot,
+                  .data$Mass, .data$Tarsus, .data$OriginalTarsusMethod,
+                  .data$WingLength, .data$Age_observed, .data$Age_calculated,
+                  .data$ChickAge, .data$ExperimentID,
+                  #### mantain also BroodID needed to create Individual_data, remove at final step
+                  .data$BroodID)
+
+
+  Capture_data_fichyp <-
+    bind_rows(Capture_data_fichyp_adults,
+              Capture_data_fichyp_chicks) %>%
+    #### Create new variables
+    dplyr::group_by(.data$IndvID) %>%
+    dplyr::arrange(.data$BreedingSeason, .data$CaptureDate) %>% ## Use .data$CaptureDate if the data owner provides one. Now use StartDateOfLaying1May1.
+    dplyr::mutate(CaptureID = paste(.data$IndvID, row_number(), sep = "_")) %>%
+    dplyr::ungroup() %>%
     #### Final arrangement
     dplyr::select(.data$CaptureID, .data$IndvID, .data$Species,
                   .data$Sex_observed, .data$BreedingSeason,
@@ -1008,10 +1035,6 @@ create_capture_PET <- function(parmaj_data,
                   Sex_observed = NA_character_,
                   Age = 1L) %>%
     #### Create new variables
-    dplyr::group_by(.data$IndvID) %>%
-    dplyr::arrange(.data$BreedingSeason, .data$StartDateOfLaying1May1) %>% ## Use .data$CaptureDate if the data owner provides one. Now use StartDateOfLaying1May1.
-    dplyr::mutate(CaptureID = paste(.data$IndvID, row_number(), sep = "_")) %>%
-    dplyr::ungroup() %>%
     dplyr::mutate(Plot = .data$TheLineOfArtificialNestBoxes,
                   CaptureTime  = NA_character_,
                   CaptureAlive = TRUE,
@@ -1040,7 +1063,7 @@ create_capture_PET <- function(parmaj_data,
              Year = BreedingSeason,
              showpb = TRUE) %>%
     #### Final arrangement
-    dplyr::select(.data$CaptureID, .data$IndvID, .data$Species,
+    dplyr::select(.data$IndvID, .data$Species,
                   .data$Sex_observed, .data$BreedingSeason,
                   .data$CaptureDate, .data$CaptureTime,
                   .data$ObserverID, .data$LocationID,
@@ -1054,15 +1077,35 @@ create_capture_PET <- function(parmaj_data,
                   .data$BroodID)
 
 
+
+  Capture_data_jyntor <-
+    bind_rows(Capture_data_jyntor_adults,
+              Capture_data_jyntor_chicks) %>%
+    #### Create new variables
+    dplyr::group_by(.data$IndvID) %>%
+    dplyr::arrange(.data$BreedingSeason, .data$CaptureDate) %>% ## Use .data$CaptureDate if the data owner provides one. Now use StartDateOfLaying1May1.
+    dplyr::mutate(CaptureID = paste(.data$IndvID, row_number(), sep = "_")) %>%
+    dplyr::ungroup() %>%
+    #### Final arrangement
+    dplyr::select(.data$CaptureID, .data$IndvID, .data$Species,
+                  .data$Sex_observed, .data$BreedingSeason,
+                  .data$CaptureDate, .data$CaptureTime,
+                  .data$ObserverID, .data$LocationID,
+                  .data$CaptureAlive, .data$ReleaseAlive,
+                  .data$CapturePopID, .data$CapturePlot,
+                  .data$ReleasePopID, .data$ReleasePlot,
+                  .data$Mass, .data$Tarsus, .data$OriginalTarsusMethod,
+                  .data$WingLength, .data$Age_observed, .data$Age_calculated,
+                  .data$ChickAge, .data$ExperimentID,
+                  #### mantain also BroodID needed to create Individual_data, remove at final step
+                  .data$BroodID)
+
   #### ------------------------
   #### FINAL CAPTURE DATA
   #### ------------------------
-  Capture_data <- bind_rows(Capture_data_parmaj_adults,
-                            Capture_data_parmaj_chicks,
-                            Capture_data_fichyp_adults,
-                            Capture_data_fichyp_chicks,
-                            Capture_data_jyntor_adults,
-                            Capture_data_jyntor_chicks)
+  Capture_data <- bind_rows(Capture_data_parmaj,
+                            Capture_data_fichyp,
+                            Capture_data_jyntor)
 
   return(Capture_data)
 }
