@@ -209,12 +209,12 @@ create_brood_CHO <- function(data){
   #Finally, we add in average mass and tarsus measured for all chicks at 14 - 16d
   #Subset only those chicks that were 14 - 16 days when captured.
   avg_measure <- data %>%
-    dplyr::filter(.data$Age == "C" & !is.na(.data$ChickAge) & between(.data$ChickAge, 14, 16)) %>%
+    dplyr::filter(.data$Age == "C" & !is.na(.data$ChickAge) & dplyr::between(.data$ChickAge, 14, 16)) %>%
     #For every brood, determine the average mass and tarsus length
     dplyr::group_by(.data$BroodID) %>%
-    dplyr::summarise(AvgChickMass = mean(.data$Weight, na.rm = T),
+    dplyr::summarise(AvgChickMass = mean(.data$Weight, na.rm = TRUE),
                      NumberChicksMass = length(stats::na.omit(.data$Weight)),
-                     AvgTarsus = mean(.data$Tarsus, na.rm = T),
+                     AvgTarsus = mean(.data$Tarsus, na.rm = TRUE),
                      NumberChicksTarsus = length(stats::na.omit(.data$Tarsus))) %>%
     dplyr::mutate(OriginalTarsusMethod = dplyr::case_when(!is.na(.data$AvgTarsus) ~ "Alternative"))
 

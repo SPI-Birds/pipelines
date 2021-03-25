@@ -171,7 +171,7 @@ format_VEL <- function(db = choose_directory(),
                                                "text", "text", "text", "text",
                                                "skip")) %>%
     janitor::clean_names() %>%
-    dplyr::mutate_at(.vars = vars(contains("date")),
+    dplyr::mutate_at(.vars = dplyr::vars(contains("date")),
                      function(date){
 
                        purrr::map(.x = date,
