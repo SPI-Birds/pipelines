@@ -5,7 +5,7 @@
 #'
 #'This section provides details on data management choices that are unique to
 #'this data. For a general description of the standard format please see
-#'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
+#'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 #'
 #'\strong{NumberFledged_observed}: This population has no estimation of actual fledgling
 #'numbers. The last time nests are counted is 14 days post hatching. We use this
@@ -439,5 +439,4 @@ create_location_CHO <- function(data){
 
 
 #----------------------
-# NOTES:
 #FIXME What about individual IDs "branco", "no ring" and "not ringed"?
