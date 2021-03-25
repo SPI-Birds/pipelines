@@ -5,7 +5,7 @@
 #'
 #'This section provides details on data management choices that are unique to
 #'this data. For a general description of the standard format please see
-#'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
+#'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 #'
 #'\strong{Species}: There are records where species is uncertain (e.g. listed as
 #''GRETI?'). This uncertainty is ignored. We assume that the suggested species
@@ -19,12 +19,12 @@
 #'small number of cases where nest attempt number is uncertain (e.g.
 #'`2(MAYBE)`). This uncertainty is ignored.
 #'
-#'\strong{LayDate, HatchDate, NumberFledged}: There are some cases where
+#'\strong{LayDate_observed, HatchDate_observed, NumberFledged_observed}: There are some cases where
 #'values are given with uncertainty (e.g. 97+, 95?). We don't know how much
 #'uncertainty is involved here, it is currently ignored, but we need to
 #'discuss this with data owner.
 #'
-#'\strong{ClutchSize}: Cases where clutch size is uncertain (e.g. nests were
+#'\strong{ClutchSize_observed}: Cases where clutch size is uncertain (e.g. nests were
 #'predated before completion) are treated as NA because clutch size is unknown.
 #'
 #'\strong{LocationID}: Box numbers are not unique, they are repeated between
@@ -40,7 +40,7 @@
 #'\strong{Age_observed}: There is no recorded capture age. This is left as NA.
 #'
 #'\strong{AvgEggMass}: Currently we only include records where the day of egg
-#'weighing is <= LayDate + ClutchSize. This should be an estimate of the date
+#'weighing is <= LayDate_observed + ClutchSize_observed. This should be an estimate of the date
 #'that incubation began. Once incubation starts, egg weight is not easily
 #'comparable because it changes with embryonic development.
 #'
@@ -48,6 +48,8 @@
 #'the data currently provided. These values are therefore left blank.
 #'
 #'\strong{StartSeason}: Assume all boxes were placed in the first year of the study.
+#'
+#'\strong{CaptureAlive, ReleaseAlive}: Assume all individuals were alive when captured and released.
 #'
 #'@inheritParams pipeline_params
 #'
@@ -63,8 +65,7 @@ format_BAN <- function(db = choose_directory(),
   #Force choose_directory() if used
   force(db)
 
-  #Assign species for filtering
-  #If no species are specified, all species are included
+  #Add species filter
   if(is.null(species)){
 
     species_filter <- species_codes$Species
@@ -86,52 +87,61 @@ format_BAN <- function(db = choose_directory(),
                                  janitor::clean_names() %>%
                                  dplyr::mutate_all(.funs = na_if, y = "NA") %>%
                                  #Convert column names to match standard format
-                                 dplyr::mutate(BreedingSeason = as.integer(year),
-                                               PopID = "BAN", Plot = site,
+                                 dplyr::mutate(BreedingSeason = as.integer(.data$year),
+                                               PopID = "BAN",
+                                               Plot = .data$site,
                                                #Create a unique LocationID using plot and box number
-                                               LocationID = paste(Plot, stringr::str_pad(string = box_number, width = 3, pad = "0"), sep = "_"),
+                                               LocationID = paste(.data$Plot,
+                                                                  stringr::str_pad(string = .data$box_number,
+                                                                                   width = 3,
+                                                                                   pad = "0"), sep = "_"),
                                                #Ignore uncertainty in species (e.g. GRETI?)
-                                               Species = dplyr::case_when(grepl(pattern = "GRETI", x = .$species) ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
-                                                                          grepl(pattern = "BLUTI", x = .$species) ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
-                                                                          grepl(pattern = "COATI", x = .$species) ~ species_codes[species_codes$SpeciesID == 14610, ]$Species),
+                                               #TODO Need to check with data owners
+                                               Species = dplyr::case_when(grepl(pattern = "GRETI", x = .data$species) ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
+                                                                          grepl(pattern = "BLUTI", x = .data$species) ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
+                                                                          grepl(pattern = "COATI", x = .data$species) ~ species_codes[species_codes$SpeciesID == 14610, ]$Species),
                                                #Ignore uncertainty in clutch type (e.g. 2(MAYBE))
-                                               ClutchType_observed = dplyr::case_when(grepl(pattern = 1, x = .$nest_attempt) ~ "first",
-                                                                                      grepl(pattern = 2, x = .$nest_attempt) ~ "second"),
+                                               ClutchType_observed = dplyr::case_when(grepl(pattern = 1, x = .data$nest_attempt) ~ "first",
+                                                                                      grepl(pattern = 2, x = .data$nest_attempt) ~ "second"),
                                                March1Date = as.Date(glue::glue('{Year}-03-01',
-                                                                               Year = BreedingSeason),
+                                                                               Year = .data$BreedingSeason),
                                                                     format = "%Y-%m-%d"),
                                                #Ignore uncertainty in laying date (e.g. 97? or 97+)
+                                               #TODO Need to check with data owners
                                                #Laying date is calculated where LayDate 1 = March 1st
                                                #We need to do March 1st - 1 + Laying date to get corresponding calendar date
                                                #(can't use end of Feb + Laying date because of leap years)
-                                               LayDate = March1Date - 1 + as.numeric(gsub(pattern = "\\?|\\+",
-                                                                                         replacement = "",
-                                                                                         x = first_egg_lay_date)),
+                                               LayDate_observed = .data$March1Date - 1 + as.numeric(gsub(pattern = "\\?|\\+",
+                                                                                                         replacement = "",
+                                                                                                         x = .data$first_egg_lay_date)),
                                                #Create a unique BroodID from Year_Plot_BoxNumber_LayingDay_LayingMonth
-                                               BroodID = paste(BreedingSeason, LocationID,
-                                                               stringr::str_pad(lubridate::day(LayDate), width = 2, pad = "0"),
-                                                               stringr::str_pad(lubridate::month(LayDate), width = 2, pad = "0"), sep = "_"),
-                                               AvgEggMass = as.numeric(egg_weight), NumberEggs = as.integer(number_eggs_weighed),
-                                               ClutchSize = as.integer(final_clutch_size),
+                                               BroodID = paste(.data$BreedingSeason, .data$LocationID,
+                                                               stringr::str_pad(lubridate::day(.data$LayDate_observed),
+                                                                                width = 2, pad = "0"),
+                                                               stringr::str_pad(lubridate::month(.data$LayDate_observed),
+                                                                                width = 2, pad = "0"), sep = "_"),
+                                               AvgEggMass = as.numeric(.data$egg_weight),
+                                               NumberEggs = as.integer(.data$number_eggs_weighed),
+                                               ClutchSize_observed = as.integer(.data$final_clutch_size),
                                                #Assume incubation begins immediately after the last egg is laid.
-                                               StartIncubation = LayDate + ClutchSize,
-                                               EggWeighDate = (March1Date - 1 + as.numeric(weigh_date)),
+                                               StartIncubation = .data$LayDate_observed + .data$ClutchSize_observed,
+                                               EggWeighDate = (.data$March1Date - 1 + as.numeric(.data$weigh_date)),
                                                #Distinguish whether egg was being incubated when weighed.
-                                               EggWasIncubated = (March1Date - 1 + as.numeric(weigh_date)) > (LayDate + ClutchSize),
+                                               EggWasIncubated = (.data$March1Date - 1 + as.numeric(.data$weigh_date)) > (.data$LayDate_observed + .data$ClutchSize_observed),
                                                #Ignore uncertainty in hatch date (e.g. 97?)
-                                               HatchDate = March1Date - 1 + as.numeric(gsub(pattern = "\\?",
-                                                                                        replacement = "",
-                                                                                        x = actual_hatch_date)),
-                                               MaleCaptureDate = March1Date - 1 + as.numeric(actual_male_trapping_date),
-                                               FemaleCaptureDate = March1Date - 1 + as.numeric(actual_female_trapping_date),
-                                               MaleID = male_id, FemaleID = female_id,
-                                               ChickCaptureDate = March1Date - 1 + as.numeric(actual_pullus_ringing_date),
+                                               HatchDate_observed = .data$March1Date - 1 + as.numeric(gsub(pattern = "\\?",
+                                                                                                           replacement = "",
+                                                                                                           x = .data$actual_hatch_date)),
+                                               MaleCaptureDate = .data$March1Date - 1 + as.numeric(.data$actual_male_trapping_date),
+                                               FemaleCaptureDate = .data$March1Date - 1 + as.numeric(.data$actual_female_trapping_date),
+                                               MaleID = .data$male_id, FemaleID = .data$female_id,
+                                               ChickCaptureDate = .data$March1Date - 1 + as.numeric(.data$actual_pullus_ringing_date),
                                                #Ignore uncertainty in NumberFledged (e.g. 97?)
-                                               NumberFledged = as.integer(gsub(pattern = "\\?",
-                                                                               replacement = "",
-                                                                               number_fledged))) %>%
+                                               NumberFledged_observed = as.integer(gsub(pattern = "\\?",
+                                                                                        replacement = "",
+                                                                                        .data$number_fledged))) %>%
                                  #Filter only the species of interest
-                                 dplyr::filter(Species %in% species_filter))
+                                 dplyr::filter(.data$Species %in% species_filter))
 
   # BROOD DATA
 
@@ -158,9 +168,6 @@ format_BAN <- function(db = choose_directory(),
   Location_data <- create_location_BAN(all_data)
 
   # WRANGLE DATA FOR EXPORT
-
-  Capture_data <- Capture_data %>%
-    dplyr::select(-Sex)
 
   # EXPORT DATA
 
@@ -205,51 +212,49 @@ format_BAN <- function(db = choose_directory(),
 #'
 #' @return A data frame.
 
-create_brood_BAN   <- function(data) {
+create_brood_BAN <- function(data) {
 
   Brood_data <- data %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(., na.rm = FALSE),
-                  LayDateError = NA_real_,
-                  ClutchSizeError = NA_real_,
-                  HatchDateError = NA_real_,
-                  BroodSize = NA_integer_, BroodSizeError = NA_real_,
-                  FledgeDate = as.Date(NA), FledgeDateError = NA_real_,
-                  NumberFledgedError = NA_real_,
+                  LayDate_min = .data$LayDate_observed,
+                  LayDate_max = .data$LayDate_observed,
+                  ClutchSize_min = .data$ClutchSize_observed,
+                  ClutchSize_max = .data$ClutchSize_observed,
+                  HatchDate_min = .data$HatchDate_observed,
+                  HatchDate_max = .data$HatchDate_observed,
+                  BroodSize_observed = NA_integer_,
+                  BroodSize_min = .data$BroodSize_observed,
+                  BroodSize_max = .data$BroodSize_observed,
+                  FledgeDate_observed = as.Date(NA),
+                  FledgeDate_min = .data$FledgeDate_observed,
+                  FledgeDate_max = .data$FledgeDate_observed,
+                  NumberFledged_min = .data$NumberFledged_observed,
+                  NumberFledged_max = .data$NumberFledged_observed,
                   AvgChickMass = NA_real_, NumberChicksMass = NA_integer_,
                   AvgTarsus = NA_real_, NumberChicksTarsus = NA_integer_,
                   OriginalTarsusMethod = NA_character_,
                   ExperimentID = NA_character_) %>%
     ## Remove egg weights when the day of weighing is during incubation
-    dplyr::mutate(AvgEggMass = purrr::map2_dbl(.x = AvgEggMass, .y = EggWasIncubated,
+    dplyr::mutate(AvgEggMass = purrr::map2_dbl(.x = .data$AvgEggMass, .y = .data$EggWasIncubated,
                                                .f = ~{ifelse(..2, NA_real_, as.numeric(..1))})) %>%
-    dplyr::select(BroodID, PopID, BreedingSeason,
-                  Species, Plot, LocationID,
-                  FemaleID, MaleID,
-                  ClutchType_observed,
-                  ClutchType_calculated,
-                  LayDate, LayDateError,
-                  ClutchSize, ClutchSizeError,
-                  HatchDate, HatchDateError,
-                  BroodSize, BroodSizeError,
-                  FledgeDate, FledgeDateError,
-                  NumberFledged, NumberFledgedError,
-                  AvgEggMass, NumberEggs,
-                  AvgChickMass, NumberChicksMass,
-                  AvgTarsus, NumberChicksTarsus,
-                  OriginalTarsusMethod,
-                  ExperimentID)
+    dplyr::select(.data$BroodID, .data$PopID, .data$BreedingSeason,
+                  .data$Species, .data$Plot, .data$LocationID,
+                  .data$FemaleID, .data$MaleID,
+                  .data$ClutchType_observed,
+                  .data$ClutchType_calculated,
+                  .data$LayDate_observed, .data$LayDate_min, .data$LayDate_max,
+                  .data$ClutchSize_observed, .data$ClutchSize_min, .data$ClutchSize_max,
+                  .data$HatchDate_observed, .data$HatchDate_min, .data$HatchDate_max,
+                  .data$BroodSize_observed, .data$BroodSize_min, .data$BroodSize_max,
+                  .data$FledgeDate_observed, .data$FledgeDate_min, .data$FledgeDate_max,
+                  .data$NumberFledged_observed, .data$NumberFledged_min, .data$NumberFledged_max,
+                  .data$AvgEggMass, .data$NumberEggs,
+                  .data$AvgChickMass, .data$NumberChicksMass,
+                  .data$AvgTarsus, .data$NumberChicksTarsus,
+                  .data$OriginalTarsusMethod,
+                  .data$ExperimentID)
 
   return(Brood_data)
-
-  `.` <- AvgEggMass <- BroodID <- NULL
-  PopID <- BreedingSeason <- Species <- Plot <- LocationID <- NULL
-  FemaleID <- MaleID <- ClutchType_observed <- ClutchType_calculated <- NULL
-  LayDate <- LayDateError <- ClutchSize <- ClutchSizeError <- NULL
-  HatchDate <- HatchDateError <- BroodSize <- BroodSizeError <- NULL
-  FledgeDate <- FledgeDateError <- NumberFledged <- NumberFledgedError <- NULL
-  NumberEggs <- AvgChickMass <- NumberChicksMass <- AvgTarsus <- NumberChicksTarsus <- NULL
-  OriginalTarsusMethod <- ExperimentID <- NULL
-  EggWasIncubated <- NULL
 
 }
 
@@ -264,54 +269,58 @@ create_brood_BAN   <- function(data) {
 create_capture_BAN <- function(data) {
 
   Capture_data <- data %>%
-    dplyr::select(Species, BreedingSeason, LocationID, Plot,
-                  FemaleCaptureDate, MaleCaptureDate,
-                  FemaleID, MaleID) %>%
-    tidyr::pivot_longer(cols = c(FemaleID, MaleID), names_to = "Sex", values_to = "IndvID") %>%
-    dplyr::arrange(Sex) %>%
-    dplyr::filter(!is.na(IndvID) & !IndvID %in% c("UNKNOWN", "NA")) %>%
-    dplyr::mutate(Sex = dplyr::case_when(grepl(pattern = "Female", .$Sex) ~ "F",
-                                         grepl(pattern = "Male", .$Sex) ~ "M"),
-                  CaptureDate = as.Date(purrr::pmap_chr(.l = list(Sex, MaleCaptureDate,
-                                                      FemaleCaptureDate),
-                                            .f = ~{
+    dplyr::select(.data$Species, .data$BreedingSeason, .data$LocationID, .data$Plot,
+                  .data$FemaleCaptureDate, .data$MaleCaptureDate,
+                  .data$FemaleID, .data$MaleID) %>%
+    tidyr::pivot_longer(cols = c(.data$FemaleID, .data$MaleID), names_to = "Sex", values_to = "IndvID") %>%
+    dplyr::arrange(.data$Sex) %>%
+    dplyr::filter(!is.na(.data$IndvID) & !.data$IndvID %in% c("UNKNOWN", "NA")) %>%
+    dplyr::mutate(Sex_observed = dplyr::case_when(grepl(pattern = "Female", .data$Sex) ~ "F",
+                                                  grepl(pattern = "Male", .data$Sex) ~ "M"),
+                  CaptureDate = as.Date(purrr::pmap_chr(.l = list(.data$Sex_observed, .data$MaleCaptureDate,
+                                                                  .data$FemaleCaptureDate),
+                                                        .f = ~{
 
-                                              if(..1 == "F"){
+                                                          if(..1 == "F"){
 
-                                                return(as.character(..3))
+                                                            return(as.character(..3))
 
-                                              } else {
+                                                          } else {
 
-                                                return(as.character(..2))
+                                                            return(as.character(..2))
 
-                                              }
+                                                          }
 
-                                            })),
-                  Age_observed = NA_integer_, CaptureTime = NA_character_,
-                  Mass = NA_real_, Tarsus = NA_real_,
-                  WingLength = NA_real_, ChickAge = NA_integer_, CapturePopID = "BAN",
+                                                        })),
+                  Age_observed = NA_integer_,
+                  CaptureTime = NA_character_,
+                  Mass = NA_real_,
+                  Tarsus = NA_real_,
+                  WingLength = NA_real_, ChickAge = NA_integer_,
+                  CaptureAlive = TRUE,
+                  ReleaseAlive = TRUE,
+                  CapturePopID = "BAN",
                   ReleasePopID = "BAN", ObserverID = NA_character_,
                   OriginalTarsusMethod = NA_character_,
-                  CapturePlot = Plot, ReleasePlot = Plot) %>%
-    calc_age(ID = IndvID, Age = Age_observed,
-             Date = CaptureDate, Year = BreedingSeason) %>%
-    dplyr::select(IndvID, Species, BreedingSeason,
-                  CaptureDate, CaptureTime,
-                  ObserverID, LocationID,
-                  CapturePopID, CapturePlot,
-                  ReleasePopID, ReleasePlot,
-                  Mass, Tarsus, OriginalTarsusMethod,
-                  WingLength, Age_observed, Age_calculated,
-                  ChickAge, Sex) %>%
-    dplyr::ungroup()
+                  CapturePlot = .data$Plot, ReleasePlot = .data$Plot,
+                  ExperimentID = NA_character_) %>%
+    calc_age(ID = .data$IndvID, Age = .data$Age_observed,
+             Date = .data$CaptureDate, Year = .data$BreedingSeason) %>%
+    dplyr::select(.data$IndvID, .data$Species, .data$Sex_observed,
+                  .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime,
+                  .data$ObserverID, .data$LocationID,
+                  .data$CaptureAlive, .data$ReleaseAlive,
+                  .data$CapturePopID, .data$CapturePlot,
+                  .data$ReleasePopID, .data$ReleasePlot,
+                  .data$Mass, .data$Tarsus, .data$OriginalTarsusMethod,
+                  .data$WingLength, .data$Age_observed, .data$Age_calculated,
+                  .data$ChickAge, .data$ExperimentID) %>%
+    dplyr::group_by(.data$IndvID) %>%
+    dplyr::mutate(CaptureID = paste(.data$IndvID, 1:n(), sep = "_")) %>%
+    dplyr::ungroup() %>%
+    dplyr::select(.data$CaptureID, everything())
 
   return(Capture_data)
-
-  #Satisfy RCMD Checks
-  Species <- IndvID <- BreedingSeason <- LocationID <- Plot <- Sex <- Age_observed <- NULL
-  CaptureDate <- CaptureTime <- ObserverID <- CapturePopID <- ReleasePopID <- Mass <- Tarsus <- NULL
-  OriginalTarsusMethod <- WingLength <- Age_calculated <- ChickAge <- NULL
-  FemaleCaptureDate <- MaleCaptureDate <- FemaleID <- MaleID <- NULL
 
 }
 
@@ -327,39 +336,41 @@ create_capture_BAN <- function(data) {
 create_individual_BAN <- function(Capture_data) {
 
   Individual_data <- Capture_data %>%
-    dplyr::group_by(IndvID) %>%
-    dplyr::summarise(Species = unique(stats::na.omit(Species)),
+    dplyr::group_by(.data$IndvID) %>%
+    dplyr::summarise(Species = unique(stats::na.omit(.data$Species)),
                      PopID = "BAN",
                      BroodIDLaid = NA_character_,
                      BroodIDFledged = NA_character_,
-                     RingSeason = first(BreedingSeason),
-                     RingAge = first(Age_observed),
-                     Sex = purrr::map_chr(.x = list(unique(Sex)),
-                                          .f = ~{
+                     RingSeason = dplyr::first(.data$BreedingSeason),
+                     RingAge = dplyr::first(.data$Age_observed),
+                     Sex_calculated = purrr::map_chr(.x = list(unique(.data$Sex_observed)),
+                                                     .f = ~{
 
-                                            if(all(c("F", "M") %in% ..1)){
+                                                       if(all(c("F", "M") %in% ..1)){
 
-                                              return("C")
+                                                         return("C")
 
-                                            } else if("F" %in% ..1){
+                                                       } else if("F" %in% ..1){
 
-                                              return("F")
+                                                         return("F")
 
-                                            } else if("M" %in% ..1){
+                                                       } else if("M" %in% ..1){
 
-                                              return("M")
+                                                         return("M")
 
-                                            } else if(is.na(..1)){
+                                                       } else if(is.na(..1)){
 
-                                              return(NA_character_)
+                                                         return(NA_character_)
 
-                                            }
+                                                       }
 
-                                          })) %>%
+                                                     }),
+                     Sex_genetic = NA_character_) %>%
     #Change RingAge to chick/adult
-    dplyr::mutate(RingAge = dplyr::case_when(is.na(.$RingAge) ~ "adult",
-                                             .$RingAge > 3 ~ "adult",
-                                             .$RingAge <= 3 ~ "chick"))
+    dplyr::mutate(RingAge = dplyr::case_when(is.na(.data$RingAge) ~ "adult",
+                                             .data$RingAge > 3 ~ "adult",
+                                             .data$RingAge <= 3 ~ "chick")) %>%
+    dplyr::ungroup()
 
   return(Individual_data)
 
@@ -376,12 +387,12 @@ create_individual_BAN <- function(Capture_data) {
 create_location_BAN <- function(data) {
 
   Location_data <- tibble::tibble(LocationID = unique(data$LocationID),
-                                  NestboxID = LocationID,
+                                  NestboxID = .data$LocationID,
                                   LocationType = "NB",
                                   PopID = "BAN",
                                   Latitude = NA_real_, Longitude = NA_real_,
                                   StartSeason = 2013L,
-                                  EndSeason = NA_integer_, Habitat = NA_character_)
+                                  EndSeason = NA_integer_, HabitatType = NA_character_)
 
   return(Location_data)
 
