@@ -237,23 +237,23 @@ create_brood_CHO <- function(data){
     #Add in population/plot info
     #Convert LayDate and HatchDate to date objects
     dplyr::mutate(LayDate_observed = lubridate::ymd(paste0(.data$Year, "-01-01")) + as.numeric(.data$LayingDateJulian),
-                  LayDate_min = .data$LayDate_observed,
-                  LayDate_max = .data$LayDate_observed,
+                  LayDate_min = as.Date(NA),
+                  LayDate_max = as.Date(NA),
                   ClutchSize_observed = .data$FinalClutchSize,
-                  ClutchSize_min = .data$ClutchSize_observed,
-                  ClutchSize_max = .data$ClutchSize_observed,
+                  ClutchSize_min = NA_integer_,
+                  ClutchSize_max = NA_integer_,
                   HatchDate_observed = lubridate::ymd(paste0(.data$Year, "-01-01")) + as.numeric(.data$HatchingDateJulian),
-                  HatchDate_min = .data$HatchDate_observed,
-                  HatchDate_max = .data$HatchDate_observed,
+                  HatchDate_min = as.Date(NA),
+                  HatchDate_max = as.Date(NA),
                   BroodSize_observed = .data$NoChicksHatched,
-                  BroodSize_min = .data$BroodSize_observed,
-                  BroodSize_max = .data$BroodSize_observed,
+                  BroodSize_min = NA_integer_,
+                  BroodSize_max = NA_integer_,
                   FledgeDate_observed = as.Date(NA),
-                  FledgeDate_min = .data$FledgeDate_observed,
-                  FledgeDate_max = .data$FledgeDate_observed,
+                  FledgeDate_min = as.Date(NA),
+                  FledgeDate_max = as.Date(NA),
                   NumberFledged_observed = .data$NoChicksOlder14D,
-                  NumberFledged_min = .data$NumberFledged_observed,
-                  NumberFledged_max = .data$NumberFledged_observed) %>%
+                  NumberFledged_min = NA_integer_,
+                  NumberFledged_max = NA_integer_) %>%
     #Arrange data chronologically for each female for clutchtype calculation
     dplyr::arrange(.data$Year, .data$FemaleID, .data$LayDate_observed) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
