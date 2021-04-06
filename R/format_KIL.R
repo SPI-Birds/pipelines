@@ -143,7 +143,7 @@ format_KIL <- function(db = choose_directory(),
                   .data$AdultFemaleTarsusMm, .data$AdultMaleTarsusMm,
                   .data$AdultFemaleMassG, .data$AdultMaleMassG,
                   .data$AdultFemaleWingMm, .data$AdultMaleWingMm) %>%
-    tidyr::pivot_longer(cols = c(.data$FemaleID, .data$MaleID,),
+    tidyr::pivot_longer(cols = c(.data$FemaleID, .data$MaleID),
                         names_to = "Sex_observed",
                         values_to = "IndvID") %>%
     dplyr::mutate(Sex_observed = substr(.data$Sex_observed, start = 1, stop = 1),
@@ -197,7 +197,7 @@ format_KIL <- function(db = choose_directory(),
                   CaptureDate = as.Date(paste(.data$BreedingSeason, "05-01", sep = "-"),
                                      format = "%Y-%m-%d") + .data$RingDate1May1St - 1,
                   CaptureTime = if_else(!is.na(.data$RingTime),
-                                        (str_replace(sprintf("%05.2f", RingTime),
+                                        (str_replace(sprintf("%05.2f", .data$RingTime),
                                                      pattern = "\\.",
                                                      replacement = ":")),
                                         NA_character_),
@@ -460,7 +460,7 @@ create_capture_KIL <- function(brood_data_til92,
   ### Subset brood data to get location (nestbox) ID
   brood_data_til92_temp <-
     brood_data_til92 %>%
-    dplyr::select(BroodId, Species, PopID, BreedingSeason, LocationID)
+    dplyr::select(.data$BroodId, .data$Species, .data$PopID, .data$BreedingSeason, .data$LocationID)
 
 
   #### Adults
@@ -476,8 +476,8 @@ create_capture_KIL <- function(brood_data_til92,
                   ReleaseAlive = .data$CaptureAlive,
                   CapturePopID = .data$PopID,
                   CapturePlot  = NA_character_,
-                  ReleasePopID = ifelse(ReleaseAlive == TRUE, CapturePopID, NA_character_),
-                  ReleasePlot  = ifelse(ReleaseAlive == TRUE, CapturePlot, NA_character_),
+                  ReleasePopID = ifelse(.data$ReleaseAlive == TRUE, .data$CapturePopID, NA_character_),
+                  ReleasePlot  = ifelse(.data$ReleaseAlive == TRUE, .data$CapturePlot, NA_character_),
                   Mass = NA_real_,
                   Tarsus = NA_real_,
                   #### The method used in this population is the Svensson Standard method, but
@@ -519,8 +519,8 @@ create_capture_KIL <- function(brood_data_til92,
                   ReleaseAlive = .data$CaptureAlive,
                   CapturePopID = .data$PopID,
                   CapturePlot  = NA_character_,
-                  ReleasePopID = ifelse(ReleaseAlive == TRUE, CapturePopID, NA_character_),
-                  ReleasePlot  = ifelse(ReleaseAlive == TRUE, CapturePlot, NA_character_),
+                  ReleasePopID = ifelse(.data$ReleaseAlive == TRUE, .data$CapturePopID, NA_character_),
+                  ReleasePlot  = ifelse(.data$ReleaseAlive == TRUE, .data$CapturePlot, NA_character_),
                   Mass = as.numeric(.data$Mass),
                   Tarsus = convert_tarsus(as.numeric(.data$Tarsus), method = "Standard"),
                   OriginalTarsusMethod = if_else(!is.na(.data$Tarsus), "Standard", NA_character_),
@@ -535,8 +535,8 @@ create_capture_KIL <- function(brood_data_til92,
   capture_til92 <-
     capture_adults_til92 %>%
     dplyr::bind_rows(capture_chicks_til92) %>%
-    left_join(brood_data_til92_temp,
-              by = c("Species", "PopID", "BreedingSeason", "BroodId")) %>%
+    dplyr::left_join(brood_data_til92_temp,
+                     by = c("Species", "PopID", "BreedingSeason", "BroodId")) %>%
     dplyr::select(-.data$BroodId)
 
 
@@ -551,8 +551,8 @@ create_capture_KIL <- function(brood_data_til92,
                   ReleaseAlive = .data$CaptureAlive,
                   CapturePopID = .data$PopID,
                   CapturePlot  = NA_character_,
-                  ReleasePopID = ifelse(ReleaseAlive == TRUE, CapturePopID, NA_character_),
-                  ReleasePlot  = ifelse(ReleaseAlive == TRUE, CapturePlot, NA_character_),
+                  ReleasePopID = ifelse(.data$ReleaseAlive == TRUE, .data$CapturePopID, NA_character_),
+                  ReleasePlot  = ifelse(.data$ReleaseAlive == TRUE, .data$CapturePlot, NA_character_),
                   OriginalTarsusMethod = if_else(!is.na(.data$Tarsus), "alternative", NA_character_),
                   WingLength = NA_real_,
                   Age_observed = as.integer(.data$AgeEuringCode),
@@ -574,8 +574,8 @@ create_capture_KIL <- function(brood_data_til92,
                   ReleaseAlive = .data$CaptureAlive,
                   CapturePopID = .data$PopID,
                   CapturePlot  = NA_character_,
-                  ReleasePopID = ifelse(ReleaseAlive == TRUE, CapturePopID, NA_character_),
-                  ReleasePlot  = ifelse(ReleaseAlive == TRUE, CapturePlot, NA_character_),
+                  ReleasePopID = ifelse(.data$ReleaseAlive == TRUE, .data$CapturePopID, NA_character_),
+                  ReleasePlot  = ifelse(.data$ReleaseAlive == TRUE, .data$CapturePlot, NA_character_),
                   OriginalTarsusMethod = if_else(!is.na(.data$Tarsus), "alternative", NA_character_),
                   Age_observed = 1L,
                   ChickAge = 15,
@@ -608,11 +608,11 @@ create_capture_KIL <- function(brood_data_til92,
              Year = BreedingSeason,
              showpb = TRUE) %>%
     #### Final arrangement
-    dplyr::select(CaptureID, IndvID, Species, Sex_observed, BreedingSeason,
-                  CaptureDate, CaptureTime, ObserverID, LocationID,
-                  CaptureAlive, ReleaseAlive, CapturePopID, CapturePlot,
-                  ReleasePopID, ReleasePlot, Mass, Tarsus, OriginalTarsusMethod,
-                  WingLength, Age_observed, Age_calculated, ChickAge, ExperimentID)
+    dplyr::select(.data$CaptureID, .data$IndvID, .data$Species, .data$Sex_observed, .data$BreedingSeason,
+                  .data$CaptureDate, .data$CaptureTime, .data$ObserverID, .data$LocationID,
+                  .data$CaptureAlive, .data$ReleaseAlive, .data$CapturePopID, .data$CapturePlot,
+                  .data$ReleasePopID, .data$ReleasePlot, .data$Mass, .data$Tarsus, .data$OriginalTarsusMethod,
+                  .data$WingLength, .data$Age_observed, .data$Age_calculated, .data$ChickAge, .data$ExperimentID)
 
   return(Capture_data)
 
@@ -704,7 +704,7 @@ create_individual_KIL <- function(adults_data_til92,
     dplyr::bind_rows(indv_chicks_95) %>%
     group_by(.data$IndvID) %>%
     dplyr::arrange(.data$IndvID, .data$RingSeason) %>%
-    dplyr::summarise(Sex_calculated = purrr::map_chr(.x = list(unique(na.omit(.data$Sex_observed))),
+    dplyr::summarise(Sex_calculated = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Sex_observed))),
                                                      .f = ~{
                                                        if(length(..1) == 0){
                                                          return(NA_character_)
@@ -769,8 +769,8 @@ create_location_KIL <- function(kil_data_95, Brood_data) {
                   Latitude  = NA_real_,
                   Longitude = NA_real_) %>%
     #### Final arrangement
-    dplyr::select(LocationID, NestboxID, LocationType, PopID,
-                  Latitude, Longitude, StartSeason, EndSeason, HabitatType)
+    dplyr::select(.data$LocationID, .data$NestboxID, .data$LocationType, .data$PopID,
+                  .data$Latitude, .data$Longitude, .data$StartSeason, .data$EndSeason, .data$HabitatType)
 
   return(Location_data)
 
