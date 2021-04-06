@@ -34,24 +34,20 @@ if ("test_data.RDS" %in% list.files(path)) {
     pipeline_output <- run_pipelines(path = path,
                                      PopID = c("SSQ", "BAN", "VEL", "CHO", "MUR", "PIR", "ROU", "MON", "MTV", "MIS", "HOC",
                                                "KEV", "HAR", "PEE", "BOS",
-                                               "WYT", "PIL", "EDM"),
+                                               "WYT", "PIL", "EDM", "PEW"),
                                      output_type = "R")
   } else if (grepl(pattern = 'windows', x = OS)) {
 
     pipeline_output <- run_pipelines(path = path,
                                      PopID = c("SSQ", "BAN", "VEL", "CHO", "MUR", "PIR", "ROU", "MON", "MTV", "MIS", "HOC",
                                                "HOG", "OOS", "VLI", "BUU", "LIE", "WAR", "WES", "KEV", "HAR", "PEE", "BOS",
-                                               "WYT", "PIL", "EDM", "AMM"),
+                                               "WYT", "PIL", "EDM", "AMM", "PEW"),
                                      output_type = "R")
   } else {
     stop(paste0('Operating system ', OS, ' not supported'))
   }
 
 }
-
-# Create dummy
-# message("Create dummy data approved list...")
-approved_list <- create_approved_list(dummy = TRUE)
 
 # Run quality check for dummy data and produce no report
 message("Create dummy data quality check output...")

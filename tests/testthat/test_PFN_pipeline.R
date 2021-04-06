@@ -140,7 +140,7 @@ test_that("Capture data returns an expected outcome...", {
   expect_equal(subset(PFN_data, IndvID == "Z286392")$Mass[3], 12.5)
   #Test that tarsus is correct on first and last capture
   expect_equal(subset(PFN_data, IndvID == "Z286392")$Tarsus[1], 16.4)
-  expect_equal(subset(PFN_data, IndvID == "Z286392")$Tarsus[3], (18.1*0.72005)+3.64549)
+  expect_equal(subset(PFN_data, IndvID == "Z286392")$Tarsus[3], 18.1)
   #Test that wing length is correct on first and last capture
   expect_equal(subset(PFN_data, IndvID == "Z286392")$WingLength[1], NA_real_)
   expect_equal(subset(PFN_data, IndvID == "Z286392")$WingLength[3], 81)

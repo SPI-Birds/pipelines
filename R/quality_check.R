@@ -46,9 +46,9 @@ quality_check <- function(R_data,
 
   }
 
-  if (test) {
+  if(test) {
 
-    R_data <- dummy_data
+    R_data <- create_dummy_data()
 
     approved_list <- list(Brood_approved_list = tibble::tibble(PopID = "AAA",
                                                                BroodID = "AAA-2020-0",

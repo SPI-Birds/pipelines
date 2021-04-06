@@ -592,6 +592,11 @@ create_capture_HAR    <- function(db, Brood_data, species_filter, return_errors)
 
     })
 
+  #Remove names so that it doesn't break tests
+  #We need to come up with a more robust fix for this (i.e. change the above code!)
+  expanded_multi_chick_capture <- expanded_multi_chick_capture %>%
+    mutate(across(.cols = where(~!is.null(names(.))), .fns = ~setNames(., NULL)))
+
   #Now, for each recorded chick ring number determine the last 2 digits of the ring
   multirecord_captures <- expanded_multi_chick_capture %>%
     dplyr::mutate(Last2DigitsRingNr = stringr::str_sub(RingNumber, start = -2),
