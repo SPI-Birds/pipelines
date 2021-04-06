@@ -100,13 +100,56 @@ This will install the *pypxlib* library on your system.
 
 Restart your computer before running the pipelines.
 
-#### MikTex
+##### MikTex
 
-To generate the pdf quality check report on Windows you will need to have installed [`MikTex`](https://miktex.org/). If MikTex is not installed, only the html version of the qualit check report can be created.
+To generate the pdf quality check report on Windows you will need to have installed [`MikTex`](https://miktex.org/). If MikTex is not installed, only the html version of the quality check report can be created.
 
 #### Mac
 
-Work in progress..
+##### Microsoft Access Driver
+
+At present, no free Microsoft Access Driver is available for Mac. 
+
+As a consequence, the `pipelines`package currently does not run pipelines requiring a Microsoft Access Driver (the affected pipelines are skipped and a information message displayed when attempted to run on Mac). 
+
+##### Python 3 for Mac
+
+The following notes detail how to set up the python environment for r-reticulate on MacOS, including necessary libraries:
+
+* Install Anaconda 3.X (this was last tested with 3.8)
+
+* Check your default python version by opening terminal and typing:`python3 --version`(This should return Python 3.X.Y)
+
+* Check that `pip` is available by typing `pip3 --version` in the terminal
+
+* Update `pip` by typing `python3 -m pip install --user --upgrade pip` in the terminal
+    (You have to use the `--user` argument as permission may be denied otherwise)
+
+* Open RStudio and load the reticulate package: `library(reticulate)`
+
+* Check which version of python reticulate is linked to: `py_config()`
+    (Required python libraries need to be installed into this virtual environment)
+
+* Install `pandas` library from within R: `py_install("pandas")`
+
+* Install `pypxlib` library from within R: `py_install("pypxlib", pip = TRUE)`
+    (Since this is an external library hosted on GitHub, you need to specify installation via pip)
+
+* Check that both libraries are now available:
+```
+py_module_available("pandas")
+py_module_available("pypxlib")
+```
+(Both commands should return TRUE)
+
+With this setup, python should be good to go for extracting paradox databases.
+(Note that when you install Anaconda, the r-reticulate environment should already be present. If that is not the case, you may have to first generate the environment and link it to RStudio).
+
+##### Pdf compilation on Mac
+
+At present, the `pipelines`package does not create pdf outputs when run on a Mac. 
+This is work in progress and will be changed in the future.
+
 
 #### Troubleshooting
 
