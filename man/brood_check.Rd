@@ -42,6 +42,7 @@ The following brood data checks are performed:
 \item \strong{B10}: Check if parents of a brood are the same species using \code{\link{compare_species_parents}}.
 \item \strong{B11}: Check if the brood and the parents of that brood are recorded as the same species using \code{\link{compare_species_brood_parents}}.
 \item \strong{B12}: Check if the brood and the chicks in that brood are recorded as the same species using \code{\link{compare_species_brood_chicks}}.
-\item \strong{B13}: Check if the sex of parents listed under FemaleID and MaleID is correct (i.e., female and male, respectively) using \code{\link{check_sex_parents}}.
+\item \strong{B13}: Check if the sex of mothers listed under FemaleID are female using \code{\link{check_sex_mothers}}.
+\item \strong{B14}: Check if the sex of fathers listed under MaleID are male using \code{\link{check_sex_fathers}}.
 }
 }

@@ -170,8 +170,8 @@ quality_check <- function(R_data,
 
   # Title
   title <- paste0("Quality check report")
-  # title <- paste0("Quality check report for ", Species_codes[Species_codes$Code == species, "CommonName"],
-  #                 " in ", pop_names[pop_names$code == pop, "name"])
+  # title <- paste0("Quality check report for ", species_codes[species_codes$Species == Species, "CommonName"],
+  #                 " in ", pop_codes[pop_codes$PopID == PopID, "PopName"])
 
   # Produce report
   if(output == TRUE) {
@@ -195,9 +195,9 @@ quality_check <- function(R_data,
     '',
     '# Summary',
     '',
-    'Species: `r Species_codes[Species_codes$Code %in% species,]$CommonName`',
+    'Species: `r species_codes[species_codes$Species %in% species,]$CommonName`',
     '',
-    'Populations: `r pop_names[pop_names$code %in% pop,]$name`',
+    'Populations: `r pop_codes[pop_codes$PopID %in% pop,]$PopName`',
     '',
     'All checks performed in `r round(time, 2)` seconds.',
     '',
