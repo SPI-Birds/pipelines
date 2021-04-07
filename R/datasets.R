@@ -68,37 +68,40 @@ pop_species_combos <- utils::read.csv(system.file("extdata", "pop_species_combos
 #'   \item Rows 630-632 are records that test the functionality of check 'B7: Comparing brood size with number of chicks captured' (see \code{\link{compare_broodsize_chicknumber}}): a brood with a brood size equal to the number of chicks in Capture_data, a brood with a brood size larger than the number of chicks in Capture_data, and a brood with a brood size smaller than the number of chicks in Capture_data.
 #'   \item Rows 633-635 are records that test the functionality of check 'B8: Checking that brood IDs are unique' (see \code{\link{check_unique_BroodID}}): a brood with a unique BroodID, and two broods with the same BroodID.
 #'   \item Rows 636-641 are records that test the functionality of check 'B9: Checking that clutch type order is correct' (see \code{\link{check_clutch_type_order}}): two broods by one breeding pair in one season in the correct order of creation, two broods by one breeding pair in one season in the correct order of creation but "first" brood missing, two broods by one breeding pair in one season in the incorrect order of creation.
-#'   \item Rows 642-643 are records that test the functionality of check 'B10: Comparing parent species' (see \code{\link{compare_species_parents}}): a brood with parents of the same species, and a brood with parents of different species.
-#'   \item Rows 642-643 are records that are needed to test the functionality of check 'C4: Checking that adults caught on nest are listed are the parents (see \code{\link{check_adult_parent_nest}}): a brood with the same individuals as parents as the individuals caught on that nest, and a brood with individuals different from the individuals that are caught on this nest.
-#'   \item Rows 646-647 are records that test the functionality of check 'B11: Comparing species of brood and of parents' (see \code{\link{compare_species_brood_parents}}): a brood of the same species as both of the parents, and a brood of a different species than either of the parents.
-#'   \item Rows 648-649 are records that test the functionality of check 'B12: Comparing species of brood and of chicks' (see \code{\link{compare_species_brood_chicks}}): a brood of the same species as the chicks in that brood, and a brood of a different species than either of the chicks in that brood.
+#'   \item Rows 642-644 are records that test the functionality of check 'B10: Comparing parent species' (see \code{\link{compare_species_parents}}): a brood with parents of the same species, and a brood with parents of different species.
+#'   \item Rows 645-646 are records that are needed to test the functionality of check 'C4: Checking that adults caught on nest are listed are the parents (see \code{\link{check_adult_parent_nest}}): a brood with the same individuals as parents as the individuals caught on that nest, and a brood with individuals different from the individuals that are caught on this nest.
+#'   \item Rows 647-649 are records that test the functionality of check 'B11: Comparing species of brood and of parents' (see \code{\link{compare_species_brood_parents}}): a brood of the same species as both of the parents, and a brood of a different species than either of the parents.
+#'   \item Rows 650-652 are records that test the functionality of check 'B12: Comparing species of brood and of chicks' (see \code{\link{compare_species_brood_chicks}}): a brood of the same species as the chicks in that brood, and a brood of a different species than either of the chicks in that brood.
+#'   \item Rows 653-654 are records that test the functionality of check 'B13: Checking sex of mothers' (see \code{\link{check_sex_mothers}}): a brood where assigned mother is female and a brood where assigned mother is listed as male.
+#'   \item Rows 655-656 are records that test the functionality of check 'B14: Checking sex of fathers' (see \code{\link{check_sex_fathers}}): a brood where assigned father is male and a brood where assigned father is listed as female.
 #' }
 #'
 #' \strong{Capture data}:
 #' \itemize{
 #'   \item Rows 1-4 are records that are needed to test the functionality of check 'B7: Comparing brood size with number of chicks captured' (see \code{\link{compare_broodsize_chicknumber}}): chicks in equal, smaller or larger number than recorded as brood size in Brood_data.
-#'   \item Rows 5-8 are records that are needed test the functionality of check 'B10: Comparing parent species' (see \code{\link{compare_species_parents}}): parents of the same or different species than recorded in Brood_data.
-#'   \item Rows 9-986 are records that test the functionality of checks 'C2a-b: Checking capture variable values against reference values' (see \code{\link{check_values_capture}}): adults and chicks with probable, unlikely and impossible values in Mass (C2a) and Tarsus (C2b).
-#'   \item Rows 987-988 are records that test the functionality of check 'C3: Checking chick age values' (see \code{\link{check_chick_age}}): a chick with a correct chick age, and a chick with an incorrect chick age.
-#'   \item Rows 989-993 are records that are needed to test the functionality of check 'I2: Checking unique individual IDs' (see \code{\link{check_unique_IndvID}}): individuals with IDs that are unique, duplicated among populations and duplicated within populations.
-#'   \item Rows 994-995 are records that are needed to test the functionality of check 'I3: Checking that chicks have BroodIDs' (see \code{\link{check_BroodID_chicks}}): a chick with a BroodID, and a chick without a BroodID.
-#'   \item Rows 996-997 are records that are needed to test the functionality of check 'I4: Checking that individuals have no conflicting sex' (see \code{\link{check_conflicting_sex}}): an individual with certain sex, and an individual with uncertain sex (i.e. recorded as both male and female).
-#'   \item Rows 998-999 are records that are needed to test the functionality of check 'I5:Checking that individuals have no conflicting species' (see \code{\link{check_conflicting_species}}): an individual with certain species, and an individual with uncertain species (i.e. recorded as two different species).
-#'   \item Row 1000 is a record that is needed to test the functionality of check 'I6: Checking that individuals in Individual_data also appear in Capture_data' (see \code{\link{check_individuals_captures}}): an individual in Individual_data that is also recorded in Capture_data.
-#'   \item Rows 1001-1003 are records that test the functionality of check 'C4: Checking that adults caught on nest are listed are the parents' (see \code{\link{check_adult_parent_nest}}): a parent caught on a nest and marked as the parent of that brood, a parent caught in a mistnet, and a parent caught on a nest but not marked as the parent of that brood.
+#'   \item Rows 5-10 are records that are needed test the functionality of check 'B10: Comparing parent species' (see \code{\link{compare_species_parents}}): parents of the same or different species than recorded in Brood_data.
+#'   \item Rows 11-988 are records that test the functionality of checks 'C2a-b: Checking capture variable values against reference values' (see \code{\link{check_values_capture}}): adults and chicks with probable, unlikely and impossible values in Mass (C2a) and Tarsus (C2b).
+#'   \item Rows 989-990 are records that test the functionality of check 'C3: Checking chick age values' (see \code{\link{check_chick_age}}): a chick with a correct chick age, and a chick with an incorrect chick age.
+#'   \item Rows 991-995 are records that are needed to test the functionality of check 'I2: Checking unique individual IDs' (see \code{\link{check_unique_IndvID}}): individuals with IDs that are unique, duplicated among populations and duplicated within populations.
+#'   \item Rows 996-997 are records that are needed to test the functionality of check 'I3: Checking that chicks have BroodIDs' (see \code{\link{check_BroodID_chicks}}): a chick with a BroodID, and a chick without a BroodID.
+#'   \item Rows 998-999 are records that are needed to test the functionality of check 'I4: Checking that individuals have no conflicting sex' (see \code{\link{check_conflicting_sex}}): an individual with certain sex, and an individual with uncertain sex (i.e. recorded as both male and female).
+#'   \item Rows 1000-1001 are records that are needed to test the functionality of check 'I5:Checking that individuals have no conflicting species' (see \code{\link{check_conflicting_species}}): an individual with certain species, and an individual with uncertain species (i.e. recorded as two different species).
+#'   \item Row 1002 is a record that is needed to test the functionality of check 'I6: Checking that individuals in Individual_data also appear in Capture_data' (see \code{\link{check_individuals_captures}}): an individual in Individual_data that is also recorded in Capture_data.
+#'   \item Rows 1003-1005 are records that test the functionality of check 'C4: Checking that adults caught on nest are listed are the parents' (see \code{\link{check_adult_parent_nest}}): a parent caught on a nest and marked as the parent of that brood, a parent caught in a mistnet, and a parent caught on a nest but not marked as the parent of that brood.
+#'   \item Rows 1004-1011 are records that test the functionality of check 'C5:Checking that the age of subsequent captures is ordered correctly' (see \code{\link{check_age_captures}}): two captures in subsequent years with correct order of age, two captures in the same year with same age, two captures in subsequent years with incorrect order of age (but both are adults), two captures in subsequent years with incorrect order of age (adult caught before chick).
 #' }
 #'
 #' \strong{Individual data}:
 #' \itemize{
 #'   \item Rows 1-4 are records that are needed to test the functionality of check 'B7: Comparing brood size with number of chicks captured' (see \code{\link{compare_broodsize_chicknumber}}): chicks in equal, smaller or larger number than recorded as brood size in Brood_data.
-#'   \item Rows 5-8 are records that are needed test the functionality of check 'B10: Comparing parent species' (see \code{\link{compare_species_parents}}): parents of the same or different species than recorded in Brood_data.
-#'   \item Rows 9-13 are records that test the functionality of check 'I2: Checking unique individual IDs' (see \code{\link{check_unique_IndvID}}): individuals with IDs that are unique, duplicated among populations and duplicated within populations.
-#'   \item Rows 14-15 are records that test the functionality of check 'I3: Checking that chicks have BroodIDs' (see \code{\link{check_BroodID_chicks}}): a chick with a BroodID, and a chick without a BroodID.
-#'   \item Rows 16-17 are records that test the functionality of check 'I4: Checking that individuals have no conflicting sex' (see \code{\link{check_conflicting_sex}}): an individual with certain sex, and an individual with uncertain sex (i.e. recorded as both male and female).
-#'   \item Rows 18-19 are records that test the functionality of check 'I5:Checking that individuals have no conflicting species' (see \code{\link{check_conflicting_species}}): an individual with certain species, and an individual with uncertain species (i.e. recorded as two different species).
-#'   \item Rows 20-21 are records that test the functionality of check 'I6: Checking that individuals in Individual_data also appear in Capture_data' (see \code{\link{check_individuals_captures}}): an individual that is also recorded in Capture_data, and an individual that is missing from Capture_data.
-#'   \item Rows 22-25 are records that are needed to test the functionality of check 'B11: Comparing species of brood and of parents' (see \code{\link{compare_species_brood_parents}}): parents of the same species as their brood, and parents of different species than their brood.
-#'   \item Rows 26-29 are records that are needed to test the functionality of check 'B12: Comparing species of brood and of chicks' (see \code{\link{compare_species_brood_chicks}}): chicks of the same species as the brood they are in, and chicks of different species than the brood they are in.
+#'   \item Rows 5-10 are records that are needed test the functionality of check 'B10: Comparing parent species' (see \code{\link{compare_species_parents}}): parents of the same or different species than recorded in Brood_data.
+#'   \item Rows 11-15 are records that test the functionality of check 'I2: Checking unique individual IDs' (see \code{\link{check_unique_IndvID}}): individuals with IDs that are unique, duplicated among populations and duplicated within populations.
+#'   \item Rows 16-17 are records that test the functionality of check 'I3: Checking that chicks have BroodIDs' (see \code{\link{check_BroodID_chicks}}): a chick with a BroodID, and a chick without a BroodID.
+#'   \item Rows 18-19 are records that test the functionality of check 'I4: Checking that individuals have no conflicting sex' (see \code{\link{check_conflicting_sex}}): an individual with certain sex, and an individual with uncertain sex (i.e. recorded as both male and female).
+#'   \item Rows 20-21 are records that test the functionality of check 'I5:Checking that individuals have no conflicting species' (see \code{\link{check_conflicting_species}}): an individual with certain species, and an individual with uncertain species (i.e. recorded as two different species).
+#'   \item Rows 22-23 are records that test the functionality of check 'I6: Checking that individuals in Individual_data also appear in Capture_data' (see \code{\link{check_individuals_captures}}): an individual that is also recorded in Capture_data, and an individual that is missing from Capture_data.
+#'   \item Rows 24-29 are records that are needed to test the functionality of check 'B11: Comparing species of brood and of parents' (see \code{\link{compare_species_brood_parents}}): parents of the same species as their brood, and parents of different species than their brood.
+#'   \item Rows 30-35 are records that are needed to test the functionality of check 'B12: Comparing species of brood and of chicks' (see \code{\link{compare_species_brood_chicks}}): chicks of the same species as the brood they are in, and chicks of different species than the brood they are in.
 #' }
 #'
 #' \strong{Location data}:
@@ -159,3 +162,16 @@ checkID_variable_combos <- utils::read.csv(system.file("extdata", "checkID_varia
 #'
 #' @name chick_mass_cutoffs
 NULL
+
+#' Common hybrids
+#'
+#' Data frame with common hybrid broods. Can be used in quality checks to compare species across parents, between parents and brood, and between brood and nestlings.
+#'
+#' @format Data frame with 2 variables:
+#' \describe{
+#' \item{Species1}{6 letter code for species of record 1}
+#' \item{Species2}{6 letter code for species of record 2}
+#' }
+#'
+#' @name common_hybrids
+common_hybrids <- utils::read.csv(system.file("extdata", "common_hybrids.csv", package = "pipelines", mustWork = TRUE))
