@@ -320,7 +320,7 @@ create_individual_MTA <- function(Capture_data){
     Capture_data %>%
     #### Format and create new data columns
     group_by(.data$IndvID) %>%
-    dplyr::summarise(Sex_calculated = purrr::map_chr(.x = list(unique(na.omit(.data$Sex_observed))),
+    dplyr::summarise(Sex_calculated = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Sex_observed))),
                                                      .f = ~{
                                                        if(length(..1) == 0){
                                                          return(NA_character_)
@@ -352,7 +352,7 @@ create_individual_MTA <- function(Capture_data){
 #' Create location data table for MTA-PE, Hungary.
 #'
 #' Create location data table in standard format for data from MTA-PE, Hungary.
-#' @param data Data frame mta_data with primary data from MTA-PE, Hungary.
+#' @param mta_data Data frame mta_data with primary data from MTA-PE, Hungary.
 #' @return A data frame.
 
 
