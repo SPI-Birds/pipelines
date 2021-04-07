@@ -53,7 +53,6 @@ MAY,Mayachino,Russia,MAY,Mayachino
 MET,Metu,Turkey,MET,Metu
 MIE,Mierzeja Wi?lana,Poland,MIE,Mierzeja Wi?lana
 MOU,Moulis,France,MOU,Moulis
-MTA,MTA-PE Evolutionary Ecology Group,Hungary,MTA,MTA-PE Evolutionary Ecology Group
 MRC,Murcia,Spain,MRC,Murcia
 OUL,Oulu,Finland,OUL,Oulu
 PET,Petrozevodsk,Russia,PET,Petrozevodsk
@@ -75,3 +74,9 @@ WHZ,Westerholtz,Germany,WHZ,Westerholtz
 WIL,Wilrijk,Belgium,WIL,Wilrijk
 ZVE,Zvenigorod,Russia,ZVE,Zvenigorod
 GOT,Gotland,Sweden,GOT,Gotland
+BAL, Balatonfured, Hungary, MTA, MTA-PE Evolutionary Ecology Group
+SZE, Szentgal erdo, Hungary, MTA, MTA-PE Evolutionary Ecology Group
+VIL, Vilma puszta, Hungary, MTA, MTA-PE Evolutionary Ecology Group
+VES, Veszprem, Hungary, MTA, MTA-PE Evolutionary Ecology Group
+GUL, Gulya domb, Hungary, MTA, MTA-PE Evolutionary Ecology Group
+
