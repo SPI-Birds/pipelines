@@ -15,7 +15,7 @@
 #' \strong{Individual_data}: Currently, only the information about adults is available, there is no
 #' data included regarding chicks ringed.
 #'
-#' \strong{Capture_date}: No capture date is available, we created artificial date as 1st of April of"BreedingSeason_04-01"
+#' \strong{Capture_date}: No capture date is available, we created artificial date as 1st of April in the format "BreedingSeason-04-01"
 #'
 #'
 #' @inheritParams pipeline_params
@@ -159,10 +159,10 @@ format_MTA <- function(db = choose_directory(),
 
 #### BROOD DATA
 
-#' Create brood data table for blue tits in MTA-PE Evolutionary Ecology Group, Hungary.
+#' Create brood data table for great tits in MTA-PE Evolutionary Ecology Group, Hungary.
 #'
-#' Create a capture data table in standard format for blue tits in MTA-PE Evolutionary Ecology Group, Hungary.
-#' @param mta_data Data frame. Primaty data from MTA-PE Evolutionary Ecology Group, Hungary.
+#' Create a capture data table in standard format for great tits in MTA-PE Evolutionary Ecology Group, Hungary.
+#' @param mta_data Data frame. Primary data from MTA-PE Evolutionary Ecology Group, Hungary.
 #' @return A data frame.
 
 create_brood_MTA <- function(mta_data) {
@@ -208,20 +208,20 @@ create_brood_MTA <- function(mta_data) {
                                          .data$ExperimentId)) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
     #### Rename
-    dplyr::rename(LayDate_observed = LayDate,
-                  NumberFledged_observed = NumberFledged) %>%
+    dplyr::rename(LayDate_observed = .data$LayDate,
+                  NumberFledged_observed = .data$NumberFledged) %>%
     #### Final arrangement
-    dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot, LocationID,
-                  FemaleID, MaleID,
-                  ClutchType_observed, ClutchType_calculated,
-                  LayDate_observed, LayDate_min, LayDate_max,
-                  ClutchSize_observed, ClutchSize_min, ClutchSize_max,
-                  HatchDate_observed, HatchDate_min, HatchDate_max,
-                  BroodSize_observed, BroodSize_min, BroodSize_max,
-                  FledgeDate_observed, FledgeDate_min, FledgeDate_max,
-                  NumberFledged_observed, NumberFledged_min, NumberFledged_max,
-                  AvgEggMass, NumberEggs, AvgChickMass, NumberChicksMass,
-                  AvgTarsus, NumberChicksTarsus, OriginalTarsusMethod, ExperimentID) %>%
+    dplyr::select(.data$BroodID, .data$PopID, .data$BreedingSeason, .data$Species, .data$Plot, .data$LocationID,
+                  .data$FemaleID, .data$MaleID,
+                  .data$ClutchType_observed, .data$ClutchType_calculated,
+                  .data$LayDate_observed, .data$LayDate_min, .data$LayDate_max,
+                  .data$ClutchSize_observed, .data$ClutchSize_min, .data$ClutchSize_max,
+                  .data$HatchDate_observed, .data$HatchDate_min, .data$HatchDate_max,
+                  .data$BroodSize_observed, .data$BroodSize_min, .data$BroodSize_max,
+                  .data$FledgeDate_observed, .data$FledgeDate_min, .data$FledgeDate_max,
+                  .data$NumberFledged_observed, .data$NumberFledged_min, .data$NumberFledged_max,
+                  .data$AvgEggMass, .data$NumberEggs, .data$AvgChickMass, .data$NumberChicksMass,
+                  .data$AvgTarsus, .data$NumberChicksTarsus, .data$OriginalTarsusMethod, .data$ExperimentID) %>%
     distinct()
 
   return(Brood_data)
@@ -231,9 +231,9 @@ create_brood_MTA <- function(mta_data) {
 
 #### CAPTURE DATA
 
-#' Create capture data table for blue tits in MTA-PE Evolutionary Ecology Group, Hungary.
+#' Create capture data table for great tits in MTA-PE Evolutionary Ecology Group, Hungary.
 #'
-#' Create a capture data table in standard format for blue tits in MTA-PE Evolutionary Ecology Group, Hungary.
+#' Create a capture data table in standard format for great tits in MTA-PE Evolutionary Ecology Group, Hungary.
 #' @param Brood_data Data frame. Brood_data from MTA-PE Evolutionary Ecology Group, Hungary.
 #' @return A data frame.
 
@@ -266,8 +266,8 @@ create_capture_MTA <- function(Brood_data) {
                   ReleaseAlive = .data$CaptureAlive,
                   CapturePopID = .data$PopID,
                   CapturePlot  = .data$Plot,
-                  ReleasePopID = ifelse(ReleaseAlive == TRUE, .data$CapturePopID, NA_character_),
-                  ReleasePlot  = ifelse(ReleaseAlive == TRUE, .data$CapturePlot, NA_character_),
+                  ReleasePopID = ifelse(.data$ReleaseAlive == TRUE, .data$CapturePopID, NA_character_),
+                  ReleasePlot  = ifelse(.data$ReleaseAlive == TRUE, .data$CapturePlot, NA_character_),
                   WingLength = NA_real_,
                   Age_observed = NA_integer_,
                   ChickAge = NA_integer_,
@@ -283,10 +283,10 @@ create_capture_MTA <- function(Brood_data) {
     # dplyr::mutate(Age_calculated = calc_age())
 
     #### OLD VERSION OF THE FUNCTION
-    calc_age(ID = IndvID,
-             Age = Age_observed,
-             Date = CaptureDate,
-             Year = BreedingSeason,
+    calc_age(ID = .data$IndvID,
+             Age = .data$Age_observed,
+             Date = .data$CaptureDate,
+             Year = .data$BreedingSeason,
              showpb = TRUE) %>%
     #### Final arrangement
     dplyr::select(.data$CaptureID, .data$IndvID, .data$Species,
