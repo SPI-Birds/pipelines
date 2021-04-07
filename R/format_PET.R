@@ -43,9 +43,6 @@
 #
 #### --------------------------------------------------------------------------~
 
-#### Temporal, as I do not have access to NDrive anymore
-# db = "~/Dropbox/POSTDOC/POSTDOC_NIOO_NETHERLANDS_2020/SPI-birds_project/data_pipeline_temp_copy/PET_Petrozavodsk_Russia"
-
 format_PET <- function(db = choose_directory(),
                        species = NULL,
                        pop = NULL,
@@ -166,9 +163,7 @@ format_PET <- function(db = choose_directory(),
                   BroodID = as.character(paste(.data$BreedingSeason, .data$TheLineOfArtificialNestBoxes,
                                                .data$NestboxID, .data$StartDateOfLaying1May1,
                                                sep = "_")),
-                  #### ADD WRYNECK TO SPECIES CODES !!!
-                  # Species = species_codes[which(species_codes$SpeciesID == XXX), ]$Species,
-                  Species = "JYNTOR",
+                  Species = species_codes[which(species_codes$SpeciesID == 8480), ]$Species,
                   FemalesRingSeries = stringr::str_replace(.data$FemalesRingSeries,
                                                            pattern = " ", replacement = ""),
                   FemaleID = if_else(!is.na(.data$FemalesRingSeries) & !is.na(.data$FemalesRing),
