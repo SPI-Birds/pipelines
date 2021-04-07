@@ -38,7 +38,8 @@ It is possible for empty columns to occur and this check will simply flag these 
 \\item \\textbf{B10}. Compare species of mother and father. The species of the parents are expected to be the same in the majority of broods. Common, biologically possible multi-species broods are flagged as 'warning'. Other combinations are flagged as 'potential error'.
 \\item \\textbf{B11}. Compare species of parents and the brood itself. The species of the parents and their brood are expected to be the same. Broods with a combination of species for which brood fostering is known to exist are flagged as 'warning'. Other combinations of species are flagged as 'potential error'.
 \\item \\textbf{B12}. Compare species of brood and the chicks in the brood. The species of the brood and the chicks are expected to be the same. Broods with a combination of species for which brood fostering is known to exist are flagged as 'warning'. Other combinations of species are flagged as 'potential error'.
-\\item \\textbf{B13}. Check that the sex of the mother and father are female and male, respectively. Broods where parents are of the opposite sex are flagged as 'potential error'.
+\\item \\textbf{B13}. Check that the sex of the mother is female. Broods where mothers are listed as male are flagged as 'potential error'.
+\\item \\textbf{B14}. Check that the sex of the father is male. Broods where fathers are listed as female are flagged as 'potential error'.
 \\end{itemize}
 
 Capture checks:
