@@ -30,7 +30,8 @@ A dummy pipeline output specifically created to test single checks from \code{\l
   \item Rows 645-646 are records that are needed to test the functionality of check 'C4: Checking that adults caught on nest are listed are the parents (see \code{\link{check_adult_parent_nest}}): a brood with the same individuals as parents as the individuals caught on that nest, and a brood with individuals different from the individuals that are caught on this nest.
   \item Rows 647-649 are records that test the functionality of check 'B11: Comparing species of brood and of parents' (see \code{\link{compare_species_brood_parents}}): a brood of the same species as both of the parents, and a brood of a different species than either of the parents.
   \item Rows 650-652 are records that test the functionality of check 'B12: Comparing species of brood and of chicks' (see \code{\link{compare_species_brood_chicks}}): a brood of the same species as the chicks in that brood, and a brood of a different species than either of the chicks in that brood.
-  \item Rows 653-654 are records that test the functionality of check 'B13: Checking sex of parents' (see \code{\link{check_sex_parents}}): a brood with a female listed under FemaleID and male listed under MaleID, and a brood with a female listed under FemaleID and a female listed under MaleID.
+  \item Rows 653-654 are records that test the functionality of check 'B13: Checking sex of mothers' (see \code{\link{check_sex_mothers}}): a brood where assigned mother is female and a brood where assigned mother is listed as male.
+  \item Rows 655-656 are records that test the functionality of check 'B14: Checking sex of fathers' (see \code{\link{check_sex_fathers}}): a brood where assigned father is male and a brood where assigned father is listed as female.
 }
 
 \strong{Capture data}:
