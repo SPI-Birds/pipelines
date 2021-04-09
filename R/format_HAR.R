@@ -1,3 +1,4 @@
+#' SOME NEW TEXT!
 #'This section provides details on data management choices that are unique to
 #'this data. For a general description of the standard protocl please see
 #'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
