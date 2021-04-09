@@ -238,7 +238,7 @@ In addition to folders for each data owner, the `data` folder contains the most 
 
 ## Naming conventions
 
-When we receive new data or start a new project all files should follow the standard naming convention.
+All files used to run pipelines and store data should follow the standard naming convention.
 
 ### Primary data
 
@@ -251,11 +251,23 @@ ABC_PrimaryData_Bluetit.csv
 
 ### Meta data
 
-All data owners should also provide 
+All data owners should also provide meta-data about their population(s) in an .xslx file with the format `X_MetaData.xlsx`, where *X* is the data owner code.
 
-All pipelines assume the primary data is stored using a standard naming protocol: `X_PrimaryData_Y`. Where *X* is the data owner code (described above) and *Y* is additional information used to distinguish between multiple primary data files. The exact naming convention of primary data for each pipeline is described in the help. *Note:* All primary data files for a given pipeline should be stored in a single folder.
+### Archive meta data
 
-This provides additional information for the SPI-Birds team, which isn't relevant for the general user.
+The folder of each data owner will also include an archive meta data .txt file (the archiving process is explained in more detail below). This file will be in the format `X_ArchiveMetaData.txt`, where *X* is the data owner code.
+
+### Additional files
+
+The data owner may provide other files (e.g. field work protocols, relevant papers). The possible types of files here is unrestricted, to the naming convention must be more flexible. Files can contain any information and be of any file type; however all files should start with the data owner code. For example, the field protocol for data owner `ABC` may be stored as:
+
+```
+ABC_FieldProtocol.docx
+```
+
+### Pipelines
+
+Code of all pipelines is stored in the /R folder of the pipelines repository. Every pipeline file should follow the naming convention `X_format.R`, where *X* is the data owner code. More details on the structure of pipeline code can be found below.
 
 <a name="workflow"/>
 
