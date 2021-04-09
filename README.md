@@ -1,4 +1,4 @@
-<h1 style="font-weight:normal" align="left">
+<h1 style="font-weight:normal" align="centre">
   &nbsp;SPI-Birds Network and Database: Pipelines&nbsp;
 </h1>
 
@@ -12,7 +12,9 @@
 
 </div>
 
-Welcome to the 
+<h2 style="font-weight:normal" align="centre">
+  &nbsp;Welcome to the pipeline repository for the SPI-Birds Network and Database. Follow this links above to visit our website, contact us via e-mail or Twitter. This README contains all the details required to work with the pipelines, including workflow guidelines for developers.&nbsp;
+</h2>
 
 <details>
 <summary>Table of Contents (general user)</summary>
