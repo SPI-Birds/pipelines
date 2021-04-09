@@ -13,11 +13,13 @@
 </div>
 
 <h3 style="font-weight:normal" align="center">
-  &nbsp;Welcome to the pipeline repository for the SPI-Birds Network and Database. Follow this links above to visit our website, contact us via e-mail or Twitter. This README contains all the details required to work with the pipelines, including workflow guidelines for developers.&nbsp;
+  &nbsp;Welcome to the pipeline repository for the SPI-Birds Network and Database. Follow the links above to visit our website, contact us via e-mail or Twitter. This README contains all the details required to work with the pipelines, including workflow guidelines for developers.&nbsp;
 </h3>
 
+---
+
 <details>
-<summary>Table of Contents (general user)</summary>
+<summary><h3>Table of Contents (general user)</h3></summary>
 
 <!-- toc -->
 [Load the pipeline package](#load)  
@@ -30,7 +32,7 @@
 </details>
 <details>
 
-<summary>Table of Contents (developers guidelines)</summary>
+<summary><h3>Table of Contents (developers guidelines)</h3></summary>
 
 <!-- toc -->
 [Data storage conventions](#storage)
