@@ -35,7 +35,11 @@
 
 [Recommended workflow](#workflow)
 
-[Dealing with new data](#newdata) 
+[Data requests](#requests)
+
+[Archiving](#archiving) 
+
+[Quality check](#quality_check)
 <!-- tocstop -->
 
 </details>
@@ -279,7 +283,7 @@ Below we describe the workflow that any developer should follow when building a 
 
 - Contact the data owner and let them know you have started to work on their data. At this point, it is usually helpful to ask about any changes or additions that may have been made to the primary data since it was first included in the SPI-Birds database.
 
-- Update the SPI-Birds Google Sheet (LINK) and list the pipeline as 'in progress'.
+- Update the SPI-Birds Google Sheet and list the pipeline as 'in progress'.
 
 ### Create a new branch
 
@@ -323,7 +327,7 @@ Below we describe the workflow that any developer should follow when building a 
 
 Every pipeline should have a set of unit tests in the /test/testthat folder using the `testthat` package.
 
-- The unit testing code for each pipeline should be stored in a file `test_X_pipeline.R`, where X is the data owner code. The unit tests should ensure that primary data has been properly converted to the standard format. This will usually involve comparing the values for a range of different individuals in the standard format (e.g. different species, different sex) to those that would be expected from the primary data. In other words, these are tests require some *manual* inspection of the primary data to determine the correct output expected for each individual. 
+- The unit testing code for each pipeline should be stored in a file `test_X_pipeline.R`, where X is the data owner code. The unit tests should ensure that primary data has been properly converted to the standard format. This will usually involve comparing the values for a range of different individuals in the standard format (e.g. different species, different sex) to those that would be expected from the primary data. In other words, these tests require some *manual* inspection of the primary data to determine the correct output expected for each individual. 
 
 - In addition, all PopIDs from the current pipeline (*Note* PopIDs NOT data owner code) should be added to l. 34 - 45 in the file `setup-xyz.R`. This will ensure that the new pipeline is run during checks and test described below.
 
@@ -450,68 +454,39 @@ The code review should ensure that there are no major bug or oversights. At this
 
 - Contact Antica to update the populations as 'available' on the website.
 
-## Create data in the standard format
+### Update and archive
 
-Each year when primary data are updated all pipelines will be re-run for all populations. This is done using the function `run_pipelines()`. This function has 4 arguments:
+- Every time a new pipeline is finished (or an old pipeline updated) we should update and archive the .standard_format folder on the N drive. More about archiving below.
 
-* path: The location of the folder where all population data is stored. Can be left blank and R will prompt you to find the folder.
-* PopID: The population code(s) for the populations where you want to run pipelines.
-* Species: The species code(s) for the species you want to use (e.g. PARMAJ for great tit). See the [SPI-Birds standard protocol](https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.1.0.pdf) for all species codes.
-* output_type: Should the data be output in R or as separate .csv files
+<a name="requests"/>
 
-For example, the below code will format great tit data from Harjavalta (Finland) and Choupal (Portugal) and output .csv files in the location where the data are stored.
+## Data requests
 
-```r
-run_pipelines(path = "C:\\all_data", PopID = c("HAR", "CHO"), Species = "PARMAJ", output_type = "csv")
-```
+- A data request will specify the PopIDs and Species of interest. We can return the relevant data in the standard format by running `subset_datarqst()` on the most recent version of the standard format in the .standard_format folder.
 
-**Note:** If you select a PopID/Species combination that does not exist, this population will be skipped.
+- You can choose to include or exclude individuals where the species is uncertain using the `include_conflicting` argument (FALSE by default).
 
-In most cases, we will want to run all pipelines together. In this case, the arguments *PopID* and *Species* can be ignored.
+- Run `quality_check()` on the subset of the standard format.
 
-## Recommended workflow
+- Provide the user with the subset of the standard format and the quality check report.
 
-*THIS WORKFLOW IS IN BETA. CHANGES NEED TO BE MADE TO STREAMLINE THE PROCESS*
+<a name="archiving"/>
 
-1. Run pipelines for populations of interest using `run_pipelines` return an R object. If you are just outputting the standard format for a user request there is no need to save the output as an .RDA file.
+## Archiving
 
-```r
-standard_format <- run_pipelines(PopID = "HOG", output_type = "R", save = FALSE)
-```
-
-2. Run the quality check on the newly created object. Generally, we will just want to pdf output. The file should be created in the working directory.
-
-```r
-quality_check(standard_format, output_format = "pdf")
-```
-
-3. For now, we need to run `run_pipelines` again to output the 4 .csv files to send to the user.
-
-```r
-run_pipelines(PopID = "HOG", output_type = "csv")
-```
-
-<a name="newdata"/>
-
-## Dealing with new data
-
-When we get updated data (or get data for a new population) we need to set up the archiving folder on the N drive using the `archive` function.
-
-* The names of primary data file(s) for each population should not be changed. When updating with data from new years, make sure the name of the new data is the same as the old data following the naming protocol described above.
-
-### New population
+### Archiving a new population
 
 1. Create a new folder in N:\Dep.AnE\SPI_Birds\data. It should follow the syntax `<OWNERID>_<PopName>_<Country>`
 2. Rename files.
     - Primary data should follow the syntax `<OWNERID>_PrimaryData`. If there are multiple primary data files provide different suffixes to differentiate them (e.g. `<OWNERID>_PrimaryData_GTData`
     - Population meta-data should follow the syntax `<OWNERID>_MetaData`
     - All other data that is not meta-data or primary data can be named in any way, but should always start with `<OWNERID>_`
-3. Create initial archive. The below code will generate a `ArchiveMetaData.txt` file and generate an archive folder for the new population. **Important**: Make sure you specify that this is the initial archive with `initial = TRUE`.
+3. Create the initial archive. The below code will generate a `ArchiveMetaData.txt` file and generate an archive folder for the new population. **Important**: Make sure you specify that this is the initial archive with `initial = TRUE`.
 ```
 archive(data_folder = "N:\Dep.AnE\SPI_Birds\data", OwnerID = <OWNERID>, new_data_date = <DATE WHEN DATA WERE RECEIVED>, initial = TRUE)
 ```
 
-### Updated population
+### Archiving updated data
 
 1. Rename new files to match existing data files (i.e. with the syntax `<OWNERID>_PrimaryData`). **Important**: Files should have the **exact** same name, otherwise the pipelines may break. If you do need to use new file names (and rework the pipeline) you will be given a prompt to continue.
 2. Decide if we are dealing with a 'minor' update (e.g. fix typos) or a 'major' update (e.g. new year of data).
@@ -521,3 +496,25 @@ archive(data_folder = "N:\Dep.AnE\SPI_Birds\data", OwnerID = <OWNERID>, update_t
         new_data_path = <LOCATION OF NEW FILES. Consider using choose.files()>,
         new_data_date = <DATE WHEN DATA WERE RECEIVED>, initial = FALSE)
 ```
+
+### Archiving standard format data
+
+THIS IS STILL DONE MANUALLY AND NEEDS TO BE UPDATED. EVERY TIME A NEW PIPELINE IS FINISHED WE SHOULD ADD THE NEWEST VERSION OF THE STANDARD FORMAT IN .standard_format AND ALSO IN A NEW FOLDER .standard_format/archive/<YYYY_MM_DD>.
+
+<a name="quality_check"/>
+
+## Quality check
+
+The `quality_check()` function is a wrapper function that combines 4 dataset-specific wrapper functions:
+- `brood_check()`
+- `capture_check()`
+- `individual_check()`
+- `location_check()`
+
+Each of the dataset-specific functions contains a series of individual quality check functions. These individual quality check functions should be named ‘check_’ or ‘compare_’ followed by a short description of the check and come with a CheckID (e.g. B2 is the second individual check within the `brood_check()` wrapper).
+
+All individual checks should function on rows and flag records as ‘warning’ (unlikely values) or ‘potential error’ (impossible values). 
+
+Approve-listed records (i.e. flagged records that are subsequently verified by data owners) should not be flagged by the checks.
+
+If the data owner verifies any records flagged by the quality check (i.e. classifies them as legitimate values) add them to `brood_approved_list.csv`, `capture_approved_list.csv`, `individual_approved_list.csv` or `location_approved_list.csv`.
