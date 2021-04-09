@@ -1,3 +1,9 @@
+#pipelines v xxxx
+
+Currently completed pipelines:
+- NIOO
+- University of Antwerp
+
 #pipelines v. 0.0.1
 
 ## Introduction to SPI-Birds pipelines
