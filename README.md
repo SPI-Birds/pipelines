@@ -1,9 +1,23 @@
+<h1 style="font-weight:normal" align="center">
+  &nbsp;SPI-Birds Network and Database: Pipelines&nbsp;
+</h1>
+
+<div align="center">
+
+&nbsp;&nbsp;&nbsp;
+<a href="spibirds@nioo.knaw.nl"><img border="0" alt="Blog" src="https://assets.dryicons.com/uploads/icon/svg/4926/home.svg" width="40" height="40"></a>&nbsp;&nbsp;&nbsp;
+<a href="mailto:info@data-vizard.com"><img border="0" alt="Email" src="https://assets.dryicons.com/uploads/icon/svg/8007/c804652c-fae4-43d7-b539-187d6a408254.svg" width="40" height="40"></a>&nbsp;&nbsp;&nbsp;
+<a href="https://twitter.com/spibirds"><img border="0" alt="Twitter" src="https://assets.dryicons.com/uploads/icon/svg/8385/c23f7ffc-ca8d-4246-8978-ce9f6d5bcc99.svg" width="40" height="40"></a>
+&nbsp;&nbsp;&nbsp;
+
+</div>
+
 ##### Table of Contents (general user) 
 [Load the pipeline package](#load)  
 
 [Pipeline documentation](#docs)
 
-[Run the pipelines for yourself](#run)  
+[Run the pipelines for yourself](#run) 
 
 
 ##### Table of Contents (developers) 
@@ -15,20 +29,20 @@
 
 # SPI-Birds pipeline: Introduction (for the general user)
 
-Welcome to the SPI-Birds pipeline package. This README will give you an introduction on how to load the package, how to find out details about each pipeline, and how to use the package for creating bird data following the [SPI-Birds community data standard](https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf) and generating standard quality checks.
+Welcome to the SPI-Birds pipeline package. This section of the README will give you an introduction on how to load the package, how to find out details about each pipeline, and how to use the package for creating bird data following the [SPI-Birds community data standard](https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf) and generating standard quality checks.
 
 <a name="load"/>
 
 ## Load the pipeline package
 
-The pipeline package can be installed in R using the following code from the `devtools` package:
+The pipeline package can be installed in R using the following code with the package `remotes`:
 
 ```
-devtools::install_github("SPI-Birds/pipelines")
+remotes::install_github("SPI-Birds/pipelines")
 library(pipelines)
 ```
 
-This will install all pipelines and quality check code on your computer and load the code into your session of R. Individual pipelines are build as separate functions for each data owner (where one data owner can administer multiple populations). Each function is given the name `format_X()` where *X* is the letter code for the data owner. The codes for different data owners and corresponding populations are described in the [SPI-Birds standard protocol](https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf). *Note* in cases where a data owner administers one population, the unique 3 letter population ID code and the data owner code are identical.
+This will install all pipelines and quality check code on your computer and attach our `pipeline` package into your session of R. Individual pipelines are build as separate functions for each data owner (where one data owner can administer multiple populations). Each function is given the name `format_X()` where *X* is the letter code for the data owner. The codes for different data owners and corresponding populations are described in the [SPI-Birds standard protocol](https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.1.0.pdf). *Note* in cases where a data owner administers one population, the unique 3 letter population ID code and the data owner code are identical.
 
 <a name="docs"/>
 
@@ -48,11 +62,13 @@ Each set of primary data is in a slightly different format. Therefore, to run al
 
 ### Setup your computer to run pipelines
 
-Pipelines for some populations require additional software and software drivers. These setup instructions describe how to install the required software for a Windows 10 64-bit operating system (on which the pipelines were built). The setup procedure should be similar for other Windows 64-bit systems, but will differ for non-Windows operating systems. If you are unsure which version of Windows is running on your computer, check 'System Type' in 'System Information'. To run the pipelines for all populations a users system must have:
+Pipelines for some populations require additional software and drivers. Setup instructions describe how to install the required software for both a Windows 10 64-bit operating system and Mac OSX. The setup procedure should be similar for other Windows 64-bit systems. If you are unsure which version of Windows is running on your computer, check 'System Type' in 'System Information'. To run the pipelines for all populations a users system must have:
 
-- Microsoft Access Driver (/*.mdb, /*.accdb)
+- Microsoft Access Driver (/*.mdb, /*.accdb) (Windows only)
 - Python 3
 - Python libraries *pandas* and *pypxlib*
+
+*Note* Users running Mac OSX will not be able to run pipelines with primary data stored in Microsoft Access format without purchasing paid drivers.
 
 ---
 
@@ -86,7 +102,7 @@ In the next window, you ***must*** add a 'Data Source Name'. Everything else can
 
 ![](https://github.com/LiamDBailey/SPIbirds/blob/master/inst/extdata/README_imgs/Add_name.jpg)
 
-Check if this driver is installed and recognised by R using the function `odbcListDrivers()` in the `odbc` package. Note that you will need to open a new session of R before the driver will appear.
+Check if this driver is installed and recognised by R using the function `odbcListDrivers()` from the `odbc` package. Note that you will need to open a new session of R before the driver will appear.
 
 ##### Python 3
 
@@ -110,11 +126,11 @@ To generate the pdf quality check report on Windows you will need to have instal
 
 At present, no free Microsoft Access Driver is available for Mac. 
 
-As a consequence, the `pipelines`package currently does not run pipelines requiring a Microsoft Access Driver (the affected pipelines are skipped and a information message displayed when attempted to run on Mac). 
+As a consequence, the `pipelines` package currently does not run pipelines requiring a Microsoft Access Driver on Mac OSX (the affected pipelines are skipped and a information message displayed when attempting to run on Mac). 
 
 ##### Python 3 for Mac
 
-The following notes detail how to set up the python environment for r-reticulate on MacOS, including necessary libraries:
+The following notes detail how to set up the python environment on MacOS, including necessary libraries:
 
 * Install Anaconda 3.X (this was last tested with 3.8)
 
@@ -147,9 +163,8 @@ With this setup, python should be good to go for extracting paradox databases.
 
 ##### Pdf compilation on Mac
 
-At present, the `pipelines`package does not create pdf outputs when run on a Mac. 
+At present, the `pipelines` package does not create pdf outputs when run on a Mac. 
 This is work in progress and will be changed in the future.
-
 
 #### Troubleshooting
 
