@@ -20,8 +20,10 @@
 [Run the pipelines for yourself](#run) 
 
 
-##### Table of Contents (developers) 
-[Primary data storage](#storage)  
+##### Table of Contents (developers guidelines)
+[Data storage conventions](#storage)
+
+[Naming conventions](#naming)
 
 [Recommended workflow](#workflow)
 
@@ -180,9 +182,7 @@ If you are still unable to run the pipelines following these setup instructions 
 
 ---
 
-### Primary data naming conventions
-
-All pipelines assume the primary data is stored using a standard naming protocol: `X_PrimaryData_Y`. Where *X* is the data owner code (described above) and *Y* is additional information used to distinguish between multiple primary data files. The exact naming convention of primary data for each pipeline is described in the help. *Note:* All primary data files for a given pipeline should be stored in a single folder.
+<a name="run"/>
 
 ### Running the pipelines
 
@@ -192,19 +192,59 @@ Once your computer is set up and primary data follow the correct naming protocol
 format_NIOO(output_type = "R")
 ```
 
-# SPI-Birds pipeline: Introduction (for the SPI-Birds team)
+If you want to run multiple pipelines at once, you can use the `run_pipelines()` function instead.
 
-This provides additional information for the SPI-Birds team, which isn't relevant for the general user.
+# Developer guidelines
 
 <a name="storage"/>
 
-## Primary data storage
+## Data storage conventions
 
-All primary data are stored within a single folder on the NIOO SPI-Birds computer. Primary data is stored following the standard naming approach described above `X_PrimaryData_Y`. In addition, you should ensure that:
+### The N drive data folder
 
-* The names of primary data file(s) for each population should not be changed. When updating with data from new years, make sure the name of the new data is the same as the old data following the naming protocol described above.
-* Data from each population should have its own folder. The folder name should include the letter code associated with the data owner (e.g. HAR for Harjavalta, NIOO for NIOO).
-* All populations folders should be stored in the same location.
+All files relevant to SPI-Birds are stored in the N drive on the NIOO server (`N:\Dep.AnE\SPI_Birds\data`). This `data` folder contains separate folders for every data owner in the format `X_Name_Country`, where *X* is the data owner code, *Name* is the name of the data owner, and *Country* is the country where the data owner is based. For example, the NIOO data are stored in the folder:
+
+```
+NIOO_NetherlandsInstituteOfEcology_Netherlands
+```
+
+### Data owner folders
+
+The folder for each data owner will contain all relevant information for all populations administered by the data owner. This will usually include:
+
+- Primary data
+- Meta data
+- Archive meta data
+- The archive folder
+
+The naming convention of each of these files is described [below](#naming).
+
+### The .standard_format folder
+
+In addition to folders for each data owner, the `data` folder contains the most recent output of all pipelines in the standard format, including an archiving folder. When a data request is made, this version of the standard format can be filtered to meet a given data request (see Data requests below). This is more efficient than re-running pipelines for each data request.
+
+<a name="naming"/>
+
+## Naming conventions
+
+When we receive new data or start a new project all files should follow the standard naming convention.
+
+### Primary data
+
+Primary data should be named with the format `X_PrimaryData_Y`. Where *X* is the data owner code (described above) and *Y* is additional information used to distinguish between multiple primary data files. For example, the a data owner `ABC` may have separate primary data files for great and blue tits. These files might then be named:
+
+```
+ABC_PrimaryData_Greattit.csv
+ABC_PrimaryData_Bluetit.csv
+```
+
+### Meta data
+
+All data owners should also provide 
+
+All pipelines assume the primary data is stored using a standard naming protocol: `X_PrimaryData_Y`. Where *X* is the data owner code (described above) and *Y* is additional information used to distinguish between multiple primary data files. The exact naming convention of primary data for each pipeline is described in the help. *Note:* All primary data files for a given pipeline should be stored in a single folder.
+
+This provides additional information for the SPI-Birds team, which isn't relevant for the general user.
 
 <a name="workflow"/>
 
@@ -254,6 +294,8 @@ run_pipelines(PopID = "HOG", output_type = "csv")
 ## Dealing with new data
 
 When we get updated data (or get data for a new population) we need to set up the archiving folder on the N drive using the `archive` function.
+
+* The names of primary data file(s) for each population should not be changed. When updating with data from new years, make sure the name of the new data is the same as the old data following the naming protocol described above.
 
 ### New population
 
