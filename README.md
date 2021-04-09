@@ -1,3 +1,5 @@
+<link rel="stylesheet" href="readme.css">
+
 <h1 style="font-weight:normal" align="center">
   &nbsp;SPI-Birds Network and Database: Pipelines&nbsp;
 </h1>
