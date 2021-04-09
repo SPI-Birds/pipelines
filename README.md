@@ -103,7 +103,7 @@ Pipelines for some populations require additional software and drivers. Setup in
 
 Firstly, you must check that you are running a 64-bit version of R. Open an R session and see whether you have 64-bit or 32-bit installation.
 
-![](https://github.com/LiamDBailey/SPIbirds/blob/master/inst/extdata/README_imgs/R_version.jpg){ width=50% }
+<img src="https://github.com/LiamDBailey/SPIbirds/blob/master/inst/extdata/README_imgs/R_version.jpg" width="100" height="100">
 
 If you do not have a 64-bit version you will need to install one [here](https://www.r-project.org/).
 
