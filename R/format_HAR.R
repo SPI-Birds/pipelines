@@ -1,8 +1,3 @@
-#'Construct standard format for data from Harjavalta, Finland.
-#'
-#'A pipeline to produce the standard format for the hole nesting bird population
-#'in Harjavalta, Finland, administered by the University of Turku.
-#'
 #'This section provides details on data management choices that are unique to
 #'this data. For a general description of the standard protocl please see
 #'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
