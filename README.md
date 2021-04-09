@@ -1,4 +1,4 @@
-<h1 style="font-weight:normal" align="center">
+<h1 style="font-weight:normal" align="left">
   &nbsp;SPI-Birds Network and Database: Pipelines&nbsp;
 </h1>
 
@@ -11,6 +11,8 @@
 &nbsp;&nbsp;&nbsp;
 
 </div>
+
+Welcome to the 
 
 <details>
 <summary>Table of Contents (general user)</summary>
