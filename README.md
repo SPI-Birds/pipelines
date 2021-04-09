@@ -23,6 +23,9 @@
 [Run the pipelines for yourself](#run) 
 <!-- tocstop -->
 
+</details>
+<details>
+
 <summary>Table of Contents (developers guidelines)</summary>
 
 <!-- toc -->
