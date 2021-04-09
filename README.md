@@ -12,22 +12,30 @@
 
 </div>
 
-##### Table of Contents (general user) 
+<details>
+<summary>Table of Contents (general user)</summary>
+
+<!-- toc -->
 [Load the pipeline package](#load)  
 
 [Pipeline documentation](#docs)
 
 [Run the pipelines for yourself](#run) 
+<!-- tocstop -->
 
+<summary>Table of Contents (developers guidelines)</summary>
 
-##### Table of Contents (developers guidelines)
+<!-- toc -->
 [Data storage conventions](#storage)
 
 [Naming conventions](#naming)
 
 [Recommended workflow](#workflow)
 
-[Dealing with new data](#newdata)  
+[Dealing with new data](#newdata) 
+<!-- tocstop -->
+
+</details>
 
 # SPI-Birds pipeline: Introduction (for the general user)
 
