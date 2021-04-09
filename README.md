@@ -267,9 +267,188 @@ ABC_FieldProtocol.docx
 
 ### Pipelines
 
-Code of all pipelines is stored in the /R folder of the pipelines repository. Every pipeline file should follow the naming convention `X_format.R`, where *X* is the data owner code. More details on the structure of pipeline code can be found below.
+Code of all pipelines is stored in the /R folder of the pipelines repository. Every pipeline file should follow the naming convention `format_X.R`, where *X* is the data owner code. More details on the structure of pipeline code can be found [below](#workflow).
 
 <a name="workflow"/>
+
+## Recommended developer workflow
+
+Below we describe the workflow that any developer should follow when building a new pipeline.
+
+### Before starting
+
+- Contact the data owner and let them know you have started to work on their data. At this point, it is usually helpful to ask about any changes or additions that may have been made to the primary data since it was first included in the SPI-Birds database.
+
+- Update the SPI-Birds Google Sheet (LINK) and list the pipeline as 'in progress'.
+
+### Create a new branch
+
+- Pull the newest version of the master branch (`git pull`).
+
+- Create a new branch from the master where you will build your pipeline (`git checkout -b new_branch_name`). Make sure the branch name is clear and concise.
+
+- As you work, you should stage (`git add format_X.R`) and commit (`git commit -m 'commit header' -m 'commit details'`) your work regularly.
+
+*Note* Commits should ideally be distinct blocks of changes with a concise header and detailed description. See some commit best practices [here](https://r-pkgs.org/git.html#commit-best-practices).
+
+- When you have finished working for a day, push your branch to the remote (`git push -u origin new_branch_name` the first time; `git push` afterwards).
+
+### Build the pipeline
+
+- In your new branch, create the new file `format_X.R` in the /R folder, where X is the data owner code.
+
+- This file should contain one parent function (`format_X()`) and at least 4 internal functions for each of the four tables in the standard format:
+    - `create_brood_X()`
+    - `create_capture_X()`
+    - `create_individual_X()`
+    - `create_location_X()`
+    
+- `format_X()` should always take 4 standard arguments:
+    * path: The location of the folder where primary data are stored. Can be left blank and R will prompt you to find the folder.
+    * PopID: The population code(s) for the populations where you want to run pipelines. Relevant for data owners that administer multiple populations.
+    * Species: The species code(s) for the species you want to use (e.g. PARMAJ for great tit). See the [SPI-Birds standard protocol](https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.1.0.pdf) for all species codes.
+    * output_type: Should the data be output in R or as separate .csv files
+    
+- These arguments are all documented under pipeline_params in the `zzz.R` file within /R.
+
+- Every function should be documented using `roxygen2`. The 'Details' section of the documentation should be used to record any decisions that were made during the pipeline construction that may be relevant for the data owner, users, or other developers.
+
+- Once a pipeline is finished, add information about the pipeline to `pop_codes.csv` and `pop_species_combos.csv` in the /inst/extdata folder.
+
+- If your pipeline works with a new species, also include this species in `species_codes.csv` in the /inst/extdata folder.
+    
+*Note:* We recommend you look at other pipelines as a guide.
+
+### Create unit tests
+
+Every pipeline should have a set of unit tests in the /test/testthat folder using the `testthat` package.
+
+- The unit testing code for each pipeline should be stored in a file `test_X_pipeline.R`, where X is the data owner code. The unit tests should ensure that primary data has been properly converted to the standard format. This will usually involve comparing the values for a range of different individuals in the standard format (e.g. different species, different sex) to those that would be expected from the primary data. In other words, these are tests require some *manual* inspection of the primary data to determine the correct output expected for each individual. 
+
+- In addition, all PopIDs from the current pipeline (*Note* PopIDs NOT data owner code) should be added to l. 34 - 45 in the file `setup-xyz.R`. This will ensure that the new pipeline is run during checks and test described below.
+
+- Each pipeline should undergo five sets of unit tests:
+    - Test standard format structure. Have the four tables Brood_data, Capture_data, Individual_data, and Location_data been created.
+    - Test brood data.
+    - Test capture data.
+    - Test individual data.
+    - Test location data.
+    
+- Once tests are written for your pipeline, check your pipeline output passes all these tests! Once you are confident your pipeline passes the tests you can then check that all other tests are still passing.
+    
+### `devtools::test()`
+
+Once you have finished the pipeline and passed relevant unit tests you should run the unit tests for *all* existing pipelines. This can be time consuming and a bit annoying, but it is important to regularly test all pipelines in case old code has broken due to e.g. package updates.
+
+*Note* To save time, we would recommend you run all pipelines using the `run_pipelines()` function (see code in l. 34 - 45 of `tests/testthat/setup-xyz.R`.) and save the output as `inst/extdata/test_data.RDS`. Assuming all tests pass, this file can will then be used every time in the checks instead of having to re-run pipelines every time.
+
+To run all unit tests you can use the code `devtools::test()` or Ctrl/Cmd + Shift + T to run the tests in the build window.
+
+### `devtools::check()`
+
+Once your branch is passing all unit tests you should next check the package structure. This will more broadly check things like the documentation, check for unreadable characters, ensure all the code can be loaded. It will also involve running the unit tests again, so it would be advisable to generate the `inst/extdata/test_data.RDS` file before running the checks.
+
+- You can check the code using `devtools::check()` or Ctrl/Cmd + Shift + E to run the tests in the build window.
+
+- Currently, the output of `devtools::check()` should include 2 known notes:
+
+```
+checking package dependencies (4.3s)
+Imports includes 26 non-default packages.
+Importing from so many packages makes the package vulnerable to any of
+them becoming unavailable.  Move as many as possible to Suggests and
+use conditionally.
+```
+
+Package dependencies are discussed in more detail below.
+
+```
+N  checking installed package size ... 
+     installed size is 30.2Mb
+     sub-directories of 1Mb or more:
+       data      1.7Mb
+       extdata  27.7Mb
+```
+
+Package size is discussed in more detail below.
+
+- *Any other ERRORS, WARNINGS, or NOTES must be fixed before continuing! Pull requests will not be accepted otherwise.*
+
+#### Tips for passing `devtools::check()`
+
+##### "no visible binding for global variable"
+
+This will often occur when working with `dplyr` code. All columns should be prefixed by `.data$`.
+
+##### "no visible global function"
+
+All functions except those in the `base` package should have the package namespace explicitly stated (e.g. `stats::na.omit`).
+
+##### "Undocumented arguments in documentation object 'XXX'"
+
+The function XXX includes and argument that is not documented with `@param` in the roxygen2 documentation code. Check for spelling mistakes!
+
+##### "Documented arguments not in \usage in documentation object 'XXX'"
+
+The function XXX includes documentation for an argument in `@param` in the roxygen2 documentation code that does not appear in the function. Check for spelling mistakes!
+
+##### "Found the following file with non-ASCII characters"
+
+Packages can only include [ASCII characters](https://theasciicode.com.ar/). You can check the character types being used in a line of code with `stringi::stri_enc_mark()`. For example:
+
+```
+#Will return ASCII
+stringi::stri_enc_mark("ABC")
+
+#Will return UTF-8
+stringi::stri_enc_mark("是")
+```
+
+Watch out for cases where slanted quotation marks are used (‘’) instead of straight ones ('')! Slanted quotation marks can often be introduced when copying text from outside R, but they are NOT ASCII.
+
+If a non-ASCII character must be used, it can be encoded with unicode `\uxxxx`.
+
+### Create a pull request
+
+Once your pipeline is stable and passes all tests and checks it should be reviewed by other developers.
+
+- Push your finished pipeline to the remote (`git push`).
+
+- Visit the [pipelines repository](https://github.com/SPI-Birds/pipelines) and open a pull request.
+
+- Request a reviewer. It is also good to let the person know directly so they don't miss it.
+
+*Note* One key aspect of the code review should also be to test the pipelines on both Mac OSX and Windows.
+
+*Note* The pull request should not be merged until after the data owner confirmation.
+
+- Once the pipeline is stable it can be updated to 'finished' in the Google Sheet.
+
+### Data owner confirmation
+
+The code review should ensure that there are no major bug or oversights. At this point, we can contact the data owner to discuss the pipeline.
+
+- Explain all decisions that were made in the pipeline.
+
+- Confirm any columns/data that were unclear/uncertain.
+
+- Ask about any other data that appear to be missing (e.g. capture data, nest box coordinates).
+
+- At this point, some changes may be needed to incorporate data owner input. If changes are made to the pipeline code it's important that unit tests and checks are run on the code again.
+
+- Record data owner approval in the Google Sheet.
+
+### Merge and quality check
+
+- Once a pipeline has approval from both the data owner and code reviewer the pull request can be merged.
+
+- At this point the working branch can be deleted from the remote and local.
+
+*Note* Remember to pull the newest version of the master branch at this point, it will include the new pipeline.
+
+- Run `quality_check()` on the standard format output from the pipeline. Send the quality check report and the standard format data to the data owner to help them improve data integrity. See more details on the quality check below.
+
+- Contact Antica to update the populations as 'available' on the website.
 
 ## Create data in the standard format
 
