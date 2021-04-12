@@ -43,11 +43,11 @@ format_GLA <- function(db = choose_directory(),
   #### Determine species and population codes for filtering
   if(is.null(species)){
 
-    species_filter <- species_codes$SpeciesID
+    species_filter <- NULL
 
   } else {
 
-    species_filter <- NULL
+    species_filter <- species
 
   }
 
@@ -86,7 +86,7 @@ format_GLA <- function(db = choose_directory(),
                   FemaleRing = as.character(.data$FemaleRing)) %>%
 
     ## Arrange
-    dplyr::arrange(.data$PopID, desc(.data$BreedingSeason), .data$LocationID, desc(.data$FirstEggDate)) %>%
+    dplyr::arrange(.data$PopID, dplyr::desc(.data$BreedingSeason), .data$LocationID, dplyr::desc(.data$FirstEggDate)) %>%
 
     ## Select variables of interest
     dplyr::select(.data$BreedingSeason, .data$LocationID, .data$PopID, .data$ReplacementClutch,
@@ -96,44 +96,39 @@ format_GLA <- function(db = choose_directory(),
     ## Create additional variables that will be used in multiple data tables
     dplyr::group_by(.data$PopID) %>%
     dplyr::mutate(BroodID = 1:length(.data$PopID),
-                  ClutchSize_max = case_when(.data$ClutchComplete == 1 ~ .data$ClutchSize,
-                                             .data$ClutchComplete ==  0 ~ Inf),
-                  Species = case_when(.data$Species == "bluti" ~ "CYACAE",
-                                      .data$Species == "greti" ~ "PARMAJ"),
+                  ClutchSize_max = dplyr::case_when(.data$ClutchComplete == 1 ~ .data$ClutchSize,
+                                                    .data$ClutchComplete ==  0 ~ Inf),
+                  Species = dplyr::case_when(.data$Species == "bluti" ~ 14620,
+                                             .data$Species == "greti" ~ 14640),
                   BroodSize_observed = .data$ClutchSize - .data$UnhatchedEggs,
-                  PopID = case_when(.data$PopID == "cashel" ~ "CAS",
-                                    .data$PopID == "garscube" ~ "GAR",
-                                    .data$PopID == "kelvingrove_park" ~ "KEL",
-                                    .data$PopID == "sallochy" ~ "SAL",
-                                    .data$PopID == "SCENE" ~ "SCE")) %>%
+                  PopID = dplyr::case_when(.data$PopID == "cashel" ~ "CAS",
+                                           .data$PopID == "garscube" ~ "GAR",
+                                           .data$PopID == "kelvingrove_park" ~ "KEL",
+                                           .data$PopID == "sallochy" ~ "SAL",
+                                           .data$PopID == "SCENE" ~ "SCE")) %>%
 
     ## Rename
-    dplyr::rename(FemaleID = FemaleRing,
-                  MaleID = MaleRing,
-                  LayDate_observed = FirstEggDate,
-                  LayDate_min = FirstEggDate,
-                  LayDate_max = LayingComplete,
-                  ClutchSize_observed = ClutchSize,
-                  HatchDate_observed = ObservedHatch,
-                  NumberFledged_observed = Fledglings) %>%
+    dplyr::rename(FemaleID = .data$FemaleRing,
+                  MaleID = .data$MaleRing,
+                  LayDate_observed = .data$FirstEggDate,
+                  LayDate_min = .data$FirstEggDate,
+                  LayDate_max = .data$LayingComplete,
+                  ClutchSize_observed = .data$ClutchSize,
+                  HatchDate_observed = .data$ObservedHatch,
+                  NumberFledged_observed = .data$Fledglings) %>%
 
     ## Adjust species names
-    dplyr::mutate(Species = dplyr::case_when(.$SpeciesID == 14400 ~ species_codes[species_codes$SpeciesID == 14400, ]$Species,
-                                             .$SpeciesID == 14640 ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
-                                             .$SpeciesID == 13490 ~ species_codes[species_codes$SpeciesID == 13490, ]$Species,
-                                             .$SpeciesID == 14620 ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
-                                             .$SpeciesID == 14790 ~ species_codes[species_codes$SpeciesID == 14790, ]$Species,
-                                             .$SpeciesID == 15980 ~ species_codes[species_codes$SpeciesID == 15980, ]$Species,
-                                             .$SpeciesID == 14610 ~ species_codes[species_codes$SpeciesID == 14610, ]$Species))
+    dplyr::mutate(Species = dplyr::case_when(.data$Species == 14640 ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
+                                             .data$Species == 14620 ~ species_codes[species_codes$SpeciesID == 14620, ]$Species))
 
 
-    ## Filter to keep only desired Species if specified
-    if(!is.null(species_filter)){
+  ## Filter to keep only desired Species if specified
+  if(!is.null(species_filter)){
 
-      data <- data %>%
-        filter(.data$Species %in% species_filter)
+    data <- data %>%
+      filter(.data$Species %in% species_filter)
 
-    }
+  }
 
   ## Filter to keep only desired Species if specified
   if(!is.null(pop_filter)){
@@ -154,7 +149,7 @@ format_GLA <- function(db = choose_directory(),
 
   #### INDIVIDUAL DATA
   message("Compiling individual information...")
-  Individual_data <- create_individual_GLA(data)
+  Individual_data <- create_individual_GLA(Capture_data)
 
   #### LOCATION DATA
   message("Compiling location information...")
@@ -204,76 +199,6 @@ format_GLA <- function(db = choose_directory(),
 #### FUNCTIONS
 #### --------------------------------------------------------------------------~
 
-#' Create individual table for great tits and blue tits in Glasgow, Scotland.
-#'
-#' Create full individual data table in standard format for great tits and blue tits in Glasgow, Scotland.
-#'
-#' @param data Data frame of modified primary data from Glasgow, Scotland.
-#'
-#' @return A data frame.
-
-create_individual_GLA <- function(data){
-
-  individual_data_template <- create_individual_data_template_fn()
-
-  Individual_data <-
-    data %>%
-
-    ## Pivot longer to make a row for each individual
-    tidyr::pivot_longer(cols=c("FemaleID","MaleID"), names_to = "Sex_observed") %>%
-    dplyr::rename(IndvID = value) %>%
-
-    ## Only keep records with band numbers
-    dplyr::filter(!(is.na(.data$IndvID))) %>%
-
-    ## Recode sexes
-    dplyr::mutate(Sex_observed = case_when(grepl("Female", .data$Sex_observed) ~ "F",
-                                           grepl("Male", .data$Sex_observed) ~ "M")) %>%
-
-    #### Format and create new data columns
-    dplyr::group_by(.data$IndvID) %>%
-    dplyr::mutate(Sex_calculated = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Sex_observed))),
-                                                     .f = ~{
-                                                       if(length(..1) == 0){
-                                                         return(NA_character_)
-                                                       } else if(length(..1) == 1){
-                                                         return(..1)
-                                                       } else {
-                                                         return("C")
-                                                       }
-                                                     }),
-                     Sex_genetic = NA_character_,
-                     Species = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Species))),
-                                              .f = ~{
-                                                if(length(..1) == 0){
-                                                  return(NA_character_)
-                                                } else if(length(..1) == 1){
-                                                  return(..1)
-                                                } else {
-                                                  return("CCCCCC")
-                                                }
-                                              }),
-                     PopID = .data$PopID,
-                     RingSeason = min(.data$BreedingSeason),
-                     RingAge = "adult") %>%
-
-    dplyr::ungroup() %>%
-
-    ## Keep only distinct records
-    dplyr::distinct(.data$IndvID, .keep_all = T) %>%
-
-    ## Remove unnecessary columns
-    dplyr::select(contains(names(individual_data_template))) %>%
-
-    ## Add missing columns
-    dplyr::bind_cols(individual_data_template[,!(names(individual_data_template) %in% names(.))]) %>%
-
-    ## Reorder columns
-    dplyr::select(names(individual_data_template))
-
-  return(Individual_data)
-
-}
 
 #' Create brood data table for great tits and blue tits in Glasgow, Scotland.
 #'
@@ -326,32 +251,31 @@ create_capture_GLA <- function(data) {
     data %>%
 
     ## Pivot longer to make a row for each individual
-    tidyr::pivot_longer(cols=c("FemaleID","MaleID"), names_to = "Sex_observed") %>%
-    dplyr::rename(IndvID = value) %>%
+    tidyr::pivot_longer(cols=c("FemaleID","MaleID"), names_to = "Sex_observed", values_to = "IndvID") %>%
 
     ## Only keep records with band numbers
     dplyr::filter(!(is.na(.data$IndvID))) %>%
 
     ## Recode sexes (here I am just going with the reported sex unlike above where I checked for consistency, something we can discuss)
-    dplyr::mutate(Sex_observed = case_when(grepl("Female", .data$Sex_observed) ~ "F",
+    dplyr::mutate(Sex_observed = dplyr::case_when(grepl("Female", .data$Sex_observed) ~ "F",
                                            grepl("Male", .data$Sex_observed) ~ "M")) %>%
 
     dplyr::group_by(.data$PopID) %>%
 
     ## UPDATE CaptureDate
-    dplyr::mutate(CaptureID = paste(.data$IndvID, row_number(), sep = "_"), ## Create CaptureID based on IndvID and the record number
+    dplyr::mutate(CaptureID = paste(.data$IndvID, dplyr::row_number(), sep = "_"), ## Create CaptureID based on IndvID and the record number
                   CaptureDate = .data$LayDate_min, ## TO FIX
                   CapturePopID = .data$PopID, ## Set CapturePopID based on PopID
                   ReleasePopID = .data$PopID, ## Set ReleasePopID
                   CaptureAlive = TRUE, ## Set CaptureAlive to T
-                  ReleaseAlive = TRUEs, ## Set ReleaseAlive to T
+                  ReleaseAlive = TRUE, ## Set ReleaseAlive to T
                   ExperimentID = dplyr::case_when(!is.na(.data$Experiment) ~
                                                     "COHORT; PARENTAGE")) %>%   ## TO FIX
 
     dplyr::ungroup() %>%
 
     ## Keep only necessary columns
-    dplyr::select(contains(names(capture_data_template))) %>%
+    dplyr::select(dplyr::contains(names(capture_data_template))) %>%
 
     ## Add missing columns
     dplyr::bind_cols(capture_data_template[,!(names(capture_data_template) %in% names(.))]) %>%
@@ -362,6 +286,69 @@ create_capture_GLA <- function(data) {
   return(Capture_data)
 
 }
+
+#' Create individual table for great tits and blue tits in Glasgow, Scotland.
+#'
+#' Create full individual data table in standard format for great tits and blue tits in Glasgow, Scotland.
+#'
+#' @param data Data frame of modified primary data from Glasgow, Scotland.
+#'
+#' @return A data frame.
+
+create_individual_GLA <- function(Capture_data){
+
+  individual_data_template <- create_individual_data_template_fn()
+
+  Individual_data <-
+    Capture_data %>%
+
+    #### Format and create new data columns
+    dplyr::group_by(.data$IndvID) %>%
+    dplyr::summarise(Sex_calculated = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Sex_observed))),
+                                                  .f = ~{
+                                                    if(length(..1) == 0){
+                                                      return(NA_character_)
+                                                    } else if(length(..1) == 1){
+                                                      return(..1)
+                                                    } else {
+                                                      return("C")
+                                                    }
+                                                  }),
+                  Sex_genetic = NA_character_,
+                  Species = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Species))),
+                                           .f = ~{
+                                             if(length(..1) == 0){
+                                               return(NA_character_)
+                                             } else if(length(..1) == 1){
+                                               return(..1)
+                                             } else {
+                                               return("CCCCCC")
+                                             }
+                                           }),
+
+                  ## Define PopID based on where individual was  first encountered
+                  PopID = .data$CapturePopID[which.min(.data$CaptureDate)],
+                  RingSeason = min(.data$BreedingSeason),
+                  RingAge = "adult") %>%
+
+    dplyr::ungroup() %>%
+
+    # Keep only distinct records
+    dplyr::distinct(.data$IndvID, .keep_all = TRUE) %>%
+
+    ## Keep only necessary columns
+    dplyr::select(dplyr::contains(names(individual_data_template))) %>%
+
+    ## Add missing columns
+    dplyr::bind_cols(individual_data_template[,!(names(individual_data_template) %in% names(.))]) %>%
+
+    ## Reorder columns
+    dplyr::select(names(individual_data_template))
+
+  return(Individual_data)
+
+}
+
 
 #' Create location data table for great tits and blue tits in Glasgow, Scotland.
 #'
@@ -385,21 +372,24 @@ create_location_GLA <- function(data) {
     dplyr::ungroup() %>%
     dplyr::mutate(NestboxID = .data$LocationID,
                   LocationType = "NB",
-                  HabitatType = case_when(.data$PopID == "GAR" ~ "urban",
+                  HabitatType = dplyr::case_when(.data$PopID == "GAR" ~ "urban",
                                           .data$PopID == "CAS" ~ "deciduous",
                                           .data$PopID == "KEL" ~ "urban",
                                           .data$PopID == "SCE" ~ "deciduous",
                                           .data$PopID == "SAL" ~ "deciduous"),
-                  Latitude  = case_when(.data$PopID == "GAR" ~ "55.9048",
-                                        .data$PopID == "CAS" ~ "56.10888",
-                                        .data$PopID == "KEL" ~ "55.8692216",
-                                        .data$PopID == "SCE" ~ "56.1291",
-                                        .data$PopID == "SAL" ~ "56.1232"),
-                  Longitude = case_when(.data$PopID == "GAR" ~ "-4.3199",
-                                        .data$PopID == "CAS" ~ "-4.57823",
-                                        .data$PopID == "KEL" ~ "-4.2818993",
-                                        .data$PopID == "SCE" ~ "-4.61478",
-                                        .data$PopID == "SAL" ~ "-4.5993")) %>%
+                  Latitude  = dplyr::case_when(.data$PopID == "GAR" ~ 55.9048,
+                                        .data$PopID == "CAS" ~ 56.10888,
+                                        .data$PopID == "KEL" ~ 55.8692216,
+                                        .data$PopID == "SCE" ~ 56.1291,
+                                        .data$PopID == "SAL" ~ 56.1232),
+                  Longitude = case_when(.data$PopID == "GAR" ~ -4.3199,
+                                        .data$PopID == "CAS" ~ -4.57823,
+                                        .data$PopID == "KEL" ~ -4.2818993,
+                                        .data$PopID == "SCE" ~ -4.61478,
+                                        .data$PopID == "SAL" ~ -4.5993)) %>%
+
+    ## Keep only necessary columns
+    dplyr::select(dplyr::contains(names(location_data_template))) %>%
 
     ## Add missing columns
     dplyr::bind_cols(location_data_template[,!(names(location_data_template) %in% names(.))]) %>%
