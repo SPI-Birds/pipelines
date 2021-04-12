@@ -216,9 +216,11 @@ create_brood_GLA <- function(data) {
   Brood_data <-
     data %>%
 
-    ## To be updated using meta-data
+    ## To be updated after speaking with data owner
     dplyr::mutate(ExperimentID = dplyr::case_when(!is.na(.data$Experiment) ~
-                                                    "COHORT; PARENTAGE")) %>%
+                                                    "COHORT; PARENTAGE"),
+                  ClutchTypeObserved = dplyr::case_when(.data$ReplacementClutch == 0 ~ "first",
+                                                        .data$ReplacementClutch > 0 ~ "second")) %>%
 
     ## Keep only necessary columns
     dplyr::select(contains(names(brood_data_template))) %>%
@@ -228,6 +230,11 @@ create_brood_GLA <- function(data) {
 
     ## Reorder columns
     dplyr::select(names(brood_data_template))
+
+    # ## Calculate clutch type
+    # dplyr::arrange(PopID, BreedingSeason, Species, FemaleID, LayDate_observed)
+    # dplyr::mutate(ClutchTypeCalculated = calc_clutchtype(data = ., na.rm = TRUE))
+
 
   return(Brood_data)
 
