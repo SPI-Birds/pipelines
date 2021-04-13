@@ -17,10 +17,28 @@ test_that("Individual data returns an expected outcome...", {
   #Individual ACJ2064
   expect_equal(subset(GLA_data, IndvID == "ACJ2064")$Sex_calculated, "F") # Should be female
   expect_equal(subset(GLA_data, IndvID == "ACJ2064")$Species, "CYACAE") # Should be a blue tit
-  expect_equal(subset(GLA_data, IndvID == "ACJ2064")$BroodIDLaid, 203)
-  expect_equal(subset(GLA_data, IndvID == "ACJ2064")$BroodIDFledged, NA_character_)
-  expect_equal(subset(GLA_data, IndvID == "ACJ2064")$RingSeason, 2020)
-  expect_equal(subset(GLA_data, IndvID == "ACJ2064")$RingAge, "adult")
+  expect_equal(subset(GLA_data, IndvID == "ACJ2064")$BroodIDLaid, NA_character_) # Should be NA
+  expect_equal(subset(GLA_data, IndvID == "ACJ2064")$BroodIDFledged, NA_character_) # Should be NA
+  expect_equal(subset(GLA_data, IndvID == "ACJ2064")$RingSeason, 2020) # Should be 2020
+  expect_equal(subset(GLA_data, IndvID == "ACJ2064")$RingAge, "adult") # Should be an adult
+
+  #Individual AXB1234
+  expect_equal(subset(GLA_data, IndvID == "AXB1234")$Sex_calculated, "M") # Should be male
+  expect_equal(subset(GLA_data, IndvID == "AXB1234")$Species, "CYACAE") # Should be a blue tit
+  expect_equal(subset(GLA_data, IndvID == "AXB1234")$BroodIDLaid, NA_character_) # Should be NA
+  expect_equal(subset(GLA_data, IndvID == "AXB1234")$BroodIDFledged, NA_character_) # Should be NA
+  expect_equal(subset(GLA_data, IndvID == "AXB1234")$RingSeason, 2020) # Should be 2020
+  expect_equal(subset(GLA_data, IndvID == "AXB1234")$RingAge, "adult") # Should be an adult
+
+  #Individual TX11924
+  expect_equal(subset(GLA_data, IndvID == "TX11924")$Sex_calculated, "C") # Should be conflicted
+  expect_equal(subset(GLA_data, IndvID == "TX11924")$Species, "CCCCCC") # Should be conflicted
+  expect_equal(subset(GLA_data, IndvID == "TX11924")$BroodIDLaid, NA_character_) # Should be NA
+  expect_equal(subset(GLA_data, IndvID == "TX11924")$BroodIDFledged, NA_character_) # Should be NA
+  expect_equal(subset(GLA_data, IndvID == "TX11924")$RingSeason, 2015) # Should be 2015 (seen in multiple years)
+  expect_equal(subset(GLA_data, IndvID == "TX11924")$RingAge, "adult") # Should be am adult
+
+
 
 
 
