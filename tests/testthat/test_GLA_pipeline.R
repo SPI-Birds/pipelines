@@ -92,8 +92,33 @@ test_that("Capture_data returns an expected outcome...", {
 
 test_that("Location_data returns an expected outcome...", {
 
+  #Take a subset of only GLA data
+  GLA_data <- dplyr::filter(pipeline_output$Individual_data, PopID %in% "CAS", "GAR", "KEL", "SAL", "SCE") %>%
+    arrange(.data$IndvID, .data$BreedingSeason)
 
+  #Test 1: Nestbox
+  #LocationType is as expected
+  expect_equal(subset(GLA_data, LocationID == "728")$LocationType, "NB")
+  #Habitat is as expected
+  expect_equal(subset(GLA_data, LocationID == "728")$HabitatType, "urban")
+  #Start season
+  expect_equal(subset(GLA_data, LocationID == "728")$StartSeason, 2015)
+  #PopID
+  expect_equal(subset(GLA_data, LocationID == "728")$PopID, "GAR")
+  #End season
+  expect_equal(subset(GLA_data, LocationID == "728")$EndSeason, NA_integer_)
 
+  #Test 2: Nestbox
+  #LocationType is as expected
+  expect_equal(subset(GLA_data, LocationID == "123")$LocationType, "NB")
+  #Habitat is as expected
+  expect_equal(subset(GLA_data, LocationID == "123")$HabitatType, "deciduous")
+  #Start season
+  expect_equal(subset(GLA_data, LocationID == "123")$StartSeason, 2014)
+  #PopID
+  expect_equal(subset(GLA_data, LocationID == "123")$PopID, "SCE")
+  #End season
+  expect_equal(subset(GLA_data, LocationID == "123")$EndSeason, NA_integer_)
 
 })
 
