@@ -13,6 +13,9 @@
 #' until year 1992, the brood has individual numerical ID. In the original primary data from data
 #' after the year 1995, there is no BroodID - therefore we create one using the "Breeding season_NestboxID_BreedingAttempt".
 #'
+#'\strong{CaptureDate}: Date of capture for the primary data until the year 1992 are not available in the digitized format,
+#'therefore the CaptureDate was artificially created as the 1st of May of the correspondent breeding year ("BreedingYear-05-01").
+#'
 #'\strong{LayDate}: In the primary data, laying date is the date on which the first egg of a clutch is laid.
 #'Expressed as days after 31st of March: 1 = April 1st, 31 = May 1st, etc.Use negative numbers for laying dates in March.
 #'
@@ -313,14 +316,14 @@ create_brood_KIL <- function(brood_data_til92, kil_data_95) {
                   ClutchSize_min = NA_integer_,
                   ClutchSize_max = NA_integer_,
                   HatchDate_observed =  as.Date(NA),
-                  HatchDate_min =  as.Date(NA),
-                  HatchDate_max =  as.Date(NA),
+                  HatchDate_min = as.Date(NA),
+                  HatchDate_max = as.Date(NA),
                   BroodSize_observed = NA_integer_,
                   BroodSize_min = NA_integer_,
                   BroodSize_max = NA_integer_,
                   FledgeDate_observed =  as.Date(NA),
-                  FledgeDate_min =  as.Date(NA),
-                  FledgeDate_max =  as.Date(NA),
+                  FledgeDate_min = as.Date(NA),
+                  FledgeDate_max = as.Date(NA),
                   ## for new version of calc_clutchtype
                   # NumberFledged_observed = as.integer(.data$NumberFledglings),
                   NumberFledged = as.integer(.data$NumberFledglings),
@@ -333,7 +336,7 @@ create_brood_KIL <- function(brood_data_til92, kil_data_95) {
                   AvgTarsus = NA_real_,
                   NumberChicksTarsus = NA_integer_,
                   #### The method used in this population is the Svensson Standard method, but
-                  #### data were provided
+                  #### data were not recorded in earlier years
                   OriginalTarsusMethod = NA_character_,
                   ExperimentID = NA_character_) %>%
     #### Even though, there are no dates for the clutch type calculation
@@ -355,7 +358,7 @@ create_brood_KIL <- function(brood_data_til92, kil_data_95) {
     #### Final arrangement
     dplyr::select(.data$BroodID, .data$PopID, .data$BreedingSeason, .data$Species,
                   .data$Plot, .data$LocationID,
-                  .data$FemaleID, MaleID,
+                  .data$FemaleID, .data$MaleID,
                   .data$ClutchType_observed, .data$ClutchType_calculated,
                   .data$LayDate_observed, .data$LayDate_min, .data$LayDate_max,
                   .data$ClutchSize_observed, .data$ClutchSize_min, .data$ClutchSize_max,
@@ -382,8 +385,8 @@ create_brood_KIL <- function(brood_data_til92, kil_data_95) {
                   #                            format = "%Y-%m-%d") + .data$LayingDate1April1St - 1,
                   LayDate = as.Date(paste(.data$BreedingSeason, "04-01", sep = "-"),
                                     format = "%Y-%m-%d") + .data$LayingDate1April1St - 1,
-                  LayDate_min =  as.Date(NA),
-                  LayDate_max =  as.Date(NA),
+                  LayDate_min = as.Date(NA),
+                  LayDate_max = as.Date(NA),
                   ClutchSize_observed = as.integer(.data$ClutchSize),
                   ClutchSize_min = NA_integer_,
                   ClutchSize_max = NA_integer_,
@@ -410,7 +413,7 @@ create_brood_KIL <- function(brood_data_til92, kil_data_95) {
                   AvgChickMass = .data$NestlingMassDay15G,
                   NumberChicksMass = NA_integer_,
                   AvgTarsus = .data$NestlingTarsusDay15Mm,
-                  NumberChicksTarsus = NA,
+                  NumberChicksTarsus = NA_integer_,
                   OriginalTarsusMethod = if_else(!is.na(.data$AvgTarsus), "alternative", NA_character_),
                   ExperimentID = NA_character_) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
@@ -446,11 +449,6 @@ create_brood_KIL <- function(brood_data_til92, kil_data_95) {
 
 #### CAPTURE DATA
 
-#### SOLVE: There is no date available, only the year.
-#### Create fake date?
-# CaptureDate = as.Date(paste0(BreedingSeason, "-05-01"))
-
-
 create_capture_KIL <- function(brood_data_til92,
                                adults_data_til92,
                                chicks_data_til92,
@@ -469,7 +467,7 @@ create_capture_KIL <- function(brood_data_til92,
     adults_data_til92 %>%
     dplyr::mutate(Sex_observed = .data$Sex,
                   #### Create the date, as there is no information
-                  CaptureDate  = as.Date(paste0(BreedingSeason, "-05-01")),
+                  CaptureDate  = as.Date(paste0(.data$BreedingSeason, "-05-01")),
                   CaptureTime  = NA_character_,
                   ObserverID   = NA_character_,
                   CaptureAlive = TRUE,
@@ -481,7 +479,7 @@ create_capture_KIL <- function(brood_data_til92,
                   Mass = NA_real_,
                   Tarsus = NA_real_,
                   #### The method used in this population is the Svensson Standard method, but
-                  #### for adults no data were provided
+                  #### for adults no data were recorded in earlier years
                   OriginalTarsusMethod = NA_character_,
                   Age_observed = case_when(.data$Age == "1" ~ 5L,
                                            .data$Age == "2" ~ 7L,
@@ -509,10 +507,9 @@ create_capture_KIL <- function(brood_data_til92,
   #### Data from 1971 to 1992
   capture_chicks_til92 <-
     chicks_data_til92 %>%
-    dplyr::mutate(RingAge = "chick",
-                  Sex_observed = .data$Sex,
+    dplyr::mutate(Sex_observed = .data$Sex,
                   #### Create the date, as there is no information
-                  CaptureDate = as.Date(paste0(BreedingSeason, "-05-01")),
+                  CaptureDate = as.Date(paste0(.data$BreedingSeason, "-05-01")),
                   CaptureTime = NA_character_,
                   ObserverID  = NA_character_,
                   CaptureAlive = TRUE,
@@ -544,8 +541,7 @@ create_capture_KIL <- function(brood_data_til92,
   #### Data after 1995
   capture_adults_95 <-
     adults_data_95 %>%
-    dplyr::mutate(RingAge = "adult",
-                  ObserverID = NA_character_,
+    dplyr::mutate(ObserverID = NA_character_,
                   LocationID = .data$NestboxID,
                   CaptureAlive = TRUE,
                   ReleaseAlive = .data$CaptureAlive,
@@ -578,7 +574,7 @@ create_capture_KIL <- function(brood_data_til92,
                   ReleasePlot  = ifelse(.data$ReleaseAlive == TRUE, .data$CapturePlot, NA_character_),
                   OriginalTarsusMethod = if_else(!is.na(.data$Tarsus), "alternative", NA_character_),
                   Age_observed = 1L,
-                  ChickAge = 15,
+                  ChickAge = 15L,
                   ExperimentID = NA_character_) %>%
     dplyr::select(-.data$NoFledglings,
                   -.data$NestlingMass15D,
@@ -593,8 +589,8 @@ create_capture_KIL <- function(brood_data_til92,
     capture_til92 %>%
     dplyr::bind_rows(capture_adults_95) %>%
     dplyr::bind_rows(capture_chicks_95) %>%
-    dplyr::group_by(IndvID) %>%
-    dplyr::arrange(BreedingSeason, CaptureDate) %>%
+    dplyr::group_by(.data$IndvID) %>%
+    dplyr::arrange(.data$BreedingSeason, .data$CaptureDate, .by_group = TRUE) %>%
     dplyr::mutate(CaptureID = paste(IndvID, row_number(), sep = "_")) %>%
     dplyr::ungroup() %>%
 
@@ -702,8 +698,8 @@ create_individual_KIL <- function(adults_data_til92,
     dplyr::bind_rows(indv_adults_til92) %>%
     dplyr::bind_rows(indv_adults_95) %>%
     dplyr::bind_rows(indv_chicks_95) %>%
-    group_by(.data$IndvID) %>%
-    dplyr::arrange(.data$IndvID, .data$RingSeason) %>%
+    dplyr::group_by(.data$IndvID) %>%
+    dplyr::arrange(.data$IndvID, .data$RingSeason, .by_group = TRUE) %>%
     dplyr::summarise(Sex_calculated = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Sex_observed))),
                                                      .f = ~{
                                                        if(length(..1) == 0){
@@ -755,7 +751,7 @@ create_location_KIL <- function(kil_data_95, Brood_data) {
     dplyr::mutate(NestboxID = .data$LocationID) %>%
     dplyr::full_join(loc_data_95, by = c("BreedingSeason", "LocationID", "NestboxID", "PopID")) %>%
     dplyr::group_by(.data$LocationID) %>%
-    dplyr::arrange(.data$BreedingSeason) %>%
+    dplyr::arrange(.data$BreedingSeason, .by_group = TRUE) %>%
     dplyr::summarise(StartSeason = first(.data$BreedingSeason),
                      #### CHECK WITH DATA OWNER
                      # EndSeason = last(.data$BreedingSeason))
