@@ -1,11 +1,3 @@
-## Housekeeping
-
-## Source functions to read in templates
-source(file = "/Users/tyson/Documents/academia/institutions/NIOO/SPI-Birds/pipelines/templates/individual_data_template_fn.R")
-source(file = "/Users/tyson/Documents/academia/institutions/NIOO/SPI-Birds/pipelines/templates/brood_data_template_fn.R")
-source(file = "/Users/tyson/Documents/academia/institutions/NIOO/SPI-Birds/pipelines/templates/capture_data_template_fn.R")
-source(file = "/Users/tyson/Documents/academia/institutions/NIOO/SPI-Birds/pipelines/templates/location_data_template_fn.R")
-
 #'Construct standard format for data from Glasgow, Scotland
 #'
 #'A pipeline to produce the standard format for the nest box population in Glasgow, Scotland, administered by Davide Dominoni.
@@ -67,8 +59,9 @@ format_GLA <- function(db = choose_directory(),
 
   message("Importing primary data...")
 
-  db <- setwd("/Users/tyson/Documents/academia/institutions/NIOO/SPI-Birds/pipelines/GLA/")
-  data <- readr::read_csv(file = paste0(db, "/GLA_PrimaryData.csv")) %>%
+
+  ## Read in primary data
+  data <- readr::read_csv(file = paste0("/Users/tyson/Documents/academia/institutions/NIOO/SPI-Birds/pipelines/GLA/GLA_PrimaryData.csv")) %>%
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
 
@@ -122,7 +115,21 @@ format_GLA <- function(db = choose_directory(),
                                              .data$Species == 14620 ~ species_codes[species_codes$SpeciesID == 14620, ]$Species))
 
 
-  ## Filter to keep only desired Species if specified
+  ## Read in additional data
+  rr.data.readr <- readr::read_csv(file = paste0("/Users/tyson/Documents/academia/institutions/NIOO/SPI-Birds/pipelines/GLA/GLA_RingingRecords.csv"),
+                                          col_types = readr::cols(.default = "?",
+                                                                  nestbox_number = "c",
+                                                                  chick_age = "c",
+                                                                  radio_tag_ID = "c",
+                                                                  sample_ID = "n",
+                                                                  colour_left_up = "c",
+                                                                  colour_left_down = "c",
+                                                                  colour_right_up = "c",
+                                                                  colour_right_down  = "c"))
+
+
+
+    ## Filter to keep only desired Species if specified
   if(!is.null(species_filter)){
 
     data <- data %>%
@@ -130,7 +137,7 @@ format_GLA <- function(db = choose_directory(),
 
   }
 
-  ## Filter to keep only desired Species if specified
+  ## Filter to keep only desired Populations if specified
   if(!is.null(pop_filter)){
 
     data <- data %>%
@@ -263,7 +270,7 @@ create_capture_GLA <- function(data) {
     ## Only keep records with band numbers
     dplyr::filter(!(is.na(.data$IndvID))) %>%
 
-    ## Recode sexes (here I am just going with the reported sex unlike above where I checked for consistency, something we can discuss)
+    ## Recode sexes
     dplyr::mutate(Sex_observed = dplyr::case_when(grepl("Female", .data$Sex_observed) ~ "F",
                                            grepl("Male", .data$Sex_observed) ~ "M")) %>%
 
