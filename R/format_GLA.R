@@ -43,9 +43,12 @@ format_GLA <- function(db = choose_directory(),
 
   }
 
+  ## Going to only keep 5 main populations (), so these will be the default filter ("CAS", "GAR", "SAL","KEL", "SCE")
+  ## Otherwise, use the specified pop filter
   if(is.null(pop)){
 
-    pop_filter <- NULL
+    pop_filter <- c("CAS", "GAR", "SAL","KEL", "SCE")
+
 
   } else {
 
@@ -58,7 +61,6 @@ format_GLA <- function(db = choose_directory(),
   #### Primary data
 
   message("Importing primary data...")
-
 
   ## Read in primary data
   data <- readr::read_csv(file = paste0("/Users/tyson/Documents/academia/institutions/NIOO/SPI-Birds/pipelines/GLA/GLA_PrimaryData.csv")) %>%
@@ -115,24 +117,60 @@ format_GLA <- function(db = choose_directory(),
                                              .data$Species == 14620 ~ species_codes[species_codes$SpeciesID == 14620, ]$Species))
 
 
+
+
   ## Read in additional data
-  rr.data.readr <- readr::read_csv(file = paste0("/Users/tyson/Documents/academia/institutions/NIOO/SPI-Birds/pipelines/GLA/GLA_RingingRecords.csv"),
-                                          col_types = readr::cols(.default = "?",
-                                                                  nestbox_number = "c",
-                                                                  chick_age = "c",
-                                                                  radio_tag_ID = "c",
-                                                                  sample_ID = "n",
-                                                                  colour_left_up = "c",
-                                                                  colour_left_down = "c",
-                                                                  colour_right_up = "c",
-                                                                  colour_right_down  = "c"))
+  rr.data <- readr::read_csv(file = paste0("/Users/tyson/Documents/academia/institutions/NIOO/SPI-Birds/pipelines/GLA/GLA_RingingRecords.csv"),
+                                   col_types = readr::cols(.default = "?",
+                                                           nestbox_number = "c",
+                                                           chick_age = "c",
+                                                           radio_tag_ID = "c",
+                                                           sample_ID = "n",
+                                                           colour_left_up = "c",
+                                                           colour_left_down = "c",
+                                                           colour_right_up = "c",
+                                                           colour_right_down  = "c")) %>%
+
+    ## Reformat
+    janitor::clean_names(case = "upper_camel") %>%
+    janitor::remove_empty(which = "rows") %>%
+
+    ## Remove unnecessary variables
+    dplyr::select(-c(.data$ColourLeftUp, .data$ColourLeftDown, .data$ColourRightUp, .data$ColourRightDown)) %>%
+
+    ## Rename variables
+    dplyr::rename(BreedingSeason = .data$Yr,
+                  PopID = .data$Site,
+                  IndvID = .data$RingNumber,
+                  LocationID = .data$NestboxNumber,
+                  CaptureDate = .data$Date,
+                  CaptureTime = .data$Time) %>%
+
+    ## Reformat variables
+    ## TODO: check about times - currently not formatted properly
+    dplyr::mutate(CaptureDate = lubridate::mdy(.data$CaptureDate),
+                  CaptureTime = NA_character_,
+                  Species = dplyr::case_when(.data$Species == "bluti" ~ 14620,
+                                             .data$Species == "greti" ~ 14640))  %>%
+    ## Adjust species names and population names
+    dplyr::mutate(Species = dplyr::case_when(.data$Species == 14640 ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
+                                             .data$Species == 14620 ~ species_codes[species_codes$SpeciesID == 14620, ]$Species),
+                  PopID = dplyr::case_when(.data$PopID == "cashel" ~ "CAS",
+                                           .data$PopID == "garscube" ~ "GAR",
+                                           .data$PopID == "kelvingrove_park" ~ "KEL",
+                                           .data$PopID == "sallochy" ~ "SAL",
+                                           .data$PopID == "SCENE" ~ "SCE"))
 
 
 
-    ## Filter to keep only desired Species if specified
+
+  ## Filter to keep only desired Species if specified
   if(!is.null(species_filter)){
 
     data <- data %>%
+      filter(.data$Species %in% species_filter)
+
+    rr.data <- rr.data %>%
       filter(.data$Species %in% species_filter)
 
   }
@@ -141,6 +179,9 @@ format_GLA <- function(db = choose_directory(),
   if(!is.null(pop_filter)){
 
     data <- data %>%
+      filter(.data$PopID %in% pop_filter)
+
+    rr.data <- rr.data %>%
       filter(.data$PopID %in% pop_filter)
 
   }
@@ -238,9 +279,9 @@ create_brood_GLA <- function(data) {
     ## Reorder columns
     dplyr::select(names(brood_data_template))
 
-    # ## Calculate clutch type
-    # dplyr::arrange(PopID, BreedingSeason, Species, FemaleID, LayDate_observed)
-    # dplyr::mutate(ClutchTypeCalculated = calc_clutchtype(data = ., na.rm = TRUE))
+  # ## Calculate clutch type
+  # dplyr::arrange(PopID, BreedingSeason, Species, FemaleID, LayDate_observed)
+  # dplyr::mutate(ClutchTypeCalculated = calc_clutchtype(data = ., na.rm = TRUE))
 
 
   return(Brood_data)
@@ -272,7 +313,7 @@ create_capture_GLA <- function(data) {
 
     ## Recode sexes
     dplyr::mutate(Sex_observed = dplyr::case_when(grepl("Female", .data$Sex_observed) ~ "F",
-                                           grepl("Male", .data$Sex_observed) ~ "M")) %>%
+                                                  grepl("Male", .data$Sex_observed) ~ "M")) %>%
 
     dplyr::group_by(.data$PopID) %>%
 
@@ -319,31 +360,31 @@ create_individual_GLA <- function(Capture_data){
     #### Format and create new data columns
     dplyr::group_by(.data$IndvID) %>%
     dplyr::summarise(Sex_calculated = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Sex_observed))),
-                                                  .f = ~{
-                                                    if(length(..1) == 0){
-                                                      return(NA_character_)
-                                                    } else if(length(..1) == 1){
-                                                      return(..1)
-                                                    } else {
-                                                      return("C")
-                                                    }
-                                                  }),
-                  Sex_genetic = NA_character_,
-                  Species = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Species))),
-                                           .f = ~{
-                                             if(length(..1) == 0){
-                                               return(NA_character_)
-                                             } else if(length(..1) == 1){
-                                               return(..1)
-                                             } else {
-                                               return("CCCCCC")
-                                             }
-                                           }),
+                                                     .f = ~{
+                                                       if(length(..1) == 0){
+                                                         return(NA_character_)
+                                                       } else if(length(..1) == 1){
+                                                         return(..1)
+                                                       } else {
+                                                         return("C")
+                                                       }
+                                                     }),
+                     Sex_genetic = NA_character_,
+                     Species = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Species))),
+                                              .f = ~{
+                                                if(length(..1) == 0){
+                                                  return(NA_character_)
+                                                } else if(length(..1) == 1){
+                                                  return(..1)
+                                                } else {
+                                                  return("CCCCCC")
+                                                }
+                                              }),
 
-                  ## Define PopID based on where individual was  first encountered
-                  PopID = .data$CapturePopID[which.min(.data$CaptureDate)],
-                  RingSeason = min(.data$BreedingSeason),
-                  RingAge = "adult") %>%
+                     ## Define PopID based on where individual was  first encountered
+                     PopID = .data$CapturePopID[which.min(.data$CaptureDate)],
+                     RingSeason = min(.data$BreedingSeason),
+                     RingAge = "adult") %>%
 
     dplyr::ungroup() %>%
 
@@ -387,15 +428,15 @@ create_location_GLA <- function(data) {
     dplyr::mutate(NestboxID = .data$LocationID,
                   LocationType = "NB",
                   HabitatType = dplyr::case_when(.data$PopID == "GAR" ~ "urban",
-                                          .data$PopID == "CAS" ~ "deciduous",
-                                          .data$PopID == "KEL" ~ "urban",
-                                          .data$PopID == "SCE" ~ "deciduous",
-                                          .data$PopID == "SAL" ~ "deciduous"),
+                                                 .data$PopID == "CAS" ~ "deciduous",
+                                                 .data$PopID == "KEL" ~ "urban",
+                                                 .data$PopID == "SCE" ~ "deciduous",
+                                                 .data$PopID == "SAL" ~ "deciduous"),
                   Latitude  = dplyr::case_when(.data$PopID == "GAR" ~ 55.9048,
-                                        .data$PopID == "CAS" ~ 56.10888,
-                                        .data$PopID == "KEL" ~ 55.8692216,
-                                        .data$PopID == "SCE" ~ 56.1291,
-                                        .data$PopID == "SAL" ~ 56.1232),
+                                               .data$PopID == "CAS" ~ 56.10888,
+                                               .data$PopID == "KEL" ~ 55.8692216,
+                                               .data$PopID == "SCE" ~ 56.1291,
+                                               .data$PopID == "SAL" ~ 56.1232),
                   Longitude = case_when(.data$PopID == "GAR" ~ -4.3199,
                                         .data$PopID == "CAS" ~ -4.57823,
                                         .data$PopID == "KEL" ~ -4.2818993,
