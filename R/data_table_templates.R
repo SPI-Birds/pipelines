@@ -102,4 +102,4 @@ location_data_template <- tibble(LocationID = NA_character_, ## Missing data not
                                  HabitatType = NA_character_)
 
 ## Save
-save(location_data_template, file = "./data/Brood_data_template.Rda")
+save(location_data_template, file = "./data/Location_data_template.Rda")
