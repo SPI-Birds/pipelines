@@ -120,7 +120,7 @@ format_GLA <- function(db = choose_directory(),
 
 
   ## Read in additional data
-  rr.data <- readr::read_csv(file = paste0("/Users/tyson/Documents/academia/institutions/NIOO/SPI-Birds/pipelines/GLA/GLA_RingingRecords.csv"),
+  rr_data <- readr::read_csv(file = paste0("/Users/tyson/Documents/academia/institutions/NIOO/SPI-Birds/pipelines/GLA/GLA_RingingRecords.csv"),
                                    col_types = readr::cols(.default = "?",
                                                            nestbox_number = "c",
                                                            chick_age = "c",
@@ -136,7 +136,7 @@ format_GLA <- function(db = choose_directory(),
     janitor::remove_empty(which = "rows") %>%
 
     ## Remove unnecessary variables
-    dplyr::select(-c(.data$ColourLeftUp, .data$ColourLeftDown, .data$ColourRightUp, .data$ColourRightDown)) %>%
+    dplyr::select(-c(.data$Fat,.data$ColourLeftUp, .data$ColourLeftDown, .data$ColourRightUp, .data$ColourRightDown)) %>%
 
     ## Rename variables
     dplyr::rename(BreedingSeason = .data$Yr,
@@ -144,7 +144,11 @@ format_GLA <- function(db = choose_directory(),
                   IndvID = .data$RingNumber,
                   LocationID = .data$NestboxNumber,
                   CaptureDate = .data$Date,
-                  CaptureTime = .data$Time) %>%
+                  CaptureTime = .data$Time,
+                  ObserverID = .data$Initial,
+                  Mass = .data$Weight,
+                  WingLength = .data$Wing,
+                  Sex_observed = .data$Sex) %>%
 
     ## Reformat variables
     ## TODO: check about times - currently not formatted properly
@@ -162,6 +166,13 @@ format_GLA <- function(db = choose_directory(),
                                            .data$PopID == "SCENE" ~ "SCE"))
 
 
+  # ## Join brood data to ring data associated with the nest based on PopID, BreedingSeason, and LocationID
+  # data.all <- rr.data %>%
+  #   filter(!(is.na(.data$LocationID)) & nchar(.data$IndvID) == 7) %>% # Filter out records without LocationID and without legitimate band numbers
+  #   left_join(data[!(is.na(data$LocationID)),],  by = c("BreedingSeason","PopID", "Species","LocationID"))  %>% # 13 extra records are created due to 'replacement clutches' or additional multiple clutches
+  #   bind_rows(rr.data[is.na(rr.data$LocationID),]) ## Bind back in rows
+  #
+  # dupes <- rr.data %>% group_by(BreedingSeason,PopID, Species,LocationID) %>% filter(n() > 1)
 
 
   ## Filter to keep only desired Species if specified
@@ -259,7 +270,12 @@ format_GLA <- function(db = choose_directory(),
 create_brood_GLA <- function(data) {
 
   ## Create brood data template
-  brood_data_template <- create_brood_data_template_fn()
+  brood_data_template <- load(file = "data/Brood_data_template.rda")
+
+  ## Relevant brood data from ringing data
+  Brood_data_rr <- rr_data <-
+    dplyr::filter(!(is.na(.data$ChicksAlive)) & is.na(.data$LocationID))
+
 
   Brood_data <-
     data %>%
@@ -300,7 +316,29 @@ create_brood_GLA <- function(data) {
 create_capture_GLA <- function(data) {
 
   ## Create capture data template
-  capture_data_template <- create_capture_data_template_fn()
+  load("data/Capture_data_template.rda")
+
+  ## Capture data from ringing records
+  Capture_data_rr <- rr_data %>%
+    dplyr::filter(!(.data$IndvID %in% c("too small", "too_small", "no_rings_COVID"))) %>% # Keep only records of banded individuals
+
+    ## Add additional data
+    dplyr::mutate(CaptureID = paste(.data$IndvID, dplyr::row_number(), sep = "_"), ## Create CaptureID based on IndvID and the record number
+                  CapturePopID = .data$PopID, ## Set CapturePopID based on PopID
+                  ReleasePopID = .data$PopID, ## Set ReleasePopID
+                  CaptureAlive = dplyr::case_when(.data$Retrap == "X" ~ FALSE,
+                                                  .data$Retrap %in% c("N", "R", "C", "U", NA) ~ TRUE), ## Set CaptureAlive to FALSE if Retrap is X, otherwise TRUE
+                  ReleaseAlive = dplyr::case_when(.data$Retrap == "X" | .data$Age == "X" ~ FALSE,
+                                                  .data$Retrap %in% c("N", "R", "C", "U", NA) ~ TRUE), ## Set ReleaseAlive to FALSE if Retrap is X and if Age is X (chick found dead at nest)
+                  ExperimentID = dplyr::case_when(.data$RadioTagFitted == TRUE | .data$RfidFitted == TRUE ~ "SURVIVAL"),
+                  Age_observed = dplyr::case_when(.data$Age == "X" ~ 1,
+                                                  .data$Age == "3J" ~ 3,
+                                                  TRUE ~ as.numeric(.data$Age)))
+
+  %>%   ## TODO
+
+    ##
+
 
   Capture_data <-
     data %>%
