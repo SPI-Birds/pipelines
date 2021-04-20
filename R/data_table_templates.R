@@ -24,7 +24,7 @@ capture_data_template <- tibble(CaptureID = NA_character_, ## Missing data not a
                                 ExperimentID = NA_character_)
 
 ## Save
-save(capture_data_template, file = "./data/Capture_data_template.Rda")
+save(capture_data_template, file = "./data/Capture_data_template.rda")
 
 ########################################################################
 ########################################################################
@@ -57,7 +57,7 @@ brood_data_template <- tibble(BroodID = NA_character_, ## Missing data not allow
                               MaleID = NA_character_,
                               ClutchType_observed = NA_character_,
                               ClutchType_calculated = NA_character_,
-                              LayDate_observed = NA_character_,
+                              LayDate_observed = as.Date(NA),
                               LayDate_min = as.Date(NA),
                               LayDate_max = as.Date(NA),
                               ClutchSize_observed = NA_integer_,
