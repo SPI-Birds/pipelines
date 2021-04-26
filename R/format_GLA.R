@@ -24,9 +24,6 @@ format_GLA <- function(db = choose_directory(),
   #Force choose_directory() if used
   force(db)
 
-  #Assign to database location
-  db <- paste0(db, "\\AMM_PrimaryData.accdb")
-
   start_time <- Sys.time()
 
   message("Importing primary data...")
@@ -64,8 +61,11 @@ format_GLA <- function(db = choose_directory(),
 
   message("Importing primary data...")
 
+  ## Set timezone
+  tz <- "Etc/GMT+1"
+
   ## Read in primary data from brood records
-  nest_data <- readxl::read_xlsx(path = paste0("/Users/tyson/Documents/academia/institutions/NIOO/SPI-Birds/pipelines/GLA/GLA_PrimaryData_Nest.xlsx"),
+  nest_data <- readxl::read_xlsx(path = paste0(db, "/GLA_PrimaryData_Nest.xlsx"),
                                  col_types = c(rep("text",11),
                                                "date","date",
                                                rep("text",3),
@@ -79,10 +79,10 @@ format_GLA <- function(db = choose_directory(),
                   LocationID = as.character(.data$NestboxNumber),
                   Species = as.character(.data$Species),
                   PopID = as.character(.data$Site),
-                  FirstEggDate = lubridate::dmy(.data$FirstEggDate),
+                  FirstEggDate = lubridate::ymd(.data$FirstEggDate),
                   LayDate_observed = .data$FirstEggDate,
-                  LayingComplete = lubridate::dmy(.data$LayingComplete),
-                  ObservedHatch = lubridate::dmy(.data$ObservedHatch),
+                  LayingComplete = lubridate::ymd(.data$LayingComplete),
+                  ObservedHatch = lubridate::ymd(.data$ObservedHatch),
                   Hatchlings = as.integer(.data$Hatchlings),
                   Fledglings = as.integer(.data$Fledglings),
                   MaleRing = as.character(.data$MaleRing),
@@ -97,17 +97,20 @@ format_GLA <- function(db = choose_directory(),
                   .data$ClutchSize, .data$HatchlingsManip, .data$ClutchComplete, .data$UnhatchedEggs, .data$Fledglings, .data$MaleRing, .data$FemaleRing) %>%
 
     ## Create additional variables that will be used in multiple data tables
-    dplyr::mutate(BroodID = dplyr::row_number(),
-                  ClutchSize_max = dplyr::case_when(.data$ClutchComplete == "TRUE" ~ as.numeric(.data$ClutchSize),
+    dplyr::mutate(ClutchSize_max = dplyr::case_when(.data$ClutchComplete == "TRUE" ~ as.numeric(.data$ClutchSize),
                                                     .data$ClutchComplete ==  "FALSE" ~ Inf),
                   Species = dplyr::case_when(.data$Species == "bluti" ~ 14620,
-                                             .data$Species == "greti" ~ 14640),
+                                             .data$Species == "greti" ~ 14640,
+                                             .data$Species == "piefl" ~ 13490,
+                                             .data$Species == "nutha" ~ 14790,
+                                             .data$Species == "tresp" ~ 15980,),
                   BroodSize_observed = as.numeric(.data$ClutchSize) - as.numeric(.data$UnhatchedEggs),
                   PopID = dplyr::case_when(.data$PopID == "cashel" ~ "CAS",
                                            .data$PopID == "garscube" ~ "GAR",
                                            .data$PopID == "kelvingrove_park" ~ "KEL",
                                            .data$PopID == "sallochy" ~ "SAL",
-                                           .data$PopID == "SCENE" ~ "SCE")) %>%
+                                           .data$PopID == "SCENE" ~ "SCE",
+                                           TRUE ~ as.character(.data$PopID))) %>%
 
     ## Rename
     dplyr::rename(FemaleID = .data$FemaleRing,
@@ -120,19 +123,20 @@ format_GLA <- function(db = choose_directory(),
 
     ## Adjust species names
     dplyr::mutate(Species = dplyr::case_when(.data$Species == 14640 ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
-                                             .data$Species == 14620 ~ species_codes[species_codes$SpeciesID == 14620, ]$Species))
+                                             .data$Species == 14620 ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
+                                             .data$Species == 13490 ~ species_codes[species_codes$SpeciesID == 13490, ]$Species,
+                                             .data$Species == 14790 ~ species_codes[species_codes$SpeciesID == 14790, ]$Species,
+                                             .data$Species == 15980 ~ species_codes[species_codes$SpeciesID == 15980, ]$Species)) %>%
 
-  s## Read in primary data from ringing records
-  rr_data <- readr::read_csv(file = paste0("/Users/tyson/Documents/academia/institutions/NIOO/SPI-Birds/pipelines/GLA/GLA_RingingRecords.csv"),
-                             col_types = readr::cols(.default = "?",
-                                                     nestbox_number = "c",
-                                                     chick_age = "n",
-                                                     radio_tag_ID = "c",
-                                                     sample_ID = "n",
-                                                     colour_left_up = "c",
-                                                     colour_left_down = "c",
-                                                     colour_right_up = "c",
-                                                     colour_right_down  = "c")) %>%
+    ## Create BroodID
+    dplyr::mutate(BroodID = dplyr::case_when(!is.na(.data$Species) ~ dplyr::row_number()))
+
+
+  ## Read in primary data from ringing records
+  rr_data <- readxl::read_xlsx(path = paste0(db, "/Users/tyson/Documents/academia/institutions/NIOO/SPI-Birds/pipelines/GLA/GLA_PrimaryData_RingingRecords.xlsx"),
+                               col_types = c(rep("text",7),
+                                             "date","date",
+                                             rep("text",31))) %>%
 
     ## Reformat
     janitor::clean_names(case = "upper_camel") %>%
@@ -161,9 +165,9 @@ format_GLA <- function(db = choose_directory(),
 
     ## Reformat variables
     ## TODO: check about times - currently not formatted properly
-    dplyr::mutate(CaptureDate = lubridate::mdy(.data$CaptureDate),
-                  CaptureTime = NA_character_,
-                  ChickAge = as.integer(ChickAge),
+    dplyr::mutate(CaptureDate = lubridate::ymd(.data$CaptureDate),
+                  CaptureTime = format(CaptureTime, format = "%H:%M:%S"),
+                  ChickAge = as.integer(ChickAge), # Small number of records entered as 11+12. These becomes NA
                   Species = dplyr::case_when(.data$Species == "bluti" ~ 14620,
                                              .data$Species == "greti" ~ 14640),
                   Age_observed = dplyr::case_when(.data$Age_observed == "X" ~ 1L,
