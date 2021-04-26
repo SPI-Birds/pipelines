@@ -13,6 +13,8 @@
 #'@return Generates either 4 .csv files or 4 data frames in the standard format.
 #'@export
 
+library(readxl)
+
 format_GLA <- function(db = choose_directory(),
                        path = ".",
                        species = NULL,
@@ -63,7 +65,12 @@ format_GLA <- function(db = choose_directory(),
   message("Importing primary data...")
 
   ## Read in primary data from brood records
-  nest_data <- readr::read_csv(file = paste0("/Users/tyson/Documents/academia/institutions/NIOO/SPI-Birds/pipelines/GLA/GLA_PrimaryData.csv")) %>%
+  nest_data <- readxl::read_xlsx(path = paste0("/Users/tyson/Documents/academia/institutions/NIOO/SPI-Birds/pipelines/GLA/GLA_PrimaryData_Nest.xlsx"),
+                                 col_types = c(rep("text",11),
+                                               "date","date",
+                                               rep("text",3),
+                                               "date", "date",
+                                               rep("text",23))) %>%
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
 
@@ -84,21 +91,18 @@ format_GLA <- function(db = choose_directory(),
     ## Arrange
     dplyr::arrange(.data$PopID, dplyr::desc(.data$BreedingSeason), .data$LocationID, .data$FirstEggDate) %>%
 
-    ## Create BroodID
-    dplyr::mutate(BroodID = dplyr::row_number()) %>%
-
     ## Select variables of interest
     dplyr::select(.data$BreedingSeason, .data$LocationID, .data$PopID, .data$ReplacementClutch,
                   .data$Experiment, .data$Treatment, .data$Species, .data$LayDate_observed, .data$FirstEggDate,  .data$LayingComplete, .data$ExpectedHatch, .data$ObservedHatch,
                   .data$ClutchSize, .data$HatchlingsManip, .data$ClutchComplete, .data$UnhatchedEggs, .data$Fledglings, .data$MaleRing, .data$FemaleRing) %>%
 
     ## Create additional variables that will be used in multiple data tables
-    dplyr::mutate(BroodID = 1:length(.data$PopID),
-                  ClutchSize_max = dplyr::case_when(.data$ClutchComplete == 1 ~ .data$ClutchSize,
-                                                    .data$ClutchComplete ==  0 ~ Inf),
+    dplyr::mutate(BroodID = dplyr::row_number(),
+                  ClutchSize_max = dplyr::case_when(.data$ClutchComplete == "TRUE" ~ as.numeric(.data$ClutchSize),
+                                                    .data$ClutchComplete ==  "FALSE" ~ Inf),
                   Species = dplyr::case_when(.data$Species == "bluti" ~ 14620,
                                              .data$Species == "greti" ~ 14640),
-                  BroodSize_observed = .data$ClutchSize - .data$UnhatchedEggs,
+                  BroodSize_observed = as.numeric(.data$ClutchSize) - as.numeric(.data$UnhatchedEggs),
                   PopID = dplyr::case_when(.data$PopID == "cashel" ~ "CAS",
                                            .data$PopID == "garscube" ~ "GAR",
                                            .data$PopID == "kelvingrove_park" ~ "KEL",
@@ -118,7 +122,7 @@ format_GLA <- function(db = choose_directory(),
     dplyr::mutate(Species = dplyr::case_when(.data$Species == 14640 ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
                                              .data$Species == 14620 ~ species_codes[species_codes$SpeciesID == 14620, ]$Species))
 
-  ## Read in primary data from ringing records
+  s## Read in primary data from ringing records
   rr_data <- readr::read_csv(file = paste0("/Users/tyson/Documents/academia/institutions/NIOO/SPI-Birds/pipelines/GLA/GLA_RingingRecords.csv"),
                              col_types = readr::cols(.default = "?",
                                                      nestbox_number = "c",
@@ -294,8 +298,9 @@ create_brood_GLA <- function(brood_data, rr_data) {
                      NumberChicksTarsus = n_distinct(IndvID[ChickAge <= 16 & ChickAge >= 14], na.rm = T)) %>%
 
     ## Replace NaNs and 0 with NA
-    dplyr::mutate(dplyr::across(tidyselect::where(is.numeric), ~na_if(., "NaN"))) %>%
-    dplyr::mutate(dplyr::across(tidyselect::where(is.numeric), ~na_if(., 0)))
+    ## TODO: Apparently there is some weirdness with 'where' not being exported by a package and utils::globalVariables("where") needs to be called somewhere
+    dplyr::mutate(dplyr::across(where(is.numeric), ~na_if(., "NaN"))) %>%
+    dplyr::mutate(dplyr::across(where(is.numeric), ~na_if(., 0)))
 
 
   ## Get brood data from nest records
