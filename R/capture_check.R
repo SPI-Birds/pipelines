@@ -304,7 +304,8 @@ check_values_capture <- function(Capture_data, var, approved_list) {
                          Error_max = 4 * .data$Warning_max,
                          n = n(),
                          Logis = FALSE) %>%
-        dplyr::rename(PopID = .data$CapturePopID)
+        dplyr::rename(PopID = .data$CapturePopID) %>%
+        dplyr::mutate_at(c("Warning_min", "Warning_max", "Error_min", "Error_max"), ~round(., 2))
 
       # Print message for population-species combinations with too low number of observations
       if(any(ref$n < 100)) {
@@ -336,13 +337,14 @@ check_values_capture <- function(Capture_data, var, approved_list) {
         dplyr::filter(!is.na(!!rlang::sym(var)), !is.na(.data$Species), .data$Age_calculated > 3) %>%
         dplyr::group_by(.data$Species, .data$CapturePopID) %>%
         dplyr::summarise(Stage = "Adult",
-                         Warning_min = round(stats::quantile(!!rlang::sym(var), probs = 0.01, na.rm = TRUE), 1),
-                         Warning_max = round(stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE), 1),
+                         Warning_min = stats::quantile(!!rlang::sym(var), probs = 0.01, na.rm = TRUE),
+                         Warning_max = stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE),
                          Error_min = 0,
                          Error_max = 4 * .data$Warning_max,
                          n = n(),
                          Logis = FALSE) %>%
-        dplyr::rename(PopID = .data$CapturePopID)
+        dplyr::rename(PopID = .data$CapturePopID) %>%
+        dplyr::mutate_at(c("Warning_min", "Warning_max", "Error_min", "Error_max"), ~round(., 2))
 
       # Print message for population-species combinations with too low number of observations for adults
       if(any(ref_adults$n < 100)) {
@@ -394,8 +396,8 @@ check_values_capture <- function(Capture_data, var, approved_list) {
               ..1 %>%
                 dplyr::mutate(Stage = as.character(.data$ChickAge)) %>%
                 dplyr::group_by(.data$Species, .data$CapturePopID, .data$Stage) %>%
-                dplyr::summarise(Warning_min = round(stats::quantile(!!rlang::sym(var), probs = 0.01, na.rm = TRUE), 1),
-                                 Warning_max = round(stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE), 1),
+                dplyr::summarise(Warning_min = stats::quantile(!!rlang::sym(var), probs = 0.01, na.rm = TRUE),
+                                 Warning_max = stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE),
                                  Error_min = 0,
                                  Error_max = 4 * .data$Warning_max,
                                  n = n(),
@@ -406,7 +408,8 @@ check_values_capture <- function(Capture_data, var, approved_list) {
 
           return(out)
 
-        })
+        })  %>%
+        dplyr::mutate_at(c("Warning_min", "Warning_max", "Error_min", "Error_max"), ~round(., 2))
 
       # Print message for population-species combinations with too low number of observations for chicks
       if(any(ref_chicks$Logis == FALSE & ref_chicks$n < 100)) {
@@ -750,7 +753,7 @@ check_values_capture <- function(Capture_data, var, approved_list) {
 
         low_obs_chicks <- ref_chicks %>%
           dplyr::filter(is.na(.data$Stage) | (.data$Logis == FALSE & .data$n < 100)) %>%
-          dplyr::select(.data$Species, .data$PopID)
+          dplyr::select(.data$Species, .data$PopID, .data$Stage)
 
         skipped_chicks_output <- purrr::pmap(.l = list(low_obs_chicks$Species,
                                                        low_obs_chicks$PopID,
