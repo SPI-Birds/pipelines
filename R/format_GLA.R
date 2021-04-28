@@ -12,7 +12,7 @@
 #'Three records have ring numbers that are six characters and these are probably incorrect.
 #'
 #'\strong{CaptureDate}: Some individuals were not recorded in the ringing records, but were observed breeding at a monitored nest.
-#'For these individuals, the CaptureDate is given as June 1st of the breeding year.
+#'For these individuals, the CaptureDate is set as June 1st of the breeding year.
 #'
 #'@inheritParams pipeline_params
 #'
@@ -46,7 +46,7 @@ format_GLA <- function(db = choose_directory(),
 
   }
 
-  ## Going to only keep 5 main populations (), so these will be the default filter ("CAS", "GAR", "SAL","KEL", "SCE")
+  ## Going to only keep 5 main populations, so these will be the default filter ("CAS", "GAR", "SAL","KEL", "SCE")
   ## Otherwise, use the specified pop filter
   if(is.null(pop)){
 
@@ -83,7 +83,6 @@ format_GLA <- function(db = choose_directory(),
                   FirstEggDate = case_when(grepl("/", .data$FirstEggDate) ~ lubridate::dmy(.data$FirstEggDate),
                                                TRUE ~ janitor::excel_numeric_to_date(as.numeric(.data$FirstEggDate))),
 
-
                   LayingComplete = case_when(grepl("/", .data$LayingComplete) ~ lubridate::dmy(.data$LayingComplete),
                                              TRUE ~ janitor::excel_numeric_to_date(as.numeric(.data$LayingComplete))),
 
@@ -101,40 +100,34 @@ format_GLA <- function(db = choose_directory(),
     ## Select variables of interest
     dplyr::select(.data$BreedingSeason, .data$LocationID, .data$PopID, .data$ReplacementClutch,
                   .data$Experiment, .data$Treatment, .data$Species, .data$FirstEggDate,  .data$LayingComplete, .data$ObservedHatch,
-                  .data$ClutchSize, .data$HatchlingsManip, .data$ClutchComplete, .data$UnhatchedEggs, .data$Fledglings, .data$MaleRing, .data$FemaleRing) %>%
+                  .data$ClutchSize, .data$HatchlingsManip, .data$ClutchComplete, .data$UnhatchedEggs,
+                  .data$Fledglings, .data$MaleRing, .data$FemaleRing) %>%
 
     ## Create additional variables that will be used in multiple data tables
     dplyr::mutate(ClutchSize_max = dplyr::case_when(.data$ClutchComplete == "TRUE" ~ as.numeric(.data$ClutchSize),
                                                     .data$ClutchComplete ==  "FALSE" ~ Inf),
-                  Species = dplyr::case_when(.data$Species == "bluti" ~ 14620,
-                                             .data$Species == "greti" ~ 14640,
-                                             .data$Species == "piefl" ~ 13490,
-                                             .data$Species == "nutha" ~ 14790,
-                                             .data$Species == "tresp" ~ 15980,),
+                  Species = dplyr::case_when(.data$Species == "bluti" ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
+                                             .data$Species == "greti" ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
+                                             .data$Species == "piefl" ~ species_codes[species_codes$SpeciesID == 13490, ]$Species,
+                                             .data$Species == "nutha" ~ species_codes[species_codes$SpeciesID == 14790, ]$Species,
+                                             .data$Species == "tresp" ~ species_codes[species_codes$SpeciesID == 15980, ]$Species),
                   BroodSize_observed = as.numeric(.data$ClutchSize) - as.numeric(.data$UnhatchedEggs),
                   PopID = dplyr::case_when(.data$PopID == "cashel" ~ "CAS",
                                            .data$PopID == "garscube" ~ "GAR",
                                            .data$PopID == "kelvingrove_park" ~ "KEL",
                                            .data$PopID == "sallochy" ~ "SAL",
                                            .data$PopID == "SCENE" ~ "SCE",
-                                           TRUE ~ as.character(.data$PopID))) %>%
+                                           TRUE ~ as.character(.data$PopID)),
+                  LayDate_observed = .data$FirstEggDate) %>%
 
     ## Rename
     dplyr::rename(FemaleID = .data$FemaleRing,
                   MaleID = .data$MaleRing,
-                  LayDate_observed = .data$FirstEggDate,
                   LayDate_min = .data$FirstEggDate,
                   LayDate_max = .data$LayingComplete,
                   ClutchSize_observed = .data$ClutchSize,
                   HatchDate_observed = .data$ObservedHatch,
                   NumberFledged_observed = .data$Fledglings) %>%
-
-    ## Adjust species names
-    dplyr::mutate(Species = dplyr::case_when(.data$Species == 14640 ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
-                                             .data$Species == 14620 ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
-                                             .data$Species == 13490 ~ species_codes[species_codes$SpeciesID == 13490, ]$Species,
-                                             .data$Species == 14790 ~ species_codes[species_codes$SpeciesID == 14790, ]$Species,
-                                             .data$Species == 15980 ~ species_codes[species_codes$SpeciesID == 15980, ]$Species)) %>%
 
     ## Create BroodID
     dplyr::mutate(BroodID = dplyr::case_when(!is.na(.data$Species) ~ dplyr::row_number()))
@@ -179,17 +172,17 @@ format_GLA <- function(db = choose_directory(),
                   Tarsus = as.numeric(.data$Tarsus),
                   WingLength = as.numeric(.data$WingLength),
                   ChickAge = as.integer(.data$ChickAge), # Small number of records entered as 11+12. These becomes NA
-                  Species = dplyr::case_when(.data$Species == "bluti" ~ 14620,
-                                             .data$Species == "greti" ~ 14640),
+                  Species = dplyr::case_when(.data$Species == "bluti" ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
+                                             .data$Species == "greti" ~ species_codes[species_codes$SpeciesID == 14640, ]$Species),
+
+                  ## TODO: check about meaning of 3J
                   Age_observed = dplyr::case_when(.data$Age == "X" ~ 1L,
                                                   .data$Age == "3J" ~ 3L,
                                                   TRUE ~ as.integer(.data$Age)),
                   BreedingSeason = as.numeric(.data$BreedingSeason))  %>%
 
     ## Adjust species names and population names
-    dplyr::mutate(Species = dplyr::case_when(.data$Species == 14640 ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
-                                             .data$Species == 14620 ~ species_codes[species_codes$SpeciesID == 14620, ]$Species),
-                  PopID = dplyr::case_when(.data$PopID == "cashel" ~ "CAS",
+    dplyr::mutate(PopID = dplyr::case_when(.data$PopID == "cashel" ~ "CAS",
                                            .data$PopID == "garscube" ~ "GAR",
                                            .data$PopID == "kelvingrove_park" ~ "KEL",
                                            .data$PopID == "sallochy" ~ "SAL",
@@ -222,19 +215,19 @@ format_GLA <- function(db = choose_directory(),
 
   #### BROOD DATA
   message("Compiling brood information...")
-  Brood_data <- create_brood_GLA(data)
+  Brood_data <- create_brood_GLA(nest_data, rr_data)
 
   #### CAPTURE DATA
   message("Compiling capture information...")
-  Capture_data <- create_capture_GLA(data)
+  Capture_data <- create_capture_GLA(nest_data, rr_data)
 
   #### INDIVIDUAL DATA
   message("Compiling individual information...")
-  Individual_data <- create_individual_GLA(Capture_data)
+  Individual_data <- create_individual_GLA(Capture_data, Brood_data)
 
   #### LOCATION DATA
   message("Compiling location information...")
-  Location_data <- create_location_GLA(data)
+  Location_data <- create_location_GLA(rr_data, nest_data)
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
@@ -280,18 +273,17 @@ format_GLA <- function(db = choose_directory(),
 #'
 #' Create brood data table in standard format for Glasgow, Scotland.
 #'
-#' @param data Data frame of modified primary data from Glasgow, Scotland.
+#' @param nest_data Data frame of nest data from Glasgow, Scotland.
+#'
+#' @param rr_data Data frame of ringing records from Glasgow, Scotland.
 #'
 #' @return A data frame.
 
 create_brood_GLA <- function(nest_data, rr_data) {
 
-  ## Create brood data template
-  load(file = "data/Brood_data_template.rda")
-
   ## Get brood data from ringing records
   rr_data_brood_sum <- rr_data %>%
-    dplyr::filter(is.na(.data$LocationID) == F) %>%
+    dplyr::filter(is.na(.data$LocationID) == FALSE) %>%
 
     ## Determine whether a chick or adult - done for each observation since there is no unique identifier for individuals
     dplyr::mutate(RingAge = ifelse(.data$Age_observed == 1, "chick", "adult")) %>%
@@ -301,12 +293,20 @@ create_brood_GLA <- function(nest_data, rr_data) {
 
     ## Summarize brood information for each nest
     dplyr::group_by(.data$BreedingSeason, .data$PopID, .data$LocationID) %>%
+
+    dplyr::summarise(Species = unique(.data$Species, na.rm = T),
+                     FemaleID = unique(.data$MotherRing, na.rm = T),
+                     MaleID = unique(.data$FatherRing, na.rm = T))
+
+
+
+
     dplyr::summarise(Species = names(which.max(table(.data$Species, useNA = "always"))),
                      FemaleID = names(which.max(table(.data$MotherRing, useNA = "always"))),
                      MaleID = names(which.max(table(.data$FatherRing, useNA = "always"))),
-                     AvgChickMass = round(mean(Mass[ChickAge <= 16 & ChickAge >= 14], na.rm = T),1),
+                     AvgChickMass = round(mean(Mass[ChickAge <= 16 & ChickAge >= 14], na.rm = TRUE),1),
                      NumberChicksMass = length(IndvID[ChickAge <= 16 & ChickAge >= 14]),
-                     AvgTarsus = round(mean(Tarsus[ChickAge <= 16 & ChickAge >= 14], na.rm = T),1),
+                     AvgTarsus = round(mean(Tarsus[ChickAge <= 16 & ChickAge >= 14], na.rm = TRUE),1),
                      NumberChicksTarsus = length(IndvID[ChickAge <= 16 & ChickAge >= 14])) %>%
 
     ## Replace NaNs and 0 with NA
@@ -581,7 +581,7 @@ create_individual_GLA <- function(Capture_data, Brood_data){
 #'
 #' @return A data frame.
 
-create_location_GLA <- function(data) {
+create_location_GLA <- function(rr_data, nest_data) {
 
   ## Create location data template
   load("data/Location_data_template.rda")
