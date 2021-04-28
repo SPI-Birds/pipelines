@@ -7,7 +7,7 @@
 #' @param R_data Output of pipeline as an R object. Generated using
 #' \code{output_type = R} in \code{\link{run_pipelines}}.
 #' @param output \code{TRUE} or \code{FALSE}. If \code{TRUE}, a report is produced. Default: \code{TRUE}.
-#' @param output_format Character. Format of output report. Options: \code{"html"}, \code{"pdf"}, or \code{"both"}. Default: \code{"both"}.
+#' @param output_format Character. Format of output report. Options: "html", "pdf", and "both" (default).
 #' @param output_file Character. Name of the output file. Default: "output_report".
 #' @param latex_engine Character. LaTeX engine for producing PDF output. Options are "pdflatex" (default), "xelatex", and "lualatex". NB: pdfLaTeX and XeLaTeX have memory limit restrictions, which can be problematic when generating large pdfs. LuaLaTeX has dynamic memory management which may help for generating large pdfs.
 #' @param check_format \code{TRUE} or \code{FALSE}. If \code{TRUE}, the checks on variable format (i.e. \code{\link{check_format_brood}}, \code{\link{check_format_capture}}, \code{\link{check_format_individual}} and \code{\link{check_format_location}}) are included in the quality check. Default: \code{TRUE}.
