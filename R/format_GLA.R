@@ -6,14 +6,19 @@
 #'this data. For a general description of the standard format please see
 #'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 #'
-#'\strong{Species}:
+#'\strong{Species}: Primarily great tits and blue tits, but a few records of Eurasian tree sparrows, pied flycatchers, and Eurasian nuthatch.
 #'
+#'\strong{IndvID}: Should be a 7 alphanumeric character string.
+#'Three records have ring numbers that are six characters and these are probably incorrect.
+#'
+#'\strong{CaptureDate}: Some individuals were not recorded in the ringing records, but were observed breeding at a monitored nest.
+#'For these individuals, the CaptureDate is given as June 1st of the breeding year.
+#'
+#'\strong{}
 #'@inheritParams pipeline_params
 #'
 #'@return Generates either 4 .csv files or 4 data frames in the standard format.
 #'@export
-
-library(readxl)
 
 format_GLA <- function(db = choose_directory(),
                        path = ".",
@@ -133,7 +138,7 @@ format_GLA <- function(db = choose_directory(),
 
 
   ## Read in primary data from ringing records
-  rr_data <- readxl::read_xlsx(path = paste0(db, "/Users/tyson/Documents/academia/institutions/NIOO/SPI-Birds/pipelines/GLA/GLA_PrimaryData_RingingRecords.xlsx"),
+  rr_data <- readxl::read_xlsx(path = paste0(db, "/GLA_PrimaryData_RingingRecords.xlsx"),
                                col_types = c(rep("text",7),
                                              "date","date",
                                              rep("text",31))) %>%
@@ -164,15 +169,19 @@ format_GLA <- function(db = choose_directory(),
                   Age_observed = .data$Age) %>%
 
     ## Reformat variables
-    ## TODO: check about times - currently not formatted properly
+    ## TODO: check about times
     dplyr::mutate(CaptureDate = lubridate::ymd(.data$CaptureDate),
-                  CaptureTime = format(CaptureTime, format = "%H:%M:%S"),
-                  ChickAge = as.integer(ChickAge), # Small number of records entered as 11+12. These becomes NA
+                  CaptureTime = format(.data$CaptureTime, format = "%H:%M:%S"),
+                  Mass = as.numeric(.data$Mass),
+                  Tarsus = as.numeric(.data$Mass),
+                  WingLength = as.numeric(.data$WingLength),
+                  ChickAge = as.integer(.data$ChickAge), # Small number of records entered as 11+12. These becomes NA
                   Species = dplyr::case_when(.data$Species == "bluti" ~ 14620,
                                              .data$Species == "greti" ~ 14640),
                   Age_observed = dplyr::case_when(.data$Age_observed == "X" ~ 1L,
                                                   .data$Age_observed == "3J" ~ 3L,
-                                                  TRUE ~ as.integer(.data$Age_observed)))  %>%
+                                                  TRUE ~ as.integer(.data$Age_observed)),
+                  BreedingSeason = as.numeric(.data$BreedingSeason))  %>%
     ## Adjust species names and population names
     dplyr::mutate(Species = dplyr::case_when(.data$Species == 14640 ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
                                              .data$Species == 14620 ~ species_codes[species_codes$SpeciesID == 14620, ]$Species),
@@ -223,11 +232,6 @@ format_GLA <- function(db = choose_directory(),
   message("Compiling location information...")
   Location_data <- create_location_GLA(data)
 
-  #### FINAL ARRANGEMENT
-  Capture_data <-
-    Capture_data %>%
-    dplyr::filter(!is.na(.data$CaptureDate))
-
   time <- difftime(Sys.time(), start_time, units = "sec")
 
   message(paste0("All tables generated in ", round(time, 2), " seconds"))
@@ -276,7 +280,7 @@ format_GLA <- function(db = choose_directory(),
 #'
 #' @return A data frame.
 
-create_brood_GLA <- function(brood_data, rr_data) {
+create_brood_GLA <- function(nest_data, rr_data) {
 
   ## Create brood data template
   load(file = "data/Brood_data_template.rda")
@@ -291,7 +295,7 @@ create_brood_GLA <- function(brood_data, rr_data) {
     ## Keeping chicks
     dplyr::filter(RingAge == "chick") %>%
 
-    ## Summarize brood information. Will fail if multiple unique species, male IDs or female IDs within a nest
+    ## Summarize brood information for each nest
     dplyr::group_by(.data$BreedingSeason, .data$PopID, .data$LocationID) %>%
     dplyr::summarise(Species = names(which.max(table(.data$Species, useNA = "always"))),
                      FemaleID = names(which.max(table(.data$MotherRing, useNA = "always"))),
@@ -302,9 +306,9 @@ create_brood_GLA <- function(brood_data, rr_data) {
                      NumberChicksTarsus = n_distinct(IndvID[ChickAge <= 16 & ChickAge >= 14], na.rm = T)) %>%
 
     ## Replace NaNs and 0 with NA
-    ## TODO: Apparently there is some weirdness with 'where' not being exported by a package and utils::globalVariables("where") needs to be called somewhere
-    dplyr::mutate(dplyr::across(where(is.numeric), ~na_if(., "NaN"))) %>%
-    dplyr::mutate(dplyr::across(where(is.numeric), ~na_if(., 0)))
+    ## TODO: Apparently there is some weirdness with 'where' not being exported by any package and utils::globalVariables("where") needs to be called somewhere
+    dplyr::mutate(dplyr::across(where(is.numeric), ~na_if(., "NaN")),
+                  dplyr::across(where(is.numeric), ~na_if(., 0)))
 
 
   ## Get brood data from nest records
@@ -370,7 +374,7 @@ create_brood_GLA <- function(brood_data, rr_data) {
 #'
 #' @return A data frame.
 
-create_capture_GLA <- function(data) {
+create_capture_GLA <- function(rr_data, nest_data) {
 
   ## Create capture data template
   load("data/Capture_data_template.rda")
@@ -422,7 +426,7 @@ create_capture_GLA <- function(data) {
     dplyr::mutate(CapturePopID = .data$PopID) %>%
 
     ## TODO: Check on Capture Date
-    dplyr::mutate(CaptureDate = .data$LayDate_min, ## TODO: Check on determining CaptureDate
+    dplyr::mutate(CaptureDate = as.Date(paste0(.data$BreedingSeason, "-06-01")), ## TODO: Check on determining CaptureDate
                   CapturePopID = .data$PopID, ## Set CapturePopID based on PopID
                   ReleasePopID = .data$PopID, ## Set ReleasePopID
                   CaptureAlive = TRUE, ## Set CaptureAlive to T
@@ -450,17 +454,17 @@ create_capture_GLA <- function(data) {
     dplyr::bind_rows(brood_recs_unique) %>%
 
     ##  Change column class
-    dplyr::mutate(BreedingSeason = as.integer(BreedingSeason)) %>%
+    dplyr::mutate(BreedingSeason = as.integer(.data$BreedingSeason)) %>%
 
     ## Arrange
-    dplyr::arrange(IndvID, CaptureDate) %>%
-    dplyr::group_by(IndvID) %>%
+    dplyr::arrange(.data$IndvID, .data$CaptureDate) %>%
+    dplyr::group_by(.data$IndvID) %>%
 
     ## Calculate age
-    calc_age(ID = IndvID,
-             Age = Age_observed,
-             Date = CaptureDate,
-             Year = BreedingSeason) %>%
+    calc_age(ID = .data$IndvID,
+             Age = .data$Age_observed,
+             Date = .data$CaptureDate,
+             Year = .data$BreedingSeason) %>%
 
     ## Arrange
     dplyr::arrange(.data$BreedingSeason, .data$CapturePopID, .data$IndvID, .data$CaptureDate) %>%
@@ -534,7 +538,7 @@ create_individual_GLA <- function(Capture_data, Brood_data){
   Individual_data <- Individual_data_temp %>%
     dplyr::filter(.data$RingAge == "chick" & is.na(.data$LocationID) == F) %>%
     dplyr::left_join(Brood_data %>%
-                       dplyr::filter(is.na(LocationID) == F) %>%
+                       dplyr::filter(is.na(.data$LocationID) == F) %>%
                        dplyr::group_by(.data$BreedingSeason, .data$PopID, .data$LocationID) %>%
                        dplyr::filter(.data$BroodID == max(.data$BroodID)) %>%
                        dplyr::select(.data$BreedingSeason, .data$PopID, .data$LocationID, .data$BroodID) %>%
