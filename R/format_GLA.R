@@ -14,7 +14,6 @@
 #'\strong{CaptureDate}: Some individuals were not recorded in the ringing records, but were observed breeding at a monitored nest.
 #'For these individuals, the CaptureDate is given as June 1st of the breeding year.
 #'
-#'\strong{}
 #'@inheritParams pipeline_params
 #'
 #'@return Generates either 4 .csv files or 4 data frames in the standard format.
@@ -165,23 +164,24 @@ format_GLA <- function(db = choose_directory(),
                   ObserverID = .data$Initial,
                   Mass = .data$Weight,
                   WingLength = .data$Wing,
-                  Sex_observed = .data$Sex,
-                  Age_observed = .data$Age) %>%
+                  Sex_observed = .data$Sex) %>%
 
     ## Reformat variables
     ## TODO: check about times
     dplyr::mutate(CaptureDate = lubridate::ymd(.data$CaptureDate),
-                  CaptureTime = format(.data$CaptureTime, format = "%H:%M:%S"),
+                  CaptureTime = dplyr::case_when(format(.data$CaptureTime, format = "%H:%M:%S") == "00:00:00" ~ NA_character_,
+                                                 TRUE ~ format(.data$CaptureTime, format = "%H:%M:%S")),
                   Mass = as.numeric(.data$Mass),
-                  Tarsus = as.numeric(.data$Mass),
+                  Tarsus = as.numeric(.data$Tarsus),
                   WingLength = as.numeric(.data$WingLength),
                   ChickAge = as.integer(.data$ChickAge), # Small number of records entered as 11+12. These becomes NA
                   Species = dplyr::case_when(.data$Species == "bluti" ~ 14620,
                                              .data$Species == "greti" ~ 14640),
-                  Age_observed = dplyr::case_when(.data$Age_observed == "X" ~ 1L,
-                                                  .data$Age_observed == "3J" ~ 3L,
-                                                  TRUE ~ as.integer(.data$Age_observed)),
+                  Age_observed = dplyr::case_when(.data$Age == "X" ~ 1L,
+                                                  .data$Age == "3J" ~ 3L,
+                                                  TRUE ~ as.integer(.data$Age)),
                   BreedingSeason = as.numeric(.data$BreedingSeason))  %>%
+
     ## Adjust species names and population names
     dplyr::mutate(Species = dplyr::case_when(.data$Species == 14640 ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
                                              .data$Species == 14620 ~ species_codes[species_codes$SpeciesID == 14620, ]$Species),
@@ -391,7 +391,7 @@ create_capture_GLA <- function(rr_data, nest_data) {
     dplyr::mutate(CapturePopID = .data$PopID, ## Set CapturePopID based on PopID
                   CaptureAlive = dplyr::case_when(.data$Retrap == "X" ~ FALSE,
                                                   .data$Retrap %in% c("N", "R", "C", "U", NA) ~ TRUE), ## Set CaptureAlive to FALSE if Retrap is X, otherwise TRUE
-                  ReleaseAlive = dplyr::case_when(.data$Retrap == "X" | .data$Age_observed == "X" ~ FALSE,
+                  ReleaseAlive = dplyr::case_when(.data$Retrap == "X" | .data$Age == "X" ~ FALSE,
                                                   .data$Retrap %in% c("N", "R", "C", "U", NA) ~ TRUE), ## Set ReleaseAlive to FALSE if Retrap is X and if Age is X (chick found dead at nest)
                   ReleasePopID = dplyr::case_when(.data$ReleaseAlive == FALSE ~ NA_character_,
                                                   TRUE ~ as.character(.data$CapturePopID)), ## Set ReleasePopID to NA if ReleaseAlive is FALSE, otherwise same as CapturePopID
