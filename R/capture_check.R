@@ -506,21 +506,21 @@ check_values_capture <- function(Capture_data, var, approved_list) {
 
                                      # Capture records below lower error threshold
                                      lower_err <- Capture_data %>%
-                                       dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2, .data$Age_calculated > 3,
-                                                     !!rlang::sym(var) < ..6) %>%
                                        dplyr::mutate(Variable = var,
                                                      Threshold = "L",
                                                      Ref = ..6) %>%
+                                       dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2, .data$Age_calculated > 3,
+                                                     !!rlang::sym(var) < ..6) %>%
                                        dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
                                                      .data$Species, .data$Variable, .data$Threshold, .data$Ref)
 
                                      # Capture records above upper error threshold
                                      upper_err <- Capture_data %>%
-                                       dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2, .data$Age_calculated > 3,
-                                                     !!rlang::sym(var) > ..7) %>%
                                        dplyr::mutate(Variable = var,
                                                      Threshold = "U",
                                                      Ref = ..7) %>%
+                                       dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2, .data$Age_calculated > 3,
+                                                     !!rlang::sym(var) > ..7) %>%
                                        dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
                                                      .data$Species, .data$Variable, .data$Threshold, .data$Ref)
 
@@ -532,11 +532,11 @@ check_values_capture <- function(Capture_data, var, approved_list) {
 
                                      # Capture records below lower error threshold
                                      Capture_data %>%
-                                       dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2, .data$Age_calculated > 3,
-                                                     !!rlang::sym(var) < ..6) %>%
                                        dplyr::mutate(Variable = var,
                                                      Threshold = "L",
                                                      Ref = ..6) %>%
+                                       dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2, .data$Age_calculated > 3,
+                                                     !!rlang::sym(var) < ..6) %>%
                                        dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
                                                      .data$Species, .data$Variable, .data$Threshold, .data$Ref)
 
@@ -550,11 +550,11 @@ check_values_capture <- function(Capture_data, var, approved_list) {
 
                                      # Capture records below lower error threshold
                                      Capture_data %>%
-                                       dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2, .data$CurrentChickAge == ..3,
-                                                     !!rlang::sym(var) < ..6) %>%
                                        dplyr::mutate(Variable = var,
                                                      Threshold = "L",
                                                      Ref = ..6) %>%
+                                       dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2, .data$CurrentChickAge == ..3,
+                                                     !!rlang::sym(var) < ..6) %>%
                                        dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
                                                      .data$Species, .data$Variable, .data$Threshold, .data$Ref)
 
@@ -563,21 +563,21 @@ check_values_capture <- function(Capture_data, var, approved_list) {
 
                                      # Capture records below lower error threshold
                                      lower_err <- Capture_data %>%
-                                       dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2,
-                                                     .data$CurrentChickAge == ..3, !!rlang::sym(var) < ..6) %>%
                                        dplyr::mutate(Variable = var,
                                                      Threshold = "L",
                                                      Ref = ..6) %>%
+                                       dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2,
+                                                     .data$CurrentChickAge == ..3, !!rlang::sym(var) < ..6) %>%
                                        dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
                                                      .data$Species, .data$Variable, .data$Threshold, .data$Ref)
 
                                      # Capture records above upper error threshold
                                      upper_err <- Capture_data %>%
-                                       dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2,
-                                                     .data$CurrentChickAge == ..3, !!rlang::sym(var) > ..7) %>%
                                        dplyr::mutate(Variable = var,
                                                      Threshold = "U",
                                                      Ref = ..7) %>%
+                                       dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2,
+                                                     .data$CurrentChickAge == ..3, !!rlang::sym(var) > ..7) %>%
                                        dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
                                                      .data$Species, .data$Variable, .data$Threshold, .data$Ref)
 
@@ -631,21 +631,21 @@ check_values_capture <- function(Capture_data, var, approved_list) {
 
                                    # Capture records below lower warning threshold
                                    lower_war <- Capture_data %>%
-                                     dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2, .data$Age_calculated > 3,
-                                                   !!rlang::sym(var) < ..4, !!rlang::sym(var) >= ..6) %>%
                                      dplyr::mutate(Variable = var,
                                                    Threshold = "L",
                                                    Ref = ..4) %>%
+                                     dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2, .data$Age_calculated > 3,
+                                                   !!rlang::sym(var) < ..4, !!rlang::sym(var) >= ..6) %>%
                                      dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
                                                    .data$Species, .data$Variable, .data$Threshold, .data$Ref)
 
                                    # Capture records above upper warning threshold
                                    upper_war <- Capture_data %>%
-                                     dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2, .data$Age_calculated > 3,
-                                                   !!rlang::sym(var) > ..5, !!rlang::sym(var) <= ..7) %>%
                                      dplyr::mutate(Variable = var,
                                                    Threshold = "U",
                                                    Ref = ..5) %>%
+                                     dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2, .data$Age_calculated > 3,
+                                                   !!rlang::sym(var) > ..5, !!rlang::sym(var) <= ..7) %>%
                                      dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
                                                    .data$Species, .data$Variable, .data$Threshold, .data$Ref)
 
@@ -655,23 +655,23 @@ check_values_capture <- function(Capture_data, var, approved_list) {
 
                                    # Capture records below lower warning threshold
                                    lower_war <- Capture_data %>%
-                                     dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2,
-                                                   .data$CurrentChickAge == ..3, !!rlang::sym(var) < ..4,
-                                                   !!rlang::sym(var) >= ..6) %>%
                                      dplyr::mutate(Variable = var,
                                                    Threshold = "L",
                                                    Ref = ..4) %>%
+                                     dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2,
+                                                   .data$CurrentChickAge == ..3, !!rlang::sym(var) < ..4,
+                                                   !!rlang::sym(var) >= ..6) %>%
                                      dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
                                                    .data$Species, .data$Variable, .data$Threshold, .data$Ref)
 
                                    # Capture records above upper warning threshold
                                    upper_war <- Capture_data %>%
-                                     dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2,
-                                                   .data$CurrentChickAge == ..3, !!rlang::sym(var) > ..5,
-                                                   !!rlang::sym(var) <= ..7) %>%
                                      dplyr::mutate(Variable = var,
                                                    Threshold = "U",
                                                    Ref = ..5) %>%
+                                     dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2,
+                                                   .data$CurrentChickAge == ..3, !!rlang::sym(var) > ..5,
+                                                   !!rlang::sym(var) <= ..7) %>%
                                      dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
                                                    .data$Species, .data$Variable, .data$Threshold, .data$Ref)
 
@@ -993,7 +993,7 @@ check_age_captures <- function(Capture_data, approved_list){
   # Select records of captures with an age larger than the subsequent capture.
   # This may happen when age determination and uncertainty vary over time, but should be flagged as a warning.
   wrong_age_order <- Capture_data %>%
-    dplyr::group_by(.data$IndvID) %>%
+    dplyr::group_by(.data$PopID, .data$IndvID) %>%
     dplyr::arrange(.data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
     dplyr::mutate(Age_observed_next = lead(.data$Age_observed)) %>%
     dplyr::filter(.data$Age_observed > .data$Age_observed_next &
