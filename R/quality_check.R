@@ -9,6 +9,7 @@
 #' @param output \code{TRUE} or \code{FALSE}. If \code{TRUE}, a report is produced. Default: \code{TRUE}.
 #' @param output_format Character. Format of output report. Options: \code{"html"}, \code{"pdf"}, or \code{"both"}. Default: \code{"both"}.
 #' @param output_file Character. Name of the output file. Default: "output_report".
+#' @param latex_engine Character. LaTeX engine for producing PDF output. Options are "pdflatex" (default), "xelatex", and "lualatex". NB: pdfLaTeX and XeLaTeX have memory limit restrictions, which can be problematic when generating large pdfs. LuaLaTeX has dynamic memory management which may help for generating large pdfs.
 #' @param check_format \code{TRUE} or \code{FALSE}. If \code{TRUE}, the checks on variable format (i.e. \code{\link{check_format_brood}}, \code{\link{check_format_capture}}, \code{\link{check_format_individual}} and \code{\link{check_format_location}}) are included in the quality check. Default: \code{TRUE}.
 #' @param test Logical. Is `quality_check` being used inside package tests? If TRUE, `R_data` is ignored and
 #' dummy data will be used instead.
@@ -37,6 +38,7 @@ quality_check <- function(R_data,
                           output = TRUE,
                           output_format = "both",
                           output_file = "output_report",
+                          latex_engine = "pdflatex",
                           check_format = TRUE,
                           test = FALSE){
 
@@ -409,7 +411,7 @@ quality_check <- function(R_data,
                      knitr::knit(text = mark_output, output = "output-report.md")
 
                      rmarkdown::render("output-report.md",
-                                       output_format = "pdf_document",
+                                       output_format = rmarkdown::pdf_document(latex_engine = latex_engine),
                                        output_file = output_file)
 
                    }

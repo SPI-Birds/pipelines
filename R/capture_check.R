@@ -490,8 +490,7 @@ check_values_capture <- function(Capture_data, var, approved_list) {
         .data$Age_calculated == 1 & is.na(.data$ChickAge) ~ 14, # Chicks age 1 and unknown chick age: 14
         .data$Age_calculated == 1 & .data$ChickAge < 0 ~ 14, # Chicks age 1 and impossible chick age: 14
         TRUE ~ as.numeric(.data$ChickAge) # Remaining chicks (chicks with known chick age) get recorded chick age
-      )) %>%
-      dplyr::mutate(CaptureID = as.character(1:nrow(Capture_data))) ##FIXME: remove after merge with master
+      ))
 
     # Errors
     Capture_err <- purrr::pmap(.l = ref,
