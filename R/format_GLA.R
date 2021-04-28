@@ -301,9 +301,9 @@ create_brood_GLA <- function(nest_data, rr_data) {
                      FemaleID = names(which.max(table(.data$MotherRing, useNA = "always"))),
                      MaleID = names(which.max(table(.data$FatherRing, useNA = "always"))),
                      AvgChickMass = round(mean(Mass[ChickAge <= 16 & ChickAge >= 14], na.rm = T),1),
-                     NumberChicksMass = n_distinct(IndvID[ChickAge <= 16 & ChickAge >= 14], na.rm = T),
+                     NumberChicksMass = length(IndvID[ChickAge <= 16 & ChickAge >= 14]),
                      AvgTarsus = round(mean(Tarsus[ChickAge <= 16 & ChickAge >= 14], na.rm = T),1),
-                     NumberChicksTarsus = n_distinct(IndvID[ChickAge <= 16 & ChickAge >= 14], na.rm = T)) %>%
+                     NumberChicksTarsus = length(IndvID[ChickAge <= 16 & ChickAge >= 14])) %>%
 
     ## Replace NaNs and 0 with NA
     ## TODO: Apparently there is some weirdness with 'where' not being exported by any package and utils::globalVariables("where") needs to be called somewhere
