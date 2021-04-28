@@ -69,12 +69,7 @@ format_GLA <- function(db = choose_directory(),
   tz <- "Etc/GMT+1"
 
   ## Read in primary data from brood records
-  nest_data <- readxl::read_xlsx(path = paste0(db, "/GLA_PrimaryData_Nest.xlsx"),
-                                 col_types = c(rep("text",11),
-                                               "date","date",
-                                               rep("text",3),
-                                               "date", "date",
-                                               rep("text",23))) %>%
+  nest_data <- readxl::read_xlsx(path = paste0(db, "/GLA_PrimaryData_Nest.xlsx")) %>%
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
 
@@ -83,10 +78,18 @@ format_GLA <- function(db = choose_directory(),
                   LocationID = as.character(.data$NestboxNumber),
                   Species = as.character(.data$Species),
                   PopID = as.character(.data$Site),
-                  FirstEggDate = lubridate::ymd(.data$FirstEggDate),
-                  LayDate_observed = .data$FirstEggDate,
-                  LayingComplete = lubridate::ymd(.data$LayingComplete),
-                  ObservedHatch = lubridate::ymd(.data$ObservedHatch),
+
+                  ## Two formats for dates
+                  FirstEggDate = case_when(grepl("/", .data$FirstEggDate) ~ lubridate::dmy(.data$FirstEggDate),
+                                               TRUE ~ janitor::excel_numeric_to_date(as.numeric(.data$FirstEggDate))),
+
+
+                  LayingComplete = case_when(grepl("/", .data$LayingComplete) ~ lubridate::dmy(.data$LayingComplete),
+                                             TRUE ~ janitor::excel_numeric_to_date(as.numeric(.data$LayingComplete))),
+
+                  ObservedHatch = case_when(grepl("/", .data$ObservedHatch) ~ lubridate::dmy(.data$ObservedHatch),
+                                            TRUE ~ janitor::excel_numeric_to_date(as.numeric(.data$ObservedHatch))),
+
                   Hatchlings = as.integer(.data$Hatchlings),
                   Fledglings = as.integer(.data$Fledglings),
                   MaleRing = as.character(.data$MaleRing),
@@ -97,7 +100,7 @@ format_GLA <- function(db = choose_directory(),
 
     ## Select variables of interest
     dplyr::select(.data$BreedingSeason, .data$LocationID, .data$PopID, .data$ReplacementClutch,
-                  .data$Experiment, .data$Treatment, .data$Species, .data$LayDate_observed, .data$FirstEggDate,  .data$LayingComplete, .data$ExpectedHatch, .data$ObservedHatch,
+                  .data$Experiment, .data$Treatment, .data$Species, .data$FirstEggDate,  .data$LayingComplete, .data$ObservedHatch,
                   .data$ClutchSize, .data$HatchlingsManip, .data$ClutchComplete, .data$UnhatchedEggs, .data$Fledglings, .data$MaleRing, .data$FemaleRing) %>%
 
     ## Create additional variables that will be used in multiple data tables
@@ -119,6 +122,7 @@ format_GLA <- function(db = choose_directory(),
     ## Rename
     dplyr::rename(FemaleID = .data$FemaleRing,
                   MaleID = .data$MaleRing,
+                  LayDate_observed = .data$FirstEggDate,
                   LayDate_min = .data$FirstEggDate,
                   LayDate_max = .data$LayingComplete,
                   ClutchSize_observed = .data$ClutchSize,
