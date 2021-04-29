@@ -227,7 +227,7 @@ format_GLA <- function(db = choose_directory(),
 
   #### LOCATION DATA
   message("Compiling location information...")
-  Location_data <- create_location_GLA(rr_data, nest_data)
+  Location_data <- create_location_GLA(nest_data, rr_data)
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
@@ -293,14 +293,6 @@ create_brood_GLA <- function(nest_data, rr_data) {
 
     ## Summarize brood information for each nest
     dplyr::group_by(.data$BreedingSeason, .data$PopID, .data$LocationID) %>%
-
-    dplyr::summarise(Species = unique(.data$Species, na.rm = T),
-                     FemaleID = unique(.data$MotherRing, na.rm = T),
-                     MaleID = unique(.data$FatherRing, na.rm = T))
-
-
-
-
     dplyr::summarise(Species = names(which.max(table(.data$Species, useNA = "always"))),
                      FemaleID = names(which.max(table(.data$MotherRing, useNA = "always"))),
                      MaleID = names(which.max(table(.data$FatherRing, useNA = "always"))),
@@ -322,9 +314,10 @@ create_brood_GLA <- function(nest_data, rr_data) {
     ## TODO: Check on experiments and meaning of replacement clutch
     dplyr::mutate(ExperimentID = dplyr::case_when(!is.na(.data$Experiment) ~
                                                     "COHORT; PARENTAGE"),
-                  ClutchType_observed = dplyr::case_when(.data$ReplacementClutch == 0 ~ "first",
-                                                         is.na(.data$ReplacementClutch) ~ "first",
-                                                         .data$ReplacementClutch > 0 ~ "second"))
+                  ClutchType_observed = dplyr::case_when(is.na(.data$ReplacementClutch) ~ NA_character_,
+                                                         .data$ReplacementClutch == 0L ~ "first",
+                                                         .data$ReplacementClutch == 1L ~ "replacement",
+                                                         .data$ReplacementClutch  == 2L ~ NA_character_))
 
 
   ## Join brood data from ringing records to brood data from nest records
@@ -356,10 +349,10 @@ create_brood_GLA <- function(nest_data, rr_data) {
     dplyr::select(names(brood_data_template)) %>%
 
     ## Remove any NAs from essential columns
-    dplyr::filter(is.na(BroodID) == F,
-           is.na(PopID) == F,
-           is.na(BreedingSeason) == F,
-           is.na(Species) == F) %>%
+    dplyr::filter(!is.na(BroodID),
+           !is.na(PopID),
+           !is.na(BreedingSeason),
+           !is.na(Species)) %>%
 
     ## Calculate clutch type
     dplyr::arrange(PopID, BreedingSeason, Species, FemaleID, LayDate_observed) %>%
@@ -374,11 +367,13 @@ create_brood_GLA <- function(nest_data, rr_data) {
 #' Create a capture data table in standard format for great tits and blue tits in Glasgow, Scotland.
 #' @param data Data frame of modified primary data from Glasgow, Scotland.
 #'
-#' @param Brood_data Data frame. Brood_data from Glasgow, Scotland
+#' @param nest_data Data frame of nest data from Glasgow, Scotland.
+#'
+#' @param rr_data Data frame of ringing records from Glasgow, Scotland.
 #'
 #' @return A data frame.
 
-create_capture_GLA <- function(rr_data, nest_data) {
+create_capture_GLA <- function(nest_data, rr_data) {
 
   ## Create capture data template
   load("data/Capture_data_template.rda")
@@ -450,7 +445,7 @@ create_capture_GLA <- function(rr_data, nest_data) {
     dplyr::select(names(capture_data_template))
 
 
-  ## Get records of individuals that were reported in brood data, but not in ringing records
+  ## Get records of individuals that were reported in the nest data, but not in the ringing records
   brood_recs_unique <- dplyr::anti_join(Capture_data_nest, Capture_data_rr, by = c("BreedingSeason", "CapturePopID", "IndvID"))
 
   ## Combine captures and add additional information
@@ -483,7 +478,9 @@ create_capture_GLA <- function(rr_data, nest_data) {
 #'
 #' Create full individual data table in standard format for great tits and blue tits in Glasgow, Scotland.
 #'
-#' @param data Data frame of modified primary data from Glasgow, Scotland.
+#' @param Capture_data Capture data output from Glasgow, Scotland
+#'
+#' @param Brood_data Brood data output from Glasgow, Scotland
 #'
 #' @return A data frame.
 
@@ -540,9 +537,9 @@ create_individual_GLA <- function(Capture_data, Brood_data){
   ## TODO: Duplicates are created due to two nests having replacement clutches.
   ## Temporary solution to avoid this is to keep the newest brood record for each LocationID since apparently there are no true second clutches in the data. This means that any banded chicks must come from the last brood.
   Individual_data <- Individual_data_temp %>%
-    dplyr::filter(.data$RingAge == "chick" & is.na(.data$LocationID) == F) %>%
+    dplyr::filter(.data$RingAge == "chick" & !is.na(.data$LocationID)) %>%
     dplyr::left_join(Brood_data %>%
-                       dplyr::filter(is.na(.data$LocationID) == F) %>%
+                       dplyr::filter(!is.na(.data$LocationID)) %>%
                        dplyr::group_by(.data$BreedingSeason, .data$PopID, .data$LocationID) %>%
                        dplyr::filter(.data$BroodID == max(.data$BroodID)) %>%
                        dplyr::select(.data$BreedingSeason, .data$PopID, .data$LocationID, .data$BroodID) %>%
@@ -555,7 +552,7 @@ create_individual_GLA <- function(Capture_data, Brood_data){
                        dplyr::filter(.data$RingAge == "adult" | is.na(.data$LocationID))) %>%
 
     ## Keep distinct records
-    dplyr::distinct(.data$IndvID, .keep_all = T) %>%
+    dplyr::distinct(.data$IndvID, .keep_all = TRUE) %>%
 
     ## Arrange
     dplyr::arrange(.data$CaptureID) %>%
@@ -577,11 +574,13 @@ create_individual_GLA <- function(Capture_data, Brood_data){
 #' Create location data table for great tits and blue tits in Glasgow, Scotland.
 #'
 #' Create a location data table in standard format for great tits and blue tits in Glasgow, Scotland.
-#' @param data Data frame of modified primary data from Glasgow, Scotland.
+#' @param nest_data Data frame of nest data from Glasgow, Scotland.
+#'
+#' @param rr_data Data frame of ringing records from Glasgow, Scotland.
 #'
 #' @return A data frame.
 
-create_location_GLA <- function(rr_data, nest_data) {
+create_location_GLA <- function(nest_data, rr_data) {
 
   ## Create location data template
   load("data/Location_data_template.rda")
@@ -590,15 +589,15 @@ create_location_GLA <- function(rr_data, nest_data) {
   Location_data <- rr_data %>%
 
     dplyr::select(.data$BreedingSeason, .data$PopID, .data$LocationID) %>%
-    dplyr::filter(is.na(.data$LocationID) == F) %>%
+    dplyr::filter(!is.na(.data$LocationID)) %>%
 
     ## Add in location from brood data
     dplyr::bind_rows(nest_data %>%
                        dplyr::select(.data$BreedingSeason, .data$PopID, .data$LocationID) %>%
-                       dplyr::filter(is.na(.data$LocationID) == F)) %>%
+                       dplyr::filter(!is.na(.data$LocationID))) %>%
 
     ## Keep distinct records
-    dplyr::distinct(.data$PopID, .data$LocationID, .keep_all = T) %>%
+    dplyr::distinct(.data$PopID, .data$LocationID, .keep_all = TRUE) %>%
 
     ## All records shows be complete: remove any incomplete cases
     tidyr::drop_na() %>%
