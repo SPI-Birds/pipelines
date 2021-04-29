@@ -12,9 +12,9 @@ test_that("GLA outputs all files...", {
 test_that("Individual data returns an expected outcome...", {
 
   #Take a subset of only GLA data
-  GLA_data <- dplyr::filter(pipeline_output$Individual_data, PopID %in% "CAS", "GAR", "KEL", "SAL", "SCE")
+  GLA_data <- dplyr::filter(pipeline_output$Individual_data, PopID %in% c("CAS", "GAR", "KEL", "SAL", "SCE"))
 
-  #Individual ACJ2064 - female
+  #Individual ACJ2064 - female, ringed as adult
   expect_equal(subset(GLA_data, IndvID == "ACJ2064")$Sex_calculated, "F") # Should be female
   expect_equal(subset(GLA_data, IndvID == "ACJ2064")$Species, "CYACAE") # Should be a blue tit
   expect_equal(subset(GLA_data, IndvID == "ACJ2064")$BroodIDLaid, NA_character_) # Should be NA
@@ -22,13 +22,13 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(subset(GLA_data, IndvID == "ACJ2064")$RingSeason, 2020) # Should be 2020
   expect_equal(subset(GLA_data, IndvID == "ACJ2064")$RingAge, "adult") # Should be an adult
 
-  #Individual AXB1234 - male
+  #Individual AXB1234 - male, ringed as chick
   expect_equal(subset(GLA_data, IndvID == "AXB1234")$Sex_calculated, "M") # Should be male
   expect_equal(subset(GLA_data, IndvID == "AXB1234")$Species, "CYACAE") # Should be a blue tit
-  expect_equal(subset(GLA_data, IndvID == "AXB1234")$BroodIDLaid, NA_character_) # Should be NA
-  expect_equal(subset(GLA_data, IndvID == "AXB1234")$BroodIDFledged, NA_character_) # Should be NA
-  expect_equal(subset(GLA_data, IndvID == "AXB1234")$RingSeason, 2020) # Should be 2020
-  expect_equal(subset(GLA_data, IndvID == "AXB1234")$RingAge, "adult") # Should be an adult
+  expect_equal(!is.na(subset(GLA_data, IndvID == "AXB1234")$BroodIDLaid), TRUE) # Should be have a BroodIDLaid
+  expect_equal(!is.na(subset(GLA_data, IndvID == "AXB1234")$BroodIDFledged), TRUE) # Should be have a BroodIDFledged
+  expect_equal(subset(GLA_data, IndvID == "AXB1234")$RingSeason, 2018) # Should be 2018
+  expect_equal(subset(GLA_data, IndvID == "AXB1234")$RingAge, "chick") # Should be an adult
 
   #Individual TX11924 - uncertain sex and species
   expect_equal(subset(GLA_data, IndvID == "TX11924")$Sex_calculated, "C") # Should be conflicted
@@ -40,20 +40,62 @@ test_that("Individual data returns an expected outcome...", {
 
   #Individual AFE3038 - uncertain sex
   expect_equal(subset(GLA_data, IndvID == "AFE3038")$Sex_calculated, "C") # Should be conflicted
-  expect_equal(subset(GLA_data, IndvID == "AFE3038")$Species, "CYACAE") # Should be conflicted
+  expect_equal(subset(GLA_data, IndvID == "AFE3038")$Species, "CYACAE") # Should be blue tit
   expect_equal(subset(GLA_data, IndvID == "AFE3038")$BroodIDLaid, NA_character_) # Should be NA
   expect_equal(subset(GLA_data, IndvID == "AFE3038")$BroodIDFledged, NA_character_) # Should be NA
-  expect_equal(subset(GLA_data, IndvID == "AFE3038")$RingSeason, 2019) # Should be 2015 (seen in two years)
+  expect_equal(subset(GLA_data, IndvID == "AFE3038")$RingSeason, 2019) # Should be 2019 (seen in two years)
   expect_equal(subset(GLA_data, IndvID == "AFE3038")$RingAge, "adult") # Should be an adult
+
 
 })
 
 test_that("Brood_data returns an expected outcome...", {
 
+  ## Take a subset of only GLA data
+  GLA_data <- dplyr::filter(pipeline_output$Brood_data, PopID %in% c("CAS", "GAR", "KEL", "SAL", "SCE"))
 
+  ## Brood where clutch type observed = replacement
+  expect_equal(subset(GLA_data, BreedingSeason == "2015"
+                      & PopID == "SAL"
+                      & LocationID == "235"
+                      & is.na(LayDate_observed))$ClutchType_observed, "replacement")
 
+  ## Brood where chick weight, but not tarsus is measured
+  expect_equal(subset(GLA_data,
+                      BreedingSeason == "2018"
+                      & PopID == "CAS"
+                      & LocationID == "28")$AvgChickMass, 10.1)
+  expect_equal(subset(GLA_data,
+                      BreedingSeason == "2018"
+                      & PopID == "CAS"
+                      & LocationID == "28")$NumberChicksMass, 8)
+  expect_equal(subset(GLA_data,
+                      BreedingSeason == "2018"
+                      & PopID == "CAS"
+                      & LocationID == "28")$AvgTarsus, NA_real_)
+  expect_equal(subset(GLA_data,
+                      BreedingSeason == "2018"
+                      & PopID == "CAS"
+                      & LocationID == "28")$NumberChicksTarsus, NA_integer_)
 
+  ## Case where species is ambiguous, but used the species information from the nest data
+  expect_equal(subset(GLA_data,
+                      BreedingSeason == "2020"
+                      & PopID == "SAL"
+                      & LocationID == "204")$Species, "CYACAE")
 
+  ## Case where both FemaleID and MaleID are known
+  expect_equal(subset(GLA_data,
+                      BreedingSeason == "2020"
+                      & PopID == "KEL"
+                      & LocationID == "534")$FemaleID, "ACJ2320")
+  expect_equal(subset(GLA_data,
+                      BreedingSeason == "2020"
+                      & PopID == "KEL"
+                      & LocationID == "534")$MaleID, "ACJ2305")
+
+  ## Case where female had two nests in the same year
+  expect_equal(nrow(subset(GLA_data, FemaleID == "TX11502" & BreedingSeason == 2017)), 2)
 
 })
 
@@ -61,64 +103,45 @@ test_that("Capture_data returns an expected outcome...", {
 
 
   #Take a subset of only GLA data
-  GLA_data <- dplyr::filter(pipeline_output$Individual_data, PopID %in% "CAS", "GAR", "KEL", "SAL", "SCE") %>%
-    arrange(.data$IndvID, .data$BreedingSeason)
+  GLA_data <- dplyr::filter(pipeline_output$Capture_data, CapturePopID %in% c("CAS", "GAR", "KEL", "SAL", "SCE"))
 
-  #Test 1: Female caught as adult
-  #Test the female has the correct number of capture records (2) up to and including 2018
-  expect_equal(nrow(subset(GLA_data, IndvID == "S034047"  & BreedingSeason <= 2018)), 2) # Two records
-  #Test the first capture of the female
-  expect_equal(subset(GLA_data, IndvID == "S034047")$Sex_observed[1], "F") # Female
-  expect_equal(subset(GLA_data, IndvID == "S034047")$LocationID[1], "65") # Nest 65
-  expect_equal(min(subset(GLA_data, IndvID == "S034047")$CaptureDate, na.rm = TRUE), as.Date("2017-04-23")) # First caught 2017-04-23
+  ## Case where chick found dead after ringed
+  expect_equal(subset(GLA_data, IndvID == "ACJ2314")$ReleaseAlive, FALSE) # Should be False
+  expect_equal(subset(GLA_data, IndvID == "ACJ2314")$ReleasePopID, NA_character_) # Should be NA (since dead)
+  expect_equal(subset(GLA_data, IndvID == "ACJ2314")$Species, "CYACAE") # Should be blue tit
+  expect_equal(subset(GLA_data, IndvID == "ACJ2314")$Mass, 9.42) # Should be 9.42
+  expect_equal(subset(GLA_data, IndvID == "ACJ2314")$BreedingSeason, 2020) # Should be 2019
+  expect_equal(subset(GLA_data, IndvID == "ACJ2314")$Age_observed, 1) # Should be 1
 
-  #Test 2: Male caught as adult
-  #Test the female has the correct number of capture records (2) up to and including 2020
-  expect_equal(nrow(subset(GLA_data, IndvID == "AFE3005")), 2) # Two records
-  #Test the second capture of the male
-  expect_equal(subset(GLA_data, IndvID == "AFE3005")$Sex_observed[2], "M") # Male
-  expect_equal(subset(GLA_data, IndvID == "AFE3005")$LocationID[2], "545") # Nest 65
-  expect_equal(min(subset(GLA_data, IndvID == "AFE3005")$CaptureDate, na.rm = TRUE), as.Date("2020-04-30"))
-
-  #Test 2: Female caught as adult and at three different nests up to and including 2020
-  #Test the female has the correct number of capture records (3) AXB1206
-  expect_equal(nrow(subset(GLA_data, IndvID == "AXB1206")), 3) # Two records
-  #Test the second capture of the male
-  expect_equal(subset(GLA_data, IndvID == "AXB1206")$Sex_observed[1], "F") # Female
-  expect_equal(subset(GLA_data, IndvID == "AXB1206")$LocationID[2], "543") # Nest 543
-  expect_equal(min(subset(GLA_data, IndvID == "AXB1206")$CaptureDate, na.rm = TRUE), as.Date("2018-05-08"))
+  # Case where individual recorded at different locations in nest and ringing data
+  expect_equal(nrow(subset(GLA_data, IndvID == "S034047" & BreedingSeason <= 2018)), 3) # Three records
+  expect_equal(subset(GLA_data, IndvID == "S034047" &
+                       BreedingSeason == 2017)$Sex_observed, "F") # Female
+  expect_equal(subset(GLA_data, IndvID == "S034047" &
+                        CaptureDate == as.Date("2018-01-05"))$LocationID, "65") # LocationID 65
 
 })
 
 test_that("Location_data returns an expected outcome...", {
 
   #Take a subset of only GLA data
-  GLA_data <- dplyr::filter(pipeline_output$Individual_data, PopID %in% "CAS", "GAR", "KEL", "SAL", "SCE") %>%
-    arrange(.data$IndvID, .data$BreedingSeason)
+  GLA_data <- dplyr::filter(pipeline_output$Location_data, PopID %in% c("CAS", "GAR", "KEL", "SAL", "SCE"))
 
-  #Test 1: Nestbox
-  #LocationType is as expected
-  expect_equal(subset(GLA_data, LocationID == "728")$LocationType, "NB")
-  #Habitat is as expected
-  expect_equal(subset(GLA_data, LocationID == "728")$HabitatType, "urban")
-  #Start season
-  expect_equal(subset(GLA_data, LocationID == "728")$StartSeason, 2015)
-  #PopID
-  expect_equal(subset(GLA_data, LocationID == "728")$PopID, "GAR")
-  #End season
-  expect_equal(subset(GLA_data, LocationID == "728")$EndSeason, NA_integer_)
+  ## Nestbox 728 in GAR
+  expect_equal(subset(GLA_data, LocationID == "728" &
+                        PopID == "GAR")$LocationType, "NB") ## Nestbox
+  expect_equal(subset(GLA_data, LocationID == "728" &
+                        PopID == "GAR")$HabitatType, "urban") ## Urban
+  expect_equal(subset(GLA_data, LocationID == "728" &
+                        PopID == "GAR")$StartSeason, 2015) ## 2015
+  expect_equal(subset(GLA_data, LocationID == "728" &
+                        PopID == "GAR")$EndSeason, NA_integer_) ## NA
 
-  #Test 2: Nestbox
+  ## Same nestbox number at 3 populations
   #LocationType is as expected
-  expect_equal(subset(GLA_data, LocationID == "123")$LocationType, "NB")
-  #Habitat is as expected
-  expect_equal(subset(GLA_data, LocationID == "123")$HabitatType, "deciduous")
-  #Start season
-  expect_equal(subset(GLA_data, LocationID == "123")$StartSeason, 2014)
-  #PopID
-  expect_equal(subset(GLA_data, LocationID == "123")$PopID, "SCE")
-  #End season
-  expect_equal(subset(GLA_data, LocationID == "123")$EndSeason, NA_integer_)
+  expect_equal(subset(GLA_data, LocationID == "10")$PopID, c("CAS", "KEL", "SCE"))
+
+
 
 })
 
