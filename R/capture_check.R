@@ -827,7 +827,7 @@ check_chick_age <- function(Capture_data, approved_list){
                                   paste0("Record on row ", ..1,
                                          " (PopID: ", ..2,
                                          "; CaptureID: ", ..3, ", ", species_codes[species_codes$Species == ..4, "CommonName"], ")",
-                                         " has an impossible value in ChickAge (", ..5, "). Impossible chick age may be caused by problems with hatch date.")
+                                         " has an impossible value in ChickAge (", ..5, ").")
 
                                 })
 
