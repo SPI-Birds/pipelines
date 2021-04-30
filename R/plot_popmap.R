@@ -12,15 +12,15 @@
 #'
 #' @examples
 #' #Create jpeg map
-#' if (requireNamespace("ggplot2", quietly = TRUE)) {
+#' if (requireNamespace("ggplot2", quietly = TRUE) & requireNamespace("maps", quietly = TRUE)) {
 #'     plot_popmap()
 #'     file.remove("Population_map.jpg")
 #' }
 plot_popmap <- function(scale = 2, filename = NULL){
 
-  if (!requireNamespace(package = "ggplot2", quietly = TRUE)) {
+  if (!requireNamespace(package = "ggplot2", quietly = TRUE) | !requireNamespace(package = "maps", quietly = TRUE)) {
 
-    stop("Require ggplot2 for plotting.")
+    stop("Require ggplot2 and maps package for plotting.")
 
   }
 
