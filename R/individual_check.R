@@ -362,7 +362,7 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data, a
                                 .f = ~{
 
                                   paste0("Record on row ", ..1, " (PopID: ", ..4, "; IndvID: ", ..2, ")",
-                                         " has no BroodID.")
+                                         " is a chick without a BroodID.")
 
                                 })
 
