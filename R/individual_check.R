@@ -340,9 +340,9 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data, a
     dplyr::left_join(first_captures, by = c("IndvID", "Species", "PopID" = "CapturePopID"))
 
   # Errors
-  # Select records with chicks caught in a nest box but not associated with a BroodID
+  # Select records of individuals caught as a nestling which are not associated with a BroodID
   no_BroodID_nest <- ind_cap_loc_data %>%
-    dplyr::filter(.data$RingAge == "chick" & (is.na(.data$BroodIDLaid) | is.na(.data$BroodIDFledged)) & .data$LocationType == "NB")
+    dplyr::filter(.data$Age_observed == 1 & (is.na(.data$BroodIDLaid) | is.na(.data$BroodIDFledged)) & .data$LocationType == "NB")
 
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
