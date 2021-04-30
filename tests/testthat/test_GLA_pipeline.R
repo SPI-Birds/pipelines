@@ -28,7 +28,7 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(!is.na(subset(GLA_data, IndvID == "AXB1234")$BroodIDLaid), TRUE) # Should be have a BroodIDLaid
   expect_equal(!is.na(subset(GLA_data, IndvID == "AXB1234")$BroodIDFledged), TRUE) # Should be have a BroodIDFledged
   expect_equal(subset(GLA_data, IndvID == "AXB1234")$RingSeason, 2018) # Should be 2018
-  expect_equal(subset(GLA_data, IndvID == "AXB1234")$RingAge, "chick") # Should be an adult
+  expect_equal(subset(GLA_data, IndvID == "AXB1234")$RingAge, "chick") # Should be an chick
 
   #Individual TX11924 - uncertain sex and species
   expect_equal(subset(GLA_data, IndvID == "TX11924")$Sex_calculated, "C") # Should be conflicted
@@ -78,7 +78,7 @@ test_that("Brood_data returns an expected outcome...", {
                       & PopID == "CAS"
                       & LocationID == "28")$NumberChicksTarsus, NA_integer_)
 
-  ## Case where species is ambiguous, but used the species information from the nest data
+  ## Case where species is ambiguous, but the species information from the nest data  was used to assign species for the brood
   expect_equal(subset(GLA_data,
                       BreedingSeason == "2020"
                       & PopID == "SAL"
@@ -96,6 +96,33 @@ test_that("Brood_data returns an expected outcome...", {
 
   ## Case where female had two nests in the same year
   expect_equal(nrow(subset(GLA_data, FemaleID == "TX11502" & BreedingSeason == 2017)), 2)
+
+  ## Cases where dates are in different formats for laying columns in primary data
+  expect_equal(subset(GLA_data,
+                      BreedingSeason == "2014"
+                      & PopID == "GAR"
+                      & LocationID == "710")$LayDate_observed, as.Date("2014-05-05"))
+  expect_equal(subset(GLA_data,
+                      BreedingSeason == "2014"
+                      & PopID == "GAR"
+                      & LocationID == "710")$LayDate_max, as.Date("2014-05-16"))
+  expect_equal(subset(GLA_data,
+                      BreedingSeason == "2014"
+                      & PopID == "GAR"
+                      & LocationID == "729")$LayDate_max, as.Date("2014-05-01"))
+  expect_equal(subset(GLA_data,
+                      BreedingSeason == "2014"
+                      & PopID == "GAR"
+                      & LocationID == "724")$LayDate_min, as.Date("2014-05-01"))
+  expect_equal(subset(GLA_data,
+                      BreedingSeason == "2015"
+                      & PopID == "SCE"
+                      & LocationID == "724")$LayDate_min, as.Date("2015-05-02"))
+  expect_equal(subset(GLA_data,
+                      BreedingSeason == "2017"
+                      & PopID == "SAL"
+                      & LocationID == "227")$LayDate_min, as.Date("2017-04-30"))
+
 
 })
 
@@ -140,7 +167,6 @@ test_that("Location_data returns an expected outcome...", {
   ## Same nestbox number at 3 populations
   #LocationType is as expected
   expect_equal(subset(GLA_data, LocationID == "10")$PopID, c("CAS", "KEL", "SCE"))
-
 
 
 })
