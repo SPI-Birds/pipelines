@@ -329,7 +329,7 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data, a
 
   # Select first captures and link to the information of their locations
   first_captures <- Capture_data %>%
-    dplyr::group_by(.data$IndvID) %>%
+    dplyr::group_by(.data$CapturePopID, .data$IndvID) %>%
     dplyr::filter(.data$CaptureDate == dplyr::first(.data$CaptureDate)) %>%
     dplyr::ungroup() %>%
     #dplyr::select(IndvID, Species, CapturePopID, LocationID) %>%
@@ -533,7 +533,8 @@ check_individuals_captures <- function(Individual_data, Capture_data, approved_l
 
   # Errors
   missing_individuals <- Individual_data %>%
-    filter(!(.data$IndvID %in% Capture_data$IndvID))
+    dplyr::group_by(.data$PopID) %>%
+    dplyr::filter(!(.data$IndvID %in% Capture_data$IndvID))
 
   # Errors
   err <- FALSE
