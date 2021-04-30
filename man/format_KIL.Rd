@@ -48,6 +48,9 @@ this data. For a general description of the standard format please see
 until year 1992, the brood has individual numerical ID. In the original primary data from data
 after the year 1995, there is no BroodID - therefore we create one using the "Breeding season_NestboxID_BreedingAttempt".
 
+\strong{CaptureDate}: Date of capture for the primary data until the year 1992 are not available in the digitized format,
+therefore the CaptureDate was artificially created as the 1st of May of the correspondent breeding year ("BreedingYear-05-01").
+
 \strong{LayDate}: In the primary data, laying date is the date on which the first egg of a clutch is laid.
 Expressed as days after 31st of March: 1 = April 1st, 31 = May 1st, etc.Use negative numbers for laying dates in March.
 
