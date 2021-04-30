@@ -993,7 +993,7 @@ check_age_captures <- function(Capture_data, approved_list){
   # Select records of captures with an age larger than the subsequent capture.
   # This may happen when age determination and uncertainty vary over time, but should be flagged as a warning.
   wrong_age_order <- Capture_data %>%
-    dplyr::group_by(.data$PopID, .data$IndvID) %>%
+    dplyr::group_by(.data$CapturePopID, .data$IndvID) %>%
     dplyr::arrange(.data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
     dplyr::mutate(Age_observed_next = lead(.data$Age_observed)) %>%
     dplyr::filter(.data$Age_observed > .data$Age_observed_next &
@@ -1033,7 +1033,7 @@ check_age_captures <- function(Capture_data, approved_list){
   # Select records of chick captures that happened after adult captures of the same individual
   # This is impossible and should be flagged as an error.
   chicks_caught_after_adults <- Capture_data %>%
-    dplyr::group_by(.data$IndvID) %>%
+    dplyr::group_by(.data$CapturePopID, .data$IndvID) %>%
     dplyr::arrange(.data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
     dplyr::mutate(Age_observed_next = lead(.data$Age_observed)) %>%
     dplyr::filter(.data$Age_observed > .data$Age_observed_next &
