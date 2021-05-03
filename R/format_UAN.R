@@ -228,7 +228,7 @@ format_UAN <- function(db = choose_directory(),
 
   message("\n Compiling individual information...")
 
-  Individual_data <- create_individual_UAN(INDV_info, Capture_data, species, pop)
+  Individual_data <- create_individual_UAN(INDV_info, Capture_data, species)
 
   # LOCATION DATA
 
