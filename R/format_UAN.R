@@ -221,7 +221,7 @@ format_UAN <- function(db = choose_directory(),
 
   message("\n Compiling individual information...")
 
-  Individual_data <- create_individual_UAN(INDV_info, CAPTURE_info, species)
+  Individual_data <- create_individual_UAN(INDV_info, Capture_data, species)
 
   # LOCATION DATA
 
@@ -505,50 +505,58 @@ create_capture_UAN <- function(data, species_filter){
 #' Antwerp, Belgium.
 #'
 #' @param data Data frame. Primary data from University of Antwerp.
-#' @param CAPTURE_info Capture data table from the raw data
+#' @param Capture_data Output of \code{\link{create_capture_UAN}}.
 #' @param species_filter 6 letter species codes for filtering data.
 #'
 #' @return A data frame.
 
-create_individual_UAN <- function(data, CAPTURE_info, species_filter){
+create_individual_UAN <- function(data, Capture_data, species_filter){
 
   #This is a summary of each individual and general lifetime information (e.g. sex, resident/immigrant)
+  pb <- progress::progress_bar$new(total = length(unique(Capture_data$IndvID)))
 
-  #To determine which brood an individual is from, we subset the CAPTURE_info table
-  #and include only those records where an individual was caught as a nestling (i.e. Age_observed > 5 where age is in days).
-  #We then take the nest that this nestling was in when it was caught.
-  Indv_broods <- CAPTURE_info %>%
-    dplyr::arrange(IndvID, CaptureDate, CaptureTime) %>%
+  #Take capture data and determine summary data for each individual
+  Indv_info <- Capture_data %>%
+    dplyr::arrange(IndvID, BreedingSeason, CaptureDate, CaptureTime) %>%
     dplyr::group_by(IndvID) %>%
-    dplyr::filter(!is.na(BroodID) & (Age_observed > 5 | Age_observed == 1)) %>%
-    dplyr::summarise(BroodIDLaid = as.character(first(BroodID)))
+    dplyr::summarise(Species = purrr::map_chr(.x = list(unique(stats::na.omit(Species))), .f = ~{
 
-  #Do this for PopID, capture age and first year as well
-  Indv_Pop <- CAPTURE_info %>%
-    dplyr::filter(!is.na(CapturePopID)) %>%
-    dplyr::group_by(IndvID) %>%
-    dplyr::arrange(CaptureDate, .by_group = TRUE) %>%
-    dplyr::summarise(PopID = first(CapturePopID),
-                     FirstAge = first(Age_observed),
-                     FirstYear = as.integer(min(lubridate::year(CaptureDate))))
+      pb$tick()
 
-  #There were no translocations, so BroodIDLaid/Fledged are the same
-  Indv_data <- data %>%
-    dplyr::left_join(Indv_broods, by = "IndvID") %>%
-    dplyr::left_join(Indv_Pop, by = "IndvID") %>%
-    #Add and filter by species
-    dplyr::mutate(PopID = dplyr::case_when(.$PopID == "FR" ~ "BOS",
-                                           .$PopID == "PB" ~ "PEE"),
-                  Species = dplyr::case_when(.$Species == "pm" ~ species_codes[which(species_codes$SpeciesID == 14640), ]$Species,
-                                             .$Species == "pc" ~ species_codes[which(species_codes$SpeciesID == 14620), ]$Species),
-                  Sex = dplyr::case_when(.$Sex %in% c(1, 3) ~ "M",
-                                         .$Sex %in% c(2, 4) ~ "F")) %>%
-    dplyr::filter(!is.na(Species) & Species %in% species_filter) %>%
-    dplyr::mutate(BroodIDFledged = BroodIDLaid,
-                  RingSeason = FirstYear,
-                  RingAge = dplyr::case_when(.$FirstAge > 5 | .$FirstAge == 1 ~ "chick",
-                                             is.na(.$FirstAge) | .$FirstAge <= 5 ~ "adult")) %>%
-    select(IndvID, Species, PopID, BroodIDLaid, BroodIDFledged, RingSeason, RingAge, Sex)
+      if(length(..1) == 0){
+
+        return(NA_character_)
+
+      } else if(length(..1) == 1){
+
+        return(..1)
+
+      } else {
+
+        return("CONFLICTED")
+
+      }
+
+    }),
+    PopID = dplyr::first(CapturePopID),
+    BroodIDLaid = first(BroodID),
+    BroodIDFledged = BroodIDLaid,
+    RingSeason = first(BreedingSeason),
+    RingAge = dplyr::case_when(dplyr::first(.data$Age_observed) > 5  ~ "chick",
+                               dplyr::first(.data$Age_observed) == 1 ~ "chick",
+                               is.na(dplyr::first(.data$Age_observed)) ~ "adult",
+                               dplyr::first(.data$Age_observed) <= 5 ~ "adult")) %>%
+    dplyr::arrange(RingSeason, IndvID)
+
+  # Retrieve sex information from primary data
+  Indv_sex <- data %>%
+    dplyr::mutate(Sex = dplyr::case_when(.data$Sex %in% c(1, 3) ~ "M",
+                                         .data$Sex %in% c(2, 4) ~ "F")) %>%
+    dplyr::select(IndvID, Sex)
+
+  Indv_data <- Indv_info %>%
+    dplyr::left_join(Indv_sex, by = "IndvID") %>%
+    dplyr::filter(Species %in% species_filter)
 
   return(Indv_data)
 
