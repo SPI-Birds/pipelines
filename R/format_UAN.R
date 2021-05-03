@@ -76,6 +76,13 @@ format_UAN <- function(db = choose_directory(),
 
   }
 
+  #Assign populations for filtering
+  if(is.null(pop)){
+
+    pop <- c("BOS", "PEE")
+
+  }
+
   start_time <- Sys.time()
 
   message("\n Loading all files")
@@ -209,19 +216,19 @@ format_UAN <- function(db = choose_directory(),
 
   message("\n Compiling brood information...")
 
-  Brood_data <- create_brood_UAN(BROOD_info, CAPTURE_info, species)
+  Brood_data <- create_brood_UAN(BROOD_info, CAPTURE_info, species, pop)
 
   # CAPTURE DATA
 
   message("\n Compiling capture information...")
 
-  Capture_data <- create_capture_UAN(CAPTURE_info, species)
+  Capture_data <- create_capture_UAN(CAPTURE_info, species, pop)
 
   # INDIVIDUAL DATA
 
   message("\n Compiling individual information...")
 
-  Individual_data <- create_individual_UAN(INDV_info, Capture_data, species)
+  Individual_data <- create_individual_UAN(INDV_info, Capture_data, species, pop)
 
   # LOCATION DATA
 
@@ -290,10 +297,11 @@ format_UAN <- function(db = choose_directory(),
 #' @param data Data frame. Primary data from University of Antwerp.
 #' @param CAPTURE_info Capture data table from the raw data
 #' @param species_filter 6 letter species codes for filtering data.
+#' @param pop_filter Population three letter codes from the standard protocol.
 #'
 #' @return A data frame.
 
-create_brood_UAN <- function(data, CAPTURE_info, species_filter){
+create_brood_UAN <- function(data, CAPTURE_info, species_filter, pop_filter){
 
   #For every brood in the capture data table, determine whether measurements were
   #taken with Svensson's standard or alternative
@@ -320,7 +328,7 @@ create_brood_UAN <- function(data, CAPTURE_info, species_filter){
                                                          .$ClutchType_observed %in% c(3, 4, 5, 8) ~ "replacement"),
                   ClutchSizeError = dplyr::case_when(.$ClutchSizeError == "J" ~ 0,
                                                      .$ClutchSizeError == "N" ~ 2)) %>%
-    #Remove only species chosen.
+    #Keep filtered species
     dplyr::filter(Species %in% species_filter) %>%
     #Add NA columns and convert dates
     dplyr::mutate(LayDate = lubridate::ymd(LayDate),
@@ -334,6 +342,7 @@ create_brood_UAN <- function(data, CAPTURE_info, species_filter){
     #Calculate clutchtype, assuming NAs are true unknowns
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(., na.rm = FALSE)) %>%
     dplyr::left_join(Tarsus_method, by = "BroodID") %>%
+    dplyr::filter(PopID %in% pop_filter) %>%
     #Order columns
     dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot,
                   LocationID, FemaleID, MaleID, ClutchType_observed,
@@ -374,10 +383,11 @@ create_brood_UAN <- function(data, CAPTURE_info, species_filter){
 #'
 #' @param data Data frame. Primary data from University of Antwerp.
 #' @param species_filter 6 letter species codes for filtering data.
+#' @param pop_filter Population three letter codes from the standard protocol.
 #'
 #' @return A data frame.
 
-create_capture_UAN <- function(data, species_filter){
+create_capture_UAN <- function(data, species_filter, pop_filter){
 
   #Capture data includes all times an individual was captured (with measurements
   #like mass, tarsus etc.). This will include first capture as nestling (for
@@ -391,7 +401,7 @@ create_capture_UAN <- function(data, species_filter){
                                                   .$CapturePopID == "PB" ~ "PEE"),
                   Species = dplyr::case_when(.$Species == "pm" ~ species_codes[which(species_codes$SpeciesID == 14640), ]$Species,
                                              .$Species == "pc" ~ species_codes[which(species_codes$SpeciesID == 14620), ]$Species)) %>%
-    #Filter by species
+    #Keep filtered species
     dplyr::filter(Species %in% species_filter) %>%
     #Make tarsus length into standard method (Svensson Alt)
     #Firstly, convert the Svennson's standard measures to Svennson's Alt.
@@ -482,6 +492,7 @@ create_capture_UAN <- function(data, species_filter){
     #Determine age at first capture for every individual
     dplyr::mutate(ischick = dplyr::case_when(.$Age_observed_new <= 3 ~ 1L)) %>%
     calc_age(ID = IndvID, Age = ischick, Date = CaptureDate, Year = BreedingSeason) %>%
+    dplyr::filter(CapturePopID %in% pop_filter) %>%
     #Arrange columns
     #Replace Age_observed with Age_observed_new which has been converted to EURING codes
     dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime,
