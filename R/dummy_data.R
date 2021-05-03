@@ -759,6 +759,8 @@ create_dummy_data <- function() {
       Row = seq(max(I2_capture_rows$Row) + 1, length.out = n()),
       CaptureID = paste(CapturePopID, IndvID, CaptureDate, sep="_"),
       LocationID = paste(CapturePopID, "NB", "001", sep="_"),
+      Age_observed = 1,
+      Age_calculated = 1,
       CheckID = "I3"
     )
 
