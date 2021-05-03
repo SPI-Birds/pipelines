@@ -991,7 +991,7 @@ check_values_brood <- function(Brood_data, var, approved_list) {
   warning_ref <- ref %>%
     dplyr::filter(.data$n >= 100)
 
-  brood_war <- purrr::pmap(.l = warning_ref[13,],
+  brood_war <- purrr::pmap(.l = warning_ref,
                            .f = ~{
 
                              #pb$tick()
