@@ -197,7 +197,7 @@ If you are still unable to run the pipelines following these setup instructions 
 
 - Restart your computer before running pipelines to ensure R recognises the newly installed software and drivers.
 
-- If R does not recognise Python's *pandas* module, try installing it using ```reticulate::py_install("pandas")```.
+- If R on Windows does not recognise Python's *pandas* module, try installing it using ```reticulate::py_install("pandas")```.
 
 - Download the newest version of R [here](https://www.r-project.org/).
 
@@ -513,6 +513,7 @@ THIS IS STILL DONE MANUALLY AND NEEDS TO BE UPDATED. EVERY TIME A NEW PIPELINE I
 
 ## Quality check
 
+### Creating checks
 The `quality_check()` function is a wrapper function that combines 4 dataset-specific wrapper functions:
 - `brood_check()`
 - `capture_check()`
@@ -523,6 +524,12 @@ Each of the dataset-specific functions contains a series of individual quality c
 
 All individual checks should function on rows and flag records as ‘warning’ (unlikely values) or ‘potential error’ (impossible values). 
 
+### Approve-listing
 Approve-listed records (i.e. flagged records that are subsequently verified by data owners) should not be flagged by the checks.
 
 If the data owner verifies any records flagged by the quality check (i.e. classifies them as legitimate values) add them to `brood_approved_list.csv`, `capture_approved_list.csv`, `individual_approved_list.csv` or `location_approved_list.csv`.
+
+### Running quality check
+The quality check is run on data in the standard format using `quality_check()`. The quality check report can be printed as html and/or pdf.
+
+If you have trouble running the pdf, try setting the LaTeX engine to LuaLaTeX (i.e. `quality_check(latex_engine = "lualatex")`. If that doesn't work, a different LaTeX distribution, like TinyTeX (https://yihui.org/tinytex/), might work.
