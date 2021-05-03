@@ -550,13 +550,14 @@ create_individual_UAN <- function(data, Capture_data, species_filter){
 
     }),
     PopID = dplyr::first(CapturePopID),
-    BroodIDLaid = first(BroodID),
-    BroodIDFledged = BroodIDLaid,
     RingSeason = first(BreedingSeason),
     RingAge = dplyr::case_when(dplyr::first(.data$Age_observed) > 5  ~ "chick",
                                dplyr::first(.data$Age_observed) == 1 ~ "chick",
                                is.na(dplyr::first(.data$Age_observed)) ~ "adult",
-                               dplyr::first(.data$Age_observed) <= 5 ~ "adult")) %>%
+                               dplyr::first(.data$Age_observed) <= 5 ~ "adult"),
+    BroodIDLaid = dplyr::case_when(RingAge == "chick" ~ first(BroodID),
+                                   RingAge == "adult" ~ NA_character_),
+    BroodIDFledged = BroodIDLaid) %>%
     dplyr::arrange(RingSeason, IndvID)
 
   # Retrieve sex information from primary data
@@ -567,7 +568,8 @@ create_individual_UAN <- function(data, Capture_data, species_filter){
 
   Indv_data <- Indv_info %>%
     dplyr::left_join(Indv_sex, by = "IndvID") %>%
-    dplyr::filter(Species %in% species_filter)
+    dplyr::filter(Species %in% species_filter) %>%
+    dplyr::select(IndvID, Species, PopID, BroodIDLaid, BroodIDFledged, RingSeason, RingAge, Sex)
 
   return(Indv_data)
 
