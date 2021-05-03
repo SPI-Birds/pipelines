@@ -4,7 +4,7 @@
 \alias{create_brood_UAN}
 \title{Create brood data table for data from University of Antwerp, Belgium.}
 \usage{
-create_brood_UAN(data, CAPTURE_info, species_filter)
+create_brood_UAN(data, CAPTURE_info, species_filter, pop_filter)
 }
 \arguments{
 \item{data}{Data frame. Primary data from University of Antwerp.}
@@ -12,6 +12,8 @@ create_brood_UAN(data, CAPTURE_info, species_filter)
 \item{CAPTURE_info}{Capture data table from the raw data}
 
 \item{species_filter}{6 letter species codes for filtering data.}
+
+\item{pop_filter}{Population three letter codes from the standard protocol.}
 }
 \value{
 A data frame.
