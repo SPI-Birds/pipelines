@@ -532,4 +532,4 @@ If the data owner verifies any records flagged by the quality check (i.e. classi
 ### Running quality check
 The quality check is run on data in the standard format using `quality_check()`. The quality check report can be printed as html and/or pdf.
 
-If you have trouble running the pdf, try setting the LaTeX engine to LuaLaTeX (i.e. `quality_check(latex_engine = "lualatex")`. If that doesn't work, a different LaTeX distribution, like TinyTeX (https://yihui.org/tinytex/), might work.
+If you have trouble running the pdf, try setting the LaTeX engine to LuaLaTeX (i.e. `quality_check(latex_engine = "lualatex")`). Alternatively, a different LaTeX distribution, like TinyTeX (https://yihui.org/tinytex/), might work.
