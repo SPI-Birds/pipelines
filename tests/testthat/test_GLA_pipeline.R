@@ -46,6 +46,14 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(subset(GLA_data, IndvID == "AFE3038")$RingSeason, 2019) # Should be 2019 (seen in two years)
   expect_equal(subset(GLA_data, IndvID == "AFE3038")$RingAge, "adult") # Should be an adult
 
+  ## Individual observed in multiple populations
+  expect_equal(nrow(subset(GLA_data, IndvID == "ACJ2041")), 2) # 2 records
+  expect_equal(subset(GLA_data, IndvID == "ACJ2041")$PopID, c("SCE", "SAL")) # SCE and SAL pop codes
+
+  ## Individual observed in multiple populations and ringed as chick
+  expect_equal(nrow(subset(GLA_data, IndvID == "AFE3840")), 2) # SCE and SAL pop codes
+  expect_equal(n_distinct(subset(GLA_data, IndvID == "AFE3840")$BroodIDLaid), 1) # 1 BroodIDLaid value
+  expect_equal(!is.na(unique(subset(GLA_data, IndvID == "AFE3840")$BroodIDLaid)), TRUE) # BroodIDLaid not NA
 
 })
 
