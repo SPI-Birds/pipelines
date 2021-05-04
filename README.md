@@ -145,6 +145,8 @@ Restart your computer before running the pipelines.
 
 To generate the pdf quality check report on Windows you will need to have installed [`MikTex`](https://miktex.org/). If MikTex is not installed, only the html version of the quality check report can be created.
 
+An alternative LaTeX distribution that works well in R is [`TinyTeX`](https://yihui.org/tinytex/).
+
 #### Mac
 
 ##### Microsoft Access Driver
@@ -530,6 +532,15 @@ Approve-listed records (i.e. flagged records that are subsequently verified by d
 If the data owner verifies any records flagged by the quality check (i.e. classifies them as legitimate values) add them to `brood_approved_list.csv`, `capture_approved_list.csv`, `individual_approved_list.csv` or `location_approved_list.csv`.
 
 ### Running quality check
-The quality check is run on data in the standard format using `quality_check()`. The quality check report can be printed as html and/or pdf.
+The quality check is run on data in the standard format using `quality_check()`. 
 
-If you have trouble running the pdf, try setting the LaTeX engine to LuaLaTeX (i.e. `quality_check(latex_engine = "lualatex")`). Alternatively, a different LaTeX distribution, like TinyTeX (https://yihui.org/tinytex/), might work.
+The output of the quality check includes:
+- A summary table of which checks resulted in warnings and potential errors
+- The pipeline output, where each table of the standard format includes two additional columns (Warning and Error) marking the records that resulted in warnings and potential errors
+- A report (in html and/or pdf) with a description of all checks and a list of all warnings and potential errors that have been flagged in the pipeline output.
+
+### Troubleshooting
+
+If you have any issues with running the quality check, try these troubleshooting tips:
+- Often pipelines make use of several grouping structures (inserted by `dplyr::group_by()` or `dplyr::rowwise()`). Removing these groups (by `dplyr::ungroup()` or `dplyr::summarise(..., .groups = "drop")`) reduces the run time of the quality check considerably.
+- If you have trouble creating the pdf, try setting the LaTeX engine to LuaLaTeX (i.e. `quality_check(..., latex_engine = "lualatex")`).
