@@ -6,10 +6,12 @@
 #'this data. For a general description of the standard format please see
 #'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 #'
-#'\strong{Species}: Primarily great tits and blue tits, but a few records of Eurasian tree sparrows, pied flycatchers, and Eurasian nuthatch.
+#'\strong{Species}: Primarily great tits and blue tits, but a small number of records of Eurasian tree sparrows, pied flycatchers, and Eurasian nuthatch.
+#'In the Brood table, four records
 #'
 #'\strong{IndvID}: Should be a 7 alphanumeric character string.
 #'Three records have ring numbers that are six characters and these are probably incorrect.
+#'
 #'
 #'\strong{CaptureDate}: Some individuals were not recorded in the ringing records, but were observed breeding at a monitored nest.
 #'For these individuals, the CaptureDate is set as June 1st of the breeding year.
@@ -64,10 +66,10 @@ format_GLA <- function(db = choose_directory(),
   ## Set options
   options(dplyr.summarise.inform = FALSE)
 
-    nest_csv <- read.csv("/Users/tyson/Downloads/GLA_PrimaryData.csv")
-
   ## Read in primary data from brood records
-  nest_data <- readxl::read_xlsx(path = paste0(db, "/GLA_PrimaryData_Nest.xlsx"), guess_max = 1500) %>%
+  ## Some dates are inverted (these are the dates that are stored as Excel dates in the primary data)
+  ## To fix these dates, the day and month needs to be changed for all Excel dates. Currently rather slow
+  nest_data <- readxl::read_xlsx(path = paste0(db, "/GLA_PrimaryData_Nest.xlsx"), guess = 5000) %>%
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
 
@@ -75,18 +77,22 @@ format_GLA <- function(db = choose_directory(),
     dplyr::mutate(BreedingSeason = as.integer(.data$Yr),
                   LocationID = as.character(.data$NestboxNumber),
                   Species = as.character(.data$Species),
-                  PopID = as.character(.data$Site),
+                  PopID = as.character(.data$Site)) %>%
 
-                  ## Two formats for dates. Lubridate gives warning message for dates in Excel date/time numbers, but these do get parsed
-                  ## TODO: Some dates, however, are in the incorrect format (month - day - year)
-                  FirstEggDate = case_when(grepl("/", .data$FirstEggDate) ~ lubridate::dmy(.data$FirstEggDate, quiet = TRUE),
-                                           TRUE ~ janitor::excel_numeric_to_date(as.numeric(.data$FirstEggDate))),
+    ## Rowwise, adjust dates
+    dplyr::rowwise() %>%
+
+    ## Two formats for dates.
+    ## First can be handled with Lubriate. Lubridate gives warning message for dates in Excel date/time numbers, but these do get parsed
+    ## Some dates, however, are in the incorrect format (month - day - year) and these need to be rearranged
+    dplyr::mutate(FirstEggDate = case_when(grepl("/", .data$FirstEggDate) ~ lubridate::dmy(.data$FirstEggDate, quiet = TRUE),
+                                           TRUE ~ lubridate::ymd(paste(unlist(stringr::str_split(as.character(janitor::excel_numeric_to_date(as.numeric(.data$FirstEggDate))), pattern = "-"))[c(1,3,2)], collapse = "-"))),
 
                   LayingComplete = case_when(grepl("/", .data$LayingComplete) ~ lubridate::dmy(.data$LayingComplete, quiet = TRUE),
-                                             TRUE ~ janitor::excel_numeric_to_date(as.numeric(.data$LayingComplete))),
+                                             TRUE ~ lubridate::ymd(paste(unlist(stringr::str_split(as.character(janitor::excel_numeric_to_date(as.numeric(.data$LayingComplete))), pattern = "-"))[c(1,3,2)], collapse = "-"))),
 
                   ObservedHatch = case_when(grepl("/", .data$ObservedHatch) ~ lubridate::dmy(.data$ObservedHatch, quiet = TRUE),
-                                            TRUE ~ janitor::excel_numeric_to_date(as.numeric(.data$ObservedHatch))),
+                                            TRUE ~ lubridate::ymd(paste(unlist(stringr::str_split(as.character(janitor::excel_numeric_to_date(as.numeric(.data$ObservedHatch))), pattern = "-"))[c(1,3,2)], collapse = "-"))),
 
                   Hatchlings = as.integer(.data$Hatchlings),
                   Fledglings = as.integer(.data$Fledglings),
@@ -361,7 +367,8 @@ create_brood_GLA <- function(nest_data, rr_data) {
 
     ## Calculate clutch type
     dplyr::arrange(.data$PopID, .data$BreedingSeason, .data$Species, .data$FemaleID, .data$LayDate_observed) %>%
-    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., protocol_version = "1.1", na.rm = FALSE)) %>%
+    ungroup() %>%
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data =.  , protocol_version = "1.1", na.rm = FALSE)) %>%
 
     ## Adjust column classes as necessary
     dplyr::mutate(BroodID = as.character(.data$BroodID))

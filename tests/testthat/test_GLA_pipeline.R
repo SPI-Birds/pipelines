@@ -116,8 +116,8 @@ test_that("Brood_data returns an expected outcome...", {
                       & LocationID == "724")$LayDate_min, as.Date("2014-05-01"))
   expect_equal(subset(GLA_data,
                       BreedingSeason == "2015"
-                      & PopID == "SCE"
-                      & LocationID == "724")$LayDate_min, as.Date("2015-05-02"))
+                      & PopID == "GAR"
+                      & LocationID == "724")$LayDate_min, as.Date("2015-05-08"))
   expect_equal(subset(GLA_data,
                       BreedingSeason == "2017"
                       & PopID == "SAL"
@@ -145,7 +145,7 @@ test_that("Capture_data returns an expected outcome...", {
   expect_equal(subset(GLA_data, IndvID == "S034047" &
                        BreedingSeason == 2017)$Sex_observed, "F") # Female
   expect_equal(subset(GLA_data, IndvID == "S034047" &
-                        CaptureDate == as.Date("2018-01-05"))$LocationID, "65") # LocationID 65
+                        CaptureDate == as.Date("2018-05-01"))$LocationID, "65") # LocationID 65
 
 })
 
