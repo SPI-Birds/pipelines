@@ -98,7 +98,7 @@ format_CHO <- function(db = choose_directory(),
                                           }
 
                                         }),
-           AvgEggMass = MeanEggWeight, NumberEggs = NEggsWeighted)
+           AvgEggMass = .data$MeanEggWeight, NumberEggs = .data$NoEggsWeighted)
 
   # CAPTURE DATA
 

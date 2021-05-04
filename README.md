@@ -1,34 +1,73 @@
-##### Table of Contents (general user) 
+<h1 style="font-weight:normal" align="center">
+  &nbsp;SPI-Birds Network and Database: Pipelines&nbsp;
+</h1>
+
+<div align="center">
+
+&nbsp;&nbsp;&nbsp;
+<a href="spibirds@nioo.knaw.nl"><img border="0" alt="Blog" src="https://assets.dryicons.com/uploads/icon/svg/4926/home.svg" width="40" height="40"></a>&nbsp;&nbsp;&nbsp;
+<a href="mailto:info@data-vizard.com"><img border="0" alt="Email" src="https://assets.dryicons.com/uploads/icon/svg/8007/c804652c-fae4-43d7-b539-187d6a408254.svg" width="40" height="40"></a>&nbsp;&nbsp;&nbsp;
+<a href="https://twitter.com/spibirds"><img border="0" alt="Twitter" src="https://assets.dryicons.com/uploads/icon/svg/8385/c23f7ffc-ca8d-4246-8978-ce9f6d5bcc99.svg" width="40" height="40"></a>
+&nbsp;&nbsp;&nbsp;
+
+</div>
+
+<h3 style="font-weight:normal" align="center">
+  &nbsp;Welcome to the pipeline repository for the SPI-Birds Network and Database. Follow the links above to visit our website, contact us via e-mail or Twitter. This README contains all the details required to work with the pipelines, including workflow guidelines for developers.&nbsp;
+</h3>
+
+---
+
+<details>
+<summary>Table of Contents (general user)</summary>
+
+<!-- toc -->
 [Load the pipeline package](#load)  
 
 [Pipeline documentation](#docs)
 
-[Run the pipelines for yourself](#run)  
+[Run the pipelines for yourself](#run) 
+<!-- tocstop -->
 
+</details>
+<details>
 
-##### Table of Contents (developers) 
-[Primary data storage](#storage)  
+<summary>Table of Contents (developers guidelines)</summary>
+
+<!-- toc -->
+[Data storage conventions](#storage)
+
+[Naming conventions](#naming)
 
 [Recommended workflow](#workflow)
 
-[Dealing with new data](#newdata)  
+[Data requests](#requests)
+
+[Archiving](#archiving) 
+
+[Quality check](#quality_check)
+<!-- tocstop -->
+
+</details>
+
+---
 
 # SPI-Birds pipeline: Introduction (for the general user)
 
-Welcome to the SPI-Birds pipeline package. This README will give you an introduction on how to load the package, how to find out details about each pipeline, and how to use the package for creating bird data following the [SPI-Birds community data standard](https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf) and generating standard quality checks.
+Welcome to the SPI-Birds pipeline package. This section of the README will give you an introduction on how to load the package, how to find out details about each pipeline, and how to use the package for creating bird data following the [SPI-Birds community data standard](https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf) and generating standard quality checks.
 
 <a name="load"/>
 
 ## Load the pipeline package
 
-The pipeline package can be installed in R using the following code from the `devtools` package:
+The pipeline package can be installed in R using the following code with the package `remotes`:
 
 ```
-devtools::install_github("SPI-Birds/pipelines")
+remotes::install_github("SPI-Birds/pipelines")
 library(pipelines)
 ```
 
-This will install all pipelines and quality check code on your computer and load the code into your session of R. Individual pipelines are build as separate functions for each data owner (where one data owner can administer multiple populations). Each function is given the name `format_X()` where *X* is the letter code for the data owner. The codes for different data owners and corresponding populations are described in the [SPI-Birds standard protocol](https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.0.0.pdf). *Note* in cases where a data owner administers one population, the unique 3 letter population ID code and the data owner code are identical.
+This will install all pipelines and quality check code on your computer and attach our `pipeline` package into your session of R. Individual pipelines are build as separate functions for each data owner (where one data owner can administer multiple populations). Each function is given the name `format_X()` where *X* is the letter code for the data owner. The codes for different data owners and corresponding populations are described in the [SPI-Birds standard protocol](https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.1.0.pdf). *Note* in cases where a data owner administers one population, the unique 3 letter population ID code and the data owner code are identical.
 
 <a name="docs"/>
 
@@ -48,11 +87,13 @@ Each set of primary data is in a slightly different format. Therefore, to run al
 
 ### Setup your computer to run pipelines
 
-Pipelines for some populations require additional software and software drivers. These setup instructions describe how to install the required software for a Windows 10 64-bit operating system (on which the pipelines were built). The setup procedure should be similar for other Windows 64-bit systems, but will differ for non-Windows operating systems. If you are unsure which version of Windows is running on your computer, check 'System Type' in 'System Information'. To run the pipelines for all populations a users system must have:
+Pipelines for some populations require additional software and drivers. Setup instructions describe how to install the required software for both a Windows 10 64-bit operating system and Mac OSX. The setup procedure should be similar for other Windows 64-bit systems. If you are unsure which version of Windows is running on your computer, check 'System Type' in 'System Information'. To run the pipelines for all populations a users system must have:
 
-- Microsoft Access Driver (/*.mdb, /*.accdb)
+- Microsoft Access Driver (/*.mdb, /*.accdb) (Windows only)
 - Python 3
 - Python libraries *pandas* and *pypxlib*
+
+*Note* Users running Mac OSX will not be able to run pipelines with primary data stored in Microsoft Access format without purchasing paid drivers.
 
 ---
 
@@ -62,7 +103,7 @@ Pipelines for some populations require additional software and software drivers.
 
 Firstly, you must check that you are running a 64-bit version of R. Open an R session and see whether you have 64-bit or 32-bit installation.
 
-![](https://github.com/LiamDBailey/SPIbirds/blob/master/inst/extdata/README_imgs/R_version.jpg)
+<img src="https://github.com/LiamDBailey/SPIbirds/blob/master/inst/extdata/README_imgs/R_version.jpg" width="400" height="400">
 
 If you do not have a 64-bit version you will need to install one [here](https://www.r-project.org/).
 
@@ -86,7 +127,7 @@ In the next window, you ***must*** add a 'Data Source Name'. Everything else can
 
 ![](https://github.com/LiamDBailey/SPIbirds/blob/master/inst/extdata/README_imgs/Add_name.jpg)
 
-Check if this driver is installed and recognised by R using the function `odbcListDrivers()` in the `odbc` package. Note that you will need to open a new session of R before the driver will appear.
+Check if this driver is installed and recognised by R using the function `odbcListDrivers()` from the `odbc` package. Note that you will need to open a new session of R before the driver will appear.
 
 ##### Python 3
 
@@ -100,13 +141,55 @@ This will install the *pypxlib* library on your system.
 
 Restart your computer before running the pipelines.
 
-#### MikTex
+##### MikTex
 
-To generate the pdf quality check report on Windows you will need to have installed [`MikTex`](https://miktex.org/). If MikTex is not installed, only the html version of the qualit check report can be created.
+To generate the pdf quality check report on Windows you will need to have installed [`MikTex`](https://miktex.org/). If MikTex is not installed, only the html version of the quality check report can be created.
 
 #### Mac
 
-Work in progress..
+##### Microsoft Access Driver
+
+At present, no free Microsoft Access Driver is available for Mac. 
+
+As a consequence, the `pipelines` package currently does not run pipelines requiring a Microsoft Access Driver on Mac OSX (the affected pipelines are skipped and a information message displayed when attempting to run on Mac). 
+
+##### Python 3 for Mac
+
+The following notes detail how to set up the python environment on MacOS, including necessary libraries:
+
+* Install Anaconda 3.X (this was last tested with 3.8)
+
+* Check your default python version by opening terminal and typing:`python3 --version`(This should return Python 3.X.Y)
+
+* Check that `pip` is available by typing `pip3 --version` in the terminal
+
+* Update `pip` by typing `python3 -m pip install --user --upgrade pip` in the terminal
+    (You have to use the `--user` argument as permission may be denied otherwise)
+
+* Open RStudio and load the reticulate package: `library(reticulate)`
+
+* Check which version of python reticulate is linked to: `py_config()`
+    (Required python libraries need to be installed into this virtual environment)
+
+* Install `pandas` library from within R: `py_install("pandas")`
+
+* Install `pypxlib` library from within R: `py_install("pypxlib", pip = TRUE)`
+    (Since this is an external library hosted on GitHub, you need to specify installation via pip)
+
+* Check that both libraries are now available:
+```
+py_module_available("pandas")
+py_module_available("pypxlib")
+```
+(Both commands should return TRUE)
+
+With this setup, python should be good to go for extracting paradox databases.
+(Note that when you install Anaconda, the r-reticulate environment should already be present. If that is not the case, you may have to first generate the environment and link it to RStudio).
+
+##### Pdf compilation on Mac
+
+At present, the `pipelines` package does not create pdf outputs when run on a Mac. 
+This is work in progress and will be changed in the future.
 
 #### Troubleshooting
 
@@ -114,7 +197,7 @@ If you are still unable to run the pipelines following these setup instructions 
 
 - Restart your computer before running pipelines to ensure R recognises the newly installed software and drivers.
 
-- If R does not recognise Python's *pandas* module, try installing it using ```reticulate::py_install("pandas")```.
+- If R on Windows does not recognise Python's *pandas* module, try installing it using ```reticulate::py_install("pandas")```.
 
 - Download the newest version of R [here](https://www.r-project.org/).
 
@@ -122,9 +205,7 @@ If you are still unable to run the pipelines following these setup instructions 
 
 ---
 
-### Primary data naming conventions
-
-All pipelines assume the primary data is stored using a standard naming protocol: `X_PrimaryData_Y`. Where *X* is the data owner code (described above) and *Y* is additional information used to distinguish between multiple primary data files. The exact naming convention of primary data for each pipeline is described in the help. *Note:* All primary data files for a given pipeline should be stored in a single folder.
+<a name="run"/>
 
 ### Running the pipelines
 
@@ -134,82 +215,286 @@ Once your computer is set up and primary data follow the correct naming protocol
 format_NIOO(output_type = "R")
 ```
 
-# SPI-Birds pipeline: Introduction (for the SPI-Birds team)
+If you want to run multiple pipelines at once, you can use the `run_pipelines()` function instead.
 
-This provides additional information for the SPI-Birds team, which isn't relevant for the general user.
+# Developer guidelines
 
 <a name="storage"/>
 
-## Primary data storage
+## Data storage conventions
 
-All primary data are stored within a single folder on the NIOO SPI-Birds computer. Primary data is stored following the standard naming approach described above `X_PrimaryData_Y`. In addition, you should ensure that:
+### The N drive data folder
 
-* The names of primary data file(s) for each population should not be changed. When updating with data from new years, make sure the name of the new data is the same as the old data following the naming protocol described above.
-* Data from each population should have its own folder. The folder name should include the letter code associated with the data owner (e.g. HAR for Harjavalta, NIOO for NIOO).
-* All populations folders should be stored in the same location.
+All files relevant to SPI-Birds are stored in the N drive on the NIOO server (`N:\Dep.AnE\SPI_Birds\data`). This `data` folder contains separate folders for every data owner in the format `X_Name_Country`, where *X* is the data owner code, *Name* is the name of the data owner, and *Country* is the country where the data owner is based. For example, the NIOO data are stored in the folder:
+
+```
+NIOO_NetherlandsInstituteOfEcology_Netherlands
+```
+
+### Data owner folders
+
+The folder for each data owner will contain all relevant information for all populations administered by the data owner. This will usually include:
+
+- Primary data
+- Meta data
+- Archive meta data
+- The archive folder
+
+The naming convention of each of these files is described [below](#naming).
+
+### The .standard_format folder
+
+In addition to folders for each data owner, the `data` folder contains the most recent output of all pipelines in the standard format, including an archiving folder. When a data request is made, this version of the standard format can be filtered to meet a given data request (see Data requests below). This is more efficient than re-running pipelines for each data request.
+
+<a name="naming"/>
+
+## Naming conventions
+
+All files used to run pipelines and store data should follow the standard naming convention.
+
+### Primary data
+
+Primary data should be named with the format `X_PrimaryData_Y`. Where *X* is the data owner code (described above) and *Y* is additional information used to distinguish between multiple primary data files. For example, the a data owner `ABC` may have separate primary data files for great and blue tits. These files might then be named:
+
+```
+ABC_PrimaryData_Greattit.csv
+ABC_PrimaryData_Bluetit.csv
+```
+
+### Meta data
+
+All data owners should also provide meta-data about their population(s) in an .xslx file with the format `X_MetaData.xlsx`, where *X* is the data owner code.
+
+### Archive meta data
+
+The folder of each data owner will also include an archive meta data .txt file (the archiving process is explained in more detail below). This file will be in the format `X_ArchiveMetaData.txt`, where *X* is the data owner code.
+
+### Additional files
+
+The data owner may provide other files (e.g. field work protocols, relevant papers). The possible types of files here is unrestricted, to the naming convention must be more flexible. Files can contain any information and be of any file type; however all files should start with the data owner code. For example, the field protocol for data owner `ABC` may be stored as:
+
+```
+ABC_FieldProtocol.docx
+```
+
+### Pipelines
+
+Code of all pipelines is stored in the /R folder of the pipelines repository. Every pipeline file should follow the naming convention `format_X.R`, where *X* is the data owner code. More details on the structure of pipeline code can be found [below](#workflow).
 
 <a name="workflow"/>
 
-## Create data in the standard format
+## Recommended developer workflow
 
-Each year when primary data are updated all pipelines will be re-run for all populations. This is done using the function `run_pipelines()`. This function has 4 arguments:
+Below we describe the workflow that any developer should follow when building a new pipeline.
 
-* path: The location of the folder where all population data is stored. Can be left blank and R will prompt you to find the folder.
-* PopID: The population code(s) for the populations where you want to run pipelines.
-* Species: The species code(s) for the species you want to use (e.g. PARMAJ for great tit). See the [SPI-Birds standard protocol](https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.1.0.pdf) for all species codes.
-* output_type: Should the data be output in R or as separate .csv files
+### Before starting
 
-For example, the below code will format great tit data from Harjavalta (Finland) and Choupal (Portugal) and output .csv files in the location where the data are stored.
+- Contact the data owner and let them know you have started to work on their data. At this point, it is usually helpful to ask about any changes or additions that may have been made to the primary data since it was first included in the SPI-Birds database.
 
-```r
-run_pipelines(path = "C:\\all_data", PopID = c("HAR", "CHO"), Species = "PARMAJ", output_type = "csv")
+- Update the SPI-Birds Google Sheet and list the pipeline as 'in progress'.
+
+### Create a new branch
+
+- Pull the newest version of the master branch (`git pull`).
+
+- Create a new branch from the master where you will build your pipeline (`git checkout -b new_branch_name`). Make sure the branch name is clear and concise.
+
+- As you work, you should stage (`git add format_X.R`) and commit (`git commit -m 'commit header' -m 'commit details'`) your work regularly.
+
+*Note* Commits should ideally be distinct blocks of changes with a concise header and detailed description. See some commit best practices [here](https://r-pkgs.org/git.html#commit-best-practices).
+
+- When you have finished working for a day, push your branch to the remote (`git push -u origin new_branch_name` the first time; `git push` afterwards).
+
+### Build the pipeline
+
+- In your new branch, create the new file `format_X.R` in the /R folder, where X is the data owner code.
+
+- This file should contain one parent function (`format_X()`) and at least 4 internal functions for each of the four tables in the standard format:
+    - `create_brood_X()`
+    - `create_capture_X()`
+    - `create_individual_X()`
+    - `create_location_X()`
+    
+- `format_X()` should always take 4 standard arguments:
+    * path: The location of the folder where primary data are stored. Can be left blank and R will prompt you to find the folder.
+    * PopID: The population code(s) for the populations where you want to run pipelines. Relevant for data owners that administer multiple populations.
+    * Species: The species code(s) for the species you want to use (e.g. PARMAJ for great tit). See the [SPI-Birds standard protocol](https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.1.0.pdf) for all species codes.
+    * output_type: Should the data be output in R or as separate .csv files
+    
+- These arguments are all documented under pipeline_params in the `zzz.R` file within /R.
+
+- Every function should be documented using `roxygen2`. The 'Details' section of the documentation should be used to record any decisions that were made during the pipeline construction that may be relevant for the data owner, users, or other developers.
+
+- Once a pipeline is finished, add information about the pipeline to `pop_codes.csv` and `pop_species_combos.csv` in the /inst/extdata folder.
+
+- If your pipeline works with a new species, also include this species in `species_codes.csv` in the /inst/extdata folder.
+    
+*Note:* We recommend you look at other pipelines as a guide.
+
+### Create unit tests
+
+Every pipeline should have a set of unit tests in the /test/testthat folder using the `testthat` package.
+
+- The unit testing code for each pipeline should be stored in a file `test_X_pipeline.R`, where X is the data owner code. The unit tests should ensure that primary data has been properly converted to the standard format. This will usually involve comparing the values for a range of different individuals in the standard format (e.g. different species, different sex) to those that would be expected from the primary data. In other words, these tests require some *manual* inspection of the primary data to determine the correct output expected for each individual. 
+
+- In addition, all PopIDs from the current pipeline (*Note* PopIDs NOT data owner code) should be added to l. 34 - 45 in the file `setup-xyz.R`. This will ensure that the new pipeline is run during checks and test described below.
+
+- Each pipeline should undergo five sets of unit tests:
+    - Test standard format structure. Have the four tables Brood_data, Capture_data, Individual_data, and Location_data been created.
+    - Test brood data.
+    - Test capture data.
+    - Test individual data.
+    - Test location data.
+    
+- Once tests are written for your pipeline, check your pipeline output passes all these tests! Once you are confident your pipeline passes the tests you can then check that all other tests are still passing.
+    
+### `devtools::test()`
+
+Once you have finished the pipeline and passed relevant unit tests you should run the unit tests for *all* existing pipelines. This can be time consuming and a bit annoying, but it is important to regularly test all pipelines in case old code has broken due to e.g. package updates.
+
+*Note* To save time, we would recommend you run all pipelines using the `run_pipelines()` function (see code in l. 34 - 45 of `tests/testthat/setup-xyz.R`.) and save the output as `inst/extdata/test_data.RDS`. Assuming all tests pass, this file can will then be used every time in the checks instead of having to re-run pipelines every time.
+
+To run all unit tests you can use the code `devtools::test()` or Ctrl/Cmd + Shift + T to run the tests in the build window.
+
+### `devtools::check()`
+
+Once your branch is passing all unit tests you should next check the package structure. This will more broadly check things like the documentation, check for unreadable characters, ensure all the code can be loaded. It will also involve running the unit tests again, so it would be advisable to generate the `inst/extdata/test_data.RDS` file before running the checks.
+
+- You can check the code using `devtools::check()` or Ctrl/Cmd + Shift + E to run the tests in the build window.
+
+- Currently, the output of `devtools::check()` should include 2 known notes:
+
+```
+checking package dependencies (4.3s)
+Imports includes 26 non-default packages.
+Importing from so many packages makes the package vulnerable to any of
+them becoming unavailable.  Move as many as possible to Suggests and
+use conditionally.
 ```
 
-**Note:** If you select a PopID/Species combination that does not exist, this population will be skipped.
+Package dependencies are discussed in more detail below.
 
-In most cases, we will want to run all pipelines together. In this case, the arguments *PopID* and *Species* can be ignored.
-
-## Recommended workflow
-
-*THIS WORKFLOW IS IN BETA. CHANGES NEED TO BE MADE TO STREAMLINE THE PROCESS*
-
-1. Run pipelines for populations of interest using `run_pipelines` return an R object. If you are just outputting the standard format for a user request there is no need to save the output as an .RDA file.
-
-```r
-standard_format <- run_pipelines(PopID = "HOG", output_type = "R", save = FALSE)
+```
+N  checking installed package size ... 
+     installed size is 30.2Mb
+     sub-directories of 1Mb or more:
+       data      1.7Mb
+       extdata  27.7Mb
 ```
 
-2. Run the quality check on the newly created object. Generally, we will just want to pdf output. The file should be created in the working directory.
+Package size is discussed in more detail below.
 
-```r
-quality_check(standard_format, output_format = "pdf")
+- *Any other ERRORS, WARNINGS, or NOTES must be fixed before continuing! Pull requests will not be accepted otherwise.*
+
+#### Tips for passing `devtools::check()`
+
+##### "no visible binding for global variable"
+
+This will often occur when working with `dplyr` code. All columns should be prefixed by `.data$`.
+
+##### "no visible global function"
+
+All functions except those in the `base` package should have the package namespace explicitly stated (e.g. `stats::na.omit`).
+
+##### "Undocumented arguments in documentation object 'XXX'"
+
+The function XXX includes and argument that is not documented with `@param` in the roxygen2 documentation code. Check for spelling mistakes!
+
+##### "Documented arguments not in \usage in documentation object 'XXX'"
+
+The function XXX includes documentation for an argument in `@param` in the roxygen2 documentation code that does not appear in the function. Check for spelling mistakes!
+
+##### "Found the following file with non-ASCII characters"
+
+Packages can only include [ASCII characters](https://theasciicode.com.ar/). You can check the character types being used in a line of code with `stringi::stri_enc_mark()`. For example:
+
+```
+#Will return ASCII
+stringi::stri_enc_mark("ABC")
+
+#Will return UTF-8
+stringi::stri_enc_mark("是")
 ```
 
-3. For now, we need to run `run_pipelines` again to output the 4 .csv files to send to the user.
+Watch out for cases where slanted quotation marks are used (‘’) instead of straight ones ('')! Slanted quotation marks can often be introduced when copying text from outside R, but they are NOT ASCII.
 
-```r
-run_pipelines(PopID = "HOG", output_type = "csv")
-```
+If a non-ASCII character must be used, it can be encoded with unicode `\uxxxx`.
 
-<a name="newdata"/>
+### Create a pull request
 
-## Dealing with new data
+Once your pipeline is stable and passes all tests and checks it should be reviewed by other developers.
 
-When we get updated data (or get data for a new population) we need to set up the archiving folder on the N drive using the `archive` function.
+- Push your finished pipeline to the remote (`git push`).
 
-### New population
+- Visit the [pipelines repository](https://github.com/SPI-Birds/pipelines) and open a pull request.
+
+- Request a reviewer. It is also good to let the person know directly so they don't miss it.
+
+*Note* One key aspect of the code review should also be to test the pipelines on both Mac OSX and Windows.
+
+*Note* The pull request should not be merged until after the data owner confirmation.
+
+- Once the pipeline is stable it can be updated to 'finished' in the Google Sheet.
+
+### Data owner confirmation
+
+The code review should ensure that there are no major bug or oversights. At this point, we can contact the data owner to discuss the pipeline.
+
+- Explain all decisions that were made in the pipeline.
+
+- Confirm any columns/data that were unclear/uncertain.
+
+- Ask about any other data that appear to be missing (e.g. capture data, nest box coordinates).
+
+- At this point, some changes may be needed to incorporate data owner input. If changes are made to the pipeline code it's important that unit tests and checks are run on the code again.
+
+- Record data owner approval in the Google Sheet.
+
+### Merge and quality check
+
+- Once a pipeline has approval from both the data owner and code reviewer the pull request can be merged.
+
+- At this point the working branch can be deleted from the remote and local.
+
+*Note* Remember to pull the newest version of the master branch at this point, it will include the new pipeline.
+
+- Run `quality_check()` on the standard format output from the pipeline. Send the quality check report and the standard format data to the data owner to help them improve data integrity. See more details on the quality check below.
+
+- Contact Antica to update the populations as 'available' on the website.
+
+### Update and archive
+
+- Every time a new pipeline is finished (or an old pipeline updated) we should update and archive the .standard_format folder on the N drive. More about archiving below.
+
+<a name="requests"/>
+
+## Data requests
+
+- A data request will specify the PopIDs and Species of interest. We can return the relevant data in the standard format by running `subset_datarqst()` on the most recent version of the standard format in the .standard_format folder.
+
+- You can choose to include or exclude individuals where the species is uncertain using the `include_conflicting` argument (FALSE by default).
+
+- Run `quality_check()` on the subset of the standard format.
+
+- Provide the user with the subset of the standard format and the quality check report.
+
+<a name="archiving"/>
+
+## Archiving
+
+### Archiving a new population
 
 1. Create a new folder in N:\Dep.AnE\SPI_Birds\data. It should follow the syntax `<OWNERID>_<PopName>_<Country>`
 2. Rename files.
     - Primary data should follow the syntax `<OWNERID>_PrimaryData`. If there are multiple primary data files provide different suffixes to differentiate them (e.g. `<OWNERID>_PrimaryData_GTData`
     - Population meta-data should follow the syntax `<OWNERID>_MetaData`
     - All other data that is not meta-data or primary data can be named in any way, but should always start with `<OWNERID>_`
-3. Create initial archive. The below code will generate a `ArchiveMetaData.txt` file and generate an archive folder for the new population. **Important**: Make sure you specify that this is the initial archive with `initial = TRUE`.
+3. Create the initial archive. The below code will generate a `ArchiveMetaData.txt` file and generate an archive folder for the new population. **Important**: Make sure you specify that this is the initial archive with `initial = TRUE`.
 ```
 archive(data_folder = "N:\Dep.AnE\SPI_Birds\data", OwnerID = <OWNERID>, new_data_date = <DATE WHEN DATA WERE RECEIVED>, initial = TRUE)
 ```
 
-### Updated population
+### Archiving updated data
 
 1. Rename new files to match existing data files (i.e. with the syntax `<OWNERID>_PrimaryData`). **Important**: Files should have the **exact** same name, otherwise the pipelines may break. If you do need to use new file names (and rework the pipeline) you will be given a prompt to continue.
 2. Decide if we are dealing with a 'minor' update (e.g. fix typos) or a 'major' update (e.g. new year of data).
@@ -219,3 +504,32 @@ archive(data_folder = "N:\Dep.AnE\SPI_Birds\data", OwnerID = <OWNERID>, update_t
         new_data_path = <LOCATION OF NEW FILES. Consider using choose.files()>,
         new_data_date = <DATE WHEN DATA WERE RECEIVED>, initial = FALSE)
 ```
+
+### Archiving standard format data
+
+THIS IS STILL DONE MANUALLY AND NEEDS TO BE UPDATED. EVERY TIME A NEW PIPELINE IS FINISHED WE SHOULD ADD THE NEWEST VERSION OF THE STANDARD FORMAT IN .standard_format AND ALSO IN A NEW FOLDER .standard_format/archive/<YYYY_MM_DD>.
+
+<a name="quality_check"/>
+
+## Quality check
+
+### Creating checks
+The `quality_check()` function is a wrapper function that combines 4 dataset-specific wrapper functions:
+- `brood_check()`
+- `capture_check()`
+- `individual_check()`
+- `location_check()`
+
+Each of the dataset-specific functions contains a series of individual quality check functions. These individual quality check functions should be named ‘check_’ or ‘compare_’ followed by a short description of the check and come with a CheckID (e.g. B2 is the second individual check within the `brood_check()` wrapper).
+
+All individual checks should function on rows and flag records as ‘warning’ (unlikely values) or ‘potential error’ (impossible values). 
+
+### Approve-listing
+Approve-listed records (i.e. flagged records that are subsequently verified by data owners) should not be flagged by the checks.
+
+If the data owner verifies any records flagged by the quality check (i.e. classifies them as legitimate values) add them to `brood_approved_list.csv`, `capture_approved_list.csv`, `individual_approved_list.csv` or `location_approved_list.csv`.
+
+### Running quality check
+The quality check is run on data in the standard format using `quality_check()`. The quality check report can be printed as html and/or pdf.
+
+If you have trouble running the pdf, try setting the LaTeX engine to LuaLaTeX (i.e. `quality_check(latex_engine = "lualatex")`). Alternatively, a different LaTeX distribution, like TinyTeX (https://yihui.org/tinytex/), might work.
