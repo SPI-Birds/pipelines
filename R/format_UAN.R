@@ -242,14 +242,17 @@ format_UAN <- function(db = choose_directory(),
   avg_chick_data <- Capture_data %>%
     dplyr::filter(between(ChickAge, 14, 16)) %>%
     dplyr::group_by(BroodID) %>%
-    dplyr::summarise(AvgChickMass_capture = mean(Mass, na.rm = TRUE), AvgTarsus_capture = mean(Tarsus, na.rm = TRUE))
+    dplyr::summarise(AvgChickMass_capture = mean(Mass, na.rm = TRUE),
+                     AvgTarsus_capture = mean(Tarsus, na.rm = TRUE),
+                     .groups = "drop")
 
   Brood_data <- Brood_data %>%
     dplyr::left_join(avg_chick_data, by = "BroodID") %>%
     dplyr::rowwise() %>%
     dplyr::mutate(AvgChickMass = ifelse(!is.na(AvgChickMass_capture), AvgChickMass_capture, AvgChickMass),
                   AvgTarsus = ifelse(!is.na(AvgTarsus_capture), AvgTarsus_capture, AvgTarsus)) %>%
-    dplyr::select(-AvgChickMass_capture, -AvgTarsus_capture)
+    dplyr::select(-AvgChickMass_capture, -AvgTarsus_capture) %>%
+    dplyr::ungroup()
 
   Capture_data <- Capture_data %>%
     dplyr::select(-BroodID)
@@ -308,15 +311,14 @@ create_brood_UAN <- function(data, CAPTURE_info, species_filter, pop_filter){
   Tarsus_method <- CAPTURE_info %>%
     dplyr::group_by(BroodID) %>%
     dplyr::summarise(TarsusAlt = length(stats::na.omit(TarsusAlt)) > 0,
-                     TarsusStd = length(stats::na.omit(TarsusStandard)) > 0) %>%
+                     TarsusStd = length(stats::na.omit(TarsusStandard)) > 0,
+                     .groups = "drop") %>%
     dplyr::mutate(OriginalTarsusMethod = dplyr::case_when(TarsusAlt == "TRUE" ~ "Alternative",
                                                           TarsusAlt != "TRUE" & TarsusStd == "TRUE" ~ "Standard",
                                                           TarsusAlt != "TRUE" & TarsusStd != "TRUE" ~ NA_character_)) %>%
     dplyr::select(-TarsusAlt, -TarsusStd)
 
   #Create a table with brood information.
-  clutchtype <- progress::progress_bar$new(total = nrow(data))
-
   Brood_data <- data %>%
     #Convert columns to expected values
     dplyr::mutate(PopID = dplyr::case_when(.$PopID == "FR" ~ "BOS",
@@ -557,7 +559,8 @@ create_individual_UAN <- function(data, Capture_data, species_filter){
                                dplyr::first(.data$Age_observed) <= 5 ~ "adult"),
     BroodIDLaid = dplyr::case_when(RingAge == "chick" ~ first(BroodID),
                                    RingAge == "adult" ~ NA_character_),
-    BroodIDFledged = BroodIDLaid) %>%
+    BroodIDFledged = BroodIDLaid,
+    .groups = "drop") %>%
     dplyr::arrange(RingSeason, IndvID)
 
   # Retrieve sex information from primary data
@@ -587,9 +590,10 @@ create_individual_UAN <- function(data, Capture_data, species_filter){
 create_location_UAN <- function(data){
 
   Location_data <- data %>%
-    dplyr::mutate(LocationID = GBPL, LocationType = dplyr::case_when(TYPE %in% c("pc", "pm", "cb") | is.na(TYPE) ~ "NB",
-                                                                        TYPE == "FPT" ~ "FD",
-                                                                        TYPE %in% c("PMO", "&") ~ "MN")) %>%
+    dplyr::mutate(LocationID = GBPL,
+                  LocationType = dplyr::case_when(TYPE %in% c("pc", "pm", "cb") | is.na(TYPE) ~ "NB",
+                                                  TYPE == "FPT" ~ "FD",
+                                                  TYPE %in% c("PMO", "&") ~ "MN")) %>%
     dplyr::rowwise() %>%
     dplyr::mutate(NestboxID = ifelse(LocationType == "NB", LocationID, NA_character_)) %>%
     dplyr::ungroup() %>%
