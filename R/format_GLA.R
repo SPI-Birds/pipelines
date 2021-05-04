@@ -136,8 +136,10 @@ format_GLA <- function(db = choose_directory(),
                   HatchDate_observed = .data$ObservedHatch,
                   NumberFledged_observed = .data$Fledglings) %>%
 
-    ## Create BroodID
-    dplyr::mutate(BroodID = dplyr::case_when(!is.na(.data$Species) ~ dplyr::row_number()))
+
+    ## Create BroodID based on PopID and row number
+    dplyr::ungroup() %>%
+    dplyr::mutate(BroodID = dplyr::case_when(!is.na(.data$Species) ~ paste(.data$PopID, dplyr::row_number(), sep ="-")))
 
 
   ## Read in primary data from ringing records
@@ -511,7 +513,7 @@ create_individual_GLA <- function(Capture_data, Brood_data){
     #### Format and create new data columns
     dplyr::group_by(.data$IndvID) %>%
 
-    dplyr::mutate(PopID = .data$CapturePopID[which.min(.data$CaptureDate)], ## Define PopID based on where individual was first encountered
+    dplyr::mutate(PopID = .data$CapturePopID,
                   RingSeason = min(.data$BreedingSeason)) %>%
 
     ## Arrange
@@ -556,22 +558,38 @@ create_individual_GLA <- function(Capture_data, Brood_data){
   ## Temporary solution to avoid this is to keep the newest brood record for each LocationID since apparently there are no true second clutches in the data.
   ## This means that any banded chicks must come from the last brood.
   Individual_data <- Individual_data_temp %>%
-    dplyr::filter(.data$RingAge == "chick" & !is.na(.data$LocationID)) %>%
+
+    ## Filter to keep only records of individuals banded as chicks and the first record of that individual and records where LocationID is known
+    dplyr::filter(.data$RingAge == "chick" & .data$RingSeason == .data$BreedingSeason & !is.na(.data$LocationID)) %>%
     dplyr::left_join(Brood_data %>%
                        dplyr::filter(!is.na(.data$LocationID)) %>%
                        dplyr::group_by(.data$BreedingSeason, .data$PopID, .data$LocationID) %>%
-                       dplyr::filter(.data$BroodID == max(.data$BroodID)) %>%
+                       dplyr::filter(.data$BroodID == first(.data$BroodID)) %>%
                        dplyr::select(.data$BreedingSeason, .data$PopID, .data$LocationID, .data$BroodID) %>%
-                       dplyr::rename(BroodIDLaid = .data$BroodID) %>%
-                       dplyr::mutate(BroodIDFledged = .data$BroodIDLaid),
+                       dplyr::rename(BroodIDLaid = .data$BroodID),
                      by = c("BreedingSeason", "PopID", "LocationID")) %>%
 
-    ## Add back in adults
+    ## Add back in filtered records
     dplyr::bind_rows(Individual_data_temp %>%
-                       dplyr::filter(.data$RingAge == "adult" | is.na(.data$LocationID))) %>%
+                       dplyr::filter(.data$RingAge == "adult" | is.na(.data$LocationID) | (.data$RingSeason != .data$BreedingSeason))) %>%
 
-    ## Keep distinct records
-    dplyr::distinct(.data$IndvID, .keep_all = TRUE) %>%
+    ## For each individual, check if there is BroodID information from an earlier capture
+    ## TODO: Check that there is no cross fostering
+    group_by(.data$IndvID) %>%
+    dplyr::mutate(BroodIDLaid = purrr::map_chr(.x = list(unique(stats::na.omit(.data$BroodIDLaid))),
+                                                     .f = ~{
+                                                       if(length(..1) == 0){
+                                                         return(NA_character_)
+                                                       } else if(length(..1) == 1){
+                                                         return(..1)
+                                                       } else {
+                                                         return("CCCCCC")
+                                                       }
+                                                     }),
+                BroodIDFledged = .data$BroodIDLaid) %>%
+
+    ## Keep distinct records by PopID and InvdID
+    dplyr::distinct(.data$PopID, .data$IndvID, .keep_all = TRUE) %>%
 
     ## Arrange
     dplyr::arrange(.data$CaptureID) %>%
