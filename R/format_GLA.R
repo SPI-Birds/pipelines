@@ -82,8 +82,8 @@ format_GLA <- function(db = choose_directory(),
     ## Rowwise, adjust dates
     dplyr::rowwise() %>%
 
-    ## Two formats for dates.
-    ## First can be handled with Lubriate. Lubridate gives warning message for dates in Excel date/time numbers, but these do get parsed
+    ## There are two formats for dates
+    ## First can be handled with Lubridate. Lubridate gives warning messages for some dates , but these do get parsed
     ## Some dates, however, are in the incorrect format (month - day - year) and these need to be rearranged
     dplyr::mutate(FirstEggDate = case_when(grepl("/", .data$FirstEggDate) ~ lubridate::dmy(.data$FirstEggDate, quiet = TRUE),
                                            TRUE ~ lubridate::ymd(paste(unlist(stringr::str_split(as.character(janitor::excel_numeric_to_date(as.numeric(.data$FirstEggDate))), pattern = "-"))[c(1,3,2)], collapse = "-"))),
@@ -218,7 +218,6 @@ format_GLA <- function(db = choose_directory(),
       dplyr::filter(.data$PopID %in% pop_filter & !(is.na(.data$PopID)))
 
   }
-
 
   #### BROOD DATA
   message("Compiling brood information...")
@@ -368,7 +367,7 @@ create_brood_GLA <- function(nest_data, rr_data) {
     ## Calculate clutch type
     dplyr::arrange(.data$PopID, .data$BreedingSeason, .data$Species, .data$FemaleID, .data$LayDate_observed) %>%
     ungroup() %>%
-    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data =.  , protocol_version = "1.1", na.rm = FALSE)) %>%
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data =. , protocol_version = "1.1", na.rm = FALSE)) %>%
 
     ## Adjust column classes as necessary
     dplyr::mutate(BroodID = as.character(.data$BroodID))
@@ -550,6 +549,7 @@ create_individual_GLA <- function(Capture_data, Brood_data){
                                                 return("adult")
                                               }
                                             }))
+
 
   ## Get chicks and join BroodID to these records
   ## TODO: Duplicates are created due to two nests having replacement clutches.
