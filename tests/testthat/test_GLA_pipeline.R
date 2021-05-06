@@ -55,12 +55,22 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(n_distinct(subset(GLA_data, IndvID == "AFE3840")$BroodIDLaid), 1) # 1 BroodIDLaid value
   expect_equal(!is.na(unique(subset(GLA_data, IndvID == "AFE3840")$BroodIDLaid)), TRUE) # BroodIDLaid not NA
 
+  ## Case where individual hatched in a replacement clutch
+  expect_equal(subset(GLA_data, IndvID == "AFE3178")$BroodIDLaid, "SAL-1319")
+
+
 })
 
 test_that("Brood_data returns an expected outcome...", {
 
   ## Take a subset of only GLA data
   GLA_data <- dplyr::filter(pipeline_output$Brood_data, PopID %in% c("CAS", "GAR", "KEL", "SAL", "SCE"))
+
+
+  ## Case where there were multiple clutches laid at the same location
+  expect_equal(nrow(subset(GLA_data, BreedingSeason == "2019"
+                      & PopID == "SAL"
+                      & LocationID == "249")), 2)
 
   ## Brood where clutch type observed = replacement
   expect_equal(subset(GLA_data, BreedingSeason == "2015"
