@@ -41,7 +41,7 @@ individual_data_template <- tibble(IndvID = NA_character_, ## Missing data not a
                                 Sex_genetic = NA_character_)
 
 ## Save
-save(individual_data_template, file = "./data/Individual_data_template.Rda")
+save(individual_data_template, file = "./data/Individual_data_template.rda")
 
 ########################################################################
 ########################################################################
@@ -85,7 +85,7 @@ brood_data_template <- tibble(BroodID = NA_character_, ## Missing data not allow
                               ExperimentID = NA_character_)
 
 ## Save
-save(brood_data_template, file = "./data/Brood_data_template.Rda")
+save(brood_data_template, file = "./data/Brood_data_template.rda")
 
 ########################################################################
 ########################################################################
@@ -102,4 +102,4 @@ location_data_template <- tibble(LocationID = NA_character_, ## Missing data not
                                  HabitatType = NA_character_)
 
 ## Save
-save(location_data_template, file = "./data/Location_data_template.Rda")
+save(location_data_template, file = "./data/Location_data_template.rda")
