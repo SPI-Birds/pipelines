@@ -552,7 +552,7 @@ create_individual_UAN <- function(data, Capture_data, species_filter){
 
     }),
     PopID = dplyr::first(CapturePopID),
-    RingSeason = first(BreedingSeason),
+    RingSeason = dplyr::first(BreedingSeason),
     RingAge = dplyr::case_when(dplyr::first(.data$Age_observed) > 5  ~ "chick",
                                dplyr::first(.data$Age_observed) == 1 ~ "chick",
                                is.na(dplyr::first(.data$Age_observed)) ~ "adult",
