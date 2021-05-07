@@ -384,7 +384,6 @@ create_brood_GLA <- function(nest_data, rr_data) {
 #' Create capture data table for great tits and blue tits in Glasgow, Scotland.
 #'
 #' Create a capture data table in standard format for great tits and blue tits in Glasgow, Scotland.
-#' @param data Data frame of modified primary data from Glasgow, Scotland.
 #'
 #' @param nest_data Data frame of nest data from Glasgow, Scotland.
 #'
