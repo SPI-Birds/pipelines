@@ -95,14 +95,10 @@ format_GRO <- function(db = choose_directory(),
     dplyr::arrange(.data$PopID, .data$BreedingSeason, .data$LocationID)
 
 
-
   ## Filter to keep only desired Species if specified
   if(!is.null(species_filter)){
 
-    nest_data <- nest_data %>%
-      dplyr::filter(.data$Species %in% species_filter & !(is.na(.data$Species)))
-
-    rr_data <- rr_data %>%
+    gro_data <- gro_data %>%
       dplyr::filter(.data$Species %in% species_filter & !(is.na(.data$Species)))
 
   }
@@ -110,29 +106,26 @@ format_GRO <- function(db = choose_directory(),
   ## Filter to keep only desired Populations if specified
   if(!is.null(pop_filter)){
 
-    nest_data <- nest_data %>%
-      dplyr::filter(.data$PopID %in% pop_filter & !(is.na(.data$PopID)))
-
-    rr_data <- rr_data %>%
+    gro_data <- gro_data %>%
       dplyr::filter(.data$PopID %in% pop_filter & !(is.na(.data$PopID)))
 
   }
 
   #### BROOD DATA
   message("Compiling brood information...")
-  Brood_data <- create_brood_GRO(nest_data, rr_data)
+  Brood_data <- create_brood_GRO(gro_data)
 
   #### CAPTURE DATA
   message("Compiling capture information...")
-  Capture_data <- create_capture_GRO(nest_data, rr_data)
+  Capture_data <- create_capture_GRO()
 
   #### INDIVIDUAL DATA
   message("Compiling individual information...")
-  Individual_data <- create_individual_GRO(Capture_data, Brood_data)
+  Individual_data <- create_individual_GRO()
 
   #### LOCATION DATA
   message("Compiling location information...")
-  Location_data <- create_location_GRO(nest_data, rr_data)
+  Location_data <- create_location_GRO()
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
@@ -186,90 +179,15 @@ format_GRO <- function(db = choose_directory(),
 
 create_brood_GRO <- function(gro_data) {
 
-  ## Get brood data from ringing records
-  rr_data_brood_sum <- rr_data %>%
-    dplyr::filter(is.na(.data$LocationID) == FALSE) %>%
-
-    ## Determine whether a chick or adult - done for each observation since there is no unique identifier for individuals
-    dplyr::mutate(RingAge = ifelse(.data$Age_observed == 1, "chick", "adult")) %>%
-
-    ## Keeping chicks
-    dplyr::filter(RingAge == "chick") %>%
+  ## Get brood data
+  gro_data_brood_sum <- gro_data %>%
+    dplyr::filter(!is.na(.data$LocationID)) %>%
 
     ## Summarize brood information for each nest
-    dplyr::group_by(.data$BreedingSeason, .data$PopID, .data$LocationID) %>%
+    dplyr::group_by(.data$BreedingSeason, .data$PopID, .data$LocationID, .data$LayDate_observed) %>%
 
-    dplyr::summarise(Species = names(which.max(table(.data$Species, useNA = "always"))),
-                     FemaleID = names(which.max(table(.data$MotherRing, useNA = "always"))),
-                     MaleID = names(which.max(table(.data$FatherRing, useNA = "always"))),
-                     AvgChickMass = round(mean(Mass[ChickAge <= 16L & ChickAge >= 14L], na.rm = TRUE),1),
-                     NumberChicksMass = sum(ChickAge <= 16L & ChickAge >= 14L & is.na(Mass) == F),
-                     AvgTarsus = round(mean(Tarsus[ChickAge <= 16L & ChickAge >= 14L ], na.rm = TRUE),1),
-                     NumberChicksTarsus = sum(ChickAge <= 16L & ChickAge >= 14L & is.na(Tarsus) == F)) %>%
-
-    ## Replace NaNs and 0 with NA
-    dplyr::mutate(dplyr::across(where(is.numeric), ~na_if(., "NaN")),
-                  dplyr::across(where(is.numeric), ~na_if(., 0)))
-
-
-  ## Get brood data from nest records
-  nest_data_brood_sum <-
-    nest_data %>%
-
-    ## TODO: Check on experiments and meaning of replacement clutch
-    dplyr::mutate(ExperimentID = dplyr::case_when(!is.na(.data$Experiment) ~
-                                                    "COHORT; PARENTAGE"),
-                  ClutchType_observed = dplyr::case_when(is.na(.data$ReplacementClutch) ~ NA_character_,
-                                                         .data$ReplacementClutch == 0L ~ "first",
-                                                         .data$ReplacementClutch == 1L ~ "replacement",
-                                                         .data$ReplacementClutch  == 2L ~ NA_character_))
-
-
-  ## Join brood data from ringing records to brood data from nest records
-  ## TODO: Check about determining species - there are cases (4 as of 2021) where nest and ringing data suggest different social parents.
-  ## Currently the species will be assigned based on the nest data
-  ## TODO: Add experiment information
-  Brood_data <- nest_data_brood_sum %>%
-    dplyr::left_join(rr_data_brood_sum %>%
-                       select(-.data$Species),
-                     by = c("BreedingSeason", "PopID", "LocationID")) %>%
-
-    ## Join Male and Female ID columns to fill in any that are missing
-    dplyr::mutate(MaleID_j = dplyr::case_when(.data$MaleID.x == .data$MaleID.y ~ .data$MaleID.x,
-                                              is.na(.data$MaleID.x) & !is.na(.data$MaleID.y) ~ .data$MaleID.y,
-                                              !is.na(.data$MaleID.x) & is.na(.data$MaleID.y) ~ .data$MaleID.x),
-                  FemaleID_j = dplyr::case_when(.data$FemaleID.x == .data$FemaleID.y ~ .data$FemaleID.x,
-                                                is.na(.data$FemaleID.x) & !is.na(.data$FemaleID.y) ~ .data$FemaleID.y,
-                                                !is.na(.data$FemaleID.x) & is.na(.data$FemaleID.y) ~ .data$FemaleID.x)) %>%
-
-    ## Remove extra ID columns
-    dplyr::select(-(dplyr::contains(c(".x",".y")))) %>%
-
-    dplyr::rename(MaleID = .data$MaleID_j,
-                  FemaleID = .data$FemaleID_j) %>%
-
-    ## Keep only necessary columns
-    dplyr::select(dplyr::contains(names(brood_data_template))) %>%
-
-    ## Add missing columns
-    dplyr::bind_cols(brood_data_template[,!(names(brood_data_template) %in% names(.))]) %>%
-
-    ## Reorder columns
-    dplyr::select(names(brood_data_template)) %>%
-
-    ## Remove any NAs from essential columns
-    dplyr::filter(!is.na(.data$BroodID),
-                  !is.na(.data$PopID),
-                  !is.na(.data$BreedingSeason),
-                  !is.na(.data$Species)) %>%
-
-    ## Calculate clutch type
-    dplyr::arrange(.data$PopID, .data$BreedingSeason, .data$Species, .data$FemaleID, .data$LayDate_observed) %>%
-    ungroup() %>%
-    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data =. , protocol_version = "1.1", na.rm = FALSE)) %>%
-
-    ## Adjust column classes as necessary
-    dplyr::mutate(BroodID = as.character(.data$BroodID))
+    dplyr::summarise(FemaleID = .data$FemaleID,
+                     MaleID = .data$MaleID)
 
   # ## Check column classes
   # purrr::map_df(brood_data_template, class) == purrr::map_df(Brood_data, class)
@@ -355,7 +273,7 @@ create_capture_GRO <- function(gro_data) {
 #'
 #' @return A data frame.
 
-create_individual_GRO <- function(Capture_data, Brood_data){
+create_individual_GRO <- function(Capture_data){
 
   Individual_data_temp <- Capture_data %>%
 
@@ -401,58 +319,6 @@ create_individual_GRO <- function(Capture_data, Brood_data){
                                               }
                                             }))
 
-
-  ## Get chicks and join BroodID to these records
-  ## TODO: Duplicates are created due to two nests having replacement clutches.
-  ## Temporary solution to avoid this is to keep the last brood record for each LocationID (which will be replacement clutches) since apparently there are no true second clutches in the data.
-  ## This means that any banded chicks must come from the last brood.
-  ## There are no instances of multiple broods with chicks that fledged
-  Individual_data <- Individual_data_temp %>%
-
-    ## Filter to keep only records of individuals banded as chicks and the first record of that individual and records where LocationID is known
-    dplyr::filter(.data$RingAge == "chick" & .data$RingSeason == .data$BreedingSeason & !is.na(.data$LocationID)) %>%
-    dplyr::left_join(Brood_data %>%
-                       dplyr::filter(!is.na(.data$LocationID)) %>%
-                       dplyr::group_by(.data$BreedingSeason, .data$PopID, .data$LocationID) %>%
-                       dplyr::filter(.data$BroodID == last(.data$BroodID)) %>%
-                       dplyr::select(.data$BreedingSeason, .data$PopID, .data$LocationID, .data$BroodID) %>%
-                       dplyr::rename(BroodIDLaid = .data$BroodID),
-                     by = c("BreedingSeason", "PopID", "LocationID")) %>%
-
-    ## Add back in filtered records
-    dplyr::bind_rows(Individual_data_temp %>%
-                       dplyr::filter(.data$RingAge == "adult" | is.na(.data$LocationID) | (.data$RingSeason != .data$BreedingSeason))) %>%
-
-    ## For each individual, check if there is BroodID information from an earlier capture
-    ## TODO: Check that there is no cross fostering
-    ## TODO: This way of getting BroodIDLaid can be changed
-    group_by(.data$IndvID) %>%
-    dplyr::mutate(BroodIDLaid = purrr::map_chr(.x = list(unique(stats::na.omit(.data$BroodIDLaid))),
-                                               .f = ~{
-                                                 if(length(..1) == 0){
-                                                   return(NA_character_)
-                                                 } else if(length(..1) == 1){
-                                                   return(..1)
-                                                 } else {
-                                                   return("CCCCCC")
-                                                 }
-                                               }),
-                  BroodIDFledged = .data$BroodIDLaid) %>%
-
-    ## Keep distinct records by PopID and InvdID
-    dplyr::distinct(.data$PopID, .data$IndvID, .keep_all = TRUE) %>%
-
-    ## Arrange
-    dplyr::arrange(.data$CaptureID) %>%
-
-    ## Keep only necessary columns
-    dplyr::select(dplyr::contains(names(individual_data_template))) %>%
-
-    ## Add missing columns
-    dplyr::bind_cols(individual_data_template[,!(names(individual_data_template) %in% names(.))]) %>%
-
-    ## Reorder columns
-    dplyr::select(names(individual_data_template))
 
   # ## Check column classes
   # purrr::map_df(individual_data_template, class) == purrr::map_df(Individual_data, class)
