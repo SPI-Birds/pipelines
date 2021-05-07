@@ -15,10 +15,11 @@ test_that("Initial archiving works...", {
 
   testthat::skip(message = "Skipped in devtools::test(). Run manually to test archiving")
 
-  date_folder    <- format(Sys.Date(), format = "%Y_%m_%d")
+  expected_date  <- "2020-01-01"
+  date_folder    <- format(as.Date(expected_date), format = "%Y_%m_%d")
   main_folder    <- here::here("./inst/extdata/test_archiving")
 
-  archive(data_folder = main_folder, OwnerID = "NEW", initial = TRUE, new_data_date = "2020-01-01")
+  archive(data_folder = main_folder, OwnerID = "NEW", initial = TRUE, new_data_date = expected_date)
 
   #Check that an archive folder was created
   expect_true("archive" %in% list.dirs(paste0(main_folder, "/NEW_testpop"), full.names = FALSE))
