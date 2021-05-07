@@ -168,9 +168,9 @@ quality_check <- function(R_data,
 
   # Create output file
   # Unique PopIDs and Species for report title
-  pop <- dplyr::pull(unique(Brood_data[!is.na(Brood_data$PopID), "PopID"]))
+  pop <- unique(Brood_data[!is.na(Brood_data$PopID), ]$PopID)
   if(length(pop) == 0) pop <- NA
-  species <- dplyr::pull(unique(Brood_data[!is.na(Brood_data$Species), "Species"]))
+  species <- unique(Brood_data[!is.na(Brood_data$Species), ]$Species)
 
   # Title
   title <- paste0("Quality check report")

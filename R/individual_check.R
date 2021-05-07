@@ -329,7 +329,7 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data, a
 
   # Select first captures and link to the information of their locations
   first_captures <- Capture_data %>%
-    dplyr::group_by(.data$IndvID) %>%
+    dplyr::group_by(.data$CapturePopID, .data$IndvID) %>%
     dplyr::filter(.data$CaptureDate == dplyr::first(.data$CaptureDate)) %>%
     dplyr::ungroup() %>%
     #dplyr::select(IndvID, Species, CapturePopID, LocationID) %>%
@@ -340,9 +340,9 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data, a
     dplyr::left_join(first_captures, by = c("IndvID", "Species", "PopID" = "CapturePopID"))
 
   # Errors
-  # Select records with chicks caught in a nest box but not associated with a BroodID
+  # Select records of individuals caught as a nestling which are not associated with a BroodID
   no_BroodID_nest <- ind_cap_loc_data %>%
-    dplyr::filter(.data$RingAge == "chick" & (is.na(.data$BroodIDLaid) | is.na(.data$BroodIDFledged)) & .data$LocationType == "NB")
+    dplyr::filter(.data$Age_observed == 1 & (is.na(.data$BroodIDLaid) | is.na(.data$BroodIDFledged)) & .data$LocationType == "NB")
 
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
@@ -362,7 +362,7 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data, a
                                 .f = ~{
 
                                   paste0("Record on row ", ..1, " (PopID: ", ..4, "; IndvID: ", ..2, ")",
-                                         " has no BroodID.")
+                                         " is a chick without a BroodID.")
 
                                 })
 
@@ -533,7 +533,8 @@ check_individuals_captures <- function(Individual_data, Capture_data, approved_l
 
   # Errors
   missing_individuals <- Individual_data %>%
-    filter(!(.data$IndvID %in% Capture_data$IndvID))
+    dplyr::group_by(.data$PopID) %>%
+    dplyr::filter(!(.data$IndvID %in% Capture_data$IndvID))
 
   # Errors
   err <- FALSE

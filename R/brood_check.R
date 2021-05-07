@@ -97,7 +97,8 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE, approved
   # - Check clutch size values against reference values
   message("B6a: Checking clutch size values against reference values...")
 
-  var_ext <- ifelse("ClutchSize" %in% colnames(Brood_data), "", "_observed")
+  var_ext <- ifelse("ClutchSize" %in% colnames(Brood_data),
+                    ifelse(all(is.na(Brood_data$ClutchSize)), "_observed", ""), "_observed")
 
   check_values_clutch_size_output <- check_values_brood(Brood_data, paste0("ClutchSize", var_ext), approved_list)
 
@@ -870,19 +871,21 @@ check_values_brood <- function(Brood_data, var, approved_list) {
 
                                  # Brood records below lower error threshold
                                  lower_err <- Brood_data %>%
-                                   dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(var) < ..5) %>%
-                                   dplyr::select(.data$Row, .data$PopID, .data$BroodID, !!rlang::sym(var), .data$Species) %>%
                                    dplyr::mutate(Variable = var,
                                                  Threshold = "L",
-                                                 Ref = ..5)
+                                                 Ref = ..5) %>%
+                                   dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(var) < ..5) %>%
+                                   dplyr::select(.data$Row, .data$PopID, .data$BroodID, !!rlang::sym(var), .data$Species, .data$Variable, .data$Threshold, .data$Ref)
+
 
                                  # Brood records above upper error threshold
                                  upper_err <- Brood_data %>%
-                                   dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(var) > ..6) %>%
-                                   dplyr::select(.data$Row, .data$PopID, .data$BroodID, !!rlang::sym(var), .data$Species) %>%
                                    dplyr::mutate(Variable = var,
                                                  Threshold = "U",
-                                                 Ref = ..6)
+                                                 Ref = ..6) %>%
+                                   dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(var) > ..6) %>%
+                                   dplyr::select(.data$Row, .data$PopID, .data$BroodID, !!rlang::sym(var), .data$Species, .data$Variable, .data$Threshold, .data$Ref)
+
 
                                  dplyr::bind_rows(lower_err, upper_err)
 
@@ -892,11 +895,11 @@ check_values_brood <- function(Brood_data, var, approved_list) {
 
                                  # Brood records below lower error threshold
                                  Brood_data %>%
-                                   dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(var) < ..5) %>%
-                                   dplyr::select(.data$Row, .data$PopID, .data$BroodID, !!rlang::sym(var), .data$Species) %>%
                                    dplyr::mutate(Variable = var,
                                                  Threshold = "L",
-                                                 Ref = ..5)
+                                                 Ref = ..5) %>%
+                                   dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(var) < ..5) %>%
+                                   dplyr::select(.data$Row, .data$PopID, .data$BroodID, !!rlang::sym(var), .data$Species, .data$Variable, .data$Threshold, .data$Ref)
 
                                }
 
@@ -909,10 +912,10 @@ check_values_brood <- function(Brood_data, var, approved_list) {
                                  # to compare to Julian day reference values
                                  dplyr::mutate(!!paste0(var, "_julian") := as.numeric(!!rlang::sym(var) - lubridate::ymd(paste(.data$BreedingSeason, "1", "1", sep = "-")) + 1)) %>%
                                  dplyr::ungroup() %>%
-                                 dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(paste0(var, "_julian")) < ..5) %>%
                                  dplyr::mutate(Variable = var,
                                                Threshold = "L",
                                                Ref = paste(.data$BreedingSeason, "01", "01", sep = "-")) %>%
+                                 dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(paste0(var, "_julian")) < ..5) %>%
                                  dplyr::select(.data$Row, .data$PopID, .data$BroodID, !!rlang::sym(var),
                                                .data$Species, .data$Variable, .data$Threshold, .data$Ref)
 
@@ -923,10 +926,10 @@ check_values_brood <- function(Brood_data, var, approved_list) {
                                  # to compare to Julian day reference values
                                  dplyr::mutate(!!paste0(var, "_julian") := as.numeric(!!rlang::sym(var) - lubridate::ymd(paste(.data$BreedingSeason, "1", "1", sep = "-")) + 1)) %>%
                                  dplyr::ungroup() %>%
-                                 dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(paste0(var, "_julian")) > ..6) %>%
                                  dplyr::mutate(Variable = var,
                                                Threshold = "U",
                                                Ref = paste(.data$BreedingSeason, "12", "31", sep = "-")) %>%
+                                 dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(paste0(var, "_julian")) > ..6) %>%
                                  dplyr::select(.data$Row, .data$PopID, .data$BroodID, !!rlang::sym(var),
                                                .data$Species, .data$Variable, .data$Threshold, .data$Ref)
 
@@ -991,19 +994,19 @@ check_values_brood <- function(Brood_data, var, approved_list) {
   brood_war <- purrr::pmap(.l = warning_ref,
                            .f = ~{
 
-                             pb$tick()
+                             #pb$tick()
 
                              if(var %in% c("ClutchSize", "BroodSize", "NumberFledged",
                                            "ClutchSize_observed", "BroodSize_observed", "NumberFledged_observed")) {
 
                                # Brood records above upper warning threshold
                                Brood_data %>%
-                                 dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 &
-                                                 (!!rlang::sym(var) > ..4 & !!rlang::sym(var) <= ..6)) %>%
-                                 dplyr::select(.data$Row, .data$PopID, .data$BroodID, !!rlang::sym(var), .data$Species) %>%
                                  dplyr::mutate(Variable = var,
                                                Threshold = "U",
-                                               Ref = ..4)
+                                               Ref = ..4) %>%
+                                 dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 &
+                                                 (!!rlang::sym(var) > ..4 & !!rlang::sym(var) <= ..6)) %>%
+                                 dplyr::select(.data$Row, .data$PopID, .data$BroodID, !!rlang::sym(var), .data$Species, .data$Variable, .data$Threshold, .data$Ref)
 
                              } else if(var %in% c("LayDate", "LayDate_observed")) {
 
@@ -1014,10 +1017,10 @@ check_values_brood <- function(Brood_data, var, approved_list) {
                                  # to compare to Julian day reference values
                                  dplyr::mutate(!!paste0(var, "_julian") := as.numeric(!!rlang::sym(var) - lubridate::ymd(paste(.data$BreedingSeason, "1", "1", sep = "-")) + 1)) %>%
                                  dplyr::ungroup() %>%
-                                 dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(paste0(var, "_julian")) < ..3 & !!rlang::sym(paste0(var, "_julian")) >= ..5) %>%
                                  dplyr::mutate(Variable = var,
                                                Threshold = "L",
                                                Ref = lubridate::ymd(paste(.data$BreedingSeason, "1", "1", sep = "-")) + ..3 - 1) %>%
+                                 dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(paste0(var, "_julian")) < ..3 & !!rlang::sym(paste0(var, "_julian")) >= ..5) %>%
                                  dplyr::select(.data$Row, .data$PopID, .data$BroodID, !!rlang::sym(var),
                                                .data$Species, .data$Variable, .data$Threshold, .data$Ref)
 
@@ -1028,10 +1031,10 @@ check_values_brood <- function(Brood_data, var, approved_list) {
                                  # to compare to Julian day reference values
                                  dplyr::mutate(!!paste0(var, "_julian") := as.numeric(!!rlang::sym(var) - lubridate::ymd(paste(.data$BreedingSeason, "1", "1", sep = "-")) + 1)) %>%
                                  dplyr::ungroup() %>%
-                                 dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(paste0(var, "_julian")) > ..4 & !!rlang::sym(paste0(var, "_julian")) <= ..6) %>%
                                  dplyr::mutate(Variable = var,
                                                Threshold = "U",
                                                Ref = lubridate::ymd(paste(.data$BreedingSeason, "1", "1", sep = "-")) + ..4 - 1) %>%
+                                 dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(paste0(var, "_julian")) > ..4 & !!rlang::sym(paste0(var, "_julian")) <= ..6) %>%
                                  dplyr::select(.data$Row, .data$PopID, .data$BroodID, !!rlang::sym(var),
                                                .data$Species, .data$Variable, .data$Threshold, .data$Ref)
 
