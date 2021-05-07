@@ -305,6 +305,8 @@ Below we describe the workflow that any developer should follow when building a 
 
 *Note* Commits should ideally be distinct blocks of changes with a concise header and detailed description. See some commit best practices [here](https://r-pkgs.org/git.html#commit-best-practices).
 
+- To make commits more easily readable/searchable you should include an emoji at the *start* of each commit message following [these dev guidelines](https://gitmoji.dev/). For example, if you find some typos in the code your commit would be ':pencil2: Fix typo in format_XXX() function'.
+
 - When you have finished working for a day, push your branch to the remote (`git push -u origin new_branch_name` the first time; `git push` afterwards).
 
 ### Build the pipeline
