@@ -175,3 +175,31 @@ NULL
 #'
 #' @name common_hybrids
 common_hybrids <- utils::read.csv(system.file("extdata", "common_hybrids.csv", package = "pipelines", mustWork = TRUE))
+
+#'capture_data_template template
+#'
+#'Tibble giving names and associated classes for all the columns in the Capture data for the standard protocol v1.1.0
+#'@format Tibble
+#'@name capture_data_template
+NULL
+
+#'individual_data_template template
+#'
+#'Tibble giving names and associated classes for all the columns in the Individual data for the standard protocol v1.1.0
+#'@format Tibble
+#'@name individual_data_template
+NULL
+
+#'brood_data_template template
+#'
+#'Tibble giving names and associated classes for all the columns in the Brood data for the standard protocol v1.1.0
+#'@format Tibble
+#'@name brood_data_template
+NULL
+
+#'location_data_template template
+#'
+#'Tibble giving names and associated classes for all the columns in the Location data for the standard protocol v1.1.0
+#'@format Tibble
+#'@name location_data_template
+NULL
