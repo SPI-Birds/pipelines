@@ -48,5 +48,6 @@ Suggests:
     rmarkdown,
     testthat
 Enhances:
-    ggplot2
+    ggplot2,
+    maps
 VignetteBuilder: knitr

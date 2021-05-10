@@ -4,12 +4,12 @@
 \alias{create_individual_UAN}
 \title{Create individual data table for data from University of Antwerp, Belgium.}
 \usage{
-create_individual_UAN(data, CAPTURE_info, species_filter)
+create_individual_UAN(data, Capture_data, species_filter)
 }
 \arguments{
 \item{data}{Data frame. Primary data from University of Antwerp.}
 
-\item{CAPTURE_info}{Capture data table from the raw data}
+\item{Capture_data}{Output of \code{\link{create_capture_UAN}}.}
 
 \item{species_filter}{6 letter species codes for filtering data.}
 }

@@ -3,6 +3,7 @@
 Currently completed pipelines:
 - NIOO
 - University of Antwerp
+- Pied Flied Net data
 
 #pipelines v. 0.0.1
 
