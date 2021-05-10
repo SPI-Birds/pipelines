@@ -43,8 +43,8 @@ calc_age <- function(data, ID, Age, Date, Year, showpb = TRUE){
   output <- data %>%
     dplyr::arrange({{ID}}, {{Year}}, {{Date}}) %>%
     dplyr::group_by({{ID}}) %>%
-    dplyr::mutate(FirstAge  = as.integer(first({{Age}})),
-                  FirstYear = as.integer(first({{Year}}))) %>%
+    dplyr::mutate(FirstAge  = as.integer(dplyr::first({{Age}})),
+                  FirstYear = as.integer(dplyr::first({{Year}}))) %>%
     dplyr::mutate(yr_diff   = as.integer({{Year}}) - FirstYear,
                   Age_calculated = purrr::pmap_int(.l = list(FirstAge, yr_diff, {{Age}}, {{ID}}),
                                              .f = ~{

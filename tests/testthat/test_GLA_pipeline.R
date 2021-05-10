@@ -52,7 +52,7 @@ test_that("Individual data returns an expected outcome...", {
 
   ## Individual observed in multiple populations and ringed as chick
   expect_equal(nrow(subset(GLA_data, IndvID == "AFE3840")), 2) # SCE and SAL pop codes
-  expect_equal(n_distinct(subset(GLA_data, IndvID == "AFE3840")$BroodIDLaid), 1) # 1 BroodIDLaid value
+  expect_equal(dplyr::n_distinct(subset(GLA_data, IndvID == "AFE3840")$BroodIDLaid), 1) # 1 BroodIDLaid value
   expect_equal(!is.na(unique(subset(GLA_data, IndvID == "AFE3840")$BroodIDLaid)), TRUE) # BroodIDLaid not NA
 
   ## Case where individual hatched in a replacement clutch
