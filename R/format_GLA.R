@@ -11,7 +11,6 @@
 #'\strong{IndvID}: Should be a 7 alphanumeric character string.
 #'Three records have ring numbers that are six characters. These are probably incorrect.
 #'
-#'
 #'\strong{CaptureDate}: Some individuals were not recorded in the ringing records, but were observed breeding at a monitored nest.
 #'For these individuals, the CaptureDate is set as June 1st of the breeding year.
 #'
@@ -47,7 +46,7 @@ format_GLA <- function(db = choose_directory(),
 
   }
 
-  ## Going to only keep 5 main populations, so these will be the default filter ("CAS", "GAR", "SAL","KEL", "SCE")
+  ## Only keeping 5 main populations, so these will be the default filter ("CAS", "GAR", "SAL","KEL", "SCE")
   ## Otherwise, use the specified pop filter
   if(is.null(pop)){
 
@@ -66,7 +65,7 @@ format_GLA <- function(db = choose_directory(),
   options(dplyr.summarise.inform = FALSE)
 
   ## Read in primary data from brood records
-  ## Some dates are inverted (these are the dates that are stored as Excel dates in the primary data)
+  ## Some dates are in the wrong format (these are the dates that are stored as Excel dates in the primary data)
   ## To fix these dates, the day and month needs to be changed for all Excel dates. Currently rather slow
   nest_data <- readxl::read_xlsx(path = paste0(db, "/GLA_PrimaryData_Nest.xlsx"), guess = 5000) %>%
     janitor::clean_names(case = "upper_camel") %>%
@@ -78,7 +77,7 @@ format_GLA <- function(db = choose_directory(),
                   Species = as.character(.data$Species),
                   PopID = as.character(.data$Site)) %>%
 
-    ## Rowwise, adjust dates
+    ## Adjust dates
     dplyr::rowwise() %>%
 
     ## There are two formats for dates
@@ -280,8 +279,6 @@ format_GLA <- function(db = choose_directory(),
 
 #' Create brood data table for great tits and blue tits in Glasgow, Scotland.
 #'
-#' Create brood data table in standard format for Glasgow, Scotland.
-#'
 #' @param nest_data Data frame of nest data from Glasgow, Scotland.
 #'
 #' @param rr_data Data frame of ringing records from Glasgow, Scotland.
@@ -382,8 +379,6 @@ create_brood_GLA <- function(nest_data, rr_data) {
 }
 
 #' Create capture data table for great tits and blue tits in Glasgow, Scotland.
-#'
-#' Create a capture data table in standard format for great tits and blue tits in Glasgow, Scotland.
 #'
 #' @param nest_data Data frame of nest data from Glasgow, Scotland.
 #'
@@ -496,8 +491,6 @@ create_capture_GLA <- function(nest_data, rr_data) {
 }
 
 #' Create individual table for great tits and blue tits in Glasgow, Scotland.
-#'
-#' Create full individual data table in standard format for great tits and blue tits in Glasgow, Scotland.
 #'
 #' @param Capture_data Capture data output from Glasgow, Scotland
 #'
@@ -614,7 +607,6 @@ create_individual_GLA <- function(Capture_data, Brood_data){
 
 #' Create location data table for great tits and blue tits in Glasgow, Scotland.
 #'
-#' Create a location data table in standard format for great tits and blue tits in Glasgow, Scotland.
 #' @param nest_data Data frame of nest data from Glasgow, Scotland.
 #'
 #' @param rr_data Data frame of ringing records from Glasgow, Scotland.
