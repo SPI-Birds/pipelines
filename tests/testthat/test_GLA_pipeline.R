@@ -56,7 +56,7 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(!is.na(unique(subset(GLA_data, IndvID == "AFE3840")$BroodIDLaid)), TRUE) # BroodIDLaid not NA
 
   ## Case where individual hatched in a replacement clutch
-  expect_equal(subset(GLA_data, IndvID == "AFE3178")$BroodIDLaid, "SAL-1319")
+  expect_equal(dplyr::n_distinct(subset(GLA_data, IndvID == "AFE3178")$BroodIDLaid), 1) # 1 BroodIDLaid value
 
 
 })
