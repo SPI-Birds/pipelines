@@ -6,7 +6,7 @@
 #' @export
 
 choose_directory <- function() {
-  if (exists('utils::choose.dir')) {
+  if (exists('choose.dir')) {
     utils::choose.dir()
   } else {
     tcltk::tk_choose.dir()

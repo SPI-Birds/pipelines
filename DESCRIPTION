@@ -40,12 +40,14 @@ Imports: dplyr,
          rstudioapi,
          sp,
          usethis,
-         rlang
+         rlang,
+         maps
 RoxygenNote: 7.1.1
 Suggests: 
     knitr,
     rmarkdown,
     testthat
 Enhances:
-    ggplot2
+    ggplot2,
+    maps
 VignetteBuilder: knitr

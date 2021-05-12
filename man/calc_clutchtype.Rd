@@ -4,10 +4,12 @@
 \alias{calc_clutchtype}
 \title{Calculate clutch type (when laying date is in date format)}
 \usage{
-calc_clutchtype(data, na.rm = FALSE)
+calc_clutchtype(data, protocol_version = "1.0", na.rm = FALSE)
 }
 \arguments{
 \item{data}{Data frame. Brood data to use for conversion}
+
+\item{protocol_version}{Character string. Either "1.0" (default) or "1.1".}
 
 \item{na.rm}{Logical. Should NA's be removed and treated as 0s. If FALSE, NAs
 are treated as true unknowns. If TRUE, NAs are treated as 0s.}

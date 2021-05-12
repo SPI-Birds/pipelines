@@ -37,6 +37,13 @@ calculate_chick_mass_cutoffs <- function(Capture_data, plot = FALSE) {
   data <- Capture_data %>%
     dplyr::filter(!is.na(ChickAge), !is.na(Mass))
 
+  # Check that there are non-NA records left to fit a logistic model on
+  if(nrow(data) == 0) {
+
+    stop("All ChickAge and/or Mass records are NA.")
+
+  }
+
   # Set initial values for logistic model
   initial_values <- list(a = {data %>% dplyr::filter(ChickAge == max(ChickAge)) %>% dplyr::summarise(M = max(Mass)) %>% dplyr::pull(M)},
                          b = 5,

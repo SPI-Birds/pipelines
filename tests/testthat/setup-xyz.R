@@ -33,15 +33,16 @@ if ("test_data.RDS" %in% list.files(path)) {
   if (grepl(pattern = 'mac', x = OS)) {
     pipeline_output <- run_pipelines(path = path,
                                      PopID = c("SSQ", "BAN", "VEL", "CHO", "MUR", "PIR", "ROU", "MON", "MTV", "MIS", "HOC",
-                                               "KEV", "HAR", "PEE", "BOS",
-                                               "WYT", "PIL", "EDM", "PEW", "CAS", "GAR", "KIL", "SCE", "SAL"),
+                                               "KEV", "HAR", "PEE", "BOS", "WYT", "PIL", "EDM", "DIN", "KAT", "NAG", "OKE", "TEI",
+                                               "PEW", "KIL", "CAS", "GAR", "KEL", "SCE", "SAL"),
                                      output_type = "R")
   } else if (grepl(pattern = 'windows', x = OS)) {
 
     pipeline_output <- run_pipelines(path = path,
                                      PopID = c("SSQ", "BAN", "VEL", "CHO", "MUR", "PIR", "ROU", "MON", "MTV", "MIS", "HOC",
                                                "HOG", "OOS", "VLI", "BUU", "LIE", "WAR", "WES", "KEV", "HAR", "PEE", "BOS",
-                                               "WYT", "PIL", "EDM", "AMM", "PEW", "CAS", "GAR", "KIL", "SCE", "SAL"),
+                                               "WYT", "PIL", "EDM", "AMM", "DIN", "KAT", "NAG", "OKE", "TEI",
+                                               "PEW", "KIL", "CAS", "GAR", "KEL", "SCE", "SAL"),
                                      output_type = "R")
   } else {
     stop(paste0('Operating system ', OS, ' not supported'))

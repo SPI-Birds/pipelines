@@ -7,7 +7,8 @@
 #' breeding birds.
 #'
 #' This function uses information from the standardized Brood data table to
-#' calculate the first and last breeding season when each nestbox was used by birds
+#' calculate the first and last breeding season when each nestbox in each
+#' population was used by birds
 #'
 #' For the moment, if a nestbox was used in the latest year of data available, this
 #' year is returned in LastSeason (which differs from the definition in the protocol,
@@ -16,25 +17,28 @@
 #' The function assumes that NestBoxID = LocationID.
 #'
 #' @param Brood_data Data frame. Data frame with standardized brood data.
-#' @return A data frame with the NestBoxID and corresponding FirstSeason and LastSeason.
+#' @return A data frame with all combinations of `PopID` and `NestBoxID`
+#'  and corresponding `StartSeason` and `EndSeason`.
 #' @export
 #'
 #' @examples
 #' library(dplyr)
-#' Brood_data <- tibble::tibble(BroodID = c(1:10), LocationID = LETTERS[c(1,3,1,1,2,3,1,2,1,2)],
-#'                              BreedingSeason = sort(sample(2012:2016, 10, replace = TRUE)))
-#' calc_birdNBuse(Brood_data)
+#' Brood_data <- tibble::tibble(BroodID = rep(c(1:5), 2),
+#'                              PopID = rep(c('XXX', 'YYY'), each = 5),
+#'                              LocationID = LETTERS[c(1,2,1,1,2,2,1,2,1,2)],
+#'                              BreedingSeason = c(2001, 2001, 2002, 2003, 2003,
+#'                              1962, 1963, 1963, 1965, 1965))
+#'calc_birdNBuse(Brood_data)
+
+
 calc_birdNBuse <- function(Brood_data){
 
   output <- Brood_data %>%
-    dplyr::group_by(LocationID) %>%
-    dplyr::summarise(StartSeason  = as.integer(min(BreedingSeason)),
-                  EndSeason  = as.integer(max(BreedingSeason))) %>%
-    dplyr::ungroup()
+    dplyr::group_by(.data$PopID, .data$LocationID) %>%
+    dplyr::summarise(StartSeason  = as.integer(min(.data$BreedingSeason)),
+                  EndSeason  = as.integer(max(.data$BreedingSeason)),
+                  .groups = 'drop')
 
   return(output)
-
-  #Satisfy RCMD Checks
-  LocationID <- BreedingSeason <- BroodID <- StartSeason <- EndSeason <- NULL
 
 }

@@ -25,10 +25,10 @@ test_that("Individual data returns an expected outcome...", {
   #Individual AXB1234 - male, ringed as chick
   expect_equal(subset(GLA_data, IndvID == "AXB1234")$Sex_calculated, "M") # Should be male
   expect_equal(subset(GLA_data, IndvID == "AXB1234")$Species, "CYACAE") # Should be a blue tit
-  expect_equal(!is.na(subset(GLA_data, IndvID == "AXB1234")$BroodIDLaid), TRUE) # Should be have a BroodIDLaid
-  expect_equal(!is.na(subset(GLA_data, IndvID == "AXB1234")$BroodIDFledged), TRUE) # Should be have a BroodIDFledged
+  expect_equal(!is.na(subset(GLA_data, IndvID == "AXB1234")$BroodIDLaid), TRUE) # Shouldhave a BroodIDLaid
+  expect_equal(!is.na(subset(GLA_data, IndvID == "AXB1234")$BroodIDFledged), TRUE) # Should have a BroodIDFledged
   expect_equal(subset(GLA_data, IndvID == "AXB1234")$RingSeason, 2018) # Should be 2018
-  expect_equal(subset(GLA_data, IndvID == "AXB1234")$RingAge, "chick") # Should be an chick
+  expect_equal(subset(GLA_data, IndvID == "AXB1234")$RingAge, "chick") # Should be a chick
 
   #Individual TX11924 - uncertain sex and species
   expect_equal(subset(GLA_data, IndvID == "TX11924")$Sex_calculated, "C") # Should be conflicted
@@ -40,7 +40,7 @@ test_that("Individual data returns an expected outcome...", {
 
   #Individual AFE3038 - uncertain sex
   expect_equal(subset(GLA_data, IndvID == "AFE3038")$Sex_calculated, "C") # Should be conflicted
-  expect_equal(subset(GLA_data, IndvID == "AFE3038")$Species, "CYACAE") # Should be blue tit
+  expect_equal(subset(GLA_data, IndvID == "AFE3038")$Species, "CYACAE") # Should be a blue tit
   expect_equal(subset(GLA_data, IndvID == "AFE3038")$BroodIDLaid, NA_character_) # Should be NA
   expect_equal(subset(GLA_data, IndvID == "AFE3038")$BroodIDFledged, NA_character_) # Should be NA
   expect_equal(subset(GLA_data, IndvID == "AFE3038")$RingSeason, 2019) # Should be 2019 (seen in two years)
@@ -52,11 +52,11 @@ test_that("Individual data returns an expected outcome...", {
 
   ## Individual observed in multiple populations and ringed as chick
   expect_equal(nrow(subset(GLA_data, IndvID == "AFE3840")), 2) # SCE and SAL pop codes
-  expect_equal(n_distinct(subset(GLA_data, IndvID == "AFE3840")$BroodIDLaid), 1) # 1 BroodIDLaid value
+  expect_equal(dplyr::n_distinct(subset(GLA_data, IndvID == "AFE3840")$BroodIDLaid), 1) # 1 BroodIDLaid value
   expect_equal(!is.na(unique(subset(GLA_data, IndvID == "AFE3840")$BroodIDLaid)), TRUE) # BroodIDLaid not NA
 
   ## Case where individual hatched in a replacement clutch
-  expect_equal(subset(GLA_data, IndvID == "AFE3178")$BroodIDLaid, "SAL-1319")
+  expect_equal(dplyr::n_distinct(subset(GLA_data, IndvID == "AFE3178")$BroodIDLaid), 1) # 1 BroodIDLaid value
 
 
 })
@@ -65,7 +65,6 @@ test_that("Brood_data returns an expected outcome...", {
 
   ## Take a subset of only GLA data
   GLA_data <- dplyr::filter(pipeline_output$Brood_data, PopID %in% c("CAS", "GAR", "KEL", "SAL", "SCE"))
-
 
   ## Case where there were multiple clutches laid at the same location
   expect_equal(nrow(subset(GLA_data, BreedingSeason == "2019"
