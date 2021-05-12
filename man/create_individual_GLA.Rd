@@ -15,5 +15,5 @@ create_individual_GLA(Capture_data, Brood_data)
 A data frame.
 }
 \description{
-Create full individual data table in standard format for great tits and blue tits in Glasgow, Scotland.
+Create individual table for great tits and blue tits in Glasgow, Scotland.
 }

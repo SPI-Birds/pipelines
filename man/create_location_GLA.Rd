@@ -15,5 +15,5 @@ create_location_GLA(nest_data, rr_data)
 A data frame.
 }
 \description{
-Create a location data table in standard format for great tits and blue tits in Glasgow, Scotland.
+Create location data table for great tits and blue tits in Glasgow, Scotland.
 }

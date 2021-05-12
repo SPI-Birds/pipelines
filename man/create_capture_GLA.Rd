@@ -15,5 +15,5 @@ create_capture_GLA(nest_data, rr_data)
 A data frame.
 }
 \description{
-Create a capture data table in standard format for great tits and blue tits in Glasgow, Scotland.
+Create capture data table for great tits and blue tits in Glasgow, Scotland.
 }

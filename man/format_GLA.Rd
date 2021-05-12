@@ -46,7 +46,6 @@ this data. For a general description of the standard format please see
 \strong{IndvID}: Should be a 7 alphanumeric character string.
 Three records have ring numbers that are six characters. These are probably incorrect.
 
-
 \strong{CaptureDate}: Some individuals were not recorded in the ringing records, but were observed breeding at a monitored nest.
 For these individuals, the CaptureDate is set as June 1st of the breeding year.
 }

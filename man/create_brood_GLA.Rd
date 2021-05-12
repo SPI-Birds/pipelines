@@ -15,5 +15,5 @@ create_brood_GLA(nest_data, rr_data)
 A data frame.
 }
 \description{
-Create brood data table in standard format for Glasgow, Scotland.
+Create brood data table for great tits and blue tits in Glasgow, Scotland.
 }
