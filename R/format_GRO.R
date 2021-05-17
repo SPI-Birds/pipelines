@@ -6,7 +6,6 @@
 #'this data. For a general description of the standard format please see
 #'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 #'
-#'
 #'@inheritParams pipeline_params
 #'
 #'@return Generates either 4 .csv files or 4 data frames in the standard format.
@@ -55,15 +54,13 @@ format_GRO <- function(db = choose_directory(),
   ## Set options
   options(dplyr.summarise.inform = FALSE)
 
-  db <- "/Users/tyson/Documents/academia/institutions/NIOO/SPI-Birds/pipelines/GRO/data/"
-
   ## Read in the three separate primary data tables
   bt_data <- nest_data <- readxl::read_excel(path = paste0(db, "/GRO_PrimaryData_BT_Phenology.xls"), guess = 5000, range = readxl::cell_cols("A:L")) %>%
-    dplyr::mutate(PopID = rep("BT", nrow(.)))
+    dplyr::mutate(Species = rep("CYACAE", nrow(.)))
   cf_data <- nest_data <- readxl::read_excel(path = paste0(db, "/GRO_PrimaryData_CF_Phenology.xls"), guess = 5000, range = readxl::cell_cols("A:L")) %>%
-    dplyr::mutate(PopID = rep("CF", nrow(.)))
+    dplyr::mutate(Species = rep("FICALB", nrow(.)))
   gt_data <- nest_data <- readxl::read_excel(path = paste0(db, "/GRO_PrimaryData_GT_Phenology.xls"), guess = 5000, range = readxl::cell_cols("A:L")) %>%
-    dplyr::mutate(PopID = rep("GT", nrow(.)))
+    dplyr::mutate(Species = rep("PARMAJ", nrow(.)))
 
   ## Rbind data
   gro_data <- rbind(bt_data, cf_data, gt_data) %>%
@@ -81,12 +78,14 @@ format_GRO <- function(db = choose_directory(),
                   BroodSize_observed = .data$HatchlingN,
                   NumberFledged_observed = .data$FledglingN,
                   ExperimentID = .data$Experiment,
-                  ObserverID = .data$Observer,
-                  PopID = .data$PopId) %>%
+                  ObserverID = .data$Observer) %>%
 
     ## Reformat
     ## TODO: Ask about the few cases about clutch, brood, and fledge counts that get coerced to NAs
-    dplyr::mutate(BreedingSeason = as.integer(.data$BreedingSeason),
+    dplyr::mutate(PopID = "GRO",
+                  BreedingSeason = as.integer(.data$BreedingSeason),
+                  LayDate_observed =  as.Date(LayDate_observed),
+                  HatchDate_observed =  as.Date(HatchDate_observed),
                   ClutchSize_observed = suppressWarnings(as.integer(ClutchSize_observed)),
                   BroodSize_observed = suppressWarnings(as.integer(BroodSize_observed)),
                   NumberFledged_observed = suppressWarnings(as.integer(NumberFledged_observed))) %>%
@@ -117,15 +116,15 @@ format_GRO <- function(db = choose_directory(),
 
   #### CAPTURE DATA
   message("Compiling capture information...")
-  Capture_data <- create_capture_GRO()
+  Capture_data <- create_capture_GRO(gro_data)
 
   #### INDIVIDUAL DATA
   message("Compiling individual information...")
-  Individual_data <- create_individual_GRO()
+  Individual_data <- create_individual_GRO(Capture_data)
 
   #### LOCATION DATA
   message("Compiling location information...")
-  Location_data <- create_location_GRO()
+  Location_data <- create_location_GRO(gro_data)
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
@@ -169,25 +168,46 @@ format_GRO <- function(db = choose_directory(),
 
 #' Create brood data table for great tits and blue tits in Grobla, Poland.
 #'
-#' Create brood data table in standard format for Grobla, Poland.
-#'
-#' @param nest_data Data frame of nest data from Grobla, Poland.
-#'
-#' @param rr_data Data frame of ringing records from Grobla, Poland.
+#' @param gro_data Data frame of modified primary data from Grobla, Poland.
 #'
 #' @return A data frame.
 
 create_brood_GRO <- function(gro_data) {
 
   ## Get brood data
-  gro_data_brood_sum <- gro_data %>%
+  ## TODO: Check on minimum information for brood ID
+  Brood_data <- gro_data %>%
     dplyr::filter(!is.na(.data$LocationID)) %>%
 
     ## Summarize brood information for each nest
     dplyr::group_by(.data$BreedingSeason, .data$PopID, .data$LocationID, .data$LayDate_observed) %>%
 
-    dplyr::summarise(FemaleID = .data$FemaleID,
-                     MaleID = .data$MaleID)
+    dplyr::mutate(FemaleID = .data$FemaleID,
+                  MaleID = .data$MaleID)  %>%
+
+    ## Keep only necessary columns
+    dplyr::select(dplyr::contains(names(brood_data_template))) %>%
+
+    ## Add missing columns
+    dplyr::bind_cols(brood_data_template[,!(names(brood_data_template) %in% names(.))]) %>%
+
+    ## Reorder columns
+    dplyr::select(names(brood_data_template)) %>%
+
+    ## Remove any NAs from essential columns
+    dplyr::filter(!is.na(.data$PopID),
+                  !is.na(.data$BreedingSeason),
+                  !is.na(.data$Species)) %>%
+
+    ## Calculate clutch type
+    dplyr::arrange(.data$PopID, .data$BreedingSeason, .data$Species, .data$FemaleID, .data$LayDate_observed) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data =. , protocol_version = "1.1", na.rm = FALSE)) %>%
+
+    ## Create Brood ID
+    ## TODO: Check on when it is appropriate to create a Brood ID
+    dplyr::mutate(BroodID = dplyr::case_when(!is.na(.data$LayDate_observed) ~ paste(.data$PopID, dplyr::row_number(), sep ="-")))
+
 
   # ## Check column classes
   # purrr::map_df(brood_data_template, class) == purrr::map_df(Brood_data, class)
@@ -198,12 +218,7 @@ create_brood_GRO <- function(gro_data) {
 
 #' Create capture data table for great tits and blue tits in Grobla, Poland.
 #'
-#' Create a capture data table in standard format for great tits and blue tits in Grobla, Poland.
-#' @param data Data frame of modified primary data from Grobla, Poland.
-#'
-#' @param nest_data Data frame of nest data from Grobla, Poland.
-#'
-#' @param rr_data Data frame of ringing records from Grobla, Poland.
+#' @param gro_data Data frame of modified primary data from Grobla, Poland.
 #'
 #' @return A data frame.
 
@@ -265,17 +280,13 @@ create_capture_GRO <- function(gro_data) {
 
 #' Create individual table for great tits and blue tits in Grobla, Poland.
 #'
-#' Create full individual data table in standard format for great tits and blue tits in Grobla, Poland.
-#'
-#' @param Capture_data Capture data output from Grobla, Poland
-#'
-#' @param Brood_data Brood data output from Grobla, Poland
+#' @param Capture_data Capture data output based on modified primary data from Grobla, Poland
 #'
 #' @return A data frame.
 
 create_individual_GRO <- function(Capture_data){
 
-  Individual_data_temp <- Capture_data %>%
+  Individual_data <- Capture_data %>%
 
     #### Format and create new data columns
     dplyr::group_by(.data$IndvID) %>%
@@ -317,7 +328,22 @@ create_individual_GRO <- function(Capture_data){
                                               } else if(..1 > 3L){
                                                 return("adult")
                                               }
-                                            }))
+                                            })) %>%
+
+    ## Keep distinct records by PopID and InvdID
+    dplyr::distinct(.data$PopID, .data$IndvID, .keep_all = TRUE) %>%
+
+    ## Arrange
+    dplyr::arrange(.data$CaptureID) %>%
+
+    ## Keep only necessary columns
+    dplyr::select(dplyr::contains(names(individual_data_template))) %>%
+
+    ## Add missing columns
+    dplyr::bind_cols(individual_data_template[,!(names(individual_data_template) %in% names(.))]) %>%
+
+    ## Reorder columns
+    dplyr::select(names(individual_data_template))
 
 
   # ## Check column classes
@@ -330,10 +356,7 @@ create_individual_GRO <- function(Capture_data){
 
 #' Create location data table for great tits and blue tits in Grobla, Poland.
 #'
-#' Create a location data table in standard format for great tits and blue tits in Grobla, Poland.
-#' @param nest_data Data frame of nest data from Grobla, Poland.
-#'
-#' @param rr_data Data frame of ringing records from Grobla, Poland.
+#' @param gro_data Data frame of modified primary data from Grobla, Poland.
 #'
 #' @return A data frame.
 
