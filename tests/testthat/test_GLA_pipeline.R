@@ -36,6 +36,7 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(subset(GLA_data, IndvID == "TX11924")$BroodIDLaid, NA_character_) # Should be NA
   expect_equal(subset(GLA_data, IndvID == "TX11924")$BroodIDFledged, NA_character_) # Should be NA
   expect_equal(subset(GLA_data, IndvID == "TX11924")$RingSeason, 2015) # Should be 2015 (seen in multiple years)
+
   expect_equal(subset(GLA_data, IndvID == "TX11924")$RingAge, "adult") # Should be an adult
 
   #Individual AFE3038 - uncertain sex
@@ -50,14 +51,14 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(nrow(subset(GLA_data, IndvID == "ACJ2041")), 2) # 2 records
   expect_equal(subset(GLA_data, IndvID == "ACJ2041")$PopID, c("SCE", "SAL")) # SCE and SAL pop codes
 
-  ## Individual observed in multiple populations and ringed as chick
+  ## Individual observed in multiple populations and ringed as chick, but part of a cross fostering experiment, so broodIDlaid is NA, but broodIDfledged is known
   expect_equal(nrow(subset(GLA_data, IndvID == "AFE3840")), 2) # SCE and SAL pop codes
   expect_equal(dplyr::n_distinct(subset(GLA_data, IndvID == "AFE3840")$BroodIDLaid), 1) # 1 BroodIDLaid value
-  expect_equal(!is.na(unique(subset(GLA_data, IndvID == "AFE3840")$BroodIDLaid)), TRUE) # BroodIDLaid not NA
+  expect_equal(is.na(unique(subset(GLA_data, IndvID == "AFE3840")$BroodIDLaid)), TRUE) # BroodIDLaid is NA
+  expect_equal(!is.na(unique(subset(GLA_data, IndvID == "AFE3840")$BroodIDFledged)), TRUE) # BroodIDFledged is not NA
 
   ## Case where individual hatched in a replacement clutch
   expect_equal(dplyr::n_distinct(subset(GLA_data, IndvID == "AFE3178")$BroodIDLaid), 1) # 1 BroodIDLaid value
-
 
 })
 
@@ -74,8 +75,8 @@ test_that("Brood_data returns an expected outcome...", {
   ## Brood where clutch type observed = replacement
   expect_equal(subset(GLA_data, BreedingSeason == "2015"
                       & PopID == "SAL"
-                      & LocationID == "235"
-                      & is.na(LayDate_observed))$ClutchType_observed, "replacement")
+                      & LocationID == "235" &
+                        is.na(LayDate_observed))$ClutchType_observed, "replacement")
 
   ## Brood where chick weight, but not tarsus is measured
   expect_equal(subset(GLA_data,
@@ -95,11 +96,11 @@ test_that("Brood_data returns an expected outcome...", {
                       & PopID == "CAS"
                       & LocationID == "28")$NumberChicksTarsus, NA_integer_)
 
-  ## Case where species is ambiguous, but the species information from the nest data  was used to assign species for the brood
+  ## Case where species is ambiguous, but the species information from the ringing data  was used to assign species for the brood
   expect_equal(subset(GLA_data,
                       BreedingSeason == "2020"
                       & PopID == "SAL"
-                      & LocationID == "204")$Species, "CYACAE")
+                      & LocationID == "204")$Species, "PARMAJ")
 
   ## Case where both FemaleID and MaleID are known
   expect_equal(subset(GLA_data,
