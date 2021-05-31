@@ -138,8 +138,8 @@ format_GLA <- function(db = choose_directory(),
     ## Select variables of interest
     dplyr::select(.data$BreedingSeason,.data$PopID, .data$LocationID, .data$Species, .data$ReplacementClutch,
                   .data$LayDate_observed, .data$LayDate_min, .data$LayDate_max, .data$HatchDate_observed,
-                  .data$ClutchSize_observed, .data$UnhatchedEggs,
-                  .data$NumberFledged_observed, .data$FemaleID, .data$MaleID, .data$BroodID, .data$ExperimentID, .data$ClutchSizeManip, .data$HatchlingsManip)
+                  .data$ClutchSize_observed, .data$UnhatchedEggs, .data$BroodSize_observed,
+                  .data$NumberFledged_observed, .data$FemaleID, .data$MaleID, .data$BroodID, .data$ExperimentID)
 
   ## Read in primary data from ringing records
   rr_data <- readxl::read_xlsx(path = paste0(db, "/GLA_PrimaryData_RingingRecords.xlsx"),
@@ -228,7 +228,7 @@ format_GLA <- function(db = choose_directory(),
 
   #### CAPTURE DATA
   message("Compiling capture information...")
-  Capture_data <- create_capture_GLA(nest_data, rr_data)
+  Capture_data <- create_capture_GLA(nest_data, rr_data, Brood_data)
 
   #### INDIVIDUAL DATA
   message("Compiling individual information...")
@@ -379,9 +379,11 @@ create_brood_GLA <- function(nest_data, rr_data) {
 #'
 #' @param rr_data Data frame of ringing records from Glasgow, Scotland.
 #'
+#' @param Brood_data Data frame of Brood data in standard format from Glasgow, Scotland.
+#'
 #' @return A data frame.
 
-create_capture_GLA <- function(nest_data, rr_data) {
+create_capture_GLA <- function(nest_data, rr_data, Brood_data) {
 
   ## Capture data from ringing records
   ## TODO: Check on tarsus method

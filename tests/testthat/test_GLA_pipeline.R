@@ -67,10 +67,31 @@ test_that("Brood_data returns an expected outcome...", {
   ## Take a subset of only GLA data
   GLA_data <- dplyr::filter(pipeline_output$Brood_data, PopID %in% c("CAS", "GAR", "KEL", "SAL", "SCE"))
 
+  ## General brood data
+  expect_equal(subset(GLA_data, BreedingSeason == "2014"
+                      & PopID == "GAR"
+                      & LocationID == "704")$ClutchSize_observed, 10)
+  expect_equal(subset(GLA_data, BreedingSeason == "2014"
+                      & PopID == "GAR"
+                      & LocationID == "704")$BroodSize_observed, 9)
+  expect_equal(subset(GLA_data, BreedingSeason == "2014"
+                      & PopID == "GAR"
+                      & LocationID == "704")$NumberFledged_observed, 9)
+
+  expect_equal(subset(GLA_data, BreedingSeason == "2014"
+                      & PopID == "GAR"
+                      & LocationID == "704")$LayDate_observed, as.Date("2014-04-25"))
+  expect_equal(subset(GLA_data, BreedingSeason == "2014"
+                      & PopID == "GAR"
+                      & LocationID == "704")$LayDate_min, as.Date("2014-04-25"))
+  expect_equal(subset(GLA_data, BreedingSeason == "2014"
+                      & PopID == "GAR"
+                      & LocationID == "704")$LayDate_max, as.Date("2014-05-04"))
+
   ## Case where there were multiple clutches laid at the same location
   expect_equal(nrow(subset(GLA_data, BreedingSeason == "2019"
-                      & PopID == "SAL"
-                      & LocationID == "249")), 2)
+                           & PopID == "SAL"
+                           & LocationID == "249")), 2)
 
   ## Brood where clutch type observed = replacement
   expect_equal(subset(GLA_data, BreedingSeason == "2015"
@@ -161,7 +182,7 @@ test_that("Capture_data returns an expected outcome...", {
   # Case where individual recorded at different locations in nest and ringing data
   expect_equal(nrow(subset(GLA_data, IndvID == "S034047" & BreedingSeason <= 2018)), 3) # Three records
   expect_equal(subset(GLA_data, IndvID == "S034047" &
-                       BreedingSeason == 2017)$Sex_observed, "F") # Female
+                        BreedingSeason == 2017)$Sex_observed, "F") # Female
   expect_equal(subset(GLA_data, IndvID == "S034047" &
                         CaptureDate == as.Date("2018-05-01"))$LocationID, "65") # LocationID 65
 
