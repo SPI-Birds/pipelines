@@ -55,11 +55,11 @@ format_GRO <- function(db = choose_directory(),
   options(dplyr.summarise.inform = FALSE)
 
   ## Read in the three separate primary data tables
-  bt_data <- nest_data <- readxl::read_excel(path = paste0(db, "/GRO_PrimaryData_BT_Phenology.xls"), guess = 5000, range = readxl::cell_cols("A:L")) %>%
+  bt_data <- nest_data <- readxl::read_excel(path = paste0(db, "/GRO_PrimaryData_BT.xls"), guess = 5000, range = readxl::cell_cols("A:L")) %>%
     dplyr::mutate(Species = rep("CYACAE", nrow(.)))
-  cf_data <- nest_data <- readxl::read_excel(path = paste0(db, "/GRO_PrimaryData_CF_Phenology.xls"), guess = 5000, range = readxl::cell_cols("A:L")) %>%
+  cf_data <- nest_data <- readxl::read_excel(path = paste0(db, "/GRO_PrimaryData_CF.xls"), guess = 5000, range = readxl::cell_cols("A:L")) %>%
     dplyr::mutate(Species = rep("FICALB", nrow(.)))
-  gt_data <- nest_data <- readxl::read_excel(path = paste0(db, "/GRO_PrimaryData_GT_Phenology.xls"), guess = 5000, range = readxl::cell_cols("A:L")) %>%
+  gt_data <- nest_data <- readxl::read_excel(path = paste0(db, "/GRO_PrimaryData_GT.xls"), guess = 5000, range = readxl::cell_cols("A:L")) %>%
     dplyr::mutate(Species = rep("PARMAJ", nrow(.)))
 
   ## Rbind data
