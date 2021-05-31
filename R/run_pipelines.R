@@ -210,7 +210,7 @@ run_pipelines <- function(path = choose_directory(),
 
     utils::write.csv(x = Capture_data, file = paste0(save_path, "/", filename, "_Capture_data.csv"), row.names = F)
 
-    utils::write.csv(x = Individual_data, file = paste0(save_path, "/", filename, "Individual_data.csv"), row.names = F)
+    utils::write.csv(x = Individual_data, file = paste0(save_path, "/", filename, "_Individual_data.csv"), row.names = F)
 
     utils::write.csv(x = Location_data, file = paste0(save_path, "/", filename, "_Location_data.csv"), row.names = F)
 
