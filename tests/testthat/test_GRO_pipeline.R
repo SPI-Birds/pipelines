@@ -264,7 +264,7 @@ test_that("Capture_data returns an expected outcome...", {
   expect_equal(subset(GRO_data,
                       IndvID == "LE31496")$LocationID, "I37")
   expect_equal(subset(GRO_data,
-                      IndvID == "LE31496")$CaptureDate, as.Date("2002-04-28"))
+                      IndvID == "LE31496")$CaptureDate, as.Date("2002-05-28"))
 
 })
 
