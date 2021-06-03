@@ -6,6 +6,9 @@
 #'this data. For a general description of the standard format please see
 #'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 #'
+#'#'\strong{CaptureDate}: Adults are typically captured two weeks into the nestling period.
+#'If hatch date is not known for the nest, CaptureDate is set two weeks after May 14th, which is the average hatch date.
+#'
 #'@inheritParams pipeline_params
 #'
 #'@return Generates either 4 .csv files or 4 data frames in the standard format.
@@ -77,18 +80,30 @@ format_GRO <- function(db = choose_directory(),
                   HatchDate_observed = .data$HatchingDate,
                   BroodSize_observed = .data$HatchlingN,
                   NumberFledged_observed = .data$FledglingN,
-                  ExperimentID = .data$Experiment,
                   ObserverID = .data$Observer) %>%
 
     ## Reformat
-    ## TODO: Ask about the few cases about clutch, brood, and fledge counts that get coerced to NAs
+    ## Few cases of clutch size observed have '?' - these should be considered the minimum clutch size, otherwise on information provided on minimum clutch size
     dplyr::mutate(PopID = "GRO",
+                  LocationID = toupper(LocationID),
                   BreedingSeason = as.integer(.data$BreedingSeason),
-                  LayDate_observed =  as.Date(LayDate_observed),
-                  HatchDate_observed =  as.Date(HatchDate_observed),
-                  ClutchSize_observed = suppressWarnings(as.integer(ClutchSize_observed)),
-                  BroodSize_observed = suppressWarnings(as.integer(BroodSize_observed)),
-                  NumberFledged_observed = suppressWarnings(as.integer(NumberFledged_observed))) %>%
+                  LayDate_observed =  as.Date(.data$LayDate_observed),
+                  HatchDate_observed =  as.Date(.data$HatchDate_observed),
+                  ClutchSize_min = dplyr::case_when(grepl("?", .data$ClutchSize_observed, fixed = T) ~ as.integer(sub("?","",.data$ClutchSize_observed, fixed = T)),
+                                                    TRUE ~ NA_integer_),
+                  ClutchSize_observed = suppressWarnings(as.integer(.data$ClutchSize_observed)),
+                  BroodSize_observed = suppressWarnings(as.integer(.data$BroodSize_observed)),
+                  NumberFledged_observed = suppressWarnings(as.integer(.data$NumberFledged_observed)),
+
+                  ## Information on clutch type recorded opportunistically in the Notes - when there is a note, label
+                  ClutchType_observed = dplyr::case_when(grepl("First|first", .data$Notes, fixed = F) ~ "first",
+                                                         grepl("Repeated|second|secend|Second", .data$Notes, fixed = F) ~ "second",
+                                                         TRUE ~ NA_character_)) %>%
+
+
+                  ## TODO: Experiments - join using table - fail if there are new experiments not in table
+                  # ExperimentID = dplyr::case_when(grepl("EXCHANGE", gro_data$ExperimentID) ~ "PARENTAGE",
+                  #                                 grepl("EXCHANGE", gro_data$ExperimentID) ~ "PARENTAGE")) %>%
 
     ## Arrange
     dplyr::arrange(.data$PopID, .data$BreedingSeason, .data$LocationID)
@@ -175,7 +190,6 @@ format_GRO <- function(db = choose_directory(),
 create_brood_GRO <- function(gro_data) {
 
   ## Get brood data
-  ## TODO: Check on minimum information for brood ID
   Brood_data <- gro_data %>%
     dplyr::filter(!is.na(.data$LocationID)) %>%
 
@@ -204,9 +218,8 @@ create_brood_GRO <- function(gro_data) {
     dplyr::ungroup() %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data =. , protocol_version = "1.1", na.rm = FALSE)) %>%
 
-    ## Create Brood ID
-    ## TODO: Check on when it is appropriate to create a Brood ID
-    dplyr::mutate(BroodID = dplyr::case_when(!is.na(.data$LayDate_observed) ~ paste(.data$PopID, dplyr::row_number(), sep ="-")))
+    ## Calculating BroodID if Species is known
+    dplyr::mutate(BroodID = dplyr::case_when(!is.na(Species) ~ paste(.data$PopID, dplyr::row_number(), sep ="-")))
 
 
   # ## Check column classes
@@ -224,6 +237,7 @@ create_brood_GRO <- function(gro_data) {
 
 create_capture_GRO <- function(gro_data) {
 
+
   ## Capture data from nest data
   Capture_data <- gro_data %>%
 
@@ -237,12 +251,12 @@ create_capture_GRO <- function(gro_data) {
     dplyr::mutate(Sex_observed = dplyr::case_when(grepl("Female", .data$Sex_observed) ~ "F",
                                                   grepl("Male", .data$Sex_observed) ~ "M")) %>%
 
-    dplyr::group_by(.data$PopID) %>%
-
-    ## TODO: Check on Capture Date
+    ## Capture date is generally two weeks after hatching
+    ## If hatch date is not known, then May 14th of that year is used
     ## TODO: Check about experimental types
-    dplyr::mutate(CaptureDate = case_when(!is.na(.data$LayDate_observed) ~ as.Date(.data$LayDate_observed),
-                                          is.na(.data$LayDate_observed) ~ as.Date(paste0(.data$BreedingSeason, "-06-01"))),
+    dplyr::group_by(.data$IndvID, .data$BreedingSeason) %>%
+    dplyr::mutate(CaptureDate = case_when(!is.na(.data$HatchDate_observed) ~ as.Date(.data$HatchDate_observed) + 14,
+                                          is.na(.data$HatchDate_observed) ~ as.Date(paste0(.data$BreedingSeason, "-05-28"))),
                   CapturePopID = .data$PopID,
                   ReleasePopID = .data$PopID,
                   CaptureAlive = TRUE,
@@ -263,7 +277,8 @@ create_capture_GRO <- function(gro_data) {
     calc_age(ID = .data$IndvID,
              Age = .data$Age_observed,
              Date = .data$CaptureDate,
-             Year = .data$BreedingSeason) %>%
+             Year = .data$BreedingSeason,
+             showpb = FALSE) %>%
 
     ## Arrange
     dplyr::arrange(.data$BreedingSeason, .data$CapturePopID, .data$IndvID, .data$CaptureDate) %>%
@@ -322,7 +337,7 @@ create_individual_GRO <- function(Capture_data){
                   RingAge = purrr::pmap_chr(.l = list(first(.data$Age_observed)),
                                             .f = ~{
                                               if(is.na(..1)){
-                                                return("adult")  # TODO: If age observed is unknown, assuming adult. Check this assumption
+                                                return("adult")
                                               } else if(..1 <= 3L){
                                                 return("chick")
                                               } else if(..1 > 3L){
@@ -363,7 +378,7 @@ create_individual_GRO <- function(Capture_data){
 create_location_GRO <- function(gro_data) {
 
   ## Build location data based on nest data
-  ## TODO: Check whether any boxes have been removed
+  ## Some boxes were removed in the early years of the study, but there is no information about which boxes or when
   Location_data <- gro_data %>%
     dplyr::select(.data$BreedingSeason, .data$PopID, .data$LocationID) %>%
     dplyr::filter(!is.na(.data$LocationID)) %>%
