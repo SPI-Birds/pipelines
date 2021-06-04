@@ -9,41 +9,6 @@ test_that("CAC outputs all files...", {
 
 })
 
-test_that("Individual data returns an expected outcome...", {
-
-  #Take a subset of only CAC data
-  CAC_data <- dplyr::filter(pipeline_output$Individual_data, PopID %in% "CAC")
-
-  ## Great tit female
-  expect_equal(subset(CAC_data, IndvID == "2649419")$Sex_calculated, "F")
-  expect_equal(subset(CAC_data, IndvID == "2649419")$Sex_observed, "F")
-  expect_equal(subset(CAC_data, IndvID == "2649419")$Species, "PARMAJ")
-  expect_equal(subset(CAC_data, IndvID == "2649419")$RingAge, "adult")
-  expect_equal(subset(CAC_data, IndvID == "2649419")$Sex_genetic, NA_character_)
-  expect_equal(subset(CAC_data, IndvID == "2649419")$BroodIDLaid, NA_character_)
-  expect_equal(subset(CAC_data, IndvID == "2649419")$RingSeason, 2001)
-
-  # Great tit male
-  expect_equal(subset(CAC_data, IndvID == "L743224")$Sex_calculated, "M")
-  expect_equal(subset(CAC_data, IndvID == "2649419")$Sex_observed, "M")
-  expect_equal(subset(CAC_data, IndvID == "L743224")$Species, "PARMAJ")
-  expect_equal(subset(CAC_data, IndvID == "L743224")$RingAge, "adult")
-  expect_equal(subset(CAC_data, IndvID == "L743224")$Sex_genetic, NA_character_)
-  expect_equal(subset(CAC_data, IndvID == "L743224")$BroodIDLaid, NA_character_)
-  expect_equal(subset(CAC_data, IndvID == "L743224")$RingSeason, 2013)
-
-  # Grea tit male captured in many years
-  expect_equal(subset(CAC_data, IndvID == "2A001084")$Sex_calculated, "M")
-  expect_equal(subset(CAC_data, IndvID == "2A001084")$Sex_observed, "M")
-  expect_equal(subset(CAC_data, IndvID == "2A001084")$Species, "PARMAJ")
-  expect_equal(subset(CAC_data, IndvID == "2A001084")$RingAge, "adult")
-  expect_equal(subset(CAC_data, IndvID == "2A001084")$Sex_genetic, NA_character_)
-  expect_equal(subset(CAC_data, IndvID == "2A001084")$BroodIDLaid, NA_character_)
-  expect_equal(subset(CAC_data, IndvID == "2A001084")$RingSeason, 2012)
-
-
-})
-
 test_that("Brood_data returns an expected outcome...", {
 
   ## Take a subset of only CAC data
@@ -55,22 +20,19 @@ test_that("Brood_data returns an expected outcome...", {
                         BreedingSeason == 2013)$FemaleID, NA_character_)
   expect_equal(subset(CAC_data,
                       LocationID == "111" &
-                        BreedingSeason == 1999)$MaleID, NA_character_)
+                        BreedingSeason == 2013)$MaleID, NA_character_)
   expect_equal(subset(CAC_data,
                       LocationID == "111" &
-                        BreedingSeason == 1999)$LayDate_observed, as.Date("2013-04-13"))
+                        BreedingSeason == 2013)$LayDate_observed, as.Date("2013-04-21"))
   expect_equal(subset(CAC_data,
                       LocationID == "111" &
-                        BreedingSeason == 1999)$HatchDate_observed, lubridate::NA_Date_)
+                        BreedingSeason == 2013)$HatchDate_observed, lubridate::NA_Date_)
   expect_equal(subset(CAC_data,
                       LocationID == "111" &
-                        BreedingSeason == 1999)$ClutchSize_observed, 7)
+                        BreedingSeason == 2013)$ClutchSize_observed, 7)
   expect_equal(subset(CAC_data,
                       LocationID == "111" &
-                        BreedingSeason == 1999)$BroodSize_observed, 12)
-  expect_equal(subset(CAC_data,
-                      LocationID == "111" &
-                        BreedingSeason == 1999)$NumberFledged_observed, 0)
+                        BreedingSeason == 2013)$NumberFledged_observed, 0)
 
   ## Nest 34 in 2007
   expect_equal(subset(CAC_data,
@@ -128,70 +90,76 @@ test_that("Brood_data returns an expected outcome...", {
 
 test_that("Capture_data returns an expected outcome...", {
 
-
   ## Take a subset of only CAC data
   CAC_data <- dplyr::filter(pipeline_output$Capture_data, CapturePopID %in% "CAC")
 
-  ## FICALB individual LE31523 caught in two years with conflicting sex
-  expect_equal(subset(CAC_data,
-                      IndvID == "LE31523")$BreedingSeason, c(1999, 2002))
-  expect_equal(subset(CAC_data,
-                      IndvID == "LE31523")$Sex_observed, c("M", "F"))
-  expect_equal(subset(CAC_data,
-                      IndvID == "LE31523")$LocationID, c("I01", "S19"))
+  # Great tit male captured in many years
+  expect_equal(subset(CAC_data, IndvID == "2A001084" &
+                        BreedingSeason == 2013)$Species, "PARMAJ")
+  expect_equal(subset(CAC_data, IndvID == "2A001084" &
+                        BreedingSeason == 2015)$Sex_observed, "M")
+  expect_equal(subset(CAC_data, IndvID == "2A001084" &
+                        BreedingSeason == 2016)$LocationID, "169")
+  expect_equal(subset(CAC_data, IndvID == "2A001084" &
+                        BreedingSeason == 2017)$Age_calculated, c(14,14))
+  expect_equal(subset(CAC_data, IndvID == "2A001084" &
+                        BreedingSeason == 2017)$LocationID, c("170","170A"))
+  expect_equal(subset(CAC_data, IndvID == "2A001084" &
+                        BreedingSeason == 2018)$ExperimentID, c(NA_character_,NA_character_))
+
+  # Great tit female captured in two years
+  expect_equal(subset(CAC_data, IndvID == "2N78773" &
+                        BreedingSeason == 2011)$Species, "PARMAJ")
+  expect_equal(subset(CAC_data, IndvID == "2N78773"  &
+                        BreedingSeason == 2011)$LocationID, "107")
+  expect_equal(subset(CAC_data, IndvID == "2N78773" &
+                        BreedingSeason == 2013)$LocationID, "103")
+  expect_equal(subset(CAC_data, IndvID == "2N78773" &
+                        BreedingSeason == 2013)$Age_observed, 6)
+  expect_equal(subset(CAC_data, IndvID == "2N78773" &
+                        BreedingSeason == 2013)$Age_calculated, 8)
+  expect_equal(subset(CAC_data, IndvID == "2N78773" &
+                        BreedingSeason == 2013)$ExperimentID, NA_character_)
+
+  # Great tit female captured in one year without an age
+  expect_equal(subset(CAC_data, IndvID == "2KA77226" &
+                        BreedingSeason == 2020)$Age_observed, NA_integer_)
+  expect_equal(subset(CAC_data, IndvID == "2KA77226"  &
+                        BreedingSeason == 2020)$LocationID, "109")
+  expect_equal(subset(CAC_data, IndvID == "2KA77226"  &
+                        BreedingSeason == 2020)$Sex_observed, "F")
+
+})
 
 
-  ## PARMAJ individual KP46833 caught twice in same year
-  expect_equal(unique(subset(CAC_data,
-                             IndvID == "KP46833")$BreedingSeason), 1999)
-  expect_equal(unique(subset(CAC_data,
-                             IndvID == "KP46833")$Species), "PARMAJ")
-  expect_equal(unique(subset(CAC_data,
-                             IndvID == "KP46833")$Mass), NA_real_)
-  expect_equal(unique(subset(CAC_data,
-                             IndvID == "KP46833")$WingLength), NA_real_)
-  expect_equal(unique(subset(CAC_data,
-                             IndvID == "KP46833")$CaptureAlive), TRUE)
-  expect_equal(unique(subset(CAC_data,
-                             IndvID == "KP46833")$Sex_observed), "F")
-  expect_equal(unique(subset(CAC_data,
-                             IndvID == "KP46833")$LocationID), "I19")
+test_that("Individual data returns an expected outcome...", {
 
+  #Take a subset of only CAC data
+  CAC_data <- dplyr::filter(pipeline_output$Individual_data, PopID %in% "CAC")
 
-  ## CYACAE individual K1L7504
-  expect_equal(subset(CAC_data,
-                      IndvID == "K1L7504")$BreedingSeason, 2015)
-  expect_equal(subset(CAC_data,
-                      IndvID == "K1L7504")$Sex_observed, "F")
-  expect_equal(subset(CAC_data,
-                      IndvID == "K1L7504")$Species, "CYACAE")
-  expect_equal(subset(CAC_data,
-                      IndvID == "K1L7504")$Mass, NA_real_)
-  expect_equal(subset(CAC_data,
-                      IndvID == "K1L7504")$WingLength, NA_real_)
-  expect_equal(subset(CAC_data,
-                      IndvID == "K1L7504")$CaptureAlive, TRUE)
-  expect_equal(subset(CAC_data,
-                      IndvID == "K1L7504")$LocationID, "H63")
+  ## Great tit female
+  expect_equal(subset(CAC_data, IndvID == "2649419")$Sex_calculated, "F")
+  expect_equal(subset(CAC_data, IndvID == "2649419")$Species, "PARMAJ")
+  expect_equal(subset(CAC_data, IndvID == "2649419")$RingAge, "adult")
+  expect_equal(subset(CAC_data, IndvID == "2649419")$Sex_genetic, NA_character_)
+  expect_equal(subset(CAC_data, IndvID == "2649419")$BroodIDLaid, NA_character_)
+  expect_equal(subset(CAC_data, IndvID == "2649419")$RingSeason, 2001)
 
+  # Great tit male
+  expect_equal(subset(CAC_data, IndvID == "L743224")$Sex_calculated, "M")
+  expect_equal(subset(CAC_data, IndvID == "L743224")$Species, "PARMAJ")
+  expect_equal(subset(CAC_data, IndvID == "L743224")$RingAge, "adult")
+  expect_equal(subset(CAC_data, IndvID == "L743224")$Sex_genetic, NA_character_)
+  expect_equal(subset(CAC_data, IndvID == "L743224")$BroodIDLaid, NA_character_)
+  expect_equal(subset(CAC_data, IndvID == "L743224")$RingSeason, 2010)
 
-  ## FICALB individual LE31496
-  expect_equal(subset(CAC_data,
-                      IndvID == "LE31496")$BreedingSeason, 2002)
-  expect_equal(subset(CAC_data,
-                      IndvID == "LE31496")$Sex_observed, "F")
-  expect_equal(subset(CAC_data,
-                      IndvID == "LE31496")$Species, "FICALB")
-  expect_equal(subset(CAC_data,
-                      IndvID == "LE31496")$Mass, NA_real_)
-  expect_equal(subset(CAC_data,
-                      IndvID == "LE31496")$WingLength, NA_real_)
-  expect_equal(subset(CAC_data,
-                      IndvID == "LE31496")$CaptureAlive, TRUE)
-  expect_equal(subset(CAC_data,
-                      IndvID == "LE31496")$LocationID, "I37")
-  expect_equal(subset(CAC_data,
-                      IndvID == "LE31496")$CaptureDate, as.Date("2002-04-28"))
+  # Great tit male captured in many years
+  expect_equal(subset(CAC_data, IndvID == "2A001084")$Sex_calculated, "M")
+  expect_equal(subset(CAC_data, IndvID == "2A001084")$Species, "PARMAJ")
+  expect_equal(subset(CAC_data, IndvID == "2A001084")$RingAge, "adult")
+  expect_equal(subset(CAC_data, IndvID == "2A001084")$Sex_genetic, NA_character_)
+  expect_equal(subset(CAC_data, IndvID == "2A001084")$BroodIDLaid, NA_character_)
+  expect_equal(subset(CAC_data, IndvID == "2A001084")$RingSeason, 2012)
 
 })
 
@@ -200,19 +168,17 @@ test_that("Location_data returns an expected outcome...", {
   #Take a subset of only CAC data
   CAC_data <- dplyr::filter(pipeline_output$Location_data, PopID %in% "CAC")
 
-  # All should have the same latitude equal to 50.06
-  expect_equal(unique(subset(CAC_data)$Latitude), 50.06)
+  # All should have the same latitude equal to 45.27
+  expect_equal(unique(subset(CAC_data)$Latitude), 45.27)
 
-  # All should have the same longitude equal to 20.25
-  expect_equal(unique(subset(CAC_data)$Longitude), 20.25)
+  # All should have the same longitude equal to 2.8
+  expect_equal(unique(subset(CAC_data)$Longitude), 2,8)
 
-  # StartSeason for nestbox C12 is 1997
-  expect_equal(subset(CAC_data, LocationID == "C12")$StartSeason, 1997)
+  # StartSeason for nestbox 47A is 2017
+  expect_equal(subset(CAC_data, LocationID == "47A")$StartSeason, 2017)
 
-  # StartSeason for nestbox C12 is 1999 (nest box occurs in FICALB and PARMAJ data)
-  expect_equal(subset(CAC_data, LocationID == "I04")$StartSeason, 1999)
-
-
+  # StartSeason for nestbox R111 is 2000
+  expect_equal(subset(CAC_data, LocationID == "R111")$StartSeason, 2000)
 
 })
 

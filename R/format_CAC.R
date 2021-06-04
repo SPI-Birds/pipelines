@@ -6,8 +6,7 @@
 #'this data. For a general description of the standard format please see
 #'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 #'
-#'\strong{CaptureDate}: Some individuals were not recorded in the ringing records, but were observed breeding at a monitored nest.
-#'For these individuals, the CaptureDate is set as June 1st of the breeding year.
+#'\strong{CaptureDate}:
 #'
 #'@inheritParams pipeline_params
 #'
@@ -60,7 +59,6 @@ format_CAC <- function(db = choose_directory(),
 
   db <- "/Users/tyson/Documents/academia/institutions/NIOO/SPI-Birds/my_pipelines/CAC/CAC_CanCatà_Spain/"
 
-
   ## Read in primary data
   cac_data <- readxl::read_xlsx(path = paste0(db, "/CAC_PrimaryData.xlsx"), guess = 5000) %>%
     janitor::clean_names(case = "upper_camel") %>%
@@ -74,24 +72,26 @@ format_CAC <- function(db = choose_directory(),
                   FledgeDate_observed = suppressWarnings(janitor::excel_numeric_to_date(as.numeric(.data$FledglingDate))),
 
                   ## TODO: Check on meaning of parentheses around numbers
-                  ClutchSize_observed = as.integer(.data$ClutchSize),
+                  ClutchSize_observed = suppressWarnings(as.integer(.data$ClutchSize)),
                   NumberFledged_observed = as.integer(.data$NumberFledglings),
 
                   ## TODO: Check on cross fostering
-                  ExperimentID = case_when(!is.na(.data$Crossfostering) ~ "COHORT; PARENTAGE"),
+                  ExperimentID = dplyr::case_when(!is.na(.data$Crossfostering) ~ "COHORT; PARENTAGE"),
 
                   ## TODO: Check on one species that is labeled PM+PC
-                  Sp = case_when(stringr::str_squish(toupper(.data$Sp)) == "PM"  ~ species_codes[species_codes == 14640,]$Species,
+                  Sp = dplyr::case_when(stringr::str_squish(toupper(.data$Sp)) == "PM"  ~ species_codes[species_codes == 14640,]$Species,
                                  TRUE ~ .data$Sp),
 
-                  ## TODO: Check on brood
-                  Brood = case_when(.data$Brood == "1" ~ "first",
+                  ## TODO: Check on brood classifications
+                  Brood = dplyr::case_when(.data$Brood == "1" ~ "first",
                                     .data$Brood == "2" ~ "second",
-                                    .data$Brood == "R" ~ "replacement")) %>%
+                                    .data$Brood == "R" ~ "replacement"),
+
+                  ## TODO: Check if lowercase and uppercase are all the same nestboxes
+                  LocationID = toupper(.data$NestBox)) %>%
 
     ## Rename
     dplyr::rename(Species = .data$Sp,
-                  LocationID = .data$NestBox,
                   ClutchType_observed = .data$Brood,
                   FemaleID = .data$Female,
                   MaleID = .data$Male) %>%
@@ -126,7 +126,8 @@ format_CAC <- function(db = choose_directory(),
                   -.data$PvcM,
                   -.data$Year,
                   -.data$ClutchSize,
-                  -.data$NumberFledglings) %>%
+                  -.data$NumberFledglings,
+                  -.data$NestBox) %>%
 
     ## Create BroodID based on PopID and row number
     dplyr::ungroup() %>%
@@ -160,7 +161,7 @@ format_CAC <- function(db = choose_directory(),
 
   #### INDIVIDUAL DATA
   message("Compiling individual information...")
-  Individual_data <- create_individual_CAC(Capture_data, cac_data)
+  Individual_data <- create_individual_CAC(Capture_data)
 
   #### LOCATION DATA
   message("Compiling location information...")
@@ -226,19 +227,11 @@ create_brood_CAC <- function(cac_data) {
     ## Reorder columns
     dplyr::select(names(brood_data_template)) %>%
 
-    ## Remove any NAs from essential columns
-    dplyr::filter(!is.na(.data$BroodID),
-                  !is.na(.data$PopID),
-                  !is.na(.data$BreedingSeason),
-                  !is.na(.data$Species)) %>%
-
     ## Calculate clutch type
-    dplyr::arrange(.data$BreedingSeason, .data$Species, .data$FemaleID, .data$LayDate_observed) %>%
-    dplyr::ungroup() %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data =. , protocol_version = "1.1", na.rm = FALSE))
 
-  ## Check column classes
-  purrr::map_df(brood_data_template, class) == purrr::map_df(Brood_data, class)
+  # ## Check column classes
+  # purrr::map_df(brood_data_template, class) == purrr::map_df(Brood_data, class)
 
   return(Brood_data)
 
@@ -272,9 +265,9 @@ create_capture_CAC <- function(cac_data) {
                                                   grepl("Male", .data$Sex_observed) ~ "M"),
 
                   ## TODO: Check about age codes
-                  Age_observed = as.integer(dplyr::case_when(.data$Sex_observed == "F" ~ case_when(.data$AgeF == "A" ~ "6",
+                  Age_observed = as.integer(dplyr::case_when(.data$Sex_observed == "F" ~ dplyr::case_when(.data$AgeF == "A" ~ "6",
                                                                                                    .data$AgeF == "Y" ~ "4"),
-                                                             .data$Sex_observed == "M" ~ case_when(.data$AgeM == "A" ~ "6",
+                                                             .data$Sex_observed == "M" ~ dplyr::case_when(.data$AgeM == "A" ~ "6",
                                                                                                    .data$AgeM == "Y" ~ "4"))),
                   CapturePopID = .data$PopID, ## Set CapturePopID based on PopID
                   ReleasePopID = .data$PopID, ## Set ReleasePopID
@@ -298,7 +291,8 @@ create_capture_CAC <- function(cac_data) {
     calc_age(ID = .data$IndvID,
              Age = .data$Age_observed,
              Date = .data$CaptureDate,
-             Year = .data$BreedingSeason) %>%
+             Year = .data$BreedingSeason,
+             showpb = F) %>%
 
     ## Arrange
     dplyr::arrange(.data$BreedingSeason, .data$IndvID, .data$CaptureDate) %>%
@@ -315,11 +309,9 @@ create_capture_CAC <- function(cac_data) {
 #'
 #' @param Capture_data Capture data output from Can Cata, Spain
 #'
-#' @param cac_data Data frame of primary data from Can Cata, Spain.
-#'
 #' @return A data frame.
 
-create_individual_CAC <- function(Capture_data, cac_data){
+create_individual_CAC <- function(Capture_data){
 
   Individual_data <- Capture_data %>%
 
@@ -387,15 +379,40 @@ create_individual_CAC <- function(Capture_data, cac_data){
 
 #' Create location data table for great tits and blue tits in Can Cata, Spain.
 #'
-#' @param nest_data Data frame of nest data from Can Cata, Spain.
+#' @param cac_data Data frame of primaru data from Can Cata, Spain.
 #'
 #' @return A data frame.
 
-create_location_CAC <- function(nest_data, rr_data) {
+create_location_CAC <- function(cac_data) {
 
+  ## TODO: Check on meaning of letters associated with nest boxes
+  ## TODO: Check whether nest boxes have been removed
+  Location_data <- cac_data %>%
+    dplyr::select(.data$BreedingSeason, .data$PopID, .data$LocationID) %>%
+    dplyr::filter(!is.na(.data$LocationID)) %>%
+    dplyr::mutate(LocationID = factor(.data$LocationID, levels = unique(stringr::str_sort(.data$LocationID, numeric = T)))) %>%
+    dplyr::arrange(.data$LocationID) %>%
 
-  ## Keep only necessary columns
-  dplyr::select(dplyr::contains(names(location_data_template))) %>%
+    ## Keep distinct records
+    dplyr::distinct(.data$BreedingSeason, .data$LocationID, .keep_all = TRUE) %>%
+
+    ## All records should be complete: remove any incomplete cases
+    tidyr::drop_na() %>%
+
+    ## Get additional information
+    dplyr::group_by(.data$PopID, .data$LocationID) %>%
+    dplyr::summarise(StartSeason = min(.data$BreedingSeason, na.rm = TRUE),
+                     EndSeason = NA_integer_) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(LocationID = as.character(.data$LocationID),
+                  NestboxID = .data$LocationID,
+                  LocationType = "NB",
+                  HabitatType = "mixed",
+                  Latitude  = 45.27,
+                  Longitude = 2.8) %>%
+
+    ## Keep only necessary columns
+    dplyr::select(dplyr::contains(names(location_data_template))) %>%
 
     ## Add missing columns
     dplyr::bind_cols(location_data_template[,!(names(location_data_template) %in% names(.))]) %>%
