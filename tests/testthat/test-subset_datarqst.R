@@ -1,6 +1,6 @@
-context("Test that subset_datarqst() functions as expected...")
+pipeline_output <- run_pipelines(path = data_path, PopID = c("CHO", "SSQ", "HOC", "HAR", "PIL"))
 
-request_PopIDs <- c('CHO', 'HOC', 'EDM', 'PIL')
+request_PopIDs <- c('CHO', 'HOC', 'HAR', 'PIL')
 request_Species <- c('PARMAJ', 'FICHYP')
 request_PopSpec <- paste(expand.grid(request_PopIDs, request_Species)[,1], expand.grid(request_PopIDs, request_Species)[,2], sep = '_')
 

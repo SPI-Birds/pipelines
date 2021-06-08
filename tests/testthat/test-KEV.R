@@ -1,4 +1,4 @@
-context("Run data quality check on Kevo pipeline output")
+pipeline_output <- format_KEV(db = paste0(data_path, "/KEV_Kevo_Finland"))
 
 test_that("KEV outputs all files...", {
 

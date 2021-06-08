@@ -1,4 +1,4 @@
-context("Run data quality check on Choupal pipeline output")
+pipeline_output <- format_CHO(db = paste0(data_path, "/CHO_Choupal_Portugal"))
 
 test_that("CHO outputs all files...", {
 

@@ -1,4 +1,4 @@
-context("Run data quality check on Velky Kosir pipeline output")
+pipeline_output <- format_VEL(db = paste0(data_path, "/VEL_VelkyKosir_Czechia"))
 
 test_that("VEL outputs all files...", {
 

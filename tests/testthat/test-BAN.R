@@ -1,4 +1,4 @@
-context("Run data quality check on Bandon Valley pipeline output")
+pipeline_output <- format_BAN(db = paste0(data_path, "/BAN_BandonValley_Ireland"))
 
 test_that("BAN outputs all files...", {
 

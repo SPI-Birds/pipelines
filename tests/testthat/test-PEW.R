@@ -1,4 +1,4 @@
-context("Run data quality check on Peerdsbos West, Belgium, pipeline output")
+pipeline_output <- format_PEW(db = paste0(data_path, "/PEW_PeerdsbosWest_Belgium"))
 
 test_that("PEW outputs all files...", {
 

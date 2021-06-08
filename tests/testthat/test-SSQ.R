@@ -1,4 +1,4 @@
-context("Run data quality check on Santo Stefano Quisqina pipeline output")
+pipeline_output <- format_SSQ(db = paste0(data_path, "/SSQ_SantoStefanoQuisquina_Italy"))
 
 test_that("SSQ outputs all files...", {
 
