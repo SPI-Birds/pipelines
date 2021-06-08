@@ -2,7 +2,7 @@
 % Please edit documentation in R/format_PFN.R
 \name{format_PFN}
 \alias{format_PFN}
-\title{Construct standard format PiedFlyNet data}
+\title{Construct standard format for PiedFlyNet data}
 \usage{
 format_PFN(
   db = choose_directory(),
@@ -77,7 +77,7 @@ may be added to a future update of the standard format.
 \strong{Age calculation}: The age of each bird is estimated based on its history of ringing and recaptures.
 Since some birds that breed in one of the focal populations may have been ringed in another study sites (= immigrants), the
 pipeline calculates age for birds in any one population based on capture records in all monitored populations,
-and not just ringing/captures in locations within the specifc study site.
+and not just ringing/captures in locations within the specific study site.
 
 \strong{LayDate_observed and HatchDate_observed}: Information is provided as date of first egg (DFE) and
 date of hatching (DH). These are given as integer number, and represent days after a set
