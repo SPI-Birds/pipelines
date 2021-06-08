@@ -18,6 +18,9 @@
 #' Those IndvID were unified as "unringed" and are included in the Brood_data,
 #' but not included in the Individual_data.
 #'
+#' \strong{ClutchSize_observed} Where clutch size has ?, recorded value is used
+#' as ClutchSize_observed. ClutchSize_min/max is defined by No of chicks D3.
+#'
 #' \strong{NumberFledged} Information provided by the data owner: The number of
 #' fledged nestlings were not consistently monitored. However, nestlings were
 #' ringed at day 14, so very close to fledging. In almost all cases, the number
@@ -122,7 +125,7 @@ format_PEW <- function(db = choose_directory(),
                                                                date_system = "modern"),
                   Tarsus = as.numeric(.data$Tarsus),
                   Mass = as.numeric(.data$Mass),
-                  ClutchSize = as.integer(stringr::str_replace(string = .data$ClutchSize,
+                                          TRUE ~ .data$Mass)),
                                                                pattern = "\\?",
                                                                replace = "")),
                   NumberOfRingedChicks = case_when(.data$DateRingingChicks %in% c("verlaten incubatie", "all dead d1") ~ 0L,
@@ -330,9 +333,16 @@ create_brood_PEW <- function(data) {
                   LayDate = .data$DateEgg1,
                   LayDate_min = as.Date(NA),
                   LayDate_max = as.Date(NA),
-                  ClutchSize_observed = .data$ClutchSize,
-                  ClutchSize_min = NA_integer_,
-                  ClutchSize_max = NA_integer_,
+                  #If there is a ? in clutch size, ignore it for observed.
+                  #Where there is ? we use No Chicks at D3 as the possible min
+                  #Max will be infinite (we only know the min through ringed chicks)
+                  ClutchSize_observed = as.integer(stringr::str_replace(string = .data$ClutchSize,
+                                                                        pattern = "\\?",
+                                                                        replace = "")),
+                  ClutchSize_min = dplyr::case_when(stringr::str_detect(.data$ClutchSize, pattern = "\\?") ~ as.numeric(.data$NoOfChicksD3),
+                                                    TRUE ~ NA_real_),
+                  ClutchSize_max = dplyr::case_when(stringr::str_detect(.data$ClutchSize, pattern = "\\?") ~ Inf,
+                                                    TRUE ~ NA_real_),
                   HatchDate_observed = .data$HatchDateD0,
                   HatchDate_min = as.Date(NA),
                   HatchDate_max = as.Date(NA),
