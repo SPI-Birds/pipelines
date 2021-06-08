@@ -108,8 +108,8 @@ format_PEW <- function(db = choose_directory(),
                                                "text", "text", "text", "text", "text",
                                                "text", "text", "text", "text", "text",
                                                "text", "text", "text", "text",
-                                               "text", "text", "numeric", "numeric",
-                                               "text", "numeric", "numeric", "numeric",
+                                               "text", "text", "text", "text",
+                                               "text", "skip", "numeric", "skip",
                                                "numeric", "numeric", "numeric",
                                                "numeric", "numeric", "numeric"),
                                  na = c("NA", "na")) %>%
@@ -124,26 +124,28 @@ format_PEW <- function(db = choose_directory(),
                   CaptureDate = janitor::excel_numeric_to_date(as.numeric(.data$Date_temp),
                                                                date_system = "modern"),
                   Tarsus = as.numeric(.data$Tarsus),
-                  Mass = as.numeric(.data$Mass),
+                  Mass = as.numeric(dplyr::case_when(stringr::str_detect(.data$Mass, pattern = "dead") ~ NA_character_,
                                           TRUE ~ .data$Mass)),
-                                                               pattern = "\\?",
-                                                               replace = "")),
-                  NumberOfRingedChicks = case_when(.data$DateRingingChicks %in% c("verlaten incubatie", "all dead d1") ~ 0L,
-                                                   .data$HatchDateD0 %in% c("abandoned", "bumblebee nest", "dead embryos") ~ 0L,
-                                                   .data$NumberOfRingedChicks == "all dead" ~ 0L,
-                                                   TRUE ~ as.integer(.data$NumberOfRingedChicks)),
-                  HatchDateD0 = janitor::excel_numeric_to_date(as.numeric(.data$HatchDateD0),
+                  NumberOfRingedChicks = as.integer(case_when(.data$DateRingingChicks %in% c("verlaten incubatie", "all dead d1") ~ "0",
+                                                   .data$HatchDateD0 %in% c("abandoned", "bumblebee nest", "dead embryos") ~ "0",
+                                                   .data$NumberOfRingedChicks == "all dead" ~ "0",
+                                                   .data$NumberOfRingedChicks == "joris" ~ "0",
+                                                   TRUE ~ .data$NumberOfRingedChicks)),
+                  #Anything that can't be coerced to numeric should be NA, so we coercion warnings are expected.
+                  HatchDateD0 = janitor::excel_numeric_to_date(suppressWarnings(as.numeric(.data$HatchDateD0)),
                                                                date_system = "modern"),
-                  DateRingingChicks = janitor::excel_numeric_to_date(as.numeric(.data$DateRingingChicks),
+                  DateRingingChicks = janitor::excel_numeric_to_date(suppressWarnings(as.numeric(.data$DateRingingChicks)),
                                                                      date_system = "modern"),
-                  NoOfChicksD3 = as.integer(.data$NoOfChicksD3),
-                  BroodMassD3  = as.numeric(.data$BroodMassD3),
+                  NoOfChicksD3 = as.integer(dplyr::case_when(.data$NoOfChicksD3 == "dead" ~ "0",
+                                                  TRUE ~ .data$NoOfChicksD3)),
+                  BroodMassD3  = as.numeric(dplyr::case_when(.data$BroodMassD3 == "dead" ~ NA_character_,
+                                                  TRUE ~ .data$BroodMassD3)),
                   NewRing = toupper(.data$NewRing),
                   Species = species_codes[which(species_codes$SpeciesID == 14620), ]$Species,
                   PopID = "PEW",
                   NestboxID = tolower(.data$Nest),
                   BroodID = ifelse(.data$Method %in% c("Catch adults nestbox", "ChickRinging",
-                                                 "Catch incubation"),
+                                                       "Catch incubation"),
                                    paste(.data$Year, .data$NestboxID, sep = "_"), NA)) %>%
     #### Rename variables to standardized format
     dplyr::rename(IndvID = .data$Id,
@@ -164,7 +166,6 @@ format_PEW <- function(db = choose_directory(),
                   -.data$VisitsAlternatedPartner,
                   -.data$VisitsSync10,
                   -.data$ChickAgeOfBehavObserv,
-                  -.data$MateStrategy,
                   -.data$Nest,
                   -.data$MassPartner,
                   -.data$AgePartner,
@@ -195,19 +196,19 @@ format_PEW <- function(db = choose_directory(),
     #               PartnerId = ifelse(.data$PartnerId == "12706106" & .data$BroodID == "2017_49",
     #                                  "13619466", .data$PartnerId),
     #               # (2016_60) Data owner: FEMALE 12706296 in box 60 in 2016
-    #               # is erroneous and can be removed from the data.
-    #               # Female 13617052 was the only female in box 60 in 2016.
-    #               # She layed a complete clutch, which never hatched.
-    #               # The male was never caught and remains unknown.
-    #               rem = ifelse((.data$IndvID == "12706296" & .data$BroodID == "2016_60"),
-    #                            "yes", "no")) %>%
-    # dplyr::filter(.data$rem == "no" | is.na(.data$rem)) %>%
-    # dplyr::select(-.data$rem) %>%
-    # ### This part of the code can be removed after fixing the data from data owner
+  #               # is erroneous and can be removed from the data.
+  #               # Female 13617052 was the only female in box 60 in 2016.
+  #               # She layed a complete clutch, which never hatched.
+  #               # The male was never caught and remains unknown.
+  #               rem = ifelse((.data$IndvID == "12706296" & .data$BroodID == "2016_60"),
+  #                            "yes", "no")) %>%
+  # dplyr::filter(.data$rem == "no" | is.na(.data$rem)) %>%
+  # dplyr::select(-.data$rem) %>%
+  # ### This part of the code can be removed after fixing the data from data owner
 
 
-    dplyr::mutate(DateEgg1 = janitor::excel_numeric_to_date(as.numeric(.data$DateEgg1),
-                                                            date_system = "modern")) %>%
+  dplyr::mutate(DateEgg1 = janitor::excel_numeric_to_date(suppressWarnings(as.numeric(.data$DateEgg1)),
+                                                          date_system = "modern")) %>%
     dplyr::distinct()
 
 
@@ -310,7 +311,7 @@ create_brood_PEW <- function(data) {
     #### Exclude also Date column, as for few broods, there may be
     #### several catches of parents, but the brood parameters are the same
     dplyr::select(-c(.data$Age, .data$PartnerId, .data$NumberTransponder,
-                     .data$NewRing, .data$CaptureDate, .data$NeophobiaTransponder,
+                     .data$NewRing, .data$CaptureDate,
                      .data$Tarsus, .data$Mass, .data$ObserverID,
                      .data$Experiment, .data$D14Chicks)) %>%
     #### Remove duplicated rows (as we get one row for males and females for the same brood)
@@ -465,18 +466,18 @@ create_capture_PEW <- function(pew_data, Brood_data) {
     #### Calculate Capture date for chicks from Hatch date
     #### Create fake Hatch_date for several broods
     dplyr::mutate(HatchDate_observed = dplyr::if_else(is.na(.data$HatchDate_observed) & is.na(.data$CaptureDate) &
-                                                 .data$Method == "ChickRinging",
-                                               as.Date(paste0(.data$BreedingSeason, "-06-01")),
-                                               .data$HatchDate_observed),
+                                                        .data$Method == "ChickRinging",
+                                                      as.Date(paste0(.data$BreedingSeason, "-06-01")),
+                                                      .data$HatchDate_observed),
                   CaptureDate = case_when(is.na(.data$CaptureDate) & .data$D14Chicks == "yes" ~ .data$HatchDate_observed + 14,
                                           #### Create fake capture dates
                                           is.na(.data$CaptureDate) ~ as.Date(paste0(.data$BreedingSeason, "-04-01"), "%Y-%m-%d"),
                                           TRUE ~ .data$CaptureDate)) %>%
     #### The age of captured chicks in days since hatching
     dplyr::mutate(ChickAge = dplyr::if_else(.data$Age_observed == 1L,
-                                     as.integer(difftime(.data$CaptureDate, .data$HatchDate_observed,
-                                                         units = "days")),
-                                     NA_integer_),
+                                            as.integer(difftime(.data$CaptureDate, .data$HatchDate_observed,
+                                                                units = "days")),
+                                            NA_integer_),
                   BroodIDLaid = .data$BroodID) %>%
     distinct() %>%
     #### Create CaptureID
