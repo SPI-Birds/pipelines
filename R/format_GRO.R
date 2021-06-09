@@ -100,14 +100,17 @@ format_GRO <- function(db = choose_directory(),
                                                          grepl("Repeated|second|secend|Second", .data$Notes, fixed = F) ~ "second",
                                                          TRUE ~ NA_character_)) %>%
 
-
-                  ## TODO: Experiments - join using table - fail if there are new experiments not in table
-                  # ExperimentID = dplyr::case_when(grepl("EXCHANGE", gro_data$ExperimentID) ~ "PARENTAGE",
-                  #                                 grepl("EXCHANGE", gro_data$ExperimentID) ~ "PARENTAGE")) %>%
-
     ## Arrange
-    dplyr::arrange(.data$PopID, .data$BreedingSeason, .data$LocationID)
+    dplyr::arrange(.data$BreedingSeason, .data$LocationID)
 
+
+  ## Read in experiment table
+  exp_table <- read.csv(paste0(db, "/GRO_PrimaryData_ExperimentLabels.csv"))
+
+  ## Join in experiment labels
+  gro_data <- gro_data %>%
+    dplyr::rename(Experiment_Treatment = .data$Experiment) %>%
+    dplyr::left_join(exp_table, by = c("BreedingSeason","Species","Experiment_Treatment"))
 
   ## Filter to keep only desired Species if specified
   if(!is.null(species_filter)){
