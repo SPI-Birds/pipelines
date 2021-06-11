@@ -79,9 +79,8 @@ format_GLA <- function(db = choose_directory(),
     ## Adjust dates
     dplyr::rowwise() %>%
 
-    ## There are two formats for dates
-    ## First can be handled with Lubridate. Lubridate gives warning messages for some dates , but these do get parsed
-    ## Some dates, however, are in the incorrect format (month - day - year) and these need to be rearranged
+    ## There are two formats for dates.
+    ## The first can be handled with Lubridate, the second need to be rearranged
     dplyr::mutate(FirstEggDate = suppressWarnings(dplyr::case_when(grepl("/", .data$FirstEggDate) ~ lubridate::dmy(.data$FirstEggDate, quiet = TRUE),
                                                                    TRUE ~ lubridate::ymd(paste(unlist(stringr::str_split(as.character(janitor::excel_numeric_to_date(as.numeric(.data$FirstEggDate))), pattern = "-"))[c(1,3,2)], collapse = "-"), quiet = TRUE))),
 
@@ -134,10 +133,23 @@ format_GLA <- function(db = choose_directory(),
     left_join(expID_tab, by = c("Experiment", "Treatment")) %>%
 
     ## Select variables of interest
-    dplyr::select(.data$BreedingSeason,.data$PopID, .data$LocationID, .data$Species, .data$ReplacementClutch,
-                  .data$LayDate_observed, .data$LayDate_min, .data$LayDate_max, .data$HatchDate_observed,
-                  .data$ClutchSize_observed, .data$UnhatchedEggs, .data$BroodSize_observed,
-                  .data$NumberFledged_observed, .data$FemaleID, .data$MaleID, .data$BroodID, .data$ExperimentID)
+    dplyr::select(.data$BreedingSeason,
+                  .data$PopID,
+                  .data$LocationID,
+                  .data$Species,
+                  .data$ReplacementClutch,
+                  .data$LayDate_observed,
+                  .data$LayDate_min,
+                  .data$LayDate_max,
+                  .data$HatchDate_observed,
+                  .data$ClutchSize_observed,
+                  .data$UnhatchedEggs,
+                  .data$BroodSize_observed,
+                  .data$NumberFledged_observed,
+                  .data$FemaleID,
+                  .data$MaleID,
+                  .data$BroodID,
+                  .data$ExperimentID)
 
   ## Read in primary data from ringing records
   rr_data <- readxl::read_xlsx(path = paste0(db, "/GLA_PrimaryData_RingingRecords.xlsx"),
