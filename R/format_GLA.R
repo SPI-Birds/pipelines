@@ -62,9 +62,10 @@ format_GLA <- function(db = choose_directory(),
   ## Set options
   options(dplyr.summarise.inform = FALSE)
 
+  ## Read experiment classification table
+  expID_tab <- read.csv(file = paste0(db, "/GLA_experiment_groups.csv"))
+
   ## Read in primary data from brood records
-  ## Some dates are in the wrong format (these are the dates that are stored as Excel dates in the primary data)
-  ## To fix these dates, the day and month needs to be changed for all Excel dates. Currently rather slow
   nest_data <- readxl::read_xlsx(path = paste0(db, "/GLA_PrimaryData_Nest.xlsx"), guess = 5000) %>%
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
@@ -114,12 +115,6 @@ format_GLA <- function(db = choose_directory(),
                                            .data$PopID == "sallochy" ~ "SAL",
                                            .data$PopID == "SCENE" ~ "SCE",
                                            TRUE ~ as.character(.data$PopID)),
-                  ExperimentID = dplyr::case_when(grepl("light brood_size", .data$Experiment) ~ "COHORT; PARENTAGE; OTHER",
-                                                  grepl("feeding malaria", .data$Experiment) ~ "SURVIVAL; OTHER",
-                                                  grepl("cross_fostering|crossfostering|brood_size", .data$Experiment) ~ "COHORT; PARENTAGE",
-                                                  grepl("feeding", .data$Experiment) ~ "SURVIVAL",
-                                                  grepl("citronella|malaria|ibutton|chronotype|light box|light|incubation|alan", .data$Experiment) ~ "OTHER",
-                                                  TRUE ~ NA_character_),
                   LayDate_observed = .data$FirstEggDate) %>%
 
     ## Rename
@@ -134,6 +129,9 @@ format_GLA <- function(db = choose_directory(),
     ## Create BroodID based on PopID and row number
     dplyr::ungroup() %>%
     dplyr::mutate(BroodID = dplyr::case_when(!is.na(.data$Species) ~ paste(.data$PopID, dplyr::row_number(), sep ="-"))) %>%
+
+    ## Join experiment labels
+    left_join(expID_tab, by = c("Experiment", "Treatment")) %>%
 
     ## Select variables of interest
     dplyr::select(.data$BreedingSeason,.data$PopID, .data$LocationID, .data$Species, .data$ReplacementClutch,
@@ -578,7 +576,9 @@ create_individual_GLA <- function(Capture_data, Brood_data){
                        dplyr::filter(.data$RingAge == "adult" | is.na(.data$LocationID) | (.data$RingSeason != .data$BreedingSeason))) %>%
 
     ## Add BroodID information
-    ## BroodIDFledged is the same as BroodIDLaid unless ExperimentID == parentage. In this case, BroodIDLaid is NA, but the BroodID is still used for BroodIDFledged
+    ## BroodIDFledged is the same as BroodIDLaid unless ExperimentID is COHORT or PARENTAGE
+    ## In these cases, the origin of eggs/nestlings is unknown and so the BroodIDLaid is unknown
+    ## BroodIDFledged however can still be determined based on the BroodID of the nest
     dplyr::group_by(.data$IndvID) %>%
     dplyr::mutate(BroodIDFledged = purrr::map_chr(.x = list(unique(stats::na.omit(.data$BroodIDLaid))),
                                                   .f = ~{
@@ -588,7 +588,7 @@ create_individual_GLA <- function(Capture_data, Brood_data){
                                                       return(..1)
                                                     }
                                                   }),
-                  BroodIDLaid = case_when(grepl("PARENTAGE", .data$ExperimentID) ~ NA_character_,
+                  BroodIDLaid = case_when(grepl("COHORT|PARENTAGE", .data$ExperimentID) ~ NA_character_,
                                           TRUE ~ .data$BroodIDLaid)) %>%
 
     ## Keep distinct records by PopID and InvdID

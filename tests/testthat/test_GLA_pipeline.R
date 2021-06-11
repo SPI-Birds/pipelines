@@ -36,7 +36,6 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(subset(GLA_data, IndvID == "TX11924")$BroodIDLaid, NA_character_) # Should be NA
   expect_equal(subset(GLA_data, IndvID == "TX11924")$BroodIDFledged, NA_character_) # Should be NA
   expect_equal(subset(GLA_data, IndvID == "TX11924")$RingSeason, 2015) # Should be 2015 (seen in multiple years)
-
   expect_equal(subset(GLA_data, IndvID == "TX11924")$RingAge, "adult") # Should be an adult
 
   #Individual AFE3038 - uncertain sex
@@ -77,7 +76,6 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(GLA_data, BreedingSeason == "2014"
                       & PopID == "GAR"
                       & LocationID == "704")$NumberFledged_observed, 9)
-
   expect_equal(subset(GLA_data, BreedingSeason == "2014"
                       & PopID == "GAR"
                       & LocationID == "704")$LayDate_observed, as.Date("2014-04-25"))
@@ -161,6 +159,34 @@ test_that("Brood_data returns an expected outcome...", {
                       BreedingSeason == "2017"
                       & PopID == "SAL"
                       & LocationID == "227")$LayDate_min, as.Date("2017-04-30"))
+
+  ## Check experiment groups
+  expect_equal(subset(GLA_data,
+                      BreedingSeason == "2016"
+                      & PopID == "KEL"
+                      & LocationID == "548")$ExperimentID, "PARENTAGE")
+
+
+  expect_equal(subset(GLA_data,
+                      BreedingSeason == "2016"
+                      & PopID == "KEL"
+                      & LocationID == "550")$ExperimentID, "OTHER")
+
+  expect_equal(subset(GLA_data,
+                      BreedingSeason == "2017"
+                      & PopID == "SCE"
+                      & LocationID == "41")$ExperimentID, "OTHER")
+
+  expect_equal(subset(GLA_data,
+                      BreedingSeason == "2018"
+                      & PopID == "SCE"
+                      & LocationID == "175")$ExperimentID, "OTHER")
+
+  expect_equal(subset(GLA_data,
+                      BreedingSeason == "2019"
+                      & PopID == "SAL"
+                      & LocationID == "229")$ExperimentID, "COHORT")
+
 
 
 })
