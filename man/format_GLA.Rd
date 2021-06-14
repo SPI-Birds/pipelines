@@ -43,9 +43,8 @@ this data. For a general description of the standard format please see
 
 \strong{Species}: Primarily great tits and blue tits.
 
-\strong{IndvID}: Should be a 7 alphanumeric character string.
-Three records have ring numbers that are six characters. These are probably incorrect.
+\strong{IndvID}: Should be a 7 digit alphanumeric string. IndvIDs with more or less characters are likely errors.
 
 \strong{CaptureDate}: Some individuals were not recorded in the ringing records, but were observed breeding at a monitored nest.
-For these individuals, the CaptureDate is set as June 1st of the breeding year.
+For these individuals, the CaptureDate is set as May 15 of the breeding year.
 }

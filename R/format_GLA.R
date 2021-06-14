@@ -8,7 +8,7 @@
 #'
 #'\strong{Species}: Primarily great tits and blue tits.
 #'
-#'\strong{IndvID}: Should be a 7 digit alphanumeric string.
+#'\strong{IndvID}: Should be a 7 digit alphanumeric string. IndvIDs with more or less characters are likely errors.
 #'
 #'\strong{CaptureDate}: Some individuals were not recorded in the ringing records, but were observed breeding at a monitored nest.
 #'For these individuals, the CaptureDate is set as May 15 of the breeding year.
@@ -63,7 +63,7 @@ format_GLA <- function(db = choose_directory(),
   options(dplyr.summarise.inform = FALSE)
 
   ## Read experiment classification table
-  expID_tab <- read.csv(file = paste0(db, "/GLA_experiment_groups.csv"))
+  expID_tab <- utils::read.csv(file = paste0(db, "/GLA_experiment_groups.csv"))
 
   ## Read in primary data from brood records
   nest_data <- readxl::read_xlsx(path = paste0(db, "/GLA_PrimaryData_Nest.xlsx"), guess = 5000) %>%
@@ -608,6 +608,7 @@ create_individual_GLA <- function(Capture_data, Brood_data){
 
     ## Arrange
     dplyr::arrange(.data$CaptureID) %>%
+    dplyr::ungroup() %>%
 
     ## Keep only necessary columns
     dplyr::select(dplyr::contains(names(individual_data_template))) %>%
