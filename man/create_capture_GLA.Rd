@@ -4,12 +4,14 @@
 \alias{create_capture_GLA}
 \title{Create capture data table for great tits and blue tits in Glasgow, Scotland.}
 \usage{
-create_capture_GLA(nest_data, rr_data)
+create_capture_GLA(nest_data, rr_data, Brood_data)
 }
 \arguments{
 \item{nest_data}{Data frame of nest data from Glasgow, Scotland.}
 
 \item{rr_data}{Data frame of ringing records from Glasgow, Scotland.}
+
+\item{Brood_data}{Data frame of Brood data in standard format from Glasgow, Scotland.}
 }
 \value{
 A data frame.
