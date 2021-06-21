@@ -85,6 +85,7 @@ format_WRS <- function(db = choose_directory(),
     ## Recode column information
     ## TODO: Check species - How to handle 'TIT'?
     dplyr::mutate(PopID = "WRS",
+                  dplyr::across(where(is.character), ~na_if(., "NA")),
                   Species = dplyr::case_when(.data$Species == "GT"  ~ species_codes[species_codes$SpeciesID == 14640,]$Species,
                                              .data$Species == "BT"  ~ species_codes[species_codes$SpeciesID == 14620,]$Species,
                                              .data$Species == "FC"  ~ species_codes[species_codes$SpeciesID == 13490,]$Species,
@@ -115,7 +116,8 @@ format_WRS <- function(db = choose_directory(),
                   .data$AvgEggMass,
                   .data$ExperimentID,
                   .data$Latitude,
-                  .data$Longitude)
+                  .data$Longitude,
+                  .data$UniqueBreedingEvent)
 
   ## Read in primary data from chicks
   chick_data <- suppressWarnings(readxl::read_xlsx(path = paste0(db, "/WAR_PrimaryData.xlsx"),
@@ -136,7 +138,9 @@ format_WRS <- function(db = choose_directory(),
 
     ## Adjust variables
     ## TODO: Check about 'dead chick' ID codes
-    dplyr::mutate(PopID = "WRS",
+    dplyr::mutate(dplyr::across(where(is.character), ~na_if(., "NA")),
+                  PopID = "WRS",
+                  BreedingSeason = as.integer(BreedingSeason),
                   ReleaseAlive = dplyr::case_when(.data$ChickExp != 0 | .data$ChickPred != 0 | .data$Fledged == 0~ FALSE,
                                                   TRUE ~ TRUE),
                   Mass = suppressWarnings(round(as.numeric(dplyr::case_when(!is.na(.data$WeightD15) ~ WeightD15,
@@ -149,7 +153,6 @@ format_WRS <- function(db = choose_directory(),
                                               !is.na(.data$WeightD5)  ~ 5L,
                                               !is.na(.data$WeightD2)  ~ 2L,
                                               TRUE ~ NA_integer_),
-
                   Species = dplyr::case_when(.data$Species == "GT"  ~ species_codes[species_codes$SpeciesID == 14640,]$Species,
                                              .data$Species == "BT"  ~ species_codes[species_codes$SpeciesID == 14620,]$Species,
                                              .data$Species == "FC"  ~ species_codes[species_codes$SpeciesID == 13490,]$Species,
@@ -167,7 +170,8 @@ format_WRS <- function(db = choose_directory(),
                   .data$CaptureDate,
                   .data$Mass,
                   .data$ChickAge,
-                  .data$ReleaseAlive)
+                  .data$ReleaseAlive,
+                  .data$UniqueBreedingEvent)
 
 
   ## Read in primary data from adults
@@ -192,7 +196,11 @@ format_WRS <- function(db = choose_directory(),
     ## Recode columns
     ## TODO: Add openxlsx package to dependencies
     ## TODO: Check about age codes
+    ## TODO: Check about aggression scoring
+    ## TODO: where() not namespaced
     mutate(PopID = "WRS",
+           BreedingSeason = as.integer(BreedingSeason),
+           dplyr::across(c(Mass, WingLength, Tarsus), ~ suppressWarnings(as.numeric(.x))),
            CaptureTime = suppressWarnings(format(openxlsx::convertToDateTime(.data$Hour), "%H:%M")),
            Species = dplyr::case_when(.data$Species == "GT"  ~ species_codes[species_codes$SpeciesID == 14640,]$Species,
                                       .data$Species == "BT"  ~ species_codes[species_codes$SpeciesID == 14620,]$Species,
@@ -203,8 +211,11 @@ format_WRS <- function(db = choose_directory(),
                                       .data$Species == "SP"  ~ species_codes[species_codes$SpeciesID == 15980,]$Species),
            ReleaseAlive = dplyr::case_when(.data$AdultExp == 1 ~ FALSE,
                                            TRUE ~ TRUE),
-           Age_observed = dplyr::case_when(.data$Age_observed == 2 ~ 5,
-                                           toupper(.data$Age_observed) == "PO2" ~ 6)) %>%
+           Age_observed = dplyr::case_when(.data$Age_observed == 2 ~ 5L,
+                                           toupper(.data$Age_observed) == "PO2" ~ 6L),
+           ExperimentID = dplyr::case_when(!is.na(.data$Aggress) ~ "OTHER",
+                                           TRUE ~ NA_character_),
+           dplyr::across(where(is.character), ~na_if(., "NA"))) %>%
 
     select(.data$BreedingSeason,
            .data$PopID,
@@ -219,7 +230,9 @@ format_WRS <- function(db = choose_directory(),
            .data$WingLength,
            .data$Tarsus,
            .data$ReleaseAlive,
-           .data$ObserverID)
+           .data$ObserverID,
+           .data$ExperimentID,
+           .data$UniqueBreedingEvent)
 
 
   ## Filter to keep only desired Species if specified
@@ -228,7 +241,10 @@ format_WRS <- function(db = choose_directory(),
     nest_data <- nest_data %>%
       dplyr::filter(.data$Species %in% species_filter & !(is.na(.data$Species)))
 
-    rr_data <- rr_data %>%
+    chick_data <- chick_data %>%
+      dplyr::filter(.data$Species %in% species_filter & !(is.na(.data$Species)))
+
+    adult_data <- adult_data %>%
       dplyr::filter(.data$Species %in% species_filter & !(is.na(.data$Species)))
 
   }
@@ -239,26 +255,29 @@ format_WRS <- function(db = choose_directory(),
     nest_data <- nest_data %>%
       dplyr::filter(.data$PopID %in% pop_filter & !(is.na(.data$PopID)))
 
-    rr_data <- rr_data %>%
+    chick_data <- chick_data %>%
+      dplyr::filter(.data$PopID %in% pop_filter & !(is.na(.data$PopID)))
+
+    adult_data <- adult_data %>%
       dplyr::filter(.data$PopID %in% pop_filter & !(is.na(.data$PopID)))
 
   }
 
   #### BROOD DATA
   message("Compiling brood information...")
-  Brood_data <- create_brood_WRS(nest_data, adult_data, nest_data)
+  Brood_data <- create_brood_WRS(nest_data, chick_data, adult_data)
 
   #### CAPTURE DATA
   message("Compiling capture information...")
-  Capture_data <- create_capture_WRS(nest_data, adult_data, nest_data)
+  Capture_data <- create_capture_WRS(nest_data, chick_data, adult_data)
 
   #### INDIVIDUAL DATA
   message("Compiling individual information...")
-  Individual_data <- create_individual_WRS(nest_data, adult_data, nest_data)
+  Individual_data <- create_individual_WRS(nest_data, chick_data, adult_data)
 
   #### LOCATION DATA
   message("Compiling location information...")
-  Location_data <- create_location_WRS(nest_data, adult_data, nest_data)
+  Location_data <- create_location_WRS(nest_data, chick_data, adult_data)
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
@@ -304,12 +323,43 @@ format_WRS <- function(db = choose_directory(),
 #'
 #' @param nest_data Data frame of nest data from Warsaw, Poland.
 #'
-#' @param rr_data Data frame of ringing records from Warsaw, Poland.
+#' @param chick_data Data frame of chick ringing records from Warsaw, Poland.
+#'
+#' @param adult_data Data frame of adult ringing records from Warsaw, Poland.
 #'
 #' @return A data frame.
 
-create_brood_WRS <- function(nest_data, rr_data) {
+create_brood_WRS <- function(nest_data, chick_data, adult_data) {
 
+
+  ## Combine primary data
+  ## TODO: Check on tarsus method
+  ## TODO: Check on clutch type observed
+  Brood_data <- nest_data %>%
+
+    ## Keep only records with sufficient information
+    filter(!is.na(.data$UniqueBreedingEvent) & !is.na(.data$Species)) %>%
+
+    dplyr::left_join(adult_data %>%
+                       dplyr::select(.data$UniqueBreedingEvent,
+                                     .data$Sex_observed,
+                                     .data$IndvID) %>%
+                       na.omit() %>%
+
+                       ## A few cases where the same individuals were caught multiple times for a single breeding event
+                       ## Keeping only distinct records by breeding event and sex
+                       ## TODO: Check about whether this is robust
+                       dplyr::distinct(.data$UniqueBreedingEvent, .data$Sex_observed, .keep_all = T) %>%
+                       tidyr::pivot_wider(id_cols = .data$UniqueBreedingEvent,
+                                          values_from = .data$IndvID,
+                                          names_from = .data$Sex_observed) %>%
+                       dplyr::rename(FemaleID = "F",
+                                     MaleID = "M"),
+                     by = "UniqueBreedingEvent") %>%
+
+    dplyr::arrange(.data$PopID, .data$BreedingSeason, .data$Plot, .data$LocationID) %>%
+    dplyr::mutate(BroodID = paste(.data$Plot, 1:n(), sep = "-"),
+                  ClutchType_calculated = calc_clutchtype(data =. , protocol_version = "1.1", na.rm = FALSE)) %>%
 
     ## Keep only necessary columns
     dplyr::select(dplyr::contains(names(brood_data_template))) %>%
@@ -318,13 +368,12 @@ create_brood_WRS <- function(nest_data, rr_data) {
     dplyr::bind_cols(brood_data_template[,!(names(brood_data_template) %in% names(.))]) %>%
 
     ## Reorder columns
-    dplyr::select(names(brood_data_template)) %>%
+    dplyr::select(names(brood_data_template))
 
+    # ## Check column classes
+    # purrr::map_df(brood_data_template, class) == purrr::map_df(Brood_data, class)
 
-  # ## Check column classes
-  # purrr::map_df(brood_data_template, class) == purrr::map_df(Brood_data, class)
-
-  return(Brood_data)
+    return(Brood_data)
 
 }
 
@@ -342,8 +391,8 @@ create_capture_WRS <- function(nest_data, rr_data, Brood_data) {
 
 
 
-    ## Keep only necessary columns
-    dplyr::select(dplyr::contains(names(capture_data_template))) %>%
+  ## Keep only necessary columns
+  dplyr::select(dplyr::contains(names(capture_data_template))) %>%
 
     ## Add missing columns
     dplyr::bind_cols(capture_data_template[,!(names(capture_data_template) %in% names(.))]) %>%
