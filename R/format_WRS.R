@@ -12,7 +12,6 @@
 #'
 #'\strong{CaptureDate}:
 #'
-#'
 #'@inheritParams pipeline_params
 #'
 #'@return Generates either 4 .csv files or 4 data frames in the standard format.
@@ -58,13 +57,14 @@ format_WRS <- function(db = choose_directory(),
   start_time <- Sys.time()
 
   ## Set options
-  options(dplyr.summarise.inform = FALSE)
+  options(dplyr.summarise.inform = FALSE,
+          digits = 10)
 
   # db <- "/Users/tyson/Documents/academia/institutions/NIOO/SPI-Birds/my_pipelines/WRS/data/WAR_Warshav_Poland/"
 
   ## Read in primary data from nest sheet
   ## TODO: Change WAR to WRS
-  nest_data <- readxl::read_xlsx(path = paste0(db, "/WAR_PrimaryData.xlsx"), guess = 5000, sheet = "Nests") %>%
+  nest_data <- readxl::read_xlsx(path = paste0(db, "/WAR_PrimaryData.xlsx"), guess = 5000, sheet = "Nests", col_types = "text") %>%
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
 
@@ -148,6 +148,7 @@ format_WRS <- function(db = choose_directory(),
                   BreedingSeason = as.integer(BreedingSeason),
                   ReleaseAlive = dplyr::case_when(.data$ChickExp != 0 | .data$ChickPred != 0 | .data$Fledged == 0~ FALSE,
                                                   TRUE ~ TRUE),
+                  Tarsus = suppressWarnings(as.numeric(.data$Tarsus)),
                   Mass = suppressWarnings(round(as.numeric(dplyr::case_when(!is.na(.data$WeightD15) ~ WeightD15,
                                                                             !is.na(.data$WeightD10) ~ WeightD10,
                                                                             !is.na(.data$WeightD5)  ~ WeightD5,
@@ -174,6 +175,7 @@ format_WRS <- function(db = choose_directory(),
                   .data$IndvID,
                   .data$CaptureDate,
                   .data$Mass,
+                  .data$Tarsus,
                   .data$ChickAge,
                   .data$ReleaseAlive,
                   .data$UniqueBreedingEvent)
@@ -419,7 +421,7 @@ create_brood_WRS <- function(nest_data, chick_data, adult_data) {
                        dplyr::select(.data$UniqueBreedingEvent,
                                      .data$Sex_observed,
                                      .data$IndvID) %>%
-                       na.omit() %>%
+                       stats::na.omit() %>%
 
                        ## A few cases where the same individuals were caught multiple times for a single breeding event
                        ## Keeping only distinct records by breeding event and sex
@@ -457,7 +459,7 @@ create_brood_WRS <- function(nest_data, chick_data, adult_data) {
 create_capture_WRS <- function(chick_data, adult_data) {
 
   ## All chicks with IndvIDs containing 'XX' died before fledging
-  ## TODO: Check on dropping these, they currently don't have CaptureDates
+  ## TODO: Check on dropping these, they currently don't have a CaptureDate
   Capture_data_temp <- adult_data %>%
     dplyr::mutate(RingAge_temp = "adult",
                   CaptureAlive = TRUE) %>%
@@ -472,8 +474,8 @@ create_capture_WRS <- function(chick_data, adult_data) {
     ## Create new columns
     dplyr::mutate(CapturePopID = .data$PopID,
                   ReleasePopID = .data$PopID,
-                  CapturePlot = .data$Plot,
-                  ReleasePlot = .data$Plot) %>%
+                  CapturePlot  = .data$Plot,
+                  ReleasePlot  = .data$Plot) %>%
 
     ## Arrange
     dplyr::arrange(.data$IndvID, .data$CaptureDate) %>%
@@ -508,7 +510,7 @@ create_capture_WRS <- function(chick_data, adult_data) {
 
 create_individual_WRS <- function(Capture_data_temp, Brood_data_temp){
 
-  ## TODO: Add nest KPN46 in 2016 to test data
+  ## Create individual data
   Individual_data_temp <- Capture_data_temp %>%
 
     #### Format and create new data columns
@@ -606,33 +608,35 @@ create_location_WRS <- function(nest_data) {
 
   ## Build location data based on nest data
   Location_data_temp <- nest_data %>%
-    dplyr::select(.data$BreedingSeason, .data$PopID, .data$Plot, .data$LocationID, .data$Latitude, .data$Longitude) %>%
-    dplyr::filter(!is.na(.data$LocationID)) %>%
+
+    ## Need to first remove trailing 0s from Lat/Lon
+    dplyr::mutate(Latitude = sub("^0+", "", .data$Latitude),
+                  Longitude = sub("^0+", "", .data$Longitude)) %>%
+
+    ## Summarize information for each nest box
+    dplyr::group_by(.data$PopID, .data$LocationID) %>%
+    dplyr::summarise(NestboxID = .data$LocationID,
+                     LocationType = "NB",
+                     StartSeason = min(.data$BreedingSeason, na.rm = TRUE),
+                     EndSeason = NA_integer_,
+
+                     ## Keep lat/lon for each box with the most digits
+                     Latitude = as.numeric(.data$Latitude[which.max(nchar(.data$Latitude))]),
+                     Longitude = as.numeric(.data$Longitude[which.max(nchar(.data$Longitude))]),
+
+                     ## TODO: Match vegetation type with plots
+                     HabitatType = dplyr::case_when(.data$Plot == "CMZ" ~ "urban",
+                                                    .data$Plot == "KPN" ~ "urban",
+                                                    .data$Plot == "POL" ~ "urban",
+                                                    .data$Plot == "LOL" ~ "urban",
+                                                    .data$Plot == "MUR" ~ "urban",
+                                                    .data$Plot == "OLO" ~ "urban",
+                                                    .data$Plot == "PAL" ~ "urban",
+                                                    .data$Plot == "UNI" ~ "urban",
+                                                    .data$Plot == "BIB" ~ "urban")) %>%
 
     ## Keep distinct records
-    dplyr::distinct(.data$PopID, .data$BreedingSeason, .data$LocationID, .keep_all = TRUE) %>%
-
-    ## All records shows be complete: remove any incomplete cases
-    tidyr::drop_na() %>%
-
-    ## Get additional information
-    dplyr::group_by(.data$PopID, .data$LocationID) %>%
-    dplyr::mutate(StartSeason = min(.data$BreedingSeason, na.rm = TRUE),
-                  EndSeason = NA_integer_,
-                  NestboxID = .data$LocationID,
-                  LocationType = "NB",
-
-                  ## TODO: Match vegetation with plot name
-                  HabitatType = dplyr::case_when(.data$Plot == "CMZ" ~ "urban",
-                                                 .data$Plot == "KPN" ~ "urban",
-                                                 .data$Plot == "POL" ~ "urban",
-                                                 .data$Plot == "LOL" ~ "urban",
-                                                 .data$Plot == "MUR" ~ "urban",
-                                                 .data$Plot == "OLO" ~ "urban",
-                                                 .data$Plot == "PAL" ~ "urban",
-                                                 .data$Plot == "UNI" ~ "urban",
-                                                 .data$Plot == "BIB" ~ "urban"))
-
+    dplyr::distinct(.data$PopID, .data$LocationID, .keep_all = TRUE)
 
   return(Location_data_temp)
 
