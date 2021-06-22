@@ -9,6 +9,274 @@ test_that("WRS outputs all files...", {
 
 })
 
+test_that("Brood_data returns an expected outcome...", {
+
+  ## Take a subset of only WRS data
+  WRS_data <- dplyr::filter(pipeline_output$Brood_data, PopID %in% c("WRS"))
+
+  ## General brood data - Location POL33
+  expect_equal(!is.na(subset(WRS_data,
+                      BreedingSeason == "2016"
+                      & PopID == "WRS"
+                      & LocationID == "POL33")$BroodID), TRUE)
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2016"
+                      & PopID == "WRS"
+                      & LocationID == "POL33")$BreedingSeason, 2016)
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2016"
+                      & PopID == "WRS"
+                      & LocationID == "POL33")$Species, "PARMAJ")
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2016"
+                      & PopID == "WRS"
+                      & LocationID == "POL33")$Plot, "POL")
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2016"
+                      & PopID == "WRS"
+                      & LocationID == "POL33")$FemaleID, NA_character_)
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2016"
+                      & PopID == "WRS"
+                      & LocationID == "POL33")$MaleID, NA_character_)
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2016"
+                      & PopID == "WRS"
+                      & LocationID == "POL33")$LayDate_observed, c("2016-04-24"))
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2016"
+                      & PopID == "WRS"
+                      & LocationID == "POL33")$ClutchSize_observed, 5)
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2016"
+                      & PopID == "WRS"
+                      & LocationID == "POL33")$HatchDate_observed, as.Date("2016-05-14"))
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2016"
+                      & PopID == "WRS"
+                      & LocationID == "POL33")$BroodSize_observed, 5)
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2016"
+                      & PopID == "WRS"
+                      & LocationID == "POL33")$NumberFledged_observed, 0)
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2016"
+                      & PopID == "WRS"
+                      & LocationID == "POL33")$FledgeDate_observed, lubridate::NA_Date_)
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2016"
+                      & PopID == "WRS"
+                      & LocationID == "POL33")$AvgEggMass, 7.1/4)
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2016"
+                      & PopID == "WRS"
+                      & LocationID == "POL33")$NumberEggs, 4)
+
+
+  ## General brood data - Location KPN46 in 2016 - first brood of two
+  expect_equal(!is.na(subset(WRS_data,
+                      BreedingSeason == "2016"
+                      & PopID == "WRS"
+                      & LocationID == "KPN46"
+                      & LayDate_observed == "2016-04-19")$BroodID), TRUE)
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2016"
+                      & PopID == "WRS"
+                      & LocationID == "KPN46"
+                      & LayDate_observed == "2016-04-19")$BreedingSeason, 2016)
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2016"
+                      & PopID == "WRS"
+                      & LocationID == "KPN46"
+                      & LayDate_observed == "2016-04-19")$Species, "PARMAJ")
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2016"
+                      & PopID == "WRS"
+                      & LocationID == "KPN46"
+                      & LayDate_observed == "2016-04-19")$Plot, "KPN")
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2016"
+                      & PopID == "WRS"
+                      & LocationID == "KPN46"
+                      & LayDate_observed == "2016-04-19")$FemaleID, "K7V3107")
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2016"
+                      & PopID == "WRS"
+                      & LocationID == "KPN46"
+                      & LayDate_observed == "2016-04-19")$MaleID, "K7V3106")
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2016"
+                      & PopID == "WRS"
+                      & LocationID == "KPN46"
+                      & LayDate_observed == "2016-04-19")$ClutchSize_observed, 8)
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2016"
+                      & PopID == "WRS"
+                      & LocationID == "KPN46"
+                      & LayDate_observed == "2016-04-19")$HatchDate_observed, as.Date("2016-05-10"))
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2016"
+                      & PopID == "WRS"
+                      & LocationID == "KPN46"
+                      & LayDate_observed == "2016-04-19")$BroodSize_observed, 8)
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2016"
+                      & PopID == "WRS"
+                      & LocationID == "KPN46"
+                      & LayDate_observed == "2016-04-19")$NumberFledged_observed, 4)
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2016"
+                      & PopID == "WRS"
+                      & LocationID == "KPN46"
+                      & LayDate_observed == "2016-04-19")$FledgeDate_observed, lubridate::NA_Date_)
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2016"
+                      & PopID == "WRS"
+                      & LocationID == "KPN46"
+                      & LayDate_observed == "2016-04-19")$AvgEggMass, 6.7/4)
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2016"
+                      & PopID == "WRS"
+                      & LocationID == "KPN46"
+                      & LayDate_observed == "2016-04-19")$NumberEggs, 4)
+
+
+  ## General brood data - Location POL57
+  expect_equal(!is.na(subset(WRS_data,
+                             BreedingSeason == "2019"
+                             & PopID == "WRS"
+                             & LocationID == "POL57")$BroodID), TRUE)
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2019"
+                      & PopID == "WRS"
+                      & LocationID == "POL57")$BreedingSeason, 2019)
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2019"
+                      & PopID == "WRS"
+                      & LocationID == "POL57")$Species, "CYACAE")
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2019"
+                      & PopID == "WRS"
+                      & LocationID == "POL57")$Plot, "POL")
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2019"
+                      & PopID == "WRS"
+                      & LocationID == "POL57")$FemaleID, "K7V5321")
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2019"
+                      & PopID == "WRS"
+                      & LocationID == "POL57")$MaleID, "K7V5155")
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2019"
+                      & PopID == "WRS"
+                      & LocationID == "POL57")$LayDate_observed, as.Date("2019-04-09"))
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2019"
+                      & PopID == "WRS"
+                      & LocationID == "POL57")$ClutchSize_observed, 11)
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2019"
+                      & PopID == "WRS"
+                      & LocationID == "POL57")$HatchDate_observed, as.Date("2019-05-03"))
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2019"
+                      & PopID == "WRS"
+                      & LocationID == "POL57")$BroodSize_observed, 10)
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2019"
+                      & PopID == "WRS"
+                      & LocationID == "POL57")$NumberFledged_observed, 9)
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2019"
+                      & PopID == "WRS"
+                      & LocationID == "POL57")$FledgeDate_observed, lubridate::NA_Date_)
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2019"
+                      & PopID == "WRS"
+                      & LocationID == "POL57")$AvgEggMass, 4.9/4)
+  expect_equal(subset(WRS_data,
+                      BreedingSeason == "2019"
+                      & PopID == "WRS"
+                      & LocationID == "POL57")$NumberEggs, 4)
+
+
+})
+
+test_that("Capture_data returns an expected outcome...", {
+
+
+  #Take a subset of only WRS data
+  WRS_data <- dplyr::filter(pipeline_output$Capture_data, CapturePopID %in% c("WRS"))
+
+  ## K7V3106 caught on 2016-05-19 (and two other occasions)
+  expect_equal(subset(WRS_data, IndvID == "K7V3106"
+                      & CaptureDate == "2016-05-19")$Species, "PARMAJ")
+  expect_equal(subset(WRS_data, IndvID == "K7V3106"
+                      & CaptureDate == "2016-05-19")$Sex_observed, "M")
+  expect_equal(subset(WRS_data, IndvID == "K7V3106"
+                      & CaptureDate == "2016-05-19")$BreedingSeason, 2016)
+  expect_equal(subset(WRS_data, IndvID == "K7V3106"
+                      & CaptureDate == "2016-05-19")$CaptureTime, "11:15")
+  expect_equal(subset(WRS_data, IndvID == "K7V3106"
+                      & CaptureDate == "2016-05-19")$CapturePlot, "KPN")
+  expect_equal(subset(WRS_data, IndvID == "K7V3106"
+                      & CaptureDate == "2016-05-19")$ReleasePopID, "WRS")
+  expect_equal(subset(WRS_data, IndvID == "K7V3106"
+                      & CaptureDate == "2016-05-19")$ReleasePlot, "KPN")
+  expect_equal(subset(WRS_data, IndvID == "K7V3106"
+                      & CaptureDate == "2016-05-19")$Mass, 18.0)
+  expect_equal(subset(WRS_data, IndvID == "K7V3106"
+                      & CaptureDate == "2016-05-19")$Tarsus, 20.5)
+  expect_equal(subset(WRS_data, IndvID == "K7V3106"
+                      & CaptureDate == "2016-05-19")$OriginalTarsusMethod, NA_character_)
+  expect_equal(subset(WRS_data, IndvID == "K7V3106"
+                      & CaptureDate == "2016-05-19")$WingLength, 75.0)
+  expect_equal(subset(WRS_data, IndvID == "K7V3106"
+                      & CaptureDate == "2016-05-19")$Age_observed, 6) # May change depending on age code
+  expect_equal(subset(WRS_data, IndvID == "K7V3106"
+                      & CaptureDate == "2016-05-19")$Age_calculated, 4)
+  expect_equal(subset(WRS_data, IndvID == "K7V3106"
+                      & CaptureDate == "2016-05-19")$ChickAge, NA_integer_)
+  expect_equal(subset(WRS_data, IndvID == "K7V3106"
+                      & CaptureDate == "2016-05-19")$ExperimentID, "OTHER") # May change depending on experiment labels
+
+
+  ## K4Z2221 caught on 2016-05-19 as a chick
+  expect_equal(subset(WRS_data, IndvID == "K4Z2221"
+                      & CaptureDate == "2019-05-19")$Species, "CYACAE")
+  expect_equal(subset(WRS_data, IndvID == "K4Z2221"
+                      & CaptureDate == "2019-05-19")$Sex_observed, NA_character_)
+  expect_equal(subset(WRS_data, IndvID == "K4Z2221"
+                      & CaptureDate == "2019-05-19")$BreedingSeason, 2019)
+  expect_equal(subset(WRS_data, IndvID == "K4Z2221"
+                      & CaptureDate == "2019-05-19")$CaptureTime, NA_character_)
+  expect_equal(subset(WRS_data, IndvID == "K4Z2221"
+                      & CaptureDate == "2019-05-19")$CapturePlot, "CMZ")
+  expect_equal(subset(WRS_data, IndvID == "K4Z2221"
+                      & CaptureDate == "2019-05-19")$ReleasePopID, "WRS")
+  expect_equal(subset(WRS_data, IndvID == "K4Z2221"
+                      & CaptureDate == "2019-05-19")$ReleasePlot, "CMZ")
+  expect_equal(subset(WRS_data, IndvID == "K4Z2221"
+                      & CaptureDate == "2019-05-19")$Mass, 8.5)
+  expect_equal(subset(WRS_data, IndvID == "K4Z2221"
+                      & CaptureDate == "2019-05-19")$Tarsus, 15.0)
+  expect_equal(subset(WRS_data, IndvID == "K4Z2221"
+                      & CaptureDate == "2019-05-19")$OriginalTarsusMethod, NA_character_)
+  expect_equal(subset(WRS_data, IndvID == "K4Z2221"
+                      & CaptureDate == "2019-05-19")$WingLength, NA_real_)
+  expect_equal(subset(WRS_data, IndvID == "K4Z2221"
+                      & CaptureDate == "2019-05-19")$Age_observed, 1) # May change depending on age code
+  expect_equal(subset(WRS_data, IndvID == "K4Z2221"
+                      & CaptureDate == "2019-05-19")$Age_calculated, 1)
+  expect_equal(subset(WRS_data, IndvID == "K4Z2221"
+                      & CaptureDate == "2019-05-19")$ChickAge, 15)
+  expect_equal(subset(WRS_data, IndvID == "K4Z2221"
+                      & CaptureDate == "2019-05-19")$ExperimentID, NA_character_) # May change depending on experiment labels
+
+
+})
+
+
 test_that("Individual data returns an expected outcome...", {
 
   #Take a subset of only WRS data
@@ -54,180 +322,33 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(subset(WRS_data, IndvID == "K4Z2244")$Sex_calculated, "M") # M
   expect_equal(subset(WRS_data, IndvID == "K4Z2244")$Sex_genetic, NA_character_) # NA
 
-
 })
 
-test_that("Brood_data returns an expected outcome...", {
-
-  ## Take a subset of only WRS data
-  WRS_data <- dplyr::filter(pipeline_output$Brood_data, PopID %in% c("WRS"))
-
-  ## General brood data
-  expect_equal(subset(WRS_data, BreedingSeason == "2014"
-                      & PopID == "GAR"
-                      & LocationID == "704")$ClutchSize_observed, 10)
-  expect_equal(subset(WRS_data, BreedingSeason == "2014"
-                      & PopID == "GAR"
-                      & LocationID == "704")$BroodSize_observed, 9)
-  expect_equal(subset(WRS_data, BreedingSeason == "2014"
-                      & PopID == "GAR"
-                      & LocationID == "704")$NumberFledged_observed, 9)
-  expect_equal(subset(WRS_data, BreedingSeason == "2014"
-                      & PopID == "GAR"
-                      & LocationID == "704")$LayDate_observed, as.Date("2014-04-25"))
-  expect_equal(subset(WRS_data, BreedingSeason == "2014"
-                      & PopID == "GAR"
-                      & LocationID == "704")$LayDate_min, as.Date("2014-04-25"))
-  expect_equal(subset(WRS_data, BreedingSeason == "2014"
-                      & PopID == "GAR"
-                      & LocationID == "704")$LayDate_max, as.Date("2014-05-04"))
-
-  ## Case where there were multiple clutches laid at the same location
-  expect_equal(nrow(subset(WRS_data, BreedingSeason == "2019"
-                           & PopID == "SAL"
-                           & LocationID == "249")), 2)
-
-  ## Brood where clutch type observed = replacement
-  expect_equal(subset(WRS_data, BreedingSeason == "2015"
-                      & PopID == "SAL"
-                      & LocationID == "235" &
-                        is.na(LayDate_observed))$ClutchType_observed, "replacement")
-
-  ## Brood where chick weight, but not tarsus is measured
-  expect_equal(subset(WRS_data,
-                      BreedingSeason == "2018"
-                      & PopID == "CAS"
-                      & LocationID == "28")$AvgChickMass, 10.1)
-  expect_equal(subset(WRS_data,
-                      BreedingSeason == "2018"
-                      & PopID == "CAS"
-                      & LocationID == "28")$NumberChicksMass, 8)
-  expect_equal(subset(WRS_data,
-                      BreedingSeason == "2018"
-                      & PopID == "CAS"
-                      & LocationID == "28")$AvgTarsus, NA_real_)
-  expect_equal(subset(WRS_data,
-                      BreedingSeason == "2018"
-                      & PopID == "CAS"
-                      & LocationID == "28")$NumberChicksTarsus, NA_integer_)
-
-  ## Case where species is ambiguous, but the species information from the ringing data  was used to assign species for the brood
-  expect_equal(subset(WRS_data,
-                      BreedingSeason == "2020"
-                      & PopID == "SAL"
-                      & LocationID == "204")$Species, "PARMAJ")
-
-  ## Case where both FemaleID and MaleID are known
-  expect_equal(subset(WRS_data,
-                      BreedingSeason == "2020"
-                      & PopID == "KEL"
-                      & LocationID == "534")$FemaleID, "ACJ2320")
-  expect_equal(subset(WRS_data,
-                      BreedingSeason == "2020"
-                      & PopID == "KEL"
-                      & LocationID == "534")$MaleID, "ACJ2305")
-
-  ## Case where female had two nests in the same year
-  expect_equal(nrow(subset(WRS_data, FemaleID == "TX11502" & BreedingSeason == 2017)), 2)
-
-  ## Cases where dates are in different formats for laying columns in primary data
-  expect_equal(subset(WRS_data,
-                      BreedingSeason == "2014"
-                      & PopID == "GAR"
-                      & LocationID == "710")$LayDate_observed, as.Date("2014-05-05"))
-  expect_equal(subset(WRS_data,
-                      BreedingSeason == "2014"
-                      & PopID == "GAR"
-                      & LocationID == "710")$LayDate_max, as.Date("2014-05-16"))
-  expect_equal(subset(WRS_data,
-                      BreedingSeason == "2014"
-                      & PopID == "GAR"
-                      & LocationID == "729")$LayDate_max, as.Date("2014-05-01"))
-  expect_equal(subset(WRS_data,
-                      BreedingSeason == "2014"
-                      & PopID == "GAR"
-                      & LocationID == "724")$LayDate_min, as.Date("2014-05-01"))
-  expect_equal(subset(WRS_data,
-                      BreedingSeason == "2015"
-                      & PopID == "GAR"
-                      & LocationID == "724")$LayDate_min, as.Date("2015-05-08"))
-  expect_equal(subset(WRS_data,
-                      BreedingSeason == "2017"
-                      & PopID == "SAL"
-                      & LocationID == "227")$LayDate_min, as.Date("2017-04-30"))
-
-  ## Check experiment groups
-  expect_equal(subset(WRS_data,
-                      BreedingSeason == "2016"
-                      & PopID == "KEL"
-                      & LocationID == "548")$ExperimentID, "PARENTAGE")
-
-
-  expect_equal(subset(WRS_data,
-                      BreedingSeason == "2016"
-                      & PopID == "KEL"
-                      & LocationID == "550")$ExperimentID, "OTHER")
-
-  expect_equal(subset(WRS_data,
-                      BreedingSeason == "2017"
-                      & PopID == "SCE"
-                      & LocationID == "41")$ExperimentID, "OTHER")
-
-  expect_equal(subset(WRS_data,
-                      BreedingSeason == "2018"
-                      & PopID == "SCE"
-                      & LocationID == "175")$ExperimentID, "OTHER")
-
-  expect_equal(subset(WRS_data,
-                      BreedingSeason == "2019"
-                      & PopID == "SAL"
-                      & LocationID == "229")$ExperimentID, "COHORT")
-
-
-
-})
-
-test_that("Capture_data returns an expected outcome...", {
-
-
-  #Take a subset of only WRS data
-  WRS_data <- dplyr::filter(pipeline_output$Capture_data, CapturePopID %in% c("CAS", "GAR", "KEL", "SAL", "SCE"))
-
-  ## Case where chick found dead after ringed
-  expect_equal(subset(WRS_data, IndvID == "ACJ2314")$ReleaseAlive, FALSE) # Should be False
-  expect_equal(subset(WRS_data, IndvID == "ACJ2314")$ReleasePopID, NA_character_) # Should be NA (since dead)
-  expect_equal(subset(WRS_data, IndvID == "ACJ2314")$Species, "CYACAE") # Should be blue tit
-  expect_equal(subset(WRS_data, IndvID == "ACJ2314")$Mass, 9.42) # Should be 9.42
-  expect_equal(subset(WRS_data, IndvID == "ACJ2314")$BreedingSeason, 2020) # Should be 2019
-  expect_equal(subset(WRS_data, IndvID == "ACJ2314")$Age_observed, 1) # Should be 1
-
-  # Case where individual recorded at different locations in nest and ringing data
-  expect_equal(nrow(subset(WRS_data, IndvID == "S034047" & BreedingSeason <= 2018)), 3) # Three records
-  expect_equal(subset(WRS_data, IndvID == "S034047" &
-                        BreedingSeason == 2017)$Sex_observed, "F") # Female
-  expect_equal(subset(WRS_data, IndvID == "S034047" &
-                        CaptureDate == as.Date("2018-05-01"))$LocationID, "65") # LocationID 65
-
-})
 
 test_that("Location_data returns an expected outcome...", {
 
   #Take a subset of only WRS data
-  WRS_data <- dplyr::filter(pipeline_output$Location_data, PopID %in% c("CAS", "GAR", "KEL", "SAL", "SCE"))
+  WRS_data <- dplyr::filter(pipeline_output$Location_data, PopID %in% c("WRS"))
 
-  ## Nestbox 728 in GAR
-  expect_equal(subset(WRS_data, LocationID == "728" &
-                        PopID == "GAR")$LocationType, "NB") ## Nestbox
-  expect_equal(subset(WRS_data, LocationID == "728" &
-                        PopID == "GAR")$HabitatType, "urban") ## Urban
-  expect_equal(subset(WRS_data, LocationID == "728" &
-                        PopID == "GAR")$StartSeason, 2015) ## 2015
-  expect_equal(subset(WRS_data, LocationID == "728" &
-                        PopID == "GAR")$EndSeason, NA_integer_) ## NA
+  ## Nestbox BIB42
+  expect_equal(subset(WRS_data, LocationID == "BIB42")$NestboxID, "BIB42")
+  expect_equal(subset(WRS_data, LocationID == "BIB42")$LocationType, "NB")
+  expect_equal(subset(WRS_data, LocationID == "BIB42")$PopID, "WRS")
+  expect_equal(subset(WRS_data, LocationID == "BIB42")$Latitude, 52.29715)
+  expect_equal(subset(WRS_data, LocationID == "BIB42")$Longitude, 20.951402)
+  expect_equal(subset(WRS_data, LocationID == "BIB42")$StartSeason, 2018)
+  expect_equal(subset(WRS_data, LocationID == "BIB42")$EndSeason, NA_integer_)
+  expect_equal(subset(WRS_data, LocationID == "BIB42")$HabitatType, "urban") # May change depending on input from data owner
 
-  ## Same nestbox number at 3 populations
-  #LocationType is as expected
-  expect_equal(subset(WRS_data, LocationID == "10")$PopID, c("CAS", "KEL", "SCE"))
+  ## Nestbox CMZ22
+  expect_equal(subset(WRS_data, LocationID == "CMZ22")$NestboxID, "CMZ22")
+  expect_equal(subset(WRS_data, LocationID == "CMZ22")$LocationType, "NB")
+  expect_equal(subset(WRS_data, LocationID == "CMZ22")$PopID, "WRS")
+  expect_equal(subset(WRS_data, LocationID == "CMZ22")$Latitude, 52.2471)
+  expect_equal(subset(WRS_data, LocationID == "CMZ22")$Longitude, 20.97461)
+  expect_equal(subset(WRS_data, LocationID == "CMZ22")$StartSeason, 2016)
+  expect_equal(subset(WRS_data, LocationID == "CMZ22")$EndSeason, NA_integer_)
+  expect_equal(subset(WRS_data, LocationID == "CMZ22")$HabitatType, "urban") # May change depending on input from data owner
 
 
 })
