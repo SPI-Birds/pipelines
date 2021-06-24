@@ -40,7 +40,8 @@ Imports: dplyr,
          rstudioapi,
          sp,
          usethis,
-         rlang
+         rlang,
+         openxlsx
 RoxygenNote: 7.1.1
 Suggests: 
     knitr,
