@@ -166,6 +166,7 @@ format_VOM <- function(db = choose_directory(),
   # ## Check column classes
   # purrr::map_df(brood_data_template, class) == purrr::map_df(Brood_data, class)
 
+<<<<<<< HEAD
 
   ## Capture data
   Capture_data <- Capture_data_temp %>%
@@ -367,6 +368,239 @@ create_individual_VOM <- function(Capture_data_temp){
   return(Individual_data_temp)
 
 }
+
+#' Create location data table for great tits and blue tits in Vomb Fure, Sweden.
+#'
+#' @param nest_data Data frame of nest data from Vomb Fure, Sweden.
+#'
+#' @return A data frame.
+
+create_location_VOM <- function(nest_data) {
+
+  ## Build location data based on nest data
+  Location_data_temp <- nest_data %>%
+
+    ## Summarize information for each nest box
+    dplyr::group_by(.data$LocationID) %>%
+    dplyr::summarise(NestboxID = .data$LocationID,
+                     LocationType = "NB",
+                     StartSeason = min(.data$BreedingSeason, na.rm = TRUE),
+                     EndSeason = NA_integer_,
+
+                     ## Lat/lon given for the population
+                     Latitude = 55.67,
+                     Longitude = 13.55,
+
+                     HabitatType = "mixed") %>%
+
+    ## Keep distinct records
+    dplyr::distinct(.data$LocationID, .keep_all = TRUE)
+
+  return(Location_data_temp)
+
+}
+||||||| :construction: Edits to format_VOM
+  ## Capture data
+  Capture_data <- Capture_data_temp %>%
+
+    ## Keep only necessary columns
+    dplyr::select(dplyr::contains(names(capture_data_template))) %>%
+
+    ## Add missing columns
+    dplyr::bind_cols(capture_data_template[,!(names(capture_data_template) %in% names(.))]) %>%
+
+    ## Reorder columns
+    dplyr::select(names(capture_data_template))
+
+  # ## Check column classes
+  # purrr::map_df(capture_data_template, class) == purrr::map_df(Capture_data, class)
+
+
+  ## Individual data
+  Individual_data <- Individual_data_temp %>%
+
+    ## Keep only necessary columns
+    dplyr::select(dplyr::contains(names(individual_data_template))) %>%
+
+    ## Add missing columns
+    dplyr::bind_cols(individual_data_template[,!(names(individual_data_template) %in% names(.))]) %>%
+
+    ## Reorder columns
+    dplyr::select(names(individual_data_template))
+
+  # ## Check column classes
+  # purrr::map_df(individual_data_template, class) == purrr::map_df(Individual_data, class)
+
+
+  ## Location data
+  Location_data <- Location_data_temp %>%
+
+    ## Keep only necessary columns
+    dplyr::select(dplyr::contains(names(location_data_template))) %>%
+
+    ## Add missing columns
+    dplyr::bind_cols(location_data_template[,!(names(location_data_template) %in% names(.))]) %>%
+
+    ## Reorder columns
+    dplyr::select(names(location_data_template))
+
+  # ## Check column classes
+  # purrr::map_df(location_data_template, class) == purrr::map_df(Location_data, class)
+
+
+  #### EXPORT DATA
+
+  if(output_type == "csv"){
+
+    message("Saving .csv files...")
+
+    utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_VOM.csv"), row.names = F)
+
+    utils::write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_VOM.csv"), row.names = F)
+
+    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_VOM.csv"), row.names = F)
+
+    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_VOM.csv"), row.names = F)
+
+    invisible(NULL)
+
+  }
+
+  if(output_type == "R"){
+
+    message("Returning R objects...")
+
+    return(list(Brood_data = Brood_data,
+                Capture_data = Capture_data,
+                Individual_data = Individual_data,
+                Location_data = Location_data))
+
+  }
+
+}
+
+#### --------------------------------------------------------------------------~
+#### FUNCTIONS
+#### --------------------------------------------------------------------------~
+
+
+#' Create brood data table for great tits and blue tits in Vomb Fure, Sweden.
+#'
+#' @param nest_data Data frame of nest data from Vomb Fure, Sweden.
+#'
+#' @return A data frame.
+
+create_brood_VOM <- function(nest_data) {
+
+  ## Create brood data
+  Brood_data_temp <- nest_data %>%
+
+    dplyr::mutate(BroodID = paste(.data$LocationID, 1:n(), sep = "_")) %>%
+
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data =. , protocol_version = "1.1", na.rm = FALSE)) %>%
+
+    ## Reorder columns
+    dplyr::select(any_of(names(brood_data_template)))
+
+  return(Brood_data_temp)
+
+}
+
+#' Create capture data table for great tits and blue tits in Vomb Fure, Sweden.
+#'
+#' @param nest_data Data frame of nest data from Vomb Fure, Sweden.
+#'
+#' @return A data frame.
+
+create_capture_VOM <- function(nest_data) {
+
+  ## Create capture data
+  ## TODO: Check on capture date
+  Capture_data_temp <- nest_data %>%
+    tidyr::pivot_longer(cols = c(.data$FemaleID, .data$MaleID), values_to = "IndvID", names_to = "Sex_observed") %>%
+    filter(!is.na(.data$IndvID)) %>%
+
+    ## Add additional information
+    ## TODO: Check on age information
+    dplyr::arrange(.data$BreedingSeason, .data$IndvID, .data$LocationID) %>%
+    mutate(Sex_observed = substring(.data$Sex_observed, 1,1),
+           Age_observed = NA_integer_,
+           CaptureDate = .data$LayDate_observed,
+           CapturePopID = .data$PopID,
+           ReleasePopID = .data$PopID,
+           CaptureAlive = TRUE,
+           ReleaseAlive = TRUE,
+           CaptureID = paste(.data$IndvID, dplyr::row_number(), sep = "_")) %>%
+
+    ## Reorder columns
+    dplyr::select(any_of(names(capture_data_template)))
+
+  return(Capture_data_temp)
+
+}
+
+#' Create individual table for great tits and blue tits in Vomb Fure, Sweden.
+#'
+#' @param Capture_data_temp Data frame of Capture data from Vomb Fure, Sweden.
+#'
+#' @return A data frame.
+
+create_individual_VOM <- function(Capture_data_temp){
+
+  ## Create individual data
+  Individual_data_temp <- Capture_data_temp %>%
+
+    #### Format and create new data columns
+    dplyr::group_by(.data$IndvID) %>%
+    dplyr::mutate(PopID = .data$CapturePopID,
+                  RingSeason = min(.data$BreedingSeason, na.rm = T),
+                  Sex_calculated = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Sex_observed))),
+                                                  .f = ~{
+                                                    if(length(..1) == 0){
+                                                      return(NA_character_)
+                                                    } else if(length(..1) == 1){
+                                                      return(..1)
+                                                    } else {
+                                                      return("C")
+                                                    }
+                                                  }),
+                  Sex_genetic = NA_character_,
+                  Species = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Species))),
+                                           .f = ~{
+                                             if(length(..1) == 0){
+                                               return(NA_character_)
+                                             } else if(length(..1) == 1){
+                                               return(..1)
+                                             } else {
+                                               return("CCCCCC")
+                                             }
+                                           }),
+
+                  RingAge = purrr::pmap_chr(.l = list(dplyr::first(.data$Age_observed)),
+                                            .f = ~{
+                                              if(is.na(..1)){
+                                                return("adult")
+                                              } else if(..1 <= 3L){
+                                                return("chick")
+                                              } else if(..1 > 3L){
+                                                return("adult")
+                                              }
+                                            })) %>%
+
+    dplyr::distinct(.data$IndvID, .keep_all = TRUE) %>%
+
+    ## Arrange
+    dplyr::arrange(.data$CaptureID) %>%
+    dplyr::ungroup() %>%
+
+    ## Reorder columns
+    dplyr::select(any_of(names(individual_data_template)))
+
+
+  return(Individual_data_temp)
+
+}
+
 
 #' Create location data table for great tits and blue tits in Vomb Fure, Sweden.
 #'
