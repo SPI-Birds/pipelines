@@ -43,7 +43,11 @@ this data. For a general description of the standard format please see
 
 \strong{Species}:
 
-\strong{IndvID}:
+\strong{IndvID}: IndvID codes of the form '19XX' (two numbers + XX) indicate a chick that died before fledging.
+The first two numbers give the year in which the chick died. There is one adult band that also includes 'XX' so this should not
+be used to filter out these records. The regular expression "^[:digit:]{2}XX" along with stringr::str_detect can be used to identify
+and filter out these records.
+
 
 \strong{CaptureDate}:
 }

@@ -6,9 +6,15 @@
 #'this data. For a general description of the standard format please see
 #'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 #'
-#'\strong{Species}:
+#'\strong{Species}: Only PARMAJ and CYACAE are entered in the Capture and Individual tables.
 #'
-#'\strong{IndvID}:
+#'\strong{IndvID}: IndvID codes of the form '19XX' (two numbers + XX) indicate a chick that died before fledging.
+#' The first two numbers give the year in which the chick died. There is one adult band that also includes 'XX' so this should not
+#' be used to filter out these records. The regular expression "^[:digit:]{2}XX" along with stringr::str_detect can be used to identify
+#' and filter out these records.
+#'
+#' \strong{LocationID}: The Location data is constructed based on nest data that has many records from FICHYP, PASMON, and unidentified tit species. As such, the first year a nest box
+#' was used, it might not have been occupied by either PARMAJ or CYACAE.
 #'
 #'\strong{CaptureDate}:
 #'
@@ -64,6 +70,7 @@ format_WRS <- function(db = choose_directory(),
 
   ## Read in primary data from nest sheet
   ## TODO: Change WAR to WRS
+  ## TODO: Check about species codes
   nest_data <- readxl::read_xlsx(path = paste0(db, "/WAR_PrimaryData.xlsx"), guess = 5000, sheet = "Nests", col_types = "text") %>%
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
@@ -204,10 +211,11 @@ format_WRS <- function(db = choose_directory(),
                                                                   TRUE ~ janitor::excel_numeric_to_date(as.numeric(.data$Date))))) %>%
 
     ## Recode columns
-    ## TODO: Add openxlsx package to dependencies
+    ## TODO: Add package to dependencies
     ## TODO: Check about age codes
     ## TODO: Check about aggression scoring - Should this be an experiment? Currently listed as OTHER
     ## TODO: where() not namespaced
+    ## Check species codes
     mutate(dplyr::across(where(is.character), ~na_if(., "NA")),
            PopID = "WRS",
            BreedingSeason = as.integer(BreedingSeason),
@@ -556,7 +564,7 @@ create_individual_WRS <- function(Capture_data_temp, Brood_data_temp){
                                               }
                                             }))  %>%
 
-    ## Create dummy variable to use in joining Brood data for Individuals banded as chicks
+    ## Join Brood data for Individuals banded as chicks
     dplyr::mutate(brood_record = dplyr::case_when(.data$RingAge == "chick" &
                                                     .data$RingSeason == .data$BreedingSeason &
                                                     !is.na(.data$LocationID) ~ "yes",
@@ -571,6 +579,7 @@ create_individual_WRS <- function(Capture_data_temp, Brood_data_temp){
                      by = c("brood_record", "UniqueBreedingEvent")) %>%
 
     ## Add BroodID information
+    ## Only one unique (non NA) BroodID per individual
     dplyr::group_by(.data$IndvID) %>%
     dplyr::mutate(BroodIDLaid = purrr::map_chr(.x = list(unique(stats::na.omit(.data$BroodID))),
                                                .f = ~{
