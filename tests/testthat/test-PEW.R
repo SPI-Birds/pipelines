@@ -98,6 +98,19 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(PEW_data, BroodID == "2017_23")$AvgChickMass, NA_real_)
   expect_equal(subset(PEW_data, BroodID == "2017_23")$AvgTarsus, NA_real_)
 
+  #Clutch that should have uncertainty in clutch size (i.e. has ?)
+  expect_equal(subset(PEW_data, BroodID == "2016_k72")$Species, "CYACAE")
+  #ClutchType_calc is NA because no laying date given
+  expect_equal(subset(PEW_data, BroodID == "2016_k72")$ClutchType_calculated, "replacement")
+  expect_equal(subset(PEW_data, BroodID == "2016_k72")$FemaleID, "13619463")
+  expect_equal(subset(PEW_data, BroodID == "2016_k72")$MaleID, "unringed")
+  expect_equal(subset(PEW_data, BroodID == "2016_k72")$LayDate_observed, as.Date("2017-05-05"))
+  expect_equal(subset(PEW_data, BroodID == "2016_k72")$HatchDate_observed, as.Date("2017-05-23"))
+  expect_equal(subset(PEW_data, BroodID == "2016_k72")$ClutchSize_observed, 9)
+  #AvgChickMass and AvgTarsus should be NA, there were no chicks measured
+  expect_equal(subset(PEW_data, BroodID == "2016_k72")$AvgChickMass, NA_real_)
+  expect_equal(subset(PEW_data, BroodID == "2016_k72")$AvgTarsus, NA_real_)
+
 })
 
 test_that("Capture_data returns an expected outcome...", {
