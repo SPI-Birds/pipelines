@@ -232,7 +232,12 @@ create_brood_AMM   <- function(connection) {
                   Plot_ExperimentID = dplyr::case_when(.data$PlotLevelTreatment %in% c(1L, 2L) ~ "PHENOLOGY",
                                                        .data$PlotLevelTreatment == 3L ~ "PHENOLOGY;COHORT;SURVIVAL",
                                                        TRUE ~ NA_character_),
-                  ExperimentID = paste(.data$BroodSwap_ExperimentID, .data$BroodOther_ExperimentID, .data$Plot_ExperimentID, sep = ";")) %>%
+                  ExperimentID = stringr::str_remove_all(paste(.data$BroodSwap_ExperimentID,
+                                                           .data$BroodOther_ExperimentID,
+                                                           .data$Plot_ExperimentID, sep = ";"),
+                                                     pattern = "NA[;]*")) %>%
+    #Remove cases where experiment ID is ""
+    dplyr::mutate(ExperimentID = dplyr::na_if(ExperimentID, "")) %>%
     # Determine clutch type
     dplyr::arrange(.data$BreedingSeason, .data$FemaleID, .data$LayDate_observed) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE),
