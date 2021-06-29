@@ -80,7 +80,7 @@ format_GLA <- function(db = choose_directory(),
     dplyr::rowwise() %>%
 
     ## There are two formats for dates.
-    ## The first can be handled with Lubridate, the second need to be rearranged
+    ## The first can be handled with Lubridate, the second needs to be rearranged
     dplyr::mutate(FirstEggDate = suppressWarnings(dplyr::case_when(grepl("/", .data$FirstEggDate) ~ lubridate::dmy(.data$FirstEggDate, quiet = TRUE),
                                                                    TRUE ~ lubridate::ymd(paste(unlist(stringr::str_split(as.character(janitor::excel_numeric_to_date(as.numeric(.data$FirstEggDate))), pattern = "-"))[c(1,3,2)], collapse = "-"), quiet = TRUE))),
 
@@ -195,7 +195,7 @@ format_GLA <- function(db = choose_directory(),
                                              .data$Species == "nutha" ~ species_codes[species_codes$SpeciesID == 14790,]$Species,
                                              .data$Species == "tresp" ~ species_codes[species_codes$SpeciesID == 15980,]$Species),
 
-                  ## 3J is the same age as 3 - just means it likely hatched at that site. It is a now retired BTO age code.
+                  ## 3J is the same age as 3 - just means it likely hatched at that site. It is now a retired BTO age code.
                   Age_observed = dplyr::case_when(.data$Age == "X" ~ 1L,
                                                   .data$Age == "3J" ~ 3L,
                                                   TRUE ~ suppressWarnings(as.integer(.data$Age))),
@@ -426,7 +426,7 @@ create_capture_GLA <- function(nest_data, rr_data, Brood_data) {
                   CaptureAlive = dplyr::case_when(.data$Retrap == "X" ~ FALSE,
                                                   .data$Retrap %in% c("N", "R", "C", "U", NA) ~ TRUE), ## Set CaptureAlive to FALSE if Retrap is X, otherwise TRUE
                   ReleaseAlive = dplyr::case_when(.data$Retrap == "X" | .data$Age == "X" ~ FALSE,
-                                                  .data$Retrap %in% c("N", "R", "C", "U", NA) ~ TRUE), ## Set ReleaseAlive to FALSE if Retrap is X and if Age is X (chick found dead at nest)
+                                                  .data$Retrap %in% c("N", "R", "C", "U", NA) ~ TRUE), ## Set ReleaseAlive to FALSE if Retrap is X or if Age is X (chick found dead at nest)
                   ReleasePopID = dplyr::case_when(.data$ReleaseAlive == FALSE ~ NA_character_,
                                                   TRUE ~ as.character(.data$CapturePopID))) %>%  ## Set ReleasePopID to NA if ReleaseAlive is FALSE, otherwise same as CapturePopID
 
@@ -452,12 +452,9 @@ create_capture_GLA <- function(nest_data, rr_data, Brood_data) {
 
     ## Recode sexes
     dplyr::mutate(Sex_observed = dplyr::case_when(grepl("Female", .data$Sex_observed) ~ "F",
-                                                  grepl("Male", .data$Sex_observed) ~ "M")) %>%
-
-    dplyr::group_by(.data$PopID) %>%
-    dplyr::mutate(CapturePopID = .data$PopID) %>%
-
-    dplyr::mutate(CaptureDate = dplyr::case_when(is.na(.data$LayDate_observed) ~ as.Date(paste0(.data$BreedingSeason, "-05-15")),
+                                                  grepl("Male", .data$Sex_observed) ~ "M"),
+                  CapturePopID = .data$PopID,
+                  CaptureDate = dplyr::case_when(is.na(.data$LayDate_observed) ~ as.Date(paste0(.data$BreedingSeason, "-05-15")),
                                                  !is.na(.data$LayDate_observed) ~ .data$LayDate_observed,
                                                  TRUE ~ as.Date(NA_character_)),
                   CapturePopID = .data$PopID, ## Set CapturePopID based on PopID
@@ -523,10 +520,9 @@ create_individual_GLA <- function(Capture_data, Brood_data){
   Individual_data_temp <- Capture_data %>%
 
     #### Format and create new data columns
-    dplyr::group_by(.data$IndvID, .data$CapturePopID) %>%
-    dplyr::mutate(PopID = .data$CapturePopID) %>%
     dplyr::group_by(.data$IndvID) %>%
-    dplyr::mutate(RingSeason = min(.data$BreedingSeason, na.rm = T)) %>%
+    dplyr::mutate(RingSeason = min(.data$BreedingSeason, na.rm = T),
+                  PopID = .data$CapturePopID) %>%
 
     ## Arrange
     dplyr::arrange(.data$IndvID, .data$CaptureDate) %>%
@@ -565,11 +561,9 @@ create_individual_GLA <- function(Capture_data, Brood_data){
                                               }
                                             }))
 
-
   ## Get chicks and join BroodID to these records
-  ## A couple of duplicates are created when there are replacement clutches.
-  ## To avoid this, only the last brood record for each LocationID is kept (which will be replacement clutches that may actually result in fledglings) since apparently there are no double clutches in these populations.
-  ## This means that any banded chicks will from the information associated with the last brood.
+  ## A small number of duplicates (~10) are created when there are replacement clutches.
+  ## To avoid this, only the last brood record for each LocationID is kept which will be the brood that may result in fledglings since there are no double broods in these populations.
   Individual_data <- Individual_data_temp %>%
 
     ## Filter to keep only records of individuals banded as chicks, the first record of that individual, and records where LocationID is known
@@ -582,7 +576,6 @@ create_individual_GLA <- function(Capture_data, Brood_data){
                        dplyr::rename(BroodIDLaid = .data$BroodID),
                      by = c("BreedingSeason", "PopID", "LocationID")) %>%
 
-
     ## Add back in filtered records
     dplyr::bind_rows(Individual_data_temp %>%
                        dplyr::filter(.data$RingAge == "adult" | is.na(.data$LocationID) | (.data$RingSeason != .data$BreedingSeason))) %>%
@@ -590,7 +583,7 @@ create_individual_GLA <- function(Capture_data, Brood_data){
     ## Add BroodID information
     ## BroodIDFledged is the same as BroodIDLaid unless ExperimentID is COHORT or PARENTAGE
     ## In these cases, the origin of eggs/nestlings is unknown and so the BroodIDLaid is unknown
-    ## BroodIDFledged however can still be determined based on the BroodID of the nest
+    ## BroodIDFledged can still be determined based on the BroodID of the nest
     dplyr::group_by(.data$IndvID) %>%
     dplyr::mutate(BroodIDFledged = purrr::map_chr(.x = list(unique(stats::na.omit(.data$BroodIDLaid))),
                                                   .f = ~{
@@ -600,7 +593,7 @@ create_individual_GLA <- function(Capture_data, Brood_data){
                                                       return(..1)
                                                     }
                                                   }),
-                  BroodIDLaid = case_when(grepl("COHORT|PARENTAGE", .data$ExperimentID) ~ NA_character_,
+                  BroodIDLaid = dplyr::case_when(grepl("COHORT|PARENTAGE", .data$ExperimentID) ~ NA_character_,
                                           TRUE ~ .data$BroodIDLaid)) %>%
 
     ## Keep distinct records by PopID and InvdID
