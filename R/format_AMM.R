@@ -226,40 +226,42 @@ create_brood_AMM   <- function(connection) {
                   NumberEggs = NA_integer_,
                   AvgChickMass = NA_integer_,
                   NumberChicksMass = NA_integer_,
-                  BroodSwap_ExperimentID = ifelse(.data$BroodSwap > 0L, "PARENTAGE;COHORT", NA_character_),
-                  BroodOther_ExperimentID = dplyr::case_when(.data$BroodOtherTreatment %in% c(1L, 2L, 3L, 4L, 5L) ~ "SURVIVAL",
-                                                             TRUE ~ NA_character_),
-                  Plot_ExperimentID = dplyr::case_when(.data$PlotLevelTreatment %in% c(1L, 2L) ~ "PHENOLOGY",
-                                                       .data$PlotLevelTreatment == 3L ~ "PHENOLOGY;COHORT;SURVIVAL",
-                                                       TRUE ~ NA_character_),
-                  ExperimentID = stringr::str_remove_all(paste(.data$BroodSwap_ExperimentID,
-                                                               .data$BroodOther_ExperimentID,
-                                                               .data$Plot_ExperimentID, sep = ";"),
-                                                         pattern = "NA[;]*")) %>%
-    #Remove cases where experiment ID is ""
-    dplyr::mutate(ExperimentID = dplyr::na_if(ExperimentID, "")) %>%
+                  BroodSwap_ExperimentID = ifelse(.data$BroodSwap > 0L, list(c("PARENTAGE", "COHORT")), list(NA_character_)),
+                  BroodOther_ExperimentID = dplyr::case_when(.data$BroodOtherTreatment %in% c(1L, 2L, 3L, 4L, 5L) ~ list("SURVIVAL"),
+                                                             TRUE ~ list(NA_character_)),
+                  Plot_ExperimentID = dplyr::case_when(.data$PlotLevelTreatment %in% c(1L, 2L) ~ list("PHENOLOGY"),
+                                                       .data$PlotLevelTreatment == 3L ~ list(c("PHENOLOGY", "COHORT", "SURVIVAL")),
+                                                       TRUE ~ list(NA_character_))) %>%
+    # Combine all experiments together
+    dplyr::rowwise() %>%
+    dplyr::mutate(ExperimentID = paste(union(union(BroodSwap_ExperimentID,
+                                                   BroodOther_ExperimentID),
+                                             Plot_ExperimentID), collapse = ";")) %>%
+    dplyr::ungroup() %>%
+    # Remove NAs from the experiment list
+    dplyr::mutate(ExperimentID = stringr::str_remove_all(ExperimentID, pattern = "NA[;]*|;NA^")) %>%
     # Determine clutch type
     dplyr::arrange(.data$BreedingSeason, .data$FemaleID, .data$LayDate_observed) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE),
                   ClutchType_observed = dplyr::case_when(.data$ClutchNumber == 1L ~ "first",
                                                          .data$ClutchNumber %in% c(2L, 4L) ~ "second",
                                                          .data$ClutchNumber %in% c(3L, 5L, 6L) ~ "replacement")) %>%
-    # Arrange columns
-    dplyr::select(.data$BroodID, .data$PopID, .data$BreedingSeason,
-                  .data$Species, .data$Plot, LocationID = .data$NestBox, .data$FemaleID, .data$MaleID,
-                  .data$ClutchType_observed, .data$ClutchType_calculated,
-                  .data$LayDate_observed, .data$LayDate_minimum, .data$LayDate_maximum,
-                  .data$ClutchSize_observed, .data$ClutchSize_minimum, .data$ClutchSize_maximum,
-                  .data$HatchDate_observed, .data$HatchDate_minimum, .data$HatchDate_maximum,
-                  .data$BroodSize_observed, .data$BroodSize_minimum,
-                  .data$BroodSize_maximum,
-                  .data$FledgeDate_observed, .data$FledgeDate_minimum,
-                  .data$FledgeDate_maximum,
-                  .data$NumberFledged_observed, .data$NumberFledged_minimum,
-                  .data$NumberFledged_maximum,
-                  .data$AvgEggMass, .data$NumberEggs,
-                  .data$AvgChickMass, .data$NumberChicksMass,
-                  .data$ExperimentID) %>%
+  # Arrange columns
+  dplyr::select(.data$BroodID, .data$PopID, .data$BreedingSeason,
+                .data$Species, .data$Plot, LocationID = .data$NestBox, .data$FemaleID, .data$MaleID,
+                .data$ClutchType_observed, .data$ClutchType_calculated,
+                .data$LayDate_observed, .data$LayDate_minimum, .data$LayDate_maximum,
+                .data$ClutchSize_observed, .data$ClutchSize_minimum, .data$ClutchSize_maximum,
+                .data$HatchDate_observed, .data$HatchDate_minimum, .data$HatchDate_maximum,
+                .data$BroodSize_observed, .data$BroodSize_minimum,
+                .data$BroodSize_maximum,
+                .data$FledgeDate_observed, .data$FledgeDate_minimum,
+                .data$FledgeDate_maximum,
+                .data$NumberFledged_observed, .data$NumberFledged_minimum,
+                .data$NumberFledged_maximum,
+                .data$AvgEggMass, .data$NumberEggs,
+                .data$AvgChickMass, .data$NumberChicksMass,
+                .data$ExperimentID) %>%
     # Convert to correct formats
     dplyr::mutate_at(.vars = vars(.data$Plot:.data$MaleID), as.character) %>%
     dplyr::mutate_at(.vars = vars(.data$LayDate_observed, .data$HatchDate_observed, .data$FledgeDate_observed), as.Date)
