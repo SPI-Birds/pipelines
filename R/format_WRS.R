@@ -402,7 +402,7 @@ format_WRS <- function(db = choose_directory(),
 #### --------------------------------------------------------------------------~
 
 
-#' Create brood data table for great tits and blue tits in Warsaw, Poland.
+#' Create brood data table in Warsaw, Poland.
 #'
 #' @param nest_data Data frame of nest data from Warsaw, Poland.
 #'
@@ -453,7 +453,7 @@ create_brood_WRS <- function(nest_data, chick_data, adult_data) {
 
 }
 
-#' Create capture data table for great tits and blue tits in Warsaw, Poland.
+#' Create capture data table for Warsaw, Poland.
 #'
 #' @param chick_data, Data frame of chick ringing records from Warsaw, Poland.
 #'
@@ -505,7 +505,7 @@ create_capture_WRS <- function(chick_data, adult_data) {
 
 }
 
-#' Create individual table for great tits and blue tits in Warsaw, Poland.
+#' Create individual table for Warsaw, Poland.
 #'
 #' @param Capture_data_temp Capture data output from Warsaw, Poland
 #'
@@ -604,7 +604,7 @@ create_individual_WRS <- function(Capture_data_temp, Brood_data_temp){
 }
 
 
-#' Create location data table for great tits and blue tits in Warsaw, Poland.
+#' Create location data table for Warsaw, Poland.
 #'
 #' @param nest_data Data frame of nest data from Warsaw, Poland.
 #'
@@ -642,7 +642,8 @@ create_location_WRS <- function(nest_data) {
                                                     .data$Plot == "BIB" ~ "urban")) %>%
 
     ## Keep distinct records
-    dplyr::distinct(.data$PopID, .data$LocationID, .keep_all = TRUE)
+    dplyr::distinct(.data$PopID, .data$LocationID, .keep_all = TRUE) %>%
+    dplyr::ungroup()
 
   return(Location_data_temp)
 
