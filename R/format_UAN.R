@@ -619,7 +619,15 @@ create_location_UAN <- function(data){
   Location_data$'TRUE'$Latitude <- true_coords[, 2]
 
   Location_data <- dplyr::bind_rows(Location_data) %>%
-    dplyr::select(-HasCoords, -Latitude_Lambert, -Longitude_Lambert)
+    dplyr::select(LocationID,
+                  NestboxID,
+                  LocationType,
+                  PopID,
+                  Latitude,
+                  Longitude,
+                  StartSeason,
+                  EndSeason,
+                  Habitat)
 
   return(Location_data)
 
