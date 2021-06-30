@@ -69,7 +69,7 @@ format_WRS <- function(db = choose_directory(),
   ## Read in primary data from nest sheet
   ## TODO: Change WAR to WRS
   ## TODO: Check about species codes
-  nest_data <- readxl::read_xlsx(path = paste0(db, "/WAR_PrimaryData.xlsx"), guess = 5000, sheet = "Nests", col_types = "text") %>%
+  nest_data <- readxl::read_xlsx(path = paste0(db, "/WRS_PrimaryData.xlsx"), guess = 5000, sheet = "Nests", col_types = "text") %>%
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
 
@@ -126,7 +126,7 @@ format_WRS <- function(db = choose_directory(),
                   .data$UniqueBreedingEvent)
 
   ## Read in primary data from chicks
-  chick_data <- suppressWarnings(readxl::read_xlsx(path = paste0(db, "/WAR_PrimaryData.xlsx"),
+  chick_data <- suppressWarnings(readxl::read_xlsx(path = paste0(db, "/WRS_PrimaryData.xlsx"),
                                                    guess = 5000,
                                                    sheet = "Chicks",
                                                    .name_repair = "minimal")) %>%
@@ -186,7 +186,7 @@ format_WRS <- function(db = choose_directory(),
                   .data$UniqueBreedingEvent)
 
   ## Read in primary data from adults
-  adult_data <- suppressWarnings(readxl::read_xlsx(path = paste0(db, "/WAR_PrimaryData.xlsx"),
+  adult_data <- suppressWarnings(readxl::read_xlsx(path = paste0(db, "/WRS_PrimaryData.xlsx"),
                                                    sheet = "Adults",
                                                    col_types = "text")) %>%
     janitor::clean_names(case = "upper_camel") %>%
