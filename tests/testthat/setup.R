@@ -1,1 +1,1 @@
-data_path <- choose.dir()
+data_path <- choose_directory()
