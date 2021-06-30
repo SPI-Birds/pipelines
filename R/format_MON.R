@@ -230,9 +230,9 @@ create_capture_MON <- function(db, species_filter, pop_filter){
                                              .$espece == "non" ~ species_codes$Species[which(species_codes$SpeciesID == 14400)])) %>%
     #Filter by species
     dplyr::filter(Species %in% species_filter) %>%
-    dplyr::mutate(CaptureDate = janitor::excel_numeric_to_date(as.numeric(date_mesure)),
-                  CaptureTime = dplyr::na_if(paste(stringr::str_pad((24*as.numeric(heure)) %/% 1, width = 2, pad = "0"),
-                                      stringr::str_pad(round(((24*as.numeric(heure)) %% 1) * 60), width = 2, pad = "0"),
+    dplyr::mutate(CaptureDate = janitor::excel_numeric_to_date(suppressWarnings(as.numeric(date_mesure))),
+                  CaptureTime = dplyr::na_if(paste(stringr::str_pad((24*suppressWarnings(as.numeric(heure))) %/% 1, width = 2, pad = "0"),
+                                      stringr::str_pad(round(((24*suppressWarnings(as.numeric(heure))) %% 1) * 60), width = 2, pad = "0"),
                                       sep = ":"), "NA:NA"),
                   BreedingSeason = an, CaptureTime = heure,
                   IndvID = bague, WingLength = aile,
@@ -876,12 +876,18 @@ create_individual_MON <- function(capture_data, brood_data, verbose){
     dplyr::filter(n > 1) %>%
     dplyr::pull(IndvID)
 
-  purrr::pwalk(.l = list(duplicates),
-               ~{
+  #If we are showing warnings, return this warning message
+  ## TODO: Maybe this should be removed so it can be picked up by quality checks
+  if (verbose) {
 
-                 warning(glue::glue("Individual {duplicate} has more than one potential BroodID", duplicate = ..1))
+    purrr::pwalk(.l = list(duplicates),
+                 ~{
 
-               })
+                   warning(glue::glue("Individual {duplicate} has more than one potential BroodID", duplicate = ..1))
+
+                 })
+
+  }
 
   #For any duplicate cases, we just take the first, which should be the most recent one
   Individual_data <- Individual_data_single_records %>%
