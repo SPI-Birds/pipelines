@@ -7,7 +7,7 @@
 #'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 #'
 #'#'\strong{CaptureDate}: Adults are typically captured two weeks into the nestling period.
-#'If hatch date is not known for the nest, CaptureDate is set two weeks after May 14th, which is the average hatch date.
+#'If hatch date is not known for the nest, CaptureDate is set to two weeks after May 14th, which is the average hatch date.
 #'
 #'@inheritParams pipeline_params
 #'
@@ -256,9 +256,8 @@ create_capture_GRO <- function(gro_data) {
 
     ## Capture date is generally two weeks after hatching
     ## If hatch date is not known, then May 14th of that year is used
-    ## TODO: Check about experimental types
     dplyr::group_by(.data$IndvID, .data$BreedingSeason) %>%
-    dplyr::mutate(CaptureDate = case_when(!is.na(.data$HatchDate_observed) ~ as.Date(.data$HatchDate_observed) + 14,
+    dplyr::mutate(CaptureDate = dplyr::case_when(!is.na(.data$HatchDate_observed) ~ as.Date(.data$HatchDate_observed) + 14,
                                           is.na(.data$HatchDate_observed) ~ as.Date(paste0(.data$BreedingSeason, "-05-28"))),
                   CapturePopID = .data$PopID,
                   ReleasePopID = .data$PopID,
@@ -306,16 +305,15 @@ create_individual_GRO <- function(Capture_data){
 
   Individual_data <- Capture_data %>%
 
+    ## Arrange
+    dplyr::arrange(.data$IndvID, .data$CaptureDate) %>%
+
     #### Format and create new data columns
     dplyr::group_by(.data$IndvID) %>%
 
     dplyr::mutate(PopID = .data$CapturePopID,
-                  RingSeason = min(.data$BreedingSeason)) %>%
-
-    ## Arrange
-    dplyr::arrange(.data$IndvID, .data$CaptureDate) %>%
-
-    dplyr::mutate(Sex_calculated = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Sex_observed))),
+                  RingSeason = min(.data$BreedingSeason),
+                  Sex_calculated = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Sex_observed))),
                                                   .f = ~{
                                                     if(length(..1) == 0){
                                                       return(NA_character_)
