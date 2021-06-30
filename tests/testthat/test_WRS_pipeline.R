@@ -42,7 +42,7 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(WRS_data,
                       BreedingSeason == "2016"
                       & PopID == "WRS"
-                      & LocationID == "POL33")$LayDate_observed, c("2016-04-24"))
+                      & LocationID == "POL33")$LayDate_observed, as.Date("2016-04-24"))
   expect_equal(subset(WRS_data,
                       BreedingSeason == "2016"
                       & PopID == "WRS"
