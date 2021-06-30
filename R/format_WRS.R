@@ -13,10 +13,8 @@
 #' be used to filter out these records. The regular expression "^[:digit:]{2}XX" along with stringr::str_detect can be used to identify
 #' and filter out these records.
 #'
-#' \strong{LocationID}: The Location data is constructed based on nest data that has many records from FICHYP, PASMON, and unidentified tit species. As such, the first year a nest box
-#' was used, it might not have been occupied by either PARMAJ or CYACAE.
-#'
-#'\strong{CaptureDate}:
+#' \strong{LocationID}: The Location data is constructed based on nest data that has many records from FICHYP, PASMON, and unidentified tit species.
+#' As such, the first year a nest box was used, it might not have been occupied by either PARMAJ or CYACAE.
 #'
 #'@inheritParams pipeline_params
 #'
@@ -211,7 +209,6 @@ format_WRS <- function(db = choose_directory(),
                                                                   TRUE ~ janitor::excel_numeric_to_date(as.numeric(.data$Date))))) %>%
 
     ## Recode columns
-    ## TODO: Add package to dependencies
     ## TODO: Check about age codes
     ## TODO: Check about aggression scoring - Should this be an experiment? Currently listed as OTHER
     ## TODO: where() not namespaced
@@ -234,9 +231,9 @@ format_WRS <- function(db = choose_directory(),
                                            toupper(.data$Age_observed) == "PO2" ~ 6L),
            ExperimentID = dplyr::case_when(!is.na(.data$Aggress) ~ "OTHER",
                                            TRUE ~ NA_character_),
-           dplyr::across(where(is.character), ~na_if(., "NA"))) %>%
+           dplyr::across(where(is.character), ~dplyr::na_if(., "NA"))) %>%
 
-    select(.data$BreedingSeason,
+    dplyr::select(.data$BreedingSeason,
            .data$PopID,
            .data$Plot,
            .data$LocationID,
@@ -423,7 +420,7 @@ create_brood_WRS <- function(nest_data, chick_data, adult_data) {
   Brood_data_temp <- nest_data %>%
 
     ## Keep only records with sufficient information
-    filter(!is.na(.data$UniqueBreedingEvent) & !is.na(.data$Species)) %>%
+    dplyr::filter(!is.na(.data$UniqueBreedingEvent) & !is.na(.data$Species)) %>%
 
     dplyr::left_join(adult_data %>%
                        dplyr::select(.data$UniqueBreedingEvent,
@@ -445,12 +442,12 @@ create_brood_WRS <- function(nest_data, chick_data, adult_data) {
     dplyr::arrange(.data$PopID, .data$BreedingSeason, .data$Plot, .data$LocationID) %>%
 
     ## Create BroodID
-    dplyr::mutate(BroodID = paste(.data$Plot, 1:n(), sep = "-")) %>%
+    dplyr::mutate(BroodID = paste(.data$Plot, 1:dplyr::n(), sep = "-")) %>%
 
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data =. , protocol_version = "1.1", na.rm = FALSE)) %>%
 
     ## Reorder columns
-    dplyr::select(any_of(names(brood_data_template)), everything())
+    dplyr::select(dplyr::any_of(names(brood_data_template)), dplyr::everything())
 
   return(Brood_data_temp)
 
@@ -501,7 +498,7 @@ create_capture_WRS <- function(chick_data, adult_data) {
     dplyr::mutate(CaptureID = paste(.data$IndvID, dplyr::row_number(), sep = "_")) %>%
 
     ## Reorder columns
-    dplyr::select(any_of(names(capture_data_template)), everything())
+    dplyr::select(dplyr::any_of(names(capture_data_template)), dplyr::everything())
 
 
   return(Capture_data_temp)
@@ -599,7 +596,7 @@ create_individual_WRS <- function(Capture_data_temp, Brood_data_temp){
     dplyr::ungroup() %>%
 
     ## Reorder columns
-    dplyr::select(any_of(names(individual_data_template)), everything())
+    dplyr::select(dplyr::any_of(names(individual_data_template)), dplyr::everything())
 
 
   return(Individual_data_temp)
@@ -629,7 +626,7 @@ create_location_WRS <- function(nest_data) {
                      StartSeason = min(.data$BreedingSeason, na.rm = TRUE),
                      EndSeason = NA_integer_,
 
-                     ## Keep lat/lon for each box with the most digits
+                     ## Keep lat/lon with the most digits for each box
                      Latitude = as.numeric(.data$Latitude[which.max(nchar(.data$Latitude))]),
                      Longitude = as.numeric(.data$Longitude[which.max(nchar(.data$Longitude))]),
 
