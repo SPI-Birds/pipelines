@@ -234,9 +234,9 @@ create_brood_AMM   <- function(connection) {
                                                        TRUE ~ list(NA_character_))) %>%
     # Combine all experiments together
     dplyr::rowwise() %>%
-    dplyr::mutate(ExperimentID = paste(union(union(BroodSwap_ExperimentID,
-                                                   BroodOther_ExperimentID),
-                                             Plot_ExperimentID), collapse = ";")) %>%
+    dplyr::mutate(ExperimentID = paste(union(union(.data$BroodSwap_ExperimentID,
+                                                   .data$BroodOther_ExperimentID),
+                                             .data$Plot_ExperimentID), collapse = ";")) %>%
     dplyr::ungroup() %>%
     # Remove NAs from the experiment list
     dplyr::mutate(ExperimentID = stringr::str_remove_all(ExperimentID, pattern = "NA[;]*|;NA^")) %>%
