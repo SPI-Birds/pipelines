@@ -157,8 +157,8 @@ run_pipelines <- function(path = choose_directory(),
                                      .x$Brood_data
 
                                    }) %>%
-    dplyr::mutate(Row = seq(1, n())) %>%
-    dplyr::select(Row, everything())
+    dplyr::mutate(Row = seq(1, dplyr::n())) %>%
+    dplyr::select(Row, tidyselect::everything())
 
   Capture_data <- purrr::map_df(.x = R_objects,
                                      .f = ~{
@@ -166,8 +166,8 @@ run_pipelines <- function(path = choose_directory(),
                                        .x$Capture_data
 
                                      }) %>%
-    dplyr::mutate(Row = seq(1, n())) %>%
-    dplyr::select(Row, everything())
+    dplyr::mutate(Row = seq(1, dplyr::n())) %>%
+    dplyr::select(Row, tidyselect::everything())
 
   Individual_data <- purrr::map_df(.x = R_objects,
                                         .f = ~{
@@ -175,8 +175,8 @@ run_pipelines <- function(path = choose_directory(),
                                           .x$Individual_data
 
                                         }) %>%
-    dplyr::mutate(Row = seq(1, n())) %>%
-    dplyr::select(Row, everything())
+    dplyr::mutate(Row = seq(1, dplyr::n())) %>%
+    dplyr::select(Row, tidyselect::everything())
 
   Location_data   <- purrr::map_df(.x = R_objects,
                                         .f = ~{
@@ -184,8 +184,8 @@ run_pipelines <- function(path = choose_directory(),
                                           .x$Location_data
 
                                         }) %>%
-    dplyr::mutate(Row = seq(1, n())) %>%
-    dplyr::select(Row, everything())
+    dplyr::mutate(Row = seq(1, dplyr::n())) %>%
+    dplyr::select(Row, tidyselect::everything())
 
   #If we want an R output, return a list with the 4 different data frames
   if(output_type == "R"){
