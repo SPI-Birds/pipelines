@@ -552,6 +552,15 @@ create_capture_MON <- function(db, species_filter, pop_filter){
                   WingLength, Age_observed, Age_calculated, ChickAge, ObservedSex, GeneticSex,
                   BroodIDLaid, BroodIDFledged, latitude, longitude, CaptureMethod, ExperimentDescription1, ExperimentDescription2)
 
+  Capture_data <- Capture_data %>%
+  ## The normal number of characters in an IndvID is 7
+  ## Any IndvIDs that have more than 8 characters or fewer than 6 characters and are not only numbers are set to NA
+  dplyr::mutate(IndvID = dplyr::case_when(nchar(.data$IndvID) %in% c(6,7,8) & stringr::str_detect(.data$IndvID, "^[:digit:]+$")  ~ .data$IndvID,
+                                             TRUE ~ NA_character_)) %>%
+
+    ## Filter out NAs from IndvID
+    dplyr::filter(!is.na(.data$IndvID))
+
   return(Capture_data)
 
 }
@@ -633,7 +642,10 @@ create_brood_MON <- function(db, species_filter, pop_filter){
                   ClutchSize, ClutchSizeError, HatchDate, HatchDateError,
                   BroodSize, BroodSizeError, FledgeDate, FledgeDateError,
                   NumberFledged, NumberFledgedError, ExperimentID,
-                  pulbag1:pulbag14, BoxNumber)
+                  pulbag1:pulbag14, BoxNumber) %>%
+
+    ## Remove non-standard IDs from MON data
+    Capture_data
 
   return(Brood_data)
 
