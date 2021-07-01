@@ -176,15 +176,15 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(subset(PFN_data, IndvID == "S846128")$Species, c("FICHYP", "FICHYP"))
   expect_equal(subset(PFN_data, IndvID == "S846128")$BroodIDLaid, c("TEI-1537", "TEI-1537"))
   expect_equal(subset(PFN_data, IndvID == "S846128")$BroodIDFledged, c("TEI-1537","TEI-1537"))
-  expect_equal(subset(PFN_data, IndvID == "S846128")$RingSeason, c(2018, 2017))
-  expect_equal(subset(PFN_data, IndvID == "S846128")$RingAge, c("adult", "chick"))
+  expect_equal(subset(PFN_data, IndvID == "S846128")$RingSeason, c(2017, 2017))
+  expect_equal(subset(PFN_data, IndvID == "S846128")$RingAge, c("chick", "chick"))
 
   #Test 4: Twice as adult in different populations
   expect_equal(subset(PFN_data, IndvID == "R723892")$Sex_calculated, c("F", "F"))
   expect_equal(subset(PFN_data, IndvID == "R723892")$Species, c("FICHYP", "FICHYP"))
   expect_equal(subset(PFN_data, IndvID == "R723892")$BroodIDLaid, rep(NA_character_, 2))
   expect_equal(subset(PFN_data, IndvID == "R723892")$BroodIDFledged, rep(NA_character_, 2))
-  expect_equal(subset(PFN_data, IndvID == "R723892")$RingSeason, c(2006, 2007))
+  expect_equal(subset(PFN_data, IndvID == "R723892")$RingSeason, c(2006, 2006))
   expect_equal(subset(PFN_data, IndvID == "R723892")$RingAge, c("adult", "adult"))
 })
 
