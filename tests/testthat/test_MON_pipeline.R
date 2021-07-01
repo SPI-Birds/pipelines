@@ -63,10 +63,12 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(MON_data, BroodID == "2012_font_15_1")$MaleID, NA_character_)
 
   #Test 7: FemaleIDs only contain numbers and all are 6-8 characters long
-  expect_true(all(nchar(MON_data$FemaleID) %in% c(6,7,8) & stringr::str_detect(MON_data$FemaleID, "^[:digit:]+$")))
+  expect_true(all(nchar(MON_data$FemaleID[!is.na(MON_data$FemaleID)]) %in% c(6,7,8) &
+                    stringr::str_detect(MON_data$FemaleID[!is.na(MON_data$FemaleID)], "^[:digit:]+$")))
 
   #Test 8: MaleIDs only contain numbers and all are 6-8 characters long
-  expect_true(all(nchar(MON_data$MaleID) %in% c(6,7,8) & stringr::str_detect(MON_data$MaleID, "^[:digit:]+$")))
+  expect_true(all(nchar(MON_data$MaleID[!is.na(MON_data$MaleID)]) %in% c(6,7,8)
+                  & stringr::str_detect(MON_data$MaleID[!is.na(MON_data$MaleID)], "^[:digit:]+$")))
 
 })
 
@@ -135,7 +137,8 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(subset(MON_data, IndvID == "7207569")$RingAge, "chick")
 
   #Test 6: IndvIDs only contain numbers and all are 6-8 characters long
-  expect_true(all(nchar(MON_data$IndvID) %in% c(6,7,8) & stringr::str_detect(MON_data$IndvID, "^[:digit:]+$")))
+  expect_true(all(nchar(MON_data$IndvID[!is.na(MON_data$IndvID)]) %in% c(6,7,8) &
+                    stringr::str_detect(MON_data$IndvID[!is.na(MON_data$IndvID)], "^[:digit:]+$")))
 
 })
 
