@@ -336,9 +336,9 @@ format_WRS <- function(db = choose_directory(),
   # ## Check column classes
   # purrr::map_df(location_data_template, class) == purrr::map_df(Location_data, class)
 
-  #### Filter Brood, Capture, and Individual tables
 
-  ## Filter to keep only desired Species if specified
+
+  ## Filter to keep only desired Species if specified for Brood, Capture, and Individual tables
   if(!is.null(species_filter)){
 
     Brood_data <- Brood_data %>%
@@ -352,16 +352,19 @@ format_WRS <- function(db = choose_directory(),
 
   }
 
-  ## Filter to keep only desired Populations if specified
+  ## Filter to keep only desired Pops if specified for Brood, Capture, Individual, and Location tables
   if(!is.null(pop_filter)){
 
     nest_data <- nest_data %>%
       dplyr::filter(.data$PopID %in% pop_filter & !(is.na(.data$PopID)))
 
     Capture_data <- Capture_data %>%
-      dplyr::filter(.data$PopID %in% pop_filter & !(is.na(.data$PopID)))
+      dplyr::filter(.data$CapturePopID %in% pop_filter & !(is.na(.data$CapturePopID)))
 
     Individual_data <- Individual_data %>%
+      dplyr::filter(.data$PopID %in% pop_filter & !(is.na(.data$PopID)))
+
+    Location_data <- Location_data %>%
       dplyr::filter(.data$PopID %in% pop_filter & !(is.na(.data$PopID)))
 
   }
