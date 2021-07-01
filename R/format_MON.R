@@ -230,10 +230,10 @@ create_capture_MON <- function(db, species_filter, pop_filter){
                                              .$espece == "non" ~ species_codes$Species[which(species_codes$SpeciesID == 14400)])) %>%
     #Filter by species
     dplyr::filter(Species %in% species_filter) %>%
-    dplyr::mutate(CaptureDate = janitor::excel_numeric_to_date(as.numeric(date_mesure)),
-                  CaptureTime = dplyr::na_if(paste(stringr::str_pad((24*as.numeric(heure)) %/% 1, width = 2, pad = "0"),
+    dplyr::mutate(CaptureDate = suppressWarnings(janitor::excel_numeric_to_date(as.numeric(date_mesure))),
+                  CaptureTime = suppressWarnings(dplyr::na_if(paste(stringr::str_pad((24*as.numeric(heure)) %/% 1, width = 2, pad = "0"),
                                       stringr::str_pad(round(((24*as.numeric(heure)) %% 1) * 60), width = 2, pad = "0"),
-                                      sep = ":"), "NA:NA"),
+                                      sep = ":"), "NA:NA")),
                   BreedingSeason = an,
                   IndvID = bague, WingLength = aile,
                   BeakLength = becna,
@@ -412,10 +412,10 @@ create_capture_MON <- function(db, species_filter, pop_filter){
     #Filter by species
     #Also remove only the pops we know
     dplyr::filter(Species %in% species_filter) %>%
-    dplyr::mutate(CaptureDate = janitor::excel_numeric_to_date(as.numeric(date_mesure)),
-                  CaptureTime = dplyr::na_if(paste(stringr::str_pad((24*as.numeric(heure)) %/% 1, width = 2, pad = "0"),
+    dplyr::mutate(CaptureDate = suppressWarnings(janitor::excel_numeric_to_date(as.numeric(date_mesure))),
+                  CaptureTime = suppressWarnings(dplyr::na_if(paste(stringr::str_pad((24*as.numeric(heure)) %/% 1, width = 2, pad = "0"),
                                                    stringr::str_pad(round(((24*as.numeric(heure)) %% 1) * 60), width = 2, pad = "0"),
-                                                   sep = ":"), "NA:NA"),
+                                                   sep = ":"), "NA:NA")),
                   BreedingSeason = an,
                   IndvID = purrr::pmap_chr(.l = list(bague),
                                            .f = ~{
@@ -897,7 +897,7 @@ create_individual_MON <- function(Capture_data, Brood_data, verbose){
   purrr::pwalk(.l = list(duplicates),
                ~{
 
-                 warning(glue::glue("Individual {duplicate} has more than one potential BroodID", duplicate = ..1))
+                 message(glue::glue("Individual {duplicate} has more than one potential BroodID", duplicate = ..1))
 
                })
 
