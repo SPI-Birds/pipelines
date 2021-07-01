@@ -40,7 +40,8 @@ run_pipelines <- function(path = choose_directory(),
                           PopID = NULL,
                           Species = NULL,
                           output_type = "R",
-                          save = FALSE, save_path = NULL,
+                          save = FALSE,
+                          save_path = NULL,
                           filename = "standard_format"){
 
   #Force choose_directory()
@@ -136,15 +137,15 @@ run_pipelines <- function(path = choose_directory(),
 
   #For each data owner, run the pipeline using the populations requested
   #Return R lists rather than generating .csv files
-  R_objects <- purrr::pmap(.l = list(dirs = all_dirs, owner = pop_species_subset$Owner,
+  R_objects <- purrr::pmap(.l = list(dirs = all_dirs,
+                                     owner = pop_species_subset$Owner,
                                      pops = pop_species_subset$Pops,
                                      species = pop_species_subset$Species),
                            .f = function(dirs, owner, pops, species){
 
                              message(glue::glue('Running {owner} pipeline'))
 
-                           eval(parse(text = glue::glue('format_{owner}(db = dirs, pop = pops, species = species,
-                                                output_type = "R")')))
+                           eval(parse(text = glue::glue('format_{owner}(db = dirs, pop = pops, species = species, output_type = "R")')))
 
                              })
 
@@ -210,7 +211,7 @@ run_pipelines <- function(path = choose_directory(),
 
     utils::write.csv(x = Capture_data, file = paste0(save_path, "/", filename, "_Capture_data.csv"), row.names = F)
 
-    utils::write.csv(x = Individual_data, file = paste0(save_path, "/", filename, "Individual_data.csv"), row.names = F)
+    utils::write.csv(x = Individual_data, file = paste0(save_path, "/", filename, "_Individual_data.csv"), row.names = F)
 
     utils::write.csv(x = Location_data, file = paste0(save_path, "/", filename, "_Location_data.csv"), row.names = F)
 
