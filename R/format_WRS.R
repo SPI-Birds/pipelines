@@ -61,8 +61,7 @@ format_WRS <- function(db = choose_directory(),
   start_time <- Sys.time()
 
   ## Set options
-  options(dplyr.summarise.inform = FALSE,
-          digits = 10)
+  options(dplyr.summarise.inform = FALSE)
 
   # db <- "/Users/tyson/Documents/academia/institutions/NIOO/SPI-Birds/my_pipelines/WRS/data/WAR_Warshav_Poland/"
 
