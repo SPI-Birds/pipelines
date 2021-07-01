@@ -56,6 +56,13 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(MON_data, BroodID == "1992_rou_90_2")$AvgChickMass, NA_real_)
   expect_equal(subset(MON_data, BroodID == "1992_rou_90_2")$AvgTarsus, NA_real_)
 
+  #Test 5: BroodID has FemaleID that does not match proper ID format
+  expect_equal(subset(MON_data, BroodID == "2016_gram_39_1")$FemaleID, NA_character_)
+
+  #Test 6: BroodID has MaleID that does not match proper ID format
+  expect_equal(subset(MON_data, BroodID == "2012_font_15_1")$MaleID, NA_character_)
+
+
 })
 
 test_that("Individual data returns an expected outcome...", {

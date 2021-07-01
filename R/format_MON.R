@@ -642,10 +642,16 @@ create_brood_MON <- function(db, species_filter, pop_filter){
                   ClutchSize, ClutchSizeError, HatchDate, HatchDateError,
                   BroodSize, BroodSizeError, FledgeDate, FledgeDateError,
                   NumberFledged, NumberFledgedError, ExperimentID,
-                  pulbag1:pulbag14, BoxNumber) %>%
+                  pulbag1:pulbag14, BoxNumber)
 
-    ## Remove non-standard IDs from MON data
-    Capture_data
+    ## Set non-standard IDs to NA
+    Brood_data <- Brood_data %>%
+      ## The normal number of characters in an IndvID is 7
+      ## Any IndvIDs that have more than 8 characters or fewer than 6 characters and are not only numbers are set to NA
+      dplyr::mutate(FemaleID = dplyr::case_when(nchar(FemaleID) %in% c(6,7,8) & stringr::str_detect(FemaleID, "^[:digit:]+$")  ~ FemaleID,
+                                                    TRUE ~ NA_character_),
+                    MaleID = dplyr::case_when(nchar(MaleID) %in% c(6,7,8) & stringr::str_detect(MaleID, "^[:digit:]+$")  ~ MaleID,
+                                                    TRUE ~ NA_character_))
 
   return(Brood_data)
 
