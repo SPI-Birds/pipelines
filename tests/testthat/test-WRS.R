@@ -1,6 +1,6 @@
 pipeline_output <- format_WRS(db = paste0(data_path, "/WRS_Warsaw_Poland"))
 
-context("Run data quality check on Warswaw, Pland, pipeline output")
+context("Run data quality check on Warswaw, Poland, pipeline output")
 
 test_that("WRS outputs all files...", {
 
