@@ -11,7 +11,7 @@ create_brood_PFN(Nest_data, ReRingTable, badIDs)
 
 \item{ReRingTable}{Table containing ring numbers and unique identifiers for all individuals}
 
-\item{badIDs}{Vector containing non-conslusive IDs (extracted from Nest data)}
+\item{badIDs}{Vector containing non-conclusive IDs (extracted from Nest data)}
 }
 \value{
 A data frame with Brood data
