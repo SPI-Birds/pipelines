@@ -13,9 +13,6 @@
 #' be used to filter out these records. The regular expression "^[:digit:]{2}XX" along with stringr::str_detect can be used to identify
 #' and filter out these records.
 #'
-#' \strong{LocationID}: The Location data is constructed based on nest data that has many records from FICHYP, PASMON, and unidentified tit species.
-#' As such, the first year a nest box was used, it might not have been occupied by either PARMAJ or CYACAE.
-#'
 #'@inheritParams pipeline_params
 #'
 #'@return Generates either 4 .csv files or 4 data frames in the standard format.
@@ -61,10 +58,7 @@ format_WRS <- function(db = choose_directory(),
   start_time <- Sys.time()
 
   ## Set options
-  options(dplyr.summarise.inform = FALSE,
-          digits = 10)
-
-  # db <- "/Users/tyson/Documents/academia/institutions/NIOO/SPI-Birds/my_pipelines/WRS/data/WAR_Warshav_Poland/"
+  options(dplyr.summarise.inform = FALSE)
 
   ## Read in primary data from nest sheet
   ## TODO: Change WAR to WRS
@@ -89,9 +83,10 @@ format_WRS <- function(db = choose_directory(),
 
     ## Recode column information
     ## TODO: Check species - How to handle 'TIT'?
-    dplyr::mutate(dplyr::across(where(is.character), ~na_if(., "NA")),
+    ## TODO: Check about camera and experiments
+    dplyr::mutate(dplyr::across(where(is.character), ~dplyr::na_if(., "NA")),
                   PopID = "WRS",
-                  dplyr::across(where(is.character), ~na_if(., "NA")),
+                  dplyr::across(where(is.character), ~dplyr::na_if(., "NA")),
                   Species = dplyr::case_when(.data$Species == "GT"  ~ species_codes[species_codes$SpeciesID == 14640,]$Species,
                                              .data$Species == "BT"  ~ species_codes[species_codes$SpeciesID == 14620,]$Species,
                                              .data$Species == "FC"  ~ species_codes[species_codes$SpeciesID == 13490,]$Species,
@@ -148,16 +143,16 @@ format_WRS <- function(db = choose_directory(),
 
     ## Adjust variables
     ## TODO: Check about 'dead chick' ID codes
-    dplyr::mutate(dplyr::across(where(is.character), ~na_if(., "NA")),
+    dplyr::mutate(dplyr::across(where(is.character), ~dplyr::na_if(., "NA")),
                   PopID = "WRS",
-                  BreedingSeason = as.integer(BreedingSeason),
+                  BreedingSeason = as.integer(.data$BreedingSeason),
                   ReleaseAlive = dplyr::case_when(.data$ChickExp != 0 | .data$ChickPred != 0 | .data$Fledged == 0~ FALSE,
                                                   TRUE ~ TRUE),
                   Tarsus = suppressWarnings(as.numeric(.data$Tarsus)),
-                  Mass = suppressWarnings(round(as.numeric(dplyr::case_when(!is.na(.data$WeightD15) ~ WeightD15,
-                                                                            !is.na(.data$WeightD10) ~ WeightD10,
-                                                                            !is.na(.data$WeightD5)  ~ WeightD5,
-                                                                            !is.na(.data$WeightD2)  ~ WeightD2,
+                  Mass = suppressWarnings(round(as.numeric(dplyr::case_when(!is.na(.data$WeightD15) ~ .data$WeightD15,
+                                                                            !is.na(.data$WeightD10) ~ .data$WeightD10,
+                                                                            !is.na(.data$WeightD5)  ~ .data$WeightD5,
+                                                                            !is.na(.data$WeightD2)  ~ .data$WeightD2,
                                                                             TRUE ~ NA_character_)),3)),
                   ChickAge = dplyr::case_when(!is.na(.data$WeightD15) ~ 15L,
                                               !is.na(.data$WeightD10) ~ 10L,
@@ -213,10 +208,10 @@ format_WRS <- function(db = choose_directory(),
     ## TODO: Check about aggression scoring - Should this be an experiment? Currently listed as OTHER
     ## TODO: where() not namespaced
     ## Check species codes
-    mutate(dplyr::across(where(is.character), ~na_if(., "NA")),
+    mutate(dplyr::across(where(is.character), ~dplyr::na_if(., "NA")),
            PopID = "WRS",
-           BreedingSeason = as.integer(BreedingSeason),
-           dplyr::across(c(Mass, WingLength, Tarsus), ~ suppressWarnings(as.numeric(.x))),
+           BreedingSeason = as.integer(.data$BreedingSeason),
+           dplyr::across(c(.data$Mass, .data$WingLength, .data$Tarsus), ~ suppressWarnings(as.numeric(.x))),
            CaptureTime = suppressWarnings(format(openxlsx::convertToDateTime(.data$Hour), "%H:%M")),
            Species = dplyr::case_when(.data$Species == "GT"  ~ species_codes[species_codes$SpeciesID == 14640,]$Species,
                                       .data$Species == "BT"  ~ species_codes[species_codes$SpeciesID == 14620,]$Species,
@@ -633,7 +628,7 @@ create_location_WRS <- function(nest_data) {
                      Latitude = as.numeric(.data$Latitude[which.max(nchar(.data$Latitude))]),
                      Longitude = as.numeric(.data$Longitude[which.max(nchar(.data$Longitude))]),
 
-                     ## TODO: Match vegetation type with plots
+                     ## TODO: Match vegetation type with plots based on data owner input
                      HabitatType = dplyr::case_when(.data$Plot == "CMZ" ~ "urban",
                                                     .data$Plot == "KPN" ~ "urban",
                                                     .data$Plot == "POL" ~ "urban",
