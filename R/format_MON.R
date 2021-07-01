@@ -234,7 +234,7 @@ create_capture_MON <- function(db, species_filter, pop_filter){
                   CaptureTime = dplyr::na_if(paste(stringr::str_pad((24*as.numeric(heure)) %/% 1, width = 2, pad = "0"),
                                       stringr::str_pad(round(((24*as.numeric(heure)) %% 1) * 60), width = 2, pad = "0"),
                                       sep = ":"), "NA:NA"),
-                  BreedingSeason = an, CaptureTime = heure,
+                  BreedingSeason = an,
                   IndvID = bague, WingLength = aile,
                   BeakLength = becna,
                   Mass = poids, ObserverID = obs,
@@ -416,7 +416,7 @@ create_capture_MON <- function(db, species_filter, pop_filter){
                   CaptureTime = dplyr::na_if(paste(stringr::str_pad((24*as.numeric(heure)) %/% 1, width = 2, pad = "0"),
                                                    stringr::str_pad(round(((24*as.numeric(heure)) %% 1) * 60), width = 2, pad = "0"),
                                                    sep = ":"), "NA:NA"),
-                  BreedingSeason = an, CaptureTime = heure,
+                  BreedingSeason = an,
                   IndvID = purrr::pmap_chr(.l = list(bague),
                                            .f = ~{
 
@@ -780,7 +780,7 @@ create_individual_MON <- function(capture_data, brood_data, verbose){
     }, brood_data) %>%
    dplyr::bind_rows()
 
-  Individual_data <- capture_data %>%
+    Individual_data <- capture_data %>%
     dplyr::arrange(IndvID, CaptureDate) %>%
     dplyr::group_by(IndvID) %>%
     dplyr::summarise(Species = purrr::map_chr(.x = list(stats::na.omit(unique(Species))),
