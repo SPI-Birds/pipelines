@@ -251,34 +251,6 @@ format_WRS <- function(db = choose_directory(),
            .data$ExperimentID,
            .data$UniqueBreedingEvent)
 
-  ## Filter to keep only desired Species if specified
-  if(!is.null(species_filter)){
-
-    nest_data <- nest_data %>%
-      dplyr::filter(.data$Species %in% species_filter & !(is.na(.data$Species)))
-
-    chick_data <- chick_data %>%
-      dplyr::filter(.data$Species %in% species_filter & !(is.na(.data$Species)))
-
-    adult_data <- adult_data %>%
-      dplyr::filter(.data$Species %in% species_filter & !(is.na(.data$Species)))
-
-  }
-
-  ## Filter to keep only desired Populations if specified
-  if(!is.null(pop_filter)){
-
-    nest_data <- nest_data %>%
-      dplyr::filter(.data$PopID %in% pop_filter & !(is.na(.data$PopID)))
-
-    chick_data <- chick_data %>%
-      dplyr::filter(.data$PopID %in% pop_filter & !(is.na(.data$PopID)))
-
-    adult_data <- adult_data %>%
-      dplyr::filter(.data$PopID %in% pop_filter & !(is.na(.data$PopID)))
-
-  }
-
   #### BROOD DATA
   message("Compiling brood information...")
   Brood_data_temp <- create_brood_WRS(nest_data, chick_data, adult_data)
@@ -349,7 +321,6 @@ format_WRS <- function(db = choose_directory(),
   # ## Check column classes
   # purrr::map_df(individual_data_template, class) == purrr::map_df(Individual_data, class)
 
-
   ## Location data
   Location_data <- Location_data_temp %>%
 
@@ -365,6 +336,35 @@ format_WRS <- function(db = choose_directory(),
   # ## Check column classes
   # purrr::map_df(location_data_template, class) == purrr::map_df(Location_data, class)
 
+  #### Filter Brood, Capture, and Individual tables
+
+  ## Filter to keep only desired Species if specified
+  if(!is.null(species_filter)){
+
+    Brood_data <- Brood_data %>%
+      dplyr::filter(.data$Species %in% species_filter & !(is.na(.data$Species)))
+
+    Capture_data <- Capture_data %>%
+      dplyr::filter(.data$Species %in% species_filter & !(is.na(.data$Species)))
+
+    Individual_data <- Individual_data %>%
+      dplyr::filter(.data$Species %in% species_filter & !(is.na(.data$Species)))
+
+  }
+
+  ## Filter to keep only desired Populations if specified
+  if(!is.null(pop_filter)){
+
+    nest_data <- nest_data %>%
+      dplyr::filter(.data$PopID %in% pop_filter & !(is.na(.data$PopID)))
+
+    Capture_data <- Capture_data %>%
+      dplyr::filter(.data$PopID %in% pop_filter & !(is.na(.data$PopID)))
+
+    Individual_data <- Individual_data %>%
+      dplyr::filter(.data$PopID %in% pop_filter & !(is.na(.data$PopID)))
+
+  }
 
   #### EXPORT DATA
 
