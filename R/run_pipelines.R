@@ -157,7 +157,6 @@ run_pipelines <- function(path = choose_directory(),
                                      .x$Brood_data
 
                                    }) %>%
-    dplyr::ungroup() %>%
     dplyr::mutate(Row = seq(1, dplyr::n())) %>%
     dplyr::select(Row, tidyselect::everything())
 
@@ -167,7 +166,6 @@ run_pipelines <- function(path = choose_directory(),
                                        .x$Capture_data
 
                                      }) %>%
-    dplyr::ungroup() %>%
     dplyr::mutate(Row = seq(1, dplyr::n())) %>%
     dplyr::select(Row, tidyselect::everything())
 
@@ -177,7 +175,6 @@ run_pipelines <- function(path = choose_directory(),
                                           .x$Individual_data
 
                                         }) %>%
-    dplyr::ungroup() %>%
     dplyr::mutate(Row = seq(1, dplyr::n())) %>%
     dplyr::select(Row, tidyselect::everything())
 
@@ -187,7 +184,6 @@ run_pipelines <- function(path = choose_directory(),
                                           .x$Location_data
 
                                         }) %>%
-    dplyr::ungroup() %>%
     dplyr::mutate(Row = seq(1, dplyr::n())) %>%
     dplyr::select(Row, tidyselect::everything())
 
