@@ -1,4 +1,6 @@
-context("Run data quality check on Hochstadt pipeline output")
+testthat::skip_if(!exists("data_path"))
+
+pipeline_output <- format_HOC(db = paste0(data_path, "/HOC_Hochstadt_Germany"))
 
 test_that("HOC outputs all files...", {
 
