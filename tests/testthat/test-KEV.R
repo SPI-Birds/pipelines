@@ -1,3 +1,5 @@
+testthat::skip_if(!exists("data_path"))
+
 pipeline_output <- format_KEV(db = paste0(data_path, "/KEV_Kevo_Finland"))
 
 test_that("KEV outputs all files...", {

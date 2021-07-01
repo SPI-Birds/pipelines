@@ -1,3 +1,5 @@
+testthat::skip_if(!exists("data_path"))
+
 pipeline_output <- format_SSQ(db = paste0(data_path, "/SSQ_SantoStefanoQuisquina_Italy"))
 
 test_that("SSQ outputs all files...", {

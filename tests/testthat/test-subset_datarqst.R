@@ -1,3 +1,5 @@
+testthat::skip_if(!exists("data_path"))
+
 pipeline_output <- run_pipelines(path = data_path, PopID = c("CHO", "SSQ", "HOC", "HAR", "PIL"))
 
 request_PopIDs <- c('CHO', 'HOC', 'HAR', 'PIL')

@@ -1,3 +1,5 @@
+testthat::skip_if(!exists("data_path"))
+
 pipeline_output <- format_KIL(db = paste0(data_path, "/KIL_KilingiNomme_Estonia"))
 
 test_that("KIL outputs all files...", {

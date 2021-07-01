@@ -1,3 +1,5 @@
+testthat::skip_if(!exists("data_path"))
+
 pipeline_output <- format_PEW(db = paste0(data_path, "/PEW_PeerdsbosWest_Belgium"))
 
 test_that("PEW outputs all files...", {

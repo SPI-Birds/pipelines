@@ -1,4 +1,5 @@
 testthat::skip_on_os("mac")
+testthat::skip_if(!exists("data_path"))
 
 pipeline_output <- format_AMM(db = paste0(data_path, "/AMM_Ammersee_Germany"))
 

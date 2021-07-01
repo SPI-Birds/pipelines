@@ -1,3 +1,5 @@
+testthat::skip_if(!exists("data_path"))
+
 pipeline_output <- run_pipelines(path = data_path, PopID = c("CHO", "SSQ"))
 
 test_that("All 4 tables are created...", {
