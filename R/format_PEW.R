@@ -326,8 +326,7 @@ create_brood_PEW <- function(data) {
 
     #### Create new variables
     dplyr::mutate(Plot = NA_character_,
-                  # LayDate_observed = DateEgg1, ## for new version of calc_clutchtype
-                  LayDate = .data$DateEgg1,
+                  LayDate_observed = DateEgg1, ## for new version of calc_clutchtype
                   LayDate_min = as.Date(NA),
                   LayDate_max = as.Date(NA),
                   ClutchSize_observed = .data$ClutchSize,
@@ -343,16 +342,15 @@ create_brood_PEW <- function(data) {
                   FledgeDate_observed = as.Date(NA),
                   FledgeDate_min = as.Date(NA),
                   FledgeDate_max = as.Date(NA),
-                  # NumberFledged_observed = NumberOfRingedChicks, ## for new version of calc_clutchtype
                   #### Correction regarding one brood from data owner:
-                  NumberFledged = ifelse(.data$BroodID == "2015_79", 0L, .data$NumberOfRingedChicks),
+                  NumberFledged_observed = ifelse(.data$BroodID == "2015_79", 0L, .data$NumberOfRingedChicks),
                   NumberFledged_min = NA_integer_,
                   NumberFledged_max = NA_integer_,
                   AvgEggMass = NA_real_,
                   NumberEggs = NA_integer_,
                   #### Metadata states that only the first clutches are recorded
                   ClutchType_observed = "first") %>%
-    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE))
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.1"))
 
 
   #### Get chick measurements per brood
@@ -377,9 +375,7 @@ create_brood_PEW <- function(data) {
   Brood_data <-
     parents_brood_data %>%
     left_join(chicks_measurements, by = "BroodID") %>%
-    #### Rename
-    dplyr::rename(LayDate_observed = .data$LayDate,
-                  NumberFledged_observed = .data$NumberFledged) %>%
+
     #### Final arrangement
     dplyr::select(.data$BroodID, .data$PopID, .data$BreedingSeason,
                   .data$Species, .data$Plot, .data$LocationID,
