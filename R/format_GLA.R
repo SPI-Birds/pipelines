@@ -8,7 +8,10 @@
 #'
 #'\strong{Species}: Primarily great tits and blue tits.
 #'
+#'\strong{BroodID}: A concatentation of PopID and the row number of the brood record (e.g. SAL-1).
+#'
 #'\strong{IndvID}: Should be a 7 digit alphanumeric string. IndvIDs with more or less characters are likely errors.
+#'
 #'
 #'\strong{CaptureDate}: Some individuals were not recorded in the ringing records, but were observed breeding at a monitored nest.
 #'For these individuals, the CaptureDate is set as May 15 of the breeding year.
@@ -59,14 +62,16 @@ format_GLA <- function(db = choose_directory(),
 
   start_time <- Sys.time()
 
-  ## Set options
+  ##  Options
   options(dplyr.summarise.inform = FALSE)
+  on.exit(options(original_options), add = TRUE, after = FALSE)
 
   ## Read experiment classification table
   expID_tab <- utils::read.csv(file = paste0(db, "/GLA_experiment_groups.csv"))
 
   ## Read in primary data from brood records
-  nest_data <- readxl::read_xlsx(path = paste0(db, "/GLA_PrimaryData_Nest.xlsx"), guess = 5000) %>%
+  nest_data <- readxl::read_xlsx(path = paste0(db, "/GLA_PrimaryData_Nest.xlsx"),
+                                 guess_max = 5000) %>%
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
 
@@ -81,16 +86,17 @@ format_GLA <- function(db = choose_directory(),
 
     ## There are two formats for dates.
     ## The first can be handled with Lubridate, the second needs to be rearranged
-    dplyr::mutate(FirstEggDate = suppressWarnings(dplyr::case_when(grepl("/", .data$FirstEggDate) ~ lubridate::dmy(.data$FirstEggDate, quiet = TRUE),
-                                                                   TRUE ~ lubridate::ymd(paste(unlist(stringr::str_split(as.character(janitor::excel_numeric_to_date(as.numeric(.data$FirstEggDate))), pattern = "-"))[c(1,3,2)], collapse = "-"), quiet = TRUE))),
+    dplyr::mutate(dplyr::across(.cols = c(.data$FirstEggDate,
+                                          .data$LayingComplete,
+                                          .data$ObservedHatch),
+                                .fns = ~suppressWarnings(dplyr::case_when(grepl("/", .) ~ lubridate::dmy(., quiet = TRUE),
+                                                                          TRUE ~ lubridate::ymd(paste(unlist(stringr::str_split(as.character(janitor::excel_numeric_to_date(as.numeric(.))),
+                                                                                                                                pattern = "-"))[c(1,3,2)],
+                                                                                                      collapse = "-"),
+                                                                                                quiet = TRUE))))) %>%
+    dplyr::ungroup() %>%
 
-                  LayingComplete = suppressWarnings(dplyr::case_when(grepl("/", .data$LayingComplete) ~ lubridate::dmy(.data$LayingComplete, quiet = TRUE),
-                                                                     TRUE ~ lubridate::ymd(paste(unlist(stringr::str_split(as.character(janitor::excel_numeric_to_date(as.numeric(.data$LayingComplete))), pattern = "-"))[c(1,3,2)], collapse = "-"), quiet = TRUE))),
-
-                  ObservedHatch = suppressWarnings(dplyr::case_when(grepl("/", .data$ObservedHatch) ~ lubridate::dmy(.data$ObservedHatch, quiet = TRUE),
-                                                                    TRUE ~ lubridate::ymd(paste(unlist(stringr::str_split(as.character(janitor::excel_numeric_to_date(as.numeric(.data$ObservedHatch))), pattern = "-"))[c(1,3,2)], collapse = "-"), quiet = TRUE))),
-
-                  Hatchlings = as.integer(.data$Hatchlings),
+    dplyr::mutate(Hatchlings = as.integer(.data$Hatchlings),
                   Fledglings = as.integer(.data$Fledglings),
                   MaleRing = as.character(.data$MaleRing),
                   FemaleRing = as.character(.data$FemaleRing),
@@ -119,8 +125,6 @@ format_GLA <- function(db = choose_directory(),
     ## Rename
     dplyr::rename(FemaleID = .data$FemaleRing,
                   MaleID = .data$MaleRing,
-                  LayDate_min = .data$FirstEggDate,
-                  LayDate_max = .data$LayingComplete,
                   ClutchSize_observed = .data$ClutchSize,
                   HatchDate_observed = .data$ObservedHatch,
                   NumberFledged_observed = .data$Fledglings) %>%
@@ -139,8 +143,6 @@ format_GLA <- function(db = choose_directory(),
                   .data$Species,
                   .data$ReplacementClutch,
                   .data$LayDate_observed,
-                  .data$LayDate_min,
-                  .data$LayDate_max,
                   .data$HatchDate_observed,
                   .data$ClutchSize_observed,
                   .data$UnhatchedEggs,
@@ -334,7 +336,7 @@ create_brood_GLA <- function(nest_data, rr_data) {
   ## Join brood data from ringing records to brood data from nest records
   ## Species information determined based on the ringing data
   Brood_data <- nest_data_brood_sum %>%
-    dplyr::left_join(rr_data_brood_sum, by = c("BreedingSeason", "PopID", "LocationID")) %>%
+    dplyr::left_join(rr_data_brood_sum, by = c("BreedingSeason", "PopID", "LocationID",)) %>%
 
     ## Merge Male and Female ID columns to fill in any that are missing
     dplyr::mutate(MaleID_j = dplyr::case_when(.data$MaleID.x == .data$MaleID.y ~ .data$MaleID.x,
@@ -594,7 +596,7 @@ create_individual_GLA <- function(Capture_data, Brood_data){
                                                     }
                                                   }),
                   BroodIDLaid = dplyr::case_when(grepl("COHORT|PARENTAGE", .data$ExperimentID) ~ NA_character_,
-                                          TRUE ~ .data$BroodIDLaid)) %>%
+                                                 TRUE ~ .data$BroodIDLaid)) %>%
 
     ## Keep distinct records by PopID and InvdID
     dplyr::distinct(.data$PopID, .data$IndvID, .keep_all = TRUE) %>%
