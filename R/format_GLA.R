@@ -316,12 +316,17 @@ create_brood_GLA <- function(nest_data, rr_data) {
     ## If any chicks reach the age where they can be ringed at a nest box, that nest box will not be used again in the breeding season
     ## As such, for each location with chicks, there is only going to be one FemaleID and one MaleID
     ## In one case (2020 - SCE - CYACAE - 107), the mother ID is not assigned for all chicks, but is set to NA for one chick
-    dplyr::summarise(FemaleID = names(which.max(table(.data$MotherRing, useNA = "always"))),
-                     MaleID = names(which.max(table(.data$FatherRing, useNA = "always"))),
+    ## We will be conservative and assign any broods with multiple FemaleIDs or MaleIDs as NA
+    dplyr::summarise(FemaleID = dplyr::case_when(dplyr::n_distinct(.data$MotherRing) > 1 ~ NA_character_,
+                                                 TRUE ~ unique(.data$MotherRing)),
+                     MaleID = dplyr::case_when(dplyr::n_distinct(.data$FatherRing) > 1 ~ NA_character_,
+                                               TRUE ~ unique(.data$FatherRing)),
                      AvgChickMass = round(mean(Mass[ChickAge <= 16L & ChickAge >= 14L], na.rm = TRUE),1),
                      NumberChicksMass = sum(ChickAge <= 16L & ChickAge >= 14L & is.na(Mass) == F),
                      AvgTarsus = round(mean(Tarsus[ChickAge <= 16L & ChickAge >= 14L ], na.rm = TRUE),1),
-                     NumberChicksTarsus = sum(ChickAge <= 16L & ChickAge >= 14L & is.na(Tarsus) == F)) %>%
+                     NumberChicksTarsus = sum(ChickAge <= 16L & ChickAge >= 14L & is.na(Tarsus) == F),
+                     .groups = "keep") %>%
+    dplyr::distinct() %>%
 
     ## Replace NaNs and 0 with NA
     dplyr::mutate(dplyr::across(where(is.numeric), ~dplyr::na_if(., "NaN")),
