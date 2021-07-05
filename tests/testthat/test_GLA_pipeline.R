@@ -81,10 +81,10 @@ test_that("Brood_data returns an expected outcome...", {
                       & LocationID == "704")$LayDate_observed, as.Date("2014-04-25"))
   expect_equal(subset(GLA_data, BreedingSeason == "2014"
                       & PopID == "GAR"
-                      & LocationID == "704")$LayDate_min, as.Date("2014-04-25"))
+                      & LocationID == "704")$LayDate_min, lubridate::NA_Date_)
   expect_equal(subset(GLA_data, BreedingSeason == "2014"
                       & PopID == "GAR"
-                      & LocationID == "704")$LayDate_max, as.Date("2014-05-04"))
+                      & LocationID == "704")$LayDate_max, lubridate::NA_Date_)
 
   ## Case where there were multiple clutches laid at the same location
   expect_equal(nrow(subset(GLA_data, BreedingSeason == "2019"
@@ -142,23 +142,23 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(GLA_data,
                       BreedingSeason == "2014"
                       & PopID == "GAR"
-                      & LocationID == "710")$LayDate_max, as.Date("2014-05-16"))
+                      & LocationID == "710")$LayDate_max, lubridate::NA_Date_)
   expect_equal(subset(GLA_data,
                       BreedingSeason == "2014"
                       & PopID == "GAR"
-                      & LocationID == "729")$LayDate_max, as.Date("2014-05-01"))
+                      & LocationID == "729")$LayDate_max, lubridate::NA_Date_)
   expect_equal(subset(GLA_data,
                       BreedingSeason == "2014"
                       & PopID == "GAR"
-                      & LocationID == "724")$LayDate_min, as.Date("2014-05-01"))
+                      & LocationID == "724")$LayDate_min, lubridate::NA_Date_)
   expect_equal(subset(GLA_data,
                       BreedingSeason == "2015"
                       & PopID == "GAR"
-                      & LocationID == "724")$LayDate_min, as.Date("2015-05-08"))
+                      & LocationID == "724")$LayDate_min, lubridate::NA_Date_)
   expect_equal(subset(GLA_data,
                       BreedingSeason == "2017"
                       & PopID == "SAL"
-                      & LocationID == "227")$LayDate_min, as.Date("2017-04-30"))
+                      & LocationID == "227")$LayDate_min, lubridate::NA_Date_)
 
   ## Check experiment groups
   expect_equal(subset(GLA_data,
