@@ -1,4 +1,6 @@
-context("Run data quality check on Kilingi Nomme, Estonia, pipeline output")
+testthat::skip_if(!exists("data_path"))
+
+pipeline_output <- format_KIL(db = paste0(data_path, "/KIL_KilingiNomme_Estonia"))
 
 test_that("KIL outputs all files...", {
   expect_true("KIL" %in% pipeline_output$Brood_data$PopID)

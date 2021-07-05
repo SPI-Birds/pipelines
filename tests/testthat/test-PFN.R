@@ -1,7 +1,8 @@
-context("Run data quality check on East Dartmoor pipeline output")
+testthat::skip_if(!exists("data_path"))
+
+pipeline_output <- format_PFN(db = paste0(data_path, "/PFN_PiedFlyNet_UK"))
 
 PFN_PopIDs <- c('DIN', 'EDM', 'KAT', 'NAG', 'OKE', 'TEI')
-
 
 test_that("format_PFN outputs all tables...", {
 

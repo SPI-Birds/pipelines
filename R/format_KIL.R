@@ -44,6 +44,14 @@ format_KIL <- function(db = choose_directory(),
                        path = ".",
                        output_type = "R"){
 
+  #Avoid with scientific notation (creates unusable IDs)
+  original_options <- options(scipen = 200)
+  #Make sure we revert back to original scientific notation afterwards
+  #Otherwise, we are overwriting the users local settings
+  on.exit(options(original_options), add = TRUE, after = FALSE)
+  ## TODO: If there are multiple option/setup changes we need to make, this could be in
+  # a function (e.g. pipeline_setup)
+
   #Force user to select directory
   force(db)
 
