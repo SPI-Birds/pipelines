@@ -1,4 +1,6 @@
-context("Run data quality check on Wytham Woods pipeline output")
+testthat::skip_if(!exists("data_path"))
+
+pipeline_output <- format_WYT(db = paste0(data_path, "/WYT_WythamWoods_UK"))
 
 test_that("WYT outputs all files...", {
 

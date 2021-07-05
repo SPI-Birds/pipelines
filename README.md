@@ -339,9 +339,7 @@ Below we describe the workflow that any developer should follow when building a 
 
 Every pipeline should have a set of unit tests in the /test/testthat folder using the `testthat` package.
 
-- The unit testing code for each pipeline should be stored in a file `test_X_pipeline.R`, where X is the data owner code. The unit tests should ensure that primary data has been properly converted to the standard format. This will usually involve comparing the values for a range of different individuals in the standard format (e.g. different species, different sex) to those that would be expected from the primary data. In other words, these tests require some *manual* inspection of the primary data to determine the correct output expected for each individual. 
-
-- In addition, all PopIDs from the current pipeline (*Note* PopIDs NOT data owner code) should be added to l. 34 - 45 in the file `setup-xyz.R`. This will ensure that the new pipeline is run during checks and test described below.
+- The unit testing code for each pipeline should be stored in a file `test-XXX.R`, where XXX is the data owner code. The file should start with an option to skip if the data path is missing. It should then run the corresponding `format_XXX()` function for the pipeline, followed by the required tests. Unit tests should ensure that primary data has been properly converted to the standard format. This will usually involve comparing the values for a range of different individuals in the standard format (e.g. different species, different sex) to those that would be expected from the primary data. In other words, these tests require some *manual* inspection of the primary data to determine the correct output expected for each individual.
 
 - Each pipeline should undergo five sets of unit tests:
     - Test standard format structure. Have the four tables Brood_data, Capture_data, Individual_data, and Location_data been created.
@@ -350,27 +348,28 @@ Every pipeline should have a set of unit tests in the /test/testthat folder usin
     - Test individual data.
     - Test location data.
     
-- Once tests are written for your pipeline, check your pipeline output passes all these tests! Once you are confident your pipeline passes the tests you can then check that all other tests are still passing.
+- See examples from completed pipelines to better understand the structure of unit testing code.
     
-### `devtools::test()`
+### `test_pipeline()`
 
-Once you have finished the pipeline and passed relevant unit tests you should run the unit tests for *all* existing pipelines. This can be time consuming and a bit annoying, but it is important to regularly test all pipelines in case old code has broken due to e.g. package updates.
+Once you have finished the pipeline and written relevant unit tests you should make sure these tests pass.
 
-*Note* To save time, we would recommend you run all pipelines using the `run_pipelines()` function (see code in l. 34 - 45 of `tests/testthat/setup-xyz.R`.) and save the output as `inst/extdata/test_data.RDS`. Assuming all tests pass, this file can will then be used every time in the checks instead of having to re-run pipelines every time.
+- Firstly, run unit tests just for your new pipeline. In the console type `test_pipeline(filter = "XXX")`, where XXX is the data owner code of your new pipeline.
 
-To run all unit tests you can use the code `devtools::test()` or Ctrl/Cmd + Shift + T to run the tests in the build window.
+- Once your pipeline passes the relevant tests next run the unit tests for *all* existing pipelines by removing the filter argument: `test_pipeline()`. This can be time consuming and a bit annoying, but it is important to regularly test all pipelines in case old code has broken due to e.g. package updates.
+
+- If one or more tests fail you can fix them and trouble shoot using the filter argument as shown above. To test more than one pipeline simultaneously use `test_pipeline(filter = "XXX|YYY")`, where XXX and YYY are two different data owner codes.
 
 ### `devtools::check()`
 
-Once your branch is passing all unit tests you should next check the package structure. This will more broadly check things like the documentation, check for unreadable characters, ensure all the code can be loaded. It will also involve running the unit tests again, so it would be advisable to generate the `inst/extdata/test_data.RDS` file before running the checks.
+Once your branch is passing all unit tests you should next check the package structure. This will more broadly check things like the documentation, check for unreadable characters, ensure all the code can be loaded. This will *not* re-run the pipeline unit tests, which are skipped at this stage.
 
-- You can check the code using `devtools::check()` or Ctrl/Cmd + Shift + E to run the tests in the build window.
+- You can check the code using `devtools::check()` or Ctrl/Cmd + Shift + E to run the checks in the build window.
 
 - Currently, the output of `devtools::check()` should include 2 known notes:
 
 ```
-checking package dependencies (4.3s)
-Imports includes 26 non-default packages.
+Imports includes 27 non-default packages.
 Importing from so many packages makes the package vulnerable to any of
 them becoming unavailable.  Move as many as possible to Suggests and
 use conditionally.
@@ -378,23 +377,13 @@ use conditionally.
 
 Package dependencies are discussed in more detail below.
 
-```
-N  checking installed package size ... 
-     installed size is 30.2Mb
-     sub-directories of 1Mb or more:
-       data      1.7Mb
-       extdata  27.7Mb
-```
-
-Package size is discussed in more detail below.
-
 - *Any other ERRORS, WARNINGS, or NOTES must be fixed before continuing! Pull requests will not be accepted otherwise.*
 
 #### Tips for passing `devtools::check()`
 
 ##### "no visible binding for global variable"
 
-This will often occur when working with `dplyr` code. All columns should be prefixed by `.data$`.
+This will often occur when working with `dplyr` code. All references to columns in a data frame should be prefixed by `.data$`.
 
 ##### "no visible global function"
 
@@ -402,7 +391,7 @@ All functions except those in the `base` package should have the package namespa
 
 ##### "Undocumented arguments in documentation object 'XXX'"
 
-The function XXX includes and argument that is not documented with `@param` in the roxygen2 documentation code. Check for spelling mistakes!
+The function XXX includes an argument that is not documented with `@param` in the roxygen2 documentation code. Check for spelling mistakes!
 
 ##### "Documented arguments not in \usage in documentation object 'XXX'"
 
@@ -420,7 +409,7 @@ stringi::stri_enc_mark("ABC")
 stringi::stri_enc_mark("是")
 ```
 
-Watch out for cases where slanted quotation marks are used (‘’) instead of straight ones ('')! Slanted quotation marks can often be introduced when copying text from outside R, but they are NOT ASCII.
+Watch out for cases where slanted quotation marks are used (‘’) instead of straight ones ('')! Slanted quotation marks can often be introduced when copying text from outside R, but they are **NOT ASCII**.
 
 If a non-ASCII character must be used, it can be encoded with unicode `\uxxxx`.
 

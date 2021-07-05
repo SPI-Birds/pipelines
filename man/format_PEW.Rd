@@ -52,6 +52,9 @@ the information reflecting the sex, nestbox and year (i.e. "Unknown_M2019NestK97
 Those IndvID were unified as "unringed" and are included in the Brood_data,
 but not included in the Individual_data.
 
+\strong{ClutchSize_observed} Where clutch size has ?, recorded value is used
+as ClutchSize_observed. ClutchSize_min/max is defined by No of chicks D3.
+
 \strong{NumberFledged} Information provided by the data owner: The number of
 fledged nestlings were not consistently monitored. However, nestlings were
 ringed at day 14, so very close to fledging. In almost all cases, the number
