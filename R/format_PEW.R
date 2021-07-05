@@ -330,7 +330,7 @@ create_brood_PEW <- function(data) {
 
     #### Create new variables
     dplyr::mutate(Plot = NA_character_,
-                  LayDate_observed = DateEgg1, ## for new version of calc_clutchtype
+                  LayDate_observed = .data$DateEgg1, ## for new version of calc_clutchtype
                   LayDate_min = as.Date(NA),
                   LayDate_max = as.Date(NA),
                   #If there is a ? in clutch size, ignore it for observed.
