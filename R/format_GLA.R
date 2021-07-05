@@ -314,6 +314,7 @@ create_brood_GLA <- function(nest_data, rr_data) {
     dplyr::group_by(.data$BreedingSeason, .data$PopID, .data$Species, .data$LocationID) %>%
 
     ## If any chicks reach the age where they can be ringed at a nest box, that nest box will not be used again in the breeding season
+    ## As such, for each location with chicks, there is only going to be one FemaleID and one MaleID
     ## In one case (2020 - SCE - CYACAE - 107), the mother ID is not assigned for all chicks, but is set to NA for one chick
     dplyr::summarise(FemaleID = names(which.max(table(.data$MotherRing, useNA = "always"))),
                      MaleID = names(which.max(table(.data$FatherRing, useNA = "always"))),

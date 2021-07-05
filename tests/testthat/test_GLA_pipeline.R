@@ -166,7 +166,6 @@ test_that("Brood_data returns an expected outcome...", {
                       & PopID == "KEL"
                       & LocationID == "548")$ExperimentID, "PARENTAGE")
 
-
   expect_equal(subset(GLA_data,
                       BreedingSeason == "2016"
                       & PopID == "KEL"
@@ -187,12 +186,18 @@ test_that("Brood_data returns an expected outcome...", {
                       & PopID == "SAL"
                       & LocationID == "229")$ExperimentID, "COHORT")
 
+  ## Check incorrect IDs
+  expect_equal(subset(GLA_data,
+                      BreedingSeason == "2018"
+                      & PopID == "SCE"
+                      & LocationID == "51")$MaleID, NA_character_)
+
+
 
 
 })
 
 test_that("Capture_data returns an expected outcome...", {
-
 
   #Take a subset of only GLA data
   GLA_data <- dplyr::filter(pipeline_output$Capture_data, CapturePopID %in% c("CAS", "GAR", "KEL", "SAL", "SCE"))
@@ -205,12 +210,15 @@ test_that("Capture_data returns an expected outcome...", {
   expect_equal(subset(GLA_data, IndvID == "ACJ2314")$BreedingSeason, 2020) # Should be 2019
   expect_equal(subset(GLA_data, IndvID == "ACJ2314")$Age_observed, 1) # Should be 1
 
-  # Case where individual recorded at different locations in nest and ringing data
+  ## Case where individual recorded at different locations in nest and ringing data
   expect_equal(nrow(subset(GLA_data, IndvID == "S034047" & BreedingSeason <= 2018)), 3) # Three records
   expect_equal(subset(GLA_data, IndvID == "S034047" &
                         BreedingSeason == 2017)$Sex_observed, "F") # Female
   expect_equal(subset(GLA_data, IndvID == "S034047" &
                         CaptureDate == as.Date("2018-05-01"))$LocationID, "65") # LocationID 65
+
+  ## Check that all IndvIDs conform to expected format
+  expect_true(all(stringr::str_detect(subset(Capture_data)$IndvID, "^[[:digit:][:alpha:]]{7}$")))
 
 })
 
