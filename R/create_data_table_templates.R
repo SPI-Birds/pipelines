@@ -1,56 +1,12 @@
-## Capture data template
-capture_data_template <- tibble::tibble(CaptureID = NA_character_, ## Missing data not allowed
-                                        IndvID = NA_character_, ## Missing data not allowed
-                                        Species = NA_character_, ## Missing data not allowed
-                                        Sex_observed = NA_character_,
-                                        BreedingSeason = NA_integer_, ## Missing data not allowed
-                                        CaptureDate = as.Date(NA), ## Missing data not allowed
-                                        CaptureTime = NA_character_,
-                                        ObserverID = NA_character_,
-                                        LocationID = NA_character_,
-                                        CaptureAlive = NA,
-                                        ReleaseAlive = NA,
-                                        CapturePopID = NA_character_, ## Missing data not allowed
-                                        CapturePlot = NA_character_,
-                                        ReleasePopID = NA_character_, ## Missing data only allowed if ReleaseAlive is False
-                                        ReleasePlot = NA_character_, ## Missing data only allowed if ReleaseAlive is False
-                                        Mass = NA_real_,
-                                        Tarsus = NA_real_,
-                                        OriginalTarsusMethod = NA_character_,
-                                        WingLength = NA_real_,
-                                        Age_observed = NA_integer_,
-                                        Age_calculated = NA_integer_,
-                                        ChickAge = NA_integer_,
-                                        ExperimentID = NA_character_)
-
-## Save
-save(capture_data_template, file = "./data/Capture_data_template.RData")
-
-########################################################################
-########################################################################
-
-## Individual data template
-individual_data_template <- tibble::tibble(IndvID = NA_character_, ## Missing data not allowed
-                                           Species = NA_character_, ## Missing data not allowed
-                                           PopID = NA_character_, ## Missing data not allowed
-                                           BroodIDLaid = NA_character_,
-                                           BroodIDFledged = NA_character_,
-                                           RingSeason = NA_integer_,
-                                           RingAge = NA_character_,
-                                           Sex_calculated = NA_character_,
-                                           Sex_genetic = NA_character_)
-
-## Save
-save(individual_data_template, file = "./data/Individual_data_template.RData")
-
-########################################################################
-########################################################################
+## Define templates for each of the standard data tables
+## Protocol version 1.1.0
+## Dummy values are entered for columns that cannot contain NAs
 
 ## Brood data template
-brood_data_template <- tibble::tibble(BroodID = NA_character_, ## Missing data not allowed
-                                      PopID = NA_character_, ## Missing data not allowed
-                                      BreedingSeason = NA_integer_, ## Missing data not allowed
-                                      Species = NA_character_, ## Missing data not allowed
+brood_data_template <- tibble::tibble(BroodID = as.character("POP-1"), ## Missing data not allowed
+                                      PopID = as.character("POP"), ## Missing data not allowed
+                                      BreedingSeason = as.integer(2021), ## Missing data not allowed
+                                      Species = as.character("SPECIES"), ## Missing data not allowed
                                       Plot = NA_character_,
                                       LocationID = NA_character_,
                                       FemaleID = NA_character_,
@@ -87,14 +43,54 @@ brood_data_template <- tibble::tibble(BroodID = NA_character_, ## Missing data n
 ## Save
 save(brood_data_template, file = "./data/Brood_data_template.RData")
 
-########################################################################
-########################################################################
+## Capture data template
+capture_data_template <- tibble::tibble(CaptureID = as.character("POP"), ## Missing data not allowed
+                                        IndvID = as.character("INDV00"), ## Missing data not allowed
+                                        Species = as.character("SPECIES"), ## Missing data not allowed
+                                        Sex_observed = NA_character_,
+                                        BreedingSeason = as.integer(2021), ## Missing data not allowed
+                                        CaptureDate = as.Date("2021-04-01"), ## Missing data not allowed
+                                        CaptureTime = NA_character_,
+                                        ObserverID = NA_character_,
+                                        LocationID = NA_character_,
+                                        CaptureAlive = NA,
+                                        ReleaseAlive = NA,
+                                        CapturePopID = as.character("POP"), ## Missing data not allowed
+                                        CapturePlot = NA_character_,
+                                        ReleasePopID = ifelse(ReleaseAlive == F, NA_character_, CapturePopID), ## Missing data only allowed if ReleaseAlive is False
+                                        ReleasePlot = NA_character_, ## Missing data only allowed if ReleaseAlive is False
+                                        Mass = NA_real_,
+                                        Tarsus = NA_real_,
+                                        OriginalTarsusMethod = NA_character_,
+                                        WingLength = NA_real_,
+                                        Age_observed = NA_integer_,
+                                        Age_calculated = NA_integer_,
+                                        ChickAge = NA_integer_,
+                                        ExperimentID = NA_character_)
+
+## Save
+save(capture_data_template, file = "./data/Capture_data_template.RData")
+
+
+## Individual data template
+individual_data_template <- tibble::tibble(IndvID = as.character("INDV00"), ## Missing data not allowed
+                                           Species = as.character("SPECIES"), ## Missing data not allowed
+                                           PopID = as.character("POP"), ## Missing data not allowed
+                                           BroodIDLaid = NA_character_,
+                                           BroodIDFledged = NA_character_,
+                                           RingSeason = as.integer(2021), ## Missing data not allowed
+                                           RingAge = NA_character_,
+                                           Sex_calculated = NA_character_,
+                                           Sex_genetic = NA_character_)
+
+## Save
+save(individual_data_template, file = "./data/Individual_data_template.RData")
 
 ## Location
-location_data_template <- tibble::tibble(LocationID = NA_character_, ## Missing data not allowed
-                                         NestboxID = NA_character_, ## Missing data  allowed  for some species
-                                         LocationType = NA_character_, ## Missing data not allowed
-                                         PopID = NA_character_, ## Missing data not allowed
+location_data_template <- tibble::tibble(LocationID = as.character("NEST"), ## Missing data not allowed
+                                         NestboxID = NA_character_, ## Missing data allowed  for some species
+                                         LocationType = as.character("NET"), ## Missing data not allowed
+                                         PopID = as.character("POP"), ## Missing data not allowed
                                          Latitude = NA_real_,
                                          Longitude = NA_real_,
                                          StartSeason = NA_integer_,
