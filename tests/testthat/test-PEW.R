@@ -185,3 +185,72 @@ test_that("Location_data returns an expected outcome...", {
 
 })
 
+
+## General tests (for pipelines formatted to standard protocol version 1.1.0)
+
+test_that("Column classes are as expected", {
+
+  ## Will be false if column classes do not match and will be an error if data frame dimensions are not equal
+
+  ## Brood data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Brood")
+
+  ## Capture data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Capture")
+
+  ## Individual data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Individual")
+
+  ## Location data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Location")
+
+})
+
+test_that("ID columns match the expected format for the pipeline", {
+
+  ## FemaleID format is as expected
+  test_ID_format(pipeline_output, ID_col = "FemaleID", ID_format = "^[:digit:]+$")
+
+  ## MaleID format is as expected
+  test_ID_format(pipeline_output, ID_col = "MaleID", ID_format = "^[:digit:]+$")
+
+  ## IndvID format in Capture data  is as expected
+  test_ID_format(pipeline_output, ID_col = "C-IndvID", ID_format = "^[:digit:]+$")
+
+  ## IndvID format in Individual data is as expected
+  test_ID_format(pipeline_output, ID_col = "I-IndvID", ID_format = "^[:digit:]+$")
+
+})
+
+
+test_that("Key columns only contain unique values", {
+
+  ## BroodID has only unique values
+  test_unique_values(pipeline_output, "BroodID")
+
+  ## CaptureID has only unique values
+  test_unique_values(pipeline_output, "CaptureID")
+
+  ## PopID-IndvID has only unique values
+  test_unique_values(pipeline_output, "PopID-IndvID")
+
+})
+
+
+test_that("Key columns in each table do not have NAs", {
+
+  ## Brood
+  test_NA_columns(pipeline_output, "Brood")
+
+  ## Capture
+  test_NA_columns(pipeline_output, "Capture")
+
+  ## Individual
+  test_NA_columns(pipeline_output, "Individual")
+
+  ## Location
+  test_NA_columns(pipeline_output, "Location")
+
+})
+
+
