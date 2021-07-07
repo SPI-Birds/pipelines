@@ -206,6 +206,7 @@ test_that("Column classes are as expected", {
 
 })
 
+
 test_that("ID columns match the expected format for the pipeline", {
 
   ## FemaleID format is as expected
@@ -254,3 +255,18 @@ test_that("Key columns in each table do not have NAs", {
 })
 
 
+test_that("Categorical columns do not have unexpected values", {
+
+  ## Brood
+  test_category_columns(pipeline_output, "Brood")
+
+  ## Capture
+  test_category_columns(pipeline_output, "Capture")
+
+  ## Individual
+  test_category_columns(pipeline_output, "Individual")
+
+  ## Location
+  test_category_columns(pipeline_output, "Location")
+
+})
