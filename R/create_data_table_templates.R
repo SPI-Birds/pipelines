@@ -11,8 +11,8 @@ brood_data_template <- tibble::tibble(BroodID = as.character("POP-1"), ## Missin
                                       LocationID = NA_character_,
                                       FemaleID = NA_character_,
                                       MaleID = NA_character_,
-                                      ClutchType_observed = NA_character_,
-                                      ClutchType_calculated = NA_character_,
+                                      ClutchType_observed = c("first","second","replacement",NA,NA,NA),
+                                      ClutchType_calculated = c("first","second","replacement",NA,NA,NA),
                                       LayDate_observed = as.Date(NA),
                                       LayDate_min = as.Date(NA),
                                       LayDate_max = as.Date(NA),
@@ -37,8 +37,8 @@ brood_data_template <- tibble::tibble(BroodID = as.character("POP-1"), ## Missin
                                       NumberChicksMass = NA_integer_,
                                       AvgTarsus = NA_real_,
                                       NumberChicksTarsus = NA_integer_,
-                                      OriginalTarsusMethod = NA_character_,
-                                      ExperimentID = NA_character_)
+                                      OriginalTarsusMethod = c("Alternative", "Standard", "Oxford", NA, NA, NA),
+                                      ExperimentID = c("PHENOLOGY","COHORT", "PARENTAGE", "SURVIVAL", "OTHER", NA))
 
 ## Save
 save(brood_data_template, file = "./data/Brood_data_template.RData")
@@ -66,7 +66,7 @@ capture_data_template <- tibble::tibble(CaptureID = as.character("POP"), ## Miss
                                         Age_observed = NA_integer_,
                                         Age_calculated = NA_integer_,
                                         ChickAge = NA_integer_,
-                                        ExperimentID = NA_character_)
+                                        ExperimentID = c("PHENOLOGY","COHORT", "PARENTAGE", "SURVIVAL", "OTHER", NA))
 
 ## Save
 save(capture_data_template, file = "./data/Capture_data_template.RData")
@@ -79,9 +79,9 @@ individual_data_template <- tibble::tibble(IndvID = as.character("INDV00"), ## M
                                            BroodIDLaid = NA_character_,
                                            BroodIDFledged = NA_character_,
                                            RingSeason = as.integer(2021), ## Missing data not allowed
-                                           RingAge = NA_character_,
-                                           Sex_calculated = NA_character_,
-                                           Sex_genetic = NA_character_)
+                                           RingAge = c("chick", "adult", NA, NA),
+                                           Sex_calculated = c("M","F","C", NA),
+                                           Sex_genetic = c("M","F","C", NA))
 
 ## Save
 save(individual_data_template, file = "./data/Individual_data_template.RData")
@@ -89,13 +89,13 @@ save(individual_data_template, file = "./data/Individual_data_template.RData")
 ## Location
 location_data_template <- tibble::tibble(LocationID = as.character("NEST"), ## Missing data not allowed
                                          NestboxID = NA_character_, ## Missing data allowed  for some species
-                                         LocationType = as.character("NET"), ## Missing data not allowed
+                                         LocationType = c("NB", "MN", NA, NA, NA), ## Missing data not allowed
                                          PopID = as.character("POP"), ## Missing data not allowed
                                          Latitude = NA_real_,
                                          Longitude = NA_real_,
                                          StartSeason = NA_integer_,
                                          EndSeason = NA_integer_,
-                                         HabitatType = NA_character_)
+                                         HabitatType = c("deciduous","evergreen","mixed", "urban", NA))
 
 ## Save
 save(location_data_template, file = "./data/Location_data_template.RData")
