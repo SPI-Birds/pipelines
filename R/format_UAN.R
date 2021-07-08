@@ -466,7 +466,7 @@ create_capture_UAN <- function(data, species_filter, pop_filter){
 
                                          }
 
-                                       #If age is > 5 this is the chick age in days
+                                         #If age is > 5 this is the chick age in days
                                        } else if(..1 > 5){
 
                                          return(tibble::tibble(Age_observed_new = 1, ChickAge = ..1))
@@ -583,13 +583,13 @@ create_individual_UAN <- function(data, Capture_data, species_filter){
 #' Create location data table in standard format for data from University of
 #' Antwerp, Belgium.
 #'
-#' @param data Data frame. Primary data from University of Antwerp.
+#' @param BOX_info Data frame. Primary data from University of Antwerp.
 #'
 #' @return A data frame.
 
-create_location_UAN <- function(data){
+create_location_UAN <- function(BOX_info){
 
-  Location_data <- data %>%
+  Location_data <- BOX_info %>%
     dplyr::mutate(LocationID = GBPL,
                   LocationType = dplyr::case_when(TYPE %in% c("pc", "pm", "cb") | is.na(TYPE) ~ "NB",
                                                   TYPE == "FPT" ~ "FD",
@@ -619,7 +619,15 @@ create_location_UAN <- function(data){
   Location_data$'TRUE'$Latitude <- true_coords[, 2]
 
   Location_data <- dplyr::bind_rows(Location_data) %>%
-    dplyr::select(-HasCoords, -Latitude_Lambert, -Longitude_Lambert)
+    dplyr::select(LocationID,
+                  NestboxID,
+                  LocationType,
+                  PopID,
+                  Latitude,
+                  Longitude,
+                  StartSeason,
+                  EndSeason,
+                  Habitat)
 
   return(Location_data)
 
