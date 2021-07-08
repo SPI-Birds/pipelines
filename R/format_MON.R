@@ -894,12 +894,16 @@ create_individual_MON <- function(Capture_data, Brood_data, verbose){
     dplyr::filter(n > 1) %>%
     dplyr::pull(IndvID)
 
-  purrr::pwalk(.l = list(duplicates),
-               ~{
+  #If we are showing warnings, return this warning message
+  ## TODO: Maybe this should be removed so it can be picked up by quality checks
+  if (verbose) {
 
+    purrr::pwalk(.l = list(duplicates),
+                 ~{
                  message(glue::glue("Individual {duplicate} has more than one potential BroodID", duplicate = ..1))
+                 })
 
-               })
+  }
 
   #For any duplicate cases, we just take the first, which should be the most recent one
   Individual_data <- Individual_data_single_records %>%
