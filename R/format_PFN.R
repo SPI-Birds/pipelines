@@ -417,13 +417,13 @@ create_brood_PFN <- function(Nest_data, ReRingTable, badIDs){
                   ClutchType_observed = dplyr::case_when(.data$CltCd == "1" ~ "first",
                                                 .data$CltCd == "2" ~ "replacement",
                                                 .data$CltCd == "3" ~ "second"),
-                  LayDate = as.Date(paste('31/03/', .data$BreedingSeason, sep = ''), format = "%d/%m/%Y") + as.numeric(.data$DFE),
+                  LayDate_observed = as.Date(paste('31/03/', .data$BreedingSeason, sep = ''), format = "%d/%m/%Y") + as.numeric(.data$DFE),
                   ClutchSize = dplyr::case_when(as.integer(.data$CltSize) > 0 ~ as.integer(.data$CltSize),
                                                 as.integer(.data$CltSize) == 0 | is.na(.data$CltSize) ~ NA_integer_),
                   ClutchSize_min = dplyr::case_when(is.na(.data$CltSize) | as.integer(.data$CltSize) == 0 ~ suppressWarnings(pmax(as.integer(.data$MinEggs), as.integer(.data$UnHatch)+as.integer(.data$Hatch), as.integer(.data$UnHatch)+as.integer(.data$Fledged), na.rm = TRUE))),
                   HatchDate = as.Date(paste('31/03/', .data$BreedingSeason, sep = ''), format = "%d/%m/%Y") + as.numeric(.data$DH),
                   BroodSize = as.integer(.data$Hatch),
-                  NumberFledged = as.integer(.data$Fledged),
+                  NumberFledged_observed = as.integer(.data$Fledged),
                   ChickAge = as.integer(as.Date(.data$YoungDate, format = "%d/%m/%Y") - .data$HatchDate)) %>%
 
     # Note on ClutchSize_min: In cases in which clutch size was either not recorded, or recorded as 0 (e.g. when clutches were laid but not incubated).
@@ -435,7 +435,7 @@ create_brood_PFN <- function(Nest_data, ReRingTable, badIDs){
     #                         laying date (i.e. number of fledlings (+ number of unhatched eggs) <= number of hatched eggs (+ number of unhatched eggs) <= number of laid eggs)
 
     # 3) Add columns that are based on calculations
-    dplyr::arrange(.data$BreedingSeason, .data$FemaleID, .data$LayDate)
+    dplyr::arrange(.data$BreedingSeason, .data$FemaleID, .data$LayDate_observed)
     # --> This sorting is required for the function "calc_clutchtype" to work
 
   ## 3.1) Calculate and add means and observation numbers for fledgling weight/tarsus length
@@ -464,13 +464,12 @@ create_brood_PFN <- function(Nest_data, ReRingTable, badIDs){
 
   ## 3.2) Add other calculated columns
   Brood_data <- Brood_data %>%
-    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = Brood_data, na.rm = FALSE))
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = Brood_data, na.rm = FALSE, protocol_version = "1.1"))
 
   # 4) Rename columns and add columns without data
   Brood_data <- Brood_data %>%
       dplyr::mutate(NumberChicksMass = .data$NumberChickMass,
                     NumberChicksTarsus = .data$NumberTarsus,
-                    LayDate_observed = .data$LayDate,
                     LayDate_min = as.Date(NA),
                     LayDate_max = as.Date(NA),
                     ClutchSize_observed = .data$ClutchSize,
@@ -484,7 +483,6 @@ create_brood_PFN <- function(Nest_data, ReRingTable, badIDs){
                     FledgeDate_observed = as.Date(NA),
                     FledgeDate_min = as.Date(NA),
                     FledgeDate_max = as.Date(NA),
-                    NumberFledged_observed = .data$NumberFledged,
                     NumberFledged_min = NA_integer_,
                     NumberFledged_max = NA_integer_,
                     AvgEggMass =  NA_real_,

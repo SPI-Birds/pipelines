@@ -29,8 +29,8 @@ test_that("Initial archiving works...", {
 
   #Check that data has been moved correctly
   #It should be the same in both the data and original
-  expect_equal(read.csv(paste0(main_folder, "/NEW_testpop/NEW_PrimaryData_XXX.csv")) %>% pull(Col2), c(1, 2, 3))
-  expect_equal(read.csv(paste0(main_folder, "/NEW_testpop/archive/", date_folder, "/NEW_PrimaryData_XXX.csv")) %>% pull(Col2), c(1, 2, 3))
+  expect_equal(read.csv(paste0(main_folder, "/NEW_testpop/NEW_PrimaryData_XXX.csv")) %>% dplyr::pull(Col2), c(1, 2, 3))
+  expect_equal(read.csv(paste0(main_folder, "/NEW_testpop/archive/", date_folder, "/NEW_PrimaryData_XXX.csv")) %>% dplyr::pull(Col2), c(1, 2, 3))
 
   #Check that metadata is correct in both original and archive folder
   expect_equal(read.delim(paste0(main_folder, "/NEW_testpop/NEW_ArchiveMetaData.txt"), sep = "", header = FALSE),

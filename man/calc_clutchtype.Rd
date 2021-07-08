@@ -4,10 +4,13 @@
 \alias{calc_clutchtype}
 \title{Calculate clutch type (when laying date is in date format)}
 \usage{
-calc_clutchtype(data, na.rm = FALSE)
+calc_clutchtype(data, protocol_version = "1.0", na.rm = FALSE)
 }
 \arguments{
 \item{data}{Data frame. Brood data to use for conversion}
+
+\item{protocol_version}{Character string. The protocol version of the SPI Birds
+standard data being used to process the primary data. Either "1.0" (default) or "1.1".}
 
 \item{na.rm}{Logical. Should NA's be removed and treated as 0s. If FALSE, NAs
 are treated as true unknowns. If TRUE, NAs are treated as 0s.}
@@ -31,6 +34,7 @@ BreedingSeason = sample(c(seq(2000, 2012, 1)), size = 100, replace = TRUE),
 LayDate = as.Date(paste(BreedingSeason,
                            sample(c(4, 5, 6), size = 100, replace = TRUE),
                            sample(seq(1, 31, 1), size = 100, replace = TRUE), sep = "-"),
-                           format = "\%Y-\%m-\%d"))
+                           format = "\%Y-\%m-\%d"),
+LayDate_observed = LayDate)
 calc_clutchtype(data = dat, na.rm = FALSE)
 }
