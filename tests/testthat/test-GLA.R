@@ -1,4 +1,6 @@
-context("Run data quality check on Glasgow, Scotland, pipeline output")
+testthat::skip_if(!exists("data_path"))
+
+pipeline_output <- format_GLA(db = paste0(data_path, "/GLA_Glasgow_Scotland"))
 
 test_that("GLA outputs all files...", {
 
@@ -218,7 +220,7 @@ test_that("Capture_data returns an expected outcome...", {
                         CaptureDate == as.Date("2018-05-01"))$LocationID, "65") # LocationID 65
 
   ## Check that all IndvIDs conform to expected format
-  expect_true(all(stringr::str_detect(subset(Capture_data)$IndvID, "^[[:digit:][:alpha:]]{7}$")))
+  expect_true(all(stringr::str_detect(subset(GLA_data)$IndvID, "^[[:digit:][:alpha:]]{7}$")))
 
 })
 
