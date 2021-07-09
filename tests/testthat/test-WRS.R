@@ -1,6 +1,6 @@
-pipeline_output <- format_WRS(db = paste0(data_path, "/WRS_Warsaw_Poland"))
+testthat::skip_if(!exists("data_path"))
 
-context("Run data quality check on Warswaw, Poland, pipeline output")
+pipeline_output <- format_WRS(db = paste0(data_path, "/WRS_Warsaw_Poland"))
 
 test_that("WRS outputs all files...", {
 
