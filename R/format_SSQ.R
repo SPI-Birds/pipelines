@@ -6,14 +6,13 @@
 #'
 #' This section provides details on data management choices that are unique to
 #' this data. For a general description of the standard format please see
-#'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
+#'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 #'
 #' \strong{BroodID}: Unique BroodID is constructed using:
 #' BreedingSeason_LocationID_LayDate (April days)
 #'
 #' \strong{Species}: In the individual data, there are some cases where an
-#' IndvID is associated with >1 species. I assume these are just typos and I
-#' will just take the first species.
+#' IndvID is associated with >1 species. These are considered conflicted species.
 #'
 #' \strong{CaptureDate}: No exact capture date is currently given. For adults we
 #' use the laying date of the nest as a proxy for capture date. Chicks were only
@@ -47,7 +46,7 @@ format_SSQ <- function(db = choose_directory(),
   #Force user to select directory
   force(db)
 
-  db <- paste0(db, "/SSQ_PrimaryData.xlsx")
+  SSQ_data <- paste0(db, "/SSQ_PrimaryData.xlsx")
 
   if(is.null(species)){
 
@@ -59,23 +58,25 @@ format_SSQ <- function(db = choose_directory(),
   start_time <- Sys.time()
 
   #Read in data with readxl
-  all_data <- readxl::read_excel(db) %>%
+  all_data <- readxl::read_excel(SSQ_data) %>%
     #Clean all names with janitor to snake_case
     janitor::clean_names(case = "upper_camel") %>%
     #Remove the column 'Row'. This is just the row number, we have this already.
-    dplyr::select(-Row) %>%
+    dplyr::select(-.data$Row) %>%
     janitor::remove_empty(which = "rows") %>%
     #Change column names to match consistent naming
-    dplyr::mutate(BreedingSeason = as.integer(Year), LayDate = Ld, ClutchSize = as.integer(Cs),
-                  HatchDate = Hd, BroodSize = as.integer(Hs), NumberFledged = as.integer(Fs),
-                  FemaleID = FId, MaleID = MId, LocationID = NestId,
-                  Plot = HabitatOfRinging,
-                  Latitude = YCoord, Longitude = XCoord) %>%
+    ## TODO: Add uncertainty if needed.
+    dplyr::mutate(BreedingSeason = as.integer(.data$Year), LayDate_observed = .data$Ld,
+                  ClutchSize_observed = as.integer(.data$Cs), HatchDate_observed = .data$Hd,
+                  BroodSize_observed = as.integer(.data$Hs), NumberFledged_observed = as.integer(.data$Fs),
+                  FemaleID = .data$FId, MaleID = .data$MId, LocationID = .data$NestId,
+                  Plot = .data$HabitatOfRinging,
+                  Latitude = .data$YCoord, Longitude = .data$XCoord) %>%
     #Add species codes
     dplyr::mutate(Species = dplyr::case_when(.$Species == "Parus major" ~ species_codes[which(species_codes$SpeciesID == 14640), ]$Species,
                                              .$Species == "Cyanistes caeruleus" ~ species_codes[which(species_codes$SpeciesID == 14620), ]$Species)) %>%
     #Filter species
-    dplyr::filter(Species %in% species) %>%
+    dplyr::filter(.data$Species %in% species) %>%
     #Add other missing data:
     #- PopID
     #- BroodID (Year_LocationID_LayDate)
@@ -83,17 +84,19 @@ format_SSQ <- function(db = choose_directory(),
     #- FledgeDate
     #Pad LocationID so they are all the same length
     dplyr::mutate(PopID = "SSQ",
-                  LocationID = stringr::str_pad(LocationID, width = 3, pad = "0"),
-                  BroodID = paste(BreedingSeason, LocationID, stringr::str_pad(LayDate, width = 3, pad = "0"), sep = "_"),
+                  LocationID = stringr::str_pad(.data$LocationID, width = 3, pad = "0"),
+                  BroodID = paste(.data$BreedingSeason, .data$LocationID, stringr::str_pad(.data$LayDate_observed, width = 3, pad = "0"), sep = "_"),
                   ClutchType_observed = dplyr::case_when(.$Class == 1 ~ "first",
                                                          .$Class == 3 ~ "second",
                                                          .$Class == 2 ~ "replacement"),
-                  FledgeDate = as.Date(NA), AvgEggMass = NA_real_, NumberEggs = NA_integer_, AvgChickMass = NA_real_,
-                  NumberChicksMass = NA_integer_, AvgTarsus = NA_real_, NumberChicksTarsus = NA_integer_,
-                  LayDateError = NA_integer_, ClutchSizeError = NA_integer_, HatchDateError = NA_integer_, BroodSizeError = NA_integer_,
-                  FledgeDateError = NA_integer_, NumberFledgedError = NA_integer_, ExperimentID = NA_character_,
-                  LayDate = as.Date(paste(BreedingSeason, "03-01", sep = "-"), format = "%Y-%m-%d") + LayDate - 1,
-                  HatchDate = as.Date(paste(BreedingSeason, "03-01", sep = "-"), format = "%Y-%m-%d") + HatchDate - 1)
+                  FledgeDate_observed = as.Date(NA), AvgEggMass = NA_real_,
+                  NumberEggs = NA_integer_, AvgChickMass = NA_real_,
+                  NumberChicksMass = NA_integer_, AvgTarsus = NA_real_,
+                  NumberChicksTarsus = NA_integer_, ExperimentID = NA_character_,
+                  ## TODO: Use Chris's method where we set origin
+                  ## TODO: Add NAMESPACEs
+                  LayDate_observed = as.Date(paste(.data$BreedingSeason, "03-01", sep = "-"), format = "%Y-%m-%d") + .data$LayDate_observed - 1,
+                  HatchDate_observed = as.Date(paste(.data$BreedingSeason, "03-01", sep = "-"), format = "%Y-%m-%d") + .data$HatchDate_observed - 1)
 
   # BROOD DATA
 
@@ -169,24 +172,16 @@ create_brood_SSQ <- function(data){
 
   Brood_data <- data %>%
     #Arrange data for use with ClutchType_calculated (should be chronological)
-    dplyr::arrange(BreedingSeason, FemaleID, LayDate) %>%
+    dplyr::arrange(.data$BreedingSeason, .data$FemaleID, .data$LayDate_observed) %>%
     #Calculate clutch type
-    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE),
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.1"),
                   OriginalTarsusMethod = NA_character_) %>%
-    #Arrange columns to match standard protocol
-    dplyr::select(BreedingSeason, Species, PopID, Plot,
-                  LocationID, BroodID, FemaleID, MaleID,
-                  ClutchType_observed, ClutchType_calculated,
-                  LayDate, LayDateError,
-                  ClutchSize, ClutchSizeError,
-                  HatchDate, HatchDateError,
-                  BroodSize, BroodSizeError,
-                  FledgeDate, FledgeDateError,
-                  NumberFledged, NumberFledgedError,
-                  AvgEggMass, NumberEggs,
-                  AvgChickMass, NumberChicksMass,
-                  AvgTarsus, NumberChicksTarsus, OriginalTarsusMethod, ExperimentID) %>%
-    dplyr::ungroup()
+    ## Keep only necessary columns
+    dplyr::select(dplyr::contains(names(brood_data_template))) %>%
+    ## Add missing columns
+    dplyr::bind_cols(brood_data_template[, !(names(brood_data_template) %in% names(.))]) %>%
+    ## Reorder columns
+    dplyr::select(names(brood_data_template))
 
   return(Brood_data)
 
@@ -203,56 +198,61 @@ create_brood_SSQ <- function(data){
 create_capture_SSQ <- function(data){
 
   Adult_captures <- data %>%
-    dplyr::select(BreedingSeason, PopID, Plot, LocationID, Species, LayDate, FemaleID, FAge, MaleID, MAge) %>%
+    dplyr::select(.data$BreedingSeason, .data$PopID, .data$Plot, .data$LocationID,
+                  .data$Species, .data$LayDate_observed, .data$FemaleID, .data$FAge,
+                  .data$MaleID, .data$MAge) %>%
     #Combine column FemaleID and MaleID
     tidyr::pivot_longer(cols = c("FemaleID", "MaleID"), values_to = "IndvID", names_to = "variable") %>%
     #Remove all NAs, we're only interested in cases where parents were ID'd.
-    dplyr::filter(!is.na(IndvID)) %>%
+    dplyr::filter(!is.na(.data$IndvID)) %>%
     #Make a single Age column. If variable == "FemaleID", then use FAge and visa versa
     dplyr::rowwise() %>%
-    dplyr::mutate(Age = ifelse(variable == "FemaleID", as.integer(FAge), as.integer(MAge))) %>%
+    dplyr::mutate(Age = ifelse(variable == "FemaleID", as.integer(.data$FAge), as.integer(.data$MAge))) %>%
     dplyr::ungroup() %>%
     #Convert these age values to current EURING codes
     #If NA, we know it's an adult but don't know it's age
     #We don't want to assume anything here
     dplyr::mutate(Age_observed = dplyr::case_when(.$Age == 1 ~ 5L,
                                                   .$Age == 2 ~ 6L)) %>%
-    dplyr::rename(CapturePopID = PopID, CapturePlot = Plot) %>%
+    dplyr::rename(CapturePopID = .data$PopID, CapturePlot = .data$Plot) %>%
     #Treat CaptureDate of adults as the Laying Date
-    dplyr::mutate(ReleasePopID = CapturePopID, ReleasePlot = CapturePlot,
-                  CaptureDate = LayDate,
+    dplyr::mutate(ReleasePopID = .data$CapturePopID, ReleasePlot = .data$CapturePlot,
+                  CaptureDate = .data$LayDate_observed,
                   CaptureTime = NA_character_) %>%
-    dplyr::select(-variable, -LayDate, -FAge, -MAge)
+    dplyr::select(-.data$variable, -.data$LayDate_observed, -.data$FAge, -.data$MAge)
 
   #Also extract chick capture information
   Chick_captures <- data %>%
-    dplyr::select(BreedingSeason, Species, PopID, Plot, LocationID, LayDate, ClutchSize, Chick1Id:Chick13Id) %>%
+    dplyr::select(.data$BreedingSeason, .data$Species, .data$PopID, .data$Plot, .data$LocationID,
+                  .data$LayDate_observed, .data$ClutchSize_observed, .data$Chick1Id:Chick13Id) %>%
     #Create separate rows for every chick ID
-    tidyr::pivot_longer(cols = c(Chick1Id:Chick13Id), names_to = "variable", values_to = "IndvID") %>%
+    tidyr::pivot_longer(cols = c(.data$Chick1Id:.data$Chick13Id), names_to = "variable", values_to = "IndvID") %>%
     #Remove NAs
-    dplyr::filter(!is.na(IndvID)) %>%
-    dplyr::rename(CapturePopID = PopID, CapturePlot = Plot) %>%
+    dplyr::filter(!is.na(.data$IndvID)) %>%
+    dplyr::rename(CapturePopID = .data$PopID, CapturePlot = .data$Plot) %>%
     #For chicks, we currently don't have the version of the individual level capture data.
     #For now, we use LayDate + ClutchSize + 15 (incubation days in SSQ) + 12.
     #Chicks were captured and weighed at 12 days old at the latest
-    dplyr::mutate(ReleasePopID = CapturePopID, ReleasePlot = CapturePlot,
-                  CaptureDate = LayDate + ClutchSize + 27,
+    dplyr::mutate(ReleasePopID = .data$CapturePopID, ReleasePlot = .data$CapturePlot,
+                  CaptureDate = .data$LayDate_observed + ClutchSize_observed + 27,
                   CaptureTime = NA_character_, Age_observed = 1, Age = 1L) %>%
-    dplyr::select(-variable, -LayDate, -ClutchSize)
+    dplyr::select(-.data$variable, -.data$LayDate_observed, -.data$ClutchSize_observed)
 
   #Combine Adult and chick data
   Capture_data <- dplyr::bind_rows(Adult_captures, Chick_captures) %>%
-    dplyr::arrange(IndvID, CaptureDate) %>%
+    dplyr::arrange(.data$IndvID, .data$CaptureDate) %>%
     #Add NA for morphometric measures and chick age
     #ChickAge (in days) is NA because we have no exact CaptureDate
     dplyr::mutate(Mass = NA_real_, Tarsus = NA_real_, OriginalTarsusMethod = NA_character_,
                   WingLength = NA_real_,
                   ChickAge = NA_integer_, ObserverID = NA_character_) %>%
-    calc_age(ID = IndvID, Age = Age, Date = CaptureDate, Year = BreedingSeason) %>%
-  #Order variables to match other data
-    dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, ObserverID, IndvID, Species,
-                  CapturePopID, CapturePlot, ReleasePopID, ReleasePlot,
-                  Mass, Tarsus, WingLength, Age_observed, Age_calculated, ChickAge)
+    calc_age(ID = .data$IndvID, Age = .data$Age, Date = .data$CaptureDate, Year = .data$BreedingSeason) %>%
+    ## Keep only necessary columns
+    dplyr::select(dplyr::contains(names(capture_data_template))) %>%
+    ## Add missing columns
+    dplyr::bind_cols(capture_data_template[,!(names(capture_data_template) %in% names(.))]) %>%
+    ## Reorder columns
+    dplyr::select(names(capture_data_template))
 
   return(Capture_data)
 
@@ -272,29 +272,33 @@ create_individual_SSQ <- function(data, Capture_data, Brood_data){
 
   #Create a list of all chicks
   Chick_IDs <- data %>%
-    dplyr::select(BroodID, Chick1Id:Chick13Id) %>%
-    tidyr::pivot_longer(cols = c(-BroodID), names_to = "variable", values_to = "IndvID") %>%
-    dplyr::filter(!is.na(IndvID)) %>%
-    dplyr::select(-variable, BroodIDLaid = BroodID)
+    dplyr::select(.data$BroodID, .data$Chick1Id:.data$Chick13Id) %>%
+    tidyr::pivot_longer(cols = c(-.data$BroodID), names_to = "variable", values_to = "IndvID") %>%
+    dplyr::filter(!is.na(.data$IndvID)) %>%
+    dplyr::select(-.data$variable, BroodIDLaid = .data$BroodID)
 
   #Determine summary data for every captured individual
   Individual_data <- Capture_data %>%
-    dplyr::arrange(IndvID, CaptureDate) %>%
-    dplyr::group_by(IndvID) %>%
-    dplyr::summarise(Species = first(Species),
-                     RingSeason = as.integer(min(lubridate::year(CaptureDate))),
-                     RingAge = dplyr::case_when(is.na(first(Age_observed)) ~ "adult",
-                                                first(Age_observed) == 1 ~ "chick",
-                                                first(Age_observed) > 1 ~ "adult")) %>%
-    dplyr::mutate(Sex = dplyr::case_when(.$IndvID %in% Brood_data$FemaleID ~ "F",
-                                         .$IndvID %in% Brood_data$MaleID ~ "M",
-                                         .$IndvID %in% Brood_data$MaleID & .$IndvID %in% Brood_data$FemaleID ~ "C")) %>%
+    dplyr::arrange(.data$IndvID, .data$CaptureDate) %>%
+    dplyr::group_by(.data$IndvID) %>%
+    dplyr::summarise(Species = first(.data$Species),
+                     RingSeason = as.integer(min(lubridate::year(.data$CaptureDate))),
+                     RingAge = dplyr::case_when(is.na(first(.data$Age_observed)) ~ "adult",
+                                                first(.data$Age_observed) == 1 ~ "chick",
+                                                first(.data$Age_observed) > 1 ~ "adult")) %>%
+    dplyr::mutate(Sex_calculated = dplyr::case_when(.$IndvID %in% Brood_data$FemaleID ~ "F",
+                                                    .$IndvID %in% Brood_data$MaleID ~ "M",
+                                                    .$IndvID %in% Brood_data$MaleID & .$IndvID %in% Brood_data$FemaleID ~ "C")) %>%
     #Join in BroodID from the reshaped Chick_IDs table
     dplyr::left_join(Chick_IDs, by = "IndvID") %>%
-    dplyr::mutate(BroodIDFledged = BroodIDLaid,
+    dplyr::mutate(BroodIDFledged = .data$BroodIDLaid,
                   PopID = "SSQ") %>%
-    select(IndvID, Species, PopID, BroodIDLaid,
-           BroodIDFledged, RingSeason, RingAge, Sex)
+    ## Keep only necessary columns
+    dplyr::select(dplyr::contains(names(individual_data_template))) %>%
+    ## Add missing columns
+    dplyr::bind_cols(individual_data_template[,!(names(individual_data_template) %in% names(.))]) %>%
+    ## Reorder columns
+    dplyr::select(names(individual_data_template))
 
 }
 
@@ -309,14 +313,19 @@ create_individual_SSQ <- function(data, Capture_data, Brood_data){
 create_location_SSQ <- function(data){
 
   Location_data <- data %>%
-    dplyr::group_by(LocationID) %>%
+    dplyr::group_by(.data$LocationID) %>%
     dplyr::summarise(LocationType = "NB",
                      PopID = "SSQ",
                      StartSeason = 1993L, EndSeason = NA_integer_) %>%
-    dplyr::mutate(NestboxID = LocationID) %>%
+    dplyr::mutate(NestboxID = .data$LocationID) %>%
     #Join in first latitude and longitude data recorded for this box.
     #It's not clear why these are ever different, need to ask.
-    dplyr::left_join(data %>% group_by(LocationID) %>% slice(1) %>% select(LocationID, Latitude, Longitude), by = "LocationID") %>%
-    dplyr::select(LocationID, NestboxID, LocationType, PopID, Latitude, Longitude, StartSeason, EndSeason)
+    dplyr::left_join(data %>% group_by(.data$LocationID) %>% slice(1) %>% select(.data$LocationID, .data$Latitude, .data$Longitude), by = "LocationID") %>%
+    ## Keep only necessary columns
+    dplyr::select(dplyr::contains(names(location_data_template))) %>%
+    ## Add missing columns
+    dplyr::bind_cols(location_data_template[,!(names(location_data_template) %in% names(.))]) %>%
+    ## Reorder columns
+    dplyr::select(names(location_data_template))
 
 }
