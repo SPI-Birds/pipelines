@@ -5,7 +5,7 @@
 #'
 #'This section provides details on data management choices that are unique to
 #'this data. For a general description of the standard format please see
-#'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
+#'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 #'
 #'\strong{Species}: Species code 5 refers to Willow tit/Marsh tit. As we cannot
 #'confidently identify species, these are considered Unknown and removed. This
@@ -115,7 +115,7 @@ format_AMM <- function(db = choose_directory(),
 
   #Remove BroodID, no longer needed
   Capture_data <- Capture_data %>%
-    dplyr::select(.data$CaptureID:.data$Age_observed, .data$Age_calculated, .data$ChickAge)
+    dplyr::select(.data$CaptureID:.data$Age_observed, .data$Age_calculated, .data$ChickAge, .data$ExperimentID)
 
   #Disconnect from database
   DBI::dbDisconnect(connection)
@@ -226,35 +226,42 @@ create_brood_AMM   <- function(connection) {
                   NumberEggs = NA_integer_,
                   AvgChickMass = NA_integer_,
                   NumberChicksMass = NA_integer_,
-                  BroodSwap_ExperimentID = ifelse(.data$BroodSwap > 0L, "PARENTAGE;COHORT", NA_character_),
-                  BroodOther_ExperimentID = dplyr::case_when(.data$BroodOtherTreatment %in% c(1L, 2L, 3L, 4L, 5L) ~ "SURVIVAL",
-                                                             TRUE ~ NA_character_),
-                  Plot_ExperimentID = dplyr::case_when(.data$PlotLevelTreatment %in% c(1L, 2L) ~ "PHENOLOGY",
-                                                       .data$PlotLevelTreatment == 3L ~ "PHENOLOGY;COHORT;SURVIVAL",
-                                                       TRUE ~ NA_character_),
-                  ExperimentID = paste(.data$BroodSwap_ExperimentID, .data$BroodOther_ExperimentID, .data$Plot_ExperimentID, sep = ";")) %>%
+                  BroodSwap_ExperimentID = ifelse(.data$BroodSwap > 0L, list(c("PARENTAGE", "COHORT")), list(NA_character_)),
+                  BroodOther_ExperimentID = dplyr::case_when(.data$BroodOtherTreatment %in% c(1L, 2L, 3L, 4L, 5L) ~ list("SURVIVAL"),
+                                                             TRUE ~ list(NA_character_)),
+                  Plot_ExperimentID = dplyr::case_when(.data$PlotLevelTreatment %in% c(1L, 2L) ~ list("PHENOLOGY"),
+                                                       .data$PlotLevelTreatment == 3L ~ list(c("PHENOLOGY", "COHORT", "SURVIVAL")),
+                                                       TRUE ~ list(NA_character_))) %>%
+    # Combine all experiments together
+    dplyr::rowwise() %>%
+    dplyr::mutate(ExperimentID = paste(union(union(.data$BroodSwap_ExperimentID,
+                                                   .data$BroodOther_ExperimentID),
+                                             .data$Plot_ExperimentID), collapse = ";")) %>%
+    dplyr::ungroup() %>%
+    # Remove NAs from the experiment list
+    dplyr::mutate(ExperimentID = stringr::str_remove_all(ExperimentID, pattern = "NA[;]*|;NA^")) %>%
     # Determine clutch type
     dplyr::arrange(.data$BreedingSeason, .data$FemaleID, .data$LayDate_observed) %>%
-    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE),
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.1"),
                   ClutchType_observed = dplyr::case_when(.data$ClutchNumber == 1L ~ "first",
                                                          .data$ClutchNumber %in% c(2L, 4L) ~ "second",
                                                          .data$ClutchNumber %in% c(3L, 5L, 6L) ~ "replacement")) %>%
-    # Arrange columns
-    dplyr::select(.data$BroodID, .data$PopID, .data$BreedingSeason,
-                  .data$Species, .data$Plot, LocationID = .data$NestBox, .data$FemaleID, .data$MaleID,
-                  .data$ClutchType_observed, .data$ClutchType_calculated,
-                  .data$LayDate_observed, .data$LayDate_minimum, .data$LayDate_maximum,
-                  .data$ClutchSize_observed, .data$ClutchSize_minimum, .data$ClutchSize_maximum,
-                  .data$HatchDate_observed, .data$HatchDate_minimum, .data$HatchDate_maximum,
-                  .data$BroodSize_observed, .data$BroodSize_minimum,
-                  .data$BroodSize_maximum,
-                  .data$FledgeDate_observed, .data$FledgeDate_minimum,
-                  .data$FledgeDate_maximum,
-                  .data$NumberFledged_observed, .data$NumberFledged_minimum,
-                  .data$NumberFledged_maximum,
-                  .data$AvgEggMass, .data$NumberEggs,
-                  .data$AvgChickMass, .data$NumberChicksMass,
-                  .data$ExperimentID) %>%
+  # Arrange columns
+  dplyr::select(.data$BroodID, .data$PopID, .data$BreedingSeason,
+                .data$Species, .data$Plot, LocationID = .data$NestBox, .data$FemaleID, .data$MaleID,
+                .data$ClutchType_observed, .data$ClutchType_calculated,
+                .data$LayDate_observed, .data$LayDate_minimum, .data$LayDate_maximum,
+                .data$ClutchSize_observed, .data$ClutchSize_minimum, .data$ClutchSize_maximum,
+                .data$HatchDate_observed, .data$HatchDate_minimum, .data$HatchDate_maximum,
+                .data$BroodSize_observed, .data$BroodSize_minimum,
+                .data$BroodSize_maximum,
+                .data$FledgeDate_observed, .data$FledgeDate_minimum,
+                .data$FledgeDate_maximum,
+                .data$NumberFledged_observed, .data$NumberFledged_minimum,
+                .data$NumberFledged_maximum,
+                .data$AvgEggMass, .data$NumberEggs,
+                .data$AvgChickMass, .data$NumberChicksMass,
+                .data$ExperimentID) %>%
     # Convert to correct formats
     dplyr::mutate_at(.vars = vars(.data$Plot:.data$MaleID), as.character) %>%
     dplyr::mutate_at(.vars = vars(.data$LayDate_observed, .data$HatchDate_observed, .data$FledgeDate_observed), as.Date)
@@ -286,11 +293,11 @@ create_capture_AMM <- function(Brood_data, connection) {
     dplyr::left_join(Nestbox_capture, by = "NestBox") %>%
     dplyr::collect() %>%
     dplyr::mutate(Species = dplyr::case_when(.data$CatchSpecies == 1L ~ !!species_codes$Species[species_codes$SpeciesID == "14640"],
-                                   .data$CatchSpecies == 2L ~ !!species_codes$Species[species_codes$SpeciesID == "14620"],
-                                   .data$CatchSpecies == 3L ~ !!species_codes$Species[species_codes$SpeciesID == "14610"],
-                                   .data$CatchSpecies == 4L ~ !!species_codes$Species[species_codes$SpeciesID == "14790"]),
+                                             .data$CatchSpecies == 2L ~ !!species_codes$Species[species_codes$SpeciesID == "14620"],
+                                             .data$CatchSpecies == 3L ~ !!species_codes$Species[species_codes$SpeciesID == "14610"],
+                                             .data$CatchSpecies == 4L ~ !!species_codes$Species[species_codes$SpeciesID == "14790"]),
                   CaptureTime = dplyr::na_if(paste(lubridate::hour(.data$CatchTimeField),
-                                      lubridate::minute(.data$CatchTimeField), sep = ":"), "NA:NA"),
+                                                   lubridate::minute(.data$CatchTimeField), sep = ":"), "NA:NA"),
                   IndvID = as.character(.data$BirdID),
                   BreedingSeason = .data$CatchYear,
                   CaptureDate = as.Date(.data$CatchDate),
@@ -305,15 +312,15 @@ create_capture_AMM <- function(Brood_data, connection) {
                   ObserverID = as.character(dplyr::na_if(.data$FieldObserver, -99L)),
                   BroodID = as.character(.data$BroodID),
                   Sex_observed = dplyr::case_when(.data$SexObserved == 1L ~ "F",
-                                                 .data$SexObserved == 2L ~ "M",
-                                                 TRUE ~ NA_character_),
+                                                  .data$SexObserved == 2L ~ "M",
+                                                  TRUE ~ NA_character_),
                   #If taken to the lab for personality tests this could affect survival
                   #Attaching a transponder could also affect survival
-                  CaptureExperimentID = dplyr::case_when(.data$ToLab == 1L ~ "SURVIVAL",
-                                                         .data$Transponder == 1L ~ "SURVIVAL",
-                                                         TRUE ~ NA_character_),
+                  ExperimentID = dplyr::case_when(.data$ToLab == 1L ~ "SURVIVAL",
+                                                  .data$Transponder == 1L ~ "SURVIVAL",
+                                                  TRUE ~ NA_character_),
                   CaptureAlive = dplyr::case_when(.data$CatchType %in% 13L:15L ~ FALSE,
-                                                    TRUE ~ TRUE),
+                                                  TRUE ~ TRUE),
                   ReleaseAlive = dplyr::case_when(.data$CatchType %in% 13L:15L ~ FALSE,
                                                   .data$DeadOrAlive == 0L ~ FALSE,
                                                   TRUE ~ TRUE)) %>%
@@ -335,6 +342,7 @@ create_capture_AMM <- function(Brood_data, connection) {
                   WingLength = .data$WingP3,
                   .data$Age_observed,
                   .data$ChickAge,
+                  .data$ExperimentID,
                   .data$BroodID)
 
   Chick_capture <- Chick_catch_tables %>%
@@ -425,8 +433,8 @@ create_individual_AMM <- function(Capture_data, Brood_data, connection) {
     dplyr::rowwise() %>%
     dplyr::mutate(IndvID = as.character(.data$IndvID),
                   Sex_genetic = dplyr::case_when(.data$length_sex > 1 ~ "C",
-                                                .data$unique_sex[[1]] == 1L ~ "F",
-                                                .data$unique_sex[[1]] == 2L ~ "M")) %>%
+                                                 .data$unique_sex[[1]] == 1L ~ "F",
+                                                 .data$unique_sex[[1]] == 2L ~ "M")) %>%
     dplyr::ungroup() %>%
     dplyr::select(.data$IndvID, .data$Sex_genetic)
 
@@ -437,7 +445,7 @@ create_individual_AMM <- function(Capture_data, Brood_data, connection) {
                      unique_sex = list(unique(.data$Sex_observed))) %>%
     dplyr::rowwise() %>%
     dplyr::mutate(Sex_calculated = dplyr::case_when(.data$length_sex > 1 ~ "C",
-                                                TRUE ~ .data$unique_sex[[1]])) %>%
+                                                    TRUE ~ .data$unique_sex[[1]])) %>%
     dplyr::ungroup() %>%
     dplyr::select(.data$IndvID, .data$Sex_calculated)
 
