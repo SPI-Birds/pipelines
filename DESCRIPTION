@@ -39,7 +39,6 @@ Imports: dplyr,
          progress,
          rgeos,
          rstudioapi,
-         sp,
          usethis,
          rlang
 RoxygenNote: 7.1.1
