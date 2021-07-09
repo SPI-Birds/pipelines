@@ -1,4 +1,6 @@
-context("Run data quality check on Harjavalta pipeline output")
+testthat::skip_if(!exists("data_path"))
+
+pipeline_output <- format_HAR(db = paste0(data_path, "/HAR_Harjavalta_Finland"))
 
 test_that("HAR outputs all files...", {
 

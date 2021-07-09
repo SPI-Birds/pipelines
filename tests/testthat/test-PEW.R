@@ -1,4 +1,6 @@
-context("Run data quality check on Peerdsbos West, Belgium, pipeline output")
+testthat::skip_if(!exists("data_path"))
+
+pipeline_output <- format_PEW(db = paste0(data_path, "/PEW_PeerdsbosWest_Belgium"))
 
 test_that("PEW outputs all files...", {
 
@@ -97,6 +99,21 @@ test_that("Brood_data returns an expected outcome...", {
   #AvgChickMass and AvgTarsus should be NA, there were no chicks measured
   expect_equal(subset(PEW_data, BroodID == "2017_23")$AvgChickMass, NA_real_)
   expect_equal(subset(PEW_data, BroodID == "2017_23")$AvgTarsus, NA_real_)
+
+  #Clutch that should have uncertainty in clutch size (i.e. has ?)
+  expect_equal(subset(PEW_data, BroodID == "2016_k72")$Species, "CYACAE")
+  #ClutchType_calc is NA because no laying date given
+  expect_equal(subset(PEW_data, BroodID == "2016_k72")$ClutchType_calculated, NA_character_)
+  expect_equal(subset(PEW_data, BroodID == "2016_k72")$FemaleID, "14154588")
+  expect_equal(subset(PEW_data, BroodID == "2016_k72")$MaleID, "13619450")
+  expect_equal(subset(PEW_data, BroodID == "2016_k72")$LayDate_observed, as.Date(NA))
+  expect_equal(subset(PEW_data, BroodID == "2016_k72")$HatchDate_observed, as.Date("2016-05-14"))
+  expect_equal(subset(PEW_data, BroodID == "2016_k72")$ClutchSize_observed, 8)
+  expect_equal(subset(PEW_data, BroodID == "2016_k72")$ClutchSize_min, 8)
+  expect_equal(subset(PEW_data, BroodID == "2016_k72")$ClutchSize_max, Inf)
+  #AvgChickMass and AvgTarsus should be NA, there were no chicks measured
+  expect_equal(subset(PEW_data, BroodID == "2016_k72")$AvgChickMass, NA_real_)
+  expect_equal(subset(PEW_data, BroodID == "2016_k72")$AvgTarsus, NA_real_)
 
 })
 
