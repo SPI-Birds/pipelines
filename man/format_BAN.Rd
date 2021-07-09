@@ -40,7 +40,7 @@ Valley, Ireland, administered by John Quinn.
 \details{
 This section provides details on data management choices that are unique to
 this data. For a general description of the standard format please see
-\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
+\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 
 \strong{Species}: There are records where species is uncertain (e.g. listed as
 'GRETI?'). This uncertainty is ignored. We assume that the suggested species
@@ -54,12 +54,12 @@ categorise all these as 'second'. Possible distinction between 'second' and
 small number of cases where nest attempt number is uncertain (e.g.
 `2(MAYBE)`). This uncertainty is ignored.
 
-\strong{LayDate, HatchDate, NumberFledged}: There are some cases where
+\strong{LayDate_observed, HatchDate_observed, NumberFledged_observed}: There are some cases where
 values are given with uncertainty (e.g. 97+, 95?). We don't know how much
 uncertainty is involved here, it is currently ignored, but we need to
 discuss this with data owner.
 
-\strong{ClutchSize}: Cases where clutch size is uncertain (e.g. nests were
+\strong{ClutchSize_observed}: Cases where clutch size is uncertain (e.g. nests were
 predated before completion) are treated as NA because clutch size is unknown.
 
 \strong{LocationID}: Box numbers are not unique, they are repeated between
@@ -75,7 +75,7 @@ blank.
 \strong{Age_observed}: There is no recorded capture age. This is left as NA.
 
 \strong{AvgEggMass}: Currently we only include records where the day of egg
-weighing is <= LayDate + ClutchSize. This should be an estimate of the date
+weighing is <= LayDate_observed + ClutchSize_observed. This should be an estimate of the date
 that incubation began. Once incubation starts, egg weight is not easily
 comparable because it changes with embryonic development.
 
@@ -83,4 +83,6 @@ comparable because it changes with embryonic development.
 the data currently provided. These values are therefore left blank.
 
 \strong{StartSeason}: Assume all boxes were placed in the first year of the study.
+
+\strong{CaptureAlive, ReleaseAlive}: Assume all individuals were alive when captured and released.
 }
