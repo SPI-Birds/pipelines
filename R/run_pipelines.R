@@ -116,7 +116,7 @@ run_pipelines <- function(path = choose_directory(),
       purrr::pwalk(.l = list(.$PopCode),
                    .f = ~{
 
-                     message(glue::glue('Population {..1} has no information on the focal species and has been excluded.'))
+                     message(paste0('Population ', ..1, ' has no information on the focal species and has been excluded.'))
 
                    })
 
@@ -143,9 +143,9 @@ run_pipelines <- function(path = choose_directory(),
                                      species = pop_species_subset$Species),
                            .f = function(dirs, owner, pops, species){
 
-                             message(glue::glue('Running {owner} pipeline'))
+                             message(paste0('Running ', owner, ' pipeline'))
 
-                           eval(parse(text = glue::glue('format_{owner}(db = dirs, pop = pops, species = species, output_type = "R")')))
+                           eval(parse(text = paste0('format_', owner, '(db = dirs, pop = pops, species = species, output_type = "R")')))
 
                              })
 

@@ -103,9 +103,7 @@ format_BAN <- function(db = choose_directory(),
                                                #Ignore uncertainty in clutch type (e.g. 2(MAYBE))
                                                ClutchType_observed = dplyr::case_when(grepl(pattern = 1, x = .data$nest_attempt) ~ "first",
                                                                                       grepl(pattern = 2, x = .data$nest_attempt) ~ "second"),
-                                               March1Date = as.Date(glue::glue('{Year}-03-01',
-                                                                               Year = .data$BreedingSeason),
-                                                                    format = "%Y-%m-%d"),
+                                               March1Date = as.Date(paste0(.data$BreedingSeason, '-03-01'), format = "%Y-%m-%d"),
                                                #Ignore uncertainty in laying date (e.g. 97? or 97+)
                                                #TODO Need to check with data owners
                                                #Laying date is calculated where LayDate 1 = March 1st
