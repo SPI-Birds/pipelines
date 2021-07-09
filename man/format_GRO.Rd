@@ -40,4 +40,7 @@ A pipeline to produce the standard format for the nest box population in Grobla,
 This section provides details on data management choices that are unique to
 this data. For a general description of the standard format please see
 \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
+
+#'\strong{CaptureDate}: Adults are typically captured two weeks into the nestling period.
+If hatch date is not known for the nest, CaptureDate is set to two weeks after May 14th, which is the average hatch date.
 }
