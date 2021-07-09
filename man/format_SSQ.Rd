@@ -41,14 +41,13 @@ and Daniela Campobello.
 \details{
 This section provides details on data management choices that are unique to
 this data. For a general description of the standard format please see
-\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
+\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 
 \strong{BroodID}: Unique BroodID is constructed using:
 BreedingSeason_LocationID_LayDate (April days)
 
 \strong{Species}: In the individual data, there are some cases where an
-IndvID is associated with >1 species. I assume these are just typos and I
-will just take the first species.
+IndvID is associated with >1 species. These are considered conflicted species.
 
 \strong{CaptureDate}: No exact capture date is currently given. For adults we
 use the laying date of the nest as a proxy for capture date. Chicks were only
