@@ -379,7 +379,7 @@ create_brood_VEL <- function(FICALB_data, TIT_data) {
   FICALB_broods <- FICALB_data %>%
     dplyr::arrange(.data$BreedingSeason, .data$Species, .data$FemaleID, .data$LayDate_observed) %>%
     #Calculate clutchtype
-    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.1")) %>%
     dplyr::select(.data$BroodID, .data$PopID, .data$BreedingSeason,
                   .data$Species, .data$Plot, .data$LocationID, .data$FemaleID, .data$MaleID,
                   .data$ClutchType_observed, .data$ClutchType_calculated,
@@ -388,7 +388,7 @@ create_brood_VEL <- function(FICALB_data, TIT_data) {
   TIT_broods <- TIT_data %>%
     dplyr::arrange(.data$BreedingSeason, .data$Species, .data$FemaleID, .data$LayDate_observed) %>%
     #Calculate clutchtype
-    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.1")) %>%
     dplyr::select(.data$BroodID, .data$PopID, .data$BreedingSeason,
                   .data$Species, .data$Plot, .data$LocationID, .data$FemaleID, .data$MaleID,
                   .data$ClutchType_observed, .data$ClutchType_calculated,

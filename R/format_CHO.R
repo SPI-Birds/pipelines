@@ -256,7 +256,7 @@ create_brood_CHO <- function(data){
                   NumberFledged_max = NA_integer_) %>%
     #Arrange data chronologically for each female for clutchtype calculation
     dplyr::arrange(.data$Year, .data$FemaleID, .data$LayDate_observed) %>%
-    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.1")) %>%
     #Select relevant columns and rename
     dplyr::select(.data$BroodID, .data$PopID,
                   .data$BreedingSeason, .data$Species,

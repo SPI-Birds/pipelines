@@ -215,7 +215,7 @@ format_BAN <- function(db = choose_directory(),
 create_brood_BAN <- function(data) {
 
   Brood_data <- data %>%
-    dplyr::mutate(ClutchType_calculated = calc_clutchtype(., na.rm = FALSE),
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(., na.rm = FALSE, protocol_version = "1.1"),
                   LayDate_min = .data$LayDate_observed,
                   LayDate_max = .data$LayDate_observed,
                   ClutchSize_min = .data$ClutchSize_observed,
