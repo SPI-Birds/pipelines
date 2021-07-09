@@ -81,7 +81,7 @@ format_SSQ <- function(db = choose_directory(),
     #- PopID
     #- BroodID (Year_LocationID_LayDate)
     #- ClutchType_observed
-    #- FledgeDate
+    #- FledgeDate_observed
     #Pad LocationID so they are all the same length
     dplyr::mutate(PopID = "SSQ",
                   LocationID = stringr::str_pad(.data$LocationID, width = 3, pad = "0"),
@@ -93,8 +93,6 @@ format_SSQ <- function(db = choose_directory(),
                   NumberEggs = NA_integer_, AvgChickMass = NA_real_,
                   NumberChicksMass = NA_integer_, AvgTarsus = NA_real_,
                   NumberChicksTarsus = NA_integer_, ExperimentID = NA_character_,
-                  ## TODO: Use Chris's method where we set origin
-                  ## TODO: Add NAMESPACEs
                   LayDate_observed = as.Date(paste(.data$BreedingSeason, "03-01", sep = "-"), format = "%Y-%m-%d") + .data$LayDate_observed - 1,
                   HatchDate_observed = as.Date(paste(.data$BreedingSeason, "03-01", sep = "-"), format = "%Y-%m-%d") + .data$HatchDate_observed - 1)
 
