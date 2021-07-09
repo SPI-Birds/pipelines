@@ -33,7 +33,6 @@ Imports: dplyr,
          here,
          progress,
          tcltk,
-         usethis,
          rlang
 RoxygenNote: 7.1.1
 Suggests: 
