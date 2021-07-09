@@ -281,7 +281,8 @@ create_individual_SSQ <- function(data, Capture_data, Brood_data){
   Individual_data <- Capture_data %>%
     dplyr::arrange(.data$IndvID, .data$CaptureDate) %>%
     dplyr::group_by(.data$IndvID) %>%
-    dplyr::summarise(Species = first(.data$Species),
+    dplyr::summarise(Species = dplyr::case_when(length(unique(.data$Species)) == 2 ~ "CCCCCC",
+                                                TRUE ~ dplyr::first(.data$Species)),
                      RingSeason = as.integer(min(lubridate::year(.data$CaptureDate))),
                      RingAge = dplyr::case_when(is.na(first(.data$Age_observed)) ~ "adult",
                                                 first(.data$Age_observed) == 1 ~ "chick",

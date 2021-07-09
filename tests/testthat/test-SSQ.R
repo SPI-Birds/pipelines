@@ -63,6 +63,17 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(subset(SSQ_data, IndvID == "6A33818")$RingSeason, 2011)
   expect_equal(subset(SSQ_data, IndvID == "6A33818")$RingAge, "chick")
 
+  #Test 5: Individual with conflicted species
+  #Individual 25A9699 should be listed as a female with conflicting species
+  expect_equal(subset(SSQ_data, IndvID == "25A9699")$Sex_calculated, "F")
+  expect_equal(subset(SSQ_data, IndvID == "25A9699")$Species, "CCCCCC")
+  #She should have a BroodIDLaid and Fledged of 2011_026_043
+  expect_equal(subset(SSQ_data, IndvID == "25A9699")$BroodIDLaid, NA_character_)
+  expect_equal(subset(SSQ_data, IndvID == "25A9699")$BroodIDFledged, NA_character_)
+  #Her ring season should be 2011 with a RingAge of 'chick'
+  expect_equal(subset(SSQ_data, IndvID == "25A9699")$RingSeason, 2016)
+  expect_equal(subset(SSQ_data, IndvID == "25A9699")$RingAge, "adult")
+
 })
 
 test_that("Brood_data returns an expected outcome...", {
@@ -177,12 +188,12 @@ test_that("Capture_data returns an expected outcome...", {
   expect_equal(subset(SSQ_data, IndvID == "6A33877")$Age_observed[3], 6)
   expect_equal(subset(SSQ_data, IndvID == "6A33877")$Age_calculated[3], 7)
 
-  #Test 5: Blue tit caught as an adult (third time after being a chick)
-  #Individual 6A33877 was caught for a third time at "2015-04-20" (laying date of clutch)
-  expect_equal(subset(SSQ_data, IndvID == "6A33877")$CaptureDate[4], as.Date("2015-04-20"))
+  #Test 5: Individual classified as different species on 2 captures
+  expect_equal(subset(SSQ_data, IndvID == "25A9699")$CaptureDate, c(as.Date("2016-04-16"), as.Date("2017-04-15")))
+  expect_equal(subset(SSQ_data, IndvID == "25A9699")$Species, c("PARMAJ", "CYACAE"))
   #Age observed should be 4, and Age calculated should be 5 + 3*2 = 11
-  expect_equal(subset(SSQ_data, IndvID == "6A33877")$Age_observed[4], 6)
-  expect_equal(subset(SSQ_data, IndvID == "6A33877")$Age_calculated[4], 11)
+  expect_equal(subset(SSQ_data, IndvID == "25A9699")$Age_observed, c(NA, 5))
+  expect_equal(subset(SSQ_data, IndvID == "25A9699")$Age_calculated, c(4, 6))
 
 })
 
