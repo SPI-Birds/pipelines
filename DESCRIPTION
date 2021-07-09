@@ -41,8 +41,7 @@ Imports: dplyr,
          rstudioapi,
          sp,
          usethis,
-         rlang,
-         openxlsx
+         rlang
 RoxygenNote: 7.1.1
 Suggests: 
     knitr,

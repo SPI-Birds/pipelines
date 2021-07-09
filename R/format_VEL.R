@@ -732,7 +732,7 @@ create_location_VEL <- function(db, Brood_data, TIT_data){
     dplyr::left_join({
       TIT_data %>%
         dplyr::group_by(.data$LocationID) %>%
-        dplyr::summarise(HabitatType = dplyr::first(HabitatType))},
+        dplyr::summarise(HabitatType = dplyr::first(.data$HabitatType))},
       by = "LocationID") %>%
     ## Exclude locations that were already in the location data excel file.
     dplyr::filter(!.data$LocationID %in% location_data_excel$LocationID)
