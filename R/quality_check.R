@@ -7,7 +7,9 @@
 #' @param R_data Output of pipeline as an R object. Generated using
 #' \code{output_type = R} in \code{\link{run_pipelines}}.
 #' @param output \code{TRUE} or \code{FALSE}. If \code{TRUE}, a report is produced. Default: \code{TRUE}.
-#' @param output_format A character. Format of output report. Options: \code{"html"}, \code{"pdf"}, or \code{"both"}. Default: \code{"both"}.
+#' @param output_format Character. Format of output report. Options: "html", "pdf", and "both" (default).
+#' @param output_file Character. Name of the output file. Default: "output_report".
+#' @param latex_engine Character. LaTeX engine for producing PDF output. Options are "pdflatex" (default), "xelatex", and "lualatex". NB: pdfLaTeX and XeLaTeX have memory limit restrictions, which can be problematic when generating large pdfs. LuaLaTeX has dynamic memory management which may help for generating large pdfs.
 #' @param check_format \code{TRUE} or \code{FALSE}. If \code{TRUE}, the checks on variable format (i.e. \code{\link{check_format_brood}}, \code{\link{check_format_capture}}, \code{\link{check_format_individual}} and \code{\link{check_format_location}}) are included in the quality check. Default: \code{TRUE}.
 #' @param test Logical. Is `quality_check` being used inside package tests? If TRUE, `R_data` is ignored and
 #' dummy data will be used instead.
@@ -35,6 +37,8 @@
 quality_check <- function(R_data,
                           output = TRUE,
                           output_format = "both",
+                          output_file = "output_report",
+                          latex_engine = "pdflatex",
                           check_format = TRUE,
                           test = FALSE){
 
@@ -164,14 +168,14 @@ quality_check <- function(R_data,
 
   # Create output file
   # Unique PopIDs and Species for report title
-  pop <- dplyr::pull(unique(Brood_data[!is.na(Brood_data$PopID), "PopID"]))
+  pop <- unique(Brood_data[!is.na(Brood_data$PopID), ]$PopID)
   if(length(pop) == 0) pop <- NA
-  species <- dplyr::pull(unique(Brood_data[!is.na(Brood_data$Species), "Species"]))
+  species <- unique(Brood_data[!is.na(Brood_data$Species), ]$Species)
 
   # Title
   title <- paste0("Quality check report")
-  # title <- paste0("Quality check report for ", Species_codes[Species_codes$Code == species, "CommonName"],
-  #                 " in ", pop_names[pop_names$code == pop, "name"])
+  # title <- paste0("Quality check report for ", species_codes[species_codes$Species == Species, "CommonName"],
+  #                 " in ", pop_codes[pop_codes$PopID == PopID, "PopName"])
 
   # Produce report
   if(output == TRUE) {
@@ -195,9 +199,9 @@ quality_check <- function(R_data,
     '',
     '# Summary',
     '',
-    'Species: `r Species_codes[Species_codes$Code %in% species,]$CommonName`',
+    'Species: `r species_codes[species_codes$Species %in% species,]$CommonName`',
     '',
-    'Populations: `r pop_names[pop_names$code %in% pop,]$name`',
+    'Populations: `r pop_codes[pop_codes$PopID %in% pop,]$PopName`',
     '',
     'All checks performed in `r round(time, 2)` seconds.',
     '',
@@ -383,7 +387,9 @@ quality_check <- function(R_data,
 
                      knitr::knit(text = mark_output, output = "output-report.md")
 
-                     rmarkdown::render("output-report.md", output_format = "html_document")
+                     rmarkdown::render("output-report.md",
+                                       output_format = "html_document",
+                                       output_file = output_file)
 
                    }
 
@@ -404,7 +410,9 @@ quality_check <- function(R_data,
 
                      knitr::knit(text = mark_output, output = "output-report.md")
 
-                     rmarkdown::render("output-report.md", output_format = "pdf_document")
+                     rmarkdown::render("output-report.md",
+                                       output_format = rmarkdown::pdf_document(latex_engine = latex_engine),
+                                       output_file = output_file)
 
                    }
 

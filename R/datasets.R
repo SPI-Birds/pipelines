@@ -72,7 +72,8 @@ pop_species_combos <- utils::read.csv(system.file("extdata", "pop_species_combos
 #'   \item Rows 645-646 are records that are needed to test the functionality of check 'C4: Checking that adults caught on nest are listed are the parents (see \code{\link{check_adult_parent_nest}}): a brood with the same individuals as parents as the individuals caught on that nest, and a brood with individuals different from the individuals that are caught on this nest.
 #'   \item Rows 647-649 are records that test the functionality of check 'B11: Comparing species of brood and of parents' (see \code{\link{compare_species_brood_parents}}): a brood of the same species as both of the parents, and a brood of a different species than either of the parents.
 #'   \item Rows 650-652 are records that test the functionality of check 'B12: Comparing species of brood and of chicks' (see \code{\link{compare_species_brood_chicks}}): a brood of the same species as the chicks in that brood, and a brood of a different species than either of the chicks in that brood.
-#'   \item Rows 653-654 are records that test the functionality of check 'B13: Checking sex of parents' (see \code{\link{check_sex_parents}}): a brood with a female listed under FemaleID and male listed under MaleID, and a brood with a female listed under FemaleID and a female listed under MaleID.
+#'   \item Rows 653-654 are records that test the functionality of check 'B13: Checking sex of mothers' (see \code{\link{check_sex_mothers}}): a brood where assigned mother is female and a brood where assigned mother is listed as male.
+#'   \item Rows 655-656 are records that test the functionality of check 'B14: Checking sex of fathers' (see \code{\link{check_sex_fathers}}): a brood where assigned father is male and a brood where assigned father is listed as female.
 #' }
 #'
 #' \strong{Capture data}:
@@ -87,6 +88,7 @@ pop_species_combos <- utils::read.csv(system.file("extdata", "pop_species_combos
 #'   \item Rows 1000-1001 are records that are needed to test the functionality of check 'I5:Checking that individuals have no conflicting species' (see \code{\link{check_conflicting_species}}): an individual with certain species, and an individual with uncertain species (i.e. recorded as two different species).
 #'   \item Row 1002 is a record that is needed to test the functionality of check 'I6: Checking that individuals in Individual_data also appear in Capture_data' (see \code{\link{check_individuals_captures}}): an individual in Individual_data that is also recorded in Capture_data.
 #'   \item Rows 1003-1005 are records that test the functionality of check 'C4: Checking that adults caught on nest are listed are the parents' (see \code{\link{check_adult_parent_nest}}): a parent caught on a nest and marked as the parent of that brood, a parent caught in a mistnet, and a parent caught on a nest but not marked as the parent of that brood.
+#'   \item Rows 1004-1011 are records that test the functionality of check 'C5:Checking that the age of subsequent captures is ordered correctly' (see \code{\link{check_age_captures}}): two captures in subsequent years with correct order of age, two captures in the same year with same age, two captures in subsequent years with incorrect order of age (but both are adults), two captures in subsequent years with incorrect order of age (adult caught before chick).
 #' }
 #'
 #' \strong{Individual data}:
@@ -173,3 +175,52 @@ NULL
 #'
 #' @name common_hybrids
 common_hybrids <- utils::read.csv(system.file("extdata", "common_hybrids.csv", package = "pipelines", mustWork = TRUE))
+
+#'capture_data_template template
+#'
+#'Tibble giving names and associated classes for all the columns in the Capture data for the standard protocol v1.1.0
+#'@format Tibble
+#'@name capture_data_template
+NULL
+
+#'individual_data_template template
+#'
+#'Tibble giving names and associated classes for all the columns in the Individual data for the standard protocol v1.1.0
+#'@format Tibble
+#'@name individual_data_template
+NULL
+
+#'brood_data_template template
+#'
+#'Tibble giving names and associated classes for all the columns in the Brood data for the standard protocol v1.1.0
+#'@format Tibble
+#'@name brood_data_template
+NULL
+
+#'location_data_template template
+#'
+#'Tibble giving names and associated classes for all the columns in the Location data for the standard protocol v1.1.0
+#'@format Tibble
+#'@name location_data_template
+NULL
+
+#' List of standard format column names (protocol version 1.1)
+#'
+#' All columns names appearing in the 4 tables of the standard format, organized
+#' in a list.
+#' @format A list with 4 elements. Each element is a character vector.
+#' \describe{
+#'   \item{Brood}{Column names in `Brood_data`.}
+#'   \item{Capture}{Column names in `Capture_data`.}
+#'   \item{Individual}{Column names in `Individual_data`.}
+#'   \item{Location}{Column names in `Location_data`.}
+#'   }
+#'@name column_names_v1.1
+column_names_df_v1.1 <- utils::read.csv(system.file("extdata", "column_names_v1.1.csv", package = "pipelines", mustWork = TRUE), na.strings = "")
+column_names_v1.1 <- list(
+  Brood = column_names_df_v1.1$Brood[which(!is.na(column_names_df_v1.1$Brood))],
+  Capture = column_names_df_v1.1$Capture[which(!is.na(column_names_df_v1.1$Capture))],
+  Individual = column_names_df_v1.1$Individual[which(!is.na(column_names_df_v1.1$Individual))],
+  Location = column_names_df_v1.1$Location[which(!is.na(column_names_df_v1.1$Location))]
+)
+rm(column_names_df_v1.1)

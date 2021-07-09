@@ -42,5 +42,6 @@ The following capture data checks are performed:
 \item \strong{C2a-b}: Check capture variable values against reference values using \code{\link{check_values_capture}}. Capture variables checked for adults and chicks: Mass and Tarsus.
 \item \strong{C3}: Check chick age (in numbers of days since hatching) using \code{\link{check_chick_age}}.
 \item \strong{C4}: Check that adults caught on nest are listed as parents using \code{\link{check_adult_parent_nest}}.
+\item \strong{C5}: Check that the age of subsequent captures of the same individual is correct using \code{\link{check_age_captures}}.
 }
 }

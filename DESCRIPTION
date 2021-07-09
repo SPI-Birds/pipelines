@@ -16,6 +16,7 @@ License: GPL-2
 Encoding: UTF-8
 LazyData: true
 Imports: dplyr,
+         devtools,
          dbplyr,
          DBI,
          purrr,
@@ -40,12 +41,14 @@ Imports: dplyr,
          rstudioapi,
          sp,
          usethis,
-         rlang
+         rlang,
+         openxlsx
 RoxygenNote: 7.1.1
 Suggests: 
     knitr,
     rmarkdown,
     testthat
 Enhances:
-    ggplot2
+    ggplot2,
+    maps
 VignetteBuilder: knitr
