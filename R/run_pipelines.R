@@ -116,7 +116,7 @@ run_pipelines <- function(path = choose_directory(),
       purrr::pwalk(.l = list(.$PopCode),
                    .f = ~{
 
-                     message(glue::glue('Population {..1} has no information on the focal species and has been excluded.'))
+                     message(paste0('Population ', ..1, ' has no information on the focal species and has been excluded.'))
 
                    })
 
@@ -143,9 +143,9 @@ run_pipelines <- function(path = choose_directory(),
                                      species = pop_species_subset$Species),
                            .f = function(dirs, owner, pops, species){
 
-                             message(glue::glue('Running {owner} pipeline'))
+                             message(paste0('Running ', owner, ' pipeline'))
 
-                           eval(parse(text = glue::glue('format_{owner}(db = dirs, pop = pops, species = species, output_type = "R")')))
+                           eval(parse(text = paste0('format_', owner, '(db = dirs, pop = pops, species = species, output_type = "R")')))
 
                              })
 
@@ -159,7 +159,7 @@ run_pipelines <- function(path = choose_directory(),
                                    }) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(Row = seq(1, dplyr::n())) %>%
-    dplyr::select(Row, tidyselect::everything())
+    dplyr::select(Row, dplyr::everything())
 
   Capture_data <- purrr::map_df(.x = R_objects,
                                      .f = ~{
@@ -169,7 +169,7 @@ run_pipelines <- function(path = choose_directory(),
                                      }) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(Row = seq(1, dplyr::n())) %>%
-    dplyr::select(Row, tidyselect::everything())
+    dplyr::select(Row, dplyr::everything())
 
   Individual_data <- purrr::map_df(.x = R_objects,
                                         .f = ~{
@@ -179,7 +179,7 @@ run_pipelines <- function(path = choose_directory(),
                                         }) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(Row = seq(1, dplyr::n())) %>%
-    dplyr::select(Row, tidyselect::everything())
+    dplyr::select(Row, dplyr::everything())
 
   Location_data   <- purrr::map_df(.x = R_objects,
                                         .f = ~{
@@ -189,7 +189,7 @@ run_pipelines <- function(path = choose_directory(),
                                         }) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(Row = seq(1, dplyr::n())) %>%
-    dplyr::select(Row, tidyselect::everything())
+    dplyr::select(Row, dplyr::everything())
 
   #If we want an R output, return a list with the 4 different data frames
   if(output_type == "R"){

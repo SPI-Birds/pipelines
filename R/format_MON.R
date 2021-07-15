@@ -900,7 +900,7 @@ create_individual_MON <- function(Capture_data, Brood_data, verbose){
 
     purrr::pwalk(.l = list(duplicates),
                  ~{
-                 message(glue::glue("Individual {duplicate} has more than one potential BroodID", duplicate = ..1))
+                 message(paste0("Individual ", ..1, " has more than one potential BroodID"))
                  })
 
   }

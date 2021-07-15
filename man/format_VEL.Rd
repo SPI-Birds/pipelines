@@ -40,14 +40,14 @@ Kosir, Czechia, administered by Milos Krist.
 \details{
 This section provides details on data management choices that are unique to
 this data. For a general description of the standard format please see see
-\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
+\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 
 \strong{Species}: There are a small number of records for species other than
 great tit, blue tit and collared flycatcher. These are currently excluded.
 Blue tits have 93 recorded broods. This is less than our previous 100 broods
 cut-off, but they are still included.
 
-\strong{ClutchType_calc}: We assume that any NA records for number fledged
+\strong{ClutchType_calculated}: We assume that any NA records for number fledged
 are true unknowns (rather than 0s). In which case, we can't always estimate
 whether a clutch is a second clutch.
 
@@ -62,11 +62,11 @@ for multiple clutches laid in the same nest box.
 method. We convert this to Svensson's Alternative method using formula
 described in the standard format.
 
-\strong{ClutchSize, BroodSize, NumberFledged:} Some records have uncertainty
+\strong{ClutchSize_observed, BroodSize_observed, NumberFledged_observed}: Some records have uncertainty
 (e.g. 11+). We're unsure how large this uncertainty is. It's currently
 ignored, but will talk with data owner to incorporate this.
 
-\strong{CaptureDate:} In the raw data for flycatchers there are columns for
+\strong{CaptureDate}: In the raw data for flycatchers there are columns for
 measurements taken at 6 days and at 13 days. Sometimes, no measurements are
 recorded (i.e. columns are NA) and we need to decide how to deal with these.
 In discussion with the data owner we know that chicks are generally ringed at 6 days;
@@ -74,4 +74,6 @@ therefore, we assume that any ringed chick was captured at 6 days old, even if
 they have no other measurements. We only include a further capture at 13 days
 old if some measurements were taken. Those individuals with no mass/tarsus/wing length
 measures recorded at 13 days were assumed to have not been captured at this time.
+
+\strong{CaptureAlive, ReleaseAlive}: Assume all individuals were alive when captured and released.
 }

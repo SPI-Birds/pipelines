@@ -4,10 +4,12 @@
 \alias{create_individual_CHO}
 \title{Create individual data table for Choupal, Portugal.}
 \usage{
-create_individual_CHO(data)
+create_individual_CHO(data, Capture_data)
 }
 \arguments{
 \item{data}{Data frame. Primary data from Choupal.}
+
+\item{Capture_data}{Data frame. Output from \code{\link{create_capture_CHO}}.}
 }
 \value{
 A data frame.

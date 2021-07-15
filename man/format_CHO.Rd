@@ -40,9 +40,9 @@ Choupal, Portugal, administered by the University of Coimbra.
 \details{
 This section provides details on data management choices that are unique to
 this data. For a general description of the standard format please see
-\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
+\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 
-\strong{NumberFledged}: This population has no estimation of actual fledgling
+\strong{NumberFledged_observed}: This population has no estimation of actual fledgling
 numbers. The last time nests are counted is 14 days post hatching. We use this
 as an estimation of fledgling numbers. This also affects
 \emph{ClutchType_calculated} as we use the estimate of fledgling numbers to
@@ -61,10 +61,10 @@ hatched before last calendar year; year of hatching otherwise unknown.}
 to be a 'second' clutch under our definitions. 'ClutchType_calculated' may
 give a more appropriate estimate of clutch type for this data.
 
-\strong{ClutchSize, BroodSize, NumberFledged}: We currently only use records
+\strong{ClutchSize_observed, BroodSize_observed, NumberFledged_observed}: We currently only use records
 of clutch, brood, and fledgling numbers that are recorded explicitly in the
 data. This means that there are some nests where chicks have capture records,
-but the \emph{Brood data} table will not give any value of NumberFledged.
+but the \emph{Brood data} table will not give any value of NumberFledged_observed.
 (e.g. see BroodID 2004_NA). These capture records should be included, but we
 need to determine the amount of potential uncertainty around these records.
 
@@ -72,4 +72,6 @@ need to determine the amount of potential uncertainty around these records.
 trapping method column), a single LocationID "MN1" is used.
 
 \strong{StartSeason}: Assume all boxes were placed in the first year of the study.
+
+\strong{CaptureAlive, ReleaseAlive}: Assume all individuals were alive when captured and released.
 }
