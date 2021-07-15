@@ -357,7 +357,7 @@ create_capture_NIOO <- function(database, Brood_data, Individual_data, location_
     #This is used to determine the age of each individual (EURING) at the time of capture
     dplyr::left_join(dplyr::select(Individual_data, IndvID, RingSeason), by = "IndvID") %>%
     dplyr::mutate(Age_observed = as.integer(Age),
-                  CaptureDate = as.Date(CaptureDate),
+                  CaptureDate = lubridate::ymd(CaptureDate),
                   BreedingSeason = as.integer(lubridate::year(CaptureDate))) %>%
     calc_age(ID = IndvID, Age = Age_observed, Date = CaptureDate, Year = BreedingSeason, showpb = TRUE) %>%
     #Include species letter codes for all species
