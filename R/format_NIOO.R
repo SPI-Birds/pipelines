@@ -387,22 +387,9 @@ create_capture_NIOO <- function(database, Brood_data, Individual_data, location_
     dplyr::left_join(dplyr::select(Brood_data, BroodID, HatchDate), by = "BroodID") %>%
     #Determine difference between hatch and capture date for all individuals
     #that were ~before fledging (we'll say up until 30 days because this covers all possibilites)
-    dplyr::mutate(ChickAge = purrr::pmap_int(.l = list(HatchDate, CaptureDate, IndvID),
-                                             .f = ~{
-
-                                               x <- as.integer(difftime(..2, ..1))
-
-                                               if(!is.na(x) & between(x, 0, 30)){
-
-                                                 return(x)
-
-                                               } else {
-
-                                                 return(NA_integer_)
-
-                                               }
-
-                                             })) %>%
+    dplyr::mutate(diff = as.integer(.data$CaptureDate - .data$HatchDate),
+                  ChickAge = dplyr::case_when(!is.na(.data$diff) & between(.data$diff, 0, 30) ~ .data$diff,
+                                              TRUE ~ NA_integer_)) %>%
     #Arrange columns
     dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, CapturePopID, CapturePlot,
                   ReleasePopID, ReleasePlot,
