@@ -92,9 +92,9 @@ format_NIOO <- function(db = choose_directory(),
     dplyr::mutate(PopID = purrr::map_chr(.x = Name,
                                          function(.x){
 
-                                    toupper(substr(.x, start = 1, stop = 3))
+                                           toupper(substr(.x, start = 1, stop = 3))
 
-                                  })) %>%
+                                         })) %>%
     #Join in all the Areas within each AreaGroup (i.e. 'plots' within each population).
     dplyr::left_join(tbl(connection, "dbo_tx_Area_AreaGroup") %>%
                        dplyr::select(Area, AreaGroup) %>%
@@ -104,7 +104,7 @@ format_NIOO <- function(db = choose_directory(),
     dplyr::left_join(tbl(connection, "dbo_tbl_Location") %>%
                        dplyr::select(ID, UserPlaceName, AreaID, Latitude, Longitude) %>%
                        dplyr::collect(),
-              by = "AreaID")
+                     by = "AreaID")
 
   # SPECIES AND POPUALATION FILTERS
 
@@ -350,7 +350,7 @@ create_capture_NIOO <- function(database, Brood_data, Individual_data, location_
     # -Weight
     # -Tarsus
     # -Wing_Length
-    dplyr::select(CaptureID, CaptureDate, CaptureTime, IndvID, SpeciesID, CaptureLocation,
+  dplyr::select(CaptureID, CaptureDate, CaptureTime, IndvID, SpeciesID, CaptureLocation,
                 ReleaseLocation, Observer, Weight, Tarsus, WingLength = Wing_Length, Age) %>%
     dplyr::collect() %>%
     #Join in information on when the individual was first ringed (left join from the IndvData)
@@ -393,15 +393,12 @@ create_capture_NIOO <- function(database, Brood_data, Individual_data, location_
                   CaptureID = paste(.data$IndvID, dplyr::row_number(), sep = "_"),
                   CaptureAlive = TRUE, ReleaseAlive = TRUE, ##FIXME: Ask Marcel about dead captures
                   ExperimentID = NA_character_) %>% ##FIXME: Ask Marcel about individual only experiments.
-    #Arrange columns
-    dplyr::select(CaptureID, IndvID, Species, BreedingSeason,
-                  CaptureDate, CaptureTime, ObserverID, LocationID,
-                  CaptureAlive, ReleaseAlive,
-                  CapturePopID, CapturePlot,
-                  ReleasePopID, ReleasePlot,
-                  Mass, Tarsus, OriginalTarsusMethod,
-                  WingLength, Age_observed, Age_calculated,
-                  ChickAge, ExperimentID)
+    ## Keep only necessary columns
+    dplyr::select(dplyr::contains(names(capture_data_template))) %>%
+    ## Add missing columns
+    dplyr::bind_cols(capture_data_template[,!(names(capture_data_template) %in% names(.))]) %>%
+    ## Reorder columns
+    dplyr::select(names(capture_data_template))
 
   return(Capture_data)
 
@@ -494,10 +491,10 @@ create_brood_NIOO <- function(database, Individual_data, location_data, species_
                        dplyr::filter(Male_ring != ""), by = "Male_ring") %>%
     dplyr::arrange(PopID, BreedingSeason, Species, FemaleID, LayDate) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = TRUE)) %>%
-  #Add extra columns where data was not provided
-  dplyr::mutate(ClutchSizeError = NA_real_, HatchDateError = NA_real_, FledgeDateError = NA_real_,
-                BroodLocation = as.character(BroodLocation), BroodID = as.character(BroodID),
-                FemaleID = as.character(FemaleID), MaleID = as.character(MaleID))
+    #Add extra columns where data was not provided
+    dplyr::mutate(ClutchSizeError = NA_real_, HatchDateError = NA_real_, FledgeDateError = NA_real_,
+                  BroodLocation = as.character(BroodLocation), BroodID = as.character(BroodID),
+                  FemaleID = as.character(FemaleID), MaleID = as.character(MaleID))
 
   return(Brood_data)
 
@@ -524,7 +521,7 @@ create_location_NIOO <- function(database, location_data, species_filter, pop_fi
     #Join together information on the nestbox locations (e.g. latitude, longitude, nestbox name) and information on each nestbox that was there (e.g. how long before it was replaced).
     #This is necessary because one nestbox location could have multiple nestboxes erected at it over the study period.
     dplyr::right_join(dplyr::select(location_data, Location = ID, Latitude, Longitude, PopID),
-                     by = "Location") %>%
+                      by = "Location") %>%
     dplyr::filter(PopID %in% pop_filter) %>%
     dplyr::select(LocationID = Location, NestboxID = ID, LocationType = NestBoxType, PopID, Latitude, Longitude, StartSeason = StartYear, EndSeason = EndYear) %>%
     dplyr::mutate(LocationID = as.character(LocationID),
