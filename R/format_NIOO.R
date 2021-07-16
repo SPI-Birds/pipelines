@@ -389,9 +389,10 @@ create_capture_NIOO <- function(database, Brood_data, Individual_data, location_
     #that were ~before fledging (we'll say up until 30 days because this covers all possibilites)
     dplyr::mutate(diff = as.integer(.data$CaptureDate - .data$HatchDate),
                   ChickAge = dplyr::case_when(!is.na(.data$diff) & between(.data$diff, 0, 30) ~ .data$diff,
-                                              TRUE ~ NA_integer_)) %>%
+                                              TRUE ~ NA_integer_),
+                  CaptureID = paste(.data$IndvID, dplyr::row_number(), sep = "_")) %>%
     #Arrange columns
-    dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, CapturePopID, CapturePlot,
+    dplyr::select(CaptureID, IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, CapturePopID, CapturePlot,
                   ReleasePopID, ReleasePlot,
                   Mass, Tarsus, OriginalTarsusMethod, WingLength, Age_observed, Age_calculated, ChickAge)
 
