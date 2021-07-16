@@ -390,11 +390,18 @@ create_capture_NIOO <- function(database, Brood_data, Individual_data, location_
     dplyr::mutate(diff = as.integer(.data$CaptureDate - .data$HatchDate),
                   ChickAge = dplyr::case_when(!is.na(.data$diff) & between(.data$diff, 0, 30) ~ .data$diff,
                                               TRUE ~ NA_integer_),
-                  CaptureID = paste(.data$IndvID, dplyr::row_number(), sep = "_")) %>%
+                  CaptureID = paste(.data$IndvID, dplyr::row_number(), sep = "_"),
+                  CaptureAlive = TRUE, ReleaseAlive = TRUE, ##FIXME: Ask Marcel about dead captures
+                  ExperimentID = NA_character_) %>% ##FIXME: Ask Marcel about individual only experiments.
     #Arrange columns
-    dplyr::select(CaptureID, IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, CapturePopID, CapturePlot,
+    dplyr::select(CaptureID, IndvID, Species, BreedingSeason,
+                  CaptureDate, CaptureTime, ObserverID, LocationID,
+                  CaptureAlive, ReleaseAlive,
+                  CapturePopID, CapturePlot,
                   ReleasePopID, ReleasePlot,
-                  Mass, Tarsus, OriginalTarsusMethod, WingLength, Age_observed, Age_calculated, ChickAge)
+                  Mass, Tarsus, OriginalTarsusMethod,
+                  WingLength, Age_observed, Age_calculated,
+                  ChickAge, ExperimentID)
 
   return(Capture_data)
 
