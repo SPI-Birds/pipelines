@@ -166,7 +166,7 @@ format_NIOO <- function(db = choose_directory(),
                                       dplyr::select(Individual_data, IndvID, BroodID = BroodIDFledged), by = "IndvID"), by = "BroodID") %>%
     #Filter those that were not caught at 14 - 16 days
     dplyr::mutate(CaptureDate = lubridate::ymd(CaptureDate)) %>%
-    dplyr::filter(CaptureDate >= (HatchDate + 14) & CaptureDate <= (HatchDate + 16)) %>%
+    dplyr::filter(CaptureDate >= (HatchDate_observed + 14) & CaptureDate <= (HatchDate_observed + 16)) %>%
     dplyr::group_by(BroodID) %>%
     dplyr::summarise(AvgEggMass = NA_real_, NumberEggs = NA_integer_, AvgChickMass = mean(Mass, na.rm = TRUE),
                      NumberChicksMass = length(stats::na.omit(Mass)),
@@ -384,10 +384,10 @@ create_capture_NIOO <- function(database, Brood_data, Individual_data, location_
   #Join in hatch date for each brood where an individual fledged
   Capture_data <- Capture_data %>%
     dplyr::left_join(dplyr::select(Individual_data, IndvID, BroodID = BroodIDFledged), by = "IndvID") %>%
-    dplyr::left_join(dplyr::select(Brood_data, BroodID, HatchDate), by = "BroodID") %>%
+    dplyr::left_join(dplyr::select(Brood_data, BroodID, HatchDate_observed), by = "BroodID") %>%
     #Determine difference between hatch and capture date for all individuals
     #that were ~before fledging (we'll say up until 30 days because this covers all possibilites)
-    dplyr::mutate(diff = as.integer(.data$CaptureDate - .data$HatchDate),
+    dplyr::mutate(diff = as.integer(.data$CaptureDate - .data$HatchDate_observed),
                   ChickAge = dplyr::case_when(!is.na(.data$diff) & between(.data$diff, 0, 30) ~ .data$diff,
                                               TRUE ~ NA_integer_),
                   CaptureID = paste(.data$IndvID, dplyr::row_number(), sep = "_"),
@@ -443,22 +443,26 @@ create_brood_NIOO <- function(database, Individual_data, location_data, species_
   # - BroodSize
   # - FledgeDate
   # - NumberFledged
-  dplyr::select(BreedingSeason = BroodYear, BroodID = ID, BroodSpecies, BroodLocation = BroodLocationID, Female_ring = RingNumberFemale, Male_ring = RingNumberMale,
-                ClutchType_observed = Description, LayDate = LayDate, LayDateError = LayDateDeviation,
-                ClutchSize, HatchDate, BroodSize = NumberHatched, BroodSizeError = NumberHatchedDeviation,
-                FledgeDate, NumberFledged, NumberFledgedError = NumberFledgedDeviation, ExperimentID = ExperimentCode) %>%
+  dplyr::select(BreedingSeason = BroodYear, BroodID = ID, BroodSpecies, BroodLocation = BroodLocationID,
+                Female_ring = RingNumberFemale, Male_ring = RingNumberMale,
+                ClutchType_observed = Description, LayDate_observed = LayDate, LayDateDeviation,
+                ClutchSize_observed = ClutchSize, HatchDate_observed = HatchDate, BroodSize_observed = NumberHatched, NumberHatchedDeviation,
+                FledgeDate_observed = FledgeDate, NumberFledged_observed = NumberFledged, NumberFledgedDeviation, ExperimentID = ExperimentCode) %>%
     dplyr::collect() %>%
+    #Add in uncertainty columns
+    dplyr::mutate(HatchDate_observed = lubridate::ymd(.data$HatchDate_observed),
+                  LayDate_observed = lubridate::ymd(.data$LayDate_observed),
+                  LayDate_min = .data$LayDate_observed - .data$LayDateDeviation,
+                  LayDate_max = .data$LayDate_observed + .data$LayDateDeviation,
+                  BroodSize_min = .data$BroodSize_observed - .data$NumberHatchedDeviation,
+                  BroodSize_max = .data$BroodSize_observed + .data$NumberHatchedDeviation,
+                  NumberFledged_min = .data$NumberFledged_observed - .data$NumberFledgedDeviation,
+                  NumberFledged_max = .data$NumberFledged_observed + .data$NumberFledgedDeviation) %>%
     #Join PopID (including site ID and nestbox ID) and filter only the pop(s) of interest
     dplyr::left_join(dplyr::select(location_data, Plot = AreaID, BroodLocation = ID, PopID), by = "BroodLocation") %>%
     #Account for error in brood size
-    dplyr::mutate(BroodSizeError = BroodSizeError/2, NumberFledgedError = NumberFledgedError/2,
-                  LayDateError = LayDateError/2,
-                  BroodSize = as.integer(BroodSize + BroodSizeError),
-                  NumberFledged = as.integer(NumberFledged + NumberFledgedError),
-                  LayDate = lubridate::ymd(LayDate) + LayDateError,
-                  HatchDate = lubridate::ymd(HatchDate),
-                  FledgeDate = lubridate::ymd(FledgeDate),
-                  ExperimentID = as.character(!is.na(dplyr::na_if(ExperimentID, ""))),
+    ## FIXME: Ask Marcel to clarify how we would use these columns
+    dplyr::mutate(ExperimentID = as.character(!is.na(dplyr::na_if(ExperimentID, ""))),
                   Plot = as.character(Plot)) %>%
     #Include species letter codes for all species
     dplyr::mutate(Species = dplyr::case_when(.$BroodSpecies == 14400 ~ species_codes[species_codes$SpeciesID == 14400, ]$Species,
@@ -489,12 +493,8 @@ create_brood_NIOO <- function(database, Individual_data, location_data, species_
                        dplyr::filter(Female_ring != ""), by = "Female_ring") %>%
     dplyr::left_join(select(Individual_data, Male_ring = RingNumber, MaleID = IndvID) %>%
                        dplyr::filter(Male_ring != ""), by = "Male_ring") %>%
-    dplyr::arrange(PopID, BreedingSeason, Species, FemaleID, LayDate) %>%
-    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = TRUE)) %>%
-    #Add extra columns where data was not provided
-    dplyr::mutate(ClutchSizeError = NA_real_, HatchDateError = NA_real_, FledgeDateError = NA_real_,
-                  BroodLocation = as.character(BroodLocation), BroodID = as.character(BroodID),
-                  FemaleID = as.character(FemaleID), MaleID = as.character(MaleID))
+    dplyr::arrange(PopID, BreedingSeason, Species, FemaleID, LayDate_observed) %>%
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = TRUE, protocol_version = "1.1"))
 
   return(Brood_data)
 
