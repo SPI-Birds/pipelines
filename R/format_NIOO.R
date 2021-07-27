@@ -176,14 +176,17 @@ format_NIOO <- function(db = choose_directory(),
 
   #Join this average mass/tarsus data back into the brood data table
   Brood_data <- Brood_data %>%
-    dplyr::left_join(avg_mass, by = "BroodID")  %>%
-    dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot, LocationID = BroodLocation, FemaleID, MaleID, ClutchType_observed, ClutchType_calculated, LayDate, LayDateError,
-                  ClutchSize, ClutchSizeError, HatchDate, HatchDateError, BroodSize, BroodSizeError, FledgeDate, FledgeDateError, NumberFledged, NumberFledgedError,
-                  AvgEggMass, NumberEggs, AvgChickMass, NumberChicksMass, AvgTarsus, NumberChicksTarsus, OriginalTarsusMethod, ExperimentID)
+    dplyr::left_join(avg_mass, by = "BroodID") %>%
+    ## Keep only necessary columns
+    dplyr::select(dplyr::contains(names(brood_data_template))) %>%
+    ## Add missing columns
+    dplyr::bind_cols(brood_data_template[,!(names(brood_data_template) %in% names(.))]) %>%
+    ## Reorder columns
+    dplyr::select(names(brood_data_template))
 
   # REMOVE UNWANTED COLUMNS AND CHANGE FORMATS
   Individual_data <- Individual_data %>%
-    dplyr::mutate(IndvID = as.character(IndvID)) %>%
+    dplyr::mutate(dplyr::across(.cols = ends_with("ID"), .fns = ~as.character(.))) %>%
     dplyr::select(IndvID, Species, PopID, BroodIDLaid, BroodIDFledged,
                   RingSeason, RingAge, Sex)
 
@@ -193,6 +196,9 @@ format_NIOO <- function(db = choose_directory(),
                   CapturePlot = as.character(CapturePlot),
                   ReleasePlot = as.character(ReleasePlot),
                   CaptureDate = lubridate::ymd(CaptureDate))
+
+  Brood_data <- Brood_data %>%
+    dplyr::mutate(dplyr::across(.cols = ends_with("ID"), .fns = ~as.character(.)))
 
   # EXPORT DATA
 
@@ -294,13 +300,10 @@ create_individual_NIOO <- function(database, location_data, species_filter, pop_
                                              .$SpeciesID == 15980 ~ species_codes[species_codes$SpeciesID == 15980, ]$Species,
                                              .$SpeciesID == 14610 ~ species_codes[species_codes$SpeciesID == 14610, ]$Species)) %>%
     #Sort out brood laid and brood fledged so that both columns are filled.
-    mutate(BroodIDLaid = purrr::map2_chr(.x = BroodID, .y = GeneticBroodID,
-                                         #If there is no genetic brood listed but there is a regular broodID, assume these are the same
-                                         .f = ~ifelse(is.na(.y) & !is.na(.x), .x, .y)),
-
-           BroodIDFledged = purrr::map2_chr(.x = BroodID, .y = GeneticBroodID,
-                                            #If there is a genetic broodID listed by no regular brood ID assume these are the same.
-                                            .f = ~ifelse(!is.na(.y) & is.na(.x), .y, .x))) %>%
+    dplyr::mutate(BroodIDLaid = dplyr::case_when(is.na(.data$GeneticBroodID) & !is.na(.data$BroodID) ~ .data$BroodID,
+                                                 TRUE ~ .data$GeneticBroodID),
+                  BroodIDFledged = dplyr::case_when(!is.na(.data$GeneticBroodID) & is.na(.data$BroodID) ~ .data$GeneticBroodID,
+                                                    TRUE ~ .data$BroodID)) %>%
     dplyr::select(IndvID, RingNumber, Species, PopID, BroodIDLaid, BroodIDFledged, RingSeason, RingAge, Sex) %>%
     #Convert RingAge into either chick or adult
     dplyr::mutate(RingAge = dplyr::case_when(.$RingAge %in% c(1, 2, 3) ~ "chick",
@@ -479,12 +482,10 @@ create_brood_NIOO <- function(database, Individual_data, location_data, species_
                                                          grepl(pattern = "second clutch after|probably second|third clutch", .$ClutchType_observed) ~ "second",
                                                          grepl(pattern = "first clutch", .$ClutchType_observed) ~ "first")) %>%
     #Make individuals with no ring number into NA
-    dplyr::mutate(Female_ring = purrr::map_chr(.x = .$Female_ring,
-                                               .f = ~ifelse(.x == "0000000000"|.x == "",
-                                                            NA, .x)),
-                  Male_ring = purrr::map_chr(.x = .$Male_ring,
-                                             .f = ~ifelse(.x == "0000000000"|.x == "",
-                                                          NA, .x))) %>%
+    dplyr::mutate(Female_ring = dplyr::case_when(.data$Female_ring %in% c("0000000000", "") ~ NA_character_,
+                                                 TRUE ~ .data$Female_ring),
+                  Male_ring = dplyr::case_when(.data$Male_ring %in% c("0000000000", "") ~ NA_character_,
+                                               TRUE ~ .data$Male_ring)) %>%
     ########### N.B. CURRENTLY THERE ARE A FEW (~25) RING NUMBERS THAT ARE ASSIGNED TO 2 INDIVIDUALS
     ########### THIS MEANS THAT WE WILL GET A FEW DUPLICATE RECORDS WITH THIS APPROACH
     ########### THESE NEED TO BE ADDRESSED IN THE DATABASE BEFORE THEY CAN BE FIXED HERE
