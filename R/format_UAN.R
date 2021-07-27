@@ -408,26 +408,14 @@ create_capture_UAN <- function(data, species_filter, pop_filter){
     #Make tarsus length into standard method (Svensson Alt)
     #Firstly, convert the Svennson's standard measures to Svennson's Alt.
     #Then only use this converted measure when actual Svennson's Alt is unavailable.
-    dplyr::mutate(TarsusStandard = convert_tarsus(TarsusStandard, method = "Standard")) %>%
-    #Add tarsus and original tarsus method with bind_cols
-    dplyr::bind_cols(purrr::pmap_dfr(.l = list(SvenStd = .$TarsusStandard, SvenAlt = .$TarsusAlt),
-                                     function(SvenStd, SvenAlt){
-
-                                       pb$tick()
-
-                                       if(!is.na(SvenAlt)){
-
-                                         return(tibble::tibble(Tarsus = SvenAlt, OriginalTarsusMethod = "Alternative"))
-
-                                       } else if(!is.na(SvenStd)){
-
-                                         return(tibble::tibble(Tarsus = SvenStd, OriginalTarsusMethod = "Standard"))
-
-                                       } else {
-
-                                         return(tibble::tibble(Tarsus = NA_real_, OriginalTarsusMethod = NA_character_))
-
-                                       }})) %>%
+    dplyr::mutate(TarsusStandard = convert_tarsus(TarsusStandard, method = "Standard"),
+                  #Add tarsus and original tarsus method
+                  Tarsus = dplyr::case_when(!is.na(.data$TarsusAlt) ~ .data$TarsusAlt,
+                                            is.na(.data$TarsusAlt) & !is.na(.data$TarsusStandard) ~ .data$TarsusStandard,
+                                            TRUE ~ NA_real_),
+                  OriginalTarsusMethod = dplyr::case_when(!is.na(.data$TarsusAlt) ~ "Alternative",
+                                                          !is.na(.data$TarsusStandard) ~ "Standard",
+                                                          TRUE ~ NA_character_)) %>%
     #Create NAs and convert date/time
     dplyr::mutate(CaptureDate = lubridate::ymd(CaptureDate),
                   BreedingSeason = as.integer(lubridate::year(CaptureDate)),
@@ -437,60 +425,17 @@ create_capture_UAN <- function(data, species_filter, pop_filter){
                                                              pad = "0"), sep = ":"), "NA:NA"),
                   ReleasePopID = CapturePopID, ReleasePlot = CapturePlot) %>%
     #Calculate age at capture and chick age based on the LT column
-    dplyr::bind_cols(purrr::pmap_dfr(.l = list(.$Age_observed, .$CaptureMethod),
-                                     .f = ~{
-
-                                       pb$tick()
-
-                                       # If Age (LT) was not recorded
-                                       # instead estimate age from the capture type:
-                                       if(is.na(..1) | ..1 == 0){
-
-                                         #Capture type P and PP are chicks in the nest
-                                         if(..2 %in% c("P", "PP")){
-
-                                           return(tibble::tibble(Age_observed_new = 1, ChickAge = NA_integer_))
-
-                                           #Captures in mist nets, observed rings, cage traps, roost checks
-                                           #must be able to fly. But these can be anything from fledglings
-                                           #in first calendar year +
-                                           #Comment this out because it's really age calculated rather than observed
-                                           # } else if (.y %in% c("FU", "GE", "MN", "ON", "NO", "SK", "SL", "LS")){
-                                           #
-                                           #   return(tibble::tibble(Age_observed = 2, ChickAge = NA))
-
-                                         } else {
-
-                                           #If no age and no chick capture type is given, then observed age is unknown.
-                                           return(tibble::tibble(Age_observed_new = NA_integer_, ChickAge = NA_integer_))
-
-                                         }
-
-                                         #If age is > 5 this is the chick age in days
-                                       } else if(..1 > 5){
-
-                                         return(tibble::tibble(Age_observed_new = 1, ChickAge = ..1))
-
-                                       } else {
-
-                                         #If it's 1-5 then we translate into EURING codes for adults
-                                         if(..1 %in% c(1, 2)){
-
-                                           return(tibble::tibble(Age_observed_new = 1 + ..1*2, ChickAge = NA_integer_))
-
-                                         } else if (..1 %in% c(3, 4)) {
-
-                                           return(tibble::tibble(Age_observed_new = 4 + (..1 - 3)*2, ChickAge = NA_integer_))
-
-                                         } else {
-
-                                           return(tibble::tibble(Age_observed_new = NA, ChickAge = NA_integer_))
-
-                                         }
-
-                                       }
-
-                                     })) %>%
+    #Calculate age at capture and chick age based on the LT column
+    dplyr::mutate(Age_observed_new = dplyr::case_when((is.na(.data$Age_observed) | .data$Age_observed == 0) & .data$CaptureMethod %in% c("P", "PP") ~ 1L,
+                                                      (is.na(.data$Age_observed) | .data$Age_observed == 0) & !(.data$CaptureMethod %in% c("P", "PP")) ~ NA_integer_,
+                                                      .data$Age_observed > 5 ~ 1L,
+                                                      .data$Age_observed == 1 ~ 3L,
+                                                      .data$Age_observed == 2 ~ 5L,
+                                                      .data$Age_observed == 3 ~ 4L,
+                                                      .data$Age_observed == 4 ~ 6L,
+                                                      TRUE ~ NA_integer_),
+                  ChickAge = dplyr::case_when(.data$Age_observed > 5 ~ .data$Age_observed,
+                                              TRUE ~ NA_integer_)) %>%
     #Determine age at first capture for every individual
     dplyr::mutate(ischick = dplyr::case_when(.$Age_observed_new <= 3 ~ 1L)) %>%
     calc_age(ID = IndvID, Age = ischick, Date = CaptureDate, Year = BreedingSeason) %>%
@@ -553,10 +498,9 @@ create_individual_UAN <- function(data, Capture_data, species_filter){
     }),
     PopID = dplyr::first(CapturePopID),
     RingSeason = dplyr::first(BreedingSeason),
-    RingAge = dplyr::case_when(dplyr::first(.data$Age_observed) > 5  ~ "chick",
-                               dplyr::first(.data$Age_observed) == 1 ~ "chick",
-                               is.na(dplyr::first(.data$Age_observed)) ~ "adult",
-                               dplyr::first(.data$Age_observed) <= 5 ~ "adult"),
+    RingAge = dplyr::case_when(dplyr::first(.data$Age_observed) == 1 ~ "chick",
+                               dplyr::first(.data$Age_observed) != 1 ~ "adult",
+                               is.na(dplyr::first(.data$Age_observed)) ~ "adult"),
     BroodIDLaid = dplyr::case_when(RingAge == "chick" ~ first(BroodID),
                                    RingAge == "adult" ~ NA_character_),
     BroodIDFledged = BroodIDLaid,
