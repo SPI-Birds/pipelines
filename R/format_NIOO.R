@@ -341,7 +341,12 @@ create_capture_NIOO <- function(database, Brood_data, Individual_data, location_
     dplyr::left_join(dplyr::tbl(database, "dbo_vw_MI_CaptureCaptureData") %>%
                        dplyr::select(CaptureID, SpeciesID, Observer, Weight, Tarsus, Wing_Length, Age), by = "CaptureID") %>%
     #Filter target species
-    dplyr::filter(SpeciesID %in% species_filter & AccuracyOfDate %in% c(0, 1) & CaptureType %in% c(1, 2)) %>%
+    ## TODO: Ask Marcel about this AccuracyofDate column. We ignore it now...but should we?
+    ## TODO: We only include non-egg captures; however, there are errors where individuals
+    ## have a record in the Individual table but were only ever caught as an egg (e.g. 341000)
+    ## This seems like a database mistake because they are given a RingNumber...either they were
+    ## also caught and ringed (not recorded) or they are an egg and can have a ring.
+    dplyr::filter(SpeciesID %in% species_filter & CaptureType %in% c(1, 2)) %>%
     #Select only the basic info we need
     # -CaptureID (unique ID of capture event)
     # -CaptureDate
