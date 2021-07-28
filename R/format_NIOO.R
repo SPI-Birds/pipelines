@@ -407,6 +407,9 @@ create_capture_NIOO <- function(database, Brood_data, location_data, species_fil
                        dplyr::select(.data$CaptureID, .data$SpeciesID, .data$Observer,
                                      .data$Weight, .data$Tarsus,
                                      .data$Wing_Length, .data$Age), by = "CaptureID") %>%
+    #Join in Individual data so that we have an associated brood (used to determine chick age)
+    dplyr::left_join(dplyr::tbl(database, "dbo_tbl_Individual") %>%
+                       dplyr::select(IndvID = ID, BroodID), by = "IndvID") %>%
     #Now that we have joined species information, filter unwanted species out
     filter(dplyr::sql(stringr::str_flatten(paste0("SpeciesID = ", species_filter), collapse = " OR "))) %>%
     #Convert CaptureDate into DateTime and extract BreedingSeason information
@@ -458,7 +461,7 @@ create_capture_NIOO <- function(database, Brood_data, location_data, species_fil
     dplyr::left_join(dplyr::select(Brood_data, BroodID, HatchDate_observed), by = "BroodID") %>%
     #Determine difference between hatch and capture date for all individuals
     #that were ~before fledging (we'll say up until 30 days because this covers all possibilites)
-    dplyr::mutate(diff = as.integer(.data$CaptureDate - .data$HatchDate_observed),
+    dplyr::mutate(diff = as.integer(lubridate::ymd(.data$CaptureDate) - .data$HatchDate_observed),
                   ChickAge = dplyr::case_when(!is.na(.data$diff) & between(.data$diff, 0, 30) ~ .data$diff,
                                               TRUE ~ NA_integer_),
                   CaptureID = paste(.data$IndvID, dplyr::row_number(), sep = "_"),
