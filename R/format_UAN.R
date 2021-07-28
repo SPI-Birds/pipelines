@@ -5,17 +5,17 @@
 #'
 #'This section provides details on data management choices that are unique to
 #'this data. For a general description of the standard format please see
-#'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
+#'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 #'
 #'\strong{ClutchType_observed}: The raw data distinguishes second and third
 #'nests and first, second, and third replacements. We group these all as 'second'
 #'and 'replacement' respectively.
 #'
-#'\strong{ClutchSizeError}: The raw data includes a column to determine whether
+#'\strong{ClutchSize_min, ClutchSize_max}: The raw data includes a column to determine whether
 #'clutch size was counted with or without a brooding female. The presence of a
 #'brooding female can effect the uncertainty in the count. After discussions
 #'with the data owner clutch size counted with a brooding female is given an error
-#'of 2.
+#'of +/- 2, so that ClutchSize_min = ClutchSize_observed - 2, and ClutchSize_max = ClutchSize_observed + 2.
 #'
 #'\strong{ExperimentID}: Experimental codes are provided in their original
 #'format. These still need to be translated into our experimental groups.
@@ -25,7 +25,8 @@
 #'available this is used, otherwise we use converted Svensson's Standard, using
 #'\code{\link[pipelines]{convert_tarsus}}.
 #'
-#'\strong{Age}: For Age_observed: \itemize{
+#'\strong{Age}:
+#'For Age_observed: \itemize{
 #'\item If a capture has a recorded
 #'ChickAge or the Capture Type is listed as 'chick' it is given a EURING code 1:
 #'nestling or chick, unable to fly freely, still able to be caught by hand.
@@ -41,6 +42,7 @@
 #'unknown.
 #'\item After discussing with data owners, recorded value 5 (full grown age unknown)
 #'is given NA.
+#'}
 #'
 #'For Age_calculated \itemize{
 #'\item Any capture record with EURING <= 3 is considered to have a known age
@@ -50,7 +52,8 @@
 #'(i.e. EURING codes 4, 6, 8, etc.). We consider aging of adults to be too
 #'uncertain.
 #'}
-#'}
+#'
+#'\strong{ReleaseAlive}: Individuals who were captured alive are assumed to be released alive.
 #'
 #'\strong{Latitude and Longitude}: Location data is stored in Lambert72 CRS.
 #'This has been converted to WGS84 to be standard with other systems.
@@ -332,7 +335,6 @@ create_brood_UAN <- function(data, CAPTURE_info, species_filter, pop_filter){
                   ClutchType_observed = dplyr::case_when(.data$ClutchType_observed %in% c(1, 9) ~ "first",
                                                          .data$ClutchType_observed %in% c(2, 6, 7) ~ "second",
                                                          .data$ClutchType_observed %in% c(3, 4, 5, 8) ~ "replacement"),
-                  # TODO: Verify with Frank Adriaensen whether this is a correct interpretation of their error column
                   ClutchSizeError = dplyr::case_when(.data$ClutchSizeError == "J" ~ 0,
                                                      .data$ClutchSizeError == "N" ~ 2),
                   ClutchSize_min = .data$ClutchSize_observed - .data$ClutchSizeError,
@@ -416,6 +418,12 @@ create_capture_UAN <- function(data, species_filter, pop_filter){
                                                       TRUE ~ NA_integer_),
                   ChickAge = dplyr::case_when(.data$Age_observed > 5 ~ .data$Age_observed,
                                               TRUE ~ NA_integer_)) %>%
+    # CaptureMethod "DG" is found dead. No information on status on release,
+    # so individuals captured alive are assumed alive when released
+    # TODO: Verify with Frank Adriaensen
+    dplyr::mutate(CaptureAlive = dplyr::case_when(.data$CaptureMethod == "DG" ~ FALSE,
+                                                  TRUE ~ TRUE),
+                  ReleaseAlive = CaptureAlive) %>%
     # Determine age at first capture for every individual
     dplyr::mutate(ischick = dplyr::case_when(.data$Age_observed_new <= 3 ~ 1L)) %>%
     calc_age(ID = .data$IndvID, Age = .data$ischick, Date = .data$CaptureDate, Year = .data$BreedingSeason) %>%
@@ -465,7 +473,7 @@ create_individual_UAN <- function(data, Capture_data, species_filter){
     dplyr::arrange(.data$RingSeason, .data$IndvID)
 
   # Retrieve sex information from primary data
-  Indv_sex_primary <- INDV_info %>%
+  Indv_sex_primary <- data %>%
     dplyr::mutate(Sex = dplyr::case_when(.data$Sex %in% c(1, 3) ~ "M",
                                          .data$Sex %in% c(2, 4) ~ "F"),
                   Sex_genetic = dplyr::case_when(.data$MolecularSex == 1 ~ "M",
