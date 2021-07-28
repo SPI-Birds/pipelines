@@ -40,7 +40,7 @@
 #' old if some measurements were taken. Those individuals with no mass/tarsus/wing length
 #' measures recorded at 13 days were assumed to have not been captured at this time.
 #'
-#' \strong{CaptureAlive, ReleaseAlive}: Assume all individuals were alive when captured and released.
+#' \strong{CaptureAlive, ReleaseAlive}: All individuals are assumed to be captured and released alive.
 #'
 #' @inheritParams pipeline_params
 #'

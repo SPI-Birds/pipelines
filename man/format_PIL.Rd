@@ -69,6 +69,8 @@ how we want to deal with these hybrid broods in the future.
 adults as NA age. Individuals in nestling columns are assumed to always be pre-fledging
 and are given age 1.
 
+\strong{CaptureAlive, ReleaseAlive}: All individuals are assumed to be captured and released alive.
+
 \strong{Location_data}: All unique locationIDs (plot/nestbox number) are
 assumed to be active across the whole study period.
 
