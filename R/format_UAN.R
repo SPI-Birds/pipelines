@@ -88,7 +88,7 @@ format_UAN <- function(db = choose_directory(),
 
   start_time <- Sys.time()
 
-  message("\n Loading all files")
+  message("\nLoading all files")
 
   all_files <- list.files(path = db, pattern = ".xlsx", full.names = TRUE)
 
@@ -220,25 +220,25 @@ format_UAN <- function(db = choose_directory(),
 
   # BROOD DATA
 
-  message("\n Compiling brood information...")
+  message("Compiling brood information...")
 
   Brood_data <- create_brood_UAN(BROOD_info, CAPTURE_info, species, pop)
 
   # CAPTURE DATA
 
-  message("\n Compiling capture information...")
+  message("Compiling capture information...")
 
   Capture_data <- create_capture_UAN(CAPTURE_info, species, pop)
 
   # INDIVIDUAL DATA
 
-  message("\n Compiling individual information...")
+  message("Compiling individual information...")
 
   Individual_data <- create_individual_UAN(INDV_info, Capture_data, species)
 
   # LOCATION DATA
 
-  message("\n Compiling location information...")
+  message("Compiling location information...")
 
   Location_data <- create_location_UAN(BOX_info)
 
@@ -268,11 +268,11 @@ format_UAN <- function(db = choose_directory(),
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
-  message(paste0("All tables generated in ", round(time, 2), " seconds"))
+  message(paste0("\nAll tables generated in ", round(time, 2), " seconds"))
 
   if(output_type == "csv"){
 
-    message("\n Saving .csv files...")
+    message("\nSaving .csv files...")
 
     utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_UAN.csv"), row.names = F)
 
@@ -428,9 +428,14 @@ create_capture_UAN <- function(data, species_filter, pop_filter){
     dplyr::mutate(ischick = dplyr::case_when(.data$Age_observed_new <= 3 ~ 1L)) %>%
     calc_age(ID = .data$IndvID, Age = .data$ischick, Date = .data$CaptureDate, Year = .data$BreedingSeason) %>%
     dplyr::filter(CapturePopID %in% pop_filter) %>%
-    # Arrange columns
     # Replace Age_observed with Age_observed_new which has been converted to EURING codes
     dplyr::mutate(Age_observed = .data$Age_observed_new) %>%
+    # Arrange by IndvID and CaptureDate and add unique CaptureID
+    dplyr::arrange(.data$IndvID, .data$CaptureDate) %>%
+    dplyr::group_by(.data$IndvID) %>%
+    dplyr::mutate(CaptureID = paste(.data$IndvID, 1:n(), sep = "_")) %>%
+    dplyr::ungroup() %>%
+    # Arrange columns
     # Keep only necessary columns, and BroodID (to be used when creating the individual table)
     dplyr::select(dplyr::contains(c(names(capture_data_template), "BroodID"))) %>%
     # Add missing columns
