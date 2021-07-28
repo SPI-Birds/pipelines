@@ -42,8 +42,8 @@
 #'code. This is treated as EURING age 3.
 #'
 #'\strong{Tarsus}: Tarsus method is either 'M', 'S', or NA. We have assumed that
-#''M' is the Oxford min/max method and converted accordingly. Currently, we treat
-#''S' and NA as Svensson's Alternative and do not convert. This needs to be clarified with
+#''M' and NA are the Oxford min/max method and converted accordingly. Currently, we treat
+#''S' as Svensson's Alternative and do not convert. This needs to be clarified with
 #'data owner.
 #'
 #'\strong{Sex_observed, Sex_calculated}: Any uncertainty in sex is ignored. For example, 'm?' is treated as male.
@@ -202,6 +202,8 @@ create_brood_WYT <- function(db, species_filter){
                                              .data$species == "m" ~ species_codes[species_codes$SpeciesID == 14400, ]$Species)) %>%
     dplyr::filter(Species %in% species_filter) %>%
     dplyr::mutate(LayDate_observed = as.Date(.data$lay_date, format = "%d/%m/%Y"),
+                  # Uncertainty in LayDate_observed (stored in lay_date_uncertainty) is currently not used
+                  # TODO: ask data owner
                   HatchDate_observed = dplyr::case_when(
                     !is.na(.data$hatch_date) ~ as.Date(as.character(.data$hatch_date),
                                                        format = "%d/%m/%Y"),

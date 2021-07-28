@@ -53,6 +53,8 @@
 #'uncertain.
 #'}
 #'
+#'\strong{Sex_observed, Sex_calculated}: Any uncertainty in sex is ignored. For example, 'M?' is treated as male.
+#'
 #'\strong{ReleaseAlive}: Individuals who were captured alive are assumed to be released alive.
 #'
 #'\strong{Latitude and Longitude}: Location data is stored in Lambert72 CRS.

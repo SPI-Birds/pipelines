@@ -40,7 +40,7 @@ Woods, UK, administered by Edward Grey Institute Oxford (Ben Sheldon).
 \details{
 This section provides details on data management choices that are unique to
 this data. For a general description of the standard format please see
-\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
+\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 
 \strong{LocationID}: Unique locations are defined by using the nestbox IDs. These include
 plot information as nest box numbers are not unique across plots.
@@ -61,7 +61,7 @@ which I suspect is willow tit. This is currently ignored.
 
 \strong{AvgEggMass}: There are two columns with mass data, one is a 'legacy'
 column. When these overlap, they can differ up to 5g! I assume the 'legacy'
-column is less prefered (due to it's name). I only use this data where no
+column is less preferred (due to it's name). I only use this data where no
 other egg mass data is provided.
 
 \strong{AvgChickMass}: Average egg mass is recorded for each brood; however,
@@ -77,13 +77,15 @@ included unchanged. The only exception to this is '3J', which is an old EURING
 code. This is treated as EURING age 3.
 
 \strong{Tarsus}: Tarsus method is either 'M', 'S', or NA. We have assumed that
-'M' is the Oxford min/max method and converted accordingly. Currently, we treat
-'S' and NA as Svensson's Alternative and do not convert. This needs to be clarified with
+'M' and NA are the Oxford min/max method and converted accordingly. Currently, we treat
+'S' as Svensson's Alternative and do not convert. This needs to be clarified with
 data owner.
 
-\strong{Sex}: Any uncertainty in sex is ignored. For example, 'm?' is treated as male.
+\strong{Sex_observed, Sex_calculated}: Any uncertainty in sex is ignored. For example, 'm?' is treated as male.
 
 \strong{BroodIDLaid and BroodIDFledged}: There are (some) cases where BroodIDLaid/Fledged
 have conflicting records for an individual. In these cases, BroodIDLaid/Fledged is
 simply listed as 'CONFLICTED'.
+
+\strong{CaptureAlive, ReleaseAlive}: All individuals are assumed to be captured and released alive.
 }

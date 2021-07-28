@@ -5,7 +5,7 @@
 #'
 #'This section provides details on data management choices that are unique to
 #'this data. For a general description of the standard protocl please see
-#'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
+#'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 #'
 #'\strong{LocationID}: Nestbox numbers are not unique across plots. Therefore, unique locationIDs are
 #'a combination of plot and nestbox number.
@@ -161,7 +161,7 @@ format_PIL <- function(db = choose_directory(),
     dplyr::left_join(avg_mass, by = "BroodID") %>%
     dplyr::left_join(avg_tarsus, by = "BroodID")
 
-  # Remove unneccesary cols in Brood and Capture data
+  # Remove unneccesary columns in Brood and Capture data
   Brood_data <- Brood_data %>%
     # Keep only necessary columns
     dplyr::select(dplyr::contains(names(brood_data_template))) %>%
