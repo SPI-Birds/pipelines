@@ -4,12 +4,10 @@
 \alias{location_check}
 \title{Perform quality checks on location data}
 \usage{
-location_check(Location_data, check_format = TRUE, approved_list)
+location_check(Location_data, approved_list)
 }
 \arguments{
 \item{Location_data}{Data frame. Location data output from pipeline.}
-
-\item{check_format}{\code{TRUE} or \code{FALSE}. If \code{TRUE}, the check on variable format (i.e. \code{\link{check_format_location}}) is included in the quality check. Default: \code{TRUE}.}
 
 \item{approved_list}{List object. List of approved records from brood_approved_list.csv,
 capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv}
@@ -28,6 +26,6 @@ A wrapper that runs all single checks related to \code{Location_data}.
 \details{
 The following location data checks are performed:
 \itemize{
-\item \strong{L1}: Check if the formats of each column in \code{Location_data} match with the standard format using \code{\link{check_format_location}}.
+\item \strong{L1}:
 }
 }

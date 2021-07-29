@@ -26,5 +26,5 @@ A list of:
 Check that all individuals recorded in Individual_data appear at least once in Capture_data. This should never occur, because Individual_data is usually a direct product of Capture_data (i.e., all unique individuals from Capture_data). If we find missing individuals, we need to check the pipeline code.
 }
 \details{
-Check ID: I6.
+Check ID: I5.
 }

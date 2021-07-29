@@ -10,7 +10,6 @@ quality_check(
   output_format = "both",
   output_file = "output_report",
   latex_engine = "pdflatex",
-  check_format = TRUE,
   test = FALSE
 )
 }
@@ -25,8 +24,6 @@ quality_check(
 \item{output_file}{Character. Name of the output file. Default: "output_report".}
 
 \item{latex_engine}{Character. LaTeX engine for producing PDF output. Options are "pdflatex" (default), "xelatex", and "lualatex". NB: pdfLaTeX and XeLaTeX have memory limit restrictions, which can be problematic when generating large pdfs. LuaLaTeX has dynamic memory management which may help for generating large pdfs.}
-
-\item{check_format}{\code{TRUE} or \code{FALSE}. If \code{TRUE}, the checks on variable format (i.e. \code{\link{check_format_brood}}, \code{\link{check_format_capture}}, \code{\link{check_format_individual}} and \code{\link{check_format_location}}) are included in the quality check. Default: \code{TRUE}.}
 
 \item{test}{Logical. Is `quality_check` being used inside package tests? If TRUE, `R_data` is ignored and
 dummy data will be used instead.}

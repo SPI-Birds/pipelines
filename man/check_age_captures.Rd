@@ -24,5 +24,5 @@ A list of:
 Check that the observed age of chronologically ordered captures is correct. Individuals who have a record as a chick in the same or a later year than a record of an adult will be flagged as an error. Other cases where the age of the subsequent capture is not equal or greater than the previous will be flagged as a warning.
 }
 \details{
-Check ID: C5.
+Check ID: C4.
 }

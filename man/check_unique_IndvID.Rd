@@ -24,5 +24,5 @@ A list of:
 Check that the individual identifiers (IndvID) are unique. Records with individual identifiers that are not unique within populations will result in an error.
 }
 \details{
-Check ID: I2.
+Check ID: I1.
 }

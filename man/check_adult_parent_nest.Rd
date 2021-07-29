@@ -28,5 +28,5 @@ A list of:
 Check that adults captured on a nest are are listed as the parents of that nest in Brood_data. If not, records will be flagged as a warning. Adults can be caught near a nest box.
 }
 \details{
-Check ID: C4.
+Check ID: C3.
 }

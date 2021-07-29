@@ -26,5 +26,5 @@ A list of:
 Check that the parents of broods are of the same species. Common, biologically possible hybrid broods (e.g. FICHYP and FICALB) are flagged as ‘warning’. Other combinations of species are flagged as ‘potential error’.
 }
 \details{
-Check ID: B10.
+Check ID: B9.
 }

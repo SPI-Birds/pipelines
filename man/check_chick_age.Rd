@@ -24,5 +24,5 @@ A list of:
 Check whether chick ages (in number of days since hatching) are within the range of 0 and 30 days since hatching. Values outside this range will result in an error.
 }
 \details{
-Check ID: C3.
+Check ID: C2.
 }

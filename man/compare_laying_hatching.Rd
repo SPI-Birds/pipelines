@@ -24,5 +24,5 @@ A list of:
 Compare laying and hatching date per brood. Broods with laying date later than hatching date will result in an error. Broods with laying date earlier than hatching date but the difference in number of days is smaller than incubation time will result in a warning.
 }
 \details{
-Check ID: B4.
+Check ID: B3.
 }

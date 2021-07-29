@@ -24,5 +24,5 @@ A list of:
 Check that the sex of individuals in Individual_data is recorded consistently. Individuals who have been recorded as both male ('M') and female ('F') will have conflicting sex ('C') in Individual_data.
 }
 \details{
-Check ID: I4.
+Check ID: I3.
 }

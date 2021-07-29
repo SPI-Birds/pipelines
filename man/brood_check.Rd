@@ -4,14 +4,12 @@
 \alias{brood_check}
 \title{Perform quality checks on brood data}
 \usage{
-brood_check(Brood_data, Individual_data, check_format = TRUE, approved_list)
+brood_check(Brood_data, Individual_data, approved_list)
 }
 \arguments{
 \item{Brood_data}{Data frame. Brood data output from pipeline.}
 
 \item{Individual_data}{Data frame. Individual data output from pipeline.}
-
-\item{check_format}{\code{TRUE} or \code{FALSE}. If \code{TRUE}, the check on variable format (i.e. \code{\link{check_format_brood}}) is included in the quality check. Default: \code{TRUE}.}
 
 \item{approved_list}{List object. List of approved records from brood_approved_list.csv,
 capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv}
@@ -30,19 +28,18 @@ A wrapper that runs all single checks related to \code{Brood_data}.
 \details{
 The following brood data checks are performed:
 \itemize{
-\item \strong{B1}: Check if the formats of each column in \code{Brood_data} match with the standard format using \code{\link{check_format_brood}}.
-\item \strong{B2}: Compare clutch size and brood size per brood using \code{\link{compare_clutch_brood}}.
-\item \strong{B3}: Compare brood size and fledgling number per brood using \code{\link{compare_brood_fledglings}}.
-\item \strong{B4}: Compare lay date and hatching date per brood using \code{\link{compare_laying_hatching}}.
-\item \strong{B5}: Compare hatching date and fledging date per brood using \code{\link{compare_hatching_fledging}}.
-\item \strong{B6a-d}: Check brood variable values against reference values using \code{\link{check_values_brood}}. Brood variables checked: ClutchSize_observed, BroodSize_observed, NumberFledged_observed, LayDate_observed.
-\item \strong{B7}: Compare brood size with number of chicks captured using \code{\link{compare_broodsize_chicknumber}}.
-\item \strong{B8}: Check if the IDs of broods are unique using \code{\link{check_unique_BroodID}}.
-\item \strong{B9}: Check if the order of clutch types for multiple breeding attempts per female per season is correct using \code{\link{check_clutch_type_order}}.
-\item \strong{B10}: Check if parents of a brood are the same species using \code{\link{compare_species_parents}}.
-\item \strong{B11}: Check if the brood and the parents of that brood are recorded as the same species using \code{\link{compare_species_brood_parents}}.
-\item \strong{B12}: Check if the brood and the chicks in that brood are recorded as the same species using \code{\link{compare_species_brood_chicks}}.
-\item \strong{B13}: Check if the sex of mothers listed under FemaleID are female using \code{\link{check_sex_mothers}}.
-\item \strong{B14}: Check if the sex of fathers listed under MaleID are male using \code{\link{check_sex_fathers}}.
+\item \strong{B1}: Compare clutch size and brood size per brood using \code{\link{compare_clutch_brood}}.
+\item \strong{B2}: Compare brood size and fledgling number per brood using \code{\link{compare_brood_fledglings}}.
+\item \strong{B3}: Compare lay date and hatching date per brood using \code{\link{compare_laying_hatching}}.
+\item \strong{B4}: Compare hatching date and fledging date per brood using \code{\link{compare_hatching_fledging}}.
+\item \strong{B5a-d}: Check brood variable values against reference values using \code{\link{check_values_brood}}. Brood variables checked: ClutchSize_observed, BroodSize_observed, NumberFledged_observed, LayDate_observed.
+\item \strong{B6}: Compare brood size with number of chicks captured using \code{\link{compare_broodsize_chicknumber}}.
+\item \strong{B7}: Check if the IDs of broods are unique using \code{\link{check_unique_BroodID}}.
+\item \strong{B8}: Check if the order of clutch types for multiple breeding attempts per female per season is correct using \code{\link{check_clutch_type_order}}.
+\item \strong{B9}: Check if parents of a brood are the same species using \code{\link{compare_species_parents}}.
+\item \strong{B10}: Check if the brood and the parents of that brood are recorded as the same species using \code{\link{compare_species_brood_parents}}.
+\item \strong{B11}: Check if the brood and the chicks in that brood are recorded as the same species using \code{\link{compare_species_brood_chicks}}.
+\item \strong{B12}: Check if the sex of mothers listed under FemaleID are female using \code{\link{check_sex_mothers}}.
+\item \strong{B13}: Check if the sex of fathers listed under MaleID are male using \code{\link{check_sex_fathers}}.
 }
 }

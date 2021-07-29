@@ -24,5 +24,5 @@ A list of:
 Check that the order of calculated clutch types per breeding female per season is correct; "first" should always come before "replacement" and "second".
 }
 \details{
-Check ID: B9.
+Check ID: B8.
 }

@@ -24,5 +24,5 @@ A list of:
 Compare brood size and fledgling number per brood. In non-manipulated broods, brood size should be larger or equal to fledgling number. If not, the record will result in an error. In broods with clutch manipulation, brood size might be smaller than fledgling number. If so, the record will result in a warning.
 }
 \details{
-Check ID: B3.
+Check ID: B2.
 }

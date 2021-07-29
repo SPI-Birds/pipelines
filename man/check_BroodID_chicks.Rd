@@ -33,5 +33,5 @@ A list of:
 Check that all chicks in Individual_data that are caught and ringed in a nest box have a BroodID. Individuals just ringed after fledging are regarded as chicks but are not associated with a BroodID.
 }
 \details{
-Check ID: I3.
+Check ID: I2.
 }

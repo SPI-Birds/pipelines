@@ -24,5 +24,5 @@ A list of:
 Compare clutch size and brood size per brood. In non-manipulated broods, clutch size should be larger or equal to brood size. If not, the record will result in an error. In broods with clutch manipulation, clutch size might be smaller than brood size. If so, the record will result in a warning.
 }
 \details{
-Check ID: B2.
+Check ID: B1.
 }

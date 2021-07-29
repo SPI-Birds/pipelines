@@ -23,8 +23,8 @@ A list of:
 \item{Errors}{A list of row-by-row errors.}
 }
 \description{
-Check that the individuals listed under MaleID are male. Individuals with conflicted sex ("C") are ignored and checked in check I4.
+Check that the individuals listed under MaleID are male. Individuals with conflicted sex ("C") are ignored and checked in check I3 \code{\link{check_conflicting_sex}}.
 }
 \details{
-Check ID: B14.
+Check ID: B13.
 }

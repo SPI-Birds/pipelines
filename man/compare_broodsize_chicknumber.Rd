@@ -26,5 +26,5 @@ A list of:
 Compare BroodSize in Brood_data with the number of chicks captured in Capture_data. We expect these numbers to be equal. Records where BroodSize is larger than the number of chicks captured results in a warning, because chicks might have died before ringing and measuring. Records where BroodSize is smaller than the number of chicks captured results in an error, because this should not be possible.
 }
 \details{
-Check ID: B7.
+Check ID: B6.
 }

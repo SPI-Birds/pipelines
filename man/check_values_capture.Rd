@@ -27,7 +27,7 @@ Check variable values against population-species-specific reference values in ca
 }
 \details{
 \strong{Mass} \cr
-Check ID: C2a \cr
+Check ID: C1a \cr
 \itemize{
 \item{Adults}
 \itemize{
@@ -43,7 +43,7 @@ Check ID: C2a \cr
 
 
 \strong{Tarsus} \cr
-Check ID: C2b \cr
+Check ID: C1b \cr
 \itemize{
 \item{\emph{n >= 100}\cr}{Records are considered unusual if they are smaller than the 1st percentile or larger than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error.}
 \item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as an error.}
