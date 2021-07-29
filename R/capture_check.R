@@ -4,28 +4,25 @@
 #'
 #' The following capture data checks are performed:
 #' \itemize{
-#' \item \strong{C1}: Check if the formats of each column in \code{Capture_data} match with the standard format using \code{\link{check_format_capture}}.
-#' \item \strong{C2a-b}: Check capture variable values against reference values using \code{\link{check_values_capture}}. Capture variables checked for adults and chicks: Mass and Tarsus.
-#' \item \strong{C3}: Check chick age (in numbers of days since hatching) using \code{\link{check_chick_age}}.
-#' \item \strong{C4}: Check that adults caught on nest are listed as parents using \code{\link{check_adult_parent_nest}}.
-#' \item \strong{C5}: Check that the age of subsequent captures of the same individual is correct using \code{\link{check_age_captures}}.
+#' \item \strong{C1a-b}: Check capture variable values against reference values using \code{\link{check_values_capture}}. Capture variables checked for adults and chicks: Mass and Tarsus.
+#' \item \strong{C2}: Check chick age (in numbers of days since hatching) using \code{\link{check_chick_age}}.
+#' \item \strong{C3}: Check that adults caught on nest are listed as parents using \code{\link{check_adult_parent_nest}}.
+#' \item \strong{C4}: Check that the age of subsequent captures of the same individual is correct using \code{\link{check_age_captures}}.
 #' }
 #'
 #' @inheritParams checks_capture_params
 #' @inheritParams checks_location_params
 #' @inheritParams checks_brood_params
-#' @param check_format \code{TRUE} or \code{FALSE}. If \code{TRUE}, the check on variable format (i.e. \code{\link{check_format_capture}}) is included in the quality check. Default: \code{TRUE}.
 #'
 #' @inherit checks_return return
 #'
 #' @export
 
-capture_check <- function(Capture_data, Location_data, Brood_data, check_format=TRUE, approved_list){
+capture_check <- function(Capture_data, Location_data, Brood_data, approved_list){
 
   # Create check list with a summary of warnings and errors per check
-  check_list <- tibble::tibble(CheckID = paste0("C", c(1, paste0(2, letters[1:2]), 3:5)),
-                               CheckDescription = c("Check format of capture data",
-                                                    "Check mass values against reference values",
+  check_list <- tibble::tibble(CheckID = paste0("C", c(paste0(1, letters[1:2]), 2:4)),
+                               CheckDescription = c("Check mass values against reference values",
                                                     "Check tarsus values against reference values",
                                                     "Check chick age",
                                                     "Check that adults caught on nest are listed as the parents",
@@ -36,83 +33,54 @@ capture_check <- function(Capture_data, Location_data, Brood_data, check_format=
   # Checks
   message("Capture checks")
 
-  # - Check format capture data
-  if(check_format) {
-    message("C1: Checking format of capture variables...")
-
-    check_format_capture_output <- check_format_capture(Capture_data, approved_list)
-
-    check_list[1,3:4] <- check_format_capture_output$CheckList
-  }
-
   # - Check mass values against reference values
-  message("C2a: Checking mass values against reference values...")
+  message("C1a: Checking mass values against reference values...")
 
   check_values_mass_output <- check_values_capture(Capture_data, "Mass", approved_list)
 
-  check_list[2,3:4] <- check_values_mass_output$CheckList
+  check_list[1, 3:4] <- check_values_mass_output$CheckList
 
   # - Check tarsus values against reference values
-  message("C2b: Checking tarsus values against reference values...")
+  message("C1b: Checking tarsus values against reference values...")
 
   check_values_tarsus_output <- check_values_capture(Capture_data, "Tarsus", approved_list)
 
-  check_list[3,3:4] <- check_values_tarsus_output$CheckList
+  check_list[2, 3:4] <- check_values_tarsus_output$CheckList
 
   # - Check chick age values
-  message("C3: Checking chick age values...")
+  message("C2: Checking chick age values...")
 
   check_chick_age_output <- check_chick_age(Capture_data, approved_list)
 
-  check_list[4,3:4] <- check_chick_age_output$CheckList
+  check_list[3, 3:4] <- check_chick_age_output$CheckList
 
   # - Check that adults caught on nest are listed are the parents
-  message("C4: Checking that adults caught on nest are listed are the parents...")
+  message("C3: Checking that adults caught on nest are listed are the parents...")
 
   check_adult_parent_nest_output <- check_adult_parent_nest(Capture_data, Location_data, Brood_data, approved_list)
 
-  check_list[5,3:4] <- check_adult_parent_nest_output$CheckList
+  check_list[4, 3:4] <- check_adult_parent_nest_output$CheckList
 
   # - Check the order in age of subsequent captures
-  message("C5: Checking that the age of subsequent captures is ordered correctly...")
+  message("C4: Checking that the age of subsequent captures is ordered correctly...")
 
   check_age_captures_output <- check_age_captures(Capture_data, approved_list)
 
-  check_list[6,3:4] <- check_age_captures_output$CheckList
+  check_list[5, 3:4] <- check_age_captures_output$CheckList
 
-  if(check_format) {
-    # Warning list
-    warning_list <- list(Check1 = check_format_capture_output$WarningOutput,
-                         Check2a = check_values_mass_output$WarningOutput,
-                         Check2b = check_values_tarsus_output$WarningOutput,
-                         Check3 = check_chick_age_output$WarningOutput,
-                         Check4 = check_adult_parent_nest_output$WarningOutput,
-                         Check5 = check_age_captures_output$WarningOutput)
+  # Warning list
+  warning_list <- list(Check1a = check_values_mass_output$WarningOutput,
+                       Check1b = check_values_tarsus_output$WarningOutput,
+                       Check2 = check_chick_age_output$WarningOutput,
+                       Check3 = check_adult_parent_nest_output$WarningOutput,
+                       Check4 = check_age_captures_output$WarningOutput)
 
-    # Error list
-    error_list <- list(Check1 = check_format_capture_output$ErrorOutput,
-                       Check2a = check_values_mass_output$ErrorOutput,
-                       Check2b = check_values_tarsus_output$ErrorOutput,
-                       Check3 = check_chick_age_output$ErrorOutput,
-                       Check4 = check_adult_parent_nest_output$ErrorOutput,
-                       Check5 = check_age_captures_output$ErrorOutput)
-  } else {
-    # Warning list
-    warning_list <- list(Check2a = check_values_mass_output$WarningOutput,
-                         Check2b = check_values_tarsus_output$WarningOutput,
-                         Check3 = check_chick_age_output$WarningOutput,
-                         Check4 = check_adult_parent_nest_output$WarningOutput,
-                         Check5 = check_age_captures_output$WarningOutput)
-
-    # Error list
-    error_list <- list(Check2a = check_values_mass_output$ErrorOutput,
-                       Check2b = check_values_tarsus_output$ErrorOutput,
-                       Check3 = check_chick_age_output$ErrorOutput,
-                       Check4 = check_adult_parent_nest_output$ErrorOutput,
-                       Check5 = check_age_captures_output$ErrorOutput)
-
-    check_list <- check_list[-1,]
-  }
+  # Error list
+  error_list <- list(Check1a = check_values_mass_output$ErrorOutput,
+                     Check1b = check_values_tarsus_output$ErrorOutput,
+                     Check2 = check_chick_age_output$ErrorOutput,
+                     Check3 = check_adult_parent_nest_output$ErrorOutput,
+                     Check4 = check_age_captures_output$ErrorOutput)
 
   return(list(CheckList = check_list,
               WarningRows = unique(c(check_values_mass_output$WarningRows,
@@ -129,120 +97,12 @@ capture_check <- function(Capture_data, Location_data, Brood_data, check_format=
               Errors = error_list))
 }
 
-#' Check format of capture data
-#'
-#' Check that the format of each column in the capture data match with the standard format.
-#'
-#' Check ID: C1.
-#'
-#' @inheritParams checks_capture_params
-#'
-#' @inherit checks_return return
-#'
-#' @export
-
-check_format_capture <- function(Capture_data, approved_list){
-
-  ## Data frame with column names and formats according to the standard protocol
-  Capture_data_standard <- tibble::tibble(Variable = c("Row", "IndvID", "Species", "BreedingSeason",
-                                                       "CaptureDate", "CaptureTime", "ObserverID",
-                                                       "LocationID", "CapturePopID", "CapturePlot",
-                                                       "ReleasePopID", "ReleasePlot",
-                                                       "Mass", "Tarsus", "OriginalTarsusMethod",
-                                                       "WingLength", "Age_obsverved", "Age_calculated", "ChickAge"),
-                                          Format_standard = c("integer", "character", "character", "integer",
-                                                              "Date", "character", "character",
-                                                              "character", "character", "character",
-                                                              "character", "character",
-                                                              "numeric", "numeric", "character", "numeric",
-                                                              "integer", "integer", "integer"))
-
-  ## Data frame with column names and formats from Capture data
-  Capture_data_col <- tibble::tibble(Variable = names(Capture_data),
-                                     Format = unlist(purrr::pmap(list(Capture_data), class)))
-
-  ## Mismatches between Capture data and standard protocol
-  ## Column format "logical" refers to unmeasured/undetermined variables (NA)
-  Capture_data_mismatch <- dplyr::left_join(Capture_data_standard, Capture_data_col, by = "Variable") %>%
-    filter(.data$Format != "logical" & .data$Format_standard != .data$Format)
-
-  err <- FALSE
-  error_output <- NULL
-
-  if(nrow(Capture_data_mismatch) > 0) {
-    err <- TRUE
-
-    error_output <- purrr::map2(.x = Capture_data_mismatch$Variable,
-                                .y = Capture_data_mismatch$Format_standard,
-                                .f = ~{
-                                  paste0("The format of ", .x, " in Capture_data is not ", .y, ".")
-                                })
-  }
-
-  ## Missing columns
-  # Capture_data_missing <- dplyr::left_join(Capture_data_standard, Capture_data_col, by="Variable") %>%
-  #   filter(Format == "logical")
-  #
-  # war <- FALSE
-  # warning_output <- NULL
-  #
-  # if(nrow(Capture_data_missing) > 0) {
-  #   war <- TRUE
-  #
-  #   warning_output <- purrr::map(.x = Capture_data_missing$Variable,
-  #                                .f = ~{
-  #                                  paste0(.x, " in Capture_data is missing, unmeasured or undetermined (NA).")
-  #                                })
-  # }
-
-  #Test for empty columns by looking at uniques, rather than using data type
-  warning_output <- purrr::pmap(.l = list(as.list(Capture_data), colnames(Capture_data)),
-                                .f = ~{
-
-                                  if(all(is.na(unique(..1)))){
-
-                                    return(paste0(..2, " in Capture_data is missing, unmeasured or undetermined (NA)."))
-
-                                  } else {
-
-                                    return()
-
-                                  }
-
-                                })
-
-
-
-  #Remove all cases that return NULL
-  #Assigning NULL (rather than returning NULL in function) removes the list item
-  warning_output[sapply(warning_output, is.null)] <- NULL
-
-  if(length(warning_output) > 0){
-
-    war <- TRUE
-
-  } else {
-
-    war <- FALSE
-
-  }
-
-  check_list <- tibble::tibble(Warning = war,
-                               Error = err)
-
-  return(list(CheckList = check_list,
-              WarningOutput = unlist(warning_output),
-              ErrorOutput = unlist(error_output)))
-
-}
-
-
 #' Check capture variable values against reference values
 #'
 #' Check variable values against population-species-specific reference values in capture data. Reference values are based on the data if the number of observations is sufficiently large. Records for population-species combinations that are too low in number are only compared to reference values that are not data generated (see Details below).
 #'
 #' \strong{Mass} \cr
-#' Check ID: C2a \cr
+#' Check ID: C1a \cr
 #' \itemize{
 #' \item{Adults}
 #' \itemize{
@@ -258,7 +118,7 @@ check_format_capture <- function(Capture_data, approved_list){
 #'
 #'
 #' \strong{Tarsus} \cr
-#' Check ID: C2b \cr
+#' Check ID: C1b \cr
 #' \itemize{
 #' \item{\emph{n >= 100}\cr}{Records are considered unusual if they are smaller than the 1st percentile or larger than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error.}
 #' \item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as an error.}
@@ -791,7 +651,7 @@ check_values_capture <- function(Capture_data, var, approved_list) {
 #'
 #' Check whether chick ages (in number of days since hatching) are within the range of 0 and 30 days since hatching. Values outside this range will result in an error.
 #'
-#' Check ID: C3.
+#' Check ID: C2.
 #'
 #' @inheritParams checks_capture_params
 #'
@@ -856,7 +716,7 @@ check_chick_age <- function(Capture_data, approved_list){
 #'
 #' Check that adults captured on a nest are are listed as the parents of that nest in Brood_data. If not, records will be flagged as a warning. Adults can be caught near a nest box.
 #'
-#' Check ID: C4.
+#' Check ID: C3.
 #'
 #' @inheritParams checks_capture_params
 #' @inheritParams checks_location_params
@@ -979,7 +839,7 @@ check_adult_parent_nest <- function(Capture_data, Location_data, Brood_data, app
 #'
 #' Check that the observed age of chronologically ordered captures is correct. Individuals who have a record as a chick in the same or a later year than a record of an adult will be flagged as an error. Other cases where the age of the subsequent capture is not equal or greater than the previous will be flagged as a warning.
 #'
-#' Check ID: C5.
+#' Check ID: C4.
 #'
 #' @inheritParams checks_capture_params
 #'

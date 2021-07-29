@@ -4,39 +4,36 @@
 #'
 #' The following brood data checks are performed:
 #' \itemize{
-#' \item \strong{B1}: Check if the formats of each column in \code{Brood_data} match with the standard format using \code{\link{check_format_brood}}.
-#' \item \strong{B2}: Compare clutch size and brood size per brood using \code{\link{compare_clutch_brood}}.
-#' \item \strong{B3}: Compare brood size and fledgling number per brood using \code{\link{compare_brood_fledglings}}.
-#' \item \strong{B4}: Compare lay date and hatching date per brood using \code{\link{compare_laying_hatching}}.
-#' \item \strong{B5}: Compare hatching date and fledging date per brood using \code{\link{compare_hatching_fledging}}.
-#' \item \strong{B6a-d}: Check brood variable values against reference values using \code{\link{check_values_brood}}. Brood variables checked: ClutchSize_observed, BroodSize_observed, NumberFledged_observed, LayDate_observed.
-#' \item \strong{B7}: Compare brood size with number of chicks captured using \code{\link{compare_broodsize_chicknumber}}.
-#' \item \strong{B8}: Check if the IDs of broods are unique using \code{\link{check_unique_BroodID}}.
-#' \item \strong{B9}: Check if the order of clutch types for multiple breeding attempts per female per season is correct using \code{\link{check_clutch_type_order}}.
-#' \item \strong{B10}: Check if parents of a brood are the same species using \code{\link{compare_species_parents}}.
-#' \item \strong{B11}: Check if the brood and the parents of that brood are recorded as the same species using \code{\link{compare_species_brood_parents}}.
-#' \item \strong{B12}: Check if the brood and the chicks in that brood are recorded as the same species using \code{\link{compare_species_brood_chicks}}.
-#' \item \strong{B13}: Check if the sex of mothers listed under FemaleID are female using \code{\link{check_sex_mothers}}.
-#' \item \strong{B14}: Check if the sex of fathers listed under MaleID are male using \code{\link{check_sex_fathers}}.
+#' \item \strong{B1}: Compare clutch size and brood size per brood using \code{\link{compare_clutch_brood}}.
+#' \item \strong{B2}: Compare brood size and fledgling number per brood using \code{\link{compare_brood_fledglings}}.
+#' \item \strong{B3}: Compare lay date and hatching date per brood using \code{\link{compare_laying_hatching}}.
+#' \item \strong{B4}: Compare hatching date and fledging date per brood using \code{\link{compare_hatching_fledging}}.
+#' \item \strong{B5a-d}: Check brood variable values against reference values using \code{\link{check_values_brood}}. Brood variables checked: ClutchSize_observed, BroodSize_observed, NumberFledged_observed, LayDate_observed.
+#' \item \strong{B6}: Compare brood size with number of chicks captured using \code{\link{compare_broodsize_chicknumber}}.
+#' \item \strong{B7}: Check if the IDs of broods are unique using \code{\link{check_unique_BroodID}}.
+#' \item \strong{B8}: Check if the order of clutch types for multiple breeding attempts per female per season is correct using \code{\link{check_clutch_type_order}}.
+#' \item \strong{B9}: Check if parents of a brood are the same species using \code{\link{compare_species_parents}}.
+#' \item \strong{B10}: Check if the brood and the parents of that brood are recorded as the same species using \code{\link{compare_species_brood_parents}}.
+#' \item \strong{B11}: Check if the brood and the chicks in that brood are recorded as the same species using \code{\link{compare_species_brood_chicks}}.
+#' \item \strong{B12}: Check if the sex of mothers listed under FemaleID are female using \code{\link{check_sex_mothers}}.
+#' \item \strong{B13}: Check if the sex of fathers listed under MaleID are male using \code{\link{check_sex_fathers}}.
 #' }
 #'
 #' @inheritParams checks_brood_params
 #' @inheritParams checks_individual_params
-#' @param check_format \code{TRUE} or \code{FALSE}. If \code{TRUE}, the check on variable format (i.e. \code{\link{check_format_brood}}) is included in the quality check. Default: \code{TRUE}.
 #'
 #' @inherit checks_return return
 #' @importFrom rlang sym `:=`
 #' @importFrom progress progress_bar
 #' @export
 
-brood_check <- function(Brood_data, Individual_data, check_format=TRUE, approved_list){
+brood_check <- function(Brood_data, Individual_data, approved_list){
 
   # Create check list with a summary of warnings and errors per check
-  check_list <- tibble::tibble(CheckID = paste0("B", c(1:5, paste0(6, letters[1:4]), 7:14)),
-                               CheckDescription = c("Check format of brood data",
-                                                    "Compare clutch and brood sizes",
+  check_list <- tibble::tibble(CheckID = paste0("B", c(1:5, paste0(6, letters[1:4]), 7:13)),
+                               CheckDescription = c("Compare clutch and brood sizes",
                                                     "Compare brood sizes and fledgling numbers",
-                                                    "Compare lay and hatche dates",
+                                                    "Compare lay and hatch dates",
                                                     "Compare hatch and fledge dates",
                                                     "Check clutch size values against reference values",
                                                     "Check brood size values against reference values",
@@ -56,209 +53,157 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE, approved
   # Checks
   message("Brood checks")
 
-  # - Check format brood data
-  if(check_format) {
-    message("B1: Checking format of brood data...")
-
-    check_format_brood_output <- check_format_brood(Brood_data, approved_list)
-
-    check_list[1,3:4] <- check_format_brood_output$CheckList
-
-  }
-
   # - Compare clutch and brood sizes
-  message("B2: Comparing clutch and brood sizes...")
+  message("B1: Comparing clutch and brood sizes...")
 
   compare_clutch_brood_output <- compare_clutch_brood(Brood_data, approved_list)
 
-  check_list[2,3:4] <- compare_clutch_brood_output$CheckList
+  check_list[1, 3:4] <- compare_clutch_brood_output$CheckList
 
   # - Compare brood sizes and fledgling numbers
-  message("B3: Comparing brood sizes and fledgling numbers...")
+  message("B2: Comparing brood sizes and fledgling numbers...")
 
   compare_brood_fledglings_output <- compare_brood_fledglings(Brood_data, approved_list)
 
-  check_list[3,3:4] <- compare_brood_fledglings_output$CheckList
+  check_list[2, 3:4] <- compare_brood_fledglings_output$CheckList
 
   # - Compare lay and hatch dates
-  message("B4: Comparing lay and hatch dates...")
+  message("B3: Comparing lay and hatch dates...")
 
   compare_laying_hatching_output <- compare_laying_hatching(Brood_data, approved_list)
 
-  check_list[4,3:4] <- compare_laying_hatching_output$CheckList
+  check_list[3, 3:4] <- compare_laying_hatching_output$CheckList
 
   # - Compare hatch and fledge dates
-  message("B5: Comparing hatch and fledge dates...")
+  message("B4: Comparing hatch and fledge dates...")
 
   compare_hatching_fledging_output <- compare_hatching_fledging(Brood_data, approved_list)
 
-  check_list[5,3:4] <- compare_hatching_fledging_output$CheckList
+  check_list[4, 3:4] <- compare_hatching_fledging_output$CheckList
 
   # - Check clutch size values against reference values
-  message("B6a: Checking clutch size values against reference values...")
+  message("B5a: Checking clutch size values against reference values...")
 
   var_ext <- ifelse("ClutchSize" %in% colnames(Brood_data),
                     ifelse(all(is.na(Brood_data$ClutchSize)), "_observed", ""), "_observed")
 
   check_values_clutch_size_output <- check_values_brood(Brood_data, paste0("ClutchSize", var_ext), approved_list)
 
-  check_list[6,3:4] <- check_values_clutch_size_output$CheckList
+  check_list[5, 3:4] <- check_values_clutch_size_output$CheckList
 
   # - Check brood size values against reference values
-  message("B6b: Checking brood size values against reference values...")
+  message("B5b: Checking brood size values against reference values...")
 
   check_values_brood_size_output <- check_values_brood(Brood_data, paste0("BroodSize", var_ext), approved_list)
 
-  check_list[7,3:4] <- check_values_brood_size_output$CheckList
+  check_list[6, 3:4] <- check_values_brood_size_output$CheckList
 
   # - Check fledgling number values against reference values
-  message("B6c: Checking fledgling number values against reference values...")
+  message("B5c: Checking fledgling number values against reference values...")
 
   check_values_fledgling_number_output <- check_values_brood(Brood_data, paste0("NumberFledged", var_ext), approved_list)
 
-  check_list[8,3:4] <- check_values_fledgling_number_output$CheckList
+  check_list[7, 3:4] <- check_values_fledgling_number_output$CheckList
 
   # - Check lay date values against reference values
-  message("B6d: Checking lay date values against reference values...")
+  message("B5d: Checking lay date values against reference values...")
 
   check_values_lay_date_output <- check_values_brood(Brood_data, paste0("LayDate", var_ext), approved_list)
 
-  check_list[9,3:4] <- check_values_lay_date_output$CheckList
+  check_list[8, 3:4] <- check_values_lay_date_output$CheckList
 
   # - Compare brood size and number of chicks captured
-  message("B7: Comparing brood size and number of chicks captured...")
+  message("B6: Comparing brood size and number of chicks captured...")
 
   compare_broodsize_chicknumber_output <- compare_broodsize_chicknumber(Brood_data, Individual_data, approved_list)
 
-  check_list[10,3:4] <- compare_broodsize_chicknumber_output$CheckList
+  check_list[9, 3:4] <- compare_broodsize_chicknumber_output$CheckList
 
   # - Check that BroodIDs are unique
-  message("B8: Checking that brood IDs are unique...")
+  message("B7: Checking that brood IDs are unique...")
 
   check_unique_BroodID_output <- check_unique_BroodID(Brood_data, approved_list)
 
-  check_list[11,3:4] <- check_unique_BroodID_output$CheckList
+  check_list[10, 3:4] <- check_unique_BroodID_output$CheckList
 
   # - Check clutch type order
-  message("B9: Checking that clutch type order is correct..")
+  message("B8: Checking that clutch type order is correct..")
 
   check_clutch_type_order_output <- check_clutch_type_order(Brood_data, approved_list)
 
-  check_list[12,3:4] <- check_clutch_type_order_output$CheckList
+  check_list[11, 3:4] <- check_clutch_type_order_output$CheckList
 
   # - Compare species of mother and father
-  message("B10: Comparing species of mother and father...")
+  message("B9: Comparing species of mother and father...")
 
   compare_species_parents_output <- compare_species_parents(Brood_data, Individual_data, approved_list)
 
-  check_list[13,3:4] <- compare_species_parents_output$CheckList
+  check_list[12, 3:4] <- compare_species_parents_output$CheckList
 
   # - Compare species of brood and parents
-  message("B11: Comparing species of brood and parents...")
+  message("B10: Comparing species of brood and parents...")
 
   compare_species_brood_parents_output <- compare_species_brood_parents(Brood_data, Individual_data, approved_list)
 
-  check_list[14,3:4] <- compare_species_brood_parents_output$CheckList
+  check_list[13, 3:4] <- compare_species_brood_parents_output$CheckList
 
   # - Compare species of brood and chicks
-  message("B12: Comparing species of brood and chicks...")
+  message("B11: Comparing species of brood and chicks...")
 
   compare_species_brood_chicks_output <- compare_species_brood_chicks(Brood_data, Individual_data, approved_list)
 
-  check_list[15,3:4] <- compare_species_brood_chicks_output$CheckList
+  check_list[14, 3:4] <- compare_species_brood_chicks_output$CheckList
 
   # - Check sex of mothers
-  message("B13: Checking sex of mothers...")
+  message("B12: Checking sex of mothers...")
 
   check_sex_mothers_output <- check_sex_mothers(Brood_data, Individual_data, approved_list)
 
-  check_list[16,3:4] <- check_sex_mothers_output$CheckList
+  check_list[15, 3:4] <- check_sex_mothers_output$CheckList
 
   # - Check sex of fathers
-  message("B14: Checking sex of fathers...")
+  message("B13: Checking sex of fathers...")
 
   check_sex_fathers_output <- check_sex_fathers(Brood_data, Individual_data, approved_list)
 
-  check_list[17,3:4] <- check_sex_fathers_output$CheckList
+  check_list[16, 3:4] <- check_sex_fathers_output$CheckList
 
 
-  if(check_format) {
-    # Warning list
-    warning_list <- list(Check1 = check_format_brood_output$WarningOutput,
-                         Check2 = compare_clutch_brood_output$WarningOutput,
-                         Check3 = compare_brood_fledglings_output$WarningOutput,
-                         Check4 = compare_laying_hatching_output$WarningOutput,
-                         Check5 = compare_hatching_fledging_output$WarningOutput,
-                         Check6a = check_values_clutch_size_output$WarningOutput,
-                         Check6b = check_values_brood_size_output$WarningOutput,
-                         Check6c = check_values_fledgling_number_output$WarningOutput,
-                         Check6d = check_values_lay_date_output$WarningOutput,
-                         Check7 = compare_broodsize_chicknumber_output$WarningOutput,
-                         Check8 = check_unique_BroodID_output$WarningOutput,
-                         Check9 = check_clutch_type_order_output$WarningOutput,
-                         Check10 = compare_species_parents_output$WarningOutput,
-                         Check11 = compare_species_brood_parents_output$WarningOutput,
-                         Check12 = compare_species_brood_chicks_output$WarningOutput,
-                         Check13 = check_sex_mothers_output$WarningOutput,
-                         Check14 = check_sex_fathers_output$WarningOutput)
+  # Warning list
+  warning_list <- list(Check1 = compare_clutch_brood_output$WarningOutput,
+                       Check2 = compare_brood_fledglings_output$WarningOutput,
+                       Check3 = compare_laying_hatching_output$WarningOutput,
+                       Check4 = compare_hatching_fledging_output$WarningOutput,
+                       Check5a = check_values_clutch_size_output$WarningOutput,
+                       Check5b = check_values_brood_size_output$WarningOutput,
+                       Check5c = check_values_fledgling_number_output$WarningOutput,
+                       Check5d = check_values_lay_date_output$WarningOutput,
+                       Check6 = compare_broodsize_chicknumber_output$WarningOutput,
+                       Check7 = check_unique_BroodID_output$WarningOutput,
+                       Check8 = check_clutch_type_order_output$WarningOutput,
+                       Check9 = compare_species_parents_output$WarningOutput,
+                       Check10 = compare_species_brood_parents_output$WarningOutput,
+                       Check11 = compare_species_brood_chicks_output$WarningOutput,
+                       Check12 = check_sex_mothers_output$WarningOutput,
+                       Check13 = check_sex_fathers_output$WarningOutput)
 
-    # Error list
-    error_list <- list(Check1 = check_format_brood_output$ErrorOutput,
-                       Check2 = compare_clutch_brood_output$ErrorOutput,
-                       Check3 = compare_brood_fledglings_output$ErrorOutput,
-                       Check4 = compare_laying_hatching_output$ErrorOutput,
-                       Check5 = compare_hatching_fledging_output$ErrorOutput,
-                       Check6a = check_values_clutch_size_output$ErrorOutput,
-                       Check6b = check_values_brood_size_output$ErrorOutput,
-                       Check6c = check_values_fledgling_number_output$ErrorOutput,
-                       Check6d = check_values_lay_date_output$ErrorOutput,
-                       Check7 = compare_broodsize_chicknumber_output$ErrorOutput,
-                       Check8 = check_unique_BroodID_output$ErrorOutput,
-                       Check9 = check_clutch_type_order_output$ErrorOutput,
-                       Check10 = compare_species_parents_output$ErrorOutput,
-                       Check11 = compare_species_brood_parents_output$ErrorOutput,
-                       Check12 = compare_species_brood_chicks_output$ErrorOutput,
-                       Check13 = check_sex_mothers_output$ErrorOutput,
-                       Check14 = check_sex_fathers_output$ErrorOutput)
-  } else {
-    # Warning list
-    warning_list <- list(Check2 = compare_clutch_brood_output$WarningOutput,
-                         Check3 = compare_brood_fledglings_output$WarningOutput,
-                         Check4 = compare_laying_hatching_output$WarningOutput,
-                         Check5 = compare_hatching_fledging_output$WarningOutput,
-                         Check6a = check_values_clutch_size_output$WarningOutput,
-                         Check6b = check_values_brood_size_output$WarningOutput,
-                         Check6c = check_values_fledgling_number_output$WarningOutput,
-                         Check6d = check_values_lay_date_output$WarningOutput,
-                         Check7 = compare_broodsize_chicknumber_output$WarningOutput,
-                         Check8 = check_unique_BroodID_output$WarningOutput,
-                         Check9 = check_clutch_type_order_output$WarningOutput,
-                         Check10 = compare_species_parents_output$WarningOutput,
-                         Check11 = compare_species_brood_parents_output$WarningOutput,
-                         Check12 = compare_species_brood_chicks_output$WarningOutput,
-                         Check13 = check_sex_mothers_output$WarningOutput,
-                         Check14 = check_sex_fathers_output$WarningOutput)
-
-    # Error list
-    error_list <- list(Check2 = compare_clutch_brood_output$ErrorOutput,
-                       Check3 = compare_brood_fledglings_output$ErrorOutput,
-                       Check4 = compare_laying_hatching_output$ErrorOutput,
-                       Check5 = compare_hatching_fledging_output$ErrorOutput,
-                       Check6a = check_values_clutch_size_output$ErrorOutput,
-                       Check6b = check_values_brood_size_output$ErrorOutput,
-                       Check6c = check_values_fledgling_number_output$ErrorOutput,
-                       Check6d = check_values_lay_date_output$ErrorOutput,
-                       Check7 = compare_broodsize_chicknumber_output$ErrorOutput,
-                       Check8 = check_unique_BroodID_output$ErrorOutput,
-                       Check9 = check_clutch_type_order_output$ErrorOutput,
-                       Check10 = compare_species_parents_output$ErrorOutput,
-                       Check11 = compare_species_brood_parents_output$ErrorOutput,
-                       Check12 = compare_species_brood_chicks_output$ErrorOutput,
-                       Check13 = check_sex_mothers_output$ErrorOutput,
-                       Check14 = check_sex_fathers_output$ErrorOutput)
-
-    check_list <- check_list[-1,]
-  }
+  # Error list
+  error_list <- list(Check1 = compare_clutch_brood_output$ErrorOutput,
+                     Check2 = compare_brood_fledglings_output$ErrorOutput,
+                     Check3 = compare_laying_hatching_output$ErrorOutput,
+                     Check4 = compare_hatching_fledging_output$ErrorOutput,
+                     Check5a = check_values_clutch_size_output$ErrorOutput,
+                     Check5b = check_values_brood_size_output$ErrorOutput,
+                     Check5c = check_values_fledgling_number_output$ErrorOutput,
+                     Check5d = check_values_lay_date_output$ErrorOutput,
+                     Check6 = compare_broodsize_chicknumber_output$ErrorOutput,
+                     Check7 = check_unique_BroodID_output$ErrorOutput,
+                     Check8 = check_clutch_type_order_output$ErrorOutput,
+                     Check9 = compare_species_parents_output$ErrorOutput,
+                     Check10 = compare_species_brood_parents_output$ErrorOutput,
+                     Check11 = compare_species_brood_chicks_output$ErrorOutput,
+                     Check12 = check_sex_mothers_output$ErrorOutput,
+                     Check13 = check_sex_fathers_output$ErrorOutput)
 
   return(list(CheckList = check_list,
               WarningRows = unique(c(compare_clutch_brood_output$WarningRows,
@@ -297,127 +242,11 @@ brood_check <- function(Brood_data, Individual_data, check_format=TRUE, approved
               Errors = error_list))
 }
 
-#' Check format of brood data
-#'
-#' Check that the format of each column in the brood data match with the standard format.
-#'
-#' Check ID: B1.
-#'
-#' @inheritParams checks_brood_params
-#'
-#' @inherit checks_return return
-#'
-#' @export
-
-check_format_brood <- function(Brood_data, approved_list){
-
-  ## Data frame with column names and formats according to the standard protocol
-  Brood_data_standard <- tibble::tibble(Variable = c("Row", "BroodID", "PopID", "BreedingSeason", "Species", "Plot",
-                                                     "LocationID", "FemaleID", "MaleID",
-                                                     "ClutchType_observed", "ClutchType_calculated",
-                                                     "LayDate", "LayDateError", "ClutchSize",
-                                                     "ClutchSizeError", "HatchDate", "HatchDateError",
-                                                     "BroodSize", "BroodSizeError", "FledgeDate",
-                                                     "FledgeDateError", "NumberFledged",
-                                                     "NumberFledgedError", "AvgEggMass", "NumberEggs",
-                                                     "AvgChickMass", "NumberChicksMass", "AvgTarsus",
-                                                     "NumberChicksTarsus", "OriginalTarsusMethod", "ExperimentID"),
-                                        Format_standard = c("integer", "character", "character", "integer", "character",
-                                                            "character", "character", "character", "character",
-                                                            "character", "character",
-                                                            "Date", "numeric", "integer",
-                                                            "numeric", "Date", "numeric",
-                                                            "integer", "numeric", "Date",
-                                                            "numeric", "integer",
-                                                            "numeric", "numeric", "integer",
-                                                            "numeric", "integer", "numeric",
-                                                            "integer", "character", "character"))
-
-  ## Data frame with column names and formats from Brood data
-  Brood_data_col <- tibble::tibble(Variable = names(Brood_data),
-                                   Format = unlist(purrr::pmap(list(Brood_data), class)))
-
-  ## Mismatches between Brood_data and standard protocol
-  ## Column format "logical" refers to unmeasured/undetermined variables (NA)
-  Brood_data_mismatch <- dplyr::left_join(Brood_data_standard, Brood_data_col, by = "Variable") %>%
-    filter(.data$Format != "logical" & .data$Format_standard != .data$Format)
-
-  err <- FALSE
-  error_output <- NULL
-
-  if(nrow(Brood_data_mismatch) > 0) {
-    err <- TRUE
-
-    error_output <- purrr::map2(.x = Brood_data_mismatch$Variable,
-                                .y = Brood_data_mismatch$Format_standard,
-                                .f = ~{
-                                  paste0("The format of ", .x, " in Brood_data is not ", .y, ".")
-                                })
-  }
-
-  ## Missing columns
-  # Brood_data_missing <- dplyr::left_join(Brood_data_standard, Brood_data_col, by="Variable") %>%
-  #   filter(Format == "logical")
-  #
-  # war <- FALSE
-  # warning_output <- NULL
-  #
-  # if(nrow(Brood_data_missing) > 0) {
-  #   war <- TRUE
-  #
-  #   warning_output <- purrr::map(.x = Brood_data_missing$Variable,
-  #                                .f = ~{
-  #                                  paste0(.x, " in Brood_data is missing, unmeasured or undetermined (NA).")
-  #                                })
-  # }
-
-  #Test for empty columns by looking at uniques, rather than using data type
-  warning_output <- purrr::pmap(.l = list(as.list(Brood_data), colnames(Brood_data)),
-                                .f = ~{
-
-                                  if(all(is.na(unique(..1)))){
-
-                                    return(paste0(..2, " in Brood_data is missing, unmeasured or undetermined (NA)."))
-
-                                  } else {
-
-                                    return()
-
-                                  }
-
-                                })
-
-
-
-  #Remove all cases that return NULL
-  #Assigning NULL (rather than returning NULL in function) removes the list item
-  warning_output[sapply(warning_output, is.null)] <- NULL
-
-  if(length(warning_output) > 0){
-
-    war <- TRUE
-
-  } else {
-
-    war <- FALSE
-
-  }
-
-  check_list <- tibble::tibble(Warning = war,
-                               Error = err)
-
-  return(list(CheckList = check_list,
-              WarningOutput = unlist(warning_output),
-              ErrorOutput = unlist(error_output)))
-
-}
-
-
 #' Compare clutch and brood sizes
 #'
 #' Compare clutch size and brood size per brood. In non-manipulated broods, clutch size should be larger or equal to brood size. If not, the record will result in an error. In broods with clutch manipulation, clutch size might be smaller than brood size. If so, the record will result in a warning.
 #'
-#' Check ID: B2.
+#' Check ID: B1.
 #'
 #' @inheritParams checks_brood_params
 #'
@@ -515,7 +344,7 @@ compare_clutch_brood <- function(Brood_data, approved_list){
 #'
 #' Compare brood size and fledgling number per brood. In non-manipulated broods, brood size should be larger or equal to fledgling number. If not, the record will result in an error. In broods with clutch manipulation, brood size might be smaller than fledgling number. If so, the record will result in a warning.
 #'
-#' Check ID: B3.
+#' Check ID: B2.
 #'
 #' @inheritParams checks_brood_params
 #'
@@ -613,7 +442,7 @@ compare_brood_fledglings <- function(Brood_data, approved_list){
 #'
 #' Compare laying and hatching date per brood. Broods with laying date later than hatching date will result in an error. Broods with laying date earlier than hatching date but the difference in number of days is smaller than incubation time will result in a warning.
 #'
-#' Check ID: B4.
+#' Check ID: B3.
 #'
 #' @inheritParams checks_brood_params
 #'
@@ -690,7 +519,7 @@ compare_laying_hatching <- function(Brood_data, approved_list){
 #'
 #' Compare hatching and fledging date per brood. Broods with hatching date later than fledging date will result in an error. Broods with hatching date earlier than fledging date but the difference in number of days is smaller than breeding time will result in a warning.
 #'
-#' Check ID: B5.
+#' Check ID: B4.
 #'
 #' @inheritParams checks_brood_params
 #'
@@ -768,14 +597,14 @@ compare_hatching_fledging <- function(Brood_data, approved_list){
 #' Check variable values against population-species-specific reference values in brood data. Reference values are based on the data if the number of observations is sufficiently large. Records for population-species combinations that are too low in number are only compared to reference values that are not data generated (see Details below).
 #'
 #' \strong{ClutchSize_observed, BroodSize_observed, NumberFledged_observed} \cr
-#' Check IDs: B6a-c \cr
+#' Check IDs: B5a-c \cr
 #' \itemize{
 #' \item{\emph{n >= 100}\cr}{Records are considered unusual if they are larger than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error.}
 #' \item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as an error.}
 #' }
 #'
 #' \strong{LayDate_observed} \cr
-#' Check ID: B6d \cr
+#' Check ID: B5d \cr
 #' \itemize{
 #' \item{\emph{n >= 100}\cr}{Date columns are transformed to Julian days to calculate percentiles. Records are considered unusual if they are earlier than the 1st percentile or later than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are earlier than January 1st or later than December 31st of the current breeding season, and will be flagged as an error.}
 #' \item{\emph{n < 100}\cr}{Date columns are transformed to Julian days to calculate percentiles. Records are considered impossible if they are earlier than January 1st or later than December 31st of the current breeding season, and will be flagged as an error.}
@@ -1126,7 +955,7 @@ check_values_brood <- function(Brood_data, var, approved_list) {
 #'
 #' Compare BroodSize in Brood_data with the number of chicks captured in Capture_data. We expect these numbers to be equal. Records where BroodSize is larger than the number of chicks captured results in a warning, because chicks might have died before ringing and measuring. Records where BroodSize is smaller than the number of chicks captured results in an error, because this should not be possible.
 #'
-#' Check ID: B7.
+#' Check ID: B6.
 #'
 #' @inheritParams checks_brood_params
 #' @inheritParams checks_individual_params
@@ -1236,7 +1065,7 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data, approved_
 #'
 #' Check that the brood identifiers (BroodID) are unique within populations. Records with brood identifiers that are not unique within populations will result in an error.
 #'
-#' Check ID: B8.
+#' Check ID: B7.
 #'
 #' @inheritParams checks_brood_params
 #' @inherit checks_return return
@@ -1310,7 +1139,7 @@ check_unique_BroodID <- function(Brood_data, approved_list){
 #'
 #' Check that the order of calculated clutch types per breeding female per season is correct; "first" should always come before "replacement" and "second".
 #'
-#' Check ID: B9.
+#' Check ID: B8.
 #'
 #' @inheritParams checks_brood_params
 #' @inherit checks_return return
@@ -1380,7 +1209,7 @@ check_clutch_type_order <- function(Brood_data, approved_list){
 #'
 #' Check that the parents of broods are of the same species. Common, biologically possible hybrid broods (e.g. FICHYP and FICALB) are flagged as ‘warning’. Other combinations of species are flagged as ‘potential error’.
 #'
-#' Check ID: B10.
+#' Check ID: B9.
 #'
 #' @inheritParams checks_brood_params
 #' @inheritParams checks_individual_params
@@ -1490,7 +1319,7 @@ compare_species_parents <- function(Brood_data, Individual_data, approved_list) 
 #'
 #' Check that the species of broods is the same as the species of the parents of that brood. Common, biologically possible brood hybrids (e.g. FICHYP and FICALB) are flagged as ‘warning’. Other combinations of species are flagged as ‘potential error’.
 #'
-#' Check ID: B11.
+#' Check ID: B10.
 #'
 #' @inheritParams checks_brood_params
 #' @inheritParams checks_individual_params
@@ -1619,7 +1448,7 @@ compare_species_brood_parents <- function(Brood_data, Individual_data, approved_
 #'
 #' Check that the species of broods is the same as species of the chicks in that brood. Common, biologically possible brood hybrids (e.g. FICHYP and FICALB) are flagged as ‘warning’. Other combinations of species are flagged as ‘potential error’.
 #'
-#' Check ID: B12.
+#' Check ID: B11.
 #'
 #' @inheritParams checks_brood_params
 #' @inheritParams checks_individual_params
@@ -1725,9 +1554,9 @@ compare_species_brood_chicks <- function(Brood_data, Individual_data, approved_l
 
 #' Check sex of mothers
 #'
-#' Check that the individuals listed under FemaleID are female. Individuals with conflicted sex ("C") are ignored and checked in check I4.
+#' Check that the individuals listed under FemaleID are female. Individuals with conflicted sex ("C") are ignored and checked in check I3 \code{\link{check_conflicting_sex}}.
 #'
-#' Check ID: B13.
+#' Check ID: B12.
 #'
 #' @inheritParams checks_brood_params
 #' @inheritParams checks_individual_params
@@ -1812,9 +1641,9 @@ check_sex_mothers <- function(Brood_data, Individual_data, approved_list) {
 
 #' Check sex of fathers
 #'
-#' Check that the individuals listed under MaleID are male. Individuals with conflicted sex ("C") are ignored and checked in check I4.
+#' Check that the individuals listed under MaleID are male. Individuals with conflicted sex ("C") are ignored and checked in check I3 \code{\link{check_conflicting_sex}}.
 #'
-#' Check ID: B14.
+#' Check ID: B13.
 #'
 #' @inheritParams checks_brood_params
 #' @inheritParams checks_individual_params

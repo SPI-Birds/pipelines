@@ -10,7 +10,6 @@
 #' @param output_format Character. Format of output report. Options: "html", "pdf", and "both" (default).
 #' @param output_file Character. Name of the output file. Default: "output_report".
 #' @param latex_engine Character. LaTeX engine for producing PDF output. Options are "pdflatex" (default), "xelatex", and "lualatex". NB: pdfLaTeX and XeLaTeX have memory limit restrictions, which can be problematic when generating large pdfs. LuaLaTeX has dynamic memory management which may help for generating large pdfs.
-#' @param check_format \code{TRUE} or \code{FALSE}. If \code{TRUE}, the checks on variable format (i.e. \code{\link{check_format_brood}}, \code{\link{check_format_capture}}, \code{\link{check_format_individual}} and \code{\link{check_format_location}}) are included in the quality check. Default: \code{TRUE}.
 #' @param test Logical. Is `quality_check` being used inside package tests? If TRUE, `R_data` is ignored and
 #' dummy data will be used instead.
 #'
@@ -39,7 +38,6 @@ quality_check <- function(R_data,
                           output_format = "both",
                           output_file = "output_report",
                           latex_engine = "pdflatex",
-                          check_format = TRUE,
                           test = FALSE){
 
   start_time <- Sys.time()
@@ -96,24 +94,23 @@ quality_check <- function(R_data,
 
   # Add temporary empty CaptureID column to allow procedure to approve previously flagged records
   if(!("CaptureID" %in% colnames(Capture_data))) Capture_data$CaptureID <- NA_character_
-  ##FIXME remove after CaptureID column has been added in ALL pipelines
-
-  # Load approved list
-  # message("Loading approved list...")
-  # create_approved_list()
+  # FIXME remove after CaptureID column has been added in ALL pipelines
 
   # Run checks
   message("Running quality checks...")
-  Brood_checks <- brood_check(Brood_data, Individual_data, check_format, approved_list)
-  message("Check capture data...")
-  Capture_checks <- capture_check(Capture_data, Location_data, Brood_data, check_format, approved_list)
-  message("Check individual data...")
-  Individual_checks <- individual_check(Individual_data, Capture_data, Location_data, check_format, approved_list)
-  message("Check location data...")
-  Location_checks <- location_check(Location_data, check_format, approved_list)
+  Brood_checks <- brood_check(Brood_data, Individual_data, approved_list)
 
-  #Add warning and error columns to each data frame
-  #We don't do this for location because there are currently now rowwise checks
+  message("Check capture data...")
+  Capture_checks <- capture_check(Capture_data, Location_data, Brood_data, approved_list)
+
+  message("Check individual data...")
+  Individual_checks <- individual_check(Individual_data, Capture_data, Location_data, approved_list)
+
+  message("Check location data...")
+  Location_checks <- location_check(Location_data, approved_list)
+
+  # Add warning and error columns to each data frame
+  # We don't do this for location because there are currently now rowwise checks
   Brood_data$Warning <- NA
   Brood_data$Error <- NA
   Brood_data[Brood_data$Row %in% Brood_checks$WarningRows, "Warning"] <- TRUE
@@ -138,19 +135,19 @@ quality_check <- function(R_data,
   # Subset approved list items
   Brood_approved_list <- approved_list$Brood_approved_list %>%
     dplyr::filter(PopID %in% unique(R_data$Brood_data$PopID)) %>%
-    dplyr::arrange(PopID, BroodID, .data$CheckID)
+    dplyr::arrange(.data$PopID, .data$BroodID, .data$CheckID)
 
   Capture_approved_list <- approved_list$Capture_approved_list %>%
     dplyr::filter(PopID %in% unique(R_data$Brood_data$PopID)) %>%
-    dplyr::arrange(PopID, CaptureID, .data$CheckID)
+    dplyr::arrange(.data$PopID, .data$CaptureID, .data$CheckID)
 
   Individual_approved_list <- approved_list$Individual_approved_list %>%
     dplyr::filter(PopID %in% unique(R_data$Brood_data$PopID)) %>%
-    dplyr::arrange(PopID, IndvID, .data$CheckID)
+    dplyr::arrange(.data$PopID, .data$IndvID, .data$CheckID)
 
   Location_approved_list <- approved_list$Location_approved_list %>%
     dplyr::filter(PopID %in% unique(R_data$Brood_data$PopID)) %>%
-    dplyr::arrange(PopID, LocationID, .data$CheckID)
+    dplyr::arrange(.data$PopID, .data$LocationID, .data$CheckID)
 
 
   # Check messages
