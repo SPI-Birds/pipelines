@@ -677,7 +677,7 @@ check_chick_age <- function(Capture_data, approved_list){
 
     # Compare to approved_list
     error_records <- chick_age_err %>%
-      dplyr::mutate(CheckID = "C3") %>%
+      dplyr::mutate(CheckID = "C2") %>%
       dplyr::anti_join(approved_list$Capture_approved_list, by=c("PopID", "CheckID", "CaptureID"))
 
     # Create quality check report statements
@@ -797,7 +797,7 @@ check_adult_parent_nest <- function(Capture_data, Location_data, Brood_data, app
 
     # Compare to approved_list
     warning_records <- unassociated_adults %>%
-      dplyr::mutate(CheckID = "C4") %>%
+      dplyr::mutate(CheckID = "C3") %>%
       dplyr::anti_join(approved_list$Capture_approved_list, by=c("PopID", "CheckID", "CaptureID"))
 
     # Create quality check report statements
@@ -872,7 +872,7 @@ check_age_captures <- function(Capture_data, approved_list){
 
     # Compare to approved_list
     warning_records <- wrong_age_order %>%
-      dplyr::mutate(CheckID = "C5") %>%
+      dplyr::mutate(CheckID = "C4") %>%
       dplyr::anti_join(approved_list$Capture_approved_list, by=c("PopID", "CheckID", "CaptureID"))
 
     # Create quality check report statements
@@ -912,7 +912,7 @@ check_age_captures <- function(Capture_data, approved_list){
 
     # Compare to approved_list
     error_records <- chicks_caught_after_adults %>%
-      dplyr::mutate(CheckID = "C5") %>%
+      dplyr::mutate(CheckID = "C4") %>%
       dplyr::anti_join(approved_list$Capture_approved_list, by=c("PopID", "CheckID", "CaptureID"))
 
     # Create quality check report statements

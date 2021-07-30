@@ -129,7 +129,7 @@ check_unique_IndvID <- function(Individual_data, approved_list){
 
     # Compare to approved_list
     error_records <- duplicated_within %>%
-      dplyr::mutate(CheckID = "I2") %>%
+      dplyr::mutate(CheckID = "I1") %>%
       dplyr::anti_join(approved_list$Individual_approved_list, by=c("PopID", "CheckID", "IndvID"))
 
     # Create quality check report statements
@@ -215,7 +215,7 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data, a
 
     # Compare to approved_list
     error_records <- no_BroodID_nest %>%
-      dplyr::mutate(CheckID = "I3") %>%
+      dplyr::mutate(CheckID = "I2") %>%
       dplyr::anti_join(approved_list$Individual_approved_list, by=c("PopID", "CheckID", "IndvID"))
 
     # Create quality check report statements
@@ -280,7 +280,7 @@ check_conflicting_sex <- function(Individual_data, approved_list) {
 
     # Compare to approved_list
     error_records <- conflicting_sex %>%
-      dplyr::mutate(CheckID = "I4") %>%
+      dplyr::mutate(CheckID = "I3") %>%
       dplyr::anti_join(approved_list$Individual_approved_list, by=c("PopID", "CheckID", "IndvID"))
 
     # Create quality check report statements
@@ -343,7 +343,7 @@ check_conflicting_species <- function(Individual_data, approved_list) {
 
     # Compare to approved_list
     error_records <- conflicting_species %>%
-      dplyr::mutate(CheckID = "I5") %>%
+      dplyr::mutate(CheckID = "I4") %>%
       dplyr::anti_join(approved_list$Individual_approved_list, by=c("PopID", "CheckID", "IndvID"))
 
     # Create quality check report statements
@@ -408,7 +408,7 @@ check_individuals_captures <- function(Individual_data, Capture_data, approved_l
 
     # Compare to approved_list
     error_records <- missing_individuals %>%
-      dplyr::mutate(CheckID = "I6") %>%
+      dplyr::mutate(CheckID = "I5") %>%
       dplyr::anti_join(approved_list$Individual_approved_list, by=c("PopID", "CheckID", "IndvID"))
 
     # Create quality check report statements

@@ -277,7 +277,7 @@ compare_clutch_brood <- function(Brood_data, approved_list){
 
     # Compare to approved_list
     error_records <- brood_data_non %>%
-      dplyr::mutate(CheckID = "B2") %>%
+      dplyr::mutate(CheckID = "B1") %>%
       dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID")) %>%
       {if(all(c("ClutchSize", "BroodSize") %in% colnames(.))) dplyr::select(., .data$Row, .data$PopID, .data$BroodID, .data$ClutchSize, .data$BroodSize)
         else dplyr::select(., .data$Row, .data$PopID, .data$BroodID, .data$ClutchSize_observed, .data$BroodSize_observed)}
@@ -306,7 +306,7 @@ compare_clutch_brood <- function(Brood_data, approved_list){
 
     # Compare to approved_list
     warning_records <- brood_data_man %>%
-      dplyr::mutate(CheckID = "B2") %>%
+      dplyr::mutate(CheckID = "B1") %>%
       dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID")) %>%
       {if(all(c("ClutchSize", "BroodSize") %in% colnames(.))) dplyr::select(., .data$Row, .data$PopID, .data$BroodID, .data$ClutchSize, .data$BroodSize)
         else dplyr::select(., .data$Row, .data$PopID, .data$BroodID, .data$ClutchSize_observed, .data$BroodSize_observed)}
@@ -375,7 +375,7 @@ compare_brood_fledglings <- function(Brood_data, approved_list){
 
     # Compare to approved_list
     error_records <- brood_data_non %>%
-      dplyr::mutate(CheckID = "B3") %>%
+      dplyr::mutate(CheckID = "B2") %>%
       dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID")) %>%
       {if(all(c("BroodSize", "NumberFledged") %in% colnames(.))) dplyr::select(., .data$Row, .data$PopID, .data$BroodID, .data$BroodSize, .data$NumberFledged)
         else dplyr::select(., .data$Row, .data$PopID, .data$BroodID, .data$BroodSize_observed, .data$NumberFledged_observed)}
@@ -404,7 +404,7 @@ compare_brood_fledglings <- function(Brood_data, approved_list){
 
     # Compare to approved_list
     warning_records <- brood_data_man %>%
-      dplyr::mutate(CheckID = "B3") %>%
+      dplyr::mutate(CheckID = "B2") %>%
       dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID")) %>%
       {if(all(c("BroodSize", "NumberFledged") %in% colnames(.))) dplyr::select(., .data$Row, .data$PopID, .data$BroodID, .data$BroodSize, .data$NumberFledged)
         else dplyr::select(., .data$Row, .data$PopID, .data$BroodID, .data$BroodSize_observed, .data$NumberFledged_observed)}
@@ -478,7 +478,7 @@ compare_laying_hatching <- function(Brood_data, approved_list){
 
     # Compare to approved_list
     error_records <- brood_data_late %>%
-      dplyr::mutate(CheckID = "B4") %>%
+      dplyr::mutate(CheckID = "B3") %>%
       dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID")) %>%
       {if(all(c("LayDate", "HatchDate") %in% colnames(.))) dplyr::select(., .data$Row, .data$PopID, .data$BroodID, .data$LayDate, .data$HatchDate)
         else dplyr::select(., .data$Row, .data$PopID, .data$BroodID, .data$LayDate_observed, .data$HatchDate_observed)}
@@ -555,7 +555,7 @@ compare_hatching_fledging <- function(Brood_data, approved_list){
 
     # Compare to approved_list
     error_records <- brood_data_late %>%
-      dplyr::mutate(CheckID = "B5") %>%
+      dplyr::mutate(CheckID = "B4") %>%
       dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID")) %>%
       {if(all(c("HatchDate", "FledgeDate") %in% colnames(.))) dplyr::select(., .data$Row, .data$PopID, .data$BroodID, .data$HatchDate, .data$FledgeDate)
         else dplyr::select(., .data$Row, .data$PopID, .data$BroodID, .data$HatchDate_observed, .data$FledgeDate_observed)}
@@ -994,7 +994,7 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data, approved_
 
     # Compare to approved_list
     error_records <- brood_err %>%
-      dplyr::mutate(CheckID = "B7") %>%
+      dplyr::mutate(CheckID = "B6") %>%
       dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
@@ -1030,7 +1030,7 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data, approved_
 
     # Compare to approved_list
     warning_records <- brood_war %>%
-      dplyr::mutate(CheckID = "B8") %>%
+      dplyr::mutate(CheckID = "B6") %>%
       dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
@@ -1091,7 +1091,7 @@ check_unique_BroodID <- function(Brood_data, approved_list){
 
     # Compare to approved_list
     error_records <- duplicated %>%
-      dplyr::mutate(CheckID = "B8") %>%
+      dplyr::mutate(CheckID = "B7") %>%
       dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID")) %>%
       dplyr::select(.data$Row, .data$BroodID, .data$PopID)
 
@@ -1170,7 +1170,7 @@ check_clutch_type_order <- function(Brood_data, approved_list){
 
     # Compare to approved_list
     error_records <- brood_err %>%
-      dplyr::mutate(CheckID = "B9") %>%
+      dplyr::mutate(CheckID = "B8") %>%
       dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
 
     error_output <- purrr::pmap(.l = error_records,
@@ -1255,7 +1255,7 @@ compare_species_parents <- function(Brood_data, Individual_data, approved_list) 
 
     # Compare to approved_list
     warning_records <- common_hybrid_broods %>%
-      dplyr::mutate(CheckID = "B10") %>%
+      dplyr::mutate(CheckID = "B9") %>%
       dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
@@ -1287,7 +1287,7 @@ compare_species_parents <- function(Brood_data, Individual_data, approved_list) 
 
     # Compare to approved_list
     error_records <- uncommon_hybrid_broods %>%
-      dplyr::mutate(CheckID = "B10") %>%
+      dplyr::mutate(CheckID = "B9") %>%
       dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
@@ -1375,7 +1375,7 @@ compare_species_brood_parents <- function(Brood_data, Individual_data, approved_
 
     # Compare to approved_list
     warning_records <- common_different_species_brood_parents %>%
-      dplyr::mutate(CheckID = "B11") %>%
+      dplyr::mutate(CheckID = "B10") %>%
       dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
@@ -1414,7 +1414,7 @@ compare_species_brood_parents <- function(Brood_data, Individual_data, approved_
 
     # Compare to approved_list
     error_records <- uncommon_different_species_brood_parents %>%
-      dplyr::mutate(CheckID = "B11") %>%
+      dplyr::mutate(CheckID = "B10") %>%
       dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
@@ -1487,7 +1487,7 @@ compare_species_brood_chicks <- function(Brood_data, Individual_data, approved_l
 
     # Compare to approved_list
     warning_records <- common_different_species_brood_chicks %>%
-      dplyr::mutate(CheckID = "B12") %>%
+      dplyr::mutate(CheckID = "B11") %>%
       dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
@@ -1523,7 +1523,7 @@ compare_species_brood_chicks <- function(Brood_data, Individual_data, approved_l
 
     # Compare to approved_list
     error_records <- uncommon_different_species_brood_chicks %>%
-      dplyr::mutate(CheckID = "B12") %>%
+      dplyr::mutate(CheckID = "B11") %>%
       dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
 
     # Create quality check report statements
@@ -1604,7 +1604,7 @@ check_sex_mothers <- function(Brood_data, Individual_data, approved_list) {
 
     # Compare to approved_list
     error_records <- non_female_mothers %>%
-      dplyr::mutate(CheckID = "B13") %>%
+      dplyr::mutate(CheckID = "B12") %>%
       dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
 
     error_output <- purrr::pmap(.l = error_records,
@@ -1691,7 +1691,7 @@ check_sex_fathers <- function(Brood_data, Individual_data, approved_list) {
 
     # Compare to approved_list
     error_records <- non_male_fathers %>%
-      dplyr::mutate(CheckID = "B14") %>%
+      dplyr::mutate(CheckID = "B13") %>%
       dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
 
     error_output <- purrr::pmap(.l = error_records,
