@@ -152,7 +152,7 @@ format_NIOO <- function(db = choose_directory(),
 
   message("Compiling individual information...")
 
-  Individual_data <- create_individual_NIOO(connection, Locations, species_filter, pop_filter)
+  Individual_data <- create_individual_NIOO(connection, Capture_data, Locations, species_filter, pop_filter)
 
   # NESTBOX DATA
 
@@ -190,9 +190,7 @@ format_NIOO <- function(db = choose_directory(),
 
   # REMOVE UNWANTED COLUMNS AND CHANGE FORMATS
   Individual_data <- Individual_data %>%
-    dplyr::mutate(dplyr::across(.cols = ends_with("ID"), .fns = ~as.character(.))) %>%
-    dplyr::select(IndvID, Species, PopID, BroodIDLaid, BroodIDFledged,
-                  RingSeason, RingAge, Sex)
+    dplyr::mutate(dplyr::across(.cols = ends_with("ID"), .fns = ~as.character(.)))
 
   Capture_data <- Capture_data %>%
     dplyr::mutate(IndvID = as.character(IndvID),
@@ -259,19 +257,19 @@ create_brood_NIOO <- function(database, location_data, species_filter, pop_filte
   target_locations <- dplyr::filter(location_data, PopID %in% pop_filter)
 
   Male_rings <- dplyr::tbl(database, "dbo_tbl_Individual") %>%
-    dplyr::select(MaleID = ID, Male_ring = RingNumber)
+    dplyr::select(MaleID = .data$ID, Male_ring = .data$RingNumber)
 
   Female_rings <- dplyr::tbl(database, "dbo_tbl_Individual") %>%
-    dplyr::select(FemaleID = ID, Female_ring = RingNumber)
+    dplyr::select(FemaleID = .data$ID, Female_ring = .data$RingNumber)
 
   Brood_data <- dplyr::tbl(database, "dbo_tbl_Brood") %>%
     #Subset only broods of designated species in designated population
-    dplyr::filter(BroodSpecies %in% species_filter & BroodLocationID %in% !!target_locations$ID) %>%
+    dplyr::filter(.data$BroodSpecies %in% species_filter & .data$BroodLocationID %in% !!target_locations$ID) %>%
     #Link the ClutchType description (e.g. first, second, replacement)
     dplyr::left_join(dplyr::tbl(database, "dbo_tl_BroodType") %>%
-                       dplyr::select(BroodType = ID, Description), by = "BroodType") %>%
-    dplyr::mutate(Female_ring = dplyr::sql("IIF(RingNumberFemale = '0000000000' OR RingNumberFemale = '', NULL, RingNumberFemale)"),
-                  Male_ring = dplyr::sql("IIF(RingNumberMale = '0000000000' OR RingNumberMale = '', NULL, RingNumberMale)"),
+                       dplyr::select(BroodType = .data$ID, .data$Description), by = "BroodType") %>%
+    dplyr::mutate(Female_ring = dplyr::sql("IIF(RingNumberFemale = '0000000000' OR RingNumberFemale = '', NULL, CStr(RingNumberFemale))"),
+                  Male_ring = dplyr::sql("IIF(RingNumberMale = '0000000000' OR RingNumberMale = '', NULL, Cstr(RingNumberMale))"),
                   ExperimentID = dplyr::sql("IIF(IsNull(ExperimentCode) OR ExperimentCode = '', Null, CStr(ExperimentCode))")) %>%
     dplyr::left_join(Male_rings, by = "Male_ring") %>%
     dplyr::left_join(Female_rings, by = "Female_ring") %>%
@@ -286,10 +284,10 @@ create_brood_NIOO <- function(database, location_data, species_filter, pop_filte
                   NumberFledged_observed = .data$NumberFledged,
                   NumberFledged_min = .data$NumberFledged - .data$NumberFledgedDeviation,
                   NumberFledged_max = .data$NumberFledged + .data$NumberFledgedDeviation,
-                  ClutchType_observed = Description,
-                  BreedingSeason = BroodYear,
-                  BroodID = ID) %>%
-    dplyr::left_join(dplyr::select(location_data, Plot = AreaID, BroodLocationID = ID, PopID), by = "BroodLocationID") %>%
+                  ClutchType_observed = .data$Description,
+                  BreedingSeason = .data$BroodYear,
+                  BroodID = .data$ID) %>%
+    dplyr::left_join(dplyr::select(location_data, Plot = .data$AreaID, BroodLocationID = .data$ID, .data$PopID), by = "BroodLocationID") %>%
     dplyr::mutate(Species = dplyr::case_when(.$BroodSpecies == 14400 ~ species_codes[species_codes$SpeciesID == 14400, ]$Species,
                                              .$BroodSpecies == 14640 ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
                                              .$BroodSpecies == 13490 ~ species_codes[species_codes$SpeciesID == 13490, ]$Species,
@@ -303,7 +301,7 @@ create_brood_NIOO <- function(database, location_data, species_filter, pop_filte
                   ClutchType_observed = dplyr::case_when(grepl(pattern = "replacement", .$ClutchType_observed) ~ "replacement",
                                                          grepl(pattern = "second clutch after|probably second|third clutch", .$ClutchType_observed) ~ "second",
                                                          grepl(pattern = "first clutch", .$ClutchType_observed) ~ "first")) %>%
-    dplyr::arrange(PopID, BreedingSeason, Species, FemaleID, LayDate_observed) %>%
+    dplyr::arrange(.data$PopID, .data$BreedingSeason, .data$Species, .data$FemaleID, .data$LayDate_observed) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = TRUE, protocol_version = "1.1")) %>%
     ## Keep only necessary columns
     dplyr::select(dplyr::contains(names(brood_data_template))) %>%
@@ -311,65 +309,6 @@ create_brood_NIOO <- function(database, location_data, species_filter, pop_filte
     dplyr::bind_cols(brood_data_template[,!(names(brood_data_template) %in% names(.))]) %>%
     ## Reorder columns
     dplyr::select(names(brood_data_template))
-
-
-
-  # Brood_data  <- dplyr::tbl(database, "dbo_tbl_Brood") %>%
-  #   #Subset only broods of designated species in designated population
-  #   dplyr::filter(BroodSpecies %in% species_filter & BroodLocationID %in% !!target_locations$ID) %>%
-  #   #Link the ClutchType description (e.g. first, second, replacement)
-  #   dplyr::left_join(dplyr::tbl(database, "dbo_tl_BroodType") %>%
-  #                      dplyr::select(BroodType = ID, Description), by = "BroodType") %>%
-  #   dplyr::select(BreedingSeason = BroodYear, BroodID = ID, BroodSpecies, BroodLocation = BroodLocationID,
-  #                 Female_ring = RingNumberFemale, Male_ring = RingNumberMale,
-  #                 ClutchType_observed = Description, LayDate_observed = LayDate, LayDateDeviation,
-  #                 ClutchSize_observed = ClutchSize, HatchDate_observed = HatchDate, BroodSize_observed = NumberHatched, NumberHatchedDeviation,
-  #                 FledgeDate_observed = FledgeDate, NumberFledged_observed = NumberFledged, NumberFledgedDeviation, ExperimentID = ExperimentCode) %>%
-  #   dplyr::collect() %>%
-  #   #Add in uncertainty columns
-  #   dplyr::mutate(HatchDate_observed = lubridate::ymd(.data$HatchDate_observed),
-  #                 LayDate_observed = lubridate::ymd(.data$LayDate_observed),
-  #                 LayDate_min = .data$LayDate_observed - .data$LayDateDeviation,
-  #                 LayDate_max = .data$LayDate_observed + .data$LayDateDeviation,
-  #                 BroodSize_min = .data$BroodSize_observed - .data$NumberHatchedDeviation,
-  #                 BroodSize_max = .data$BroodSize_observed + .data$NumberHatchedDeviation,
-  #                 NumberFledged_min = .data$NumberFledged_observed - .data$NumberFledgedDeviation,
-  #                 NumberFledged_max = .data$NumberFledged_observed + .data$NumberFledgedDeviation) %>%
-  #   #Join PopID (including site ID and nestbox ID) and filter only the pop(s) of interest
-  #   dplyr::left_join(dplyr::select(location_data, Plot = AreaID, BroodLocation = ID, PopID), by = "BroodLocation") %>%
-  #   #Account for error in brood size
-  #   ## FIXME: Ask Marcel to clarify how we would use these columns
-  #   dplyr::mutate(ExperimentID = as.character(!is.na(dplyr::na_if(ExperimentID, ""))),
-  #                 Plot = as.character(Plot)) %>%
-  #   #Include species letter codes for all species
-  #   dplyr::mutate(Species = dplyr::case_when(.$BroodSpecies == 14400 ~ species_codes[species_codes$SpeciesID == 14400, ]$Species,
-  #                                            .$BroodSpecies == 14640 ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
-  #                                            .$BroodSpecies == 13490 ~ species_codes[species_codes$SpeciesID == 13490, ]$Species,
-  #                                            .$BroodSpecies == 14620 ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
-  #                                            .$BroodSpecies == 14790 ~ species_codes[species_codes$SpeciesID == 14790, ]$Species,
-  #                                            .$BroodSpecies == 15980 ~ species_codes[species_codes$SpeciesID == 15980, ]$Species,
-  #                                            .$BroodSpecies == 14610 ~ species_codes[species_codes$SpeciesID == 14610, ]$Species),
-  #                 #Adjust ClutchType names to fit "first", "second", "replacement".
-  #                 #We ignore any uncertainty (e.g. "probably second" is just listed as "second")
-  #                 #ClutchTypes like 'different species inside one clutch' are listed as NA.
-  #                 ClutchType_observed = dplyr::case_when(grepl(pattern = "replacement", .$ClutchType_observed) ~ "replacement",
-  #                                                        grepl(pattern = "second clutch after|probably second|third clutch", .$ClutchType_observed) ~ "second",
-  #                                                        grepl(pattern = "first clutch", .$ClutchType_observed) ~ "first")) %>%
-  #   #Make individuals with no ring number into NA
-  #   dplyr::mutate(Female_ring = dplyr::case_when(.data$Female_ring %in% c("0000000000", "") ~ NA_character_,
-  #                                                TRUE ~ .data$Female_ring),
-  #                 Male_ring = dplyr::case_when(.data$Male_ring %in% c("0000000000", "") ~ NA_character_,
-  #                                              TRUE ~ .data$Male_ring)) %>%
-  #   ########### N.B. CURRENTLY THERE ARE A FEW (~25) RING NUMBERS THAT ARE ASSIGNED TO 2 INDIVIDUALS
-  #   ########### THIS MEANS THAT WE WILL GET A FEW DUPLICATE RECORDS WITH THIS APPROACH
-  #   ########### THESE NEED TO BE ADDRESSED IN THE DATABASE BEFORE THEY CAN BE FIXED HERE
-  #   #Join in ID numbers for the parents of the brood from the individual table above
-  #   dplyr::left_join(dplyr::select(Individual_data, Female_ring = RingNumber, FemaleID = IndvID) %>%
-  #                      dplyr::filter(Female_ring != ""), by = "Female_ring") %>%
-  #   dplyr::left_join(select(Individual_data, Male_ring = RingNumber, MaleID = IndvID) %>%
-  #                      dplyr::filter(Male_ring != ""), by = "Male_ring") %>%
-  #   dplyr::arrange(PopID, BreedingSeason, Species, FemaleID, LayDate_observed) %>%
-  #   dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = TRUE, protocol_version = "1.1"))
 
   return(Brood_data)
 
@@ -394,10 +333,9 @@ create_brood_NIOO <- function(database, location_data, species_filter, pop_filte
 
 create_capture_NIOO <- function(database, Brood_data, location_data, species_filter, pop_filter){
 
-  ### DO THIS ALL WITHIN SQL TO SPEED UP
   RawCaptures <- dplyr::tbl(database, "dbo_tbl_Capture") %>%
     #Filter out egg captures. Reduce records early
-    dplyr::filter(dplyr::sql("CaptureType = 1 OR CaptureType = 2")) %>%
+    dplyr::filter(.data$CaptureType %in% c(1, 2)) %>%
     #Reduce to only necessary columns
     dplyr::select(CaptureID = .data$ID, .data$CaptureDate,
                   .data$CaptureTime, IndvID = .data$Individual,
@@ -409,9 +347,9 @@ create_capture_NIOO <- function(database, Brood_data, location_data, species_fil
                                      .data$Wing_Length, .data$Age), by = "CaptureID") %>%
     #Join in Individual data so that we have an associated brood (used to determine chick age)
     dplyr::left_join(dplyr::tbl(database, "dbo_tbl_Individual") %>%
-                       dplyr::select(IndvID = ID, BroodID), by = "IndvID") %>%
+                       dplyr::select(IndvID = .data$ID, .data$BroodID), by = "IndvID") %>%
     #Now that we have joined species information, filter unwanted species out
-    filter(dplyr::sql(stringr::str_flatten(paste0("SpeciesID = ", species_filter), collapse = " OR "))) %>%
+    dplyr::filter(.data$SpeciesID %in% species_filter) %>%
     #Convert CaptureDate into DateTime and extract BreedingSeason information
     dplyr::mutate(CaptureDateTime = dplyr::sql("IIF(CaptureDate <> '', CDate(CaptureDate), NULL)"),
                   BreedingSeason = dplyr::sql("Year(CaptureDateTime)"))
@@ -419,7 +357,7 @@ create_capture_NIOO <- function(database, Brood_data, location_data, species_fil
   #Create a summary for each individual with their ringing season (i.e. the min BreedingSeason)
   RingSeason_summary <- RawCaptures %>%
     dplyr::group_by(.data$IndvID) %>%
-    dplyr::summarise(RingSeason = dplyr::sql("Min(BreedingSeason)"))
+    dplyr::summarise(RingSeason = min(.data$BreedingSeason, na.rm = TRUE))
 
   #Join this information back in so that we know the ringing season
   Captures_w_RingSeason <- RawCaptures %>%
@@ -428,8 +366,9 @@ create_capture_NIOO <- function(database, Brood_data, location_data, species_fil
   #Now we can collect the data and continue in dplyr
   Capture_data <- Captures_w_RingSeason %>%
     dplyr::collect() %>%
-    dplyr::mutate(Age_observed = as.integer(Age)) %>%
-    calc_age(ID = IndvID, Age = Age_observed, Date = CaptureDate, Year = BreedingSeason, showpb = TRUE) %>%
+    dplyr::mutate(Age_observed = as.integer(.data$Age)) %>%
+    calc_age(ID = .data$IndvID, Age = .data$Age_observed,
+             Date = .data$CaptureDate, Year = .data$BreedingSeason, showpb = TRUE) %>%
     #Include species letter codes for all species
     dplyr::ungroup() %>%
     dplyr::mutate(Species = dplyr::case_when(.$SpeciesID == 14400 ~ species_codes[species_codes$SpeciesID == 14400, ]$Species,
@@ -441,24 +380,26 @@ create_capture_NIOO <- function(database, Brood_data, location_data, species_fil
                                              .$SpeciesID == 14610 ~ species_codes[species_codes$SpeciesID == 14610, ]$Species),
                   #Add original tarsus method
                   OriginalTarsusMethod = dplyr::case_when(!is.na(.$Tarsus) ~ "Alternative"),
-                  ObserverID = as.character(Observer)) %>%
+                  ObserverID = as.character(.data$Observer)) %>%
     #Arrange by species, indv and date/time
-    dplyr::arrange(Species, IndvID, CaptureDate, CaptureTime) %>%
+    dplyr::arrange(.data$Species, .data$IndvID, .data$CaptureDate, .data$CaptureTime) %>%
     #Include three letter population codes for both the capture and release location (some individuals may have been translocated e.g. cross-fostering)
-    dplyr::left_join(dplyr::select(location_data, CapturePlot = AreaID, CaptureLocation = ID, CapturePopID = PopID), by = "CaptureLocation") %>%
-    dplyr::left_join(dplyr::select(location_data, ReleasePlot = AreaID, ReleaseLocation = ID, ReleasePopID = PopID), by = "ReleaseLocation") %>%
+    dplyr::left_join(dplyr::select(location_data, CapturePlot = .data$AreaID, CaptureLocation = .data$ID, CapturePopID = .data$PopID), by = "CaptureLocation") %>%
+    dplyr::left_join(dplyr::select(location_data, ReleasePlot = .data$AreaID, ReleaseLocation = .data$ID, ReleasePopID = .data$PopID), by = "ReleaseLocation") %>%
     ## TODO: There are 7 other individuals (480602-8) that have a CaptureLocation = 432
     #In individual data (i.e. Hoge Veluwe)
     #But in capture data, their capture location is 8681, which corresponds to Heikamp.
     #Is Heikamp inside HOG? Is it a different location? If so, are these mistakes?
-    dplyr::filter(CapturePopID %in% pop_filter) %>%
+    dplyr::filter(.data$CapturePopID %in% pop_filter) %>%
     #Make mass and tarsus into g and mm
-    dplyr::mutate(LocationID = CaptureLocation, Mass = dplyr::na_if(Weight/100, y = 0), Tarsus = dplyr::na_if(Tarsus/10, 0))
+    dplyr::mutate(LocationID = .data$CaptureLocation,
+                  Mass = dplyr::na_if(.data$Weight/100, y = 0),
+                  Tarsus = dplyr::na_if(.data$Tarsus/10, 0))
 
   # Join in hatch date for each brood where an individual fledged
   # Do this later once we complete Individual_data
   Capture_data <- Capture_data %>%
-    dplyr::left_join(dplyr::select(Brood_data, BroodID, HatchDate_observed), by = "BroodID") %>%
+    dplyr::left_join(dplyr::select(Brood_data, .data$BroodID, .data$HatchDate_observed), by = "BroodID") %>%
     #Determine difference between hatch and capture date for all individuals
     #that were ~before fledging (we'll say up until 30 days because this covers all possibilites)
     dplyr::mutate(diff = as.integer(lubridate::ymd(.data$CaptureDate) - .data$HatchDate_observed),
@@ -473,92 +414,6 @@ create_capture_NIOO <- function(database, Brood_data, location_data, species_fil
     dplyr::bind_cols(capture_data_template[,!(names(capture_data_template) %in% names(.))]) %>%
     ## Reorder columns
     dplyr::select(names(capture_data_template))
-
-
-  #Capture data includes all times an individual was captured (with measurements like mass, tarsus etc.).
-  #This will include first capture as nestling
-  #This can include multiple records for a single individual.
-  # Capture_data <- dplyr::tbl(database, "dbo_tbl_Capture") %>%
-  #   dplyr::select(CaptureID = ID, AccuracyOfDate, CaptureDate, CaptureTime, IndvID = Individual, CaptureLocation, ReleaseLocation, CaptureType) %>%
-  #   #Join in weight, tarsus and wing_length from secondary capture data table.
-  #   dplyr::left_join(dplyr::tbl(database, "dbo_vw_MI_CaptureCaptureData") %>%
-  #                      dplyr::select(CaptureID, SpeciesID, Observer, Weight, Tarsus, Wing_Length, Age), by = "CaptureID") %>%
-  #   #Filter target species
-  #   ## TODO: Ask Marcel about this AccuracyofDate column. We ignore it now...but should we?
-  #   ## TODO: We only include non-egg captures; however, there are errors where individuals
-  #   ## have a record in the Individual table but were only ever caught as an egg (e.g. 341000)
-  #   ## This seems like a database mistake because they are given a RingNumber...either they were
-  #   ## also caught and ringed (not recorded) or they are an egg and can have a ring.
-  #   #Remove egg captures!
-  #   dplyr::filter(SpeciesID %in% species_filter & CaptureType %in% c(1, 2)) %>%
-  #   #Select only the basic info we need
-  #   # -CaptureID (unique ID of capture event)
-  #   # -CaptureDate
-  #   # -CaptureTime
-  #   # -Individual ID
-  #   # -Species
-  #   # -Capture Location
-  #   # -Release Location (for translocation)
-  #   # -Weight
-  #   # -Tarsus
-  #   # -Wing_Length
-  # dplyr::select(CaptureID, CaptureDate, CaptureTime, IndvID, SpeciesID, CaptureLocation,
-  #               ReleaseLocation, Observer, Weight, Tarsus, WingLength = Wing_Length, Age) %>%
-  #   dplyr::mutate(BreedingSeason = sql("Year(CDate('CaptureDate'))")) %>%
-  #   dplyr::collect() %>%
-  #   #Extract earliest year of ringing. Used to determine age
-  #   dplyr::mutate(BreedingSeason = lubridate::year(lubridate::ymd(.data$CaptureDate))) %>%
-  #   dplyr::group_by(.data$IndvID) %>%
-  #   dplyr::mutate(RingSeason = min(.data$BreedingSeason)) %>%
-  #   #Join in information on when the individual was first ringed (left join from the IndvData)
-  #   #This is used to determine the age of each individual (EURING) at the time of capture
-  #   # dplyr::left_join(dplyr::select(Individual_data, IndvID, RingSeason), by = "IndvID") %>%
-  #   dplyr::mutate(Age_observed = as.integer(Age)) %>%
-  #   calc_age(ID = IndvID, Age = Age_observed, Date = CaptureDate, Year = BreedingSeason, showpb = TRUE) %>%
-  #   #Include species letter codes for all species
-  #   dplyr::ungroup() %>%
-  #   dplyr::mutate(Species = dplyr::case_when(.$SpeciesID == 14400 ~ species_codes[species_codes$SpeciesID == 14400, ]$Species,
-  #                                            .$SpeciesID == 14640 ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
-  #                                            .$SpeciesID == 13490 ~ species_codes[species_codes$SpeciesID == 13490, ]$Species,
-  #                                            .$SpeciesID == 14620 ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
-  #                                            .$SpeciesID == 14790 ~ species_codes[species_codes$SpeciesID == 14790, ]$Species,
-  #                                            .$SpeciesID == 15980 ~ species_codes[species_codes$SpeciesID == 15980, ]$Species,
-  #                                            .$SpeciesID == 14610 ~ species_codes[species_codes$SpeciesID == 14610, ]$Species),
-  #                 #Add original tarsus method
-  #                 OriginalTarsusMethod = dplyr::case_when(!is.na(.$Tarsus) ~ "Alternative"),
-  #                 ObserverID = as.character(Observer)) %>%
-  #   #Arrange by species, indv and date/time
-  #   dplyr::arrange(Species, IndvID, CaptureDate, CaptureTime) %>%
-  #   #Include three letter population codes for both the capture and release location (some individuals may have been translocated e.g. cross-fostering)
-  #   dplyr::left_join(dplyr::select(location_data, CapturePlot = AreaID, CaptureLocation = ID, CapturePopID = PopID), by = "CaptureLocation") %>%
-  #   dplyr::left_join(dplyr::select(location_data, ReleasePlot = AreaID, ReleaseLocation = ID, ReleasePopID = PopID), by = "ReleaseLocation") %>%
-  #   ## TODO: There are 7 other individuals (480602-8) that have a CaptureLocation = 432
-  #   #In individual data (i.e. Hoge Veluwe)
-  #   #But in capture data, their capture location is 8681, which corresponds to Heikamp.
-  #   #Is Heikamp inside HOG? Is it a different location? If so, are these mistakes?
-  #   dplyr::filter(CapturePopID %in% pop_filter) %>%
-  #   #Make mass and tarsus into g and mm
-  #   dplyr::mutate(LocationID = CaptureLocation, Mass = dplyr::na_if(Weight/100, y = 0), Tarsus = dplyr::na_if(Tarsus/10, 0))
-
-  # # Join in hatch date for each brood where an individual fledged
-  # # Do this later once we complete Individual_data
-  # Capture_data <- Capture_data %>%
-  #   dplyr::left_join(dplyr::select(Individual_data, IndvID, BroodID = BroodIDFledged), by = "IndvID") %>%
-  #   dplyr::left_join(dplyr::select(Brood_data, BroodID, HatchDate_observed), by = "BroodID") %>%
-  #   #Determine difference between hatch and capture date for all individuals
-  #   #that were ~before fledging (we'll say up until 30 days because this covers all possibilites)
-  #   dplyr::mutate(diff = as.integer(.data$CaptureDate - .data$HatchDate_observed),
-  #                 ChickAge = dplyr::case_when(!is.na(.data$diff) & between(.data$diff, 0, 30) ~ .data$diff,
-  #                                             TRUE ~ NA_integer_),
-  #                 CaptureID = paste(.data$IndvID, dplyr::row_number(), sep = "_"),
-  #                 CaptureAlive = TRUE, ReleaseAlive = TRUE, ##FIXME: Ask Marcel about dead captures
-  #                 ExperimentID = NA_character_) %>% ##FIXME: Ask Marcel about individual only experiments.
-  #   ## Keep only necessary columns
-  #   dplyr::select(dplyr::contains(names(capture_data_template))) %>%
-  #   ## Add missing columns
-  #   dplyr::bind_cols(capture_data_template[,!(names(capture_data_template) %in% names(.))]) %>%
-  #   ## Reorder columns
-  #   dplyr::select(names(capture_data_template))
 
   return(Capture_data)
 
@@ -585,7 +440,7 @@ create_individual_NIOO <- function(database, Capture_data, location_data, specie
   Individual_data <- dplyr::tbl(database, "dbo_tbl_Individual") %>%
     #Filter only required species
     #Remove individual records that are from tissue samples (i.e. ring number is TS)
-    dplyr::filter(SpeciesID %in% species_filter & dplyr::sql("RingNumber NOT LIKE 'TS*'")) %>%
+    dplyr::filter(.data$SpeciesID %in% species_filter & dplyr::sql("RingNumber NOT LIKE 'TS*'")) %>%
     #Translate Sexe into F or M
     ## FIXME: Which sex should this be grouped as?
     #Convert ring age to adult or chick
@@ -594,18 +449,18 @@ create_individual_NIOO <- function(database, Capture_data, location_data, specie
                   RingAge_category = dplyr::sql("IIF(RingAge IN (1, 2, 3), 'chick', IIF(RingAge > 3, 'adult', Null))"),
                   BroodIDLaid = dplyr::sql("IIF(IsNull(GeneticBroodID), BroodID, GeneticBroodID)"),
                   BroodIDFledged = dplyr::sql("IIF(IsNull(BroodID), GeneticBroodID, BroodID)"),
-                  IndvID = ID) %>%
-    #Join in the first capture location (after removing )
+                  IndvID = .data$ID) %>%
+    #Join in the first capture location (after removing eggs)
     dplyr::left_join(dplyr::tbl(database, "dbo_tbl_Capture") %>%
-                       dplyr::filter(CaptureType == 1L | CaptureType == 2L) %>%
-                       dplyr::group_by(Individual) %>%
+                       dplyr::filter(.data$CaptureType == 1L | .data$CaptureType == 2L) %>%
+                       dplyr::group_by(.data$Individual) %>%
                        dplyr::summarise(FirstCaptureLocation = dplyr::sql("First(CaptureLocation)")) %>%
-                       dplyr::rename(IndvID = Individual), by = "IndvID") %>%
+                       dplyr::rename(IndvID = .data$Individual), by = "IndvID") %>%
     dplyr::collect() %>%
     #Relate the capturelocation to the three letter PopID
-    dplyr::left_join(dplyr::select(location_data, PopID, FirstCaptureLocation = ID), by = "FirstCaptureLocation") %>%
+    dplyr::left_join(dplyr::select(location_data, .data$PopID, FirstCaptureLocation = .data$ID), by = "FirstCaptureLocation") %>%
     #Filter only chosen pops
-    dplyr::filter(PopID %in% pop_filter) %>%
+    dplyr::filter(.data$PopID %in% pop_filter) %>%
     #Convert numbers to species codes
     dplyr::mutate(Species = dplyr::case_when(.$SpeciesID == 14400 ~ species_codes[species_codes$SpeciesID == 14400, ]$Species,
                                              .$SpeciesID == 14640 ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
@@ -645,17 +500,20 @@ create_location_NIOO <- function(database, location_data, species_filter, pop_fi
     dplyr::collect() %>%
     #Join together information on the nestbox locations (e.g. latitude, longitude, nestbox name) and information on each nestbox that was there (e.g. how long before it was replaced).
     #This is necessary because one nestbox location could have multiple nestboxes erected at it over the study period.
-    dplyr::right_join(dplyr::select(location_data, Location = ID, Latitude, Longitude, PopID),
+    dplyr::right_join(dplyr::select(location_data, Location = .data$ID, .data$Latitude, .data$Longitude, .data$PopID),
                       by = "Location") %>%
-    dplyr::filter(PopID %in% pop_filter) %>%
-    dplyr::select(LocationID = Location, NestboxID = ID, LocationType = NestBoxType, PopID, Latitude, Longitude, StartSeason = StartYear, EndSeason = EndYear) %>%
-    dplyr::mutate(LocationID = as.character(LocationID),
-                  NestboxID = as.character(NestboxID),
+    dplyr::filter(.data$PopID %in% pop_filter) %>%
+    dplyr::select(LocationID = .data$Location, NestboxID = .data$ID,
+                  LocationType = .data$NestBoxType, .data$PopID,
+                  .data$Latitude, .data$Longitude,
+                  StartSeason = .data$StartYear, EndSeason = .data$EndYear) %>%
+    dplyr::mutate(LocationID = as.character(.data$LocationID),
+                  NestboxID = as.character(.data$NestboxID),
                   LocationType = dplyr::case_when(.$LocationType %in% c(0:22, 40:41) ~ "NB",
                                                   .$LocationType %in% c(90, 101) ~ "MN"),
                   Habitat = dplyr::case_when(.$PopID %in% c("VLI", "HOG", "WES", "BUU") ~ "Mixed",
                                              .$PopID %in% c("OOS", "LIE", "WAR") ~ "Deciduous")) %>%
-    dplyr::arrange(LocationID, StartSeason)
+    dplyr::arrange(.data$LocationID, .data$StartSeason)
 
   return(Location_data)
 
