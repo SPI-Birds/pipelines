@@ -59,8 +59,7 @@ Individual checks:
 
 Location checks:
   \\begin{itemize}
-\\item \\textbf{L1}. Identify any empty columns (i.e. where all records are NA) in Location data and return a 'warning'.
-It is possible for empty columns to occur and this check will simply flag these empty columns so they can easily be identified by users.
+\\item \\textbf{L1}. Check that the coordinates of capture locations are close to the centre point of the study site. Records that are 15 km or farther from the centre point are flagged as 'potential error'. This check also produces a map with the capture locations within 15 km of the centre point.
 \\end{itemize}"
 
 quality_check_titlepage_pdf <- "\\renewcommand{\\familydefault}{\\sfdefault}
