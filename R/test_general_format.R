@@ -1,3 +1,53 @@
+#' Test column presence
+#'
+#' Test whether expected columns are present
+#'
+#' This function is intended to be used in the test for every pipeline in order
+#' to ensure consistency between pipelines.
+#'
+#'
+#' @param pipeline_output A list of the 4 data frames returned from format_X
+#' (where X is the three letter population code).
+#' @param data_template Character string. Which data template should be tested? One of:
+#' "Brood", "Individual", "Capture", or "Location"
+#'
+#' @return Logical (TRUE/FALSE) for whether all of the column classes are expected.
+#' @export
+#'
+test_col_present <- function(pipeline_output,
+                              data_template) {
+
+  ## Test
+  eval(bquote(expect_true(
+
+    if (data_template == "Brood"){
+
+      setequal(names(brood_data_template), names(pipeline_output[[1]]))
+
+    }
+
+    else if (data_template == "Capture") {
+
+      setequal(names(capture_data_template), names(pipeline_output[[2]]))
+
+    }
+
+    else if (data_template == "Individual") {
+
+      setequal(names(individual_data_template), names(pipeline_output[[3]]))
+
+    }
+
+    else if (data_template == "Location") {
+
+      setequal(names(location_data_template), names(pipeline_output[[4]]))
+
+    }
+
+  )))
+
+}
+
 #' Test column classes
 #'
 #' Test whether column classes for pipeline outputs match the expected column classes as specified in the standard format (version 1.1.0).
@@ -20,30 +70,52 @@ test_col_classes <- function(pipeline_output,
   ## Test
   eval(bquote(expect_true(
 
-    if (data_template == "Brood")
+    if (data_template == "Brood"){
 
-      ## Brood template
-      all(purrr::map_df(brood_data_template, class) == purrr::map_df(pipeline_output[[1]], class))
+      brood <- pipeline_output[[1]] %>%
+        dplyr::select(any_of(names(brood_data_template)))
+
+      brood_data_template_ab <- brood_data_template %>%
+        dplyr::select(any_of(names(pipeline_output[[1]])))
+
+      all(purrr::map_df(brood_data_template_ab, class) == purrr::map_df(brood, class))
+
+    }
+
 
     else if (data_template == "Capture") {
 
-      ## Capture template
-      all(purrr::map_df(capture_data_template, class) == purrr::map_df(pipeline_output[[2]], class))
+      capture <- pipeline_output[[2]] %>%
+        dplyr::select(any_of(names(capture_data_template)))
+
+      capture_data_template_ab <- capture_data_template %>%
+        dplyr::select(any_of(names(pipeline_output[[2]])))
+
+      all(purrr::map_df(capture_data_template_ab, class) == purrr::map_df(capture, class))
 
     }
 
     else if (data_template == "Individual") {
 
-      ## Capture template
-      all(purrr::map_df(individual_data_template, class) == purrr::map_df(pipeline_output[[3]], class))
+      individual <- pipeline_output[[3]] %>%
+        dplyr::select(any_of(names(individual_data_template)))
+
+      individual_data_template_ab <- individual_data_template %>%
+        dplyr::select(any_of(names(pipeline_output[[3]])))
+
+      all(purrr::map_df(individual_data_template_ab, class) == purrr::map_df(individual, class))
 
     }
 
     else if (data_template == "Location") {
 
-      ## Capture template
-      all(purrr::map_df(location_data_template, class) == purrr::map_df(pipeline_output[[4]], class))
+      location <- pipeline_output[[4]] %>%
+        dplyr::select(any_of(names(location_data_template)))
 
+      location_data_template_ab <- location_data_template %>%
+        dplyr::select(any_of(names(pipeline_output[[4]])))
+
+      all(purrr::map_df(location_data_template_ab, class) == purrr::map_df(location, class))
     }
 
   )))
@@ -86,7 +158,7 @@ test_ID_format <- function(pipeline_output,
     ## MaleID
     else if (ID_col == "MaleID") {
 
-      all(stringr::str_detect(pipeline_output[[1]]$FemaleID,
+      all(stringr::str_detect(pipeline_output[[1]]$MaleID,
                               glue::glue({ID_format})))
 
     }
@@ -147,7 +219,7 @@ test_unique_values <- function(pipeline_output,
     ## IndvID
     else if (column == "PopID-IndvID") {
 
-      return(!any(duplicated(paste(pipeline_output[[3]]$PopID, pipeline_output[[3]]$IndvID, sep = "-"))))
+      !any(duplicated(paste(pipeline_output[[3]]$PopID, pipeline_output[[3]]$IndvID, sep = "-")))
 
     }
 
@@ -227,7 +299,7 @@ test_NA_columns <- function(pipeline_output,
 #'
 #' @param pipeline_output A list of the 4 data frames returned from format_X
 #' (where X is the three letter population code).
-#' @param column Which table should be checked ? One of: "Brood", "Capture", "Individual", or "Location"
+#' @param column Which table should be checked? One of: "Brood", "Capture", "Individual", or "Location"
 #'
 #' @return Logical (TRUE/FALSE) for whether there are non-standard categories in the data frame.
 #' @export
@@ -238,22 +310,24 @@ test_category_columns <- function(pipeline_output,
   if (table == "Brood") {
 
     category_columns <- brood_data_template %>%
-      dplyr::select_if(~dplyr::n_distinct(.) > 1)
+      dplyr::select_if(~dplyr::n_distinct(.) > 1) %>%
+      dplyr::select(-BroodID)
 
-    # return(category_columns)
   }
 
   else if (table == "Capture") {
 
     category_columns <- capture_data_template %>%
-      dplyr::select_if(~dplyr::n_distinct(.) > 1)
+      dplyr::select_if(~dplyr::n_distinct(.) > 1) %>%
+      dplyr::select(-CaptureID)
 
   }
 
   else if (table == "Individual") {
 
     category_columns <- individual_data_template %>%
-      dplyr::select_if(~dplyr::n_distinct(.) > 1)
+      dplyr::select_if(~dplyr::n_distinct(.) > 1) %>%
+      dplyr::select(-IndvID)
 
   }
 
@@ -263,11 +337,6 @@ test_category_columns <- function(pipeline_output,
       dplyr::select_if(~dplyr::n_distinct(.) > 1)
 
   }
-
-  # load({{ glue::glue('{table}_data_template') }} %>%
-  #   names()
-  # category_columns <-  %>%
-  #   dplyr::select_if(~dplyr::n_distinct(.) > 1)
 
   lgl <- logical(length = 0)
   for (i in names(category_columns)) {
