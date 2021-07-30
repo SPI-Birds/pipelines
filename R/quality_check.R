@@ -12,6 +12,7 @@
 #' @param latex_engine Character. LaTeX engine for producing PDF output. Options are "pdflatex" (default), "xelatex", and "lualatex". NB: pdfLaTeX and XeLaTeX have memory limit restrictions, which can be problematic when generating large pdfs. LuaLaTeX has dynamic memory management which may help for generating large pdfs.
 #' @param test Logical. Is `quality_check` being used inside package tests? If TRUE, `R_data` is ignored and
 #' dummy data will be used instead.
+#' @param map Logical. Produce map of capture locations? See \code{\link{check_coordinates}}.
 #'
 #' @return
 #' A list of:
@@ -38,7 +39,8 @@ quality_check <- function(R_data,
                           output_format = "both",
                           output_file = "output_report",
                           latex_engine = "pdflatex",
-                          test = FALSE){
+                          test = FALSE,
+                          map = TRUE){
 
   start_time <- Sys.time()
 
@@ -107,10 +109,9 @@ quality_check <- function(R_data,
   Individual_checks <- individual_check(Individual_data, Capture_data, Location_data, approved_list)
 
   message("Check location data...")
-  Location_checks <- location_check(Location_data, approved_list)
+  Location_checks <- location_check(Location_data, approved_list, map)
 
   # Add warning and error columns to each data frame
-  # We don't do this for location because there are currently now rowwise checks
   Brood_data$Warning <- NA
   Brood_data$Error <- NA
   Brood_data[Brood_data$Row %in% Brood_checks$WarningRows, "Warning"] <- TRUE
@@ -125,6 +126,11 @@ quality_check <- function(R_data,
   Individual_data$Error <- NA
   Individual_data[Individual_data$Row %in% Individual_checks$WarningRows, "Warning"] <- TRUE
   Individual_data[Individual_data$Row %in% Individual_checks$ErrorRows, "Error"] <- TRUE
+
+  Location_data$Warning <- NA
+  Location_data$Error <- NA
+  Location_data[Location_data$Row %in% Location_checks$WarningRows, "Warning"] <- TRUE
+  Location_data[Location_data$Row %in% Location_checks$ErrorRows, "Error"] <- TRUE
 
   # Combine check lists
   check_list <- dplyr::bind_rows(Brood_checks$CheckList,
@@ -174,6 +180,7 @@ quality_check <- function(R_data,
   # title <- paste0("Quality check report for ", species_codes[species_codes$Species == Species, "CommonName"],
   #                 " in ", pop_codes[pop_codes$PopID == PopID, "PopName"])
 
+  # TODO: Print maps from check L1
   # Produce report
   if(output == TRUE) {
 
