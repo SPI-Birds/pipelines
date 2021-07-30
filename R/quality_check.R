@@ -175,7 +175,6 @@ quality_check <- function(R_data,
   # title <- paste0("Quality check report for ", species_codes[species_codes$Species == Species, "CommonName"],
   #                 " in ", pop_codes[pop_codes$PopID == PopID, "PopName"])
 
-  # TODO: Print maps from check L1
   # Produce report
   if(output == TRUE) {
 
@@ -212,56 +211,60 @@ quality_check <- function(R_data,
     '',
     '## Brood data',
     '',
-    '```{r, echo=FALSE, linewidth=100}',
+    '```{r, echo=FALSE, results="asis", linewidth=100}',
     'purrr::pwalk(.l = list(Brood_checks$Errors,
                             Brood_checks$CheckList$CheckID,
                             Brood_checks$CheckList$CheckDescription),
                   .f = ~{
-                    cat(paste0("Check ", ..2, ": ", ..3), "\n")
-                    cat(..1, sep="\n", "\n")
+                    cat(paste0("**Check ", ..2, ": ", ..3, "**", "  \n"))
+                    cat(paste(" - ", ..1), sep = "  \n")
+                    cat("  \n")
                   })',
     '```',
     '',
     '## Capture data',
     '',
-    '```{r, echo=FALSE}',
+    '```{r, echo=FALSE, results="asis"}',
     'purrr::pwalk(.l = list(Capture_checks$Errors,
                             Capture_checks$CheckList$CheckID,
                             Capture_checks$CheckList$CheckDescription),
                   .f = ~{
-                    cat(paste0("Check ", ..2, ": ", ..3), "\n")
-                    cat(..1, sep="\n", "\n")
+                    cat(paste0("**Check ", ..2, ": ", ..3, "**", "  \n"))
+                    cat(paste(" - ", ..1), sep = "  \n")
+                    cat("  \n")
                   })',
     '```',
     '',
     '## Individual data',
     '',
-    '```{r, echo=FALSE}',
+    '```{r, echo=FALSE, results="asis"}',
     'purrr::pwalk(.l = list(Individual_checks$Errors,
                             Individual_checks$CheckList$CheckID,
                             Individual_checks$CheckList$CheckDescription),
                   .f = ~{
-                    cat(paste0("Check ", ..2, ": ", ..3), "\n")
-                    cat(..1, sep="\n", "\n")
+                    cat(paste0("**Check ", ..2, ": ", ..3, "**", "  \n"))
+                    cat(paste(" - ", ..1), sep = "  \n")
+                    cat("  \n")
                   })',
     '```',
     '',
     '## Location data',
     '',
-    '```{r, echo=FALSE}',
+    '```{r, echo=FALSE, results="asis"}',
     'purrr::pwalk(.l = list(Location_checks$Errors,
                             Location_checks$CheckList$CheckID,
                             Location_checks$CheckList$CheckDescription),
                   .f = ~{
-                    cat(paste0("Check ", ..2, ": ", ..3), "\n")
-                    cat(..1, sep="\n", "\n")
+                    cat(paste0("**Check ", ..2, ": ", ..3, "**", "  \n"))
+                    cat(paste(" - ", ..1), sep = "  \n")
+                    cat("  \n")
                   })',
     '```',
     '',
     '\\newpage',
     '**Maps**',
     '',
-    '```{r, echo=FALSE}',
+    '```{r, echo=FALSE, results="asis"}',
     'invisible(lapply(Location_checks$Maps, print))', # To suppress the printing of indices
     '```',
     '\\newpage',
@@ -270,99 +273,104 @@ quality_check <- function(R_data,
     '',
     '## Brood data',
     '',
-    '```{r, echo=FALSE}',
+    '```{r, echo=FALSE, results="asis"}',
     'purrr::pwalk(.l = list(Brood_checks$Warnings,
                             Brood_checks$CheckList$CheckID,
                             Brood_checks$CheckList$CheckDescription),
                   .f = ~{
-                    cat(paste0("Check ", ..2, ": ", ..3), "\n")
-                    cat(..1, sep="\n", "\n")
+                    cat(paste0("**Check ", ..2, ": ", ..3, "**", "  \n"))
+                    cat(paste(" - ", ..1), sep = "  \n")
+                    cat("  \n")
                   })',
     '```',
     '',
     '## Capture data',
     '',
-    '```{r, echo=FALSE}',
+    '```{r, echo=FALSE, results="asis"}',
     'purrr::pwalk(.l = list(Capture_checks$Warnings,
                             Capture_checks$CheckList$CheckID,
                             Capture_checks$CheckList$CheckDescription),
                   .f = ~{
-                    cat(paste0("Check ", ..2, ": ", ..3), "\n")
-                    cat(..1, sep="\n", "\n")
+                    cat(paste0("**Check ", ..2, ": ", ..3, "**", "  \n"))
+                    cat(paste(" - ", ..1), sep = "  \n")
+                    cat("  \n")
                   })',
     '```',
     '',
     '## Individual data',
     '',
-    '```{r, echo=FALSE}',
+    '```{r, echo=FALSE, results="asis"}',
     'purrr::pwalk(.l = list(Individual_checks$Warnings,
                             Individual_checks$CheckList$CheckID,
                             Individual_checks$CheckList$CheckDescription),
                   .f = ~{
-                    cat(paste0("Check ", ..2, ": ", ..3), "\n")
-                    cat(..1, sep="\n", "\n")
+                    cat(paste0("**Check ", ..2, ": ", ..3, "**", "  \n"))
+                    cat(paste(" - ", ..1), sep = "  \n")
+                    cat("  \n")
                   })',
     '```',
     '',
     '## Location data',
     '',
-    '```{r, echo=FALSE}',
+    '```{r, echo=FALSE, results="asis"}',
     'purrr::pwalk(.l = list(Location_checks$Warnings,
                             Location_checks$CheckList$CheckID,
                             Location_checks$CheckList$CheckDescription),
                   .f = ~{
-                    cat(paste0("Check ", ..2, ": ", ..3), "\n")
-                    cat(..1, sep="\n", "\n")
+                    cat(paste0("**Check ", ..2, ": ", ..3, "**", "  \n"))
+                    cat(paste(" - ", ..1), sep = "  \n")
+                    cat("  \n")
                   })',
     '```',
     '\\newpage',
+    '',
     '# Verified records',
     '',
     '## Brood data',
     '',
-    '```{r, echo=FALSE}',
+    '```{r, echo=FALSE, results="asis"}',
     '    purrr::pwalk(.l = Brood_approved_list,
                  .f = ~{ cat(paste0("Record with BroodID ", ..2,
                                     " and PopID ", ..1,
                                     " violates check ", ..3,
                                     " but been verified by the data owner and is trustworthy."),
-                                    sep="\n")
+                                    sep="  \n")
                   })',
     '```',
     '',
     '## Capture data',
     '',
-    '```{r, echo=FALSE}',
+    '```{r, echo=FALSE, results="asis"}',
     '    purrr::pwalk(.l = Capture_approved_list,
                  .f = ~{ cat(paste0("Record with CaptureID ", ..2,
                                     " and PopID ", ..1,
                                     " violates check ", ..3,
                                     " but been verified by the data owner and is trustworthy."),
-                                    sep="\n")
+                                    sep="  \n")
                   })',
     '```',
     '',
     '## Individual data',
     '',
-    '```{r, echo=FALSE}',
+    '```{r, echo=FALSE, results="asis"}',
     '    purrr::pwalk(.l = Individual_approved_list,
                  .f = ~{ cat(paste0("Record with IndvID ", ..2,
                                     " and PopID ", ..1,
                                     " violates check ", ..3,
                                     " but been verified by the data owner and is trustworthy."),
-                                    sep="\n")
+                                    sep="  \n")
                   })',
     '```',
     '',
     '## Location data',
     '',
-    '```{r, echo=FALSE}',
+    '```{r, echo=FALSE, results="asis"}',
     '    purrr::pwalk(.l = Location_approved_list,
                  .f = ~{ cat(paste0("Record with LocationID ", ..2,
                                     " and PopID ", ..1,
                                     " violates check ", ..3,
                                     " but been verified by the data owner and is trustworthy."),
-                                    sep="\n")
+                                    sep="  \n")
                   })',
     '```',
     '')
