@@ -48,7 +48,7 @@ location_check <- function(Location_data, approved_list, map){
 
 #' Check coordinates of capture locations
 #'
-#' Check that the coordinates of capture locations are close to the centre point of the study site. Capture locations that are farther than 10 km will result in an error. It's optional to print the remaining locations on a map and visualized in the quality check report.
+#' Check that the coordinates of capture locations are close to the centre point of the study site. Capture locations that are farther than 15 km will result in an error. It's optional to print the remaining locations on a map and visualized in the quality check report.
 #'
 #' Check ID: L1.
 #'
@@ -103,9 +103,9 @@ check_coordinates <- function(Location_data, approved_list, map){
                                           crs = "EPSG:4326")$geometry,
                     Distance = as.integer(sf::st_distance(.data$Coords, .data$Centre, by_element = TRUE)))
 
-    # Filter very remote locations (10 km or farther)
+    # Filter very remote locations (15 km or farther)
     remote_locations <- locations %>%
-      dplyr::filter(Distance >= 10000) %>%
+      dplyr::filter(Distance >= 15000) %>%
       dplyr::select(.data$Row, .data$LocationID, .data$PopID, .data$Distance)
 
   }
@@ -146,9 +146,9 @@ check_coordinates <- function(Location_data, approved_list, map){
   # Produce map of capture locations
   if(map) {
 
-    # Only map capture locations within 10 km from study site
+    # Only map capture locations within 15 km from study site
     map_data <- locations %>%
-      dplyr::filter(Distance < 10000)
+      dplyr::filter(Distance < 15000)
 
     suppressMessages({
 
@@ -165,14 +165,14 @@ check_coordinates <- function(Location_data, approved_list, map){
                                             axis.title = ggplot2::element_text(size = 12),
                                             panel.border = ggplot2::element_rect(color = "black", fill = NA)) +
                              ggplot2::labs(title = .x,
-                                           subtitle = paste0("Capture locations within 10 km from centre point (",
+                                           subtitle = paste0("Capture locations within 15 km from centre point (",
                                                              round(map_data[map_data$PopID == .x,]$Centre_lon[1], 3), ", ",
                                                              round(map_data[map_data$PopID == .x,]$Centre_lat[1], 3), ")."),
                                            caption = "Source: Map tiles by Stamen Design, under CC BY 3.0. \nMap data by OpenStreetMap, under ODbL.")
 
 
-                         }) %>%
-        setNames(unique(map_data$PopID))
+                         }) #%>%
+        #setNames(unique(map_data$PopID))
 
     })
 

@@ -258,11 +258,11 @@ quality_check <- function(R_data,
                   })',
     '```',
     '',
+    '\\newpage',
+    '**Maps**',
+    '',
     '```{r, echo=FALSE}',
-    'purrr::map(.x = list(Location_checks$Maps),
-                .f = ~{
-                   .x
-                 })',
+    'invisible(lapply(Location_checks$Maps, print))', # To suppress the printing of indices
     '```',
     '\\newpage',
     '',
