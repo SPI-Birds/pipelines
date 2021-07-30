@@ -21,50 +21,50 @@ test_that("Brood_data returns an expected outcome...", {
   #Test 1: Brood where clutch type = first
   expect_equal(subset(UAN_data, BroodID == "20160067")$Species, "CYACAE")
   expect_equal(subset(UAN_data, BroodID == "20160067")$ClutchType_calculated, "first")
-  expect_equal(subset(UAN_data, BroodID == "20160067")$LayDate, as.Date("2016-04-04"))
-  expect_equal(subset(UAN_data, BroodID == "20160067")$ClutchSize, 13)
-  expect_equal(subset(UAN_data, BroodID == "20160067")$BroodSize, 13)
-  expect_equal(subset(UAN_data, BroodID == "20160067")$NumberFledged, 11)
+  expect_equal(subset(UAN_data, BroodID == "20160067")$LayDate_observed, as.Date("2016-04-04"))
+  expect_equal(subset(UAN_data, BroodID == "20160067")$ClutchSize_observed, 13)
+  expect_equal(subset(UAN_data, BroodID == "20160067")$BroodSize_observed, 13)
+  expect_equal(subset(UAN_data, BroodID == "20160067")$NumberFledged_observed, 11)
   expect_equal(round(subset(UAN_data, BroodID == "20160067")$AvgChickMass, 1), 11.3)
   expect_equal(subset(UAN_data, BroodID == "20160067")$AvgTarsus, NA_real_)
 
   #Test 2: Brood where clutch type = replacement (because first is known to have failed)
   expect_equal(subset(UAN_data, BroodID == "20170318")$Species, "PARMAJ")
   expect_equal(subset(UAN_data, BroodID == "20170318")$ClutchType_calculated, "replacement")
-  expect_equal(subset(UAN_data, BroodID == "20170318")$LayDate, as.Date("2017-05-18"))
-  expect_equal(subset(UAN_data, BroodID == "20170318")$ClutchSize, 9)
-  expect_equal(subset(UAN_data, BroodID == "20170318")$BroodSize, 9)
-  expect_equal(subset(UAN_data, BroodID == "20170318")$NumberFledged, 3)
+  expect_equal(subset(UAN_data, BroodID == "20170318")$LayDate_observed, as.Date("2017-05-18"))
+  expect_equal(subset(UAN_data, BroodID == "20170318")$ClutchSize_observed, 9)
+  expect_equal(subset(UAN_data, BroodID == "20170318")$BroodSize_observed, 9)
+  expect_equal(subset(UAN_data, BroodID == "20170318")$NumberFledged_observed, 3)
   expect_equal(round(subset(UAN_data, BroodID == "20170318")$AvgChickMass, 1), 15.5)
   expect_equal(subset(UAN_data, BroodID == "20170318")$AvgTarsus, NA_real_)
 
   #Test 3: Brood where clutch type = replacement (past the cutoff)
   expect_equal(subset(UAN_data, BroodID == "2013320")$Species, "PARMAJ")
   expect_equal(subset(UAN_data, BroodID == "2013320")$ClutchType_calculated, "replacement")
-  expect_equal(subset(UAN_data, BroodID == "2013320")$LayDate, as.Date("2013-06-01"))
-  expect_equal(subset(UAN_data, BroodID == "2013320")$ClutchSize, 1)
-  expect_equal(subset(UAN_data, BroodID == "2013320")$BroodSize, 0)
-  expect_equal(subset(UAN_data, BroodID == "2013320")$NumberFledged, 0)
+  expect_equal(subset(UAN_data, BroodID == "2013320")$LayDate_observed, as.Date("2013-06-01"))
+  expect_equal(subset(UAN_data, BroodID == "2013320")$ClutchSize_observed, 1)
+  expect_equal(subset(UAN_data, BroodID == "2013320")$BroodSize_observed, 0)
+  expect_equal(subset(UAN_data, BroodID == "2013320")$NumberFledged_observed, 0)
   expect_equal(subset(UAN_data, BroodID == "2013320")$AvgChickMass, NA_real_)
   expect_equal(subset(UAN_data, BroodID == "2013320")$AvgTarsus, NA_real_)
 
   #Test 4: Brood where clutch type = second
   expect_equal(subset(UAN_data, BroodID == "20150180")$Species, "PARMAJ")
   expect_equal(subset(UAN_data, BroodID == "20150180")$ClutchType_calculated, "second")
-  expect_equal(subset(UAN_data, BroodID == "20150180")$LayDate, as.Date("2015-05-19"))
-  expect_equal(subset(UAN_data, BroodID == "20150180")$ClutchSize, 5)
-  expect_equal(subset(UAN_data, BroodID == "20150180")$BroodSize, 5)
-  expect_equal(subset(UAN_data, BroodID == "20150180")$NumberFledged, 5)
+  expect_equal(subset(UAN_data, BroodID == "20150180")$LayDate_observed, as.Date("2015-05-19"))
+  expect_equal(subset(UAN_data, BroodID == "20150180")$ClutchSize_observed, 5)
+  expect_equal(subset(UAN_data, BroodID == "20150180")$BroodSize_observed, 5)
+  expect_equal(subset(UAN_data, BroodID == "20150180")$NumberFledged_observed, 5)
   expect_equal(subset(UAN_data, BroodID == "20150180")$AvgChickMass, NA_real_)
   expect_equal(subset(UAN_data, BroodID == "20150180")$AvgTarsus, NA_real_)
 
   #Test 5: Brood where AvgChickMass is estimated from Capture_data and replace recorded value
   expect_equal(subset(UAN_data, BroodID == "20180002")$Species, "CYACAE")
   expect_equal(subset(UAN_data, BroodID == "20180002")$ClutchType_calculated, "first")
-  expect_equal(subset(UAN_data, BroodID == "20180002")$LayDate, as.Date("2018-04-18"))
-  expect_equal(subset(UAN_data, BroodID == "20180002")$ClutchSize, 8)
-  expect_equal(subset(UAN_data, BroodID == "20180002")$BroodSize, 8)
-  expect_equal(subset(UAN_data, BroodID == "20180002")$NumberFledged, 3)
+  expect_equal(subset(UAN_data, BroodID == "20180002")$LayDate_observed, as.Date("2018-04-18"))
+  expect_equal(subset(UAN_data, BroodID == "20180002")$ClutchSize_observed, 8)
+  expect_equal(subset(UAN_data, BroodID == "20180002")$BroodSize_observed, 8)
+  expect_equal(subset(UAN_data, BroodID == "20180002")$NumberFledged_observed, 3)
   #This should be different to the recorded AvgChickMass because one chicks is 13 days (we only consider 14 - 16)
   expect_equal(round(subset(UAN_data, BroodID == "20180002")$AvgChickMass, 2), 9.75)
   expect_equal(subset(UAN_data, BroodID == "20180002")$AvgTarsus, NA_real_)
@@ -72,20 +72,20 @@ test_that("Brood_data returns an expected outcome...", {
   #Test 6: Brood where AvgTarsus needs to be converted
   expect_equal(subset(UAN_data, BroodID == "1950359")$Species, "PARMAJ")
   expect_equal(subset(UAN_data, BroodID == "1950359")$ClutchType_calculated, "replacement")
-  expect_equal(subset(UAN_data, BroodID == "1950359")$LayDate, as.Date("1996-04-14"))
-  expect_equal(subset(UAN_data, BroodID == "1950359")$ClutchSize, 6)
-  expect_equal(subset(UAN_data, BroodID == "1950359")$BroodSize, 6)
-  expect_equal(subset(UAN_data, BroodID == "1950359")$NumberFledged, 6)
+  expect_equal(subset(UAN_data, BroodID == "1950359")$LayDate_observed, as.Date("1996-04-14"))
+  expect_equal(subset(UAN_data, BroodID == "1950359")$ClutchSize_observed, 6)
+  expect_equal(subset(UAN_data, BroodID == "1950359")$BroodSize_observed, 6)
+  expect_equal(subset(UAN_data, BroodID == "1950359")$NumberFledged_observed, 6)
   expect_equal(round(subset(UAN_data, BroodID == "1950359")$AvgChickMass, 2), 18.47)
   expect_equal(round(subset(UAN_data, BroodID == "1950359")$AvgTarsus, 2), 20.49)
 
   #Test 7: Brood where AvgTarsus is estimated from Capture_data
   expect_equal(subset(UAN_data, BroodID == "20140778")$Species, "PARMAJ")
   expect_equal(subset(UAN_data, BroodID == "20140778")$ClutchType_calculated, "first")
-  expect_equal(subset(UAN_data, BroodID == "20140778")$LayDate, as.Date("2014-03-28"))
-  expect_equal(subset(UAN_data, BroodID == "20140778")$ClutchSize, 9)
-  expect_equal(subset(UAN_data, BroodID == "20140778")$BroodSize, 9)
-  expect_equal(subset(UAN_data, BroodID == "20140778")$NumberFledged, 7)
+  expect_equal(subset(UAN_data, BroodID == "20140778")$LayDate_observed, as.Date("2014-03-28"))
+  expect_equal(subset(UAN_data, BroodID == "20140778")$ClutchSize_observed, 9)
+  expect_equal(subset(UAN_data, BroodID == "20140778")$BroodSize_observed, 9)
+  expect_equal(subset(UAN_data, BroodID == "20140778")$NumberFledged_observed, 7)
   expect_equal(round(subset(UAN_data, BroodID == "20140778")$AvgChickMass, 2), 13.33)
   expect_equal(round(subset(UAN_data, BroodID == "20140778")$AvgTarsus, 2), 19.12)
 
@@ -99,8 +99,8 @@ test_that("Individual data returns an expected outcome...", {
   UAN_data <- dplyr::filter(pipeline_output$Individual_data, PopID %in% c("PEE", "BOS"))
 
   #Test 1: Male caught first as chick
-  #Expected sexand species
-  expect_equal(subset(UAN_data, IndvID == "10277110")$Sex, "M")
+  #Expected sex and species
+  expect_equal(subset(UAN_data, IndvID == "10277110")$Sex_calculated, "M")
   expect_equal(subset(UAN_data, IndvID == "10277110")$Species, "CYACAE")
   #Expected BroodIDLaid and Fledged
   expect_equal(subset(UAN_data, IndvID == "10277110")$BroodIDLaid, "2008199")
@@ -111,7 +111,7 @@ test_that("Individual data returns an expected outcome...", {
 
   #Test 2: Caught first as adult
   #Individual 2546616 should be listed as a female blue tit
-  expect_equal(subset(UAN_data, IndvID == "1002599")$Sex, "M")
+  expect_equal(subset(UAN_data, IndvID == "1002599")$Sex_calculated, "M")
   expect_equal(subset(UAN_data, IndvID == "1002599")$Species, "CYACAE")
   #She should have no BroodIDLaid or Fledged because this individual was caught as an adult
   expect_equal(subset(UAN_data, IndvID == "1002599")$BroodIDLaid, NA_character_)

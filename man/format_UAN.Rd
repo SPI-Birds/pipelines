@@ -40,17 +40,17 @@ populations administered by the University of Antwerp.
 \details{
 This section provides details on data management choices that are unique to
 this data. For a general description of the standard format please see
-\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
+\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 
 \strong{ClutchType_observed}: The raw data distinguishes second and third
 nests and first, second, and third replacements. We group these all as 'second'
 and 'replacement' respectively.
 
-\strong{ClutchSizeError}: The raw data includes a column to determine whether
+\strong{ClutchSize_min, ClutchSize_max}: The raw data includes a column to determine whether
 clutch size was counted with or without a brooding female. The presence of a
 brooding female can effect the uncertainty in the count. After discussions
 with the data owner clutch size counted with a brooding female is given an error
-of 2.
+of +/- 2, so that ClutchSize_min = ClutchSize_observed - 2, and ClutchSize_max = ClutchSize_observed + 2.
 
 \strong{ExperimentID}: Experimental codes are provided in their original
 format. These still need to be translated into our experimental groups.
@@ -60,7 +60,8 @@ and Svennson's Alternative in later years. When Svennson's Alternative is
 available this is used, otherwise we use converted Svensson's Standard, using
 \code{\link[pipelines]{convert_tarsus}}.
 
-\strong{Age}: For Age_observed: \itemize{
+\strong{Age}:
+For Age_observed: \itemize{
 \item If a capture has a recorded
 ChickAge or the Capture Type is listed as 'chick' it is given a EURING code 1:
 nestling or chick, unable to fly freely, still able to be caught by hand.
@@ -76,6 +77,7 @@ full-grown bird hatched before last calendar year; year of hatching otherwise
 unknown.
 \item After discussing with data owners, recorded value 5 (full grown age unknown)
 is given NA.
+}
 
 For Age_calculated \itemize{
 \item Any capture record with EURING <= 3 is considered to have a known age
@@ -85,7 +87,10 @@ or as fledglings to be reliable indicators of year of hatching.
 (i.e. EURING codes 4, 6, 8, etc.). We consider aging of adults to be too
 uncertain.
 }
-}
+
+\strong{Sex_observed, Sex_calculated}: Any uncertainty in sex is ignored. For example, 'M?' is treated as male.
+
+\strong{ReleaseAlive}: Individuals who were captured alive are assumed to be released alive.
 
 \strong{Latitude and Longitude}: Location data is stored in Lambert72 CRS.
 This has been converted to WGS84 to be standard with other systems.
