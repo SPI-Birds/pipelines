@@ -23,7 +23,7 @@ location_check <- function(Location_data, approved_list, map){
                                Error = NA)
 
   # Checks
-  message("Location checks")
+  message("Checking location data...")
 
   # - Check format location data
   message("L1: Checking capture location coordinates...")
@@ -42,7 +42,8 @@ location_check <- function(Location_data, approved_list, map){
               WarningRows = unique(c(check_coordinates_output$WarningRows)),
               ErrorRows = unique(c(check_coordinates_output$ErrorRows)),
               Warnings = warning_list,
-              Errors = error_list))
+              Errors = error_list,
+              Maps = check_coordinates_output$Maps))
 }
 
 #' Check coordinates of capture locations
@@ -169,7 +170,9 @@ check_coordinates <- function(Location_data, approved_list, map){
                                                              round(map_data[map_data$PopID == .x,]$Centre_lat[1], 3), ")."),
                                            caption = "Source: Map tiles by Stamen Design, under CC BY 3.0. \nMap data by OpenStreetMap, under ODbL.")
 
-                         })
+
+                         }) %>%
+        setNames(unique(map_data$PopID))
 
     })
 

@@ -6,8 +6,8 @@
 #' \itemize{
 #' \item \strong{B1}: Compare clutch size and brood size per brood using \code{\link{compare_clutch_brood}}.
 #' \item \strong{B2}: Compare brood size and fledgling number per brood using \code{\link{compare_brood_fledglings}}.
-#' \item \strong{B3}: Compare lay date and hatching date per brood using \code{\link{compare_laying_hatching}}.
-#' \item \strong{B4}: Compare hatching date and fledging date per brood using \code{\link{compare_hatching_fledging}}.
+#' \item \strong{B3}: Compare lay date and hatch date per brood using \code{\link{compare_laying_hatching}}.
+#' \item \strong{B4}: Compare hatch date and fledge date per brood using \code{\link{compare_hatching_fledging}}.
 #' \item \strong{B5a-d}: Check brood variable values against reference values using \code{\link{check_values_brood}}. Brood variables checked: ClutchSize_observed, BroodSize_observed, NumberFledged_observed, LayDate_observed.
 #' \item \strong{B6}: Compare brood size with number of chicks captured using \code{\link{compare_broodsize_chicknumber}}.
 #' \item \strong{B7}: Check if the IDs of broods are unique using \code{\link{check_unique_BroodID}}.
@@ -30,7 +30,7 @@
 brood_check <- function(Brood_data, Individual_data, approved_list){
 
   # Create check list with a summary of warnings and errors per check
-  check_list <- tibble::tibble(CheckID = paste0("B", c(1:5, paste0(6, letters[1:4]), 7:13)),
+  check_list <- tibble::tibble(CheckID = paste0("B", c(1:4, paste0(5, letters[1:4]), 6:13)),
                                CheckDescription = c("Compare clutch and brood sizes",
                                                     "Compare brood sizes and fledgling numbers",
                                                     "Compare lay and hatch dates",
@@ -51,7 +51,7 @@ brood_check <- function(Brood_data, Individual_data, approved_list){
                                Error = NA)
 
   # Checks
-  message("Brood checks")
+  message("Checking brood data...")
 
   # - Compare clutch and brood sizes
   message("B1: Comparing clutch and brood sizes...")
@@ -681,8 +681,7 @@ check_values_brood <- function(Brood_data, var, approved_list) {
 
   # Progress bar
   pb <- progress::progress_bar$new(total = 2*nrow(ref),
-                                   format = "[:bar] :percent ~:eta remaining",
-                                   clear = FALSE)
+                                   format = "[:bar] :percent ~:eta remaining")
 
   # Brood-specific errors
   brood_err <- purrr::pmap(.l = ref,
@@ -823,7 +822,7 @@ check_values_brood <- function(Brood_data, var, approved_list) {
   brood_war <- purrr::pmap(.l = warning_ref,
                            .f = ~{
 
-                             #pb$tick()
+                             pb$tick()
 
                              if(var %in% c("ClutchSize", "BroodSize", "NumberFledged",
                                            "ClutchSize_observed", "BroodSize_observed", "NumberFledged_observed")) {

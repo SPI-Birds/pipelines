@@ -9,7 +9,7 @@
 #' @param output \code{TRUE} or \code{FALSE}. If \code{TRUE}, a report is produced. Default: \code{TRUE}.
 #' @param output_format Character. Format of output report. Options: "html", "pdf", and "both" (default).
 #' @param output_file Character. Name of the output file. Default: "output_report".
-#' @param latex_engine Character. LaTeX engine for producing PDF output. Options are "pdflatex" (default), "xelatex", and "lualatex". NB: pdfLaTeX and XeLaTeX have memory limit restrictions, which can be problematic when generating large pdfs. LuaLaTeX has dynamic memory management which may help for generating large pdfs.
+#' @param latex_engine Character. LaTeX engine for producing PDF output. Options are "pdflatex", "xelatex", and "lualatex" (default). NB: pdfLaTeX and XeLaTeX have memory limit restrictions, which can be problematic when generating large pdfs. LuaLaTeX has dynamic memory management which may help for generating large pdfs.
 #' @param test Logical. Is `quality_check` being used inside package tests? If TRUE, `R_data` is ignored and
 #' dummy data will be used instead.
 #' @param map Logical. Produce map of capture locations? See \code{\link{check_coordinates}}.
@@ -38,11 +38,13 @@ quality_check <- function(R_data,
                           output = TRUE,
                           output_format = "both",
                           output_file = "output_report",
-                          latex_engine = "pdflatex",
+                          latex_engine = "lualatex",
                           test = FALSE,
                           map = TRUE){
 
   start_time <- Sys.time()
+
+  message("Running quality check")
 
   if(output_format == "both"){
 
@@ -99,16 +101,9 @@ quality_check <- function(R_data,
   # FIXME remove after CaptureID column has been added in ALL pipelines
 
   # Run checks
-  message("Running quality checks...")
   Brood_checks <- brood_check(Brood_data, Individual_data, approved_list)
-
-  message("Check capture data...")
   Capture_checks <- capture_check(Capture_data, Location_data, Brood_data, approved_list)
-
-  message("Check individual data...")
   Individual_checks <- individual_check(Individual_data, Capture_data, Location_data, approved_list)
-
-  message("Check location data...")
   Location_checks <- location_check(Location_data, approved_list, map)
 
   # Add warning and error columns to each data frame
@@ -262,7 +257,15 @@ quality_check <- function(R_data,
                     cat(..1, sep="\n", "\n")
                   })',
     '```',
+    '',
+    '```{r, echo=FALSE}',
+    'purrr::map(.x = list(Location_checks$Maps),
+                .f = ~{
+                   .x
+                 })',
+    '```',
     '\\newpage',
+    '',
     '# Warnings',
     '',
     '## Brood data',

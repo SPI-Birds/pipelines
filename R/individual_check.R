@@ -31,7 +31,7 @@ individual_check <- function(Individual_data, Capture_data, Location_data, appro
                                Error = NA)
 
   # Checks
-  message("Individual checks")
+  message("Checking individual data...")
 
   # - Check unique individual IDs
   message("I1: Checking that individual IDs are unique...")

@@ -31,7 +31,7 @@ capture_check <- function(Capture_data, Location_data, Brood_data, approved_list
                                Error = NA)
 
   # Checks
-  message("Capture checks")
+  message("Checking capture data...")
 
   # - Check mass values against reference values
   message("C1a: Checking mass values against reference values...")
@@ -55,7 +55,7 @@ capture_check <- function(Capture_data, Location_data, Brood_data, approved_list
   check_list[3, 3:4] <- check_chick_age_output$CheckList
 
   # - Check that adults caught on nest are listed are the parents
-  message("C3: Checking that adults caught on nest are listed are the parents...")
+  message("C3: Checking that adults caught on nest are listed as the parents...")
 
   check_adult_parent_nest_output <- check_adult_parent_nest(Capture_data, Location_data, Brood_data, approved_list)
 
@@ -338,8 +338,7 @@ check_values_capture <- function(Capture_data, var, approved_list) {
 
     # Create progress bar
     pb <- progress::progress_bar$new(total = 2*nrow(ref),
-                                     format = "[:bar] :percent ~:eta remaining",
-                                     clear = FALSE)
+                                     format = "[:bar] :percent ~:eta remaining")
 
     # Not all chicks have a recorded ChickAge. To still verify their values against reference values,
     # we create a new Column with CurrentChickAge, which follows the following rules:
@@ -734,8 +733,7 @@ check_adult_parent_nest <- function(Capture_data, Location_data, Brood_data, app
 
   # Determine location type of their capture locations
   pb1 <- progress::progress_bar$new(total = nrow(adults),
-                                    format = "[:bar] :percent ~:eta remaining",
-                                    clear = FALSE)
+                                    format = "[:bar] :percent ~:eta remaining")
 
   location_type <- purrr::pmap(.l = list(adults$LocationID,
                                          adults$BreedingSeason,
@@ -762,8 +760,7 @@ check_adult_parent_nest <- function(Capture_data, Location_data, Brood_data, app
 
   # Check whether adults caught in nest box are associated with that nest in Brood data
   pb2 <- progress::progress_bar$new(total = nrow(adults_nest_box),
-                                    format = "[:bar] :percent ~:eta remaining",
-                                    clear = FALSE)
+                                    format = "[:bar] :percent ~:eta remaining")
 
   parents_nests <- purrr::pmap_lgl(.l = list(adults_nest_box$CapturePopID,
                                              adults_nest_box$BreedingSeason,
