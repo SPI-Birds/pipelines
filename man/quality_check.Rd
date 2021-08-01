@@ -9,8 +9,9 @@ quality_check(
   output = TRUE,
   output_format = "both",
   output_file = "output_report",
-  latex_engine = "pdflatex",
-  test = FALSE
+  latex_engine = "lualatex",
+  test = FALSE,
+  map = TRUE
 )
 }
 \arguments{
@@ -23,10 +24,12 @@ quality_check(
 
 \item{output_file}{Character. Name of the output file. Default: "output_report".}
 
-\item{latex_engine}{Character. LaTeX engine for producing PDF output. Options are "pdflatex" (default), "xelatex", and "lualatex". NB: pdfLaTeX and XeLaTeX have memory limit restrictions, which can be problematic when generating large pdfs. LuaLaTeX has dynamic memory management which may help for generating large pdfs.}
+\item{latex_engine}{Character. LaTeX engine for producing PDF output. Options are "pdflatex", "xelatex", and "lualatex" (default). NB: pdfLaTeX and XeLaTeX have memory limit restrictions, which can be problematic when generating large pdfs. LuaLaTeX has dynamic memory management which may help for generating large pdfs.}
 
 \item{test}{Logical. Is `quality_check` being used inside package tests? If TRUE, `R_data` is ignored and
 dummy data will be used instead.}
+
+\item{map}{Logical. Produce map of capture locations? See \code{\link{check_coordinates}}.}
 }
 \value{
 A list of:

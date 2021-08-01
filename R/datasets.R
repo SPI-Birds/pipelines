@@ -106,8 +106,9 @@ pop_species_combos <- utils::read.csv(system.file("extdata", "pop_species_combos
 #'
 #' \strong{Location data}:
 #' \itemize{
-#'   \item Row 1 is a record that is needed to test the functionality of check 'I2: Checking that chicks have BroodIDs' (see \code{\link{check_BroodID_chicks}}): location information of a nestbox.
-#'   \item Rows 2-4 are records that are needed to test the functionality of check 'C3: Checking that adults caught on nest are listed are the parents' (see \code{\link{check_adult_parent_nest}}): location information of two nestboxes and a mist net.
+#'   \item Rows 1-2 is a record that is needed to test the functionality of check 'I2: Checking that chicks have BroodIDs' (see \code{\link{check_BroodID_chicks}}): location information of a nestbox.
+#'   \item Rows 3-5 are records that are needed to test the functionality of check 'C3: Checking that adults caught on nest are listed are the parents' (see \code{\link{check_adult_parent_nest}}): location information of two nestboxes and a mist net.
+#'   \item Row 6-107 are records that are needed to test the functionality of check 'L1: Checking capture locations coordinates' (see \code{\link{check_coordinates}}): Capture locations within 15 km of study site centre point and one capture locations farther away.
 #' }
 #'
 #' @name dummy_data
