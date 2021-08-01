@@ -18,107 +18,27 @@ create_dummy_data <- function() {
 
   # Create skeletons for each pipeline data frame
   # Brood data
-  Brood_data <- tibble::tibble(
-    Row = NA_integer_,
-    BroodID = NA_character_,
-    PopID = NA_character_,
-    BreedingSeason = NA_integer_,
-    Species = NA_character_,
-    Plot = NA_character_,
-    LocationID = NA_character_,
-    FemaleID = NA_character_,
-    MaleID = NA_character_,
-    ClutchType_observed  = NA_character_,
-    ClutchType_calculated  = NA_character_,
-    LayDate_observed = as.Date(NA_character_),
-    LayDate_min = as.Date(NA_character_),
-    LayDate_max = as.Date(NA_character_),
-    ClutchSize_observed = NA_integer_,
-    ClutchSize_min = NA_integer_,
-    ClutchSize_max = NA_integer_,
-    HatchDate_observed = as.Date(NA_character_),
-    HatchDate_min = as.Date(NA_character_),
-    HatchDate_max = as.Date(NA_character_),
-    BroodSize_observed = NA_integer_,
-    BroodSize_min = NA_integer_,
-    BroodSize_max = NA_integer_,
-    FledgeDate_observed = as.Date(NA_character_),
-    FledgeDate_min = as.Date(NA_character_),
-    FledgeDate_max = as.Date(NA_character_),
-    NumberFledged_observed = NA_integer_,
-    NumberFledged_min = NA_integer_,
-    NumberFledged_max = NA_integer_,
-    AvgEggMass = NA_real_,
-    NumberEggs = NA_integer_,
-    AvgChickMass = NA_real_,
-    NumberChicksMass = NA_integer_,
-    AvgTarsus = NA_real_,
-    AvgChicksTarsus = NA_integer_,
-    OriginalTarsusMethod = NA_character_,
-    ExperimentID = NA_character_,
-    CheckID = NA_character_
-  )
+  Brood_data <- brood_data_template %>%
+    dplyr::mutate(Row = NA_integer_) %>%
+    dplyr::select(Row, dplyr::everything())
 
 
   # Capture data
-  Capture_data <- tibble::tibble(
-    Row = NA_integer_,
-    IndvID = NA_character_,
-    Species = NA_character_,
-    Sex_observed = NA_character_,
-    BreedingSeason = NA_integer_,
-    CaptureDate = as.Date(NA_character_),
-    CaptureTime = NA_character_,
-    ObserverID = NA_character_,
-    LocationID = NA_character_,
-    CaptureAlive = NA,
-    ReleaseAlive = NA,
-    CapturePopID = NA_character_,
-    CapturePlot = NA_character_,
-    ReleasePopID = NA_character_,
-    ReleasePlot = NA_character_,
-    Mass = NA_real_,
-    Tarsus = NA_real_,
-    OriginalTarsusMethod = NA_character_,
-    WingLength = NA_real_,
-    Age_observed = NA_real_,
-    Age_calculated = NA_integer_,
-    ChickAge = NA_integer_,
-    ExperimentID = NA_character_,
-    CheckID = NA_character_
-  )
+  Capture_data <- capture_data_template %>%
+    dplyr::mutate(Row = NA_integer_) %>%
+    dplyr::select(Row, dplyr::everything())
 
 
   # Individual data
-  Individual_data <- tibble::tibble(
-    Row = NA_integer_,
-    IndvID = NA_character_,
-    Species = NA_character_,
-    PopID = NA_character_,
-    BroodIDLaid = NA_character_,
-    BroodIDFledged = NA_character_,
-    RingSeason = NA_integer_,
-    RingAge = NA_character_,
-    Sex_calculated = NA_character_,
-    Sex_genetic = NA_character_,
-    CheckID = NA_character_
-  )
+  Individual_data <- individual_data_template %>%
+    dplyr::mutate(Row = NA_integer_) %>%
+    dplyr::select(Row, dplyr::everything())
 
 
   # Location data
-  Location_data <- tibble::tibble(
-    Row = NA_integer_,
-    LocationID = NA_character_,
-    NestboxID = NA_character_,
-    LocationType = NA_character_,
-    PopID = NA_character_,
-    Latitude = NA_real_,
-    Longitude = NA_real_,
-    StartSeason = NA_integer_,
-    EndSeason = NA_integer_,
-    HabitatType = NA_character_,
-    CheckID = NA_character_
-  )
+  Location_data <- location_data_template %>%
+    dplyr::mutate(Row = NA_integer_) %>%
+    dplyr::select(Row, dplyr::everything())
 
 
   # Add rows in which single checks can be validated
@@ -1164,6 +1084,7 @@ create_dummy_data <- function() {
       CaptureID = paste(CapturePopID, IndvID, CaptureDate, sep="_"),
       CheckID = "C4"
     )
+
 
   # Approved_list: make sure that our approve-listing procedure works ####
   # We create a record that violates check B4, but should NOT result in TRUE in Warning & Error columns
