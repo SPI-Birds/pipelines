@@ -58,7 +58,7 @@ quality_check <- function(R_data,
 
     approved_list <- list(Brood_approved_list = tibble::tibble(PopID = "AAA",
                                                                BroodID = "AAA-2020-0",
-                                                               CheckID = "B4"),
+                                                               CheckID = "B3"),
                           Capture_approved_list = tibble::tibble(PopID = NA_character_,
                                                                  CaptureID = NA_character_,
                                                                  CheckID = NA_character_),
