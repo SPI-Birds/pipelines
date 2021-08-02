@@ -44,7 +44,7 @@ format_GRO <- function(db = choose_directory(),
   ## Otherwise, use the specified pop filter
   if(is.null(pop)){
 
-    pop_filter <- pop
+    pop_filter <- NULL
 
   } else {
 
@@ -58,12 +58,12 @@ format_GRO <- function(db = choose_directory(),
   options(dplyr.summarise.inform = FALSE)
 
   ## Read in the three separate primary data tables
-  bt_data <- nest_data <- readxl::read_excel(path = paste0(db, "/GRO_PrimaryData_BT.xls"), guess = 5000, range = readxl::cell_cols("A:L")) %>%
-    dplyr::mutate(Species = rep("CYACAE", nrow(.)))
-  cf_data <- nest_data <- readxl::read_excel(path = paste0(db, "/GRO_PrimaryData_CF.xls"), guess = 5000, range = readxl::cell_cols("A:L")) %>%
-    dplyr::mutate(Species = rep("FICALB", nrow(.)))
-  gt_data <- nest_data <- readxl::read_excel(path = paste0(db, "/GRO_PrimaryData_GT.xls"), guess = 5000, range = readxl::cell_cols("A:L")) %>%
-    dplyr::mutate(Species = rep("PARMAJ", nrow(.)))
+  bt_data <- nest_data <- readxl::read_excel(path = paste0(db, "/GRO_PrimaryData_BT.xls"), guess_max = 5000, range = readxl::cell_cols("A:L")) %>%
+    dplyr::mutate(Species = rep(species_codes[species_codes$SpeciesID == 14620,]$Species, nrow(.)))
+  cf_data <- nest_data <- readxl::read_excel(path = paste0(db, "/GRO_PrimaryData_CF.xls"), guess_max = 5000, range = readxl::cell_cols("A:L")) %>%
+    dplyr::mutate(Species = rep(species_codes[species_codes$SpeciesID == 13480,]$Species, nrow(.)))
+  gt_data <- nest_data <- readxl::read_excel(path = paste0(db, "/GRO_PrimaryData_GT.xls"), guess_max = 5000, range = readxl::cell_cols("A:L")) %>%
+    dplyr::mutate(Species = rep(species_codes[species_codes$SpeciesID == 14640,]$Species, nrow(.)))
 
   ## Rbind data
   gro_data <- rbind(bt_data, cf_data, gt_data) %>%
@@ -91,10 +91,9 @@ format_GRO <- function(db = choose_directory(),
                   HatchDate_observed =  as.Date(.data$HatchDate_observed),
                   ClutchSize_min = dplyr::case_when(grepl("?", .data$ClutchSize_observed, fixed = T) ~ as.integer(sub("?","",.data$ClutchSize_observed, fixed = T)),
                                                     TRUE ~ NA_integer_),
-                  ClutchSize_observed = suppressWarnings(as.integer(.data$ClutchSize_observed)),
-                  BroodSize_observed = suppressWarnings(as.integer(.data$BroodSize_observed)),
-                  NumberFledged_observed = suppressWarnings(as.integer(.data$NumberFledged_observed)),
-
+                  ClutchSize_observed = suppressWarnings(as.numeric(gsub("?", replacement = "", x = .data$ClutchSize_observed, fixed = T))),
+                  BroodSize_observed = suppressWarnings(as.numeric(gsub("?", replacement = "", x = .data$BroodSize_observed, fixed = T))),
+                  NumberFledged_observed = suppressWarnings(as.numeric(gsub("?", replacement = "", x = .data$NumberFledged_observed, fixed = T))),
                   ## Information on clutch type recorded opportunistically in the Notes - when there is a note, label
                   ClutchType_observed = dplyr::case_when(grepl("First|first", .data$Notes, fixed = F) ~ "first",
                                                          grepl("Repeated|second|secend|Second", .data$Notes, fixed = F) ~ "second",
@@ -222,7 +221,11 @@ create_brood_GRO <- function(gro_data) {
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data =. , protocol_version = "1.1", na.rm = FALSE)) %>%
 
     ## Calculating BroodID if Species is known
-    dplyr::mutate(BroodID = dplyr::case_when(!is.na(Species) ~ paste(.data$PopID, dplyr::row_number(), sep ="-")))
+    dplyr::mutate(BroodID = dplyr::case_when(!is.na(Species) ~ paste(.data$PopID, dplyr::row_number(), sep ="-"))) %>%
+
+    ## Remove any cases without a BroodID
+    dplyr::filter(!is.na(.data$BroodID))
+
 
 
   # ## Check column classes
