@@ -57,7 +57,7 @@ capture_data_template <- tibble::tibble(CaptureID = as.character(paste0("POP-", 
                                         ReleaseAlive = NA,
                                         CapturePopID = as.character("POP"), ## Missing data not allowed
                                         CapturePlot = NA_character_,
-                                        ReleasePopID = ifelse(ReleaseAlive == F, NA_character_, CapturePopID), ## Missing data only allowed if ReleaseAlive is False
+                                        ReleasePopID = as.character(ifelse(ReleaseAlive == FALSE, NA_character_, CapturePopID)), ## Missing data only allowed if ReleaseAlive is False
                                         ReleasePlot = NA_character_, ## Missing data only allowed if ReleaseAlive is False
                                         Mass = NA_real_,
                                         Tarsus = NA_real_,
