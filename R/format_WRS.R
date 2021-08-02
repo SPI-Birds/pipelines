@@ -215,15 +215,8 @@ format_WRS <- function(db = choose_directory(),
            PopID = "WRS",
            BreedingSeason = as.integer(.data$BreedingSeason),
            dplyr::across(c(.data$Mass, .data$WingLength, .data$Tarsus), ~ suppressWarnings(as.numeric(.x))),
-<<<<<<< HEAD
            CaptureTime = suppressWarnings(case_when(grepl(":", .data$Hour) ~ as.character(.data$Hour),
                                                     TRUE ~ format(as.POSIXct(Sys.Date() + as.numeric(.data$Hour)), "%H:%M", tz="UTC"))),
-||||||| :memo: Update docs
-           CaptureTime = suppressWarnings(format(openxlsx::convertToDateTime(.data$Hour), "%H:%M")),
-=======
-           CaptureTime = suppressWarnings(case_when(grepl(":", .data$Hour) ~ as.character(.data$Hour),
-                                                    TRUE ~ format(as.POSIXct(Sys.Date() + as.numeric(adult_data$Hour)), "%H:%M", tz="UTC"))),
->>>>>>> WRS_pipeline
            Species = dplyr::case_when(.data$Species == "GT"  ~ species_codes[species_codes$SpeciesID == 14640,]$Species,
                                       .data$Species == "BT"  ~ species_codes[species_codes$SpeciesID == 14620,]$Species,
                                       .data$Species == "FC"  ~ species_codes[species_codes$SpeciesID == 13490,]$Species,
