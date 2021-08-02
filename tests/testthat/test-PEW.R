@@ -1,7 +1,6 @@
 testthat::skip_if(!exists("data_path"))
 
 pipeline_output <- format_PEW(db = paste0(data_path, "/PEW_PeerdsbosWest_Belgium"))
-
 test_that("PEW outputs all files...", {
 
   expect_true("PEW" %in% pipeline_output$Brood_data$PopID)
@@ -188,9 +187,27 @@ test_that("Location_data returns an expected outcome...", {
 
 ## General tests (for pipelines formatted to standard protocol version 1.1.0)
 
+test_that("Expected columns are present", {
+
+  ## Will fail if not all the expected columns are present
+
+  ## Brood data: Test that all column classes are expected
+  test_col_present(pipeline_output, "Brood")
+
+  ## Capture data: Test that all column classes are expected
+  test_col_present(pipeline_output, "Capture")
+
+  ## Individual data: Test that all column classes are expected
+  test_col_present(pipeline_output, "Individual")
+
+  ## Location data: Test that all column classes are expected
+  test_col_present(pipeline_output, "Location")
+
+})
+
 test_that("Column classes are as expected", {
 
-  ## Will be false if column classes do not match and will be an error if data frame dimensions are not equal
+  ## Will be fail if classes of columns that are shared by the output and the templates do not match
 
   ## Brood data: Test that all column classes are expected
   test_col_classes(pipeline_output, "Brood")
