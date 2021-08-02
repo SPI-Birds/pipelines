@@ -61,9 +61,12 @@ format_WRS <- function(db = choose_directory(),
   options(dplyr.summarise.inform = FALSE)
 
   ## Read in primary data from nest sheet
-  ## TODO: Change WAR to WRS
+
   ## TODO: Check about species codes
-  nest_data <- readxl::read_xlsx(path = paste0(db, "/WRS_PrimaryData.xlsx"), guess = 5000, sheet = "Nests", col_types = "text") %>%
+  nest_data <- readxl::read_xlsx(path = paste0(db, "/WRS_PrimaryData.xlsx"),
+                                 guess_max = 5000,
+                                 sheet = "Nests",
+                                 col_types = "text") %>%
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
 
@@ -212,7 +215,8 @@ format_WRS <- function(db = choose_directory(),
            PopID = "WRS",
            BreedingSeason = as.integer(.data$BreedingSeason),
            dplyr::across(c(.data$Mass, .data$WingLength, .data$Tarsus), ~ suppressWarnings(as.numeric(.x))),
-           CaptureTime = suppressWarnings(format(openxlsx::convertToDateTime(.data$Hour), "%H:%M")),
+           CaptureTime = suppressWarnings(case_when(grepl(":", .data$Hour) ~ as.character(.data$Hour),
+                                                    TRUE ~ format(as.POSIXct(Sys.Date() + as.numeric(adult_data$Hour)), "%H:%M", tz="UTC"))),
            Species = dplyr::case_when(.data$Species == "GT"  ~ species_codes[species_codes$SpeciesID == 14640,]$Species,
                                       .data$Species == "BT"  ~ species_codes[species_codes$SpeciesID == 14620,]$Species,
                                       .data$Species == "FC"  ~ species_codes[species_codes$SpeciesID == 13490,]$Species,
@@ -229,22 +233,22 @@ format_WRS <- function(db = choose_directory(),
            dplyr::across(where(is.character), ~dplyr::na_if(., "NA"))) %>%
 
     dplyr::select(.data$BreedingSeason,
-           .data$PopID,
-           .data$Plot,
-           .data$LocationID,
-           .data$Species,
-           .data$IndvID,
-           .data$CaptureDate,
-           .data$CaptureTime,
-           .data$Sex_observed,
-           .data$Age_observed,
-           .data$Mass,
-           .data$WingLength,
-           .data$Tarsus,
-           .data$ReleaseAlive,
-           .data$ObserverID,
-           .data$ExperimentID,
-           .data$UniqueBreedingEvent)
+                  .data$PopID,
+                  .data$Plot,
+                  .data$LocationID,
+                  .data$Species,
+                  .data$IndvID,
+                  .data$CaptureDate,
+                  .data$CaptureTime,
+                  .data$Sex_observed,
+                  .data$Age_observed,
+                  .data$Mass,
+                  .data$WingLength,
+                  .data$Tarsus,
+                  .data$ReleaseAlive,
+                  .data$ObserverID,
+                  .data$ExperimentID,
+                  .data$UniqueBreedingEvent)
 
   #### BROOD DATA
   message("Compiling brood information...")
