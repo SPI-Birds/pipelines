@@ -25,7 +25,7 @@ test_that("Brood_data returns an expected outcome...", {
                         BreedingSeason == "2015"
                         & PopID == "MAL"
                         & Plot == "S"
-                        & LocationID == "11")
+                        & LocationID == "S11")
 
   expect_equal(!is.na(plotS_loc11$BroodID), TRUE)
   expect_equal(plotS_loc11$BreedingSeason, 2015)
@@ -47,7 +47,7 @@ test_that("Brood_data returns an expected outcome...", {
                         BreedingSeason == "2018"
                         & PopID == "MAL"
                         & Plot == "P"
-                        & LocationID == "88")
+                        & LocationID == "P88")
 
   expect_equal(!is.na(plotP_loc88$BroodID), TRUE)
   expect_equal(plotP_loc88$BreedingSeason, 2018)
@@ -60,7 +60,7 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(plotP_loc88$BroodSize_observed, 7)
   expect_equal(plotP_loc88$NumberFledged_observed, NA_integer_)
   expect_equal(plotP_loc88$FledgeDate_observed, lubridate::NA_Date_)
-  expect_equal(plotP_loc88$AvgChickMass, 10.6)
+  expect_equal(plotP_loc88$AvgChickMass, 10.7)
   expect_equal(plotP_loc88$NumberChicksMass, 6)
   expect_equal(plotP_loc88$AvgTarsus, 19.2)
   expect_equal(plotP_loc88$NumberChicksTarsus, 6)
@@ -84,6 +84,7 @@ test_that("Capture_data returns an expected outcome...", {
   expect_equal(cap_2KS92418$Sex_observed, NA_character_)
   expect_equal(cap_2KS92418$BreedingSeason, 2015)
   expect_equal(cap_2KS92418$CaptureTime, "10:10")
+  expect_equal(cap_2KS92418$LocationID, "S114")
   expect_equal(cap_2KS92418$CapturePlot, "S")
   expect_equal(cap_2KS92418$ReleasePopID, "MAL")
   expect_equal(cap_2KS92418$ReleasePlot, "S")
@@ -106,7 +107,7 @@ test_that("Capture_data returns an expected outcome...", {
   expect_equal(cap_1ET87101$Sex_observed, "F")
   expect_equal(cap_1ET87101$BreedingSeason, 2017)
   expect_equal(cap_1ET87101$CaptureTime, "18:15")
-  expect_equal(cap_1ET87101$LocationID, "128")
+  expect_equal(cap_1ET87101$LocationID, "P128")
   expect_equal(cap_1ET87101$CapturePlot, "P")
   expect_equal(cap_1ET87101$ReleasePopID, "MAL")
   expect_equal(cap_1ET87101$ReleasePlot, "P")
@@ -129,7 +130,7 @@ test_that("Capture_data returns an expected outcome...", {
   expect_equal(cap_2KS91300$Sex_observed, "F")
   expect_equal(cap_2KS91300$BreedingSeason, 2019)
   expect_equal(cap_2KS91300$CaptureTime, "12:00")
-  expect_equal(cap_2KS91300$LocationID, "117")
+  expect_equal(cap_2KS91300$LocationID, "S117")
   expect_equal(cap_2KS91300$CapturePlot, "S")
   expect_equal(cap_2KS91300$ReleasePopID, "MAL")
   expect_equal(cap_2KS91300$ReleasePlot, "S")
@@ -249,8 +250,8 @@ test_that("Column classes are as expected", {
 
   ## Will fail if columns that are shared by the output and the templates have different classes.
 
-  # ## Brood data: Test that all column classes are expected
-  # test_col_classes(pipeline_output, "Brood")
+  ## Brood data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Brood")
 
   ## Capture data: Test that all column classes are expected
   test_col_classes(pipeline_output, "Capture")
@@ -275,16 +276,16 @@ test_that("ID columns match the expected format for the pipeline", {
   # ## IndvID format in Capture data  is as expected
   # test_ID_format(pipeline_output, ID_col = "C-IndvID", ID_format = "^[:digit:]+$")
 
-  ## IndvID format in Individual data is as expected
-  test_ID_format(pipeline_output, ID_col = "I-IndvID", ID_format = "^[:digit:]+$")
+  # ## IndvID format in Individual data is as expected
+  # test_ID_format(pipeline_output, ID_col = "I-IndvID", ID_format = "^[:digit:]+$")
 
 })
 
 
 test_that("Key columns only contain unique values", {
 
-  # ## BroodID has only unique values
-  # test_unique_values(pipeline_output, "BroodID")
+  ## BroodID has only unique values
+  test_unique_values(pipeline_output, "BroodID")
 
   ## CaptureID has only unique values
   test_unique_values(pipeline_output, "CaptureID")
