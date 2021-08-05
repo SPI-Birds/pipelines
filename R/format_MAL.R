@@ -87,7 +87,7 @@ format_MAL <- function(db = choose_directory(),
                                                 .data$Species == "RS" ~ "?",
                                                 .data$Species == "NA" ~ "?"),
                      Plot = stringr::str_extract(.data$SiteNest, "[:alpha:]+"),
-                     LocationID = stringr::str_extract(.data$SiteNest, "[:digit:].*"),
+                     LocationID = .data$SiteNest,
                      CaptureDate = lubridate::ymd(.data$Date),
                      CaptureTime = format(lubridate::as_datetime(.data$Time), "%H:%M"),
                      Mass = suppressWarnings(as.numeric(.data$MassG)),
@@ -96,8 +96,8 @@ format_MAL <- function(db = choose_directory(),
                      IndvID = .data$Id,
                      Age_observed = dplyr::case_when(.data$Age == "P" ~ 1L,
                                                      .data$Age == "2" ~ 1L,
-                                                     .data$Age == "2K" ~ 3L,
-                                                     .data$Age == "2K+" ~ 3L,
+                                                     .data$Age == "2K" ~ 5L,
+                                                     .data$Age == "2K+" ~ 5L,
                                                      .data$Age == "3" ~ 5L,
                                                      .data$Age == "3K" ~ 5L,
                                                      .data$Age == "3K+" ~ 5L),
@@ -127,7 +127,7 @@ format_MAL <- function(db = choose_directory(),
                                                 .data$Species == "RS" ~ "?",
                                                 .data$Species == "NA" ~ "?"),
                      Plot = stringr::str_extract(.data$SiteNest, "[:alpha:]+"),
-                     LocationID = stringr::str_extract(.data$SiteNest, "[:digit:].*"),
+                     LocationID = .data$SiteNest,
                      LayDate_observed = lubridate::ymd(.data$FirstEgg),
                      HatchDate_observed = lubridate::ymd(.data$HatchDate),
                      ClutchSize_observed = suppressWarnings(as.integer(.data$ClutchSize)),
@@ -156,7 +156,7 @@ format_MAL <- function(db = choose_directory(),
                                                 .data$Species == "RS" ~ "?",
                                                 .data$Species == "NA" ~ "?"),
                      Plot = stringr::str_extract(.data$SiteNest, "[:alpha:]+"),
-                     LocationID = stringr::str_extract(.data$SiteNest, "[:digit:].*"),
+                     LocationID = .data$SiteNest,
                      LayDate_observed = lubridate::ymd(.data$FirstEgg),
                      HatchDate_observed = suppressWarnings(as.Date(as.numeric(.data$HatchDay),
                                                                    origin = as.Date(paste0(.data$BreedingSeason, "-03-31")))),
@@ -330,9 +330,9 @@ create_brood_MAL <- function(nest_data, rr_data) {
 
     ## Summarise brood info from chicks
     dplyr::group_by(.data$Brood_rec) %>%
-    dplyr::summarise(AvgChickMass = mean(.data$Mass, na.rm = T),
+    dplyr::summarise(AvgChickMass = round(mean(.data$Mass, na.rm = T),1),
                      NumberChicksMass = sum(is.na(.data$Mass) == F),
-                     AvgTarsus = mean(.data$Tarsus, na.rm = T),
+                     AvgTarsus = round(mean(.data$Tarsus, na.rm = T),1),
                      NumberChicksTarsus = sum(is.na(.data$Tarsus) == F)) %>%
 
     ## Replace NaNs and 0 with NA
@@ -561,9 +561,9 @@ create_location_MAL <- function(loc_data) {
     dplyr::group_by(.data$LocationID) %>%
     dplyr::mutate(PopID = "MAL",
                   NestboxID = .data$LocationID,
-                  StartSeason = min(.data$Year[.data$Present == "Y"], na.rm = TRUE),
-                  EndSeason = dplyr::case_when(any(removed == "Y") ~ max(.data$Year),
-                                               TRUE ~ NA_character_),
+                  StartSeason = as.numeric(min(.data$Year[.data$Present == "Y"], na.rm = TRUE)),
+                  EndSeason = as.numeric(dplyr::case_when(any(removed == "Y") ~ max(.data$Year),
+                                               TRUE ~ NA_integer_)),
                   LocationType = "NB") %>%
 
     dplyr::distinct(.data$LocationID, .keep_all = T) %>%
