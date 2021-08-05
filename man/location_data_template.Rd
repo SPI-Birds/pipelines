@@ -2,10 +2,10 @@
 % Please edit documentation in R/datasets.R
 \name{location_data_template}
 \alias{location_data_template}
-\title{location_data_template template}
+\title{Location data template in standard format (version 1.1.0)}
 \format{
-Tibble
+Data frame with 1 row and 9 variables:
 }
 \description{
-Tibble giving names and associated classes for all the columns in the Location data for the standard protocol v1.1.0
+Location data template in standard format (version 1.1.0)
 }
