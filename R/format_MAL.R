@@ -110,7 +110,7 @@ format_MAL <- function(db = choose_directory(),
     dplyr::arrange(.data$BreedingSeason, .data$Plot, .data$LocationID, .data$CaptureDate)
 
 
-  ## Read in primary data from nest records
+  ## Read in primary data from nest records (new format)
   nest_data_17_19 <- readxl::read_xlsx(path = paste0(db, "/MAL_PrimaryData_2.xlsx"),
                                        sheet = 1,
                                        guess_max = 5000) %>%
@@ -136,10 +136,10 @@ format_MAL <- function(db = choose_directory(),
 
                      ## Year is not entered in some cases, retrieve it from other date columns when possible
                      ## TODO: Inform about missing years
-                     BreedingSeason = dplyr::case_when(is.na(.data$Year) ~ lubridate::year(.data$LayDate_observed),
-                                                       TRUE ~ .data$Year))
+                     BreedingSeason = dplyr::case_when(is.na(.data$Year) ~ as.integer(lubridate::year(.data$LayDate_observed)),
+                                                       TRUE ~ as.integer(.data$Year)))
 
-
+  ## Read in primary data from nest records (old format)
   nest_data_13_16 <- readxl::read_xlsx(path = paste0(db, "/MAL_PrimaryData_2.xlsx"),
                                        sheet = 2,
                                        guess_max = 5000) %>%
@@ -190,9 +190,9 @@ format_MAL <- function(db = choose_directory(),
     dplyr::arrange(.data$sitenest, .data$Year) %>%
     dplyr::group_by(.data$sitenest) %>%
     dplyr::mutate(removed = case_when(.data$Present == "N" & .data$Year == max(.data$Year) ~ "Y" ,
-                                      TRUE ~ "N"))
-
-
+                                      TRUE ~ "N")) %>%
+    dplyr::mutate(Year = as.integer(.data$Year)) %>%
+    as.data.frame
 
 
   ## Filter to keep only desired Species if specified
@@ -353,8 +353,9 @@ create_brood_MAL <- function(nest_data, rr_data) {
     ## Keep only necessary columns
     dplyr::select(dplyr::contains(names(brood_data_template))) %>%
 
-    ## Add missing columns
-    dplyr::bind_cols(brood_data_template[,!(names(brood_data_template) %in% names(.))]) %>%
+    # Add missing columns
+    dplyr::bind_cols(brood_data_template[0,!(names(brood_data_template) %in% names(.))]  %>%
+                       dplyr::add_row()) %>%
 
     ## Reorder columns
     dplyr::select(names(brood_data_template)) %>%
@@ -371,8 +372,8 @@ create_brood_MAL <- function(nest_data, rr_data) {
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data =. , protocol_version = "1.1", na.rm = FALSE))
 
 
-  # ## Check column classes
-  # purrr::map_df(brood_data_template, class) == purrr::map_df(Brood_data, class)
+  ## Check column classes
+  purrr::map_df(brood_data_template, class) == purrr::map_df(Brood_data, class)
 
   return(Brood_data)
 
@@ -406,12 +407,12 @@ create_capture_MAL <- function(rr_data) {
                   ReleasePlot = dplyr::case_when(.data$ReleaseAlive == FALSE ~ NA_character_,
                                                  TRUE ~ as.character(.data$CapturePlot))) %>%
 
-
     ## Keep only necessary columns
     dplyr::select(dplyr::contains(names(capture_data_template))) %>%
 
     ## Add missing columns
-    dplyr::bind_cols(capture_data_template[,!(names(capture_data_template) %in% names(.))]) %>%
+    dplyr::bind_cols(capture_data_template[0,!(names(capture_data_template) %in% names(.))] %>%
+                       dplyr::add_row()) %>%
 
     ## Reorder columns
     dplyr::select(names(capture_data_template)) %>%
@@ -528,7 +529,8 @@ create_individual_MAL <- function(Capture_data, Brood_data){
     dplyr::select(dplyr::contains(names(individual_data_template))) %>%
 
     ## Add missing columns
-    dplyr::bind_cols(individual_data_template[,!(names(individual_data_template) %in% names(.))]) %>%
+    dplyr::bind_cols(individual_data_template[0,!(names(individual_data_template) %in% names(.))]  %>%
+                       dplyr::add_row()) %>%
 
     ## Reorder columns
     dplyr::select(names(individual_data_template))
@@ -560,9 +562,10 @@ create_location_MAL <- function(loc_data) {
 
     dplyr::group_by(.data$LocationID) %>%
     dplyr::mutate(PopID = "MAL",
+                  HabitatType = tolower(HabitatType),
                   NestboxID = .data$LocationID,
-                  StartSeason = as.numeric(min(.data$Year[.data$Present == "Y"], na.rm = TRUE)),
-                  EndSeason = as.numeric(dplyr::case_when(any(removed == "Y") ~ max(.data$Year),
+                  StartSeason = as.integer(min(.data$Year[.data$Present == "Y"], na.rm = TRUE)),
+                  EndSeason = as.integer(dplyr::case_when(any(removed == "Y") ~ max(.data$Year),
                                                TRUE ~ NA_integer_)),
                   LocationType = "NB") %>%
 
@@ -572,7 +575,8 @@ create_location_MAL <- function(loc_data) {
     dplyr::select(dplyr::contains(names(location_data_template))) %>%
 
     ## Add missing columns
-    dplyr::bind_cols(location_data_template[,!(names(location_data_template) %in% names(.))]) %>%
+    dplyr::bind_cols(location_data_template[0,!(names(location_data_template) %in% names(.))] %>%
+                       dplyr::add_row()) %>%
 
     ## Reorder columns
     dplyr::select(names(location_data_template))
