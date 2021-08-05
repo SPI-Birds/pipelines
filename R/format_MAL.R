@@ -136,8 +136,18 @@ format_MAL <- function(db = choose_directory(),
 
                      ## Year is not entered in some cases, retrieve it from other date columns when possible
                      ## TODO: Inform about missing years
+<<<<<<< HEAD
                      BreedingSeason = dplyr::case_when(is.na(.data$Year) ~ as.integer(lubridate::year(.data$LayDate_observed)),
                                                        TRUE ~ as.integer(.data$Year)))
+||||||| :construction: Add general tests to MAL pipeline brancjh
+                     BreedingSeason = dplyr::case_when(is.na(.data$Year) ~ lubridate::year(.data$LayDate_observed),
+                                                       TRUE ~ .data$Year))
+
+=======
+                     BreedingSeason = dplyr::case_when(is.na(.data$Year) ~ as.integer(lubridate::year(.data$LayDate_observed)),
+                                                       TRUE ~ as.integer(.data$Year)))
+
+>>>>>>> MAL_pipeline
 
   ## Read in primary data from nest records (old format)
   nest_data_13_16 <- readxl::read_xlsx(path = paste0(db, "/MAL_PrimaryData_2.xlsx"),
