@@ -18,7 +18,7 @@ test_col_present <- function(pipeline_output,
                               data_template) {
 
   ## Test
-  eval(bquote(expect_true(
+  eval(bquote(testthat::expect_true(
 
     if (data_template == "Brood"){
 
@@ -68,15 +68,15 @@ test_col_classes <- function(pipeline_output,
                              data_template) {
 
   ## Test
-  eval(bquote(expect_true(
+  eval(bquote(testthat::expect_true(
 
     if (data_template == "Brood"){
 
       brood <- pipeline_output[[1]] %>%
-        dplyr::select(any_of(names(brood_data_template)))
+        dplyr::select(tidyselect::any_of(names(brood_data_template)))
 
       brood_data_template_ab <- brood_data_template %>%
-        dplyr::select(any_of(names(pipeline_output[[1]])))
+        dplyr::select(tidyselect::any_of(names(pipeline_output[[1]])))
 
       all(purrr::map_df(brood_data_template_ab, class) == purrr::map_df(brood, class))
 
@@ -86,10 +86,10 @@ test_col_classes <- function(pipeline_output,
     else if (data_template == "Capture") {
 
       capture <- pipeline_output[[2]] %>%
-        dplyr::select(any_of(names(capture_data_template)))
+        dplyr::select(tidyselect::any_of(names(capture_data_template)))
 
       capture_data_template_ab <- capture_data_template %>%
-        dplyr::select(any_of(names(pipeline_output[[2]])))
+        dplyr::select(tidyselect::any_of(names(pipeline_output[[2]])))
 
       all(purrr::map_df(capture_data_template_ab, class) == purrr::map_df(capture, class))
 
@@ -98,10 +98,10 @@ test_col_classes <- function(pipeline_output,
     else if (data_template == "Individual") {
 
       individual <- pipeline_output[[3]] %>%
-        dplyr::select(any_of(names(individual_data_template)))
+        dplyr::select(tidyselect::any_of(names(individual_data_template)))
 
       individual_data_template_ab <- individual_data_template %>%
-        dplyr::select(any_of(names(pipeline_output[[3]])))
+        dplyr::select(tidyselect::any_of(names(pipeline_output[[3]])))
 
       all(purrr::map_df(individual_data_template_ab, class) == purrr::map_df(individual, class))
 
@@ -110,10 +110,10 @@ test_col_classes <- function(pipeline_output,
     else if (data_template == "Location") {
 
       location <- pipeline_output[[4]] %>%
-        dplyr::select(any_of(names(location_data_template)))
+        dplyr::select(tidyselect::any_of(names(location_data_template)))
 
       location_data_template_ab <- location_data_template %>%
-        dplyr::select(any_of(names(pipeline_output[[4]])))
+        dplyr::select(tidyselect::any_of(names(pipeline_output[[4]])))
 
       all(purrr::map_df(location_data_template_ab, class) == purrr::map_df(location, class))
     }
@@ -145,7 +145,7 @@ test_ID_format <- function(pipeline_output,
                            ID_format) {
 
   ## Test
-  eval(bquote(expect_true(
+  eval(bquote(testthat::expect_true(
 
     ## FemaleID
     if (ID_col == "FemaleID") {
@@ -200,7 +200,7 @@ test_ID_format <- function(pipeline_output,
 test_unique_values <- function(pipeline_output,
                                column) {
 
-  eval(bquote(expect_true(
+  eval(bquote(testthat::expect_true(
 
     ## BroodID
     if (column == "BroodID") {
@@ -295,11 +295,15 @@ test_NA_columns <- function(pipeline_output,
 }
 
 
-#' Test categories
+#' Test category columns
+#'
+#' Some columns should only include particular categorical values.
+#' For example, 'ExperimentID' should only include some combination of "PHENOLOGY","COHORT", "PARENTAGE", "SURVIVAL", or "OTHER".
+#' This test makes sure that there are no unexpected values in these different category columns.
 #'
 #' @param pipeline_output A list of the 4 data frames returned from format_X
 #' (where X is the three letter population code).
-#' @param column Which table should be checked? One of: "Brood", "Capture", "Individual", or "Location"
+#' @param table Which table should be checked? One of: "Brood", "Capture", "Individual", or "Location"
 #'
 #' @return Logical (TRUE/FALSE) for whether there are non-standard categories in the data frame.
 #' @export
@@ -343,15 +347,15 @@ test_category_columns <- function(pipeline_output,
 
     ## Get column values
     column_vals <- pipeline_output[[paste0(table, "_data")]] %>%
-      select(all_of(i)) %>%
+      dplyr::select(tidyselect::all_of(i)) %>%
       unique %>%
-      pull(i) %>%
+      dplyr::pull(i) %>%
       strsplit(split = "; ") %>%
       unlist() %>%
       as.character
 
     ## Get categories
-    cats <- pull(category_columns, var = i)
+    cats <- dplyr::pull(category_columns, var = i)
 
     ## Add
     lgl <- c(lgl, all(column_vals %in% cats))
@@ -359,7 +363,7 @@ test_category_columns <- function(pipeline_output,
   }
 
   ## Test
-  eval(bquote(expect_true(
+  eval(bquote(testthat::expect_true(
 
     all(lgl)
 

@@ -2,10 +2,12 @@
 % Please edit documentation in R/datasets.R
 \name{capture_data_template}
 \alias{capture_data_template}
-\title{Capture data template in standard format (version 1.1.0)}
+\title{capture_data_template template}
 \format{
+Tibble
+
 Data frame with 1 row and 23 variables:
 }
 \description{
-Capture data template in standard format (version 1.1.0)
+Tibble giving names and associated classes for all the columns in the Capture data for the standard protocol v1.1.0
 }

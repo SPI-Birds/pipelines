@@ -134,7 +134,7 @@ format_GLA <- function(db = choose_directory(),
     dplyr::mutate(BroodID = dplyr::case_when(!is.na(.data$Species) ~ paste(.data$PopID, dplyr::row_number(), sep ="-"))) %>%
 
     ## Join experiment labels
-    left_join(expID_tab, by = c("Experiment", "Treatment")) %>%
+    dplyr::left_join(expID_tab, by = c("Experiment", "Treatment")) %>%
 
     ## Select variables of interest
     dplyr::select(.data$BreedingSeason,
