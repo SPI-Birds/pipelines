@@ -16,6 +16,7 @@ License: GPL-2
 Encoding: UTF-8
 LazyData: true
 Imports: dplyr,
+         devtools,
          dbplyr,
          DBI,
          purrr,
@@ -41,7 +42,7 @@ Imports: dplyr,
          sp,
          usethis,
          rlang,
-         openxlsx
+         tidyselect
 RoxygenNote: 7.1.1
 Suggests: 
     knitr,

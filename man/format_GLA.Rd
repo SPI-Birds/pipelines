@@ -43,7 +43,10 @@ this data. For a general description of the standard format please see
 
 \strong{Species}: Primarily great tits and blue tits.
 
-\strong{IndvID}: Should be a 7 digit alphanumeric string. IndvIDs with more or less characters are likely errors.
+\strong{BroodID}: A concatentation of PopID and the row number of the brood record (e.g. SAL-1).
+
+\strong{IndvID}: Should be a 7 digit alphanumeric string. IndvIDs with a different number of characters are likely errors.
+These are set to NA and removed.
 
 \strong{CaptureDate}: Some individuals were not recorded in the ringing records, but were observed breeding at a monitored nest.
 For these individuals, the CaptureDate is set as May 15 of the breeding year.

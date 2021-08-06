@@ -1,5 +1,6 @@
-context("Run data quality check on Peerdsbos West, Belgium, pipeline output")
+testthat::skip_if(!exists("data_path"))
 
+pipeline_output <- format_PEW(db = paste0(data_path, "/PEW_PeerdsbosWest_Belgium"))
 test_that("PEW outputs all files...", {
 
   expect_true("PEW" %in% pipeline_output$Brood_data$PopID)
@@ -98,6 +99,21 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(PEW_data, BroodID == "2017_23")$AvgChickMass, NA_real_)
   expect_equal(subset(PEW_data, BroodID == "2017_23")$AvgTarsus, NA_real_)
 
+  #Clutch that should have uncertainty in clutch size (i.e. has ?)
+  expect_equal(subset(PEW_data, BroodID == "2016_k72")$Species, "CYACAE")
+  #ClutchType_calc is NA because no laying date given
+  expect_equal(subset(PEW_data, BroodID == "2016_k72")$ClutchType_calculated, NA_character_)
+  expect_equal(subset(PEW_data, BroodID == "2016_k72")$FemaleID, "14154588")
+  expect_equal(subset(PEW_data, BroodID == "2016_k72")$MaleID, "13619450")
+  expect_equal(subset(PEW_data, BroodID == "2016_k72")$LayDate_observed, as.Date(NA))
+  expect_equal(subset(PEW_data, BroodID == "2016_k72")$HatchDate_observed, as.Date("2016-05-14"))
+  expect_equal(subset(PEW_data, BroodID == "2016_k72")$ClutchSize_observed, 8)
+  expect_equal(subset(PEW_data, BroodID == "2016_k72")$ClutchSize_min, 8)
+  expect_equal(subset(PEW_data, BroodID == "2016_k72")$ClutchSize_max, Inf)
+  #AvgChickMass and AvgTarsus should be NA, there were no chicks measured
+  expect_equal(subset(PEW_data, BroodID == "2016_k72")$AvgChickMass, NA_real_)
+  expect_equal(subset(PEW_data, BroodID == "2016_k72")$AvgTarsus, NA_real_)
+
 })
 
 test_that("Capture_data returns an expected outcome...", {
@@ -168,3 +184,106 @@ test_that("Location_data returns an expected outcome...", {
 
 })
 
+
+## General tests (for pipelines formatted to standard protocol version 1.1.0)
+
+test_that("Expected columns are present", {
+
+  ## Will fail if not all the expected columns are present
+
+  ## Brood data: Test that all columns are present
+  test_col_present(pipeline_output, "Brood")
+
+  ## Capture data: Test that all columns are present
+  test_col_present(pipeline_output, "Capture")
+
+  ## Individual data: Test that all columns are present
+  test_col_present(pipeline_output, "Individual")
+
+  ## Location data: Test that all columns are present
+  test_col_present(pipeline_output, "Location")
+
+})
+
+test_that("Column classes are as expected", {
+
+  ## Will fail if columns that are shared by the output and the templates have different classes.
+
+  # ## Brood data: Test that all column classes are expected
+  # test_col_classes(pipeline_output, "Brood")
+
+  ## Capture data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Capture")
+
+  ## Individual data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Individual")
+
+  ## Location data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Location")
+
+})
+
+
+test_that("ID columns match the expected format for the pipeline", {
+
+  # ## FemaleID format is as expected
+  # test_ID_format(pipeline_output, ID_col = "FemaleID", ID_format = "^[:digit:]+$")
+  #
+  # ## MaleID format is as expected
+  # test_ID_format(pipeline_output, ID_col = "MaleID", ID_format = "^[:digit:]+$")
+
+  # ## IndvID format in Capture data  is as expected
+  # test_ID_format(pipeline_output, ID_col = "C-IndvID", ID_format = "^[:digit:]+$")
+
+  ## IndvID format in Individual data is as expected
+  test_ID_format(pipeline_output, ID_col = "I-IndvID", ID_format = "^[:digit:]+$")
+
+})
+
+
+test_that("Key columns only contain unique values", {
+
+  # ## BroodID has only unique values
+  # test_unique_values(pipeline_output, "BroodID")
+
+  ## CaptureID has only unique values
+  test_unique_values(pipeline_output, "CaptureID")
+
+  ## PopID-IndvID has only unique values
+  test_unique_values(pipeline_output, "PopID-IndvID")
+
+})
+
+
+test_that("Key columns in each table do not have NAs", {
+
+  ## Brood
+  test_NA_columns(pipeline_output, "Brood")
+
+  ## Capture
+  test_NA_columns(pipeline_output, "Capture")
+
+  ## Individual
+  test_NA_columns(pipeline_output, "Individual")
+
+  ## Location
+  test_NA_columns(pipeline_output, "Location")
+
+})
+
+
+test_that("Categorical columns do not have unexpected values", {
+
+  ## Brood
+  test_category_columns(pipeline_output, "Brood")
+
+  ## Capture
+  test_category_columns(pipeline_output, "Capture")
+
+  ## Individual
+  test_category_columns(pipeline_output, "Individual")
+
+  ## Location
+  test_category_columns(pipeline_output, "Location")
+
+})
