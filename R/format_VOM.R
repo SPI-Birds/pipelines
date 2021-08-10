@@ -9,7 +9,7 @@
 #'\strong{IndvID}: Should have the form: "2AA11111" - The first character is always a 2, the second two characters are letters,
 #'and the last five characters are numbers for a total of 8 characters.
 #'
-#'\strong{CaptureDate}: Set as the lay date for the nest.
+#'\strong{CaptureDate}: Set as the lay date for the nest. When lay date is not present, use the mean lay date (July 14th).
 #'
 #'@inheritParams pipeline_params
 #'
@@ -106,15 +106,6 @@ format_VOM <- function(db = choose_directory(),
                   .data$NumberFledged_observed,
                   .data$FemaleID,
                   .data$MaleID)
-
-
-  stringr::str_detect(nest_data$FemaleID, "^2{1}[:alpha:]{2}[:digit:]{5}")
-
-
-  stringr::str_detect(c("2KR970091", "22KR97001", "2XX11111", "2XX111111" , "1X111111", "1X1X1111"),
-                      "^2{1}[:alpha:]{2}[:digit:]{5}")
-
-
 
 
   ## Filter to keep only desired Species if specified
