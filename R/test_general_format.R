@@ -151,7 +151,7 @@ test_ID_format <- function(pipeline_output,
     if (ID_col == "FemaleID") {
 
       all(stringr::str_detect(pipeline_output[[1]]$FemaleID,
-                              glue::glue({ID_format})))
+                              ID_format), na.rm = T)
 
     }
 
@@ -159,7 +159,7 @@ test_ID_format <- function(pipeline_output,
     else if (ID_col == "MaleID") {
 
       all(stringr::str_detect(pipeline_output[[1]]$MaleID,
-                              glue::glue({ID_format})))
+                              ID_format), na.rm = T)
 
     }
 
@@ -167,7 +167,7 @@ test_ID_format <- function(pipeline_output,
     else if (ID_col == "C-IndvID") {
 
       all(stringr::str_detect(pipeline_output[[2]]$IndvID,
-                              glue::glue({ID_format})))
+                              ID_format), na.rm = T)
 
     }
 
@@ -175,7 +175,7 @@ test_ID_format <- function(pipeline_output,
     else if (ID_col == "I-IndvID") {
 
       all(stringr::str_detect(pipeline_output[[3]]$IndvID,
-                              glue::glue({ID_format})))
+                              ID_format), na.rm = T)
 
     }
 
