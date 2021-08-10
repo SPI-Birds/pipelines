@@ -54,7 +54,7 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(loc171_2019$MaleID, "2KV76835")
   expect_equal(loc171_2019$LayDate_observed, as.Date("2019-04-22"))
   expect_equal(loc171_2019$ClutchSize_observed, 10)
-  expect_equal(loc171_2019$HatchDate_observed, as.Date("2018-05-15"))
+  expect_equal(loc171_2019$HatchDate_observed, as.Date("2019-05-15"))
   expect_equal(loc171_2019$BroodSize_observed, 10)
   expect_equal(loc171_2019$NumberFledged_observed, NA_integer_)
   expect_equal(loc171_2019$FledgeDate_observed, lubridate::NA_Date_)
@@ -141,48 +141,38 @@ test_that("Individual data returns an expected outcome...", {
   #Take a subset of only VOM data
   VOM_data <- dplyr::filter(pipeline_output$Individual_data, PopID %in% c("VOM"))
 
-  #Individual 2KV75337
-  expect_equal(subset(VOM_data, IndvID == "2KV75337")$Species, "PARMAJ")
-  expect_equal(subset(VOM_data, IndvID == "2KV75337")$PopID, "VOM")
-  expect_equal(subset(VOM_data, IndvID == "2KV75337")$BroodIDLaid, NA_character_)
-  expect_equal(subset(VOM_data, IndvID == "2KV75337")$BroodIDFledged, NA_character_)
-  expect_equal(subset(VOM_data, IndvID == "2KV75337")$RingSeason, 2019)
-  expect_equal(subset(VOM_data, IndvID == "2KV75337")$RingAge, "chick")
-  expect_equal(subset(VOM_data, IndvID == "2KV75337")$Sex_calculated, NA_character_)
-  expect_equal(subset(VOM_data, IndvID == "2KV75337")$Sex_genetic, NA_character_)
+  #Individual 2KR97725
+  expect_equal(subset(VOM_data, IndvID == "2KR97725")$Species, "PARMAJ")
+  expect_equal(subset(VOM_data, IndvID == "2KR97725")$PopID, "VOM")
+  expect_equal(subset(VOM_data, IndvID == "2KR97725")$BroodIDLaid, NA_character_)
+  expect_equal(subset(VOM_data, IndvID == "2KR97725")$BroodIDFledged, NA_character_)
+  expect_equal(subset(VOM_data, IndvID == "2KR97725")$RingSeason, 2013)
+  expect_equal(subset(VOM_data, IndvID == "2KR97725")$RingAge, "adult")
+  expect_equal(subset(VOM_data, IndvID == "2KR97725")$Sex_calculated, "M")
+  expect_equal(subset(VOM_data, IndvID == "2KR97725")$Sex_genetic, NA_character_)
 
 
-  #Individual 2KR03683
-  expect_equal(subset(VOM_data, IndvID == "2KR03683")$Species, "PARMAJ")
-  expect_equal(subset(VOM_data, IndvID == "2KR03683")$PopID, "VOM")
-  expect_equal(subset(VOM_data, IndvID == "2KR03683")$BroodIDLaid, NA_character_)
-  expect_equal(subset(VOM_data, IndvID == "2KR03683")$BroodIDFledged, NA_character_)
-  expect_equal(subset(VOM_data, IndvID == "2KR03683")$RingSeason, 2013)
-  expect_equal(subset(VOM_data, IndvID == "2KR03683")$RingAge, "adult")
-  expect_equal(subset(VOM_data, IndvID == "2KR03683")$Sex_calculated, "M")
-  expect_equal(subset(VOM_data, IndvID == "2KR03683")$Sex_genetic, NA_character_)
+  #Individual 2KP22118
+  expect_equal(subset(VOM_data, IndvID == "2KP22118")$Species, "PARMAJ")
+  expect_equal(subset(VOM_data, IndvID == "2KP22118")$PopID, "VOM")
+  expect_equal(subset(VOM_data, IndvID == "2KP22118")$BroodIDLaid, NA_character_)
+  expect_equal(subset(VOM_data, IndvID == "2KP22118")$BroodIDFledged, NA_character_)
+  expect_equal(subset(VOM_data, IndvID == "2KP22118")$RingSeason, 2014)
+  expect_equal(subset(VOM_data, IndvID == "2KP22118")$RingAge, "adult")
+  expect_equal(subset(VOM_data, IndvID == "2KP22118")$Sex_calculated, "F")
+  expect_equal(subset(VOM_data, IndvID == "2KP22118")$Sex_genetic, NA_character_)
 
 
-  #Individual 2KS91300
-  expect_equal(subset(VOM_data, IndvID == "2KS91300")$Species, "PARMAJ")
-  expect_equal(subset(VOM_data, IndvID == "2KS91300")$PopID, "VOM")
-  expect_equal(subset(VOM_data, IndvID == "2KS91300")$BroodIDLaid, NA_character_)
-  expect_equal(subset(VOM_data, IndvID == "2KS91300")$BroodIDFledged, NA_character_)
-  expect_equal(subset(VOM_data, IndvID == "2KS91300")$RingSeason, 2013)
-  expect_equal(subset(VOM_data, IndvID == "2KS91300")$RingAge, "adult")
-  expect_equal(subset(VOM_data, IndvID == "2KS91300")$Sex_calculated, "F")
-  expect_equal(subset(VOM_data, IndvID == "2KS91300")$Sex_genetic, NA_character_)
+  #Individual 2KT47389
+  expect_equal(subset(VOM_data, IndvID == "2KT47389")$Species, "PARMAJ")
+  expect_equal(subset(VOM_data, IndvID == "2KT47389")$PopID, "VOM")
+  expect_equal(subset(VOM_data, IndvID == "2KT47389")$BroodIDLaid, NA_character_)
+  expect_equal(subset(VOM_data, IndvID == "2KT47389")$BroodIDFledged, NA_character_)
+  expect_equal(subset(VOM_data, IndvID == "2KT47389")$RingSeason, 2015)
+  expect_equal(subset(VOM_data, IndvID == "2KT47389")$RingAge, "adult")
+  expect_equal(subset(VOM_data, IndvID == "2KT47389")$Sex_calculated, "M")
+  expect_equal(subset(VOM_data, IndvID == "2KT47389")$Sex_genetic, NA_character_)
 
-
-  #Individual 1ET84725
-  expect_equal(subset(VOM_data, IndvID == "1ET84725")$Species, "CYACAE")
-  expect_equal(subset(VOM_data, IndvID == "1ET84725")$PopID, "VOM")
-  expect_equal(subset(VOM_data, IndvID == "1ET84725")$BroodIDLaid, NA_character_)
-  expect_equal(subset(VOM_data, IndvID == "1ET84725")$BroodIDFledged, NA_character_)
-  expect_equal(subset(VOM_data, IndvID == "1ET84725")$RingSeason, 2018)
-  expect_equal(subset(VOM_data, IndvID == "1ET84725")$RingAge, "adult")
-  expect_equal(subset(VOM_data, IndvID == "1ET84725")$Sex_calculated, "F")
-  expect_equal(subset(VOM_data, IndvID == "1ET84725")$Sex_genetic, NA_character_)
 
 })
 
