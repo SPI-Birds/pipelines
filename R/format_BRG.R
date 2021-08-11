@@ -84,7 +84,7 @@ format_BRG <- function(db = choose_directory(),
                      ClutchSize_observed = suppressWarnings(as.integer(.data$ClutchSize)),
                      BroodSize_observed = suppressWarnings(as.integer(.data$BroodSize)),
                      NumberFledged_observed = suppressWarnings(as.integer(.data$Fledged)),
-                     HabitatType = .data$Vegetation) %>%
+                     HabitatType = tolower(.data$Vegetation)) %>%
 
     dplyr::arrange(.data$PopID, .data$BreedingSeason, .data$Plot, .data$LocationID)
 
@@ -110,9 +110,9 @@ format_BRG <- function(db = choose_directory(),
                      CaptureDate = suppressWarnings(as.Date(paste(.data$Year, .data$Month, .data$Day, sep = "-"))),
                      IndvID = .data$Ring,
                      RingAge = .data$Age,
-                     ChickAge = as.numeric(.data$ChickAge),
+                     ChickAge = as.integer(.data$ChickAge),
                      CaptureTime = gsub("--", ":00", .data$Time),
-                     Weight = round(suppressWarnings(as.numeric(.data$Weight)), 1))
+                     Mass = round(suppressWarnings(as.numeric(.data$Weight)), 1))
 
 
   ## Read in adult data
@@ -140,8 +140,8 @@ format_BRG <- function(db = choose_directory(),
                      Age_observed = dplyr::case_when(.data$ObsAge == "juv" ~ 5L,
                                                      .data$ObsAge == "ad" ~ 6L),
                      CaptureTime = paste0(substr(.data$Time,1,2), ":", substr(.data$Time,3,4)),
-                     Weight = round(suppressWarnings(as.numeric(.data$Weight)), 1),
-                     WingLength = .data$Winglength)
+                     Mass = round(suppressWarnings(as.numeric(.data$Weight)), 1),
+                     WingLength = as.numeric(.data$Winglength))
 
   #### BROOD DATA
   message("Compiling brood information...")
@@ -322,8 +322,8 @@ create_brood_BRG <- function(nest_data, chick_data, adult_data) {
     dplyr::left_join(chick_data %>%
                        dplyr::filter(dplyr::between(.data$ChickAge, 14, 16)) %>%
                        dplyr::group_by(.data$BreedingSeason, .data$Plot, .data$LocationID) %>%
-                       dplyr::summarise(AvgChickMass = mean(.data$Weight, na.rm = T),
-                                        NumberChicksMass = sum(!is.na(.data$Weight))),
+                       dplyr::summarise(AvgChickMass = mean(.data$Mass, na.rm = T),
+                                        NumberChicksMass = sum(!is.na(.data$Mass))),
                      by = c("BreedingSeason", "Plot", "LocationID")) %>%
 
     ## Join adult data to get info on parents
