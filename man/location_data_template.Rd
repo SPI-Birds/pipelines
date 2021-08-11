@@ -5,6 +5,8 @@
 \title{location_data_template template}
 \format{
 Tibble
+
+Data frame with 1 row and 9 variables:
 }
 \description{
 Tibble giving names and associated classes for all the columns in the Location data for the standard protocol v1.1.0

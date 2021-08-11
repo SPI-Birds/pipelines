@@ -134,7 +134,7 @@ format_GLA <- function(db = choose_directory(),
     dplyr::mutate(BroodID = dplyr::case_when(!is.na(.data$Species) ~ paste(.data$PopID, dplyr::row_number(), sep ="-"))) %>%
 
     ## Join experiment labels
-    left_join(expID_tab, by = c("Experiment", "Treatment")) %>%
+    dplyr::left_join(expID_tab, by = c("Experiment", "Treatment")) %>%
 
     ## Select variables of interest
     dplyr::select(.data$BreedingSeason,
@@ -383,7 +383,8 @@ create_brood_GLA <- function(nest_data, rr_data) {
     dplyr::select(dplyr::contains(names(brood_data_template))) %>%
 
     ## Add missing columns
-    dplyr::bind_cols(brood_data_template[,!(names(brood_data_template) %in% names(.))]) %>%
+    dplyr::bind_cols(brood_data_template[0, !(names(brood_data_template) %in% names(.))]   %>%
+                       dplyr::add_row()) %>%
 
     ## Reorder columns
     dplyr::select(names(brood_data_template)) %>%
@@ -457,7 +458,8 @@ create_capture_GLA <- function(nest_data, rr_data, Brood_data) {
     dplyr::select(dplyr::contains(names(capture_data_template))) %>%
 
     ## Add missing columns
-    dplyr::bind_cols(capture_data_template[,!(names(capture_data_template) %in% names(.))]) %>%
+    dplyr::bind_cols(capture_data_template[0, !(names(capture_data_template) %in% names(.))]   %>%
+                       dplyr::add_row()) %>%
 
     ## Reorder columns
     dplyr::select(names(capture_data_template))
@@ -493,7 +495,8 @@ create_capture_GLA <- function(nest_data, rr_data, Brood_data) {
     dplyr::select(dplyr::contains(names(capture_data_template))) %>%
 
     ## Add missing columns
-    dplyr::bind_cols(capture_data_template[,!(names(capture_data_template) %in% names(.))]) %>%
+    dplyr::bind_cols(capture_data_template[0, !(names(capture_data_template) %in% names(.))]   %>%
+                       dplyr::add_row()) %>%
 
     ## Reorder columns
     dplyr::select(names(capture_data_template))
@@ -637,7 +640,8 @@ create_individual_GLA <- function(Capture_data, Brood_data){
     dplyr::select(dplyr::contains(names(individual_data_template))) %>%
 
     ## Add missing columns
-    dplyr::bind_cols(individual_data_template[,!(names(individual_data_template) %in% names(.))]) %>%
+    dplyr::bind_cols(individual_data_template[0 ,!(names(individual_data_template) %in% names(.))] %>%
+                                                dplyr::add_row()) %>%
 
     ## Reorder columns
     dplyr::select(names(individual_data_template))
@@ -705,7 +709,8 @@ create_location_GLA <- function(nest_data, rr_data) {
     dplyr::select(dplyr::contains(names(location_data_template))) %>%
 
     ## Add missing columns
-    dplyr::bind_cols(location_data_template[,!(names(location_data_template) %in% names(.))]) %>%
+    dplyr::bind_cols(location_data_template[0, !(names(location_data_template) %in% names(.))]  %>%
+                       dplyr::add_row()) %>%
 
     ## Reorder columns
     dplyr::select(names(location_data_template))
