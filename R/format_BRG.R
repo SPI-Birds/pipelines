@@ -6,9 +6,9 @@
 #'this data. For a general description of the standard format please see
 #'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 #'
-#'\strong{Species}:
+#'\strong{Species}: Primarily Great tits and Blue tits.
 #'
-#'\strong{IndvID}:
+#'\strong{IndvID}: Should be a character string of length 7 where the first two characters are either a letter or number and the last five characters are all numbers.
 #'
 #'@inheritParams pipeline_params
 #'
