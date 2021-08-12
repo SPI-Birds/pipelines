@@ -223,7 +223,7 @@ format_WRS <- function(db = choose_directory(),
     ## TODO: Check about aggression scoring - Should this be an experiment? Currently listed as OTHER
     ## TODO: where() not namespaced
     ## Check species codes
-    mutate(dplyr::across(where(is.character), ~dplyr::na_if(., "NA")),
+    dplyr::mutate(dplyr::across(where(is.character), ~dplyr::na_if(., "NA")),
            PopID = "WRS",
            BreedingSeason = as.integer(.data$BreedingSeason),
            dplyr::across(c(.data$Mass, .data$WingLength, .data$Tarsus), ~ suppressWarnings(as.numeric(.x))),
@@ -536,7 +536,7 @@ create_individual_WRS <- function(Capture_data_temp, Brood_data_temp){
     dplyr::group_by(.data$IndvID, .data$CapturePopID) %>%
     dplyr::mutate(PopID = .data$CapturePopID) %>%
     dplyr::group_by(.data$IndvID) %>%
-    dplyr::mutate(RingSeason = min(.data$BreedingSeason, na.rm = T)) %>%
+    dplyr::mutate(RingSeason = min(.data$BreedingSeason, na.rm = TRUE)) %>%
 
     ## Arrange
     dplyr::arrange(.data$IndvID, .data$CaptureDate) %>%
