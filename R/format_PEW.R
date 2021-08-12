@@ -292,17 +292,17 @@ create_brood_PEW <- function(data) {
   parent_info <- data %>%
     #### Exclude non-breeding data, exclude chicks
     dplyr::filter(.data$Method %in% c("Catch adults nestbox", "Catch incubation")) %>%
-    dplyr::select(BroodID, IndvID, PartnerId, Sex) %>%
-    tidyr::pivot_longer(cols = c(IndvID, PartnerId)) %>%
-    dplyr::filter(!is.na(value)) %>%
+    dplyr::select(.data$BroodID, .data$IndvID, .data$PartnerId, .data$Sex) %>%
+    tidyr::pivot_longer(cols = c(.data$IndvID, .data$PartnerId)) %>%
+    dplyr::filter(!is.na(.data$value)) %>%
     dplyr::rowwise() %>%
-    dplyr::mutate(Sex = dplyr::case_when(name == "IndvID" ~ Sex,
-                                         name == "PartnerId" ~ setdiff(sex_set, Sex))) %>%
-    dplyr::select(-name) %>%
+    dplyr::mutate(Sex = dplyr::case_when(.data$name == "IndvID" ~ .data$Sex,
+                                         .data$name == "PartnerId" ~ setdiff(sex_set, .data$Sex))) %>%
+    dplyr::select(-.data$name) %>%
     dplyr::distinct() %>%
-    tidyr::pivot_wider(names_from = Sex, values_from = value, values_fn = list) %>%
-    tidyr::unnest(cols = c(Female, Male)) %>%
-    dplyr::rename(FemaleID = Female, MaleID = Male)
+    tidyr::pivot_wider(names_from = .data$Sex, values_from = .data$value, values_fn = list) %>%
+    tidyr::unnest(cols = c(.data$Female, .data$Male)) %>%
+    dplyr::rename(FemaleID = .data$Female, MaleID = .data$Male)
 
   parents_brood_data <-
     data %>%

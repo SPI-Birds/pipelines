@@ -244,6 +244,14 @@ test_that("ID columns match the expected format for the pipeline", {
 test_that("Key columns only contain unique values", {
 
   # ## BroodID has only unique values
+  ### THIS WILL FAIL DUE TO KNOWN ISSUES WITH:
+  # 2015_24
+  # 2016_60
+  # 2016_78
+  # 2017_49
+  # 2017_79
+  # 2017_109
+  ### Requires changes made by the data owner.
   test_unique_values(pipeline_output, "BroodID")
 
   ## CaptureID has only unique values
