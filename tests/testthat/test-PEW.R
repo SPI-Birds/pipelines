@@ -77,7 +77,7 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(PEW_data, BroodID == "2016_k89")$ClutchType_calculated, NA_character_)
   expect_equal(subset(PEW_data, BroodID == "2016_k89")$Species, "CYACAE")
   expect_equal(subset(PEW_data, BroodID == "2016_k89")$FemaleID, "13617034")
-  expect_equal(subset(PEW_data, BroodID == "2016_k89")$MaleID, "unringed")
+  expect_equal(subset(PEW_data, BroodID == "2016_k89")$MaleID, NA_character_)
   expect_true(is.na(subset(PEW_data, BroodID == "2016_k89")$HatchDate_observed))
   expect_equal(subset(PEW_data, BroodID == "2016_k89")$ClutchSize_observed, 4)
   expect_equal(subset(PEW_data, BroodID == "2016_k89")$NumberFledged_observed, 0)
@@ -91,7 +91,7 @@ test_that("Brood_data returns an expected outcome...", {
   #BroodID 2013_004_14_06 should have clutch type calculated 'replacement'
   expect_equal(subset(PEW_data, BroodID == "2017_23")$ClutchType_calculated, "replacement")
   expect_equal(subset(PEW_data, BroodID == "2017_23")$FemaleID, "13619463")
-  expect_equal(subset(PEW_data, BroodID == "2017_23")$MaleID, "unringed")
+  expect_equal(subset(PEW_data, BroodID == "2017_23")$MaleID, NA_character_)
   expect_equal(subset(PEW_data, BroodID == "2017_23")$LayDate_observed, as.Date("2017-05-05"))
   expect_equal(subset(PEW_data, BroodID == "2017_23")$HatchDate_observed, as.Date("2017-05-23"))
   expect_equal(subset(PEW_data, BroodID == "2017_23")$ClutchSize_observed, 9)
@@ -227,13 +227,13 @@ test_that("Column classes are as expected", {
 test_that("ID columns match the expected format for the pipeline", {
 
   # ## FemaleID format is as expected
-  # test_ID_format(pipeline_output, ID_col = "FemaleID", ID_format = "^[:digit:]+$")
-  #
+  test_ID_format(pipeline_output, ID_col = "FemaleID", ID_format = "^[:digit:]+$")
+
   # ## MaleID format is as expected
-  # test_ID_format(pipeline_output, ID_col = "MaleID", ID_format = "^[:digit:]+$")
+  test_ID_format(pipeline_output, ID_col = "MaleID", ID_format = "^[:digit:]+$")
 
   # ## IndvID format in Capture data  is as expected
-  # test_ID_format(pipeline_output, ID_col = "C-IndvID", ID_format = "^[:digit:]+$")
+  test_ID_format(pipeline_output, ID_col = "C-IndvID", ID_format = "^[:digit:]+$")
 
   ## IndvID format in Individual data is as expected
   test_ID_format(pipeline_output, ID_col = "I-IndvID", ID_format = "^[:digit:]+$")
@@ -244,7 +244,7 @@ test_that("ID columns match the expected format for the pipeline", {
 test_that("Key columns only contain unique values", {
 
   # ## BroodID has only unique values
-  # test_unique_values(pipeline_output, "BroodID")
+  test_unique_values(pipeline_output, "BroodID")
 
   ## CaptureID has only unique values
   test_unique_values(pipeline_output, "CaptureID")
