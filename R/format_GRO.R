@@ -95,8 +95,8 @@ format_GRO <- function(db = choose_directory(),
                   BroodSize_observed = suppressWarnings(as.numeric(gsub("?", replacement = "", x = .data$BroodSize_observed, fixed = TRUE))),
                   NumberFledged_observed = suppressWarnings(as.numeric(gsub("?", replacement = "", x = .data$NumberFledged_observed, fixed = TRUE))),
                   ## Information on clutch type recorded opportunistically in the Notes - when there is a note, label
-                  ClutchType_observed = dplyr::case_when(grepl("First|first", .data$Notes, fixed = F) ~ "first",
-                                                         grepl("Repeated|second|secend|Second", .data$Notes, fixed = F) ~ "second",
+                  ClutchType_observed = dplyr::case_when(grepl("First|first", .data$Notes, fixed = FALSE) ~ "first",
+                                                         grepl("Repeated|second|secend|Second", .data$Notes, fixed = FALSE) ~ "second",
                                                          TRUE ~ NA_character_)) %>%
 
     ## Arrange
@@ -153,13 +153,13 @@ format_GRO <- function(db = choose_directory(),
 
     message("Saving .csv files...")
 
-    utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_GRO.csv"), row.names = F)
+    utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_GRO.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_GRO.csv"), row.names = F)
+    utils::write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_GRO.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_GRO.csv"), row.names = F)
+    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_GRO.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_GRO.csv"), row.names = F)
+    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_GRO.csv"), row.names = FALSE)
 
     invisible(NULL)
 
