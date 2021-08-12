@@ -8,7 +8,7 @@
 #'
 #'\strong{Species}: Blue tits.
 #'
-#'\strong{IndvID}: Should be a character string of length 7 where the first two characters are either a letter or number and the last five characters are all numbers.
+#'\strong{IndvID}: Should be a character string of length 7 where the first three characters are either a letter or number and the last four characters are all numbers.
 #'
 #'@inheritParams pipeline_params
 #'
