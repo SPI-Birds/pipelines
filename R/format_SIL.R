@@ -54,12 +54,10 @@ format_SIL <- function(db = choose_directory(),
   ## Set options
   options(dplyr.summarise.inform = FALSE)
 
-  ## Read in primary data from nest sheet
-  ## TODO: Check about nest box names. Will numbers ever be repeated?
-
   db <- "/Users/tyson/Documents/academia/institutions/NIOO/SPI-Birds/my_pipelines/SIL/data/SIL_Silwood_UK"
 
   ## Read in brood data
+  ## TODO: There are 3 FemaleIDs (Z04792, f.A18BFS09, f.E07FS09) that are likely incorrect
   brood_data <- read.csv(file = paste0(db, "/SIL_PrimaryData_Breeding.csv"))  %>%
     janitor::remove_empty(which = "rows") %>%
 
@@ -69,7 +67,8 @@ format_SIL <- function(db = choose_directory(),
                      BreedingSeason = as.integer(.data$year),
                      Species = species_codes[species_codes$SpeciesID == 14620,]$Species,
                      LocationID = as.character(.data$nest_box),
-                     FemaleID = .data$female_BTO_ring,
+                     FemaleID = case_when(stringr::str_detect(.data$female_BTO_ring, "^[[:alpha:][:digit:]]{3}[:digit:]{4}$") ~ .data$female_BTO_ring,
+                                            TRUE ~ NA_character_),
                      MaleID = .data$male_BTO_ring,
                      LayDate_observed = suppressWarnings(as.Date(as.numeric(.data$lay_date),
                                                                  origin = as.Date(paste0(.data$BreedingSeason, "-03-31")))),
@@ -89,6 +88,8 @@ format_SIL <- function(db = choose_directory(),
     ## Rename and process columns
     ## TODO: Check age codes
     ## TODO: Check on Capture dates - NA for many, using mean for those cases currently
+    ## TODO: Check on mass values that are >X or <X
+    ## TODO: Currently setting the 3 incorrect IDs to NA, consider changing
     dplyr::mutate(dplyr::across(where(is.character), ~dplyr::na_if(., "."))) %>%
     dplyr::transmute(PopID = "SIL",
                      BreedingSeason = as.integer(.data$year),
@@ -97,12 +98,17 @@ format_SIL <- function(db = choose_directory(),
                      CaptureDate = dplyr::case_when(!is.na(.data$capture_date) ~ as.Date(as.numeric(.data$capture_date),
                                                                                          origin = as.Date(paste0(.data$BreedingSeason, "-03-31"))),
                                                     TRUE ~ as.Date(36, origin = as.Date(paste0(.data$BreedingSeason, "-03-31")))),
-                     IndvID = .data$BTO_ring,
+                     IndvID = case_when(stringr::str_detect(.data$BTO_ring, "^[[:alpha:][:digit:]]{3}[:digit:]{4}$") ~ .data$BTO_ring,
+                                        TRUE ~ NA_character_),
                      Sex_observed = .data$sex,
                      Age_observed = .data$age,
-                     CaptureTime = as.character(.data$capture_time),
-                     Mass = round(suppressWarnings(as.numeric(.data$mass)), 1),
-                     WingLength = as.numeric(.data$wing))
+                     CaptureTime = format(strptime(.data$capture_time,format = "%H:%M"), "%H:%M"),
+                     Mass = round(suppressWarnings(as.numeric(.data$mass)), 2),
+                     WingLength = as.numeric(.data$wing),
+                     Tarsus = as.numeric(.data$tarsus)) %>%
+
+    dplyr::filter(!is.na(.data$IndvID))
+
 
 
   ## Read in nest data
@@ -121,7 +127,7 @@ format_SIL <- function(db = choose_directory(),
 
   #### CAPTURE DATA
   message("Compiling capture information...")
-  Capture_data_temp <- create_capture_SIL(chick_data, adult_data, Brood_data_temp)
+  Capture_data_temp <- create_capture_SIL(adult_data)
 
   #### INDIVIDUAL DATA
   message("Compiling individual information...")
@@ -129,7 +135,7 @@ format_SIL <- function(db = choose_directory(),
 
   #### LOCATION DATA
   message("Compiling location information...")
-  Location_data_temp <- create_location_SIL(nest_data)
+  Location_data_temp <- create_location_SIL(nest_data, Brood_data_temp)
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
@@ -424,6 +430,7 @@ create_location_SIL <- function(nest_data, Brood_data_temp) {
 
   ## Build location data based on nest data
   ## TODO: Check about the boxes that have been repositioned
+  ## TODO: Check about habitat types
   Location_data_temp <- nest_data %>%
 
     ## Summarize information for each nest box
@@ -438,7 +445,8 @@ create_location_SIL <- function(nest_data, Brood_data_temp) {
     dplyr::mutate(StartSeason = min(.data$BreedingSeason),
                   EndSeason = NA_integer_,
                   NestboxID = .data$LocationID,
-                  LocationType = "NB") %>%
+                  LocationType = "NB",
+                  HabitatType = "mixed") %>%
 
     ## Keep distinct records
     dplyr::distinct(.data$PopID, .data$LocationID, .keep_all = TRUE) %>%
