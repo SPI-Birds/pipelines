@@ -125,21 +125,21 @@ format_PEW <- function(db = choose_directory(),
                                                                date_system = "modern"),
                   Tarsus = as.numeric(.data$Tarsus),
                   Mass = as.numeric(dplyr::case_when(stringr::str_detect(.data$Mass, pattern = "dead") ~ NA_character_,
-                                          TRUE ~ .data$Mass)),
+                                                     TRUE ~ .data$Mass)),
                   NumberOfRingedChicks = as.integer(case_when(.data$DateRingingChicks %in% c("verlaten incubatie", "all dead d1") ~ "0",
-                                                   .data$HatchDateD0 %in% c("abandoned", "bumblebee nest", "dead embryos") ~ "0",
-                                                   .data$NumberOfRingedChicks == "all dead" ~ "0",
-                                                   .data$NumberOfRingedChicks == "joris" ~ "0",
-                                                   TRUE ~ .data$NumberOfRingedChicks)),
+                                                              .data$HatchDateD0 %in% c("abandoned", "bumblebee nest", "dead embryos") ~ "0",
+                                                              .data$NumberOfRingedChicks == "all dead" ~ "0",
+                                                              .data$NumberOfRingedChicks == "joris" ~ "0",
+                                                              TRUE ~ .data$NumberOfRingedChicks)),
                   #Anything that can't be coerced to numeric should be NA, so we coercion warnings are expected.
                   HatchDateD0 = janitor::excel_numeric_to_date(suppressWarnings(as.numeric(.data$HatchDateD0)),
                                                                date_system = "modern"),
                   DateRingingChicks = janitor::excel_numeric_to_date(suppressWarnings(as.numeric(.data$DateRingingChicks)),
                                                                      date_system = "modern"),
                   NoOfChicksD3 = as.integer(dplyr::case_when(.data$NoOfChicksD3 == "dead" ~ "0",
-                                                  TRUE ~ .data$NoOfChicksD3)),
+                                                             TRUE ~ .data$NoOfChicksD3)),
                   BroodMassD3  = as.numeric(dplyr::case_when(.data$BroodMassD3 == "dead" ~ NA_character_,
-                                                  TRUE ~ .data$BroodMassD3)),
+                                                             TRUE ~ .data$BroodMassD3)),
                   NewRing = toupper(.data$NewRing),
                   Species = species_codes[which(species_codes$SpeciesID == 14620), ]$Species,
                   PopID = "PEW",
@@ -182,9 +182,9 @@ format_PEW <- function(db = choose_directory(),
                   everything()) %>%
     #### Remove observations without ID
     dplyr::filter(!is.na(.data$IndvID)) %>%
-    #### Change ID of unringed individuals to generic "unringed"
-    dplyr::mutate(IndvID = ifelse(nchar(.data$IndvID) > 8, "unringed", .data$IndvID),
-                  PartnerId = ifelse(nchar(.data$PartnerId) > 8, "unringed", .data$PartnerId)) %>%
+    #### Change ID of unringed individuals to be NA
+    dplyr::mutate(IndvID = ifelse(nchar(.data$IndvID) > 8, NA_character_, .data$IndvID),
+                  PartnerId = ifelse(nchar(.data$PartnerId) > 8, NA_character_, .data$PartnerId)) %>%
 
     # #### This part of the code can be removed after fixing the data from data owner
     # #### Corrected information from data owner
@@ -287,21 +287,29 @@ format_PEW <- function(db = choose_directory(),
 
 create_brood_PEW <- function(data) {
 
+  sex_set <- c("Female", "Male")
+
+  parent_info <- data %>%
+    #### Exclude non-breeding data, exclude chicks
+    dplyr::filter(.data$Method %in% c("Catch adults nestbox", "Catch incubation")) %>%
+    dplyr::select(.data$BroodID, .data$IndvID, .data$PartnerId, .data$Sex) %>%
+    tidyr::pivot_longer(cols = c(.data$IndvID, .data$PartnerId)) %>%
+    dplyr::filter(!is.na(.data$value)) %>%
+    dplyr::rowwise() %>%
+    dplyr::mutate(Sex = dplyr::case_when(.data$name == "IndvID" ~ .data$Sex,
+                                         .data$name == "PartnerId" ~ setdiff(sex_set, .data$Sex))) %>%
+    dplyr::select(-.data$name) %>%
+    dplyr::distinct() %>%
+    tidyr::pivot_wider(names_from = .data$Sex, values_from = .data$value, values_fn = list) %>%
+    tidyr::unnest(cols = c(.data$Female, .data$Male)) %>%
+    dplyr::rename(FemaleID = .data$Female, MaleID = .data$Male)
+
   parents_brood_data <-
     data %>%
     #### Exclude non-breeding data, exclude chicks
     dplyr::filter(.data$Method %in% c("Catch adults nestbox", "Catch incubation")) %>%
     #### Rename variables
     dplyr::rename(LocationID = .data$NestboxID) %>%
-    #### Get IDs of females and males
-    tidyr::pivot_wider(names_from = .data$Sex,
-                       values_from = .data$IndvID) %>%
-    dplyr::rename(FemaleID = .data$Female,
-                  MaleID   = .data$Male) %>%
-    dplyr::mutate(FemaleID = ifelse(is.na(.data$FemaleID) & !is.na(.data$MaleID),
-                                    .data$PartnerId, .data$FemaleID),
-                  MaleID   = ifelse(is.na(.data$MaleID) & !is.na(.data$FemaleID),
-                                    .data$PartnerId, .data$MaleID)) %>%
     dplyr::mutate(ExperimentID = dplyr::case_when(.data$Experiment == "BSM - Griffioen et al. 2019 PeerJ" ~
                                                     "COHORT; PARENTAGE",
                                                   .data$Experiment == "2h Temp D4" ~ "SURVIVAL",
@@ -310,16 +318,17 @@ create_brood_PEW <- function(data) {
     #### Remove unnecessary variables which may cause duplicated rows
     #### Exclude also Date column, as for few broods, there may be
     #### several catches of parents, but the brood parameters are the same
-    dplyr::select(-c(.data$Age, .data$PartnerId, .data$NumberTransponder,
+    dplyr::select(-c(.data$IndvID, .data$Sex, .data$Age, .data$PartnerId, .data$NumberTransponder,
                      .data$NewRing, .data$CaptureDate,
                      .data$Tarsus, .data$Mass, .data$ObserverID,
                      .data$Experiment, .data$D14Chicks)) %>%
-    #### Remove duplicated rows (as we get one row for males and females for the same brood)
     dplyr::distinct() %>%
     #### Remove rows with no information about the brood
     dplyr::filter(!(is.na(.data$ClutchSize) & is.na(.data$DateEgg1) & is.na(.data$HatchDateD0) &
                       is.na(.data$NumberOfRingedChicks) & is.na(.data$DateRingingChicks) &
                       is.na(.data$NoOfChicksD3) & is.na(.data$BroodMassD3))) %>%
+    #Join in parentage data
+    dplyr::left_join(parent_info, by = "BroodID") %>%
 
 
     ### This part of the code can be removed after fixing the data from data owner
@@ -348,15 +357,15 @@ create_brood_PEW <- function(data) {
                   HatchDate_max = as.Date(NA),
                   #### For few broods, there is number of chicks on day 3
                   BroodSize_observed = .data$NoOfChicksD3,
-                  BroodSize_min = NA_integer_,
-                  BroodSize_max = NA_integer_,
+                  BroodSize_min = NA_real_,
+                  BroodSize_max = NA_real_,
                   FledgeDate_observed = as.Date(NA),
                   FledgeDate_min = as.Date(NA),
                   FledgeDate_max = as.Date(NA),
                   #### Correction regarding one brood from data owner:
                   NumberFledged_observed = ifelse(.data$BroodID == "2015_79", 0L, .data$NumberOfRingedChicks),
-                  NumberFledged_min = NA_integer_,
-                  NumberFledged_max = NA_integer_,
+                  NumberFledged_min = NA_real_,
+                  NumberFledged_max = NA_real_,
                   AvgEggMass = NA_real_,
                   NumberEggs = NA_integer_,
                   #### Metadata states that only the first clutches are recorded
@@ -424,6 +433,8 @@ create_capture_PEW <- function(pew_data, Brood_data) {
 
   Capture_data_temp <-
     pew_data %>%
+    #Captures without an ID are no use to us
+    dplyr::filter(!is.na(.data$IndvID)) %>%
     #### Rename variables
     dplyr::rename(LocationID = .data$NestboxID) %>%
     dplyr::select(-.data$DateRingingChicks) %>%
