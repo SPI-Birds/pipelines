@@ -78,6 +78,10 @@ format_MAR <- function(db = choose_directory(),
   ## TODO: Check about experiment IDs
   ## TODO: Ask about 36 and 36 vieja. Different nests?
   ## TODO: Check about 45 in brood size
+  ## TODO: Check about meaning of Fs and Fd
+  ## TODO: Some IDs are stored as scientific notation
+  ## TODO: There is an incorrect nest code in the primary data (118-11-1) in 2012. This nest code should be 118-12-1. It is also a duplicate.
+  ## TODO: Nest code 86-13-2 also occurs twice. The first should be 86-13-1.
   brood_data <- dplyr::tbl(connection, "Nidification data") %>%
     tibble::as_tibble() %>%
     janitor::clean_names(case = "upper_camel") %>%
@@ -93,6 +97,8 @@ format_MAR <- function(db = choose_directory(),
                   ClutchSize_observed = .data$Cs,
                   HatchDate_observed = .data$Hd,
                   BroodSize_observed = .data$Hs,
+                  NumberFledged_observed = .data$Fs,
+                  # FledgeDate_observed = .data$Fd,
                   FemaleID = .data$Female,
                   MaleID = .data$Male,
                   ExperimentID = .data$Experimental,
@@ -101,6 +107,7 @@ format_MAR <- function(db = choose_directory(),
 
     ## Recode and reformat
     ## TODO: Check on ClutchType observed codes
+    ## TODO: Check on whether LocationID's with the .X suffix are actually different locations
     dplyr::mutate(BreedingSeason = as.integer(.data$BreedingSeason),
                   PopID = "MAR",
                   Species = dplyr::case_when(.data$Species == "Parus ater" ~ species_codes[species_codes$SpeciesID == 14610,]$Species,
@@ -114,10 +121,16 @@ format_MAR <- function(db = choose_directory(),
                                              origin = as.Date(paste0(.data$BreedingSeason, "-03-31"))),
                   HatchDate_observed = as.Date(.data$HatchDate_observed,
                                                origin = as.Date(paste0(.data$BreedingSeason, "-03-31"))),
+                  # FledgeDate_observed = as.Date(.data$FledgeDate_observed,
+                  #                              origin = as.Date(paste0(.data$BreedingSeason, "-03-31"))),
                   ## Clean up LocationID
                   LocationID = toupper(gsub(",| ","", .data$LocationID)),
-                  ClutchSize_observed = as.integer(ClutchSize_observed),
-                  BroodSize_observed = as.integer(BroodSize_observed),
+
+                  ## Set to integers
+                  across(c(ClutchSize_observed,
+                           BroodSize_observed,
+                           NumberFledged_observed), as.integer),
+
                   ClutchType_observed = dplyr::case_when(.data$ClutchType_observed == "1" ~ "first",
                                                          .data$ClutchType_observed == "2" ~ "second",
                                                          .data$ClutchType_observed == "R" ~ "replacement"),
@@ -133,10 +146,18 @@ format_MAR <- function(db = choose_directory(),
                                                paste(sapply(stringr::str_split(.data$LocationID, pattern =  "\\.", n = 2), `[`, 1),
                                                      substr(.data$BreedingSeason, 3, 4),
                                                      sapply(stringr::str_split(.data$LocationID, pattern =  "\\.", n = 2), `[`, 2),
-                                                     sep = "-"))) %>%
+                                                     sep = "-")),
+                  ## Remove .X from LocationIDs
+                  LocationID = stringr::str_replace(.data$LocationID, "\\.[:digit:]*",""),
+
+                  ## Set improper IDs to NA
+                  FemaleID = dplyr::case_when(stringr::str_detect(.data$FemaleID,  "^[:alnum:]{6,9}$") ~ .data$FemaleID,
+                                                    TRUE ~ NA_character_),
+
+                  MaleID = dplyr::case_when(stringr::str_detect(.data$MaleID,  "^[:alnum:]{6,9}$") ~ .data$MaleID,
+                                                  TRUE ~ NA_character_)) %>%
 
     dplyr::arrange(.data$BreedingSeason, .data$LocationID)
-
 
   ## Read in primary data from ringing records
   ## TODO: Ask about Locality
@@ -148,10 +169,11 @@ format_MAR <- function(db = choose_directory(),
     dplyr::transmute(PopID = "MAR",
                      BreedingSeason = as.integer(.data$Year),
                      Plot = .data$Locality,
-                     IndvID = .data$Ring,
+                     IndvID = dplyr::case_when(stringr::str_detect(.data$Ring,  "^[:alnum:]{6,9}$") ~ .data$Ring,
+                                                              TRUE ~ NA_character_),
                      BroodID = .data$NestCode,
                      Species = .data$Specie,
-                     BroodID = .data$NestCode,
+                     LocationID = sapply(stringr::str_split(.data$BroodID, pattern =  "-", n = 3), `[`, 1),
                      Age_observed = as.integer(.data$Age),
                      Sex_observed = dplyr::case_when(grepl("F|f|Female|female", .data$Sex,) ~ "F",
                                                      grepl("M|m|Male|male", .data$Sex,) ~ "M"),
@@ -173,8 +195,8 @@ format_MAR <- function(db = choose_directory(),
                                                 .data$Species == "Carduelis cannabina" ~ species_codes[species_codes$SpeciesID == 16600,]$Species,
                                                 .data$Species == "Erithacus rubecula" ~ species_codes[species_codes$SpeciesID == 10990,]$Species,
                                                 .data$Species == "Fringilla coelebs" ~ species_codes[species_codes$SpeciesID == 16360,]$Species,
-                                                .data$Species == "Parus caeruleus" ~ species_codes[species_codes$SpeciesID == 13153,]$Species,
-                                                .data$Species == "Regulus ignicapillus" ~ species_codes[species_codes$SpeciesID == 14620,]$Species,
+                                                .data$Species == "Parus caeruleus" ~ species_codes[species_codes$SpeciesID == 14620,]$Species,
+                                                .data$Species == "Regulus ignicapillus" ~ species_codes[species_codes$SpeciesID == 13153,]$Species,
                                                 .data$Species == "Serinus serinus" ~ species_codes[species_codes$SpeciesID == 16400,]$Species))
 
   ## Read in primary data from nest locations
@@ -185,8 +207,8 @@ format_MAR <- function(db = choose_directory(),
     sf::st_as_sf(coords = c("CoordinatesX", "CoordinatesY"),
                  crs = ("+proj=utm +zone=30S +ellps=WGS84 +datum=WGS84 +units=m +no_defs")) %>%
     sf::st_transform(crs = 4326) %>%
-    dplyr::mutate(Longitude = sf::st_coordinates(.)[,1],
-                  Latitude= sf::st_coordinates(.)[,2]) %>%
+    dplyr::mutate(Longitude = as.numeric(sf::st_coordinates(.)[,1]),
+                  Latitude= as.numeric(sf::st_coordinates(.)[,2])) %>%
     tibble::as_tibble() %>%
     dplyr::select(-.data$geometry,
                   -.data$Id) %>%
@@ -348,7 +370,7 @@ create_brood_MAR   <- function(brood_data, rr_data) {
   Brood_data_temp <- brood_data %>%
 
     ## Summarize chick data form ringing records
-    ## TODO: Check on age of chicks when measured
+    ## TODO: Check on age of chicks when measured. Currently some broods have chicks measured at multiple points (e.g. 5-09-1)
     dplyr::left_join(rr_data %>%
 
                        ## Only keeping chicks
@@ -389,8 +411,9 @@ create_brood_MAR   <- function(brood_data, rr_data) {
 create_capture_MAR <- function(Brood_data_temp, rr_data) {
 
   ## Chick captures from ringing data. Join brood data to get BroodID
-  ## TODO: Many conflicting species codes, using species data from ringing records
+  ## TODO: Check on this: Many conflicting species codes, using species data from ringing records
   ## TODO: A few duplicated chick bands. These should be fixed
+  ## TODO: Some chick bands have a suffix (-11). All in 2013. Removing these suffixes up so these records are kept.
   chicks_cap <- rr_data %>%
     dplyr::filter(Age_observed == 1L) %>%
     dplyr::select(-.data$BroodID) %>%
@@ -398,6 +421,7 @@ create_capture_MAR <- function(Brood_data_temp, rr_data) {
                        dplyr::select(.data$BreedingSeason, .data$BroodID, dplyr::starts_with("Chick")) %>%
                        tidyr::pivot_longer(cols =  dplyr::starts_with("Chick"), values_to = "IndvID") %>%
                        dplyr::select(-name) %>%
+                       dplyr::mutate(IndvID = stringr::str_replace(.data$IndvID, "-[:digit:]*", "")) %>%
                        dplyr::filter(stringr::str_detect(.data$IndvID, "^[[:alpha:][:digit:]]{6,8}$")) %>%
                        na.omit() %>%
                        dplyr::distinct(.data$IndvID, .keep_all = T),
@@ -413,7 +437,10 @@ create_capture_MAR <- function(Brood_data_temp, rr_data) {
 
     ## Removing BroodID from adult data since BroodID here does not refer to the BroodID where the adult was laid
     dplyr::select(-.data$BroodID) %>%
-    dplyr::filter_at(vars( .data$PopID, .data$BreedingSeason, .data$Species, .data$CaptureDate), all_vars(!is.na(.)))
+    dplyr::filter_at(vars( .data$PopID,
+                           .data$BreedingSeason,
+                           .data$Species,
+                           .data$CaptureDate), all_vars(!is.na(.)))
 
   ## Bind and add additional columns
   Capture_data_temp <- chicks_cap %>%
@@ -445,6 +472,7 @@ create_capture_MAR <- function(Brood_data_temp, rr_data) {
     ## Remove NAs
     dplyr::filter_at(vars(.data$PopID,
                           .data$BreedingSeason,
+                          .data$IndvID,
                           .data$Species,
                           .data$CaptureDate), all_vars(!is.na(.)))
 
@@ -463,28 +491,14 @@ create_individual_MAR <- function(Capture_data_temp) {
   ## Create individual data from capture data
   Individual_data_temp <- Capture_data_temp %>%
 
+    ## Arrange
+    dplyr::arrange(.data$IndvID, .data$CaptureDate) %>%
+
     #### Format and create new data columns
     dplyr::group_by(.data$IndvID, .data$CapturePopID) %>%
     dplyr::mutate(PopID = .data$CapturePopID) %>%
     dplyr::group_by(.data$IndvID) %>%
-    dplyr::mutate(RingSeason = min(.data$BreedingSeason, na.rm = T)) %>%
-
-    ## Arrange
-    dplyr::arrange(.data$IndvID, .data$CaptureDate) %>%
-
-    ## Determine individual info
-    dplyr::mutate(Sex_calculated = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Sex_observed))),
-                                                  .f = ~{
-                                                    if(length(..1) == 0){
-                                                      return(NA_character_)
-                                                    } else if(length(..1) == 1){
-                                                      return(..1)
-                                                    } else {
-                                                      return("C")
-                                                    }
-                                                  }),
-                  Sex_genetic = NA_character_,
-                  Species = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Species))),
+    dplyr::mutate(Species = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Species))),
                                            .f = ~{
                                              if(length(..1) == 0){
                                                return(NA_character_)
@@ -495,6 +509,19 @@ create_individual_MAR <- function(Capture_data_temp) {
                                              }
                                            }),
 
+                  Sex_calculated = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Sex_observed))),
+                                                  .f = ~{
+                                                    if(length(..1) == 0){
+                                                      return(NA_character_)
+                                                    } else if(length(..1) == 1){
+                                                      return(..1)
+                                                    } else {
+                                                      return("C")
+                                                    }
+                                                  }),
+                  Sex_genetic = NA_character_,
+
+                  RingSeason = min(.data$BreedingSeason, na.rm = T),
                   RingAge = purrr::pmap_chr(.l = list(dplyr::first(.data$Age_observed)),
                                             .f = ~{
                                               if(is.na(..1)){
@@ -504,12 +531,9 @@ create_individual_MAR <- function(Capture_data_temp) {
                                               } else if(..1 > 3L){
                                                 return("adult")
                                               }
-                                            }))  %>%
+                                            }),
 
-
-    ## Add BroodID information
-    dplyr::group_by(.data$IndvID) %>%
-    dplyr::mutate(BroodIDLaid = purrr::map_chr(.x = list(unique(stats::na.omit(.data$BroodID))),
+                  BroodIDLaid = purrr::map_chr(.x = list(unique(stats::na.omit(.data$BroodID))),
                                                .f = ~{
                                                  if(length(..1) != 1){
                                                    return(NA_character_)
@@ -517,20 +541,18 @@ create_individual_MAR <- function(Capture_data_temp) {
                                                    return(..1)
                                                  }
                                                }),
+
+                  ## No cross-fostering, so BroodIDFledge always is BroodIDLaid
                   BroodIDFledged = .data$BroodIDLaid) %>%
 
     ## Keep distinct records by PopID and InvdID
     dplyr::distinct(.data$PopID, .data$IndvID, .keep_all = TRUE) %>%
-
-    ## Arrange
-    dplyr::arrange(.data$CaptureID) %>%
     dplyr::ungroup() %>%
 
     ## Reorder columns
     dplyr::select(dplyr::any_of(names(individual_data_template)), dplyr::everything())
 
   return(Individual_data_temp)
-
 
 }
 
@@ -545,6 +567,7 @@ create_individual_MAR <- function(Capture_data_temp) {
 create_location_MAR <- function(Brood_data_temp, nest_coord_data) {
 
   ## Create location data from brood data and nest coordinates
+  ## TODO: Check whether nest boxes are removed
   ## TODO: More boxes than are listed in the meta data
   ## TODO: Check on habitat type
   ## TODO: Check about funnel and captures outside of nest boxes
