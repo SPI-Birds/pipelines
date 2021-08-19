@@ -97,10 +97,19 @@ format_GRO <- function(db = choose_directory(),
                   ## Information on clutch type recorded opportunistically in the Notes - when there is a note, label
                   ClutchType_observed = dplyr::case_when(grepl("First|first", .data$Notes, fixed = FALSE) ~ "first",
                                                          grepl("Repeated|second|secend|Second", .data$Notes, fixed = FALSE) ~ "second",
-                                                         TRUE ~ NA_character_)) %>%
+                                                         TRUE ~ NA_character_),
+
+                  ## Remove whitespace from IDs
+                  FemaleID = gsub(" ", "", .data$FemaleID),
+                  MaleID = gsub(" ", "", .data$MaleID)) %>%
 
     ## Arrange
-    dplyr::arrange(.data$BreedingSeason, .data$LocationID)
+    dplyr::arrange(.data$BreedingSeason, .data$LocationID) %>%
+
+    ## Set non-conforming IDs to NA (as of 2020 there are 2 in FemaleID: KP6855, LE3665)
+    dplyr::mutate(dplyr::across(c(.data$FemaleID, .data$MaleID),
+                                ~dplyr::case_when(stringr::str_detect(., "^[[:digit:][:alpha:]]{7}$") ~ .,
+                                                  TRUE ~ NA_character_)))
 
 
   ## Read in experiment table
@@ -262,7 +271,7 @@ create_capture_GRO <- function(gro_data) {
     ## If hatch date is not known, then May 14th of that year is used
     dplyr::group_by(.data$IndvID, .data$BreedingSeason) %>%
     dplyr::mutate(CaptureDate = dplyr::case_when(!is.na(.data$HatchDate_observed) ~ as.Date(.data$HatchDate_observed) + 14,
-                                          is.na(.data$HatchDate_observed) ~ as.Date(paste0(.data$BreedingSeason, "-05-28"))),
+                                                 is.na(.data$HatchDate_observed) ~ as.Date(paste0(.data$BreedingSeason, "-05-28"))),
                   CapturePopID = .data$PopID,
                   ReleasePopID = .data$PopID,
                   CaptureAlive = TRUE,
