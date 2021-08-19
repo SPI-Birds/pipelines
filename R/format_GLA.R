@@ -201,6 +201,11 @@ format_GLA <- function(db = choose_directory(),
                   Age_observed = dplyr::case_when(.data$Age == "X" ~ 1L,
                                                   .data$Age == "3J" ~ 3L,
                                                   TRUE ~ suppressWarnings(as.integer(.data$Age))),
+
+                  ## Recode sex
+                  Sex_observed = dplyr::case_when(grepl(pattern = "F", .data$Sex_observed) ~ "F",
+                                                  grepl(pattern = "M", .data$Sex_observed) ~ "M"),
+
                   BreedingSeason = as.integer(.data$BreedingSeason))  %>%
 
     ## Adjust species names and population names
