@@ -205,7 +205,8 @@ create_brood_GRO <- function(gro_data) {
     dplyr::select(dplyr::contains(names(brood_data_template))) %>%
 
     ## Add missing columns
-    dplyr::bind_cols(brood_data_template[,!(names(brood_data_template) %in% names(.))]) %>%
+    dplyr::bind_cols(brood_data_template[0, !(names(brood_data_template) %in% names(.))]  %>%
+                       dplyr::add_row()) %>%
 
     ## Reorder columns
     dplyr::select(names(brood_data_template)) %>%
@@ -273,7 +274,8 @@ create_capture_GRO <- function(gro_data) {
     dplyr::select(dplyr::contains(names(capture_data_template))) %>%
 
     ## Add missing columns
-    dplyr::bind_cols(capture_data_template[,!(names(capture_data_template) %in% names(.))]) %>%
+    dplyr::bind_cols(capture_data_template[0, !(names(capture_data_template) %in% names(.))]  %>%
+                       dplyr::add_row()) %>%
 
     ## Reorder columns
     dplyr::select(names(capture_data_template)) %>%
@@ -359,7 +361,8 @@ create_individual_GRO <- function(Capture_data){
     dplyr::select(dplyr::contains(names(individual_data_template))) %>%
 
     ## Add missing columns
-    dplyr::bind_cols(individual_data_template[,!(names(individual_data_template) %in% names(.))]) %>%
+    dplyr::bind_cols(individual_data_template[0, !(names(individual_data_template) %in% names(.))]  %>%
+                       dplyr::add_row()) %>%
 
     ## Reorder columns
     dplyr::select(names(individual_data_template))
@@ -408,7 +411,8 @@ create_location_GRO <- function(gro_data) {
     dplyr::select(dplyr::contains(names(location_data_template))) %>%
 
     ## Add missing columns
-    dplyr::bind_cols(location_data_template[,!(names(location_data_template) %in% names(.))]) %>%
+    dplyr::bind_cols(location_data_template[0, !(names(location_data_template) %in% names(.))] %>%
+                       dplyr::add_row()) %>%
 
     ## Reorder columns
     dplyr::select(names(location_data_template))
