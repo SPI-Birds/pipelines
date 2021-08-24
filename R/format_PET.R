@@ -60,11 +60,46 @@ format_PET <- function(db = choose_directory(),
 
   #### Primary data
 
+  db <- "/Users/tyson/Documents/academia/institutions/NIOO/SPI-Birds/my_pipelines/PET/data/PET_Petrozavodsk_Russia/"
+
+  message("Importing primary data Pied flycatcher ...")
+
+  fichyp_data <- readxl::read_excel(path =  paste0(db, "/PET_PrimaryData.xls"),
+                                    na = c("NA", "nA"),
+                                    sheet = 1) %>%
+    janitor::clean_names(case = "upper_camel") %>%
+    janitor::remove_empty(which = "rows") %>%
+    dplyr::transmute(PopID = "PET",
+                     BreedingSeason = as.integer(.data$Year),
+                     Plot = toupper(.data$TheLineOfArtificialNestBoxes),
+                     LocationID = .data$NoNestBox,
+                     Species = species_codes[species_codes$SpeciesID == 13490, ]$Species,
+                     FemaleID = dplyr::case_when(!is.na(.data$FemalesRingSeries) & !is.na(.data$FemalesRing) ~ as.character(paste0(.data$FemalesRingSeries, .data$FemalesRing)),
+                                                 TRUE ~ NA_character_),
+                     MaleID = NA_character_,
+                     LayDate_observed = suppressWarnings(as.Date(as.numeric(.data$StartDateOfLaying1May1),
+                                                                 origin = as.Date(paste0(.data$BreedingSeason, "-03-31")))),
+
+                     # TODO: Check about two cases the hatching date is "0"
+                     HatchDate_observed = suppressWarnings(as.Date(as.numeric(.data$HatchingDate1May1),
+                                                                   origin = as.Date(paste0(.data$BreedingSeason, "-03-31")))),
+                     ClutchSize_observed = .data$ClutchSize,
+                     HatchSize_observed = .data$NumberOfHatchedNestlings,
+                     NumberFledged_observed = .data$NumberOfFledlings,
+                     NestlingRings = iconv(stringr::str_replace_all(.data$NestlingRings, pattern = " ", replacement = ""),
+                                           "UTF-8", "ASCII"),
+                     BroodID = as.character(paste(.data$BreedingSeason,
+                                                  .data$Plot,
+                                                  .data$LocationID,
+                                                  .data$LayDate_observed,
+                                                  sep = "_")))
+
+
   message("Importing primary data Great tit ...")
 
   parmaj_data <- readxl::read_excel(path = paste0(db, "/PET_PrimaryData.xls"),
-                                 na = c("NA", "nA"),
-                                 sheet = 2) %>%  ## Note: This does not work on Mac: sheet = "Great tits"
+                                    na = c("NA", "nA"),
+                                    sheet = 2) %>%  ## Note: This does not work on Mac: sheet = "Great tits"
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
     #### Convert to corresponding format and rename
@@ -74,7 +109,7 @@ format_PET <- function(db = choose_directory(),
                   LocationID = .data$NestboxID,
                   BroodID = as.character(paste(.data$BreedingSeason, .data$TheLineOfArtificialNestBoxes,
                                                .data$NestboxID, .data$StartDateOfLaying1May1,
-                                         sep = "_")),
+                                               sep = "_")),
                   Species = species_codes[which(species_codes$SpeciesID == 14640), ]$Species,
                   FemalesRingSeries = stringr::str_replace(.data$FemalesRingSeries,
                                                            pattern = " ", replacement = ""),
@@ -82,10 +117,10 @@ format_PET <- function(db = choose_directory(),
                                      as.character(paste0(.data$FemalesRingSeries, .data$FemalesRing)),
                                      NA_character_),
                   MalesRingSeries = stringr::str_replace(.data$MalesRingSeries,
-                                                           pattern = " ", replacement = ""),
+                                                         pattern = " ", replacement = ""),
                   MaleID = if_else(!is.na(.data$MalesRingSeries) & !is.na(.data$MalesRing),
-                                     as.character(paste0(.data$MalesRingSeries, .data$MalesRing)),
-                                     NA_character_),
+                                   as.character(paste0(.data$MalesRingSeries, .data$MalesRing)),
+                                   NA_character_),
                   SeriesOfNestlingsRings = stringr::str_replace_all(.data$SeriesOfNestlingsRings,
                                                                     pattern = " ", replacement = ""),
                   NestlingRings = stringr::str_replace_all(.data$NestlingRings,
@@ -107,45 +142,6 @@ format_PET <- function(db = choose_directory(),
                   everything()) %>%
     dplyr::distinct()
 
-
-  message("Importing primary data Pied flycatcher ...")
-
-  fichyp_data <- readxl::read_excel(path =  paste0(db, "/PET_PrimaryData.xls"),
-                                    na = c("NA", "nA"),
-                                    sheet = 1) %>% ## Note: This does not work on Mac: sheet = "Pied flycatcher"
-    janitor::clean_names(case = "upper_camel") %>%
-    janitor::remove_empty(which = "rows") %>%
-    #### Convert to corresponding format and rename
-    dplyr::mutate(PopID = "PET",
-                  BreedingSeason = as.integer(.data$Year),
-                  NestboxID = toupper(.data$NoNestBox),
-                  LocationID = .data$NestboxID,
-                  BroodID = as.character(paste(.data$BreedingSeason, .data$TheLineOfArtificialNestBoxes,
-                                               .data$NestboxID, .data$StartDateOfLaying1May1,
-                                               sep = "_")),
-                  Species = species_codes[which(species_codes$SpeciesID == 13490), ]$Species,
-                  FemaleID = if_else(!is.na(.data$FemalesRingSeries) & !is.na(.data$FemalesRing),
-                                     as.character(paste0(.data$FemalesRingSeries, .data$FemalesRing)),
-                                     NA_character_),
-                  MaleID = NA_character_,
-                  NestlingRings = stringr::str_replace_all(.data$NestlingRings,
-                                                           pattern = " ", replacement = ""),
-                  StartDateOfLaying1May1 = as.integer(.data$StartDateOfLaying1May1),
-                  #### In two cases the hatching date is "0"
-                  HatchingDate1May1 = if_else(HatchingDate1May1 == "0",
-                                              NA_integer_,
-                                              as.integer(.data$HatchingDate1May1))) %>%
-    #### Remove columns which we do not store in the standardized format
-    dplyr::select(-.data$FemalesRingSeries,
-                  -.data$FemalesRing,
-                  -.data$NoString,
-                  -.data$NoNestBox) %>%
-    #### Reorder columns
-    dplyr::select(.data$BreedingSeason,
-                  .data$Species,
-                  .data$PopID,
-                  everything()) %>%
-    dplyr::distinct()
 
 
   message("Importing primary data Wryneck ...")
@@ -746,51 +742,51 @@ create_capture_PET <- function(parmaj_data,
   Capture_data_parmaj_chicks <-
     bind_rows(captures_parmaj_chicks_rings1,
               captures_parmaj_chicks_rings2) %>%
-  #### ASK DATA OWNER >> til they respond, create capture date
-  dplyr::mutate(CaptureDate = as.Date(paste0(.data$BreedingSeason, "-04-01")),
-                Sex_observed = NA_character_,
-                Age = 1L) %>%
-  #### Create new variables
-  dplyr::mutate(Plot = .data$TheLineOfArtificialNestBoxes,
-                CaptureTime  = NA_character_,
-                CaptureAlive = TRUE,
-                ReleaseAlive = .data$CaptureAlive,
-                CapturePopID = .data$PopID,
-                CapturePlot  = .data$Plot,
-                ReleasePopID = ifelse(ReleaseAlive == TRUE, .data$CapturePopID, NA_character_),
-                ReleasePlot  = ifelse(ReleaseAlive == TRUE, .data$CapturePlot, NA_character_),
-                WingLength = NA_real_,
-                ChickAge = NA_integer_,
-                BroodIDLaid = .data$BroodID,
-                ObserverID = NA_character_,
-                Mass = NA_real_,
-                Tarsus = NA_real_,
-                #### Ask data owner
-                # OriginalTarsusMethod = ifelse(!is.na(.data$Tarsus), "Alternative", NA_character_),
-                OriginalTarsusMethod = NA_character_,
-                ExperimentID = NA_character_,
-                Age_observed = 1L) %>%
-  #### USE THE NEW VERSION OF THE FUNCTION
-  # dplyr::mutate(Age_calculated = calc_age())
-  #### OLD VERSION OF THE FUNCTION
-  calc_age(ID = IndvID,
-           Age = Age_observed,
-           Date = CaptureDate,
-           Year = BreedingSeason,
-           showpb = TRUE) %>%
-  #### Final arrangement
-  dplyr::select(.data$IndvID, .data$Species,
-                .data$Sex_observed, .data$BreedingSeason,
-                .data$CaptureDate, .data$CaptureTime,
-                .data$ObserverID, .data$LocationID,
-                .data$CaptureAlive, .data$ReleaseAlive,
-                .data$CapturePopID, .data$CapturePlot,
-                .data$ReleasePopID, .data$ReleasePlot,
-                .data$Mass, .data$Tarsus, .data$OriginalTarsusMethod,
-                .data$WingLength, .data$Age_observed, .data$Age_calculated,
-                .data$ChickAge, .data$ExperimentID,
-                #### mantain also BroodID needed to create Individual_data, remove at final step
-                .data$BroodID)
+    #### ASK DATA OWNER >> til they respond, create capture date
+    dplyr::mutate(CaptureDate = as.Date(paste0(.data$BreedingSeason, "-04-01")),
+                  Sex_observed = NA_character_,
+                  Age = 1L) %>%
+    #### Create new variables
+    dplyr::mutate(Plot = .data$TheLineOfArtificialNestBoxes,
+                  CaptureTime  = NA_character_,
+                  CaptureAlive = TRUE,
+                  ReleaseAlive = .data$CaptureAlive,
+                  CapturePopID = .data$PopID,
+                  CapturePlot  = .data$Plot,
+                  ReleasePopID = ifelse(ReleaseAlive == TRUE, .data$CapturePopID, NA_character_),
+                  ReleasePlot  = ifelse(ReleaseAlive == TRUE, .data$CapturePlot, NA_character_),
+                  WingLength = NA_real_,
+                  ChickAge = NA_integer_,
+                  BroodIDLaid = .data$BroodID,
+                  ObserverID = NA_character_,
+                  Mass = NA_real_,
+                  Tarsus = NA_real_,
+                  #### Ask data owner
+                  # OriginalTarsusMethod = ifelse(!is.na(.data$Tarsus), "Alternative", NA_character_),
+                  OriginalTarsusMethod = NA_character_,
+                  ExperimentID = NA_character_,
+                  Age_observed = 1L) %>%
+    #### USE THE NEW VERSION OF THE FUNCTION
+    # dplyr::mutate(Age_calculated = calc_age())
+    #### OLD VERSION OF THE FUNCTION
+    calc_age(ID = IndvID,
+             Age = Age_observed,
+             Date = CaptureDate,
+             Year = BreedingSeason,
+             showpb = TRUE) %>%
+    #### Final arrangement
+    dplyr::select(.data$IndvID, .data$Species,
+                  .data$Sex_observed, .data$BreedingSeason,
+                  .data$CaptureDate, .data$CaptureTime,
+                  .data$ObserverID, .data$LocationID,
+                  .data$CaptureAlive, .data$ReleaseAlive,
+                  .data$CapturePopID, .data$CapturePlot,
+                  .data$ReleasePopID, .data$ReleasePlot,
+                  .data$Mass, .data$Tarsus, .data$OriginalTarsusMethod,
+                  .data$WingLength, .data$Age_observed, .data$Age_calculated,
+                  .data$ChickAge, .data$ExperimentID,
+                  #### mantain also BroodID needed to create Individual_data, remove at final step
+                  .data$BroodID)
 
 
   Capture_data_parmaj <-
@@ -861,7 +857,7 @@ create_capture_PET <- function(parmaj_data,
 
   names(seqs_rings1) <- Capture_data_fichyp_chicks_temp$BroodID[!is.na(Capture_data_fichyp_chicks_temp$series1)]
 
- ### Transform to data frame
+  ### Transform to data frame
   seqs_rings1_tib <-
     seqs_rings1 %>%
     tibble::enframe(name = "BroodID", value = "Ring") %>%
