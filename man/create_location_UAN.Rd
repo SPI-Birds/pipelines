@@ -4,10 +4,10 @@
 \alias{create_location_UAN}
 \title{Create location data table for data from University of Antwerp, Belgium.}
 \usage{
-create_location_UAN(data)
+create_location_UAN(BOX_info)
 }
 \arguments{
-\item{data}{Data frame. Primary data from University of Antwerp.}
+\item{BOX_info}{Data frame. Primary data from University of Antwerp.}
 }
 \value{
 A data frame.
