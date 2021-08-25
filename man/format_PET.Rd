@@ -46,4 +46,8 @@ this data. For a general description of the standard format please see see
 
 
 \strong{Species}: Great tit (Parus major), Pied Flycatcher (Ficedula hypoleuca), Wryneck (Jynx torquilla).
+
+\strong{ID format}: Should be a 7 character string.
+
+\strong{CaptureDate}: When unknown, it is set to a default value of April 1st of that year.
 }

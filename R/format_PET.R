@@ -115,10 +115,6 @@ format_PET <- function(db = choose_directory(),
                   tidyselect::everything()) %>%
     dplyr::distinct()
 
-  Encoding(pipeline_output[[1]]$BroodID[8])
-  Encoding(pipeline_output[[1]]$BroodID[9])
-
-
   message("Importing primary data Pied flycatcher ...")
 
   fichyp_data <- readxl::read_excel(path =  paste0(db, "/PET_PrimaryData.xls"),
