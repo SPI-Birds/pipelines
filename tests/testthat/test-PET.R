@@ -1,4 +1,6 @@
-context("Run data quality check on Institute of Biology, Karelian Research Centre, Russian Academy of Sciences, Petrozavodsk, Russia, pipeline output")
+testthat::skip_if(!exists("data_path"))
+
+pipeline_output <- format_PET(db = paste0(data_path, "/PET_Petrozavodsk_Russia"))
 
 test_that("PET outputs all files...", {
 
@@ -8,6 +10,7 @@ test_that("PET outputs all files...", {
   expect_true("PET" %in% pipeline_output$Location_data$PopID)
 
 })
+
 
 test_that("Individual data returns an expected outcome...", {
 
@@ -61,8 +64,8 @@ test_that("Individual data returns an expected outcome...", {
   #Test 2: Adult flycatcher female (there are no males ringed in the dataset)
   expect_equal(subset(PET_data, IndvID == "VT76523")$Sex_calculated, "F")
   expect_equal(subset(PET_data, IndvID == "VT76523")$Species, "FICHYP")
-  expect_equal(subset(PET_data, IndvID == "VT76523")$BroodIDLaid, "2016_Z_11А_12")
-  expect_equal(subset(PET_data, IndvID == "VT76523")$BroodIDFledged,  "2016_Z_11А_12")
+  expect_equal(subset(PET_data, IndvID == "VT76523")$BroodIDLaid, "2016_Z_11A_12")
+  expect_equal(subset(PET_data, IndvID == "VT76523")$BroodIDFledged,  "2016_Z_11A_12")
   expect_equal(subset(PET_data, IndvID == "VT76523")$RingSeason, 2016L)
   expect_equal(subset(PET_data, IndvID == "VT76523")$RingAge, "chick")
 
@@ -108,9 +111,6 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(subset(PET_data, IndvID == "XX84867")$RingAge, "chick")
 
 })
-
-
-## here below
 
 
 test_that("Brood_data returns an expected outcome...", {
@@ -235,7 +235,7 @@ test_that("Capture_data returns an expected outcome...", {
   #Test the first capture of the female
   expect_equal(subset(PET_data, IndvID == "KS87496")$Sex_observed[1], "F")
   expect_equal(subset(PET_data, IndvID == "KS87496")$LocationID[1], "31")
-  ###### CHANGE AFTER UPDATE FROM DATA OWNERS
+  ## TODO: CHANGE AFTER UPDATE FROM DATA OWNERS
   expect_equal(min(subset(PET_data, IndvID == "KS87496")$CaptureDate, na.rm = TRUE), as.Date("2017-04-01"))
 
   #Test 2: Male caught as adult
@@ -244,12 +244,12 @@ test_that("Capture_data returns an expected outcome...", {
   #Test the first capture of the male
   expect_equal(subset(PET_data, IndvID == "KS87763")$Sex_observed[1], "M")
   expect_equal(subset(PET_data, IndvID == "KS87763")$LocationID[1], "7")
-  ###### CHANGE AFTER UPDATE FROM DATA OWNERS
+  ## TODO: CHANGE AFTER UPDATE FROM DATA OWNERS
   expect_equal(min(subset(PET_data, IndvID == "KS87763")$CaptureDate, na.rm = TRUE), as.Date("2018-04-01"))
 
   #Test 3: Female caught first time as chick
   #Test the female has the correct number of capture records
-  expect_equal(nrow(subset(PET_data, IndvID == "KS87645")), 3)
+  expect_equal(nrow(subset(PET_data, IndvID == "KS87645")), 2)
   expect_equal(unique(subset(PET_data, IndvID == "KS87645")$Species), "PARMAJ")
   #Test the first capture of the female
   expect_equal(subset(PET_data, IndvID == "KS87645")$Sex_observed[1], NA_character_)
@@ -265,15 +265,15 @@ test_that("Capture_data returns an expected outcome...", {
   expect_equal(unique(subset(PET_data, IndvID == "VK93089")$Species), "FICHYP")
   expect_equal(subset(PET_data, IndvID == "VK93089")$Sex_observed[1], "F")
   expect_equal(subset(PET_data, IndvID == "VK93089")$LocationID[1], "7")
-  ###### CHANGE AFTER UPDATE FROM DATA OWNERS
+  ## TODO: CHANGE AFTER UPDATE FROM DATA OWNERS
   expect_equal(min(subset(PET_data, IndvID == "VK93089")$CaptureDate, na.rm = TRUE), as.Date("2016-04-01"))
 
   #Test 2: Female caught as chick
   expect_equal(nrow(subset(PET_data, IndvID == "VT76523")), 2)
   expect_equal(unique(subset(PET_data, IndvID == "VT76523")$Species), "FICHYP")
   expect_equal(subset(PET_data, IndvID == "VT76523")$Sex_observed[2], "F")
-  expect_equal(subset(PET_data, IndvID == "VT76523")$LocationID[1], "11А")
-  ###### CHANGE AFTER UPDATE FROM DATA OWNERS
+  expect_equal(subset(PET_data, IndvID == "VT76523")$LocationID[1], "11A")
+  ## TODO: CHANGE AFTER UPDATE FROM DATA OWNERS
   expect_equal(min(subset(PET_data, IndvID == "VT76523")$CaptureDate, na.rm = TRUE), as.Date("2016-04-01"))
   expect_equal(subset(PET_data, IndvID == "VT76523")$BreedingSeason[1], 2016L)
 
@@ -285,7 +285,7 @@ test_that("Capture_data returns an expected outcome...", {
   expect_equal(unique(subset(PET_data, IndvID == "KS87477")$Species), "JYNTOR")
   expect_equal(subset(PET_data, IndvID == "KS87477")$Sex_observed[1], "F")
   expect_equal(subset(PET_data, IndvID == "KS87477")$LocationID[1], "18")
-  ###### CHANGE AFTER UPDATE FROM DATA OWNERS
+  ## TODO: CHANGE AFTER UPDATE FROM DATA OWNERS
   expect_equal(min(subset(PET_data, IndvID == "KS87477")$CaptureDate, na.rm = TRUE), as.Date("2016-04-01"))
 
   #Test 2: Individual caught as chick
@@ -293,7 +293,7 @@ test_that("Capture_data returns an expected outcome...", {
   expect_equal(unique(subset(PET_data, IndvID == "XX84871")$Species), "JYNTOR")
   expect_equal(subset(PET_data, IndvID == "XX84871")$Sex_observed[1], NA_character_)
   expect_equal(subset(PET_data, IndvID == "XX84871")$LocationID[1], "2A")
-  ###### CHANGE AFTER UPDATE FROM DATA OWNERS
+  ## TODO: CHANGE AFTER UPDATE FROM DATA OWNERS
   expect_equal(min(subset(PET_data, IndvID == "XX84871")$CaptureDate, na.rm = TRUE), as.Date("2019-04-01"))
   expect_equal(subset(PET_data, IndvID == "XX84871")$BreedingSeason[1], 2019L)
 
@@ -306,21 +306,21 @@ test_that("Location_data returns an expected outcome...", {
 
   #Test 1: Nestbox
   #LocationType is as expected
-  expect_equal(subset(PET_data, NestboxID == "17А")$LocationType, "NB")
-  expect_equal(subset(PET_data, NestboxID == "17А")$LocationID, "S")
+  expect_equal(subset(PET_data, NestboxID == "17A")$LocationType, "NB")
+  expect_equal(subset(PET_data, NestboxID == "17A")$LocationID, "S")
   #Habitat is as expected
-  expect_equal(subset(PET_data, NestboxID == "17А")$HabitatType, NA_character_)
+  expect_equal(subset(PET_data, NestboxID == "17A")$HabitatType, "mixed")
   #Start season
-  expect_equal(subset(PET_data, NestboxID == "17А")$StartSeason, 2017L)
+  expect_equal(subset(PET_data, NestboxID == "17A")$StartSeason, 2017L)
   #End season
-  expect_equal(subset(PET_data, NestboxID == "17А")$EndSeason, NA_integer_)
+  expect_equal(subset(PET_data, NestboxID == "17A")$EndSeason, NA_integer_)
 
   #Test 2: Nestbox
   #LocationType is as expected
   expect_equal(subset(PET_data, NestboxID == "10G")$LocationType, "NB")
   expect_equal(subset(PET_data, NestboxID == "10G")$LocationID, "Z")
   #Habitat is as expected
-  expect_equal(subset(PET_data, NestboxID == "10G")$HabitatType, NA_character_)
+  expect_equal(subset(PET_data, NestboxID == "10G")$HabitatType, "mixed")
   #Start season
   expect_equal(subset(PET_data, NestboxID == "10G")$StartSeason, 2016)
   #End season
@@ -331,11 +331,173 @@ test_that("Location_data returns an expected outcome...", {
   expect_equal(subset(PET_data, NestboxID == "33")$LocationType, "NB")
   expect_equal(subset(PET_data, NestboxID == "33")$LocationID, "Z")
   #Habitat is as expected
-  expect_equal(subset(PET_data, NestboxID == "33")$HabitatType, NA_character_)
+  expect_equal(subset(PET_data, NestboxID == "33")$HabitatType, "mixed")
   #Start season
   expect_equal(subset(PET_data, NestboxID == "33")$StartSeason, 2018)
   #End season
   expect_equal(subset(PET_data, NestboxID == "33")$EndSeason, NA_integer_)
+
+})
+
+## All characters should be ASCII
+test_that("No non-ASCII characters are present", {
+
+  ## Brood data
+  expect_invisible(for (col in colnames(pipeline_output[[1]])){
+
+    if(is.character(pipeline_output[[1]] %>%
+                    pull(col))){
+
+      all(Encoding(pipeline_output[[1]] %>%
+                     pull(col)) == "unknown")
+
+    }})
+
+
+  ## Capture data
+  expect_invisible(for (col in colnames(pipeline_output[[2]])){
+
+    if(is.character(pipeline_output[[2]] %>%
+                    pull(col))){
+
+      all(Encoding(pipeline_output[[2]] %>%
+                     pull(col)) == "unknown")
+
+    }})
+
+  ## Individual data
+  expect_invisible(for (col in colnames(pipeline_output[[3]])){
+
+    if(is.character(pipeline_output[[3]] %>%
+                    pull(col))){
+
+      all(Encoding(pipeline_output[[3]] %>%
+                     pull(col)) == "unknown")
+
+    }})
+
+  ## Location data
+  expect_invisible(for (col in colnames(pipeline_output[[4]])){
+
+    if(is.character(pipeline_output[[4]] %>%
+                    pull(col))){
+
+      all(Encoding(pipeline_output[[4]] %>%
+                     pull(col)) == "unknown")
+
+    }})
+})
+
+
+
+
+## General tests (for pipelines formatted to standard protocol version 1.1.0)
+
+test_that("Expected columns are present", {
+
+  ## Will fail if not all the expected columns are present
+
+  ## Brood data: Test that all columns are present
+  test_col_present(pipeline_output, "Brood")
+
+  ## Capture data: Test that all columns are present
+  test_col_present(pipeline_output, "Capture")
+
+  ## Individual data: Test that all columns are present
+  test_col_present(pipeline_output, "Individual")
+
+  ## Location data: Test that all columns are present
+  test_col_present(pipeline_output, "Location")
+
+})
+
+test_that("Column classes are as expected", {
+
+  ## Will fail if columns that are shared by the output and the templates have different classes.
+
+  # ## Brood data: Test that all column classes are expected
+  # test_col_classes(pipeline_output, "Brood")
+
+  ## Capture data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Capture")
+
+  ## Individual data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Individual")
+
+  ## Location data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Location")
+
+})
+
+
+test_that("ID columns match the expected format for the pipeline", {
+
+  # ## FemaleID format is as expected
+  test_ID_format(pipeline_output, ID_col = "FemaleID", ID_format = "^[:alpha:]{2}[:digit:]{5}$")
+
+  # ## MaleID format is as expected
+  test_ID_format(pipeline_output, ID_col = "MaleID", ID_format = "^[:alpha:]{2}[:digit:]{5}$")
+
+  # ## IndvID format in Capture data  is as expected
+  test_ID_format(pipeline_output, ID_col = "C-IndvID", ID_format = "^[:alpha:]{2}[:digit:]{5}$")
+
+  pipeline_output[[2]]$IndvID[which(!stringr::str_detect(pipeline_output[[2]]$IndvID, "^[:alpha:]{2}[:digit:]{5}$"))]
+
+  ## IndvID format in Individual data is as expected
+  test_ID_format(pipeline_output, ID_col = "I-IndvID", ID_format = "^[:alpha:]{2}[:digit:]{5}$")
+
+  # pipeline_output[[3]]$IndvID[which(!stringr::str_detect(pipeline_output[[2]]$IndvID, "^[:alpha:]{2}[:digit:]{5}$"))]
+
+
+})
+
+
+test_that("Key columns only contain unique values", {
+
+  ## BroodID has only unique values
+
+  ## Requires changes made by the data owner.
+  test_unique_values(pipeline_output, "BroodID")
+
+  ## CaptureID has only unique values
+  test_unique_values(pipeline_output, "CaptureID")
+
+  ## PopID-IndvID has only unique values
+  test_unique_values(pipeline_output, "PopID-IndvID")
+
+})
+
+
+test_that("Key columns in each table do not have NAs", {
+
+  ## Brood
+  test_NA_columns(pipeline_output, "Brood")
+
+  ## Capture
+  test_NA_columns(pipeline_output, "Capture")
+
+  ## Individual
+  test_NA_columns(pipeline_output, "Individual")
+
+  ## Location
+  test_NA_columns(pipeline_output, "Location")
+
+})
+
+
+test_that("Categorical columns do not have unexpected values", {
+
+  ## Brood
+  test_category_columns(pipeline_output, "Brood")
+
+  ## Capture
+  test_category_columns(pipeline_output, "Capture")
+
+  ## Individual
+  test_category_columns(pipeline_output, "Individual")
+
+  ## Location
+  test_category_columns(pipeline_output, "Location")
 
 })
 
