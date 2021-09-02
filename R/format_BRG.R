@@ -8,7 +8,7 @@
 #'
 #'\strong{Species}: Primarily Great tits and Blue tits.
 #'
-#'\strong{IndvID}: Should be a character string of length 7 where the first two characters are either a letter or number and the last five characters are all numbers.
+#'\strong{IndvID}: Should be a character s  tring of length 7 where the first two characters are either a letter or number and the last five characters are all numbers.
 #'
 #'@inheritParams pipeline_params
 #'
@@ -49,15 +49,10 @@ format_BRG <- function(db = choose_directory(),
 
   }
 
-  start_time <- Sys.time()
-
   ## Set options
-  options(dplyr.summarise.inform = FALSE)
+  original_options <- options(dplyr.summarise.inform = FALSE)
+  on.exit(options(original_options), add = TRUE, after = FALSE)
 
-  ## Read in primary data from nest sheet
-  ## TODO: Check about nest box names. Will numbers ever be repeated?
-
-  db <- "/Users/tyson/Documents/academia/institutions/NIOO/SPI-Birds/my_pipelines/BRG/BRG_Bergen_Norway/"
 
   ## Read in nest data
   nest_data <- readxl::read_xlsx(path = paste0(db, "/BRG_PrimaryData.xlsx"),
@@ -68,11 +63,12 @@ format_BRG <- function(db = choose_directory(),
     janitor::remove_empty(which = "rows") %>%
 
     ## Rename and process columns
-    dplyr::mutate(dplyr::across(where(is.character), ~dplyr::na_if(., "."))) %>%
+    dplyr::mutate(dplyr::across(where(is.character),
+                                ~dplyr::na_if(., "."))) %>%
     dplyr::transmute(PopID = "BRG",
                      BreedingSeason = as.integer(.data$Year),
-                     Species = dplyr::case_when(.data$Species == "Kjøttmeis"  ~ species_codes[species_codes$SpeciesID == 14640,]$Species,
-                                                .data$Species == "Blåmeis"  ~ species_codes[species_codes$SpeciesID == 14620,]$Species,
+                     Species = dplyr::case_when(.data$Species == "Kj\u00f8ttmeis"  ~ species_codes[species_codes$SpeciesID == 14640,]$Species,
+                                                .data$Species == "Bl\u00e5meis"  ~ species_codes[species_codes$SpeciesID == 14620,]$Species,
                                                 .data$Species == "Svarthvitfluesnapper"  ~ species_codes[species_codes$SpeciesID == 13490,]$Species,
                                                 .data$Species == "Svartmeis"  ~ species_codes[species_codes$SpeciesID == 14610,]$Species),
                      Plot = .data$Location,
@@ -98,11 +94,12 @@ format_BRG <- function(db = choose_directory(),
     janitor::remove_empty(which = "rows") %>%
 
     ## Rename and process columns
-    dplyr::mutate(dplyr::across(where(is.character), ~dplyr::na_if(., "."))) %>%
+    dplyr::mutate(dplyr::across(where(is.character),
+                                ~dplyr::na_if(., "."))) %>%
     dplyr::transmute(PopID = "BRG",
                      BreedingSeason = as.integer(.data$Year),
-                     Species = dplyr::case_when(.data$Species == "Kjøttmeis"  ~ species_codes[species_codes$SpeciesID == 14640,]$Species,
-                                                .data$Species == "Blåmeis"  ~ species_codes[species_codes$SpeciesID == 14620,]$Species,
+                     Species = dplyr::case_when(.data$Species == "Kj\u00f8ttmeis"  ~ species_codes[species_codes$SpeciesID == 14640,]$Species,
+                                                .data$Species == "Bl\u00e5meis"  ~ species_codes[species_codes$SpeciesID == 14620,]$Species,
                                                 .data$Species == "Svarthvitfluesnapper"  ~ species_codes[species_codes$SpeciesID == 13490,]$Species,
                                                 .data$Species == "Svartmeis"  ~ species_codes[species_codes$SpeciesID == 14610,]$Species),
                      Plot = .data$Location,
@@ -124,12 +121,12 @@ format_BRG <- function(db = choose_directory(),
     janitor::remove_empty(which = "rows") %>%
 
     ## Rename and process columns
-    ## TODO: Check age codes
-    dplyr::mutate(dplyr::across(where(is.character), ~dplyr::na_if(., "."))) %>%
+    dplyr::mutate(dplyr::across(where(is.character),
+                                ~dplyr::na_if(., "."))) %>%
     dplyr::transmute(PopID = "BRG",
                      BreedingSeason = as.integer(.data$Year),
-                     Species = dplyr::case_when(.data$Species == "Kjøttmeis"  ~ species_codes[species_codes$SpeciesID == 14640,]$Species,
-                                                .data$Species == "Blåmeis"  ~ species_codes[species_codes$SpeciesID == 14620,]$Species,
+                     Species = dplyr::case_when(.data$Species == "Kj\u00f8ttmeis"  ~ species_codes[species_codes$SpeciesID == 14640,]$Species,
+                                                .data$Species == "Bl\u00e5meis"  ~ species_codes[species_codes$SpeciesID == 14620,]$Species,
                                                 .data$Species == "Svarthvitfluesnapper"  ~ species_codes[species_codes$SpeciesID == 13490,]$Species,
                                                 .data$Species == "Svartmeis"  ~ species_codes[species_codes$SpeciesID == 14610,]$Species),
                      Plot = .data$Location,
@@ -141,7 +138,7 @@ format_BRG <- function(db = choose_directory(),
                                                      .data$ObsAge == "ad" ~ 6L),
                      CaptureTime = paste0(substr(.data$Time,1,2), ":", substr(.data$Time,3,4)),
                      Mass = round(suppressWarnings(as.numeric(.data$Weight)), 1),
-                     WingLength = as.numeric(.data$Winglength))
+                     WingLength = as.numeric(.data$WingLength))
 
   #### BROOD DATA
   message("Compiling brood information...")
@@ -177,10 +174,13 @@ format_BRG <- function(db = choose_directory(),
 
     ## Reorder columns
     dplyr::select(names(brood_data_template)) %>%
-    dplyr::ungroup()
+    dplyr::ungroup() %>%
 
-  # ## Check column classes
-  # purrr::map_df(brood_data_template, class) == purrr::map_df(Brood_data, class)
+    ## Remove any NAs from critical columns
+    dplyr::filter_at(vars(.data$BroodID,
+                          .data$PopID,
+                          .data$BreedingSeason,
+                          .data$Species), dplyr::all_vars(!is.na(.)))
 
 
   ## Capture data
@@ -195,10 +195,15 @@ format_BRG <- function(db = choose_directory(),
 
     ## Reorder columns
     dplyr::select(names(capture_data_template)) %>%
-    dplyr::ungroup()
+    dplyr::ungroup() %>%
 
-  # ## Check column classes
-  # purrr::map_df(capture_data_template, class) == purrr::map_df(Capture_data, class)
+    ## Remove any NAs from critical columns
+    dplyr::filter_at(vars(.data$CaptureID,
+                          .data$CapturePopID,
+                          .data$BreedingSeason,
+                          .data$IndvID,
+                          .data$Species,
+                          .data$CaptureDate), dplyr::all_vars(!is.na(.)))
 
 
   ## Individual data
@@ -213,10 +218,14 @@ format_BRG <- function(db = choose_directory(),
 
     ## Reorder columns
     dplyr::select(names(individual_data_template))  %>%
-    dplyr::ungroup()
+    dplyr::ungroup() %>%
 
-  # ## Check column classes
-  # purrr::map_df(individual_data_template, class) == purrr::map_df(Individual_data, class)
+    ## Remove any NAs from critical columns
+    dplyr::filter_at(vars(.data$PopID,
+                          .data$IndvID,
+                          .data$Species,
+                          .data$RingSeason), dplyr::all_vars(!is.na(.)))
+
 
   ## Location data
   Location_data <- Location_data_temp %>%
@@ -230,10 +239,12 @@ format_BRG <- function(db = choose_directory(),
 
     ## Reorder columns
     dplyr::select(names(location_data_template))  %>%
-    dplyr::ungroup()
+    dplyr::ungroup() %>%
 
-  # ## Check column classes
-  # purrr::map_df(location_data_template, class) == purrr::map_df(Location_data, class)
+    ## Remove any NAs from critical columns
+    dplyr::filter_at(vars(.data$LocationID,
+                          .data$PopID),
+                     all_vars(!is.na(.)))
 
 
 
@@ -350,8 +361,14 @@ create_brood_BRG <- function(nest_data, chick_data, adult_data) {
     ## Calculate clutch type
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data =. , protocol_version = "1.1", na.rm = FALSE)) %>%
 
+    ## Set improperly formatted IDs to NA
+    dplyr::mutate(dplyr::across(c(.data$FemaleID,
+                                  .data$MaleID),
+                                ~dplyr::case_when(stringr::str_detect(., "^[:alpha:]{2}[:digit:]{5}$") ~ .,
+                                                  TRUE ~ NA_character_))) %>%
+
     ## Reorder columns
-    dplyr::select(dplyr::any_of(names(brood_data_template)), dplyr::everything())
+    dplyr::select(dplyr::any_of(names(brood_data_template)), tidyselect::everything())
 
   return(Brood_data_temp)
 
@@ -399,13 +416,19 @@ create_capture_BRG <- function(chick_data, adult_data, Brood_data_temp) {
              Date = .data$CaptureDate,
              Year = .data$BreedingSeason) %>%
 
+    ## Set improperly formatted IDs to NA and filter
+    dplyr::mutate(IndvID = dplyr::case_when(stringr::str_detect(.data$IndvID,  "^[:alpha:]{2}[:digit:]{5}$") ~ .data$IndvID,
+                                            TRUE ~ NA_character_)) %>%
+    dplyr::filter(!is.na(.data$IndvID)) %>%
+
     ## Create CaptureID
     ## Arrange
     dplyr::arrange(.data$BreedingSeason, .data$IndvID, .data$CaptureDate) %>%
     dplyr::mutate(CaptureID = paste(.data$IndvID, dplyr::row_number(), sep = "_")) %>%
 
     ## Reorder columns
-    dplyr::select(dplyr::any_of(names(capture_data_template)), dplyr::everything())
+    dplyr::select(dplyr::any_of(names(capture_data_template)), tidyselect::everything())
+
 
 
   return(Capture_data_temp)
@@ -487,7 +510,7 @@ create_individual_BRG <- function(Capture_data_temp){
     dplyr::ungroup() %>%
 
     ## Reorder columns
-    dplyr::select(dplyr::any_of(names(individual_data_template)), dplyr::everything())
+    dplyr::select(dplyr::any_of(names(individual_data_template)), tidyselect::everything())
 
   return(Individual_data_temp)
 
@@ -506,7 +529,6 @@ create_location_BRG <- function(nest_data) {
   Location_data_temp <- nest_data %>%
 
     ## Summarize information for each nest box
-    ## TODO: Check that nest boxes have not been removeds
     dplyr::group_by(.data$PopID, .data$LocationID) %>%
     dplyr::mutate(NestboxID = .data$LocationID,
                   LocationType = "NB",
