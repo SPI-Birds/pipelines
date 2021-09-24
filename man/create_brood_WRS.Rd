@@ -2,7 +2,7 @@
 % Please edit documentation in R/format_WRS.R
 \name{create_brood_WRS}
 \alias{create_brood_WRS}
-\title{Create brood data table for great tits and blue tits in Warsaw, Poland.}
+\title{Create brood data table in Warsaw, Poland.}
 \usage{
 create_brood_WRS(nest_data, chick_data, adult_data)
 }
@@ -17,5 +17,5 @@ create_brood_WRS(nest_data, chick_data, adult_data)
 A data frame.
 }
 \description{
-Create brood data table for great tits and blue tits in Warsaw, Poland.
+Create brood data table in Warsaw, Poland.
 }

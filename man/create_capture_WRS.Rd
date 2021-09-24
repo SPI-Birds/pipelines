@@ -2,7 +2,7 @@
 % Please edit documentation in R/format_WRS.R
 \name{create_capture_WRS}
 \alias{create_capture_WRS}
-\title{Create capture data table for great tits and blue tits in Warsaw, Poland.}
+\title{Create capture data table for Warsaw, Poland.}
 \usage{
 create_capture_WRS(chick_data, adult_data)
 }
@@ -15,5 +15,5 @@ create_capture_WRS(chick_data, adult_data)
 A data frame.
 }
 \description{
-Create capture data table for great tits and blue tits in Warsaw, Poland.
+Create capture data table for Warsaw, Poland.
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/format_WRS.R
 \name{create_individual_WRS}
 \alias{create_individual_WRS}
-\title{Create individual table for great tits and blue tits in Warsaw, Poland.}
+\title{Create individual table for Warsaw, Poland.}
 \usage{
 create_individual_WRS(Capture_data_temp, Brood_data_temp)
 }
@@ -15,5 +15,5 @@ create_individual_WRS(Capture_data_temp, Brood_data_temp)
 A data frame.
 }
 \description{
-Create individual table for great tits and blue tits in Warsaw, Poland.
+Create individual table for Warsaw, Poland.
 }

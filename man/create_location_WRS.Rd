@@ -2,7 +2,7 @@
 % Please edit documentation in R/format_WRS.R
 \name{create_location_WRS}
 \alias{create_location_WRS}
-\title{Create location data table for great tits and blue tits in Warsaw, Poland.}
+\title{Create location data table for Warsaw, Poland.}
 \usage{
 create_location_WRS(nest_data)
 }
@@ -13,5 +13,5 @@ create_location_WRS(nest_data)
 A data frame.
 }
 \description{
-Create location data table for great tits and blue tits in Warsaw, Poland.
+Create location data table for Warsaw, Poland.
 }

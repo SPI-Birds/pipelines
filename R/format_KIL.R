@@ -1,4 +1,4 @@
-#' Construct standard format for data from Kilingi Nomme, Estonia.
+##' Construct standard format for data from Kilingi Nomme, Estonia.
 #'
 #' A pipeline to produce the standard format for the great tit population
 #' in Kilingi Nomme, Estonia, administered by Agu Leivits (until 1995) and
@@ -43,6 +43,14 @@ format_KIL <- function(db = choose_directory(),
                        pop = NULL,
                        path = ".",
                        output_type = "R"){
+
+  #Avoid with scientific notation (creates unusable IDs)
+  original_options <- options(scipen = 200)
+  #Make sure we revert back to original scientific notation afterwards
+  #Otherwise, we are overwriting the users local settings
+  on.exit(options(original_options), add = TRUE, after = FALSE)
+  ## TODO: If there are multiple option/setup changes we need to make, this could be in
+  # a function (e.g. pipeline_setup)
 
   #Force user to select directory
   force(db)
@@ -306,10 +314,8 @@ create_brood_KIL <- function(brood_data_til92, kil_data_95) {
                   MaleID = as.character(.data$MaleId),
                   ClutchType_observed = as.character(tolower(.data$ClutchType)),
                   ## for new version of calc_clutchtype
-                  # LayDate_observed = as.Date(paste(.data$BreedingSeason, "04-01", sep = "-"),
-                  #                            format = "%Y-%m-%d") + .data$LayDate - 1,
-                  LayDate = as.Date(paste(.data$BreedingSeason, "04-01", sep = "-"),
-                                    format = "%Y-%m-%d") + .data$LayingDate - 1,
+                  LayDate_observed = as.Date(paste(.data$BreedingSeason, "04-01", sep = "-"),
+                                             format = "%Y-%m-%d") + .data$LayingDate - 1,
                   LayDate_min = as.Date(NA),
                   LayDate_max = as.Date(NA),
                   ClutchSize_observed = as.integer(.data$ClutchSize),
@@ -325,8 +331,7 @@ create_brood_KIL <- function(brood_data_til92, kil_data_95) {
                   FledgeDate_min = as.Date(NA),
                   FledgeDate_max = as.Date(NA),
                   ## for new version of calc_clutchtype
-                  # NumberFledged_observed = as.integer(.data$NumberFledglings),
-                  NumberFledged = as.integer(.data$NumberFledglings),
+                  NumberFledged_observed = as.integer(.data$NumberFledglings),
                   NumberFledged_min = NA_integer_,
                   NumberFledged_max = NA_integer_,
                   AvgEggMass = NA_real_,
@@ -340,7 +345,7 @@ create_brood_KIL <- function(brood_data_til92, kil_data_95) {
                   OriginalTarsusMethod = NA_character_,
                   ExperimentID = NA_character_) %>%
     #### Even though, there are no dates for the clutch type calculation
-    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.1")) %>%
     #### Remove columns which we do not store in the standardized format
     dplyr::select(-.data$BroodId,
                   -.data$FemaleId,
@@ -352,9 +357,7 @@ create_brood_KIL <- function(brood_data_til92, kil_data_95) {
                   -.data$MaleRecruits,
                   -.data$AverageMass,
                   -.data$AverageTarsus) %>%
-    #### Rename
-    dplyr::rename(LayDate_observed = .data$LayDate,
-                  NumberFledged_observed = .data$NumberFledged) %>%
+
     #### Final arrangement
     dplyr::select(.data$BroodID, .data$PopID, .data$BreedingSeason, .data$Species,
                   .data$Plot, .data$LocationID,
@@ -383,7 +386,7 @@ create_brood_KIL <- function(brood_data_til92, kil_data_95) {
                   ## for new version of calc_clutchtype
                   # LayDate_observed = as.Date(paste(.data$BreedingSeason, "04-01", sep = "-"),
                   #                            format = "%Y-%m-%d") + .data$LayingDate1April1St - 1,
-                  LayDate = as.Date(paste(.data$BreedingSeason, "04-01", sep = "-"),
+                  LayDate_observed = as.Date(paste(.data$BreedingSeason, "04-01", sep = "-"),
                                     format = "%Y-%m-%d") + .data$LayingDate1April1St - 1,
                   LayDate_min = as.Date(NA),
                   LayDate_max = as.Date(NA),
@@ -403,7 +406,7 @@ create_brood_KIL <- function(brood_data_til92, kil_data_95) {
                   FledgeDate_max = as.Date(NA),
                   ## for new version of calc_clutchtype
                   # NumberFledged_observed = as.integer(.data$NumberFledglings),
-                  NumberFledged = as.integer(.data$NoOfFledglings),
+                  NumberFledged_observed = as.integer(.data$NoOfFledglings),
                   NumberFledged_min = NA_integer_,
                   NumberFledged_max = NA_integer_,
                   AvgEggMass = NA_real_,
@@ -416,10 +419,8 @@ create_brood_KIL <- function(brood_data_til92, kil_data_95) {
                   NumberChicksTarsus = NA_integer_,
                   OriginalTarsusMethod = if_else(!is.na(.data$AvgTarsus), "alternative", NA_character_),
                   ExperimentID = NA_character_) %>%
-    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
-    #### Rename
-    dplyr::rename(LayDate_observed = .data$LayDate,
-                  NumberFledged_observed = .data$NumberFledged) %>%
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.1")) %>%
+
     #### Final arrangement
     dplyr::select(.data$BroodID, .data$PopID, .data$BreedingSeason, .data$Species,
                   .data$Plot, .data$LocationID,

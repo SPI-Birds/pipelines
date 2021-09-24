@@ -61,9 +61,14 @@ format_WRS <- function(db = choose_directory(),
   options(dplyr.summarise.inform = FALSE)
 
   ## Read in primary data from nest sheet
-  ## TODO: Change WAR to WRS
+
+  # db <- "/Users/tyson/Documents/academia/institutions/NIOO/SPI-Birds/my_pipelines/WRS/data/WRS_Warsaw_Poland/"
+
   ## TODO: Check about species codes
-  nest_data <- readxl::read_xlsx(path = paste0(db, "/WRS_PrimaryData.xlsx"), guess = 5000, sheet = "Nests", col_types = "text") %>%
+  nest_data <- readxl::read_xlsx(path = paste0(db, "/WRS_PrimaryData.xlsx"),
+                                 guess_max = 5000,
+                                 sheet = "Nests",
+                                 col_types = "text") %>%
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
 
@@ -134,17 +139,26 @@ format_WRS <- function(db = choose_directory(),
                   Plot = .data$Site,
                   LocationID = .data$NestboxId,
                   IndvID = .data$RingId,
-                  CaptureDate = .data$D15Date,
                   Tarsus = .data$TarsusD15) %>%
 
+    dplyr::left_join(nest_data[,c("UniqueBreedingEvent", "HatchDate_observed")],
+                     by = "UniqueBreedingEvent") %>%
+
     ## Handling different date formats in Excel
-    dplyr::mutate(CaptureDate = suppressWarnings(dplyr::case_when(grepl("-", .data$CaptureDate) ~ lubridate::dmy(.data$CaptureDate, quiet = TRUE),
-                                                                  TRUE ~ janitor::excel_numeric_to_date(as.numeric(.data$CaptureDate))))) %>%
+    ## If chicks die before banding, the CaptureDate is set to the last day it was handled.
+    dplyr::mutate(dplyr::across(where(is.character), ~dplyr::na_if(., "NA")),
+                  CaptureDate = suppressWarnings(dplyr::case_when(grepl("-|/", .data$D15Date) ~ lubridate::dmy(.data$D15Date, quiet = TRUE),
+                                                                  !is.na(janitor::excel_numeric_to_date(as.numeric(.data$D15Date))) ~ janitor::excel_numeric_to_date(as.numeric(.data$D15Date)),
+                                                                  !is.na(.data$WeightD15) ~ .data$HatchDate_observed + 15L,
+                                                                  !is.na(.data$WeightD10) ~ .data$HatchDate_observed + 10L,
+                                                                  !is.na(.data$WeightD5)  ~ .data$HatchDate_observed + 5L,
+                                                                  !is.na(.data$WeightD2)  ~ .data$HatchDate_observed + 2L,
+                                                                  !is.na(.data$HatchDate_observed) ~ .data$HatchDate_observed,
+                                                                  TRUE ~ lubridate::NA_Date_))) %>%
 
     ## Adjust variables
     ## TODO: Check about 'dead chick' ID codes
-    dplyr::mutate(dplyr::across(where(is.character), ~dplyr::na_if(., "NA")),
-                  PopID = "WRS",
+    dplyr::mutate(PopID = "WRS",
                   BreedingSeason = as.integer(.data$BreedingSeason),
                   ReleaseAlive = dplyr::case_when(.data$ChickExp != 0 | .data$ChickPred != 0 | .data$Fledged == 0~ FALSE,
                                                   TRUE ~ TRUE),
@@ -181,6 +195,7 @@ format_WRS <- function(db = choose_directory(),
                   .data$UniqueBreedingEvent)
 
   ## Read in primary data from adults
+  ## TODO: Ask about dates with 'BIB'
   adult_data <- suppressWarnings(readxl::read_xlsx(path = paste0(db, "/WRS_PrimaryData.xlsx"),
                                                    sheet = "Adults",
                                                    col_types = "text")) %>%
@@ -208,11 +223,12 @@ format_WRS <- function(db = choose_directory(),
     ## TODO: Check about aggression scoring - Should this be an experiment? Currently listed as OTHER
     ## TODO: where() not namespaced
     ## Check species codes
-    mutate(dplyr::across(where(is.character), ~dplyr::na_if(., "NA")),
+    dplyr::mutate(dplyr::across(where(is.character), ~dplyr::na_if(., "NA")),
            PopID = "WRS",
            BreedingSeason = as.integer(.data$BreedingSeason),
            dplyr::across(c(.data$Mass, .data$WingLength, .data$Tarsus), ~ suppressWarnings(as.numeric(.x))),
-           CaptureTime = suppressWarnings(format(openxlsx::convertToDateTime(.data$Hour), "%H:%M")),
+           CaptureTime = suppressWarnings(case_when(grepl(":", .data$Hour) ~ as.character(.data$Hour),
+                                                    TRUE ~ format(as.POSIXct(Sys.Date() + as.numeric(.data$Hour)), "%H:%M", tz="UTC"))),
            Species = dplyr::case_when(.data$Species == "GT"  ~ species_codes[species_codes$SpeciesID == 14640,]$Species,
                                       .data$Species == "BT"  ~ species_codes[species_codes$SpeciesID == 14620,]$Species,
                                       .data$Species == "FC"  ~ species_codes[species_codes$SpeciesID == 13490,]$Species,
@@ -229,22 +245,22 @@ format_WRS <- function(db = choose_directory(),
            dplyr::across(where(is.character), ~dplyr::na_if(., "NA"))) %>%
 
     dplyr::select(.data$BreedingSeason,
-           .data$PopID,
-           .data$Plot,
-           .data$LocationID,
-           .data$Species,
-           .data$IndvID,
-           .data$CaptureDate,
-           .data$CaptureTime,
-           .data$Sex_observed,
-           .data$Age_observed,
-           .data$Mass,
-           .data$WingLength,
-           .data$Tarsus,
-           .data$ReleaseAlive,
-           .data$ObserverID,
-           .data$ExperimentID,
-           .data$UniqueBreedingEvent)
+                  .data$PopID,
+                  .data$Plot,
+                  .data$LocationID,
+                  .data$Species,
+                  .data$IndvID,
+                  .data$CaptureDate,
+                  .data$CaptureTime,
+                  .data$Sex_observed,
+                  .data$Age_observed,
+                  .data$Mass,
+                  .data$WingLength,
+                  .data$Tarsus,
+                  .data$ReleaseAlive,
+                  .data$ObserverID,
+                  .data$ExperimentID,
+                  .data$UniqueBreedingEvent)
 
   #### BROOD DATA
   message("Compiling brood information...")
@@ -520,7 +536,7 @@ create_individual_WRS <- function(Capture_data_temp, Brood_data_temp){
     dplyr::group_by(.data$IndvID, .data$CapturePopID) %>%
     dplyr::mutate(PopID = .data$CapturePopID) %>%
     dplyr::group_by(.data$IndvID) %>%
-    dplyr::mutate(RingSeason = min(.data$BreedingSeason, na.rm = T)) %>%
+    dplyr::mutate(RingSeason = min(.data$BreedingSeason, na.rm = TRUE)) %>%
 
     ## Arrange
     dplyr::arrange(.data$IndvID, .data$CaptureDate) %>%
