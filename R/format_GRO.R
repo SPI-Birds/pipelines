@@ -113,7 +113,18 @@ format_GRO <- function(db = choose_directory(),
 
 
   ## Read in experiment table
-  exp_table <- utils::read.csv(paste0(db, "/GRO_PrimaryData_ExperimentLabels.csv"))
+  exp_table <- readr::read_delim(paste0(db, "/GRO_PrimaryData_ExperimentLabels.csv"),
+                                 delim = "***",
+                                 col_types = readr::cols()) %>%
+    tidyr::separate(1,
+                    sep = ",",
+                    into =  c("BreedingSeason",
+                              "Species",
+                              "Experiment_Treatment",
+                              "ExperimentID")) %>%
+    dplyr::mutate(BreedingSeason = as.integer(.data$BreedingSeason))
+
+
 
   ## Join in experiment labels
   gro_data <- gro_data %>%
