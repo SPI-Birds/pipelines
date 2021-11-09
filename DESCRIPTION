@@ -42,7 +42,8 @@ Imports: dplyr,
          sp,
          usethis,
          rlang,
-         tidyselect
+         tidyselect,
+         stringi
 RoxygenNote: 7.1.1
 Suggests: 
     knitr,
