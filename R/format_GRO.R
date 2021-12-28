@@ -113,7 +113,7 @@ format_GRO <- function(db = choose_directory(),
 
 
   ## Read in experiment table
-  exp_table <- utils::read.csv(paste0(db, "/GRO_PrimaryData_ExperimentLabels.csv"))
+  exp_table <- readr::read_csv(paste0(db, "/GRO_PrimaryData_ExperimentLabels.csv"))
 
   ## Join in experiment labels
   gro_data <- gro_data %>%
