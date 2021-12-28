@@ -115,6 +115,8 @@ format_GRO <- function(db = choose_directory(),
   ## Read in experiment table
   exp_table <- readr::read_csv(paste0(db, "/GRO_PrimaryData_ExperimentLabels.csv"))
 
+
+
   ## Join in experiment labels
   gro_data <- gro_data %>%
     dplyr::rename(Experiment_Treatment = .data$Experiment) %>%
