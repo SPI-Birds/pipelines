@@ -599,14 +599,14 @@ compare_hatching_fledging <- function(Brood_data, approved_list){
 #' \strong{ClutchSize_observed, BroodSize_observed, NumberFledged_observed} \cr
 #' Check IDs: B5a-c \cr
 #' \itemize{
-#' \item{\emph{n >= 100}\cr}{Records are considered unusual if they are larger than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error.}
+#' \item{\emph{n >= 100}\cr}{Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error.}
 #' \item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as an error.}
 #' }
 #'
 #' \strong{LayDate_observed} \cr
 #' Check ID: B5d \cr
 #' \itemize{
-#' \item{\emph{n >= 100}\cr}{Date columns are transformed to Julian days to calculate percentiles. Records are considered unusual if they are earlier than the 1st percentile or later than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are earlier than January 1st or later than December 31st of the current breeding season, and will be flagged as an error.}
+#' \item{\emph{n >= 100}\cr}{Date columns are transformed to Julian days to calculate percentiles. Records are considered impossible if they are earlier than January 1st or later than December 31st of the current breeding season, and will be flagged as an error.}
 #' \item{\emph{n < 100}\cr}{Date columns are transformed to Julian days to calculate percentiles. Records are considered impossible if they are earlier than January 1st or later than December 31st of the current breeding season, and will be flagged as an error.}
 #' }
 #'
@@ -634,10 +634,8 @@ check_values_brood <- function(Brood_data, var, approved_list) {
     ref <- Brood_data %>%
       dplyr::filter(!is.na(!!rlang::sym(var)) & !is.na(.data$Species)) %>%
       dplyr::group_by(.data$Species, .data$PopID) %>%
-      dplyr::summarise(Warning_min = NA,
-                       Warning_max = ceiling(stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE)),
-                       Error_min = 0,
-                       Error_max = 4 * .data$Warning_max,
+      dplyr::summarise(Error_min = 0,
+                       Error_max = 4 * ceiling(stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE)),
                        n = n()) %>%
       dplyr::arrange(.data$PopID, .data$Species)
 
@@ -651,9 +649,7 @@ check_values_brood <- function(Brood_data, var, approved_list) {
       dplyr::mutate(!!paste0(var, "_julian") := as.numeric(!!rlang::sym(var) - lubridate::ymd(paste(.data$BreedingSeason, "1", "1", sep = "-")) + 1)) %>%
       dplyr::ungroup() %>%
       dplyr::group_by(.data$Species, .data$PopID) %>%
-      dplyr::summarise(Warning_min = floor(stats::quantile(!!rlang::sym(paste0(var, "_julian")), probs = 0.01, na.rm = TRUE)),
-                       Warning_max = ceiling(stats::quantile(!!rlang::sym(paste0(var, "_julian")), probs = 0.99, na.rm = TRUE)),
-                       Error_min = 1,
+      dplyr::summarise(Error_min = 1,
                        Error_max = 366,
                        n = n()) %>%
       dplyr::arrange(.data$PopID, .data$Species)
@@ -813,110 +809,10 @@ check_values_brood <- function(Brood_data, var, approved_list) {
 
   }
 
-
-  # Brood-specific warnings
-  # Warnings are only checked for population-species combinations with at least 100 observations
-  warning_ref <- ref %>%
-    dplyr::filter(.data$n >= 100)
-
-  brood_war <- purrr::pmap(.l = warning_ref,
-                           .f = ~{
-
-                             pb$tick()
-
-                             if(var %in% c("ClutchSize", "BroodSize", "NumberFledged",
-                                           "ClutchSize_observed", "BroodSize_observed", "NumberFledged_observed")) {
-
-                               # Brood records above upper warning threshold
-                               Brood_data %>%
-                                 dplyr::mutate(Variable = var,
-                                               Threshold = "U",
-                                               Ref = ..4) %>%
-                                 dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 &
-                                                 (!!rlang::sym(var) > ..4 & !!rlang::sym(var) <= ..6)) %>%
-                                 dplyr::select(.data$Row, .data$PopID, .data$BroodID, !!rlang::sym(var), .data$Species, .data$Variable, .data$Threshold, .data$Ref)
-
-                             } else if(var %in% c("LayDate", "LayDate_observed")) {
-
-                               # Brood records below lower warning threshold
-                               lower_war <- Brood_data %>%
-                                 dplyr::group_by(.data$BreedingSeason) %>%
-                                 # Transform dates to Julian days (while accounting for year)
-                                 # to compare to Julian day reference values
-                                 dplyr::mutate(!!paste0(var, "_julian") := as.numeric(!!rlang::sym(var) - lubridate::ymd(paste(.data$BreedingSeason, "1", "1", sep = "-")) + 1)) %>%
-                                 dplyr::ungroup() %>%
-                                 dplyr::mutate(Variable = var,
-                                               Threshold = "L",
-                                               Ref = lubridate::ymd(paste(.data$BreedingSeason, "1", "1", sep = "-")) + ..3 - 1) %>%
-                                 dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(paste0(var, "_julian")) < ..3 & !!rlang::sym(paste0(var, "_julian")) >= ..5) %>%
-                                 dplyr::select(.data$Row, .data$PopID, .data$BroodID, !!rlang::sym(var),
-                                               .data$Species, .data$Variable, .data$Threshold, .data$Ref)
-
-                               # Brood records above upper warning threshold
-                               upper_war <- Brood_data %>%
-                                 dplyr::group_by(.data$BreedingSeason) %>%
-                                 # Transform dates to Julian days (while accounting for year)
-                                 # to compare to Julian day reference values
-                                 dplyr::mutate(!!paste0(var, "_julian") := as.numeric(!!rlang::sym(var) - lubridate::ymd(paste(.data$BreedingSeason, "1", "1", sep = "-")) + 1)) %>%
-                                 dplyr::ungroup() %>%
-                                 dplyr::mutate(Variable = var,
-                                               Threshold = "U",
-                                               Ref = lubridate::ymd(paste(.data$BreedingSeason, "1", "1", sep = "-")) + ..4 - 1) %>%
-                                 dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(paste0(var, "_julian")) > ..4 & !!rlang::sym(paste0(var, "_julian")) <= ..6) %>%
-                                 dplyr::select(.data$Row, .data$PopID, .data$BroodID, !!rlang::sym(var),
-                                               .data$Species, .data$Variable, .data$Threshold, .data$Ref)
-
-                               dplyr::bind_rows(lower_war, upper_war)
-
-                             }
-
-                           }) %>%
-    dplyr::bind_rows()
-
+  # No warnings
   war <- FALSE
-  warning_records <- tibble::tibble(Row = NA_character_)
+  #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
-
-  if(nrow(brood_war) > 0) {
-
-    war <- TRUE
-
-    # Compare to approved_list
-    warning_records <- brood_war %>%
-      dplyr::mutate(CheckID = checkID_variable_combos[checkID_variable_combos$Variable == var,]$CheckID) %>%
-      dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID")) %>%
-      dplyr::arrange(.data$Row)
-
-    # Create quality check report statements
-    warning_output <- purrr::pmap(.l = warning_records,
-                                  .f = ~{
-
-                                    if(..6 %in% c("ClutchSize", "BroodSize", "NumberFledged",
-                                                  "ClutchSize_observed", "BroodSize_observed", "NumberFledged_observed")) {
-
-                                      paste0("Record on row ", ..1,
-                                             " (PopID: ", ..2, "; ",
-                                             "BroodID: ", ..3, "; ",
-                                             species_codes[species_codes$Species == ..5, "CommonName"], ")",
-                                             " has a ", ifelse(..7 == "U", "larger", "smaller"), " value in ",
-                                             ..6, " (", ..4, ") than the ", ifelse(..7 == "U", "upper", "lower"),
-                                             " reference value (", ..8, "), which is considered unusual.")
-
-                                    } else if(..6 %in% c("LayDate", "LayDate_observed")) {
-
-                                      paste0("Record on row ", ..1,
-                                             " (PopID: ", ..2, "; ",
-                                             "BroodID: ", ..3, "; ",
-                                             species_codes[species_codes$Species == ..5, "CommonName"], ")",
-                                             " has ", ifelse(..7 == "U", "a later", "an earlier"), " value in ",
-                                             ..6, " (", ..4, ") than the ", ifelse(..7 == "U", "upper", "lower"),
-                                             " reference value (", ..8, "), which is considered unusual.")
-
-                                    }
-
-                                  })
-
-  }
 
   # Add messages about population-species combinations with low n to warning outputs
   if(exists("low_obs")) {
@@ -931,7 +827,7 @@ check_values_brood <- function(Brood_data, var, approved_list) {
 
                                   })
 
-    warning_output <- c(skipped_output, warning_output)
+    warning_output <- skipped_output
 
   }
 
@@ -939,7 +835,7 @@ check_values_brood <- function(Brood_data, var, approved_list) {
                                Error = err)
 
   return(list(CheckList = check_list,
-              WarningRows = warning_records$Row,
+              WarningRows = NULL,
               ErrorRows = error_records$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
