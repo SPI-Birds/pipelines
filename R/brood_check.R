@@ -691,14 +691,14 @@ check_values_brood <- function(Brood_data, var, approved_list) {
 
                                # If number of observations is large enough, compare brood values
                                # to all reference values
-                               if(..7 >= 100) {
+                               if(..5 >= 100) {
 
                                  # Brood records below lower error threshold
                                  lower_err <- Brood_data %>%
                                    dplyr::mutate(Variable = var,
                                                  Threshold = "L",
-                                                 Ref = ..5) %>%
-                                   dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(var) < ..5) %>%
+                                                 Ref = ..3) %>%
+                                   dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(var) < ..3) %>%
                                    dplyr::select(.data$Row, .data$PopID, .data$BroodID, !!rlang::sym(var), .data$Species, .data$Variable, .data$Threshold, .data$Ref)
 
 
@@ -706,8 +706,8 @@ check_values_brood <- function(Brood_data, var, approved_list) {
                                  upper_err <- Brood_data %>%
                                    dplyr::mutate(Variable = var,
                                                  Threshold = "U",
-                                                 Ref = ..6) %>%
-                                   dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(var) > ..6) %>%
+                                                 Ref = ..4) %>%
+                                   dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(var) > ..4) %>%
                                    dplyr::select(.data$Row, .data$PopID, .data$BroodID, !!rlang::sym(var), .data$Species, .data$Variable, .data$Threshold, .data$Ref)
 
 
@@ -721,8 +721,8 @@ check_values_brood <- function(Brood_data, var, approved_list) {
                                  Brood_data %>%
                                    dplyr::mutate(Variable = var,
                                                  Threshold = "L",
-                                                 Ref = ..5) %>%
-                                   dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(var) < ..5) %>%
+                                                 Ref = ..3) %>%
+                                   dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(var) < ..3) %>%
                                    dplyr::select(.data$Row, .data$PopID, .data$BroodID, !!rlang::sym(var), .data$Species, .data$Variable, .data$Threshold, .data$Ref)
 
                                }
@@ -739,7 +739,7 @@ check_values_brood <- function(Brood_data, var, approved_list) {
                                  dplyr::mutate(Variable = var,
                                                Threshold = "L",
                                                Ref = paste(.data$BreedingSeason, "01", "01", sep = "-")) %>%
-                                 dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(paste0(var, "_julian")) < ..5) %>%
+                                 dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(paste0(var, "_julian")) < ..3) %>%
                                  dplyr::select(.data$Row, .data$PopID, .data$BroodID, !!rlang::sym(var),
                                                .data$Species, .data$Variable, .data$Threshold, .data$Ref)
 
@@ -753,7 +753,7 @@ check_values_brood <- function(Brood_data, var, approved_list) {
                                  dplyr::mutate(Variable = var,
                                                Threshold = "U",
                                                Ref = paste(.data$BreedingSeason, "12", "31", sep = "-")) %>%
-                                 dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(paste0(var, "_julian")) > ..6) %>%
+                                 dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(paste0(var, "_julian")) > ..4) %>%
                                  dplyr::select(.data$Row, .data$PopID, .data$BroodID, !!rlang::sym(var),
                                                .data$Species, .data$Variable, .data$Threshold, .data$Ref)
 
