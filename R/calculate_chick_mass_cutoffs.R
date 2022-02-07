@@ -35,7 +35,7 @@ calculate_chick_mass_cutoffs <- function(Capture_data, plot = FALSE) {
 
   # Filter data
   data <- Capture_data %>%
-    dplyr::filter(!is.na(ChickAge), !is.na(Mass))
+    dplyr::filter(!is.na(.data$ChickAge), !is.na(.data$Mass))
 
   # Check that there are non-NA records left to fit a logistic model on
   if(nrow(data) == 0) {
@@ -45,7 +45,7 @@ calculate_chick_mass_cutoffs <- function(Capture_data, plot = FALSE) {
   }
 
   # Set initial values for logistic model
-  initial_values <- list(a = {data %>% dplyr::filter(ChickAge == max(ChickAge)) %>% dplyr::summarise(M = max(Mass)) %>% dplyr::pull(M)},
+  initial_values <- list(a = {data %>% dplyr::filter(.data$ChickAge == max(.data$ChickAge)) %>% dplyr::summarise(M = max(.data$Mass)) %>% dplyr::pull(.data$M)},
                          b = 5,
                          c = 0.1)
 
@@ -55,10 +55,11 @@ calculate_chick_mass_cutoffs <- function(Capture_data, plot = FALSE) {
 
   # Predict and calculate 1st and 99th quantiles
   newdata <- data.frame(ChickAge = seq(0, max(data$ChickAge), by = 1))
+
   logistic_pred <- tibble::tibble(fit = stats::predict(logistic_model, newdata = newdata),
                                   x = newdata$ChickAge) %>%
-    dplyr::mutate(upper = fit + summary(logistic_model)$sigma * stats::qnorm(0.99, 0, 1),
-                  lower = fit + summary(logistic_model)$sigma * stats::qnorm(0.01, 0, 1))
+    dplyr::mutate(upper = .data$fit + summary(logistic_model)$sigma * stats::qnorm(0.99, 0, 1),
+                  lower = .data$fit + summary(logistic_model)$sigma * stats::qnorm(0.01, 0, 1))
 
 
   if(plot == TRUE) {
@@ -83,16 +84,16 @@ calculate_chick_mass_cutoffs <- function(Capture_data, plot = FALSE) {
   }
 
   # Create day-specific reference values
-  ref_values <- tibble::tibble(Species = rep(unique(Capture_data$Species), length(logistic_pred$x)),
-                               PopID = rep(unique(Capture_data$CapturePopID), length(logistic_pred$x)),
+  ref_values <- tibble::tibble(Species = rep(unique(data$Species), length(logistic_pred$x)),
+                               PopID = rep(unique(data$CapturePopID), length(logistic_pred$x)),
                                Stage = as.character(logistic_pred$x),
                                Error_min = 0,
                                Error_max = 4 * logistic_pred$upper,
                                n =   {data %>%
-                                   dplyr::group_by(ChickAge) %>%
-                                   dplyr::summarise(N = n()) %>%
+                                   dplyr::group_by(.data$ChickAge) %>%
+                                   dplyr::summarise(N = dplyr::n()) %>%
                                    tidyr::complete(ChickAge = logistic_pred$x) %>%
-                                   dplyr::pull(N)},
+                                   dplyr::pull(.data$N)},
                                Logis = TRUE
   )
 
