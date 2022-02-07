@@ -1,26 +1,45 @@
-quality_check_description_pdf <- "
+description_errors_pdf <- "
 
 \\section{Introduction}
 
-Welcome to the SPI-Birds quality check report. This report shows the results of a number of standard data quality checks that can be
-used on any data that have been created following the \\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{SPI-Birds Standard Protocol}.
+The SPI-Birds standard data quality checks are part of the SPI-Birds standard workflow. The aim of the data quality checks is to increase the integrity of the data by highlighting unlikely and impossible values in data that have been created following the SPI-Birds Standard Protocol.
 
-\\subsection{How to use this report}
+\\subsection{How do the data quality checks work?}
 
-All checks either look for 'potential errors' (values that we believe are impossible e.g. negative values) or 'warnings' (values that we believe are unlikely).
-Checks are run on the four tables described in the SPI-Birds Standard Protocol: Brood data, Capture data, Individual data, and Location data.
-These checks generally work on individual rows (but see the list of checks below).
-When a 'warning' or 'potential error' is identified a line will be included in the report with information on the type of check that was violated
-and the \\emph{row number} of the corresponding record. The \\emph{row number} refers to the column \\emph{Row} in the corresponding
-table output in the standard format. It does \\textbf{not} refer to row numbers in the primary data. In addition, during the process of the quality
-check two new columns ('warning' and 'error') will be added to each of the four data tables to allow potentially spurious records
-to be easily identified.
+The standard data quality check procedure involves a number of checks that work on individual rows of each of the tables described in the SPI-Birds Standard Protocol: Brood data, Capture data, Individual data, and Location data. These quality checks identify suspicious data and flag them as \\emph{potential errors} or \\emph{warnings}, which are stored into two separate reports.
 
-\\subsection{Verification of flagged records}
+\\begin{enumerate}
+\\item The first report (i.e., 'Potential Errors'; \\textbf{this document}) contains a list of potential errors, which are values that are considered as impossible (e.g., negative values for clutch size). Whenever a record is flagged as a potential error, a line is added to this report with information on the type of check that was violated and the row number of the corresponding record. This row number refers to the column Row in the corresponding data table in the standard format and does not refer to the row number in the primary data.
+\\item The second report (i.e., 'Warnings and Verified Records') contains a list of warnings, which are values that are considered possible but unlikely (e.g., a value for clutch size that is twice as large as a mean clutch size for a species). Similar to the potential errors, whenever a record is flagged as a warning, a line is added to this report with information on the type of check that was violated and the row number of the corresponding record. Again, this row number refers to the column Row in the corresponding data table in the standard format and does not refer to the row number in the primary data. Besides a list of warnings, this report contains a list of verified records. Some of the records flagged as a warning or potential error are likely to be uncommon but true observations. We don't want these same values to be flagged each time a new quality check is conducted. To overcome this, we have implemented an 'approve-listing' procedure that will prevent true records, that have been verified by the data owner, from appearing in future quality check reports. These records are listed at the end of the second document. We hope that this will make the quality check reports more useful for data owners and users.
+\\end{enumerate}
 
-Some of the records flagged as a 'warning' or 'potential error' are likely to be uncommon but true observations. We don't want these same values to be flagged each time a new quality check is conducted. To overcome this, we have implemented an 'approve-listing' procedure that will prevent true records, that have been verified by the data owner, from appearing in future quality check reports. These records are listed at the end of this document. We hope that this will make the quality check reports more useful for data owners and users.
+In addition to these two reports, two columns (Warning and Error) have been added to each of the data tables in the standard format to allow data users to easily identify and filter out potentially spurious records.
+"
+
+description_warnings_pdf <- "
+
+\\section{Introduction}
+
+The SPI-Birds standard data quality checks are part of the SPI-Birds standard workflow. The aim of the data quality checks is to increase the integrity of the data by highlighting unlikely and impossible values in data that have been created following the SPI-Birds Standard Protocol.
+
+\\subsection{How do the data quality checks work?}
+
+The standard data quality check procedure involves a number of checks that work on individual rows of each of the tables described in the SPI-Birds Standard Protocol: Brood data, Capture data, Individual data, and Location data. These quality checks identify suspicious data and flag them as \\emph{potential errors} or \\emph{warnings}, which are stored into two separate reports.
+
+\\begin{enumerate}
+\\item The first report (i.e., 'Potential Errors') contains a list of potential errors, which are values that are considered as impossible (e.g., negative values for clutch size). Whenever a record is flagged as a potential error, a line is added to this report with information on the type of check that was violated and the row number of the corresponding record. This row number refers to the column Row in the corresponding data table in the standard format and does not refer to the row number in the primary data.
+\\item The second report (i.e., 'Warnings and Verified Records'; \\textbf{this document}) contains a list of warnings, which are values that are considered possible but unlikely (e.g., a value for clutch size that is twice as large as a mean clutch size for a species). Similar to the potential errors, whenever a record is flagged as a warning, a line is added to this report with information on the type of check that was violated and the row number of the corresponding record. Again, this row number refers to the column Row in the corresponding data table in the standard format and does not refer to the row number in the primary data. Besides a list of warnings, this report contains a list of verified records. Some of the records flagged as a warning or potential error are likely to be uncommon but true observations. We don't want these same values to be flagged each time a new quality check is conducted. To overcome this, we have implemented an 'approve-listing' procedure that will prevent true records, that have been verified by the data owner, from appearing in future quality check reports. These records are listed at the end of the second document. We hope that this will make the quality check reports more useful for data owners and users.
+\\end{enumerate}
+
+In addition to these two reports, two columns (Warning and Error) have been added to each of the data tables in the standard format to allow data users to easily identify and filter out potentially spurious records.
+"
+
+check_descriptions_pdf <- "
+\\newpage
 
 \\subsection{Check descriptions}
+
+Below is a summary of all standard data quality checks included in the SPI-Birds quality check procedure. A detailed description checks can be found \\href{https://github.com/SPI-Birds/documentation/blob/master/quality_check/SPI-Birds_quality-check-protocol_v1.0.pdf}{\\underline{here}}.
 
 Brood checks:
   \\begin{itemize}
@@ -62,7 +81,7 @@ Location checks:
 \\item \\textbf{L1}. Check that the coordinates of capture locations are close to the centre point of the study site. Records that are 15 km or farther from the centre point are flagged as 'potential error'. This check also produces a map with the capture locations within 15 km of the centre point.
 \\end{itemize}"
 
-quality_check_titlepage_pdf <- "\\renewcommand{\\familydefault}{\\sfdefault}
+titlepage_errors_pdf <- "\\renewcommand{\\familydefault}{\\sfdefault}
 \\begin{titlepage}
 	\\centering % Center everything on the title page
 	\\scshape % Use small caps for all text on the title page
@@ -76,7 +95,8 @@ quality_check_titlepage_pdf <- "\\renewcommand{\\familydefault}{\\sfdefault}
 
 		\\vspace{0.75\\baselineskip} % Whitespace above the title
 % ========== Title ===============
-	{	\\Huge SPI-Birds Quality Check\\\\}
+{	\\Huge SPI-Birds \\\\ Standard Data Quality Checks\\\\}
+{ \\LARGE Potential Errors \\\\}
 % ======================================
 		\\vspace{0.75\\baselineskip} % Whitespace below the title
 	\\rule{13cm}{0.4pt}\\vspace*{-\\baselineskip}\\vspace{3.2pt} % Thin horizontal rule
@@ -101,7 +121,51 @@ quality_check_titlepage_pdf <- "\\renewcommand{\\familydefault}{\\sfdefault}
 	\\vspace{4mm}
 	{\\Large SPI-Birds team} \\\\
 	\\vspace{4mm}
-	Stefan J.G. Vriend, Liam D. Bailey, Chlo\\'{e} R. Nater, \\\\Chris Tyson, Zuzana Zajkov\\'{a}, Antica Culina, \\\\ \\& Marcel E. Visser \\\\
+	Stefan J.G. Vriend, Liam D. Bailey, Chris Tyson, \\\\Antica Culina, \\& Marcel E. Visser \\\\
+	\\vfill
+\\end{titlepage}"
+
+titlepage_warnings_pdf <- "\\renewcommand{\\familydefault}{\\sfdefault}
+\\begin{titlepage}
+	\\centering % Center everything on the title page
+	\\scshape % Use small caps for all text on the title page
+	\\vspace*{1.5\\baselineskip} % White space at the top of the page
+% ===================
+%	Title Section
+% ===================
+
+	\\rule{13cm}{1.6pt}\\vspace*{-\\baselineskip}\\vspace*{2pt} % Thick horizontal rule
+	\\rule{13cm}{0.4pt} % Thin horizontal rule
+
+		\\vspace{0.75\\baselineskip} % Whitespace above the title
+% ========== Title ===============
+{	\\Huge SPI-Birds \\\\ Standard Data Quality Checks\\\\}
+{ \\LARGE Warnings and Verified Records \\\\}
+% ======================================
+		\\vspace{0.75\\baselineskip} % Whitespace below the title
+	\\rule{13cm}{0.4pt}\\vspace*{-\\baselineskip}\\vspace{3.2pt} % Thin horizontal rule
+	\\rule{13cm}{1.6pt} % Thick horizontal rule
+
+		\\vspace{0.75\\baselineskip} % Whitespace after the title block
+
+% =================
+%	Version number
+% =================
+
+    \\vspace{3mm}
+
+    \\today
+
+    \\vspace{1.25\\baselineskip}
+
+% =================
+%	Information
+% =================
+	Produced by:\\\\
+	\\vspace{4mm}
+	{\\Large SPI-Birds team} \\\\
+	\\vspace{4mm}
+	Stefan J.G. Vriend, Liam D. Bailey, Chris Tyson, \\\\Antica Culina, \\& Marcel E. Visser \\\\
 	\\vfill
 \\end{titlepage}"
 
