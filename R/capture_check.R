@@ -160,7 +160,7 @@ check_values_capture <- function(Capture_data, var, approved_list) {
         dplyr::group_by(.data$Species, .data$CapturePopID, .data$Stage) %>%
         dplyr::summarise(Error_min = 0,
                          Error_max = 4 * round(stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE), 1),
-                         n = n(),
+                         n = dplyr::n(),
                          Logis = FALSE) %>%
         dplyr::rename(PopID = .data$CapturePopID) %>%
         dplyr::mutate_at(c("Error_min", "Error_max"), ~round(., 2))
@@ -197,7 +197,7 @@ check_values_capture <- function(Capture_data, var, approved_list) {
         dplyr::summarise(Stage = "Adult",
                          Error_min = 0,
                          Error_max = 4 * stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE),
-                         n = n(),
+                         n = dplyr::n(),
                          Logis = FALSE) %>%
         dplyr::rename(PopID = .data$CapturePopID) %>%
         dplyr::mutate_at(c("Error_min", "Error_max"), ~round(., 2))
@@ -254,7 +254,7 @@ check_values_capture <- function(Capture_data, var, approved_list) {
                 dplyr::group_by(.data$Species, .data$CapturePopID, .data$Stage) %>%
                 dplyr::summarise(Error_min = 0,
                                  Error_max = 4 * stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE),
-                                 n = n(),
+                                 n = dplyr::n(),
                                  Logis = FALSE) %>%
                 dplyr::rename(PopID = .data$CapturePopID)
 
@@ -269,7 +269,7 @@ check_values_capture <- function(Capture_data, var, approved_list) {
       if(any(ref_chicks$Logis == FALSE & ref_chicks$n < 100)) {
 
         low_obs_chicks <- ref_chicks %>%
-          dplyr::filter(.data$Logis == FALSE & .data$n < 100) %>%
+          dplyr::filter(.data$Logis == FALSE & .data$n < 100 & !is.na(.data$Stage)) %>%
           dplyr::select(.data$Species, .data$PopID, .data$Stage)
 
         purrr::pwalk(.l = list(low_obs_chicks$Species,
@@ -514,7 +514,7 @@ check_values_capture <- function(Capture_data, var, approved_list) {
                                              })
 
         low_obs_chicks <- ref_chicks %>%
-          dplyr::filter(is.na(.data$Stage) | (.data$Logis == FALSE & .data$n < 100)) %>%
+          dplyr::filter(.data$Logis == FALSE & .data$n < 100 & !is.na(.data$Stage)) %>%
           dplyr::select(.data$Species, .data$PopID, .data$Stage)
 
         skipped_chicks_output <- purrr::pmap(.l = list(low_obs_chicks$Species,
