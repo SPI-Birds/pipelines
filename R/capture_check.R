@@ -106,12 +106,12 @@ capture_check <- function(Capture_data, Location_data, Brood_data, approved_list
 #' \itemize{
 #' \item{Adults}
 #' \itemize{
-#' \item{\emph{n >= 100}\cr}{Records are considered unusual if they are smaller than the 1st percentile or larger than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error.}
+#' \item{\emph{n >= 100}\cr}{Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error.}
 #' \item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as an error.}
 #' }
 #' \item{Chicks}
 #' \itemize{
-#' \item{Reference values for chicks are calculated for each age (in days). This function tries to fit a logistic growth model to determine reference values to each day. If this model fails, reference values are determined per age if the number of observations is sufficiently large (n >= 100). Records are considered unusual if they are smaller than the 1st percentile or larger than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error.}
+#' \item{Reference values for chicks are calculated for each age (in days). This function tries to fit a logistic growth model to determine reference values to each day. If this model fails, reference values are determined per age if the number of observations is sufficiently large (n >= 100). Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error.}
 #' \item{In case the logistic growth model fails and the number of observations for an age are too low (n < 100), records are considered impossible if they are negative, and will be flagged as an error.}
 #' }
 #' }
@@ -120,7 +120,7 @@ capture_check <- function(Capture_data, Location_data, Brood_data, approved_list
 #' \strong{Tarsus} \cr
 #' Check ID: C1b \cr
 #' \itemize{
-#' \item{\emph{n >= 100}\cr}{Records are considered unusual if they are smaller than the 1st percentile or larger than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error.}
+#' \item{\emph{n >= 100}\cr}{Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error.}
 #' \item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as an error.}
 #' }
 #'
@@ -158,14 +158,12 @@ check_values_capture <- function(Capture_data, var, approved_list) {
           TRUE ~ "Chick"
         )) %>%
         dplyr::group_by(.data$Species, .data$CapturePopID, .data$Stage) %>%
-        dplyr::summarise(Warning_min = round(stats::quantile(!!rlang::sym(var), probs = 0.01, na.rm = TRUE), 1),
-                         Warning_max = round(stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE), 1),
-                         Error_min = 0,
-                         Error_max = 4 * .data$Warning_max,
+        dplyr::summarise(Error_min = 0,
+                         Error_max = 4 * round(stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE), 1),
                          n = n(),
                          Logis = FALSE) %>%
         dplyr::rename(PopID = .data$CapturePopID) %>%
-        dplyr::mutate_at(c("Warning_min", "Warning_max", "Error_min", "Error_max"), ~round(., 2))
+        dplyr::mutate_at(c("Error_min", "Error_max"), ~round(., 2))
 
       # Print message for population-species combinations with too low number of observations
       if(any(ref$n < 100)) {
@@ -197,14 +195,12 @@ check_values_capture <- function(Capture_data, var, approved_list) {
         dplyr::filter(!is.na(!!rlang::sym(var)), !is.na(.data$Species), .data$Age_calculated > 3) %>%
         dplyr::group_by(.data$Species, .data$CapturePopID) %>%
         dplyr::summarise(Stage = "Adult",
-                         Warning_min = stats::quantile(!!rlang::sym(var), probs = 0.01, na.rm = TRUE),
-                         Warning_max = stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE),
                          Error_min = 0,
-                         Error_max = 4 * .data$Warning_max,
+                         Error_max = 4 * stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE),
                          n = n(),
                          Logis = FALSE) %>%
         dplyr::rename(PopID = .data$CapturePopID) %>%
-        dplyr::mutate_at(c("Warning_min", "Warning_max", "Error_min", "Error_max"), ~round(., 2))
+        dplyr::mutate_at(c("Error_min", "Error_max"), ~round(., 2))
 
       # Print message for population-species combinations with too low number of observations for adults
       if(any(ref_adults$n < 100)) {
@@ -256,10 +252,8 @@ check_values_capture <- function(Capture_data, var, approved_list) {
               ..1 %>%
                 dplyr::mutate(Stage = as.character(.data$ChickAge)) %>%
                 dplyr::group_by(.data$Species, .data$CapturePopID, .data$Stage) %>%
-                dplyr::summarise(Warning_min = stats::quantile(!!rlang::sym(var), probs = 0.01, na.rm = TRUE),
-                                 Warning_max = stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE),
-                                 Error_min = 0,
-                                 Error_max = 4 * .data$Warning_max,
+                dplyr::summarise(Error_min = 0,
+                                 Error_max = 4 * stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE),
                                  n = n(),
                                  Logis = FALSE) %>%
                 dplyr::rename(PopID = .data$CapturePopID)
@@ -325,14 +319,10 @@ check_values_capture <- function(Capture_data, var, approved_list) {
 
   }
 
-  # Set error and warning trackers and objects
+  # Set error trackers and objects
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
-
-  war <- FALSE
-  warning_records <- tibble::tibble(Row = NA_character_)
-  warning_output <- NULL
 
   if(nrow(ref) > 0 && !all(is.na(Capture_data[,var]))) {
 
@@ -476,96 +466,10 @@ check_values_capture <- function(Capture_data, var, approved_list) {
 
     }
 
-    # Warnings
-    # Warnings are only checked for population-species combinations with at least 100 observations
-    warning_ref <- ref %>%
-      dplyr::filter((.data$Stage == "Adult" & n >= 100) | (.data$Logis == TRUE) | (.data$Logis == FALSE & .data$n >= 100))
-
-    Capture_war <- purrr::pmap(.l = warning_ref,
-                               .f = ~{
-
-                                 pb$tick()
-
-                                 if(..3 == "Adult") {
-
-                                   # Capture records below lower warning threshold
-                                   lower_war <- Capture_data %>%
-                                     dplyr::mutate(Variable = var,
-                                                   Threshold = "L",
-                                                   Ref = ..4) %>%
-                                     dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2, .data$Age_calculated > 3,
-                                                   !!rlang::sym(var) < ..4, !!rlang::sym(var) >= ..6) %>%
-                                     dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
-                                                   .data$Species, .data$Variable, .data$Threshold, .data$Ref)
-
-                                   # Capture records above upper warning threshold
-                                   upper_war <- Capture_data %>%
-                                     dplyr::mutate(Variable = var,
-                                                   Threshold = "U",
-                                                   Ref = ..5) %>%
-                                     dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2, .data$Age_calculated > 3,
-                                                   !!rlang::sym(var) > ..5, !!rlang::sym(var) <= ..7) %>%
-                                     dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
-                                                   .data$Species, .data$Variable, .data$Threshold, .data$Ref)
-
-                                   dplyr::bind_rows(lower_war, upper_war)
-
-                                 } else if(..3 != "Adult") {
-
-                                   # Capture records below lower warning threshold
-                                   lower_war <- Capture_data %>%
-                                     dplyr::mutate(Variable = var,
-                                                   Threshold = "L",
-                                                   Ref = ..4) %>%
-                                     dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2,
-                                                   .data$CurrentChickAge == ..3, !!rlang::sym(var) < ..4,
-                                                   !!rlang::sym(var) >= ..6) %>%
-                                     dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
-                                                   .data$Species, .data$Variable, .data$Threshold, .data$Ref)
-
-                                   # Capture records above upper warning threshold
-                                   upper_war <- Capture_data %>%
-                                     dplyr::mutate(Variable = var,
-                                                   Threshold = "U",
-                                                   Ref = ..5) %>%
-                                     dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2,
-                                                   .data$CurrentChickAge == ..3, !!rlang::sym(var) > ..5,
-                                                   !!rlang::sym(var) <= ..7) %>%
-                                     dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
-                                                   .data$Species, .data$Variable, .data$Threshold, .data$Ref)
-
-                                   dplyr::bind_rows(lower_war, upper_war)
-
-                                 }
-
-                               }) %>%
-      dplyr::bind_rows()
-
-    if(nrow(Capture_war) > 0) {
-
-      war <- TRUE
-
-      # Compare to approved_list
-      warning_records <- Capture_war %>%
-        dplyr::mutate(CheckID = checkID_variable_combos[checkID_variable_combos$Variable == var,]$CheckID) %>%
-        dplyr::anti_join(approved_list$Capture_approved_list, by=c("PopID", "CheckID", "CaptureID")) %>%
-        dplyr::arrange(.data$Row)
-
-      # Create quality check report statements
-      warning_output <- purrr::pmap(.l = warning_records,
-                                    .f = ~{
-
-                                      paste0("Record on row ", ..1,
-                                             " (PopID: ", ..2, "; ",
-                                             "CaptureID: ", ..3, "; ",
-                                             species_codes[species_codes$Species == ..5, "CommonName"], ")",
-                                             " has a ", ifelse(..7 == "U", "larger", "smaller"), " value in ",
-                                             ..6, " (", ..4, ") than the ", ifelse(..7 == "U", "upper", "lower"),
-                                             " reference value (", ..8, "), which is considered unusual.")
-
-                                    })
-
-    }
+    # No warnings
+    war <- FALSE
+    #warning_records <- tibble::tibble(Row = NA_character_)
+    warning_output <- NULL
 
     # Add messages about skipped population-species combinations to warning outputs
     if(var == "Tarsus") {
@@ -585,7 +489,7 @@ check_values_capture <- function(Capture_data, var, approved_list) {
 
                                     })
 
-      warning_output <- c(skipped_output, warning_output)
+      warning_output <- skipped_output
 
     }
 
@@ -636,7 +540,7 @@ check_values_capture <- function(Capture_data, var, approved_list) {
                                Error = err)
 
   return(list(CheckList = check_list,
-              WarningRows = warning_records$Row,
+              WarningRows = NULL,
               ErrorRows = error_records$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))

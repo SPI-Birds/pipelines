@@ -86,10 +86,8 @@ calculate_chick_mass_cutoffs <- function(Capture_data, plot = FALSE) {
   ref_values <- tibble::tibble(Species = rep(unique(Capture_data$Species), length(logistic_pred$x)),
                                PopID = rep(unique(Capture_data$CapturePopID), length(logistic_pred$x)),
                                Stage = as.character(logistic_pred$x),
-                               Warning_min = ifelse(logistic_pred$lower < 0, NA, logistic_pred$lower),
-                               Warning_max = logistic_pred$upper,
                                Error_min = 0,
-                               Error_max = 4 * Warning_max,
+                               Error_max = 4 * logistic_pred$upper,
                                n =   {data %>%
                                    dplyr::group_by(ChickAge) %>%
                                    dplyr::summarise(N = n()) %>%
