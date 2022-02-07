@@ -144,7 +144,7 @@ check_coordinates <- function(Location_data, approved_list, map){
                                Error = err)
 
   # Produce map of capture locations
-  if(map) {
+  if(map & any(!is.na(Location_data$Longitude) & !is.na(Location_data$Latitude))) {
 
     # Only map capture locations within 15 km from study site
     map_data <- locations %>%
