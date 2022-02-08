@@ -633,7 +633,7 @@ check_chick_age <- function(Capture_data, approved_list, output){
 
 #' Check that adults captured on a nest are listed as parents of that nest
 #'
-#' Check that adults captured on a nest are are listed as the parents of that nest in Brood_data. If not, records will be flagged as a warning. Adults can be caught near a nest box.
+#' Check that adults captured on a nest in the breeding season are are listed as the parents of that nest in Brood_data. If not, records will be flagged as a warning. Adults can be caught near a nest box. Records outside the breeding season but on a nesting location are ignored. The breeding season is determined annually and lasts from the minimum lay date in Brood_data that year to the maximum fledge date in Brood_data that year.
 #'
 #' Check ID: C3.
 #'
@@ -654,9 +654,22 @@ check_adult_parent_nest <- function(Capture_data, Location_data, Brood_data, app
 
   if(output %in% c("both", "warnings")) {
 
-    # Select adults
+    # Select adults captured in the "breeding season"
+    # Here we define a population's breeding season annually, which, for now, runs from the minimum lay date in Brood_data,
+    # to the maximum fledge date in Brood_data (both in Julian day/day of the year)
+    # TODO: Note that errors in either lay date or fledge date permeate here.
+    # TODO: Update breeding season definition for birds breeding in winter, in the tropics, or the Southern Hemisphere
+    breeding_season <- Brood_data %>%
+      dplyr::group_by(.data$PopID, .data$BreedingSeason) %>%
+      dplyr::summarise(StartBreeding = lubridate::yday(min(.data$LayDate_observed, na.rm = TRUE)),
+                       EndBreeding = lubridate::yday(max(.data$FledgeDate_observed, na.rm = TRUE)),
+                       .groups = "drop")
+
     adults <- Capture_data %>%
-      dplyr::filter(.data$Age_calculated > 3)
+      dplyr::left_join(breeding_season, by = c("BreedingSeason", "CapturePopID" = "PopID")) %>%
+      dplyr::filter(.data$Age_calculated > 3,
+                    lubridate::yday(.data$CaptureDate) >= .data$StartBreeding,
+                    lubridate::yday(.data$CaptureDate) <= .data$EndBreeding)
 
     # Determine location type of their capture locations
     pb1 <- progress::progress_bar$new(total = nrow(adults),
