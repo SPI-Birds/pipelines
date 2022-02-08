@@ -106,12 +106,12 @@ capture_check <- function(Capture_data, Location_data, Brood_data, approved_list
 #' \itemize{
 #' \item{Adults}
 #' \itemize{
-#' \item{\emph{n >= 100}\cr}{Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error.}
+#' \item{\emph{n >= 100}\cr}{Records are considered impossible if they are negative or larger than 2 times the 99th percentile, and will be flagged as an error.}
 #' \item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as an error.}
 #' }
 #' \item{Chicks}
 #' \itemize{
-#' \item{Reference values for chicks are calculated for each age (in days). This function tries to fit a logistic growth model to determine reference values to each day. If this model fails, reference values are determined per age if the number of observations is sufficiently large (n >= 100). Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error.}
+#' \item{Reference values for chicks are calculated for each age (in days). This function tries to fit a logistic growth model to determine reference values to each day. If this model fails, reference values are determined per age if the number of observations is sufficiently large (n >= 100). Records are considered impossible if they are negative or larger than 2 times the 99th percentile, and will be flagged as an error.}
 #' \item{In case the logistic growth model fails and the number of observations for an age are too low (n < 100), records are considered impossible if they are negative, and will be flagged as an error.}
 #' }
 #' }
@@ -120,7 +120,7 @@ capture_check <- function(Capture_data, Location_data, Brood_data, approved_list
 #' \strong{Tarsus} \cr
 #' Check ID: C1b \cr
 #' \itemize{
-#' \item{\emph{n >= 100}\cr}{Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error.}
+#' \item{\emph{n >= 100}\cr}{Records are considered impossible if they are negative or larger than 2 times the 99th percentile, and will be flagged as an error.}
 #' \item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as an error.}
 #' }
 #'
@@ -159,7 +159,7 @@ check_values_capture <- function(Capture_data, var, approved_list, output) {
         )) %>%
         dplyr::group_by(.data$Species, .data$CapturePopID, .data$Stage) %>%
         dplyr::summarise(Error_min = 0,
-                         Error_max = 4 * round(stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE), 1),
+                         Error_max = 2 * round(stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE), 1),
                          n = dplyr::n(),
                          Logis = FALSE) %>%
         dplyr::rename(PopID = .data$CapturePopID) %>%
@@ -196,7 +196,7 @@ check_values_capture <- function(Capture_data, var, approved_list, output) {
         dplyr::group_by(.data$Species, .data$CapturePopID) %>%
         dplyr::summarise(Stage = "Adult",
                          Error_min = 0,
-                         Error_max = 4 * stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE),
+                         Error_max = 2 * stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE),
                          n = dplyr::n(),
                          Logis = FALSE) %>%
         dplyr::rename(PopID = .data$CapturePopID) %>%
@@ -253,7 +253,7 @@ check_values_capture <- function(Capture_data, var, approved_list, output) {
                 dplyr::mutate(Stage = as.character(.data$ChickAge)) %>%
                 dplyr::group_by(.data$Species, .data$CapturePopID, .data$Stage) %>%
                 dplyr::summarise(Error_min = 0,
-                                 Error_max = 4 * stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE),
+                                 Error_max = 2 * stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE),
                                  n = dplyr::n(),
                                  Logis = FALSE) %>%
                 dplyr::rename(PopID = .data$CapturePopID)

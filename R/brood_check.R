@@ -629,7 +629,7 @@ compare_hatching_fledging <- function(Brood_data, approved_list, output){
 #' \strong{ClutchSize_observed, BroodSize_observed, NumberFledged_observed} \cr
 #' Check IDs: B5a-c \cr
 #' \itemize{
-#' \item{\emph{n >= 100}\cr}{Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error.}
+#' \item{\emph{n >= 100}\cr}{Records are considered impossible if they are negative or larger than 2 times the 99th percentile, and will be flagged as an error.}
 #' \item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as an error.}
 #' }
 #'
@@ -665,7 +665,7 @@ check_values_brood <- function(Brood_data, var, approved_list, output) {
       dplyr::filter(!is.na(!!rlang::sym(var)) & !is.na(.data$Species)) %>%
       dplyr::group_by(.data$Species, .data$PopID) %>%
       dplyr::summarise(Error_min = 0,
-                       Error_max = 4 * ceiling(stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE)),
+                       Error_max = 2 * ceiling(stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE)),
                        n = n()) %>%
       dplyr::arrange(.data$PopID, .data$Species)
 
@@ -680,7 +680,7 @@ check_values_brood <- function(Brood_data, var, approved_list, output) {
       dplyr::ungroup() %>%
       dplyr::group_by(.data$Species, .data$PopID) %>%
       dplyr::summarise(Error_min = 1,
-                       Error_max = 366,
+                       Error_max = 366, #TODO: Update for birds breeding in winter, in the tropics, or the Southern Hemisphere
                        n = n()) %>%
       dplyr::arrange(.data$PopID, .data$Species)
 
