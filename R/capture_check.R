@@ -472,73 +472,73 @@ check_values_capture <- function(Capture_data, var, approved_list, output) {
 
     }
 
-    # No check for warnings
-    war <- FALSE
-    #warning_records <- tibble::tibble(Row = NA_character_)
-    warning_output <- NULL
+  }
 
-    if(output %in% c("both", "warnings")) {
+  # No check for warnings
+  war <- FALSE
+  #warning_records <- tibble::tibble(Row = NA_character_)
+  warning_output <- NULL
 
-      # Add messages about skipped population-species combinations to warning outputs
-      if(var == "Tarsus") {
+  if(output %in% c("both", "warnings")) {
 
-        low_obs <- ref %>%
+    # Add messages about skipped population-species combinations to warning outputs
+    if(var == "Tarsus") {
+
+      low_obs <- ref %>%
+        dplyr::filter(.data$n < 100) %>%
+        dplyr::select(.data$Species, .data$PopID, .data$Stage)
+
+      skipped_output <- purrr::pmap(.l = list(low_obs$Species,
+                                              low_obs$PopID,
+                                              low_obs$Stage),
+                                    .f = ~{
+
+                                      paste0("Number of records for ", species_codes[species_codes$Species == ..1, "CommonName"],
+                                             " ", paste0(tolower(..3), "s"), " in ", ..2,
+                                             ", is too low to create reliable reference values, so records are only checked for impossible/negative values.")
+
+                                    })
+
+      warning_output <- skipped_output
+
+    }
+
+    if(var == "Mass") {
+
+      if(any(ref_adults$n < 100, is.na(ref_chicks$Stage))) {
+
+        low_obs_adults <- ref_adults %>%
           dplyr::filter(.data$n < 100) %>%
+          dplyr::select(.data$Species, .data$PopID) %>%
+          dplyr::mutate(Stage = "adults")
+
+        skipped_adults_output <- purrr::pmap(.l = list(low_obs_adults$Species,
+                                                       low_obs_adults$PopID,
+                                                       low_obs_adults$Stage),
+                                             .f = ~{
+
+                                               paste0("Number of records for ", species_codes[species_codes$Species == ..1, "CommonName"],
+                                                      " ", ..3, " in ", ..2,
+                                                      ", is too low to create reliable reference values, so records are only checked for impossible/negative values.")
+
+                                             })
+
+        low_obs_chicks <- ref_chicks %>%
+          dplyr::filter(.data$Logis == FALSE & .data$n < 100 & !is.na(.data$Stage)) %>%
           dplyr::select(.data$Species, .data$PopID, .data$Stage)
 
-        skipped_output <- purrr::pmap(.l = list(low_obs$Species,
-                                                low_obs$PopID,
-                                                low_obs$Stage),
-                                      .f = ~{
+        skipped_chicks_output <- purrr::pmap(.l = list(low_obs_chicks$Species,
+                                                       low_obs_chicks$PopID,
+                                                       low_obs_chicks$Stage),
+                                             .f = ~{
 
-                                        paste0("Number of records for ", species_codes[species_codes$Species == ..1, "CommonName"],
-                                               " ", paste0(tolower(..3), "s"), " in ", ..2,
-                                               ", is too low to create reliable reference values, so records are only checked for impossible/negative values.")
+                                               paste0("Number of records for ", species_codes[species_codes$Species == ..1, "CommonName"],
+                                                      " ", ..3, "-day-old chicks in ", ..2,
+                                                      ", is too low to create reliable reference values, so records are only checked for impossible/negative values.")
 
-                                      })
+                                             })
 
-        warning_output <- skipped_output
-
-      }
-
-      if(var == "Mass") {
-
-        if(any(ref_adults$n < 100, is.na(ref_chicks$Stage))) {
-
-          low_obs_adults <- ref_adults %>%
-            dplyr::filter(.data$n < 100) %>%
-            dplyr::select(.data$Species, .data$PopID) %>%
-            dplyr::mutate(Stage = "adults")
-
-          skipped_adults_output <- purrr::pmap(.l = list(low_obs_adults$Species,
-                                                         low_obs_adults$PopID,
-                                                         low_obs_adults$Stage),
-                                               .f = ~{
-
-                                                 paste0("Number of records for ", species_codes[species_codes$Species == ..1, "CommonName"],
-                                                        " ", ..3, " in ", ..2,
-                                                        ", is too low to create reliable reference values, so records are only checked for impossible/negative values.")
-
-                                               })
-
-          low_obs_chicks <- ref_chicks %>%
-            dplyr::filter(.data$Logis == FALSE & .data$n < 100 & !is.na(.data$Stage)) %>%
-            dplyr::select(.data$Species, .data$PopID, .data$Stage)
-
-          skipped_chicks_output <- purrr::pmap(.l = list(low_obs_chicks$Species,
-                                                         low_obs_chicks$PopID,
-                                                         low_obs_chicks$Stage),
-                                               .f = ~{
-
-                                                 paste0("Number of records for ", species_codes[species_codes$Species == ..1, "CommonName"],
-                                                        " ", ..3, "-day-old chicks in ", ..2,
-                                                        ", is too low to create reliable reference values, so records are only checked for impossible/negative values.")
-
-                                               })
-
-          warning_output <- c(skipped_adults_output, skipped_chicks_output, warning_output)
-
-        }
+        warning_output <- c(skipped_adults_output, skipped_chicks_output, warning_output)
 
       }
 

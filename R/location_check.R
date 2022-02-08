@@ -71,17 +71,17 @@ location_check <- function(Location_data, approved_list, output, map){
 # TODO: Write tests for this new function
 check_coordinates <- function(Location_data, approved_list, output, map){
 
+  # Check for potential errors
+  err <- FALSE
+  error_records <- tibble::tibble(Row = NA_character_)
+  error_output <- NULL
+
   # Skip if coordinates were not recorded, or if only warnings are flagged
   if(!any(!is.na(Location_data$Longitude) & !is.na(Location_data$Latitude)) | !(output %in% c("both", "errors"))) {
 
     remote_locations <- tibble::tibble(Row = integer())
 
   } else {
-
-    # Check for potential errors
-    err <- FALSE
-    error_records <- tibble::tibble(Row = NA_character_)
-    error_output <- NULL
 
     # Determine centre point per PopID
     centre_points <- Location_data %>%
