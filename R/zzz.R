@@ -201,6 +201,7 @@ NULL
 #' @param Brood_data Data frame. Brood data output from pipeline.
 #' @param approved_list List object. List of approved records from brood_approved_list.csv,
 #' capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv.
+#' @param output Character. Run checks on potential errors ("errors"), warnings ("warnings"), or both ("both"; default).
 #'
 #'@name checks_brood_params
 NULL
@@ -210,6 +211,7 @@ NULL
 #' @param Capture_data Data frame. Capture data output from pipeline.
 #' @param approved_list List object. List of approved records from brood_approved_list.csv,
 #' capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv.
+#' @param output Character. Run checks on potential errors ("errors"), warnings ("warnings"), or both ("both"; default).
 #'
 #'@name checks_capture_params
 NULL
@@ -219,6 +221,7 @@ NULL
 #' @param Individual_data Data frame. Individual data output from pipeline.
 #' @param approved_list List object. List of approved records from brood_approved_list.csv,
 #' capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv.
+#' @param output Character. Run checks on potential errors ("errors"), warnings ("warnings"), or both ("both"; default).
 #'
 #'@name checks_individual_params
 NULL
@@ -228,6 +231,7 @@ NULL
 #' @param Location_data Data frame. Location data output from pipeline.
 #' @param approved_list List object. List of approved records from brood_approved_list.csv,
 #' capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv.
+#' @param output Character. Run checks on potential errors ("errors"), warnings ("warnings"), or both ("both"; default).
 #'
 #'@name checks_location_params
 NULL

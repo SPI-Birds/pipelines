@@ -6,13 +6,13 @@
 #'
 #' @param R_data Output of pipeline as an R object. Generated using
 #' \code{output_type = R} in \code{\link{run_pipelines}}.
-#' @param output Character. Produce report of potential errors ("errors"), warnings and verified records ("warnings"), or both in separate files ("both"; default).
+#' @param output Character. Run checks on and produce report of: potential errors ("errors"), warnings and verified records ("warnings"), or both in separate files ("both"; default).
 #' @param output_format Character. Format of output report: "html", "pdf", or "both" (default).
-#' @param output_file Character. Name of the output file. Default: "output_report".
+#' @param output_file Character. Name of the output reports. Default: "quality-check-report". Note that to the file name of the report on potential errors the suffix "_errors" is added (i.e. "quality-check-report_errors"), and to the report on warnings and verified records "_warnings" (i.e., "quality-check-report_warnings").
 #' @param latex_engine Character. LaTeX engine for producing PDF output. Options are "pdflatex", "xelatex", and "lualatex" (default). NB: pdfLaTeX and XeLaTeX have memory limit restrictions, which can be problematic when generating large pdfs. LuaLaTeX has dynamic memory management which may help for generating large pdfs.
 #' @param test Logical. Is `quality_check` being used inside package tests? If TRUE, `R_data` is ignored and
 #' dummy data will be used instead.
-#' @param map Logical. Add map of capture locations? See \code{\link{check_coordinates}}.
+#' @param map Logical. If TRUE, a map of capture locations is added in the report. See \code{\link{check_coordinates}}.
 #'
 #' @return
 #' A list of:
@@ -37,7 +37,7 @@
 quality_check <- function(R_data,
                           output = "both",
                           output_format = "both",
-                          output_file = "output_report",
+                          output_file = "quality-check-report",
                           latex_engine = "lualatex",
                           test = FALSE,
                           map = TRUE){
@@ -101,10 +101,10 @@ quality_check <- function(R_data,
   # FIXME remove after CaptureID column has been added in ALL pipelines
 
   # Run checks
-  Brood_checks <- brood_check(Brood_data, Individual_data, approved_list)
-  Capture_checks <- capture_check(Capture_data, Location_data, Brood_data, approved_list)
-  Individual_checks <- individual_check(Individual_data, Capture_data, Location_data, approved_list)
-  Location_checks <- location_check(Location_data, approved_list, map)
+  Brood_checks <- brood_check(Brood_data, Individual_data, approved_list, output)
+  Capture_checks <- capture_check(Capture_data, Location_data, Brood_data, approved_list, output)
+  Individual_checks <- individual_check(Individual_data, Capture_data, Location_data, approved_list, output)
+  Location_checks <- location_check(Location_data, approved_list, output, map)
 
   # Add warning and error columns to each data frame
   Brood_data$Warning <- NA
@@ -297,11 +297,11 @@ quality_check <- function(R_data,
                                       mainfont: Arial',
                                     '---', body)
 
-                     knitr::knit(text = mark_output, output = "output_report.md")
+                     knitr::knit(text = mark_output, output = "quality-check-report_errors.md")
 
-                     rmarkdown::render("output_report.md",
+                     rmarkdown::render("quality-check-report_errors.md",
                                        output_format = "html_document",
-                                       output_file = output_file)
+                                       output_file = paste0(output_file, "_errors"))
 
                    }
 
@@ -322,11 +322,11 @@ quality_check <- function(R_data,
                                       check_descriptions_pdf,
                                       body)
 
-                     knitr::knit(text = mark_output, output = "output_report.md")
+                     knitr::knit(text = mark_output, output = "quality-check-report_errors.md")
 
-                     rmarkdown::render("output_report.md",
+                     rmarkdown::render("quality-check-report_errors.md",
                                        output_format = rmarkdown::pdf_document(latex_engine = latex_engine),
-                                       output_file = output_file)
+                                       output_file = paste0(output_file, "_errors"))
 
                    }
 
@@ -497,9 +497,9 @@ quality_check <- function(R_data,
                                       mainfont: Arial',
                                       '---', body)
 
-                     knitr::knit(text = mark_output, output = "output-report_warnings.md")
+                     knitr::knit(text = mark_output, output = "quality-check-report_warnings.md")
 
-                     rmarkdown::render("output-report_warnings.md",
+                     rmarkdown::render("quality-check-report_warnings.md",
                                        output_format = "html_document",
                                        output_file = paste0(output_file, "_warnings"))
 
@@ -522,9 +522,9 @@ quality_check <- function(R_data,
                                       check_descriptions_pdf,
                                       body)
 
-                     knitr::knit(text = mark_output, output = "output-report_warnings.md")
+                     knitr::knit(text = mark_output, output = "quality-check-report_warnings.md")
 
-                     rmarkdown::render("output-report_warnings.md",
+                     rmarkdown::render("quality-check-report_warnings.md",
                                        output_format = rmarkdown::pdf_document(latex_engine = latex_engine),
                                        output_file = paste0(output_file, "_warnings"))
 

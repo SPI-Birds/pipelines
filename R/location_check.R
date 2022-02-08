@@ -14,7 +14,7 @@
 #'
 #' @export
 
-location_check <- function(Location_data, approved_list, map){
+location_check <- function(Location_data, approved_list, output, map){
 
   # Create check list with a summary of warnings and errors per check
   check_list <- tibble::tibble(CheckID = paste0("L", 1),
@@ -28,7 +28,7 @@ location_check <- function(Location_data, approved_list, map){
   # - Check format location data
   message("L1: Checking capture location coordinates...")
 
-  check_coordinates_output <- check_coordinates(Location_data, approved_list, map)
+  check_coordinates_output <- check_coordinates(Location_data, approved_list, output, map)
 
   check_list[1,3:4] <- check_coordinates_output$CheckList
 
@@ -69,14 +69,19 @@ location_check <- function(Location_data, approved_list, map){
 #' @export
 
 # TODO: Write tests for this new function
-check_coordinates <- function(Location_data, approved_list, map){
+check_coordinates <- function(Location_data, approved_list, output, map){
 
-  # Skip if coordinates were not recorded
-  if(!any(!is.na(Location_data$Longitude) & !is.na(Location_data$Latitude))) {
+  # Skip if coordinates were not recorded, or if only warnings are flagged
+  if(!any(!is.na(Location_data$Longitude) & !is.na(Location_data$Latitude)) | !(output %in% c("both", "errors"))) {
 
     remote_locations <- tibble::tibble(Row = integer())
 
   } else {
+
+    # Check for potential errors
+    err <- FALSE
+    error_records <- tibble::tibble(Row = NA_character_)
+    error_output <- NULL
 
     # Determine centre point per PopID
     centre_points <- Location_data %>%
@@ -86,7 +91,7 @@ check_coordinates <- function(Location_data, approved_list, map){
       # TODO: For populations with a lot of subplots, or for migratory species,
       # determine centre points via k-clustering?
       tidyr::drop_na(dplyr::any_of(c("Longitude", "Latitude"))) %>%
-      dplyr::group_by(PopID) %>%
+      dplyr::group_by(.data$PopID) %>%
       # Centre points are determined by calculating the maximum kernel density for Longitude and Latitude
       dplyr::summarise(Centre_lon = density(Longitude)$x[which(density(Longitude)$y == max(density(Longitude)$y))],
                        Centre_lat = density(Latitude)$x[which(density(Latitude)$y == max(density(Latitude)$y))],
@@ -105,46 +110,39 @@ check_coordinates <- function(Location_data, approved_list, map){
 
     # Filter very remote locations (15 km or farther)
     remote_locations <- locations %>%
-      dplyr::filter(Distance >= 15000) %>%
+      dplyr::filter(.data$Distance >= 15000) %>%
       dplyr::select(.data$Row, .data$LocationID, .data$PopID, .data$Distance)
 
-  }
+    # If potential errors, add to report
+    if(nrow(remote_locations) > 0) {
 
-  # Errors
-  err <- FALSE
-  error_records <- tibble::tibble(Row = NA_character_)
-  error_output <- NULL
+      err <- TRUE
 
-  if(nrow(remote_locations) > 0) {
+      # Compare to approved_list
+      error_records <- remote_locations %>%
+        dplyr::mutate(CheckID = "L1") %>%
+        dplyr::anti_join(approved_list$Location_approved_list, by = c("PopID", "CheckID", "LocationID"))
 
-    err <- TRUE
+      # Create quality check report statements
+      error_output <- purrr::pmap(.l = error_records,
+                                  .f = ~{
 
-    # Compare to approved_list
-    error_records <- remote_locations %>%
-      dplyr::mutate(CheckID = "L1") %>%
-      dplyr::anti_join(approved_list$Location_approved_list, by = c("PopID", "CheckID", "LocationID"))
+                                    paste0("Record on row ", ..1, " (LocationID: ", ..2, "; PopID: ", ..3, ")",
+                                           " is ", round(..4 / 1000, 1) , " km away from the centre point of the study site.")
 
-    # Create quality check report statements
-    error_output <- purrr::pmap(.l = error_records,
-                                .f = ~{
+                                  })
 
-                                  paste0("Record on row ", ..1, " (LocationID: ", ..2, "; PopID: ", ..3, ")",
-                                         " is ", ..4 / 1000 , " km away from the centre point of the study site.")
-
-                                })
+    }
 
   }
 
-  # No warnings
+  # No check for warnings
   war <- FALSE
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
-  check_list <- tibble::tibble(Warning = war,
-                               Error = err)
-
   # Produce map of capture locations
-  if(map & any(!is.na(Location_data$Longitude) & !is.na(Location_data$Latitude))) {
+  if(map & any(!is.na(Location_data$Longitude) & !is.na(Location_data$Latitude)) & output %in% c("both", "errors")) {
 
     # Only map capture locations within 15 km from study site
     map_data <- locations %>%
@@ -164,7 +162,7 @@ check_coordinates <- function(Location_data, approved_list, map){
                              ggplot2::theme(axis.text = ggplot2::element_text(color = "black"),
                                             axis.title = ggplot2::element_text(size = 12),
                                             panel.border = ggplot2::element_rect(color = "black", fill = NA)) +
-                             ggplot2::labs(title = .x,
+                             ggplot2::labs(title = pop_codes[pop_codes$PopID == .x, ]$PopName,
                                            subtitle = paste0("Capture locations within 15 km from centre point (",
                                                              round(map_data[map_data$PopID == .x,]$Centre_lon[1], 3), ", ",
                                                              round(map_data[map_data$PopID == .x,]$Centre_lat[1], 3), ")."),
@@ -181,6 +179,9 @@ check_coordinates <- function(Location_data, approved_list, map){
     maps <- NULL
 
   }
+
+  check_list <- tibble::tibble(Warning = war,
+                               Error = err)
 
   return(list(CheckList = check_list,
               WarningRows = NULL,
