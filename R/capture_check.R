@@ -672,35 +672,24 @@ check_adult_parent_nest <- function(Capture_data, Location_data, Brood_data, app
                     lubridate::yday(.data$CaptureDate) <= .data$EndBreeding)
 
     # Determine location type of their capture locations
-    pb1 <- progress::progress_bar$new(total = nrow(adults),
-                                      format = "[:bar] :percent ~:eta remaining")
-
-    location_type <- purrr::pmap(.l = list(adults$LocationID,
-                                           adults$BreedingSeason,
-                                           adults$CapturePopID),
-                                 .f = ~{
-
-                                   pb1$tick()
-
-                                   Location_type <- Location_data %>%
-                                     dplyr::filter(.data$LocationID == ..1
-                                                   & .data$StartSeason <= ..2
-                                                   & (.data$EndSeason >= ..2 | is.na(.data$EndSeason))
-                                                   & .data$PopID == ..3) %>%
-                                     dplyr::pull(.data$LocationType)
-
-                                   ifelse(is.null(Location_type), NA, Location_type)
-
-                                 })
+    # Duplicate location rows according to the number of years they were used for easy joining with adult data
+    annual_locations <- Location_data %>%
+      dplyr::mutate(EndSeason = dplyr::case_when(is.na(EndSeason) ~ as.integer(lubridate::year(Sys.Date())),
+                                                 TRUE ~ EndSeason)) %>%
+      tidyr::uncount(weights = .data$EndSeason - .data$StartSeason + 1) %>%
+      dplyr::group_by(.data$Row) %>%
+      dplyr::mutate(BreedingSeason = StartSeason + row_number() - 1) %>%
+      dplyr::ungroup() %>%
+      dplyr::select(-Row)
 
     # Add location type to adults data frame and filter captures on nest box
     adults_nest_box <- adults %>%
-      dplyr::mutate(LocationType = unlist(location_type)) %>%
+      dplyr::left_join(annual_locations, by = c("CapturePopID" = "PopID", "LocationID", "BreedingSeason")) %>%
       dplyr::filter(LocationType == "NB")
 
     # Check whether adults caught in nest box are associated with that nest in Brood data
-    pb2 <- progress::progress_bar$new(total = nrow(adults_nest_box),
-                                      format = "[:bar] :percent ~:eta remaining")
+    pb <- progress::progress_bar$new(total = nrow(adults_nest_box),
+                                     format = "[:bar] :percent ~:eta remaining")
 
     parents_nests <- purrr::pmap_lgl(.l = list(adults_nest_box$CapturePopID,
                                                adults_nest_box$BreedingSeason,
@@ -708,7 +697,7 @@ check_adult_parent_nest <- function(Capture_data, Location_data, Brood_data, app
                                                adults_nest_box$IndvID),
                                      .f = ~{
 
-                                       pb2$tick()
+                                       pb$tick()
 
                                        Brood_parents <- Brood_data %>%
                                          dplyr::filter(.data$PopID == ..1
