@@ -8,39 +8,53 @@
 #' }
 #'
 #' @inheritParams checks_location_params
+#' @inheritParams checks_brood_params
+#' @inheritParams checks_capture_params
 #' @param map Logical. Produce map of capture locations? See \code{\link{check_coordinates}}.
 #'
 #' @inherit checks_return return
 #'
 #' @export
 
-location_check <- function(Location_data, approved_list, output, map){
+location_check <- function(Location_data, Brood_data, Capture_data, approved_list, output, map){
 
   # Create check list with a summary of warnings and errors per check
-  check_list <- tibble::tibble(CheckID = paste0("L", 1),
-                               CheckDescription = c("Check capture location coordinates"),
+  check_list <- tibble::tibble(CheckID = paste0("L", 1:2),
+                               CheckDescription = c("Check capture location coordinates",
+                                                    "Check that locations in Location_data appear in other data tables"),
                                Warning = NA,
                                Error = NA)
 
   # Checks
   message("Checking location data...")
 
-  # - Check format location data
+  # - Check location coordinates
   message("L1: Checking capture location coordinates...")
 
   check_coordinates_output <- check_coordinates(Location_data, approved_list, output, map)
 
-  check_list[1,3:4] <- check_coordinates_output$CheckList
+  check_list[1, 3:4] <- check_coordinates_output$CheckList
+
+  # - Check that all locations in Location_data appear in other data tables
+  message("L2: Checking that locations in Location_data appear in other data tables...")
+
+  check_locations_brood_capture_output <- check_locations_brood_capture(Location_data, Brood_data, Capture_data, output)
+
+  check_list[2, 3:4] <- check_locations_brood_capture_output$CheckList
 
   # Warning list
-  warning_list <- list(Check1 = check_coordinates_output$WarningOutput)
+  warning_list <- list(Check1 = check_coordinates_output$WarningOutput,
+                       Check2 = check_locations_brood_capture_output$WarningOutput)
 
   # Error list
-  error_list <- list(Check1 = check_coordinates_output$ErrorOutput)
+  error_list <- list(Check1 = check_coordinates_output$ErrorOutput,
+                     Check2 = check_locations_brood_capture_output$ErrorOutput)
 
   return(list(CheckList = check_list,
-              WarningRows = unique(c(check_coordinates_output$WarningRows)),
-              ErrorRows = unique(c(check_coordinates_output$ErrorRows)),
+              WarningRows = unique(c(check_coordinates_output$WarningRows,
+                                     check_locations_brood_capture_output$WarningRows)),
+              ErrorRows = unique(c(check_coordinates_output$ErrorRows,
+                                   check_locations_brood_capture_output$ErrorRows)),
               Warnings = warning_list,
               Errors = error_list,
               Maps = check_coordinates_output$Maps))
@@ -189,6 +203,90 @@ check_coordinates <- function(Location_data, approved_list, output, map){
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output),
               Maps = maps))
+
+  # Satisfy RCMD checks
+  approved_list <- NULL
+
+}
+
+#' Check that all locations in Location_data appear in other data tables
+#'
+#' Check that all locations recorded in Location_data appear at least once in Brood_data or Capture_data. Missing locations will be flagged as a potential error.
+#'
+#' Check ID: L2.
+#'
+#' @inheritParams checks_location_params
+#' @inheritParams checks_brood_params
+#' @inheritParams checks_capture_params
+#'
+#' @inherit checks_return return
+#'
+#' @export
+
+check_locations_brood_capture <- function(Location_data, Brood_data, Capture_data, approved_list, output){
+
+  # Check for potential errors
+  err <- FALSE
+  error_records <- tibble::tibble(Row = NA_character_)
+  error_output <- NULL
+
+  if(output %in% c("both", "errors")) {
+
+    # Select locations that are missing from Brood_data
+    missing_locations <- purrr::map(.x = unique(Location_data$PopID),
+                                    .f = ~{
+
+                                      missing_locations_brood <- dplyr::anti_join({Location_data %>% dplyr::filter(.data$PopID == .x)},
+                                                                                  {Brood_data %>% dplyr::filter(.data$PopID == .x)},
+                                                                                  by = "LocationID")
+
+                                      missing_locations_capture <- dplyr::anti_join({Location_data %>% dplyr::filter(.data$PopID == .x)},
+                                                                                    {Capture_data %>% dplyr::filter(.data$CapturePopID == .x)},
+                                                                                    by = "LocationID")
+                                      dplyr::semi_join(missing_locations_brood,
+                                                       missing_locations_capture,
+                                                       by = "LocationID")
+
+                                    }) %>%
+      dplyr::bind_rows() %>%
+      dplyr::select(.data$Row, .data$PopID, .data$LocationID)
+
+    # If potential errors, add to report
+    if(nrow(missing_locations) > 0) {
+
+      err <- TRUE
+
+      # Compare to approved_list
+      error_records <- missing_locations %>%
+        dplyr::mutate(CheckID = "L2") %>%
+        dplyr::anti_join(approved_list$Location_approved_list, by=c("PopID", "CheckID", "LocationID"))
+
+      # Create quality check report statements
+      error_output <- purrr::pmap(.l = error_records,
+                                  .f = ~{
+
+                                    paste0("Record on row ", ..1, " (PopID: ", ..2, "; LocationID: ", ..3, ")",
+                                           " does not appear in either Brood_data or Capture_data.")
+
+                                  })
+
+    }
+
+  }
+
+  # No check for warnings
+  war <- FALSE
+  #warning_records <- tibble::tibble(Row = NA_character_)
+  warning_output <- NULL
+
+  check_list <- tibble::tibble(Warning = war,
+                               Error = err)
+
+  return(list(CheckList = check_list,
+              WarningRows = NULL,
+              ErrorRows = error_records$Row,
+              WarningOutput = unlist(warning_output),
+              ErrorOutput = unlist(error_output)))
 
   # Satisfy RCMD checks
   approved_list <- NULL

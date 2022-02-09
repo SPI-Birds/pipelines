@@ -106,13 +106,13 @@ capture_check <- function(Capture_data, Location_data, Brood_data, approved_list
 #' \itemize{
 #' \item{Adults}
 #' \itemize{
-#' \item{\emph{n >= 100}\cr}{Records are considered impossible if they are negative or larger than 2 times the 99th percentile, and will be flagged as an error.}
-#' \item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as an error.}
+#' \item{\emph{n >= 100}\cr}{Records are considered impossible if they are negative or larger than 2 times the 99th percentile, and will be flagged as a potential error.}
+#' \item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as a potential error.}
 #' }
 #' \item{Chicks}
 #' \itemize{
-#' \item{Reference values for chicks are calculated for each age (in days). This function tries to fit a logistic growth model to determine reference values to each day. If this model fails, reference values are determined per age if the number of observations is sufficiently large (n >= 100). Records are considered impossible if they are negative or larger than 2 times the 99th percentile, and will be flagged as an error.}
-#' \item{In case the logistic growth model fails and the number of observations for an age are too low (n < 100), records are considered impossible if they are negative, and will be flagged as an error.}
+#' \item{Reference values for chicks are calculated for each age (in days). This function tries to fit a logistic growth model to determine reference values to each day. If this model fails, reference values are determined per age if the number of observations is sufficiently large (n >= 100). Records are considered impossible if they are negative or larger than 2 times the 99th percentile, and will be flagged as a potential error.}
+#' \item{In case the logistic growth model fails and the number of observations for an age are too low (n < 100), records are considered impossible if they are negative, and will be flagged as a potential error.}
 #' }
 #' }
 #'
@@ -120,8 +120,8 @@ capture_check <- function(Capture_data, Location_data, Brood_data, approved_list
 #' \strong{Tarsus} \cr
 #' Check ID: C1b \cr
 #' \itemize{
-#' \item{\emph{n >= 100}\cr}{Records are considered impossible if they are negative or larger than 2 times the 99th percentile, and will be flagged as an error.}
-#' \item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as an error.}
+#' \item{\emph{n >= 100}\cr}{Records are considered impossible if they are negative or larger than 2 times the 99th percentile, and will be flagged as a potential error.}
+#' \item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as a potential error.}
 #' }
 #'
 #' @inheritParams checks_capture_params
@@ -562,7 +562,7 @@ check_values_capture <- function(Capture_data, var, approved_list, output) {
 
 #' Check chick age
 #'
-#' Check whether chick ages (in number of days since hatching) are within the range of 0 and 30 days since hatching. Values outside this range will result in an error.
+#' Check whether chick ages (in number of days since hatching) are within the range of 0 and 30 days since hatching. Values outside this range will be flagged as a potential error.
 #'
 #' Check ID: C2.
 #'
@@ -760,7 +760,7 @@ check_adult_parent_nest <- function(Capture_data, Location_data, Brood_data, app
 
 #' Check age of subsequent captures
 #'
-#' Check that the observed age of chronologically ordered captures is correct. Individuals who have a record as a chick in the same or a later year than a record of an adult will be flagged as an error. Other cases where the age of the subsequent capture is not equal or greater than the previous will be flagged as a warning.
+#' Check that the observed age of chronologically ordered captures is correct. Individuals who have a record as a chick in the same or a later year than a record of an adult will be flagged as a potential error. Other cases where the age of the subsequent capture is not equal or greater than the previous will be flagged as a warning.
 #'
 #' Check ID: C4.
 #'

@@ -244,7 +244,7 @@ brood_check <- function(Brood_data, Individual_data, approved_list, output){
 
 #' Compare clutch and brood sizes
 #'
-#' Compare clutch size and brood size per brood. In non-manipulated broods, clutch size should be larger or equal to brood size. If not, the record will result in an error. In broods with clutch manipulation, clutch size might be smaller than brood size. If so, the record will result in a warning.
+#' Compare clutch size and brood size per brood. In non-manipulated broods, clutch size should be larger or equal to brood size. If not, the record will be flagged as a potential error. In broods with clutch manipulation, clutch size might be smaller than brood size. If so, the record will be flagged as a warning.
 #'
 #' Check ID: B1.
 #'
@@ -352,7 +352,7 @@ compare_clutch_brood <- function(Brood_data, approved_list, output){
 
 #' Compare brood sizes and fledgling numbers
 #'
-#' Compare brood size and fledgling number per brood. In non-manipulated broods, brood size should be larger or equal to fledgling number. If not, the record will result in an error. In broods with clutch manipulation, brood size might be smaller than fledgling number. If so, the record will result in a warning.
+#' Compare brood size and fledgling number per brood. In non-manipulated broods, brood size should be larger or equal to fledgling number. If not, the record will be flagged as a potential error. In broods with clutch manipulation, brood size might be smaller than fledgling number. If so, the record will be flagged as a warning.
 #'
 #' Check ID: B2.
 #'
@@ -460,7 +460,7 @@ compare_brood_fledglings <- function(Brood_data, approved_list, output){
 
 #' Compare laying and hatching dates
 #'
-#' Compare laying and hatching date per brood. Broods with laying date later than hatching date will result in an error. Broods with laying date earlier than hatching date but the difference in number of days is smaller than incubation time will result in a warning.
+#' Compare laying and hatching date per brood. Broods with laying date later than hatching date will be flagged as a potential error. Broods with laying date earlier than hatching date but the difference in number of days is smaller than incubation time will be flagged as a warning.
 #'
 #' Check ID: B3.
 #'
@@ -629,15 +629,15 @@ compare_hatching_fledging <- function(Brood_data, approved_list, output){
 #' \strong{ClutchSize_observed, BroodSize_observed, NumberFledged_observed} \cr
 #' Check IDs: B5a-c \cr
 #' \itemize{
-#' \item{\emph{n >= 100}\cr}{Records are considered impossible if they are negative or larger than 2 times the 99th percentile, and will be flagged as an error.}
-#' \item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as an error.}
+#' \item{\emph{n >= 100}\cr}{Records are considered impossible if they are negative or larger than 2 times the 99th percentile, and will be flagged as a potential error.}
+#' \item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as a potential error.}
 #' }
 #'
 #' \strong{LayDate_observed} \cr
 #' Check ID: B5d \cr
 #' \itemize{
-#' \item{\emph{n >= 100}\cr}{Date columns are transformed to Julian days to calculate percentiles. Records are considered impossible if they are earlier than January 1st or later than December 31st of the current breeding season, and will be flagged as an error.}
-#' \item{\emph{n < 100}\cr}{Date columns are transformed to Julian days to calculate percentiles. Records are considered impossible if they are earlier than January 1st or later than December 31st of the current breeding season, and will be flagged as an error.}
+#' \item{\emph{n >= 100}\cr}{Date columns are transformed to Julian days to calculate percentiles. Records are considered impossible if they are earlier than January 1st or later than December 31st of the current breeding season, and will be flagged as a potential error.}
+#' \item{\emph{n < 100}\cr}{Date columns are transformed to Julian days to calculate percentiles. Records are considered impossible if they are earlier than January 1st or later than December 31st of the current breeding season, and will be flagged as a potential error.}
 #' }
 #'
 #' @inheritParams checks_brood_params
@@ -884,7 +884,7 @@ check_values_brood <- function(Brood_data, var, approved_list, output) {
 
 #' Compare brood size with number of chicks captured
 #'
-#' Compare BroodSize in Brood_data with the number of chicks captured in Capture_data. We expect these numbers to be equal. Records where BroodSize is larger than the number of chicks captured results in a warning, because chicks might have died before ringing and measuring. Records where BroodSize is smaller than the number of chicks captured results in an error, because this should not be possible.
+#' Compare BroodSize in Brood_data with the number of chicks captured in Capture_data. We expect these numbers to be equal. Records where BroodSize is larger than the number of chicks captured will be flagged as a warning, because chicks might have died before ringing and measuring. Records where BroodSize is smaller than the number of chicks captured will be flagged as a potential error, because this should not be possible.
 #'
 #' Check ID: B6.
 #'
@@ -1004,7 +1004,7 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data, approved_
 
 #' Check unique brood identifiers
 #'
-#' Check that the brood identifiers (BroodID) are unique within populations. Records with brood identifiers that are not unique within populations will result in an error.
+#' Check that the brood identifiers (BroodID) are unique within populations. Records with brood identifiers that are not unique within populations will be flaggea as a potential error.
 #'
 #' Check ID: B7.
 #'
@@ -1157,7 +1157,7 @@ check_clutch_type_order <- function(Brood_data, approved_list, output){
 
 #' Compare species of parents
 #'
-#' Check that the parents of broods are of the same species. Common, biologically possible hybrid broods (e.g. FICHYP and FICALB) are flagged as ‘warning’. Other combinations of species are flagged as ‘potential error’.
+#' Check that the parents of broods are of the same species. Common, biologically possible hybrid broods (e.g. FICHYP and FICALB) are flagged as a warning. Other combinations of species are flagged as a potential error.
 #'
 #' Check ID: B9.
 #'
@@ -1277,7 +1277,7 @@ compare_species_parents <- function(Brood_data, Individual_data, approved_list, 
 
 #' Compare species of brood and species of parents
 #'
-#' Check that the species of broods is the same as the species of the parents of that brood. Common, biologically possible brood hybrids (e.g. FICHYP and FICALB) are flagged as ‘warning’. Other combinations of species are flagged as ‘potential error’.
+#' Check that the species of broods is the same as the species of the parents of that brood. Common, biologically possible brood hybrids (e.g. FICHYP and FICALB) are flagged as a warning. Other combinations of species are flagged as a potential error.
 #'
 #' Check ID: B10.
 #'
@@ -1418,7 +1418,7 @@ compare_species_brood_parents <- function(Brood_data, Individual_data, approved_
 
 #' Compare species of brood and species of chicks
 #'
-#' Check that the species of broods is the same as species of the chicks in that brood. Common, biologically possible brood hybrids (e.g. FICHYP and FICALB) are flagged as ‘warning’. Other combinations of species are flagged as ‘potential error’.
+#' Check that the species of broods is the same as species of the chicks in that brood. Common, biologically possible brood hybrids (e.g. FICHYP and FICALB) are flagged as a warning. Other combinations of species are flagged as a potential error.
 #'
 #' Check ID: B11.
 #'
