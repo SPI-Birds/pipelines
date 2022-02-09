@@ -100,7 +100,7 @@ individual_check <- function(Individual_data, Capture_data, Location_data, appro
 
 #' Check unique individual identifiers
 #'
-#' Check that the individual identifiers (IndvID) are unique. Records with individual identifiers that are not unique within populations will result in an error.
+#' Check that the individual identifiers (IndvID) are unique. Records with individual identifiers that are not unique within populations will be flagged as a potential error.
 #'
 #' Check ID: I1.
 #'
@@ -400,7 +400,7 @@ check_conflicting_species <- function(Individual_data, approved_list, output) {
 
 #' Check that all individuals in Individual_data appear in Capture_data
 #'
-#' Check that all individuals recorded in Individual_data appear at least once in Capture_data. This should never occur, because Individual_data is usually a direct product of Capture_data (i.e., all unique individuals from Capture_data). If we find missing individuals, we need to check the pipeline code.
+#' Check that all individuals recorded in Individual_data appear at least once in Capture_data. Missing individuals should never occur, because Individual_data is usually a direct product of Capture_data (i.e., all unique individuals from Capture_data). Missing individuals will be flagged as a potential error. If there are any missing individuals, the SPI-Birds team needs to check the pipeline code.
 #'
 #' Check ID: I5.
 #'
@@ -421,9 +421,15 @@ check_individuals_captures <- function(Individual_data, Capture_data, approved_l
   if(output %in% c("both", "errors")) {
 
     # Select individuals that are missing from Capture_data
-    missing_individuals <- Individual_data %>%
-      dplyr::group_by(.data$PopID) %>%
-      dplyr::filter(!(.data$IndvID %in% Capture_data$IndvID))
+    missing_individuals <- purrr::map(.x = unique(Individual_data$PopID),
+                                      .f = ~{
+
+                                        dplyr::anti_join({Individual_data %>% dplyr::filter(.data$PopID == .x)},
+                                                         {Capture_data %>% dplyr::filter(.data$CapturePopID == .x)},
+                                                         by = "IndvID")
+
+                                      }) %>%
+      dplyr::bind_rows()
 
     # If potential errors, add to report
     if(nrow(missing_individuals) > 0) {
