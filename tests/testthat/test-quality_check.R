@@ -1,7 +1,7 @@
 # Run quality check for dummy data and produce no report
 message("Create dummy data quality check output...")
 dummy_check <- quality_check(test = TRUE,
-                             output = FALSE)
+                             report = FALSE)
 
 test_that("All quality check summary items are returned...", {
 
@@ -199,6 +199,10 @@ test_that("Single checks function as expected...", {
   # Test check L1
   expect_equal(subset(dummy_check$R_data$Location_data, CheckID == "L1")$Warning[c(1, 102)], c(NA, NA))
   expect_equal(subset(dummy_check$R_data$Location_data, CheckID == "L1")$Error[c(1, 102)], c(NA, TRUE))
+
+  # Test check L2
+  expect_equal(subset(dummy_check$R_data$Location_data, CheckID == "L2")$Warning, c(NA, NA, NA, NA))
+  expect_equal(subset(dummy_check$R_data$Location_data, CheckID == "L2")$Error, c(NA, NA, NA, TRUE))
 
 })
 

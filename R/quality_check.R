@@ -7,23 +7,24 @@
 #' @param R_data Output of pipeline as an R object. Generated using
 #' \code{output_type = R} in \code{\link{run_pipelines}}.
 #' @param output Character. Run checks on and produce report of: potential errors ("errors"), warnings and verified records ("warnings"), or both in separate files ("both"; default).
-#' @param output_format Character. Format of output report: "html", "pdf", or "both" (default).
-#' @param output_file Character. Name of the output reports. Default: "quality-check-report". Note that to the file name of the report on potential errors the suffix "_errors" is added (i.e. "quality-check-report_errors"), and to the report on warnings and verified records "_warnings" (i.e., "quality-check-report_warnings").
+#' @param report \code{TRUE} or \code{FALSE}. If \code{TRUE}, a report is produced. Default: \code{TRUE}.
+#' @param report_format Character. Format of output report: "html", "pdf", or "both" (default).
+#' @param oreport_file Character. Name of the output reports. Default: "quality-check-report". Note that to the file name of the report on potential errors the suffix "_errors" is added (i.e. "quality-check-report_errors"), and to the report on warnings and verified records "_warnings" (i.e., "quality-check-report_warnings").
 #' @param latex_engine Character. LaTeX engine for producing PDF output. Options are "pdflatex", "xelatex", and "lualatex" (default). NB: pdfLaTeX and XeLaTeX have memory limit restrictions, which can be problematic when generating large pdfs. LuaLaTeX has dynamic memory management which may help for generating large pdfs.
-#' @param test Logical. Is `quality_check` being used inside package tests? If TRUE, `R_data` is ignored and
+#' @param test Logical. Is `quality_check` being used inside package tests? If  \code{TRUE, `R_data` is ignored and
 #' dummy data will be used instead.
-#' @param map Logical. If TRUE, a map of capture locations is added in the report. See \code{\link{check_coordinates}}.
+#' @param map Logical. If  \code{TRUE, a map of capture locations is added in the report. See \code{\link{check_coordinates}}.
 #'
 #' @return
 #' A list of:
-#' \item{CheckList}{A summary dataframe of check warnings and errors.}
+#' \item{CheckList}{A summary dataframe of check warnings and potential errors.}
 #' \item{NumberChecks}{Number of checks performed.}
 #' \item{NumberWarnings}{Number of checks resulted in warnings.}
-#' \item{NumberErrors}{Number of checks resulted in errors.}
+#' \item{NumberErrors}{Number of checks resulted in potential errors.}
 #' \item{ElapsedTime}{Elapsed time in seconds.}
 #' \item{R_data}{Pipeline output (a list of 4 dataframes) with Warning & Error columns marking the rows with warnings and errors.}
 #'
-#' and a report (pdf, html or both) of row-by-row list of warnings and errors if \code{output_format = TRUE}.
+#' and reports (pdf, html or both) of potential errors and/or warnings if \code{report = TRUE}.
 #'
 #' @examples
 #' \dontrun{
@@ -36,8 +37,9 @@
 
 quality_check <- function(R_data,
                           output = "both",
-                          output_format = "both",
-                          output_file = "quality-check-report",
+                          report = TRUE,
+                          report_format = "both",
+                          report_file = "quality-check-report",
                           latex_engine = "lualatex",
                           test = FALSE,
                           map = TRUE){
@@ -46,9 +48,9 @@ quality_check <- function(R_data,
 
   message("Running quality check")
 
-  if(output_format == "both"){
+  if(report_format == "both"){
 
-    output_format <- c("html", "pdf")
+    report_format <- c("html", "pdf")
 
   }
 
@@ -104,7 +106,7 @@ quality_check <- function(R_data,
   Brood_checks <- brood_check(Brood_data, Individual_data, approved_list, output)
   Capture_checks <- capture_check(Capture_data, Location_data, Brood_data, approved_list, output)
   Individual_checks <- individual_check(Individual_data, Capture_data, Location_data, approved_list, output)
-  Location_checks <- location_check(Location_data, approved_list, output, map)
+  Location_checks <- location_check(Location_data, Brood_data, Capture_data, approved_list, output, map)
 
   # Add warning and error columns to each data frame
   Brood_data$Warning <- NA
@@ -171,7 +173,7 @@ quality_check <- function(R_data,
   species <- unique(Brood_data[!is.na(Brood_data$Species), ]$Species)
 
   # Produce report with potential errors
-  if(output %in% c("errors", "both")) {
+  if(output %in% c("errors", "both") & report == TRUE) {
 
     # Title
     title <- paste0("Quality check report: potential errors")
@@ -272,12 +274,12 @@ quality_check <- function(R_data,
 
     }
 
-    #For the different output formats, create specific yaml and
-    #output the file
-    purrr::pwalk(.l = list(output_format),
+    # For the different report formats, create specific yaml and
+    # output the file
+    purrr::pwalk(.l = list(report_format),
                  .f = ~{
 
-                   if("html" %in% output_format){
+                   if("html" %in% report_format){
 
                       mark_output <- c('---',
                                     'title: "`r title`"',
@@ -301,11 +303,11 @@ quality_check <- function(R_data,
 
                      rmarkdown::render("quality-check-report_errors.md",
                                        output_format = "html_document",
-                                       output_file = paste0(output_file, "_errors"))
+                                       output_file = paste0(report_file, "_errors"))
 
                    }
 
-                   if("pdf" %in% output_format){
+                   if("pdf" %in% report_format){
 
                      mark_output <- c('---',
                                       'output:
@@ -326,7 +328,7 @@ quality_check <- function(R_data,
 
                      rmarkdown::render("quality-check-report_errors.md",
                                        output_format = rmarkdown::pdf_document(latex_engine = latex_engine),
-                                       output_file = paste0(output_file, "_errors"))
+                                       output_file = paste0(report_file, "_errors"))
 
                    }
 
@@ -334,7 +336,7 @@ quality_check <- function(R_data,
   }
 
   # Produce warnings and verified records
-  if(output %in% c("warnings", "both")) {
+  if(output %in% c("warnings", "both") & report == TRUE) {
 
     # Title
     title <- paste0("Quality check report: warnings and verified records")
@@ -474,10 +476,10 @@ quality_check <- function(R_data,
 
     #For the different output formats, create specific yaml and
     #output the file
-    purrr::pwalk(.l = list(output_format),
+    purrr::pwalk(.l = list(report_format),
                  .f = ~{
 
-                   if("html" %in% output_format){
+                   if("html" %in% report_format){
 
                      mark_output <- c('---',
                                       'title: "`r title`"',
@@ -501,11 +503,11 @@ quality_check <- function(R_data,
 
                      rmarkdown::render("quality-check-report_warnings.md",
                                        output_format = "html_document",
-                                       output_file = paste0(output_file, "_warnings"))
+                                       output_file = paste0(report_file, "_warnings"))
 
                    }
 
-                   if("pdf" %in% output_format){
+                   if("pdf" %in% report_format){
 
                      mark_output <- c('---',
                                       'output:
@@ -526,7 +528,7 @@ quality_check <- function(R_data,
 
                      rmarkdown::render("quality-check-report_warnings.md",
                                        output_format = rmarkdown::pdf_document(latex_engine = latex_engine),
-                                       output_file = paste0(output_file, "_warnings"))
+                                       output_file = paste0(report_file, "_warnings"))
 
                    }
 
@@ -545,4 +547,5 @@ quality_check <- function(R_data,
 
   # Satisfy RCMD checks
   approved_list <- CheckID <- NULL
+
 }

@@ -675,7 +675,7 @@ check_adult_parent_nest <- function(Capture_data, Location_data, Brood_data, app
     # Duplicate location rows according to the number of years they were used for easy joining with adult data
     annual_locations <- Location_data %>%
       dplyr::mutate(EndSeason = dplyr::case_when(is.na(EndSeason) ~ as.integer(lubridate::year(Sys.Date())),
-                                                 TRUE ~ EndSeason)) %>%
+                                                 !is.na(EndSeason) ~ EndSeason)) %>%
       tidyr::uncount(weights = .data$EndSeason - .data$StartSeason + 1) %>%
       dplyr::group_by(.data$Row) %>%
       dplyr::mutate(BreedingSeason = StartSeason + row_number() - 1) %>%

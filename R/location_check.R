@@ -38,7 +38,7 @@ location_check <- function(Location_data, Brood_data, Capture_data, approved_lis
   # - Check that all locations in Location_data appear in other data tables
   message("L2: Checking that locations in Location_data appear in other data tables...")
 
-  check_locations_brood_capture_output <- check_locations_brood_capture(Location_data, Brood_data, Capture_data, output)
+  check_locations_brood_capture_output <- check_locations_brood_capture(Location_data, Brood_data, Capture_data, approved_list, output)
 
   check_list[2, 3:4] <- check_locations_brood_capture_output$CheckList
 
@@ -82,7 +82,6 @@ location_check <- function(Location_data, Brood_data, Capture_data, approved_lis
 #'
 #' @export
 
-# TODO: Write tests for this new function
 check_coordinates <- function(Location_data, approved_list, output, map){
 
   # Check for potential errors
