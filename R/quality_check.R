@@ -100,7 +100,7 @@ quality_check <- function(R_data,
 
   # Add temporary empty CaptureID column to allow procedure to approve previously flagged records
   if(!("CaptureID" %in% colnames(Capture_data))) Capture_data$CaptureID <- NA_character_
-  # FIXME remove after CaptureID column has been added in ALL pipelines
+  # FIXME remove after CaptureID column has been added to ALL pipelines
 
   # Run checks
   Brood_checks <- brood_check(Brood_data, Individual_data, approved_list, output)
@@ -109,6 +109,7 @@ quality_check <- function(R_data,
   Location_checks <- location_check(Location_data, Brood_data, Capture_data, approved_list, output, map)
 
   # Add warning and error columns to each data frame
+  # FIXME remove after Warning & Error columns have been added to ALL pipelines
   Brood_data$Warning <- NA
   Brood_data$Error <- NA
   Brood_data[Brood_data$Row %in% Brood_checks$WarningRows, "Warning"] <- TRUE

@@ -266,7 +266,7 @@ compare_clutch_brood <- function(Brood_data, approved_list, output){
     # Non-manipulated broods
     # NB: allows v1.0 & v1.1 variable names of the standard format
     brood_data_non <- Brood_data %>%
-      {if(all(c("ClutchSize", "BroodSize") %in% colnames(.))) dplyr::filter(., is.na(.data$ExperimentID) & .data$ClutchSize < .data$BroodSize) else dplyr::filter(., is.na(.data$ExperimentID) & .data$ClutchSize_observed < .data$BroodSize_observed)}
+      {if(all(c("ClutchSize", "BroodSize") %in% colnames(.))) dplyr::filter(., (is.na(.data$ExperimentID) | .data$ExperimentID == "") & .data$ClutchSize < .data$BroodSize) else dplyr::filter(., (is.na(.data$ExperimentID) | .data$ExperimentID == "") & .data$ClutchSize_observed < .data$BroodSize_observed)}
 
     # If potential errors, add to report
     if(nrow(brood_data_non) > 0) {
@@ -305,7 +305,7 @@ compare_clutch_brood <- function(Brood_data, approved_list, output){
     # Manipulated broods
     # NB: allows v1.0 & v1.1 variable names of the standard format
     brood_data_man <- Brood_data %>%
-      {if(all(c("ClutchSize", "BroodSize") %in% colnames(.))) dplyr::filter(., !is.na(.data$ExperimentID) & .data$ClutchSize < .data$BroodSize) else dplyr::filter(., !is.na(.data$ExperimentID) & .data$ClutchSize_observed < .data$BroodSize_observed)}
+      {if(all(c("ClutchSize", "BroodSize") %in% colnames(.))) dplyr::filter(., (!is.na(.data$ExperimentID) | .data$ExperimentID != "") & .data$ClutchSize < .data$BroodSize) else dplyr::filter(., (!is.na(.data$ExperimentID) | .data$ExperimentID != "") & .data$ClutchSize_observed < .data$BroodSize_observed)}
 
     # If warnings, add to report
     if(nrow(brood_data_man) > 0) {
@@ -374,7 +374,7 @@ compare_brood_fledglings <- function(Brood_data, approved_list, output){
     # Non-manipulated broods
     # NB: allows v1.0 & v1.1 variable names of the standard format
     brood_data_non <- Brood_data %>%
-      {if(all(c("BroodSize", "NumberFledged") %in% colnames(.))) dplyr::filter(., is.na(.data$ExperimentID) & .data$BroodSize < .data$NumberFledged) else dplyr::filter(., is.na(.data$ExperimentID) & .data$BroodSize_observed < .data$NumberFledged_observed)}
+      {if(all(c("BroodSize", "NumberFledged") %in% colnames(.))) dplyr::filter(., (!is.na(.data$ExperimentID) | .data$ExperimentID == "") & .data$BroodSize < .data$NumberFledged) else dplyr::filter(., (is.na(.data$ExperimentID) | .data$ExperimentID == "") & .data$BroodSize_observed < .data$NumberFledged_observed)}
 
     # If potential errors, add to report
     if(nrow(brood_data_non) > 0) {
@@ -413,7 +413,7 @@ compare_brood_fledglings <- function(Brood_data, approved_list, output){
     # Manipulated broods
     # NB: allows v1.0 & v1.1 variable names of the standard format
     brood_data_man <- Brood_data %>%
-      {if(all(c("BroodSize", "NumberFledged") %in% colnames(.))) dplyr::filter(., !is.na(.data$ExperimentID) & .data$BroodSize < .data$NumberFledged) else dplyr::filter(., !is.na(.data$ExperimentID) & .data$BroodSize_observed < .data$NumberFledged_observed)}
+      {if(all(c("BroodSize", "NumberFledged") %in% colnames(.))) dplyr::filter(., (!is.na(.data$ExperimentID) | .data$ExperimentID != "") & .data$BroodSize < .data$NumberFledged) else dplyr::filter(., (!is.na(.data$ExperimentID) | .data$ExperimentID != "") & .data$BroodSize_observed < .data$NumberFledged_observed)}
 
     # If warnings, add to report
     if(nrow(brood_data_man) > 0) {
