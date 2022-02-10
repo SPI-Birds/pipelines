@@ -232,7 +232,7 @@ check_locations_brood_capture <- function(Location_data, Brood_data, Capture_dat
 
   if(output %in% c("both", "errors")) {
 
-    # Select locations that are missing from Brood_data
+    # Select locations that are missing from Brood_data and Capture_data
     missing_locations <- purrr::map(.x = unique(Location_data$PopID),
                                     .f = ~{
 

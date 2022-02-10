@@ -400,7 +400,7 @@ check_conflicting_species <- function(Individual_data, approved_list, output) {
 
 #' Check that all individuals in Individual_data appear in Capture_data
 #'
-#' Check that all individuals recorded in Individual_data appear at least once in Capture_data. Missing individuals should never occur, because Individual_data is usually a direct product of Capture_data (i.e., all unique individuals from Capture_data). Missing individuals will be flagged as a potential error. If there are any missing individuals, the SPI-Birds team needs to check the pipeline code.
+#' Check that all individuals recorded in Individual_data appear at least once in Capture_data. Missing individuals should never occur, because Individual_data is usually a direct product of Capture_data (i.e., all unique individuals from Capture_data). Missing individuals will be flagged as a potential error. If there are any missing individuals, the SPI-Birds team needs to check the pipeline code. This check is the opposite of check C5 (\code{\link{check_captures_individuals}}).
 #'
 #' Check ID: I5.
 #'

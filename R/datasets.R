@@ -76,6 +76,7 @@ pop_species_combos <- utils::read.csv(system.file("extdata", "pop_species_combos
 #'   \item Rows 655-656 are records that are used to test the functionality of check 'B13: Checking sex of fathers' (see \code{\link{check_sex_fathers}}). The records are a brood where assigned father is male and a brood where assigned father is listed as female.
 #'   \item Rows 657-658 are records that are used to test the functionality of check 'L2: Checking that locations in Location_data appear in other data tables' (see \code{\link{check_locations_brood_capture}}). The records are a location that appears in both Brood_data and Capture_data, and one that only appears in Brood_data.
 #'   \item Rows 659-662 are records that are used to test the functionality of check 'B14: Checking that parents appear in Capture_data' (see \code{\link{check_parents_captures}}). The records are a brood with both parents present in Capture_data, and broods with either or both parents missing from Capture_data.
+#'   \item Rows 663-664 are records that used to test the functionality of check 'B15: Checking that nest locations appear in Location_data' (see \code{\link{check_brood_locations}}). The records are a brood with a location that does appear in Location_data, and a brood with a location that does not appear in Location_data.
 #' }
 #'
 #' \strong{Capture data}:
@@ -94,6 +95,7 @@ pop_species_combos <- utils::read.csv(system.file("extdata", "pop_species_combos
 #'   \item Rows 1012-1013 are records that are used to test the functionality of check 'L2: Checking that locations in Location_data appear in other data tables' (see \code{\link{check_locations_brood_capture}}). The records are a location that appears in both Capture_data and Brood_data, and one that only appears in Capture_data.
 #'   \item Rows 1014-1015 are records that are used to test the functionality of check 'C5: Checking that individuals in Capture_data also appear in Individual_data' (see \code{\link{check_captures_individuals}}). The records are an individual that is also recorded in Individual_data, and one that is missing from Individual_data.
 #'   \item Rows 1016-1019 are records that are used to test the functionality of check 'B14: Checking that parents appear in Capture_data' (see \code{\link{check_parents_captures}}). The records are parents of broods where either none or one parent is missing.
+#'   \item Rows 1020-1023 are records that used to test the functionality of check 'B15: Checking that nest locations appear in Location_data' (see \code{\link{check_brood_locations}}). The records are the parents of the broods.
 #' }
 #'
 #' \strong{Individual data}:
@@ -117,7 +119,8 @@ pop_species_combos <- utils::read.csv(system.file("extdata", "pop_species_combos
 #'   \item Rows 1-2 are records that are used to test the functionality of check 'I2: Checking that chicks have BroodIDs' (see \code{\link{check_BroodID_chicks}}). The records describe location information of a nest box.
 #'   \item Rows 3-5 are records that are used to test the functionality of check 'C3: Checking that adults caught on nest are listed are the parents' (see \code{\link{check_adult_parent_nest}}). The records describe location information of two nest boxes and a mist net.
 #'   \item Rows 6-107 are records that are used to test the functionality of check 'L1: Checking capture locations coordinates' (see \code{\link{check_coordinates}}). The records are capture locations within 15 km of study site centre point and one capture locations farther away.
-#'   \items Rows 108-111 are records that are used to test the functionality of check 'L2: Checking that locations in Location_data appear in other data tables' (see \code{\link{check_locations_brood_capture}}). The records are a location that appears in both Brood_data and Capture_data, locations that appear in either one, and a location that appears in no other data table.
+#'   \item Rows 108-111 are records that are used to test the functionality of check 'L2: Checking that locations in Location_data appear in other data tables' (see \code{\link{check_locations_brood_capture}}). The records are a location that appears in both Brood_data and Capture_data, locations that appear in either one, and a location that appears in no other data table.
+#'   \item Row 112 is a recods that is used to test the functionality of check 'B15: Checking that nest locations appear in Location_data' (see \code{\link{check_brood_locations}}). The record is a nest location of a brood in Brood_data.
 #' }
 #'
 #' @name dummy_data
