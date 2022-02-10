@@ -75,6 +75,7 @@ pop_species_combos <- utils::read.csv(system.file("extdata", "pop_species_combos
 #'   \item Rows 653-654 are records that are used to test the functionality of check 'B12: Checking sex of mothers' (see \code{\link{check_sex_mothers}}). The records are a brood where assigned mother is female and a brood where assigned mother is listed as male.
 #'   \item Rows 655-656 are records that are used to test the functionality of check 'B13: Checking sex of fathers' (see \code{\link{check_sex_fathers}}). The records are a brood where assigned father is male and a brood where assigned father is listed as female.
 #'   \item Rows 657-658 are records that are used to test the functionality of check 'L2: Checking that locations in Location_data appear in other data tables' (see \code{\link{check_locations_brood_capture}}). The records are a location that appears in both Brood_data and Capture_data, and one that only appears in Brood_data.
+#'   \item Rows 659-662 are records that are used to test the functionality of check 'B14: Checking that parents appear in Capture_data' (see \code{\link{check_parents_captures}}). The records are a brood with both parents present in Capture_data, and broods with either or both parents missing from Capture_data.
 #' }
 #'
 #' \strong{Capture data}:
@@ -92,6 +93,7 @@ pop_species_combos <- utils::read.csv(system.file("extdata", "pop_species_combos
 #'   \item Rows 1004-1011 are records that are used to test the functionality of check 'C4: Checking that the age of subsequent captures is ordered correctly' (see \code{\link{check_age_captures}}). The records are two captures in subsequent years with correct order of age, two captures in the same year with same age, two captures in subsequent years with incorrect order of age (but both are adults), two captures in subsequent years with incorrect order of age (adult caught before chick).
 #'   \item Rows 1012-1013 are records that are used to test the functionality of check 'L2: Checking that locations in Location_data appear in other data tables' (see \code{\link{check_locations_brood_capture}}). The records are a location that appears in both Capture_data and Brood_data, and one that only appears in Capture_data.
 #'   \item Rows 1014-1015 are records that are used to test the functionality of check 'C5: Checking that individuals in Capture_data also appear in Individual_data' (see \code{\link{check_captures_individuals}}). The records are an individual that is also recorded in Individual_data, and one that is missing from Individual_data.
+#'   \item Rows 1016-1019 are records that are used to test the functionality of check 'B14: Checking that parents appear in Capture_data' (see \code{\link{check_parents_captures}}). The records are parents of broods where either none or one parent is missing.
 #' }
 #'
 #' \strong{Individual data}:
