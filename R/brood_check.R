@@ -17,20 +17,22 @@
 #' \item \strong{B11}: Check if the brood and the chicks in that brood are recorded as the same species using \code{\link{compare_species_brood_chicks}}.
 #' \item \strong{B12}: Check if the sex of mothers listed under FemaleID are female using \code{\link{check_sex_mothers}}.
 #' \item \strong{B13}: Check if the sex of fathers listed under MaleID are male using \code{\link{check_sex_fathers}}.
+#' \item \strong{B14}: Check that both parents appear in Capture_data using \code{\link{check_parents_captures}}.
 #' }
 #'
 #' @inheritParams checks_brood_params
 #' @inheritParams checks_individual_params
+#' @inheritParams checks_capture_params
 #'
 #' @inherit checks_return return
 #' @importFrom rlang sym `:=`
 #' @importFrom progress progress_bar
 #' @export
 
-brood_check <- function(Brood_data, Individual_data, approved_list, output){
+brood_check <- function(Brood_data, Individual_data, Capture_data, approved_list, output){
 
   # Create check list with a summary of warnings and errors per check
-  check_list <- tibble::tibble(CheckID = paste0("B", c(1:4, paste0(5, letters[1:4]), 6:13)),
+  check_list <- tibble::tibble(CheckID = paste0("B", c(1:4, paste0(5, letters[1:4]), 6:14)),
                                CheckDescription = c("Compare clutch and brood sizes",
                                                     "Compare brood sizes and fledgling numbers",
                                                     "Compare lay and hatch dates",
@@ -46,7 +48,8 @@ brood_check <- function(Brood_data, Individual_data, approved_list, output){
                                                     "Check species of brood and parents",
                                                     "Check species of brood and chicks",
                                                     "Check sex of mothers",
-                                                    "Check sex of fathers"),
+                                                    "Check sex of fathers",
+                                                    "Check that parents appear in Capture_data"),
                                Warning = NA,
                                Error = NA)
 
@@ -168,6 +171,13 @@ brood_check <- function(Brood_data, Individual_data, approved_list, output){
 
   check_list[16, 3:4] <- check_sex_fathers_output$CheckList
 
+  # - Check that parents appear in Capture_data
+  message("B14: Checking that parents appear in Capture_data...")
+
+  check_parents_captures_output <- check_parents_captures(Brood_data, Capture_data, approved_list, output)
+
+  check_list[17, 3:4] <- check_parents_captures_output$CheckList
+
 
   # Warning list
   warning_list <- list(Check1 = compare_clutch_brood_output$WarningOutput,
@@ -185,7 +195,8 @@ brood_check <- function(Brood_data, Individual_data, approved_list, output){
                        Check10 = compare_species_brood_parents_output$WarningOutput,
                        Check11 = compare_species_brood_chicks_output$WarningOutput,
                        Check12 = check_sex_mothers_output$WarningOutput,
-                       Check13 = check_sex_fathers_output$WarningOutput)
+                       Check13 = check_sex_fathers_output$WarningOutput,
+                       Check14 = check_parents_captures_output$WarningOutput)
 
   # Error list
   error_list <- list(Check1 = compare_clutch_brood_output$ErrorOutput,
@@ -203,7 +214,8 @@ brood_check <- function(Brood_data, Individual_data, approved_list, output){
                      Check10 = compare_species_brood_parents_output$ErrorOutput,
                      Check11 = compare_species_brood_chicks_output$ErrorOutput,
                      Check12 = check_sex_mothers_output$ErrorOutput,
-                     Check13 = check_sex_fathers_output$ErrorOutput)
+                     Check13 = check_sex_fathers_output$ErrorOutput,
+                     Check14 = check_parents_captures_output$ErrorOutput)
 
   return(list(CheckList = check_list,
               WarningRows = unique(c(compare_clutch_brood_output$WarningRows,
@@ -221,7 +233,8 @@ brood_check <- function(Brood_data, Individual_data, approved_list, output){
                                      compare_species_brood_parents_output$WarningRows,
                                      compare_species_brood_chicks_output$WarningRows,
                                      check_sex_mothers_output$WarningRows,
-                                     check_sex_fathers_output$WarningRows)),
+                                     check_sex_fathers_output$WarningRows,
+                                     check_parents_captures_output$WarningRows)),
               ErrorRows = unique(c(compare_clutch_brood_output$ErrorRows,
                                    compare_brood_fledglings_output$ErrorRows,
                                    compare_laying_hatching_output$ErrorRows,
@@ -237,7 +250,8 @@ brood_check <- function(Brood_data, Individual_data, approved_list, output){
                                    compare_species_brood_parents_output$ErrorRows,
                                    compare_species_brood_chicks_output$ErrorRows,
                                    check_sex_mothers_output$ErrorRows,
-                                   check_sex_fathers_output$ErrorRows)),
+                                   check_sex_fathers_output$ErrorRows,
+                                   check_parents_captures_output$ErrorRows)),
               Warnings = warning_list,
               Errors = error_list))
 }
@@ -1704,6 +1718,109 @@ check_sex_fathers <- function(Brood_data, Individual_data, approved_list, output
                                     paste0("Record on row ", ..1, " (PopID: ", ..3,
                                            "; BroodID: ", ..2, ")",
                                            " lists a female individual (", ..4, ") under MaleID.")
+
+                                  })
+
+    }
+
+  }
+
+  # No check for warnings
+  war <- FALSE
+  #warning_records <- tibble::tibble(Row = NA_character_)
+  warning_output <- NULL
+
+  check_list <- tibble::tibble(Warning = war,
+                               Error = err)
+
+  return(list(CheckList = check_list,
+              WarningRows = NULL,
+              ErrorRows = error_records$Row,
+              WarningOutput = unlist(warning_output),
+              ErrorOutput = unlist(error_output)))
+
+  # Satisfy RCMD checks
+  approved_list <- NULL
+
+}
+
+#' Check that parents appear in Capture_data
+#'
+#' Check that all individuals recorded as parents in Brood_data appear at least once in Capture_data. Missing individuals will be flagged as a potential error.
+#'
+#' Check ID: B14.
+#'
+#' @inheritParams checks_brood_params
+#' @inheritParams checks_capture_params
+#'
+#' @inherit checks_return return
+#'
+#' @export
+
+check_parents_captures <- function(Brood_data, Capture_data, approved_list, output){
+
+  # Check for potential errors
+  err <- FALSE
+  error_records <- tibble::tibble(Row = NA_character_)
+  error_output <- NULL
+
+  if(output %in% c("both", "errors")) {
+
+    # Select parents that are missing from Capture_data
+    missing_parents <- purrr::map(.x = unique(Brood_data$PopID),
+                                  .f = ~{
+
+                                    # Missing mothers
+                                    missing_mothers <- dplyr::anti_join({Brood_data %>% dplyr::filter(!is.na(FemaleID) &.data$PopID == .x)},
+                                                                        {Capture_data %>% dplyr::filter(.data$CapturePopID == .x)},
+                                                                        by = c("FemaleID" = "IndvID")) %>%
+                                      dplyr::select(.data$Row, .data$PopID, .data$BroodID, IndvID = .data$FemaleID) %>%
+                                      dplyr::mutate(Parent = "mother")
+
+                                    # Missing fathers
+                                    missing_fathers <- dplyr::anti_join({Brood_data %>% dplyr::filter(!is.na(MaleID) & .data$PopID == .x)},
+                                                                        {Capture_data %>% dplyr::filter(.data$CapturePopID == .x)},
+                                                                        by = c("MaleID" = "IndvID")) %>%
+                                      dplyr::select(.data$Row, .data$PopID, .data$BroodID, IndvID = .data$MaleID) %>%
+                                      dplyr::mutate(Parent = "father")
+
+                                    # Bind data frames, and combine info if both mother & father of the same brood are missing
+                                    dplyr::bind_rows(missing_mothers, missing_fathers) %>%
+                                      dplyr::arrange(.data$BroodID) %>%
+                                      dplyr::mutate(Parent = dplyr::case_when(.data$BroodID %in% missing_mothers$BroodID & .data$BroodID %in% missing_fathers$BroodID ~ "both",
+                                                                              TRUE ~ .data$Parent)) %>%
+                                      dplyr::group_by(.data$Row, .data$PopID, .data$BroodID, .data$Parent) %>%
+                                      dplyr::summarise(IndvID = paste(IndvID, collapse = ", "),
+                                                       .groups = "drop")
+
+                                  }) %>%
+      dplyr::bind_rows()
+
+    # If potential errors, add to report
+    if(nrow(missing_parents) > 0) {
+
+      err <- TRUE
+
+      # Compare to approved_list
+      error_records <- missing_parents %>%
+        dplyr::mutate(CheckID = "B14") %>%
+        dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
+
+      # Create quality check report statements
+      error_output <- purrr::pmap(.l = error_records,
+                                  .f = ~{
+
+                                    if(..4 != "both") {
+
+                                      paste0("Record on row ", ..1, " (PopID: ", ..2, "; BroodID: ", ..3, ")",
+                                             " has a ", ..4, " (IndvID: ", ..5, ") that does not appear in Capture_data.")
+
+                                    } else {
+
+                                      paste0("Record on row ", ..1, " (PopID: ", ..2, "; BroodID: ", ..3, ")",
+                                             " has parents (IndvIDs: ", ..5, "), neither of which appears in Capture_data.")
+
+                                    }
 
                                   })
 

@@ -103,7 +103,7 @@ quality_check <- function(R_data,
   # FIXME remove after CaptureID column has been added to ALL pipelines
 
   # Run checks
-  Brood_checks <- brood_check(Brood_data, Individual_data, approved_list, output)
+  Brood_checks <- brood_check(Brood_data, Individual_data, Capture_data, approved_list, output)
   Capture_checks <- capture_check(Capture_data, Location_data, Brood_data, Individual_data, approved_list, output)
   Individual_checks <- individual_check(Individual_data, Capture_data, Location_data, approved_list, output)
   Location_checks <- location_check(Location_data, Brood_data, Capture_data, approved_list, output, map)
