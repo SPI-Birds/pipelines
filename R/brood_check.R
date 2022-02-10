@@ -18,21 +18,23 @@
 #' \item \strong{B12}: Check if the sex of mothers listed under FemaleID are female using \code{\link{check_sex_mothers}}.
 #' \item \strong{B13}: Check if the sex of fathers listed under MaleID are male using \code{\link{check_sex_fathers}}.
 #' \item \strong{B14}: Check that both parents appear in Capture_data using \code{\link{check_parents_captures}}.
+#' \item \strong{B15}: Check that nest locations appear in Location_data using \code{\link{check_brood_locations}}.
 #' }
 #'
 #' @inheritParams checks_brood_params
 #' @inheritParams checks_individual_params
 #' @inheritParams checks_capture_params
+#' @inheritParams checks_location_params
 #'
 #' @inherit checks_return return
 #' @importFrom rlang sym `:=`
 #' @importFrom progress progress_bar
 #' @export
 
-brood_check <- function(Brood_data, Individual_data, Capture_data, approved_list, output){
+brood_check <- function(Brood_data, Individual_data, Capture_data, Location_data, approved_list, output){
 
   # Create check list with a summary of warnings and errors per check
-  check_list <- tibble::tibble(CheckID = paste0("B", c(1:4, paste0(5, letters[1:4]), 6:14)),
+  check_list <- tibble::tibble(CheckID = paste0("B", c(1:4, paste0(5, letters[1:4]), 6:15)),
                                CheckDescription = c("Compare clutch and brood sizes",
                                                     "Compare brood sizes and fledgling numbers",
                                                     "Compare lay and hatch dates",
@@ -49,7 +51,8 @@ brood_check <- function(Brood_data, Individual_data, Capture_data, approved_list
                                                     "Check species of brood and chicks",
                                                     "Check sex of mothers",
                                                     "Check sex of fathers",
-                                                    "Check that parents appear in Capture_data"),
+                                                    "Check that parents appear in Capture_data",
+                                                    "Check that nest locations appear in Location_data"),
                                Warning = NA,
                                Error = NA)
 
@@ -178,6 +181,12 @@ brood_check <- function(Brood_data, Individual_data, Capture_data, approved_list
 
   check_list[17, 3:4] <- check_parents_captures_output$CheckList
 
+  # - Check that nest locations appear in Location_data
+  message("B15: Checking that nest locations appear in Location_data...")
+
+  check_brood_locations_output <- check_brood_locations(Brood_data, Location_data, approved_list, output)
+
+  check_list[18, 3:4] <- check_brood_locations_output$CheckList
 
   # Warning list
   warning_list <- list(Check1 = compare_clutch_brood_output$WarningOutput,
@@ -196,7 +205,8 @@ brood_check <- function(Brood_data, Individual_data, Capture_data, approved_list
                        Check11 = compare_species_brood_chicks_output$WarningOutput,
                        Check12 = check_sex_mothers_output$WarningOutput,
                        Check13 = check_sex_fathers_output$WarningOutput,
-                       Check14 = check_parents_captures_output$WarningOutput)
+                       Check14 = check_parents_captures_output$WarningOutput,
+                       Check15 = check_brood_locations_output$WarningOutput)
 
   # Error list
   error_list <- list(Check1 = compare_clutch_brood_output$ErrorOutput,
@@ -215,7 +225,8 @@ brood_check <- function(Brood_data, Individual_data, Capture_data, approved_list
                      Check11 = compare_species_brood_chicks_output$ErrorOutput,
                      Check12 = check_sex_mothers_output$ErrorOutput,
                      Check13 = check_sex_fathers_output$ErrorOutput,
-                     Check14 = check_parents_captures_output$ErrorOutput)
+                     Check14 = check_parents_captures_output$ErrorOutput,
+                     Check15 = check_brood_locations_output$ErrorOutput)
 
   return(list(CheckList = check_list,
               WarningRows = unique(c(compare_clutch_brood_output$WarningRows,
@@ -234,7 +245,8 @@ brood_check <- function(Brood_data, Individual_data, Capture_data, approved_list
                                      compare_species_brood_chicks_output$WarningRows,
                                      check_sex_mothers_output$WarningRows,
                                      check_sex_fathers_output$WarningRows,
-                                     check_parents_captures_output$WarningRows)),
+                                     check_parents_captures_output$WarningRows,
+                                     check_brood_locations_output$WarningRows)),
               ErrorRows = unique(c(compare_clutch_brood_output$ErrorRows,
                                    compare_brood_fledglings_output$ErrorRows,
                                    compare_laying_hatching_output$ErrorRows,
@@ -251,7 +263,8 @@ brood_check <- function(Brood_data, Individual_data, Capture_data, approved_list
                                    compare_species_brood_chicks_output$ErrorRows,
                                    check_sex_mothers_output$ErrorRows,
                                    check_sex_fathers_output$ErrorRows,
-                                   check_parents_captures_output$ErrorRows)),
+                                   check_parents_captures_output$ErrorRows,
+                                   check_brood_locations_output$ErrorRows)),
               Warnings = warning_list,
               Errors = error_list))
 }
@@ -1744,6 +1757,7 @@ check_sex_fathers <- function(Brood_data, Individual_data, approved_list, output
 
 }
 
+
 #' Check that parents appear in Capture_data
 #'
 #' Check that all individuals recorded as parents in Brood_data appear at least once in Capture_data. Missing individuals will be flagged as a potential error.
@@ -1821,6 +1835,83 @@ check_parents_captures <- function(Brood_data, Capture_data, approved_list, outp
                                              " has parents (IndvIDs: ", ..5, "), neither of which appears in Capture_data.")
 
                                     }
+
+                                  })
+
+    }
+
+  }
+
+  # No check for warnings
+  war <- FALSE
+  #warning_records <- tibble::tibble(Row = NA_character_)
+  warning_output <- NULL
+
+  check_list <- tibble::tibble(Warning = war,
+                               Error = err)
+
+  return(list(CheckList = check_list,
+              WarningRows = NULL,
+              ErrorRows = error_records$Row,
+              WarningOutput = unlist(warning_output),
+              ErrorOutput = unlist(error_output)))
+
+  # Satisfy RCMD checks
+  approved_list <- NULL
+
+}
+
+
+#' Check that all nest locations in Brood_data appear in Location_data
+#'
+#' Check that all net locations recorded in Brood_data appear in Location_data. Missing locations will be flagged as a potential error. This check is the opposite of check L2 (\code{\link{check_locations_brood_capture}}).
+#'
+#' Check ID: B15.
+#'
+#' @inheritParams checks_brood_params
+#' @inheritParams checks_location_params
+#'
+#' @inherit checks_return return
+#'
+#' @export
+
+check_brood_locations <- function(Brood_data, Location_data, approved_list, output){
+
+  # Check for potential errors
+  err <- FALSE
+  error_records <- tibble::tibble(Row = NA_character_)
+  error_output <- NULL
+
+  if(output %in% c("both", "errors")) {
+
+    # Select locations that are missing from Locations_data
+    missing_locations <- purrr::map(.x = unique(Brood_data$PopID),
+                                    .f = ~{
+
+                                      dplyr::anti_join({Brood_data %>% dplyr::filter(!is.na(LocationID) & .data$PopID == .x)},
+                                                       {Location_data %>% dplyr::filter(.data$PopID == .x)},
+                                                       by = "LocationID")
+
+                                    }) %>%
+      dplyr::bind_rows() %>%
+      dplyr::select(.data$Row, .data$PopID, .data$BroodID, .data$LocationID)
+
+    # If potential errors, add to report
+    if(nrow(missing_locations) > 0) {
+
+      err <- TRUE
+
+      # Compare to approved_list
+      error_records <- missing_locations %>%
+        dplyr::mutate(CheckID = "B15") %>%
+        dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID"))
+
+      # Create quality check report statements
+      error_output <- purrr::pmap(.l = error_records,
+                                  .f = ~{
+
+                                    paste0("Record on row ", ..1, " (PopID: ", ..2, "; BroodID: ", ..3, ")",
+                                           " has a location (LocationID: ", ..4, ") that does not appear in Location_data.")
 
                                   })
 
