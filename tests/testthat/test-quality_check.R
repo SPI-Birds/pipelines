@@ -188,6 +188,10 @@ test_that("Single checks function as expected...", {
   expect_equal(subset(dummy_check$R_data$Capture_data, CheckID == "C5")$Warning, c(NA, NA))
   expect_equal(subset(dummy_check$R_data$Capture_data, CheckID == "C5")$Error, c(NA, TRUE))
 
+  # Test check C6
+  expect_equal(subset(dummy_check$R_data$Capture_data, CheckID == "C6")$Warning, c(NA, NA))
+  expect_equal(subset(dummy_check$R_data$Capture_data, CheckID == "C6")$Error, c(NA, TRUE))
+
   # Test check I1
   expect_equal(subset(dummy_check$R_data$Individual_data, CheckID == "I1")$Warning, c(NA, NA, NA))
   expect_equal(subset(dummy_check$R_data$Individual_data, CheckID == "I1")$Error, c(NA, TRUE, TRUE))

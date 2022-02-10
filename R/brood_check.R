@@ -1864,7 +1864,7 @@ check_parents_captures <- function(Brood_data, Capture_data, approved_list, outp
 
 #' Check that all nest locations in Brood_data appear in Location_data
 #'
-#' Check that all net locations recorded in Brood_data appear in Location_data. Missing locations will be flagged as a potential error. This check is the opposite of check L2 (\code{\link{check_locations_brood_capture}}).
+#' Check that all nest locations recorded in Brood_data appear in Location_data. Missing locations will be flagged as a potential error. This check is the opposite of check L2 (\code{\link{check_locations_brood_capture}}).
 #'
 #' Check ID: B15.
 #'

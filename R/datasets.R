@@ -96,6 +96,7 @@ pop_species_combos <- utils::read.csv(system.file("extdata", "pop_species_combos
 #'   \item Rows 1014-1015 are records that are used to test the functionality of check 'C5: Checking that individuals in Capture_data also appear in Individual_data' (see \code{\link{check_captures_individuals}}). The records are an individual that is also recorded in Individual_data, and one that is missing from Individual_data.
 #'   \item Rows 1016-1019 are records that are used to test the functionality of check 'B14: Checking that parents appear in Capture_data' (see \code{\link{check_parents_captures}}). The records are parents of broods where either none or one parent is missing.
 #'   \item Rows 1020-1023 are records that used to test the functionality of check 'B15: Checking that nest locations appear in Location_data' (see \code{\link{check_brood_locations}}). The records are the parents of the broods.
+#'   \item Rows 1024-1025 are records that used to test the functionality of check 'C6: Checking that capture locations appear in Location_data' (see \code{\link{check_capture_locations}}). The records are captures on a location that does appear in Location_data, and on a location that does not appear in Location_data.
 #' }
 #'
 #' \strong{Individual data}:
@@ -112,6 +113,7 @@ pop_species_combos <- utils::read.csv(system.file("extdata", "pop_species_combos
 #'   \item Rows 34-37 are records that are used to test the functionality of check 'B12: Checking sex of mothers' (see \code{\link{check_sex_mothers}}). The records are parents with correct and incorrect sex.
 #'   \item Rows 38-41 are records that are used to test the functionality of check 'B13: Checking sex of fathers' (see \code{\link{check_sex_fathers}}). The records are parents with correct and incorrect sex.
 #'   \item Rows 42 is a record that is used to test the functionality of check 'C5: Checking that individuals in Capture_data also appear in Individual_data' (see \code{\link{check_captures_individuals}}). The record is an individual that is also recorded in Capture_data.
+#'   \item Rows 43-44 are records that are used to test the functionality of check 'C6: Checking that capture locations appear in Location_data' (see \code{\link{check_capture_locations}}). The records are individuals captured on locations that do and do not appear in Location_data.
 #' }
 #'
 #' \strong{Location data}:
@@ -120,7 +122,8 @@ pop_species_combos <- utils::read.csv(system.file("extdata", "pop_species_combos
 #'   \item Rows 3-5 are records that are used to test the functionality of check 'C3: Checking that adults caught on nest are listed are the parents' (see \code{\link{check_adult_parent_nest}}). The records describe location information of two nest boxes and a mist net.
 #'   \item Rows 6-107 are records that are used to test the functionality of check 'L1: Checking capture locations coordinates' (see \code{\link{check_coordinates}}). The records are capture locations within 15 km of study site centre point and one capture locations farther away.
 #'   \item Rows 108-111 are records that are used to test the functionality of check 'L2: Checking that locations in Location_data appear in other data tables' (see \code{\link{check_locations_brood_capture}}). The records are a location that appears in both Brood_data and Capture_data, locations that appear in either one, and a location that appears in no other data table.
-#'   \item Row 112 is a recods that is used to test the functionality of check 'B15: Checking that nest locations appear in Location_data' (see \code{\link{check_brood_locations}}). The record is a nest location of a brood in Brood_data.
+#'   \item Row 112 is a record that is used to test the functionality of check 'B15: Checking that nest locations appear in Location_data' (see \code{\link{check_brood_locations}}). The record is a nest location of a brood in Brood_data.
+#'   \item Rows 113 is a record that is used to test the functionality of check 'C6: Checking that capture locations appear in Location_data' (see \code{\link{check_capture_locations}}). The record is a capture location of an individual in Capture_data.
 #' }
 #'
 #' @name dummy_data

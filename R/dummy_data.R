@@ -1317,6 +1317,53 @@ create_dummy_data <- function() {
       CheckID = "B15"
     )
 
+  # C6: Checking that capture locations appear in Location_data ####
+  C6_capture_rows <- Capture_data %>%
+    dplyr::mutate( # Probable
+      Row = max(B15_capture_rows$Row) + 1
+    ) %>%
+    dplyr::add_row( # Missing location from Location_data
+      Row = max(B15_capture_rows$Row) + 2
+    ) %>%
+    dplyr::mutate(
+      IndvID = paste0("I", Row),
+      CapturePopID = "AAA",
+      BreedingSeason = as.integer(2020),
+      Species = "PARMAJ",
+      CaptureDate = "2020-06-01",
+      CaptureID = paste(.data$CapturePopID, .data$IndvID, .data$CaptureDate, sep = "_"),
+      LocationID = paste(.data$CapturePopID, "NB", .data$Row, sep = "_"),
+      CheckID = "C6"
+    )
+
+  C6_indv_rows <- Individual_data %>% # Add captures to Individual_data, otherwise flagged by C5
+    dplyr::mutate(
+      IndvID = C6_capture_rows$IndvID[1]
+    ) %>%
+    dplyr::add_row(
+      IndvID = C6_capture_rows$IndvID[2]
+    ) %>%
+    dplyr::mutate(
+      Row = seq(max(C5_indv_rows$Row) + 1, length.out = dplyr::n()),
+      PopID = "AAA",
+      RingSeason = as.integer(2020),
+      Species = "PARMAJ",
+      Sex_calculated = "F",
+      CheckID = "C6"
+    )
+
+  C6_location_rows <- Location_data %>%
+    dplyr::mutate(
+      LocationID = C6_capture_rows$LocationID[1],
+      Row = max(B15_location_rows$Row) + 1,
+      PopID = "AAA",
+      StartSeason = as.integer(2019),
+      EndSeason = as.integer(2021),
+      LocationType = "NB",
+      NestboxID = .data$LocationID,
+      CheckID = "C6"
+    )
+
   # Approved_list: make sure that our approve-listing procedure works ####
   # We create a record that violates check B3, but should NOT result in TRUE in Warning & Error columns
   al_rows <- Brood_data %>%
@@ -1345,13 +1392,14 @@ create_dummy_data <- function() {
                                    C1b_adult_rows, C1b_chick_rows, C2_rows, I1_capture_rows,
                                    I2_capture_rows, I3_capture_rows, I4_capture_rows, I5_capture_rows,
                                    C3_capture_rows, C4_capture_rows, L2_capture_rows, C5_capture_rows,
-                                   B14_capture_rows, B15_capture_rows)
+                                   B14_capture_rows, B15_capture_rows, C6_capture_rows)
 
   Individual_data <- dplyr::bind_rows(B6_indv_rows, B9_indv_rows, I1_indv_rows, I2_indv_rows, I3_indv_rows,
                                       I4_indv_rows, I5_indv_rows, B10_indv_rows, B11_indv_rows, B12_indv_rows,
-                                      B13_indv_rows, C5_indv_rows)
+                                      B13_indv_rows, C5_indv_rows, C6_indv_rows)
 
-  Location_data <- dplyr::bind_rows(I2_location_rows, C3_location_rows, L1_rows, L2_location_rows, B15_location_rows)
+  Location_data <- dplyr::bind_rows(I2_location_rows, C3_location_rows, L1_rows, L2_location_rows, B15_location_rows,
+                                    C6_location_rows)
 
   # Check whether row numbers are unique
   if(any(duplicated(Brood_data$Row), duplicated(Capture_data$Row), duplicated(Individual_data$Row), duplicated(Location_data$Row))) {

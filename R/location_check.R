@@ -211,7 +211,7 @@ check_coordinates <- function(Location_data, approved_list, output, map){
 
 #' Check that all locations in Location_data appear in other data tables
 #'
-#' Check that all locations recorded in Location_data appear at least once in Brood_data or Capture_data. Missing locations will be flagged as a potential error.
+#' Check that all locations recorded in Location_data appear at least once in Brood_data or Capture_data. Missing locations will be flagged as a potential error. This check is the opposite of checks B15 (\code{\link{check_brood_locations}}) and C6 (\code{\link{check_capture_locations}}).
 #'
 #' Check ID: L2.
 #'
