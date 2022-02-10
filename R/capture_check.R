@@ -8,7 +8,8 @@
 #' \item \strong{C2}: Check chick age (in numbers of days since hatching) using \code{\link{check_chick_age}}.
 #' \item \strong{C3}: Check that adults caught on nest are listed as parents using \code{\link{check_adult_parent_nest}}.
 #' \item \strong{C4}: Check that the age of subsequent captures of the same individual is correct using \code{\link{check_age_captures}}.
-#' \item \strong{C5}: Check if individuals in Capture_data appear in Individual_data using \code{\link{check_captures_individuals}}
+#' \item \strong{C5}: Check if individuals in Capture_data appear in Individual_data using \code{\link{check_captures_individuals}}.
+#' \item \strong{C6}: Check that capture locations appear in Location_data using \code{\link{check_capture_locations}}.
 #' }
 #'
 #' @inheritParams checks_capture_params
@@ -23,13 +24,14 @@
 capture_check <- function(Capture_data, Location_data, Brood_data, Individual_data, approved_list, output){
 
   # Create check list with a summary of warnings and errors per check
-  check_list <- tibble::tibble(CheckID = paste0("C", c(paste0(1, letters[1:2]), 2:5)),
+  check_list <- tibble::tibble(CheckID = paste0("C", c(paste0(1, letters[1:2]), 2:6)),
                                CheckDescription = c("Check mass values against reference values",
                                                     "Check tarsus values against reference values",
                                                     "Check chick age",
                                                     "Check that adults caught on nest are listed as the parents",
                                                     "Check the order in age of subsequent captures",
-                                                    "Check that individuals in Capture_data also appear in Individual_data"),
+                                                    "Check that individuals in Capture_data also appear in Individual_data",
+                                                    "Check that capture locations appear in Location_data"),
                                Warning = NA,
                                Error = NA)
 
@@ -80,13 +82,22 @@ capture_check <- function(Capture_data, Location_data, Brood_data, Individual_da
 
   check_list[6, 3:4] <- check_captures_individuals_output$CheckList
 
+  # - Check that capture locations appear in Location_data
+  message("C6: Checking that capture locations appear in Location_data...")
+
+  check_capture_locations_output <- check_capture_locations(Capture_data, Location_data,
+                                                            approved_list, output)
+
+  check_list[7, 3:4] <- check_capture_locations_output$CheckList
+
   # Warning list
   warning_list <- list(Check1a = check_values_mass_output$WarningOutput,
                        Check1b = check_values_tarsus_output$WarningOutput,
                        Check2 = check_chick_age_output$WarningOutput,
                        Check3 = check_adult_parent_nest_output$WarningOutput,
                        Check4 = check_age_captures_output$WarningOutput,
-                       Check5 = check_captures_individuals_output$WarningOutput)
+                       Check5 = check_captures_individuals_output$WarningOutput,
+                       Check6 = check_capture_locations_output$WarningOutput)
 
   # Error list
   error_list <- list(Check1a = check_values_mass_output$ErrorOutput,
@@ -94,7 +105,8 @@ capture_check <- function(Capture_data, Location_data, Brood_data, Individual_da
                      Check2 = check_chick_age_output$ErrorOutput,
                      Check3 = check_adult_parent_nest_output$ErrorOutput,
                      Check4 = check_age_captures_output$ErrorOutput,
-                     Check5 = check_captures_individuals_output$ErrorOutput)
+                     Check5 = check_captures_individuals_output$ErrorOutput,
+                     Check6 = check_capture_locations_output$ErrorOutput)
 
   return(list(CheckList = check_list,
               WarningRows = unique(c(check_values_mass_output$WarningRows,
@@ -102,13 +114,15 @@ capture_check <- function(Capture_data, Location_data, Brood_data, Individual_da
                                      check_chick_age_output$WarningRows,
                                      check_adult_parent_nest_output$WarningRows,
                                      check_age_captures_output$WarningRows,
-                                     check_captures_individuals_output$WarningRows)),
+                                     check_captures_individuals_output$WarningRows,
+                                     check_capture_locations_output$WarningRows)),
               ErrorRows = unique(c(check_values_mass_output$ErrorRows,
                                    check_values_tarsus_output$ErrorRows,
                                    check_chick_age_output$ErrorRows,
                                    check_adult_parent_nest_output$ErrorRows,
                                    check_age_captures_output$ErrorRows,
-                                   check_captures_individuals_output$ErrorRows)),
+                                   check_captures_individuals_output$ErrorRows,
+                                   check_capture_locations_output$ErrorRows)),
               Warnings = warning_list,
               Errors = error_list))
 
@@ -948,6 +962,83 @@ check_captures_individuals <- function(Capture_data, Individual_data, approved_l
                                            "; CaptureID: ", ..3,
                                            "; IndvID: ", ..4, ")",
                                            " does not appear in Individual_data.")
+
+                                  })
+
+    }
+
+  }
+
+  # No check for warnings
+  war <- FALSE
+  #warning_records <- tibble::tibble(Row = NA_character_)
+  warning_output <- NULL
+
+  check_list <- tibble::tibble(Warning = war,
+                               Error = err)
+
+  return(list(CheckList = check_list,
+              WarningRows = NULL,
+              ErrorRows = error_records$Row,
+              WarningOutput = unlist(warning_output),
+              ErrorOutput = unlist(error_output)))
+
+  # Satisfy RCMD checks
+  approved_list <- NULL
+
+}
+
+
+#' Check that all capture locations in Capture_data appear in Location_data
+#'
+#' Check that all capture locations recorded in Capture_data appear in Location_data. Missing locations will be flagged as a potential error. This check is the opposite of check L2 (\code{\link{check_locations_brood_capture}}).
+#'
+#' Check ID: C6.
+#'
+#' @inheritParams checks_capture_params
+#' @inheritParams checks_location_params
+#'
+#' @inherit checks_return return
+#'
+#' @export
+
+check_capture_locations <- function(Capture_data, Location_data, approved_list, output){
+
+  # Check for potential errors
+  err <- FALSE
+  error_records <- tibble::tibble(Row = NA_character_)
+  error_output <- NULL
+
+  if(output %in% c("both", "errors")) {
+
+    # Select locations that are missing from Locations_data
+    missing_locations <- purrr::map(.x = unique(Capture_data$CapturePopID),
+                                    .f = ~{
+
+                                      dplyr::anti_join({Capture_data %>% dplyr::filter(!is.na(LocationID) & .data$CapturePopID == .x)},
+                                                       {Location_data %>% dplyr::filter(.data$PopID == .x)},
+                                                       by = "LocationID")
+
+                                    }) %>%
+      dplyr::bind_rows() %>%
+      dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, .data$LocationID)
+
+    # If potential errors, add to report
+    if(nrow(missing_locations) > 0) {
+
+      err <- TRUE
+
+      # Compare to approved_list
+      error_records <- missing_locations %>%
+        dplyr::mutate(CheckID = "C6") %>%
+        dplyr::anti_join(approved_list$Capture_approved_list, by=c("PopID", "CheckID", "CaptureID"))
+
+      # Create quality check report statements
+      error_output <- purrr::pmap(.l = error_records,
+                                  .f = ~{
+
+                                    paste0("Record on row ", ..1, " (PopID: ", ..2, "; CaptureID: ", ..3, ")",
+                                           " has a location (LocationID: ", ..4, ") that does not appear in Location_data.")
 
                                   })
 
