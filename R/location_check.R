@@ -5,6 +5,7 @@
 #' The following location data checks are performed:
 #' \itemize{
 #' \item \strong{L1}: Check capture location coordinates using \code{\link{check_coordinates}}.
+#' \item \strong{L2}: Check that all locations in Location_data appear in other data tables using \code{\link{check_locations_brood_capture}}.
 #' }
 #'
 #' @inheritParams checks_location_params
