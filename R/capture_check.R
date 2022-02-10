@@ -141,6 +141,8 @@ capture_check <- function(Capture_data, Location_data, Brood_data, Individual_da
 #' \item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as a potential error.}
 #' }
 #'
+#' Note: when the number of observations is too low to generate reference values, a message is added to the list of warnings.
+#'
 #' @inheritParams checks_capture_params
 #' @param var Character. Variable to check against reference values.
 #'

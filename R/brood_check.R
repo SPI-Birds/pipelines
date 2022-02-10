@@ -374,7 +374,7 @@ compare_brood_fledglings <- function(Brood_data, approved_list, output){
     # Non-manipulated broods
     # NB: allows v1.0 & v1.1 variable names of the standard format
     brood_data_non <- Brood_data %>%
-      {if(all(c("BroodSize", "NumberFledged") %in% colnames(.))) dplyr::filter(., (!is.na(.data$ExperimentID) | .data$ExperimentID == "") & .data$BroodSize < .data$NumberFledged) else dplyr::filter(., (is.na(.data$ExperimentID) | .data$ExperimentID == "") & .data$BroodSize_observed < .data$NumberFledged_observed)}
+      {if(all(c("BroodSize", "NumberFledged") %in% colnames(.))) dplyr::filter(., (is.na(.data$ExperimentID) | .data$ExperimentID == "") & .data$BroodSize < .data$NumberFledged) else dplyr::filter(., (is.na(.data$ExperimentID) | .data$ExperimentID == "") & .data$BroodSize_observed < .data$NumberFledged_observed)}
 
     # If potential errors, add to report
     if(nrow(brood_data_non) > 0) {
@@ -511,8 +511,8 @@ compare_laying_hatching <- function(Brood_data, approved_list, output){
                                   .f = ~{
 
                                     paste0("Record on row ", ..1, " (PopID: ", ..2, "; BroodID: ", ..3, ")",
-                                           " has a later laying date (", ..4,
-                                           ") than hatching date (", ..5, ").")
+                                           " has a laying date (", ..4,
+                                           ") equal to or later than a hatching date (", ..5, ").")
 
                                   })
 
@@ -593,8 +593,8 @@ compare_hatching_fledging <- function(Brood_data, approved_list, output){
                                 .f = ~{
 
                                   paste0("Record on row ", ..1, " (PopID: ", ..2, "; BroodID: ", ..3, ")",
-                                         " has a later hatching date (", ..4,
-                                         ") than fledging date (", ..5, ").")
+                                         " has a hatching date (", ..4,
+                                         ") equal to or later than a fledging date (", ..5, ").")
 
                                 })
 
@@ -639,6 +639,8 @@ compare_hatching_fledging <- function(Brood_data, approved_list, output){
 #' \item{\emph{n >= 100}\cr}{Date columns are transformed to Julian days to calculate percentiles. Records are considered impossible if they are earlier than January 1st or later than December 31st of the current breeding season, and will be flagged as a potential error.}
 #' \item{\emph{n < 100}\cr}{Date columns are transformed to Julian days to calculate percentiles. Records are considered impossible if they are earlier than January 1st or later than December 31st of the current breeding season, and will be flagged as a potential error.}
 #' }
+#'
+#' Note: when the number of observations is too low to generate reference values, a message is added to the list of warnings.
 #'
 #' @inheritParams checks_brood_params
 #' @param var Character. Variable to check against reference values.
@@ -911,13 +913,13 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data, approved_
 
   if(output %in% c("both", "errors")) {
 
-    # Select records where number of chicks in Capture_data > brood size in Brood_data
-    # (this should not be possible)
+    # Select non-experimental records where number of chicks in Capture_data > brood size in Brood_data
+    # (this should not be possible when no experimental manipulations have been done)
     # NB: allows v1.0 & v1.1 variable names of the standard format
     brood_err <- Brood_data %>%
       dplyr::left_join(chicks_captured, by=c("BroodID" = "BroodIDLaid")) %>%
-      {if("BroodSize" %in% colnames(.)) dplyr::filter(.,  .data$BroodSize < .data$Chicks)
-        else dplyr::filter(., .data$BroodSize_observed < .data$Chicks)} %>%
+      {if("BroodSize" %in% colnames(.)) dplyr::filter(.,  (is.na(.data$ExperimentID) | .data$ExperimentID == "") &.data$BroodSize < .data$Chicks)
+        else dplyr::filter(., (is.na(.data$ExperimentID) | .data$ExperimentID == "") & .data$BroodSize_observed < .data$Chicks)} %>%
       {if("BroodSize" %in% colnames(.)) dplyr::select(., .data$Row, .data$PopID, .data$BroodID, .data$BroodSize, .data$Chicks)
         else dplyr::select(., .data$Row, .data$PopID, .data$BroodID, .data$BroodSize_observed, .data$Chicks)}
 
@@ -938,7 +940,7 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data, approved_
                                     paste0("Record on row ", ..1, " (PopID: ", ..2, "; BroodID: ", ..3, ")",
                                            " has a smaller BroodSize (", ..4, ")",
                                            " than the number of chicks in Individual_data (",
-                                           ..5, ").")
+                                           ..5, ") but was not experimentally manipulated.")
 
                                   })
 
@@ -954,11 +956,13 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data, approved_
   if(output %in% c("both", "warnings")) {
 
     # Select records where number of chicks in Capture_data < brood size in Brood_data
-    # (chicks might have died before measuring/ringing)
+    # Yet, chicks might have died before measuring/ringing, or experimentally manipulated
+    # AND select records where number of chicks in Capture_data > brood size in Brood_data
+    # if broods are experimentally manipulated
     brood_war <- Brood_data %>%
       dplyr::left_join(chicks_captured, by=c("BroodID" = "BroodIDLaid")) %>%
-      {if("BroodSize" %in% colnames(.)) dplyr::filter(.,  .data$BroodSize > .data$Chicks)
-        else dplyr::filter(., .data$BroodSize_observed > .data$Chicks)} %>%
+      {if("BroodSize" %in% colnames(.)) dplyr::filter(.,  .data$BroodSize > .data$Chicks | ((!is.na(.data$ExperimentID) | .data$ExperimentID != "") & .data$BroodSize < .data$Chicks))
+        else dplyr::filter(., .data$BroodSize_observed > .data$Chicks | ((!is.na(.data$ExperimentID) | .data$ExperimentID != "") & .data$BroodSize_observed < .data$Chicks))} %>%
       {if("BroodSize" %in% colnames(.)) dplyr::select(., .data$Row, .data$PopID, .data$BroodID, .data$BroodSize, .data$Chicks)
         else dplyr::select(., .data$Row, .data$PopID, .data$BroodID, .data$BroodSize_observed, .data$Chicks)}
 
@@ -976,10 +980,21 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data, approved_
       warning_output <- purrr::pmap(.l = warning_records,
                                     .f = ~{
 
-                                      paste0("Record on row ", ..1, " (PopID: ", ..2, "; BroodID: ", ..3, ")",
-                                             " has a larger BroodSize (", ..4, ")",
-                                             " than the number of chicks in Individual_data (",
-                                             ..5, ").")
+                                      if(..4 < ..5) {
+
+                                        paste0("Record on row ", ..1, " (PopID: ", ..2, "; BroodID: ", ..3, ")",
+                                               " has a smaller BroodSize (", ..4, ")",
+                                               " than the number of chicks in Individual_data (",
+                                               ..5, "), and was experimentally manipulated.")
+
+                                      } else if(..4 > ..5) {
+
+                                        paste0("Record on row ", ..1, " (PopID: ", ..2, "; BroodID: ", ..3, ")",
+                                               " has a larger BroodSize (", ..4, ")",
+                                               " than the number of chicks in Individual_data (",
+                                               ..5, ").")
+
+                                      }
 
                                     })
 
