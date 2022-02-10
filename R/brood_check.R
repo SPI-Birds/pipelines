@@ -9,7 +9,7 @@
 #' \item \strong{B3}: Compare lay date and hatch date per brood using \code{\link{compare_laying_hatching}}.
 #' \item \strong{B4}: Compare hatch date and fledge date per brood using \code{\link{compare_hatching_fledging}}.
 #' \item \strong{B5a-d}: Check brood variable values against reference values using \code{\link{check_values_brood}}. Brood variables checked: ClutchSize_observed, BroodSize_observed, NumberFledged_observed, LayDate_observed.
-#' \item \strong{B6}: Compare brood size with number of chicks captured using \code{\link{compare_broodsize_chicknumber}}.
+#' \item \strong{B6}: Compare brood size with number of chicks in Individual_data using \code{\link{compare_broodsize_chicknumber}}.
 #' \item \strong{B7}: Check if the IDs of broods are unique using \code{\link{check_unique_BroodID}}.
 #' \item \strong{B8}: Check if the order of clutch types for multiple breeding attempts per female per season is correct using \code{\link{check_clutch_type_order}}.
 #' \item \strong{B9}: Check if parents of a brood are the same species using \code{\link{compare_species_parents}}.
@@ -39,7 +39,7 @@ brood_check <- function(Brood_data, Individual_data, approved_list, output){
                                                     "Check brood size values against reference values",
                                                     "Check fledgling number values against reference values",
                                                     "Check lay date values against reference values",
-                                                    "Compare brood size with number of chicks captured",
+                                                    "Compare brood size with number of chicks in Individual_data",
                                                     "Check that brood IDs are unique",
                                                     "Check clutch type order",
                                                     "Check species of mother and father",
@@ -112,8 +112,8 @@ brood_check <- function(Brood_data, Individual_data, approved_list, output){
 
   check_list[8, 3:4] <- check_values_lay_date_output$CheckList
 
-  # - Compare brood size and number of chicks captured
-  message("B6: Comparing brood size and number of chicks captured...")
+  # - Compare brood size and number of chicks in Individual_data
+  message("B6: Comparing brood size and number of chicks in Individual_data...")
 
   compare_broodsize_chicknumber_output <- compare_broodsize_chicknumber(Brood_data, Individual_data, approved_list, output)
 

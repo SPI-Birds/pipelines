@@ -235,7 +235,7 @@ create_dummy_data <- function() {
       CheckID = "B5d"
     )
 
-  # B6: Comparing brood size and number of chicks captured ####
+  # B6: Comparing brood size and number of chicks in Individual_data ####
   B6_brood_rows <- Brood_data %>%
     dplyr::mutate( # Probable
       BroodSize_observed = as.integer(1)
