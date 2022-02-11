@@ -20,7 +20,7 @@ test_that("Individual data returns an expected outcome...", {
 
   #Test 1: Adult great tit female
   #Individual C044309 should be listed as a female great tit
-  expect_equal(subset(CHO_data, IndvID == "C044309")$Sex, "F")
+  expect_equal(subset(CHO_data, IndvID == "C044309")$Sex_calculated, "F")
   expect_equal(subset(CHO_data, IndvID == "C044309")$Species, "PARMAJ")
   #She should have no BroodIDLaid or Fledged because this individual was caught as an adult
   expect_equal(subset(CHO_data, IndvID == "C044309")$BroodIDLaid, NA_character_)
@@ -31,7 +31,7 @@ test_that("Individual data returns an expected outcome...", {
 
   #Test 2: Adult great tit male
   #Individual C029843 should be listed as a male great tit
-  expect_equal(subset(CHO_data, IndvID == "C029843")$Sex, "M")
+  expect_equal(subset(CHO_data, IndvID == "C029843")$Sex_calculated, "M")
   expect_equal(subset(CHO_data, IndvID == "C029843")$Species, "PARMAJ")
   #She should have no BroodIDLaid or Fledged because this individual was caught as an adult
   expect_equal(subset(CHO_data, IndvID == "C029843")$BroodIDLaid, NA_character_)
@@ -42,7 +42,7 @@ test_that("Individual data returns an expected outcome...", {
 
   #Test 3: Caught as chick
   #Individual C048092 should be listed as a female blue tit
-  expect_equal(subset(CHO_data, IndvID == "C048092")$Sex, "F")
+  expect_equal(subset(CHO_data, IndvID == "C048092")$Sex_calculated, "F")
   expect_equal(subset(CHO_data, IndvID == "C048092")$Species, "PARMAJ")
   #Should have BroodID Laid and Fledged of 2005_81
   expect_equal(subset(CHO_data, IndvID == "C048092")$BroodIDLaid, "2005_081")
@@ -66,11 +66,11 @@ test_that("Brood_data returns an expected outcome...", {
   #BroodID 2005_021 should have clutch type calculated 'first'
   expect_equal(subset(CHO_data, BroodID == "2005_021")$ClutchType_calculated, "first")
   #Laying date should be "2005-04-06"
-  expect_equal(subset(CHO_data, BroodID == "2005_021")$LayDate, as.Date("2005-04-06"))
+  expect_equal(subset(CHO_data, BroodID == "2005_021")$LayDate_observed, as.Date("2005-04-06"))
   #Clutch size should be 6, BroodSize should be 6, NumberFledged should be 6
-  expect_equal(subset(CHO_data, BroodID == "2005_021")$ClutchSize, 6)
-  expect_equal(subset(CHO_data, BroodID == "2005_021")$BroodSize, 6)
-  expect_equal(subset(CHO_data, BroodID == "2005_021")$NumberFledged, 6)
+  expect_equal(subset(CHO_data, BroodID == "2005_021")$ClutchSize_observed, 6)
+  expect_equal(subset(CHO_data, BroodID == "2005_021")$BroodSize_observed, 6)
+  expect_equal(subset(CHO_data, BroodID == "2005_021")$NumberFledged_observed, 6)
   #AvgChickMass and AvgTarsus should be NA, there were no chicks
   expect_equal(round(subset(CHO_data, BroodID == "2005_021")$AvgChickMass, 1), 15.2)
   expect_equal(round(subset(CHO_data, BroodID == "2005_021")$AvgTarsus, 1), 17.4)
@@ -83,11 +83,11 @@ test_that("Brood_data returns an expected outcome...", {
   #BroodID 2005_21b should have clutch type calculated 'second' (clutch tested above was successful)
   expect_equal(subset(CHO_data, BroodID == "2005_006")$ClutchType_calculated, "second")
   #Laying date should be 2005-05-17
-  expect_equal(subset(CHO_data, BroodID == "2005_006")$LayDate, as.Date("2005-05-17"))
+  expect_equal(subset(CHO_data, BroodID == "2005_006")$LayDate_observed, as.Date("2005-05-17"))
   #Clutch size should be 4, BroodSize should be 2, NumberFledged should be 2
-  expect_equal(subset(CHO_data, BroodID == "2005_006")$ClutchSize, 4)
-  expect_equal(subset(CHO_data, BroodID == "2005_006")$BroodSize, 2)
-  expect_equal(subset(CHO_data, BroodID == "2005_006")$NumberFledged, 2)
+  expect_equal(subset(CHO_data, BroodID == "2005_006")$ClutchSize_observed, 4)
+  expect_equal(subset(CHO_data, BroodID == "2005_006")$BroodSize_observed, 2)
+  expect_equal(subset(CHO_data, BroodID == "2005_006")$NumberFledged_observed, 2)
   #AvgChickMass and AvgTarsus as expected
   expect_equal(round(subset(CHO_data, BroodID == "2005_006")$AvgChickMass, 1), 16.4)
   expect_equal(round(subset(CHO_data, BroodID == "2005_006")$AvgTarsus, 1), 18.9)
@@ -98,11 +98,11 @@ test_that("Brood_data returns an expected outcome...", {
   #BroodID 2005_004 should have clutch type calculated 'replacement' (clutch 2015_BC_026_24_04 had no fledlings)
   expect_equal(subset(CHO_data, BroodID == "2003_004")$ClutchType_calculated, "replacement")
   #Laying date should be "2003-06-05"
-  expect_equal(subset(CHO_data, BroodID == "2003_004")$LayDate, as.Date("2003-06-05"))
+  expect_equal(subset(CHO_data, BroodID == "2003_004")$LayDate_observed, as.Date("2003-06-05"))
   #Clutch size should be 4, BroodSize should be 2, NumberFledged should be 2
-  expect_equal(subset(CHO_data, BroodID == "2003_004")$ClutchSize, 4)
-  expect_equal(subset(CHO_data, BroodID == "2003_004")$BroodSize, 2)
-  expect_equal(subset(CHO_data, BroodID == "2003_004")$NumberFledged, 2)
+  expect_equal(subset(CHO_data, BroodID == "2003_004")$ClutchSize_observed, 4)
+  expect_equal(subset(CHO_data, BroodID == "2003_004")$BroodSize_observed, 2)
+  expect_equal(subset(CHO_data, BroodID == "2003_004")$NumberFledged_observed, 2)
   #AvgChickMass and AvgTarsus should be NA, there were no chicks
   expect_equal(round(subset(CHO_data, BroodID == "2003_004")$AvgChickMass, 1), 18.9)
   expect_equal(round(subset(CHO_data, BroodID == "2003_004")$AvgTarsus, 1), 18.8)
@@ -115,11 +115,11 @@ test_that("Brood_data returns an expected outcome...", {
   #BroodID 2005_012 should have clutch type calculated 'replacement' (laying date is > cutoff)
   expect_equal(subset(CHO_data, BroodID == "2003_012")$ClutchType_calculated, "replacement")
   #Laying date should be "2003-06-01"
-  expect_equal(subset(CHO_data, BroodID == "2003_012")$LayDate, as.Date("2003-06-01"))
+  expect_equal(subset(CHO_data, BroodID == "2003_012")$LayDate_observed, as.Date("2003-06-01"))
   #Clutch size should be 5, BroodSize should be 4, NumberFledged should be 4
-  expect_equal(subset(CHO_data, BroodID == "2003_012")$ClutchSize, 5)
-  expect_equal(subset(CHO_data, BroodID == "2003_012")$BroodSize, 4)
-  expect_equal(subset(CHO_data, BroodID == "2003_012")$NumberFledged, 4)
+  expect_equal(subset(CHO_data, BroodID == "2003_012")$ClutchSize_observed, 5)
+  expect_equal(subset(CHO_data, BroodID == "2003_012")$BroodSize_observed, 4)
+  expect_equal(subset(CHO_data, BroodID == "2003_012")$NumberFledged_observed, 4)
   #AvgChickMass and AvgTarsus should be NA, chicks were measured >16 days old
   expect_equal(subset(CHO_data, BroodID == "2003_012")$AvgChickMass, NA_real_)
   expect_equal(subset(CHO_data, BroodID == "2003_012")$AvgTarsus, NA_real_)

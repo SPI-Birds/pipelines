@@ -1215,6 +1215,7 @@ create_dummy_data <- function() {
                      Individual_data = Individual_data,
                      Location_data = Location_data)
 
+  #Not used, usethis dependency removed.
   #usethis::use_data(dummy_data, overwrite=overwrite)
   return(dummy_data)
 

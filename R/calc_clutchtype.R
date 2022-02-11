@@ -44,7 +44,7 @@ calc_clutchtype <- function(data,
     if(na.rm == TRUE){
 
       clutchtype_calculated <- cutoff_dat %>%
-        dplyr::mutate(total_fledge = calc_cumfledge(x = NumberFledged, na.rm = TRUE),
+        dplyr::mutate(total_fledge = calc_cumfledge(x = .data$NumberFledged, na.rm = TRUE),
                       row = 1:dplyr::n()) %>%
         dplyr::ungroup() %>%
         dplyr::mutate(ClutchType_calculated = purrr::pmap_chr(.l = list(rows = .$row,
@@ -128,8 +128,8 @@ calc_clutchtype <- function(data,
     } else {
 
       clutchtype_calculated <- cutoff_dat %>%
-        dplyr::mutate(total_fledge = calc_cumfledge(x = NumberFledged, na.rm = TRUE),
-                      total_fledge_na = calc_cumfledge(x = NumberFledged, na.rm = FALSE),
+        dplyr::mutate(total_fledge = calc_cumfledge(x = .data$NumberFledged, na.rm = TRUE),
+                      total_fledge_na = calc_cumfledge(x = .data$NumberFledged, na.rm = FALSE),
                       row = 1:dplyr::n()) %>%
         dplyr::ungroup() %>%
         dplyr::mutate(ClutchType_calculated = purrr::pmap_chr(.l = list(rows = .$row,
