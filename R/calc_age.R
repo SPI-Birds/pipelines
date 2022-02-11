@@ -38,71 +38,31 @@
 #' calc_age(ID = IndvID, Age = Age_obsv, Date = CaptureDate, Year = SampleYear)
 calc_age <- function(data, ID, Age, Date, Year, showpb = TRUE){
 
-  pb <- progress::progress_bar$new(total = nrow(data))
+  message("Calculating age. This can take some time for larger datasets.")
 
   output <- data %>%
     dplyr::arrange({{ID}}, {{Year}}, {{Date}}) %>%
+    #For each individual, calculate their first age and year of capture
     dplyr::group_by({{ID}}) %>%
     dplyr::mutate(FirstAge  = as.integer(dplyr::first({{Age}})),
-                  FirstYear = as.integer(dplyr::first({{Year}}))) %>%
-    dplyr::mutate(yr_diff   = as.integer({{Year}}) - FirstYear,
-                  Age_calculated = purrr::pmap_int(.l = list(FirstAge, yr_diff, {{Age}}, {{ID}}),
-                                             .f = ~{
-
-                                               if(showpb){
-
-                                                 pb$tick()
-
-                                               }
-
-                                               if(is.na(..4)){
-
-                                                 return(NA_integer_)
-
-                                               }
-
-                                               #If the capture has no age or the age is greater than 3
-                                               #where 3 is within first year...
-                                               if(is.na(..1) | ..1 > 3) {
-
-                                                 #Give an age which is at least >1yo
-                                                 return(4L + 2L*..2)
-
-                                               #If the age is 2 (i.e. can't even tell if it's a chick/adult)...
-                                               } else if(..1 == 2){
-
-                                                 #Start at 2 instead of 4
-                                                 return(2L + 2L*..2)
-
-                                               } else {
-
-                                                 #Otherwise, if it was first caught as a chick
-                                                 #and it's the same year of chick capture.
-                                                 if(..2 == 0L){
-
-                                                   #Return the recorded age
-                                                   #This is important because it could also have been
-                                                   #captured as a fledgling that year, in which
-                                                   #case we don't want to give it a value of 1 (pullus)
-                                                   return(..3)
-
-                                                 } else {
-
-                                                   #If it's later than the year of birth,
-                                                   #give it a known age.
-                                                   return(3L + 2L*..2)
-
-                                                 }
-
-                                               }
-
-                                             })) %>%
-    dplyr::select(-FirstAge:-yr_diff) %>%
-    dplyr::ungroup()
+                  FirstYear = as.integer(dplyr::first({{Year}})),
+                  yr_diff   = as.integer({{Year}}) - .data$FirstYear) %>%
+    dplyr::ungroup() %>%
+    ## TODO: Look at using apply functions.
+    #Then calculate age from these data
+    #Rule 1: If individual was not caught as a chick (i.e. age is NA or >3) then first capture is age 4 (after first year, birth year unknown)
+    dplyr::mutate(Age_calculated = dplyr::case_when(is.na(.data$FirstAge) | .data$FirstAge > 3 ~ 4L + 2L*.data$yr_diff,
+                                                    #Rule 2: If first age is specifically 2 (can fly freely but age not recorded)
+                                                    #Then use first capture as age 2 (free flying but otherwise unknown)
+                                                    .data$FirstAge == 2 ~ 2L + 2L*.data$yr_diff,
+                                                    #Rule 3: Captures in first year use recorded age (either pullus = 0 or known first year i.e. fledgling = 3)
+                                                    .data$FirstAge %in% c(1, 3) & .data$yr_diff == 0 ~ {{Age}},
+                                                    #Rule 4: After birth year, first capture age is 3 (full grown born in current year)
+                                                    .data$FirstAge %in% c(1, 3) & .data$yr_diff > 0 ~ 3L + 2L*.data$yr_diff,
+                                                    #Rule 5: All other cases (e.g. ID unknown, year of capture unknown) have no Age_calculated
+                                                    TRUE ~ NA_integer_)) %>%
+    dplyr::select(-.data$FirstAge, -.data$FirstYear, -.data$yr_diff)
 
   return(output)
-
-  #Satisfy RCMD Checks
-  FirstYear <- FirstAge <- yr_diff <- NULL
 
 }

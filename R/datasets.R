@@ -255,3 +255,31 @@ column_names_v1.1 <- list(
   Location = column_names_df_v1.1$Location[which(!is.na(column_names_df_v1.1$Location))]
 )
 rm(column_names_df_v1.1)
+
+#' Brood data template in standard format (version 1.1.0)
+#'
+#' @format Data frame with 1 row and 36 variables:
+#'
+#' @name brood_data_template
+NULL
+
+#' Capture data template in standard format (version 1.1.0)
+#'
+#' @format Data frame with 1 row and 23 variables:
+#'
+#' @name capture_data_template
+NULL
+
+#' Individual data template in standard format (version 1.1.0)
+#'
+#' @format Data frame with 1 row and 9 variables:
+#'
+#' @name individual_data_template
+NULL
+
+#' Location data template in standard format (version 1.1.0)
+#'
+#' @format Data frame with 1 row and 9 variables:
+#'
+#' @name location_data_template
+NULL

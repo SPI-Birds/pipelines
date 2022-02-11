@@ -5,6 +5,8 @@
 \title{brood_data_template template}
 \format{
 Tibble
+
+Data frame with 1 row and 36 variables:
 }
 \description{
 Tibble giving names and associated classes for all the columns in the Brood data for the standard protocol v1.1.0

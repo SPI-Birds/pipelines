@@ -42,7 +42,7 @@ Imports: dplyr,
          sp,
          usethis,
          rlang,
-         openxlsx
+         tidyselect
 RoxygenNote: 7.1.2
 Suggests: 
     knitr,
