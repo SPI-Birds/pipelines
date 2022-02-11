@@ -67,8 +67,6 @@ create_dummy_data <- function() {
       Species = "PARMAJ",
       Row = seq_len(dplyr::n()),
       BroodID = paste(.data$PopID, .data$BreedingSeason, .data$Row, sep = "-"),
-      FemaleID = paste0("F", .data$Row),
-      MaleID = paste0("M", .data$Row),
       CheckID = "B1"
     )
 
@@ -94,8 +92,6 @@ create_dummy_data <- function() {
       Species = "PARMAJ",
       Row = seq(max(B1_rows$Row) + 1, length.out = dplyr::n()),
       BroodID = paste(.data$PopID, .data$BreedingSeason, .data$Row, sep = "-"),
-      FemaleID = paste0("F", .data$Row),
-      MaleID = paste0("M", .data$Row),
       CheckID = "B2"
     )
 
@@ -115,8 +111,6 @@ create_dummy_data <- function() {
       Species = "PARMAJ",
       Row = seq(max(B2_rows$Row) + 1, length.out = dplyr::n()),
       BroodID = paste(.data$PopID, .data$BreedingSeason, .data$Row, sep = "-"),
-      FemaleID = paste0("F", .data$Row),
-      MaleID = paste0("M", .data$Row),
       CheckID = "B3"
     )
 
@@ -136,8 +130,6 @@ create_dummy_data <- function() {
       Species = "PARMAJ",
       Row = seq(max(B3_rows$Row) + 1, length.out = dplyr::n()),
       BroodID = paste(.data$PopID, .data$BreedingSeason, .data$Row, sep = "-"),
-      FemaleID = paste0("F", .data$Row),
-      MaleID = paste0("M", .data$Row),
       CheckID = "B4"
     )
 
@@ -159,8 +151,6 @@ create_dummy_data <- function() {
       Species = "PARMAJ",
       Row = seq(max(B4_rows$Row) + 1, length.out = dplyr::n()),
       BroodID = paste(.data$PopID, .data$BreedingSeason, .data$Row, sep = "-"),
-      FemaleID = paste0("F", .data$Row),
-      MaleID = paste0("M", .data$Row),
       CheckID = "B5a"
     )
 
@@ -182,8 +172,6 @@ create_dummy_data <- function() {
       Species = "PARMAJ",
       Row = seq(max(B5a_rows$Row) + 1, length.out = dplyr::n()),
       BroodID = paste(.data$PopID, .data$BreedingSeason, .data$Row, sep = "-"),
-      FemaleID = paste0("F", .data$Row),
-      MaleID = paste0("M", .data$Row),
       CheckID = "B5b"
     )
 
@@ -205,8 +193,6 @@ create_dummy_data <- function() {
       Species = "PARMAJ",
       Row = seq(max(B5b_rows$Row) + 1, length.out = dplyr::n()),
       BroodID = paste(.data$PopID, .data$BreedingSeason, .data$Row, sep = "-"),
-      FemaleID = paste0("F", .data$Row),
-      MaleID = paste0("M", .data$Row),
       CheckID = "B5c"
     )
 
@@ -230,8 +216,6 @@ create_dummy_data <- function() {
       Species = "PARMAJ",
       Row = seq(max(B5c_rows$Row) + 1, length.out = dplyr::n()),
       BroodID = paste(.data$PopID, .data$BreedingSeason, .data$Row, sep = "-"),
-      FemaleID = paste0("F", .data$Row),
-      MaleID = paste0("M", .data$Row),
       CheckID = "B5d"
     )
 
@@ -252,8 +236,6 @@ create_dummy_data <- function() {
       Species = "PARMAJ",
       Row = seq(max(B5d_rows$Row) + 1, length.out = dplyr::n()),
       BroodID = paste(.data$PopID, .data$BreedingSeason, .data$Row, sep = "-"),
-      FemaleID = paste0("F", .data$Row),
-      MaleID = paste0("M", .data$Row),
       CheckID = "B6"
     )
 
@@ -310,8 +292,6 @@ create_dummy_data <- function() {
       PopID = "AAA",
       BreedingSeason = as.integer(2020),
       Species = "PARMAJ",
-      FemaleID = paste0("F", .data$Row),
-      MaleID = paste0("M", .data$Row),
       CheckID = "B7"
     )
 
@@ -342,6 +322,39 @@ create_dummy_data <- function() {
       Row = seq(max(B7_rows$Row) + 1, length.out = dplyr::n()),
       BroodID = paste(.data$PopID, .data$BreedingSeason, .data$Row, sep = "-"),
       FemaleID = paste0("F", c(min(.data$Row), min(.data$Row), min(.data$Row) + 1, min(.data$Row) + 1, min(.data$Row) + 2, min(.data$Row) + 2)),
+      CheckID = "B8"
+    )
+
+  B8_indv_rows <- Individual_data %>%
+    dplyr::mutate(
+      IndvID = B8_rows$FemaleID[1]
+    ) %>%
+    dplyr::add_row(
+      IndvID = B8_rows$FemaleID[-1]
+    ) %>%
+    dplyr::mutate(
+      Row = seq(max(B6_indv_rows$Row) + 1, length.out = dplyr::n()),
+      Species = "PARMAJ",
+      PopID = "AAA",
+      RingSeason = as.integer(2019),
+      CheckID = "B8"
+    )
+
+  B8_capture_rows <- Capture_data %>%
+    dplyr::mutate(
+      IndvID = B8_rows$FemaleID[1]
+    ) %>%
+    dplyr::add_row(
+      IndvID = B8_rows$FemaleID[-1]
+    ) %>%
+    dplyr::mutate(
+      Sex_observed = "F",
+      Species = "PARMAJ",
+      Row = seq(max(B6_capture_rows$Row) + 1, length.out = dplyr::n()),
+      CapturePopID = "AAA",
+      BreedingSeason = as.integer(2020),
+      CaptureDate = "2020-07-04",
+      CaptureID = paste(.data$CapturePopID, .data$IndvID, .data$CaptureDate, sep = "_"),
       CheckID = "B8"
     )
 
@@ -394,7 +407,7 @@ create_dummy_data <- function() {
     dplyr::mutate(
       PopID = "AAA",
       RingSeason = as.integer(2020),
-      Row = seq(max(B6_indv_rows$Row) + 1, length.out = dplyr::n()),
+      Row = seq(max(B8_indv_rows$Row) + 1, length.out = dplyr::n()),
       RingAge = "adult",
       CheckID = "B9"
     )
@@ -409,7 +422,7 @@ create_dummy_data <- function() {
     tidyr::drop_na(IndvID) %>%
     dplyr::mutate(
       CaptureDate = paste(.data$BreedingSeason, "06", "01", sep = "-"),
-      Row = seq(max(B6_capture_rows$Row) + 1, length.out = dplyr::n()),
+      Row = seq(max(B8_capture_rows$Row) + 1, length.out = dplyr::n()),
       CaptureID = paste(.data$CapturePopID, .data$IndvID, .data$CaptureDate, sep = "_"),
       LocationID = .data$CaptureID,
       CheckID = "B9"
@@ -582,12 +595,29 @@ create_dummy_data <- function() {
       CapturePopID = "AAA",
       Row = seq(max(C1b_adult_rows$Row) + 1, length.out = dplyr::n()),
       IndvID = paste0("C", .data$Row),
-      Age_calculated = 5,
+      Age_calculated = 1,
       Species = "PARMAJ",
       BreedingSeason = 2020,
       CaptureDate = "2020-05-01",
       CaptureID = paste(.data$CapturePopID, .data$IndvID, .data$CaptureDate, sep = "_"),
       CheckID = "C1b_chicks"
+    )
+
+  C1_indv_rows <- Individual_data %>%
+    dplyr::mutate(
+      IndvID = C1a_adult_rows$IndvID[1]
+    ) %>%
+    dplyr::add_row(
+      IndvID = c(C1a_adult_rows$IndvID[-1],
+                 C1a_chick_rows$IndvID,
+                 C1b_adult_rows$IndvID,
+                 C1b_chick_rows$IndvID)
+    ) %>%
+    dplyr::mutate(
+      Row = seq(max(B9_indv_rows$Row) + 1, length.out = dplyr::n()),
+      Species = "PARMAJ",
+      PopID = "AAA",
+      CheckID = "C1"
     )
 
   # C2: Checking chick age values ####
@@ -610,6 +640,20 @@ create_dummy_data <- function() {
       CheckID = "C2"
     )
 
+  C2_indv_rows <- Individual_data %>%
+    dplyr::mutate(
+      IndvID = C2_rows$IndvID[1]
+    ) %>%
+    dplyr::add_row(
+      IndvID = C2_rows$IndvID[2]
+    ) %>%
+    dplyr::mutate(
+      Row = seq(max(C1_indv_rows$Row) + 1, length.out = dplyr::n()),
+      Species = "PARMAJ",
+      PopID = "AAA",
+      CheckID = "C2"
+    )
+
   # I1: Checking unique individual IDs ####
   I1_indv_rows <- Individual_data %>%
     dplyr::mutate( # Probable
@@ -622,7 +666,7 @@ create_dummy_data <- function() {
       RingSeason = as.integer(2020),
       Species = "PARMAJ",
       Sex_calculated = "M",
-      Row = seq(max(B9_indv_rows$Row) + 1, length.out = dplyr::n()),
+      Row = seq(max(C2_indv_rows$Row) + 1, length.out = dplyr::n()),
       RingAge = "adult",
       BroodIDLaid = paste(.data$PopID, .data$RingSeason, .data$Row, "I2", sep = "-"),
       BroodIDFledged = .data$BroodIDLaid,
@@ -816,8 +860,24 @@ create_dummy_data <- function() {
       CapturePopID = "AAA",
       BreedingSeason = as.integer(2020),
       Species = "PARMAJ",
-      CaptureDate = "2020-08-01",
+      CaptureDate = "2020-06-01",
       CaptureID = paste(.data$CapturePopID, .data$IndvID, .data$CaptureDate, sep = "_"),
+      CheckID = "C3"
+    )
+
+  C3_indv_rows <- Individual_data %>%
+    dplyr::mutate(
+      IndvID = C3_capture_rows$IndvID[1]
+    ) %>%
+    dplyr::add_row(
+      IndvID = C3_capture_rows$IndvID[-1]
+    ) %>%
+    dplyr::mutate(
+      Row = seq(max(I5_indv_rows$Row) + 1, length.out = dplyr::n()),
+      PopID = "AAA",
+      Species = "PARMAJ",
+      Sex_calculated = "F",
+      RingSeason = as.integer(2019),
       CheckID = "C3"
     )
 
@@ -859,7 +919,9 @@ create_dummy_data <- function() {
       Species = "PARMAJ",
       Row = seq(max(B9_brood_rows$Row) + 1, length.out = dplyr::n()),
       BroodID = paste(.data$PopID, .data$BreedingSeason, .data$Row, sep = "-"),
-      CheckID = "C3"
+      CheckID = "C3",
+      LayDate_observed = as.Date("2020-05-31"),
+      FledgeDate_observed = as.Date("2020-07-01")
     )
 
   # B10: Comparing species of brood and of parents ####
@@ -909,9 +971,25 @@ create_dummy_data <- function() {
       Species = "PARMAJ"
     ) %>%
     dplyr::mutate(
-      Row = seq(max(I5_indv_rows$Row) + 1, length.out = dplyr::n()),
+      Row = seq(max(C3_indv_rows$Row) + 1, length.out = dplyr::n()),
       PopID = "AAA",
       RingAge = "adult",
+      CheckID = "B10"
+    )
+
+  B10_capture_rows <- Capture_data %>%
+    dplyr::mutate(
+      IndvID = B10_indv_rows$IndvID[1]
+    ) %>%
+    dplyr::add_row(
+      IndvID = B10_indv_rows$IndvID[-1]
+    ) %>%
+    dplyr::mutate(
+      Row = seq(max(C3_capture_rows$Row) + 1, length.out = dplyr::n()),
+      CapturePopID = "AAA",
+      BreedingSeason = as.integer(2020),
+      CaptureDate = "2020-07-04",
+      CaptureID = paste(.data$CapturePopID, .data$IndvID, .data$CaptureDate, sep = "_"),
       CheckID = "B10"
     )
 
@@ -968,6 +1046,22 @@ create_dummy_data <- function() {
       CheckID = "B11"
     )
 
+  B11_capture_rows <- Capture_data %>%
+    dplyr::mutate(
+      IndvID = B11_indv_rows$IndvID[1]
+    ) %>%
+    dplyr::add_row(
+      IndvID = B11_indv_rows$IndvID[-1]
+    ) %>%
+    dplyr::mutate(
+      Row = seq(max(B10_capture_rows$Row) + 1, length.out = dplyr::n()),
+      CapturePopID = "AAA",
+      BreedingSeason = as.integer(2020),
+      CaptureDate = "2020-07-04",
+      CaptureID = paste(.data$CapturePopID, .data$IndvID, .data$CaptureDate, sep = "_"),
+      CheckID = "B11"
+    )
+
   # B12: Checking sex of mothers ####
   B12_brood_rows <- Brood_data %>%
     dplyr::mutate( # Probable
@@ -1008,6 +1102,22 @@ create_dummy_data <- function() {
       PopID = "AAA",
       Species = "PARMAJ",
       RingAge = "adult",
+      CheckID = "B12"
+    )
+
+  B12_capture_rows <- Capture_data %>%
+    dplyr::mutate(
+      IndvID = B12_indv_rows$IndvID[1]
+    ) %>%
+    dplyr::add_row(
+      IndvID = B12_indv_rows$IndvID[-1]
+    ) %>%
+    dplyr::mutate(
+      Row = seq(max(B11_capture_rows$Row) + 1, length.out = dplyr::n()),
+      CapturePopID = "AAA",
+      BreedingSeason = as.integer(2020),
+      CaptureDate = "2020-07-04",
+      CaptureID = paste(.data$CapturePopID, .data$IndvID, .data$CaptureDate, sep = "_"),
       CheckID = "B12"
     )
 
@@ -1054,40 +1164,72 @@ create_dummy_data <- function() {
       CheckID = "B13"
     )
 
+  B13_capture_rows <- Capture_data %>%
+    dplyr::mutate(
+      IndvID = B13_indv_rows$IndvID[1]
+    ) %>%
+    dplyr::add_row(
+      IndvID = B13_indv_rows$IndvID[-1]
+    ) %>%
+    dplyr::mutate(
+      Row = seq(max(B12_capture_rows$Row) + 1, length.out = dplyr::n()),
+      CapturePopID = "AAA",
+      BreedingSeason = as.integer(2020),
+      CaptureDate = "2020-07-04",
+      CaptureID = paste(.data$CapturePopID, .data$IndvID, .data$CaptureDate, sep = "_"),
+      CheckID = "B13"
+    )
+
   # C4: Checking that the age of subsequent captures is ordered correctly ####
   C4_capture_rows <- Capture_data %>%
     dplyr::mutate( # Probable (different year)
-      IndvID = paste0("I", max(C3_capture_rows$Row) + 1),
+      IndvID = paste0("I", max(B13_capture_rows$Row) + 1),
       Age_observed = 5,
       CaptureDate = "2019-05-01"
     ) %>%
     dplyr::add_row( # Probable (different year)
-      IndvID = paste0("I", max(C3_capture_rows$Row) + 1),
+      IndvID = paste0("I", max(B13_capture_rows$Row) + 1),
       Age_observed = 7,
       CaptureDate = "2020-05-01"
     ) %>%
     dplyr::add_row( # Probable (same year)
-      IndvID = rep(paste0("I", max(C3_capture_rows$Row) + 2), 2),
+      IndvID = rep(paste0("I", max(B13_capture_rows$Row) + 2), 2),
       Age_observed = c(5, 5),
       CaptureDate = c("2020-05-01", "2020-05-17")
     ) %>%
     dplyr::add_row( # Improbable (warning)
-      IndvID = rep(paste0("I", max(C3_capture_rows$Row) + 3), 2),
+      IndvID = rep(paste0("I", max(B13_capture_rows$Row) + 3), 2),
       Age_observed = c(7, 6),
       CaptureDate = c("2019-05-01", "2020-05-01")
     ) %>%
     dplyr::add_row( # Impossible (error)
-      IndvID = rep(paste0("I", max(C3_capture_rows$Row) + 4), 2),
+      IndvID = rep(paste0("I", max(B13_capture_rows$Row) + 4), 2),
       Age_observed = c(5, 1),
       CaptureDate = c("2019-05-01", "2020-05-01")
     ) %>%
     dplyr::mutate(
       Sex_observed = "F",
-      Row = seq(max(C3_capture_rows$Row) + 1, length.out = dplyr::n()),
+      Row = seq(max(B13_capture_rows$Row) + 1, length.out = dplyr::n()),
       CapturePopID = "AAA",
       BreedingSeason = as.integer(stringr::str_sub(.data$CaptureDate, 1, 4)),
       Species = "PARMAJ",
-      CaptureID = paste(.data$CapturePopID, .data$IndvID, .data$CaptureDate, sep="_"),
+      CaptureID = paste(.data$CapturePopID, .data$IndvID, .data$CaptureDate, sep = "_"),
+      CheckID = "C4"
+    )
+
+  C4_indv_rows <- Individual_data %>%
+    dplyr::mutate(
+      IndvID = unique(C4_capture_rows$IndvID)[1]
+    ) %>%
+    dplyr::add_row(
+      IndvID = unique(C4_capture_rows$IndvID)[-1]
+    ) %>%
+    dplyr::mutate(
+      Row = seq(max(B13_indv_rows$Row) + 1, length.out = dplyr::n()),
+      PopID = "AAA",
+      RingSeason = as.integer(2018),
+      Species = "PARMAJ",
+      Sex_calculated = "F",
       CheckID = "C4"
     )
 
@@ -1113,6 +1255,42 @@ create_dummy_data <- function() {
       LocationType = "NB",
       LocationID = paste0("AAA_NB_", .data$Row),
       NestboxID = .data$LocationID,
+      CheckID = "L1"
+    )
+
+  L1_capture_rows <- Capture_data %>%
+    dplyr::mutate(
+      LocationID = L1_rows$LocationID[1]
+    ) %>%
+    dplyr::add_row(
+      LocationID = L1_rows$LocationID[-1]
+    ) %>%
+    dplyr::mutate(
+      Row = seq(max(C4_capture_rows$Row) + 1, length.out = dplyr::n()),
+      Age_observed = 5,
+      IndvID = paste0("I", .data$Row),
+      CapturePopID = "AAA",
+      Species = "PARMAJ",
+      CaptureDate = "2020-05-15",
+      BreedingSeason = as.integer(stringr::str_sub(.data$CaptureDate, 1, 4)),
+      CaptureID = paste(.data$CapturePopID, .data$IndvID, .data$CaptureDate, sep = "_"),
+      Sex_observed = "F",
+      CheckID = "L1"
+    )
+
+  L1_indv_rows <- Individual_data %>%
+    dplyr::mutate(
+      IndvID = L1_capture_rows$IndvID[1]
+    ) %>%
+    dplyr::add_row(
+      IndvID = L1_capture_rows$IndvID[-1]
+    ) %>%
+    dplyr::mutate(
+      Row = seq(max(C4_indv_rows$Row) + 1, length.out = dplyr::n()),
+      PopID = "AAA",
+      Species = "PARMAJ",
+      Sex_calculated = "F",
+      RingSeason = as.integer(2020),
       CheckID = "L1"
     )
 
@@ -1162,13 +1340,13 @@ create_dummy_data <- function() {
     dplyr::mutate( # Probable
       LocationID = paste0("AAA_NB_", L2_location_rows$Row[1]),
       CaptureDate = c("2020-05-01"),
-      Row = max(C4_capture_rows$Row) + 1,
+      Row = max(L1_capture_rows$Row) + 1,
       IndvID = paste0("K", L2_brood_rows$Row[1])
     ) %>%
     dplyr::add_row( # Missing from Brood_data
       LocationID = paste0("AAA_NB_", L2_location_rows$Row[2]),
       CaptureDate = c("2020-05-01"),
-      Row = max(C4_capture_rows$Row) + 2,
+      Row = max(L1_capture_rows$Row) + 2,
       IndvID = paste0("L", Row)
     ) %>%
     dplyr::mutate(
@@ -1176,6 +1354,21 @@ create_dummy_data <- function() {
       CapturePopID = "AAA",
       Species = "PARMAJ",
       CaptureID = paste(.data$CapturePopID, .data$IndvID, .data$CaptureDate, sep="_"),
+      CheckID = "L2"
+    )
+
+  L2_indv_rows <- Individual_data %>%
+    dplyr::mutate(
+      IndvID = L2_capture_rows$IndvID[1]
+    ) %>%
+    dplyr::add_row(
+      IndvID = L2_capture_rows$IndvID[2]
+    ) %>%
+    dplyr::mutate(
+      Row = seq(max(L1_indv_rows$Row) + 1, length.out = dplyr::n()),
+      PopID = "AAA",
+      Species = "PARMAJ",
+      RingSeason = as.integer(2020),
       CheckID = "L2"
     )
 
@@ -1199,7 +1392,7 @@ create_dummy_data <- function() {
 
   C5_indv_rows <- Individual_data %>%
     dplyr::mutate(
-      Row = max(B13_indv_rows$Row) + 1,
+      Row = max(L2_indv_rows$Row) + 1,
       IndvID = paste0("I", max(L2_capture_rows$Row) + 1),
       PopID = "AAA",
       RingSeason = as.integer(2020),
@@ -1259,6 +1452,23 @@ create_dummy_data <- function() {
       CheckID = "B14"
     )
 
+  B14_indv_rows <- Individual_data %>%
+    dplyr::mutate(
+      IndvID = B14_capture_rows$IndvID[1],
+      Sex_calculated = B14_capture_rows$Sex_observed[1]
+    ) %>%
+    dplyr::add_row(
+      IndvID = B14_capture_rows$IndvID[-1],
+      Sex_calculated = B14_capture_rows$Sex_observed[-1]
+    ) %>%
+    dplyr::mutate(
+      Row = seq(max(C5_indv_rows$Row) + 1, length.out = dplyr::n()),
+      PopID = "AAA",
+      RingSeason = as.integer(2020),
+      Species = "CYACAE",
+      CheckID = "B14"
+    )
+
   # B15: Checking that nest locations appear in Location_data ####
   B15_brood_rows <- Brood_data %>%
     dplyr::mutate( # Probable
@@ -1305,6 +1515,23 @@ create_dummy_data <- function() {
       CheckID = "B15"
     )
 
+  B15_indv_rows <- Individual_data %>%
+    dplyr::mutate(
+      IndvID = B15_capture_rows$IndvID[1],
+      Sex_calculated = B15_capture_rows$Sex_observed[1]
+    ) %>%
+    dplyr::add_row(
+      IndvID = B15_capture_rows$IndvID[-1],
+      Sex_calculated = B15_capture_rows$Sex_observed[-1]
+    ) %>%
+    dplyr::mutate(
+      Row = seq(max(B14_indv_rows$Row) + 1, length.out = dplyr::n()),
+      PopID = "AAA",
+      RingSeason = as.integer(2020),
+      Species = "CYACAE",
+      CheckID = "B15"
+    )
+
   B15_location_rows <- Location_data %>%
     dplyr::mutate( # Probable
       Row = max(L2_location_rows$Row) + 1,
@@ -1344,7 +1571,7 @@ create_dummy_data <- function() {
       IndvID = C6_capture_rows$IndvID[2]
     ) %>%
     dplyr::mutate(
-      Row = seq(max(C5_indv_rows$Row) + 1, length.out = dplyr::n()),
+      Row = seq(max(B15_indv_rows$Row) + 1, length.out = dplyr::n()),
       PopID = "AAA",
       RingSeason = as.integer(2020),
       Species = "PARMAJ",
@@ -1377,8 +1604,6 @@ create_dummy_data <- function() {
       BreedingSeason = as.integer(2020),
       Species = "PARMAJ",
       BroodID = paste(.data$PopID, .data$BreedingSeason, .data$Row, sep = "-"),
-      FemaleID = paste0("F", .data$Row),
-      MaleID = paste0("M", .data$Row),
       CheckID = "Approved list"
     )
 
@@ -1388,15 +1613,18 @@ create_dummy_data <- function() {
                                  C3_brood_rows, B10_brood_rows, B11_brood_rows, B12_brood_rows, B13_brood_rows,
                                  L2_brood_rows, B14_brood_rows, B15_brood_rows)
 
-  Capture_data <- dplyr::bind_rows(B6_capture_rows, B9_capture_rows, C1a_adult_rows, C1a_chick_rows,
+  Capture_data <- dplyr::bind_rows(B6_capture_rows, B8_capture_rows, B9_capture_rows, B10_capture_rows,
+                                   B11_capture_rows, B12_capture_rows, B13_capture_rows, C1a_adult_rows, C1a_chick_rows,
                                    C1b_adult_rows, C1b_chick_rows, C2_rows, I1_capture_rows,
                                    I2_capture_rows, I3_capture_rows, I4_capture_rows, I5_capture_rows,
-                                   C3_capture_rows, C4_capture_rows, L2_capture_rows, C5_capture_rows,
+                                   C3_capture_rows, C4_capture_rows, L1_capture_rows, L2_capture_rows, C5_capture_rows,
                                    B14_capture_rows, B15_capture_rows, C6_capture_rows)
 
-  Individual_data <- dplyr::bind_rows(B6_indv_rows, B9_indv_rows, I1_indv_rows, I2_indv_rows, I3_indv_rows,
-                                      I4_indv_rows, I5_indv_rows, B10_indv_rows, B11_indv_rows, B12_indv_rows,
-                                      B13_indv_rows, C5_indv_rows, C6_indv_rows)
+  Individual_data <- dplyr::bind_rows(B6_indv_rows, B8_indv_rows, B9_indv_rows, C1_indv_rows, C2_indv_rows,
+                                      I1_indv_rows, I2_indv_rows, I3_indv_rows, I4_indv_rows, I5_indv_rows,
+                                      C3_indv_rows, B10_indv_rows, B11_indv_rows, B12_indv_rows, B13_indv_rows,
+                                      C4_indv_rows, L1_indv_rows, L2_indv_rows, C5_indv_rows, B14_indv_rows,
+                                      B15_indv_rows, C6_indv_rows)
 
   Location_data <- dplyr::bind_rows(I2_location_rows, C3_location_rows, L1_rows, L2_location_rows, B15_location_rows,
                                     C6_location_rows)

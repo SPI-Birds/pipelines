@@ -91,19 +91,19 @@ test_that("Single checks function as expected...", {
   expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B4")$Error, c(NA, TRUE))
 
   # Test check B5a
-  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B5a")$Warning[c(1, 152, 153, 154)], c(NA, TRUE, NA, NA))
+  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B5a")$Warning[c(1, 152, 153, 154)], c(NA, NA, NA, NA))
   expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B5a")$Error[c(1, 152, 153, 154)], c(NA, NA, TRUE, TRUE))
 
   # Test check B5b
-  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B5b")$Warning[c(1, 152, 153, 154)], c(NA, TRUE, NA, NA))
+  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B5b")$Warning[c(1, 152, 153, 154)], c(NA, NA, NA, NA))
   expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B5b")$Error[c(1, 152, 153, 154)], c(NA, NA, TRUE, TRUE))
 
   # Test check B5c
-  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B5c")$Warning[c(1, 152, 153, 154)], c(NA, TRUE, NA, NA))
+  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B5c")$Warning[c(1, 152, 153, 154)], c(NA, NA, NA, NA))
   expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B5c")$Error[c(1, 152, 153, 154)], c(NA, NA, TRUE, TRUE))
 
   # Test check B5d
-  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B5d")$Warning[c(1, 152, 153, 154, 155)], c(NA, TRUE, TRUE, NA, NA))
+  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B5d")$Warning[c(1, 152, 153, 154, 155)], c(NA, NA, NA, NA, NA))
   expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B5d")$Error[c(1, 152, 153, 154, 155)], c(NA, NA, NA, TRUE, TRUE))
 
   # Test check B6
@@ -149,26 +149,26 @@ test_that("Single checks function as expected...", {
   # Test check C1a
   # adults
   expect_equal(subset(dummy_check$R_data$Capture_data, CheckID == "C1a_adults")$Warning[c(1, 152, 153)],
-               c(NA, TRUE, NA))
+               c(NA, NA, NA))
   expect_equal(subset(dummy_check$R_data$Capture_data, CheckID == "C1a_adults")$Error[c(1, 152, 153)],
                c(NA, NA, TRUE))
 
   # chicks
   expect_equal(subset(dummy_check$R_data$Capture_data, CheckID == "C1a_chicks")$Warning[1:9],
-               c(NA, TRUE, NA, NA, TRUE, NA, NA, TRUE, NA))
+               c(NA, NA, NA, NA, NA, NA, NA, NA, NA))
   expect_equal(subset(dummy_check$R_data$Capture_data, CheckID == "C1a_chicks")$Error[1:9],
                c(NA, NA, TRUE, NA, NA, TRUE, NA, NA, TRUE))
 
   # Test check C1b
   # adults
   expect_equal(subset(dummy_check$R_data$Capture_data, CheckID == "C1b_adults")$Warning[c(1, 152, 153)],
-               c(NA, TRUE, NA))
+               c(NA, NA, NA))
   expect_equal(subset(dummy_check$R_data$Capture_data, CheckID == "C1b_adults")$Error[c(1, 152, 153)],
                c(NA, NA, TRUE))
 
   # chicks
   expect_equal(subset(dummy_check$R_data$Capture_data, CheckID == "C1b_chicks")$Warning[c(1, 152, 153)],
-               c(NA, TRUE, NA))
+               c(NA, NA, NA))
   expect_equal(subset(dummy_check$R_data$Capture_data, CheckID == "C1b_chicks")$Error[c(1, 152, 153)],
                c(NA, NA, TRUE))
 

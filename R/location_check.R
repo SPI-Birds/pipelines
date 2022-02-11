@@ -21,7 +21,7 @@ location_check <- function(Location_data, Brood_data, Capture_data, approved_lis
 
   # Create check list with a summary of warnings and errors per check
   check_list <- tibble::tibble(CheckID = paste0("L", 1:2),
-                               CheckDescription = c("Check capture location coordinates",
+                               CheckDescription = c("Check location coordinates",
                                                     "Check that locations in Location_data appear in other data tables"),
                                Warning = NA,
                                Error = NA)
@@ -30,7 +30,7 @@ location_check <- function(Location_data, Brood_data, Capture_data, approved_lis
   message("Checking location data...")
 
   # - Check location coordinates
-  message("L1: Checking capture location coordinates...")
+  message("L1: Checking location coordinates...")
 
   check_coordinates_output <- check_coordinates(Location_data, approved_list, output, map)
 
@@ -61,9 +61,9 @@ location_check <- function(Location_data, Brood_data, Capture_data, approved_lis
               Maps = check_coordinates_output$Maps))
 }
 
-#' Check coordinates of capture locations
+#' Check coordinates of locations
 #'
-#' Check that the coordinates of capture locations are close to the centre point of the study site. Capture locations that are farther than 15 km will result in an error. It's optional to print the remaining locations on a map and visualized in the quality check report.
+#' Check that the coordinates of locations are close to the centre point of the study site. Locations that are farther than 15 km will result in an error. It's optional to print the remaining locations on a map and visualized in the quality check report.
 #'
 #' Check ID: L1.
 #'
