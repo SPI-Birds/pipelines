@@ -71,6 +71,9 @@ format_KIL <- function(db = choose_directory(),
   # The file after 1995 contains only one sheet, other file from 1995 includes data
   # about nestlings.
 
+  #### Set R option for when to use scientific notation
+  options(scipen = 100)
+
   message("Importing primary data ... 1/4")
 
   #### Load brood data before 1992
