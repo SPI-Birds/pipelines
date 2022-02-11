@@ -365,18 +365,26 @@ check_values_capture <- function(Capture_data, var, approved_list, output) {
       pb <- progress::progress_bar$new(total = 2*nrow(ref),
                                        format = "[:bar] :percent ~:eta remaining")
 
-      # Not all chicks have a recorded ChickAge. To still verify their values against reference values,
-      # we create a new Column with CurrentChickAge, which follows the following rules:
-      Capture_data <- Capture_data %>%
-        dplyr::mutate(CurrentChickAge = dplyr::case_when(
-          .data$Age_calculated > 3 ~ NA_real_, # Adults have no chick age
-          .data$Age_calculated == 3 ~ as.numeric(max(Capture_data$ChickAge, na.rm = TRUE)), # Chicks age 3 have the maximum chick age
-          .data$Age_calculated == 1 & is.na(.data$ChickAge) ~ 14, # Chicks age 1 and unknown chick age: 14
-          .data$Age_calculated == 1 & .data$ChickAge < 0 ~ 14, # Chicks age 1 and impossible chick age: 14
-          TRUE ~ as.numeric(.data$ChickAge) # Remaining chicks (chicks with known chick age) get recorded chick age
-        ))
+      if(var == "Mass") {
 
+        # Not all chicks have a recorded ChickAge. To still verify their values against age-specific reference values,
+        # we create a new Column with CurrentChickAge, which follows the following rules:
+        Capture_data <- Capture_data %>%
+          dplyr::mutate(CurrentChickAge = dplyr::case_when(
+            .data$Age_calculated > 3 ~ NA_real_, # Adults have no chick age
+            .data$Age_calculated == 3 ~ as.numeric(max(Capture_data$ChickAge, na.rm = TRUE)), # Chicks age 3 have the maximum chick age
+            .data$Age_calculated == 1 & is.na(.data$ChickAge) ~ 14, # Chicks age 1 and unknown chick age: 14
+            .data$Age_calculated == 1 & .data$ChickAge < 0 ~ 14, # Chicks age 1 and impossible chick age: 14
+            TRUE ~ as.numeric(.data$ChickAge) # Remaining chicks (chicks with known chick age) get recorded chick age
+          ))
 
+      } else if(var == "Tarsus") {
+
+        Capture_data <- Capture_data %>%
+          dplyr::mutate(CurrentChickAge = dplyr::case_when(.data$Age_calculated > 3 ~ "Adult",
+                                                           TRUE ~ "Chick"))
+
+      }
 
       Capture_err <- purrr::pmap(.l = ref,
                                  .f = ~{
