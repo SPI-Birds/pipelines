@@ -40,7 +40,7 @@ in Pilis-Visegrád Mountains, Hungary, administered by the János Török (Eötv
 \details{
 This section provides details on data management choices that are unique to
 this data. For a general description of the standard protocl please see
-\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
+\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 
 \strong{LocationID}: Nestbox numbers are not unique across plots. Therefore, unique locationIDs are
 a combination of plot and nestbox number.
@@ -68,6 +68,8 @@ how we want to deal with these hybrid broods in the future.
 \strong{Age_observed}: Age is not explicitly recorded, therefore we classify all
 adults as NA age. Individuals in nestling columns are assumed to always be pre-fledging
 and are given age 1.
+
+\strong{CaptureAlive, ReleaseAlive}: All individuals are assumed to be captured and released alive.
 
 \strong{Location_data}: All unique locationIDs (plot/nestbox number) are
 assumed to be active across the whole study period.
