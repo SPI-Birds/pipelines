@@ -4,7 +4,12 @@
 \alias{compare_species_brood_chicks}
 \title{Compare species of brood and species of chicks}
 \usage{
-compare_species_brood_chicks(Brood_data, Individual_data, approved_list)
+compare_species_brood_chicks(
+  Brood_data,
+  Individual_data,
+  approved_list,
+  output
+)
 }
 \arguments{
 \item{Brood_data}{Data frame. Brood data output from pipeline.}
@@ -13,6 +18,8 @@ compare_species_brood_chicks(Brood_data, Individual_data, approved_list)
 
 \item{approved_list}{List object. List of approved records from brood_approved_list.csv,
 capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv.}
+
+\item{output}{Character. Run checks on potential errors ("errors"), warnings ("warnings"), or both ("both"; default).}
 }
 \value{
 A list of:
@@ -23,7 +30,7 @@ A list of:
 \item{Errors}{A list of row-by-row errors.}
 }
 \description{
-Check that the species of broods is the same as species of the chicks in that brood. Common, biologically possible brood hybrids (e.g. FICHYP and FICALB) are flagged as ‘warning’. Other combinations of species are flagged as ‘potential error’.
+Check that the species of broods is the same as species of the chicks in that brood. Common, biologically possible brood hybrids (e.g. FICHYP and FICALB) are flagged as a warning. Other combinations of species are flagged as a potential error.
 }
 \details{
 Check ID: B11.

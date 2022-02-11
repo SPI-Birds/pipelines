@@ -2,15 +2,17 @@
 % Please edit documentation in R/location_check.R
 \name{check_coordinates}
 \alias{check_coordinates}
-\title{Check coordinates of capture locations}
+\title{Check coordinates of locations}
 \usage{
-check_coordinates(Location_data, approved_list, map)
+check_coordinates(Location_data, approved_list, output, map)
 }
 \arguments{
 \item{Location_data}{Data frame. Location data output from pipeline.}
 
 \item{approved_list}{List object. List of approved records from brood_approved_list.csv,
 capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv.}
+
+\item{output}{Character. Run checks on potential errors ("errors"), warnings ("warnings"), or both ("both"; default).}
 
 \item{map}{Logical. Produce map of capture locations?}
 }
@@ -24,7 +26,7 @@ A list of:
 \item{Maps}{A list of maps with capture locations.}
 }
 \description{
-Check that the coordinates of capture locations are close to the centre point of the study site. Capture locations that are farther than 15 km will result in an error. It's optional to print the remaining locations on a map and visualized in the quality check report.
+Check that the coordinates of locations are close to the centre point of the study site. Locations that are farther than 15 km will result in an error. It's optional to print the remaining locations on a map and visualized in the quality check report.
 }
 \details{
 Check ID: L1.

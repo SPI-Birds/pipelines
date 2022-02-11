@@ -4,13 +4,15 @@
 \alias{check_clutch_type_order}
 \title{Check clutch type order}
 \usage{
-check_clutch_type_order(Brood_data, approved_list)
+check_clutch_type_order(Brood_data, approved_list, output)
 }
 \arguments{
 \item{Brood_data}{Data frame. Brood data output from pipeline.}
 
 \item{approved_list}{List object. List of approved records from brood_approved_list.csv,
 capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv.}
+
+\item{output}{Character. Run checks on potential errors ("errors"), warnings ("warnings"), or both ("both"; default).}
 }
 \value{
 A list of:

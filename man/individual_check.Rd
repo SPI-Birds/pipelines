@@ -4,7 +4,13 @@
 \alias{individual_check}
 \title{Perform quality checks on individual data}
 \usage{
-individual_check(Individual_data, Capture_data, Location_data, approved_list)
+individual_check(
+  Individual_data,
+  Capture_data,
+  Location_data,
+  approved_list,
+  output
+)
 }
 \arguments{
 \item{Individual_data}{Data frame. Individual data output from pipeline.}
@@ -13,6 +19,8 @@ individual_check(Individual_data, Capture_data, Location_data, approved_list)
 
 \item{approved_list}{List object. List of approved records from brood_approved_list.csv,
 capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv.}
+
+\item{output}{Character. Run checks on potential errors ("errors"), warnings ("warnings"), or both ("both"; default).}
 }
 \value{
 A list of:
@@ -32,6 +40,6 @@ The following individual data checks are performed:
 \item \strong{I2}: Check if all chicks have BroodID using \code{\link{check_BroodID_chicks}}.
 \item \strong{I3}: Check if individuals have no conflicting sex using \code{\link{check_conflicting_sex}}.
 \item \strong{I4}: Check if individuals have no conflicting species using \code{\link{check_conflicting_species}}.
-\item \strong{I5}: Check if individuals in Individual_data appear in Capture_data  using \code{\link{check_individuals_captures}}.
+\item \strong{I5}: Check if individuals in Individual_data appear in Capture_data using \code{\link{check_individuals_captures}}.
 }
 }

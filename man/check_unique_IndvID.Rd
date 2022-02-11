@@ -4,13 +4,15 @@
 \alias{check_unique_IndvID}
 \title{Check unique individual identifiers}
 \usage{
-check_unique_IndvID(Individual_data, approved_list)
+check_unique_IndvID(Individual_data, approved_list, output)
 }
 \arguments{
 \item{Individual_data}{Data frame. Individual data output from pipeline.}
 
 \item{approved_list}{List object. List of approved records from brood_approved_list.csv,
 capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv.}
+
+\item{output}{Character. Run checks on potential errors ("errors"), warnings ("warnings"), or both ("both"; default).}
 }
 \value{
 A list of:
@@ -21,7 +23,7 @@ A list of:
 \item{Errors}{A list of row-by-row errors.}
 }
 \description{
-Check that the individual identifiers (IndvID) are unique. Records with individual identifiers that are not unique within populations will result in an error.
+Check that the individual identifiers (IndvID) are unique. Records with individual identifiers that are not unique within populations will be flagged as a potential error.
 }
 \details{
 Check ID: I1.

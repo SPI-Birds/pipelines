@@ -11,9 +11,9 @@
 #' @param report_format Character. Format of output report: "html", "pdf", or "both" (default).
 #' @param report_file Character. Name of the output reports. Default: "quality-check-report". Note that to the file name of the report on potential errors the suffix "_errors" is added (i.e. "quality-check-report_errors"), and to the report on warnings and verified records "_warnings" (i.e., "quality-check-report_warnings").
 #' @param latex_engine Character. LaTeX engine for producing PDF output. Options are "pdflatex", "xelatex", and "lualatex" (default). NB: pdfLaTeX and XeLaTeX have memory limit restrictions, which can be problematic when generating large pdfs. LuaLaTeX has dynamic memory management which may help for generating large pdfs.
-#' @param test Logical. Is `quality_check` being used inside package tests? If  \code{TRUE, `R_data` is ignored and
+#' @param test Logical. Is `quality_check` being used inside package tests? If  \code{TRUE}, `R_data` is ignored and
 #' dummy data will be used instead.
-#' @param map Logical. If  \code{TRUE, a map of capture locations is added in the report. See \code{\link{check_coordinates}}.
+#' @param map Logical. If  \code{TRUE}, a map of capture locations is added in the report. See \code{\link{check_coordinates}}.
 #'
 #' @return
 #' A list of:

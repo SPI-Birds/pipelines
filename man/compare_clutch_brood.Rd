@@ -4,13 +4,15 @@
 \alias{compare_clutch_brood}
 \title{Compare clutch and brood sizes}
 \usage{
-compare_clutch_brood(Brood_data, approved_list)
+compare_clutch_brood(Brood_data, approved_list, output)
 }
 \arguments{
 \item{Brood_data}{Data frame. Brood data output from pipeline.}
 
 \item{approved_list}{List object. List of approved records from brood_approved_list.csv,
 capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv.}
+
+\item{output}{Character. Run checks on potential errors ("errors"), warnings ("warnings"), or both ("both"; default).}
 }
 \value{
 A list of:
@@ -21,7 +23,7 @@ A list of:
 \item{Errors}{A list of row-by-row errors.}
 }
 \description{
-Compare clutch size and brood size per brood. In non-manipulated broods, clutch size should be larger or equal to brood size. If not, the record will result in an error. In broods with clutch manipulation, clutch size might be smaller than brood size. If so, the record will result in a warning.
+Compare clutch size and brood size per brood. In non-manipulated broods, clutch size should be larger or equal to brood size. If not, the record will be flagged as a potential error. In broods with clutch manipulation, clutch size might be smaller than brood size. If so, the record will be flagged as a warning.
 }
 \details{
 Check ID: B1.

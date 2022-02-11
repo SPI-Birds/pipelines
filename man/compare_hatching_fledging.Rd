@@ -4,13 +4,15 @@
 \alias{compare_hatching_fledging}
 \title{Compare hatching and fledging dates}
 \usage{
-compare_hatching_fledging(Brood_data, approved_list)
+compare_hatching_fledging(Brood_data, approved_list, output)
 }
 \arguments{
 \item{Brood_data}{Data frame. Brood data output from pipeline.}
 
 \item{approved_list}{List object. List of approved records from brood_approved_list.csv,
 capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv.}
+
+\item{output}{Character. Run checks on potential errors ("errors"), warnings ("warnings"), or both ("both"; default).}
 }
 \value{
 A list of:

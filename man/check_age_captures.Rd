@@ -4,13 +4,15 @@
 \alias{check_age_captures}
 \title{Check age of subsequent captures}
 \usage{
-check_age_captures(Capture_data, approved_list)
+check_age_captures(Capture_data, approved_list, output)
 }
 \arguments{
 \item{Capture_data}{Data frame. Capture data output from pipeline.}
 
 \item{approved_list}{List object. List of approved records from brood_approved_list.csv,
 capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv.}
+
+\item{output}{Character. Run checks on potential errors ("errors"), warnings ("warnings"), or both ("both"; default).}
 }
 \value{
 A list of:
@@ -21,7 +23,7 @@ A list of:
 \item{Errors}{A list of row-by-row errors.}
 }
 \description{
-Check that the observed age of chronologically ordered captures is correct. Individuals who have a record as a chick in the same or a later year than a record of an adult will be flagged as an error. Other cases where the age of the subsequent capture is not equal or greater than the previous will be flagged as a warning.
+Check that the observed age of chronologically ordered captures is correct. Individuals who have a record as a chick in the same or a later year than a record of an adult will be flagged as a potential error. Other cases where the age of the subsequent capture is not equal or greater than the previous will be flagged as a warning.
 }
 \details{
 Check ID: C4.
