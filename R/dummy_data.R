@@ -18,26 +18,37 @@ create_dummy_data <- function() {
 
   # Create skeletons for each pipeline data frame
   # Brood data
-  Brood_data <- brood_data_template %>%
-    dplyr::mutate(Row = NA_integer_) %>%
+  Brood_data <- brood_data_template[1,] %>%
+    dplyr::mutate(dplyr::across(.cols = where(is.character), .fns = ~ NA_character_),
+                  dplyr::across(.cols = where(is.integer), .fns = ~ NA_integer_),
+                  dplyr::across(.cols = where(~ class(.x) == "Date"), .fns = ~ as.Date(NA_character_)),
+                  Row = NA_integer_) %>%
     dplyr::select(Row, dplyr::everything())
 
 
   # Capture data
-  Capture_data <- capture_data_template %>%
-    dplyr::mutate(Row = NA_integer_) %>%
+  Capture_data <- capture_data_template[1,] %>%
+    dplyr::mutate(dplyr::across(.cols = where(is.character), .fns = ~ NA_character_),
+                  dplyr::across(.cols = where(is.integer), .fns = ~ NA_integer_),
+                  dplyr::across(.cols = where(~ class(.x) == "Date"), .fns = ~ as.Date(NA_character_)),
+                  Row = NA_integer_) %>%
     dplyr::select(Row, dplyr::everything())
 
 
   # Individual data
-  Individual_data <- individual_data_template %>%
-    dplyr::mutate(Row = NA_integer_) %>%
+  Individual_data <- individual_data_template[1,] %>%
+    dplyr::mutate(dplyr::across(.cols = where(is.character), .fns = ~ NA_character_),
+                  dplyr::across(.cols = where(is.integer), .fns = ~ NA_integer_),
+                  Row = NA_integer_) %>%
     dplyr::select(Row, dplyr::everything())
 
 
   # Location data
-  Location_data <- location_data_template %>%
-    dplyr::mutate(Row = NA_integer_) %>%
+  Location_data <- location_data_template[1,] %>%
+    dplyr::mutate(dplyr::across(.cols = where(is.character), .fns = ~ NA_character_),
+                  dplyr::across(.cols = where(is.integer), .fns = ~ NA_integer_),
+                  dplyr::across(.cols = where(is.numeric), .fns = ~ NA_real_),
+                  Row = NA_integer_) %>%
     dplyr::select(Row, dplyr::everything())
 
 
@@ -448,6 +459,7 @@ create_dummy_data <- function() {
       Row = seq(max(B9_capture_rows$Row) + 1, length.out = dplyr::n()),
       IndvID = paste0("C", .data$Row),
       Age_calculated = 5,
+      Age_observed = .data$Age_calculated,
       Species = "PARMAJ",
       BreedingSeason = 2020,
       CaptureDate = "2020-05-01",
@@ -542,6 +554,7 @@ create_dummy_data <- function() {
     dplyr::mutate(
       CapturePopID = "AAA",
       Row = seq(max(C1a_adult_rows$Row) + 1, length.out = dplyr::n()),
+      Age_observed = .data$Age_calculated,
       IndvID = paste0("C", .data$Row),
       Species = "PARMAJ",
       BreedingSeason = 2020,
@@ -570,6 +583,7 @@ create_dummy_data <- function() {
       Row = seq(max(C1a_chick_rows$Row) + 1, length.out = dplyr::n()),
       IndvID = paste0("C", .data$Row),
       Age_calculated = 5,
+      Age_observed = 5,
       Species = "PARMAJ",
       BreedingSeason = 2020,
       CaptureDate = "2020-05-01",
@@ -596,6 +610,7 @@ create_dummy_data <- function() {
       Row = seq(max(C1b_adult_rows$Row) + 1, length.out = dplyr::n()),
       IndvID = paste0("C", .data$Row),
       Age_calculated = 1,
+      Age_observed = 1,
       Species = "PARMAJ",
       BreedingSeason = 2020,
       CaptureDate = "2020-05-01",
@@ -1611,23 +1626,27 @@ create_dummy_data <- function() {
   Brood_data <- dplyr::bind_rows(al_rows, B1_rows, B2_rows, B3_rows, B4_rows, B5a_rows, B5b_rows,
                                  B5c_rows, B5d_rows, B6_brood_rows, B7_rows, B8_rows, B9_brood_rows,
                                  C3_brood_rows, B10_brood_rows, B11_brood_rows, B12_brood_rows, B13_brood_rows,
-                                 L2_brood_rows, B14_brood_rows, B15_brood_rows)
+                                 L2_brood_rows, B14_brood_rows, B15_brood_rows) %>%
+    dplyr::arrange(.data$Row)
 
-  Capture_data <- dplyr::bind_rows(B6_capture_rows, B8_capture_rows, B9_capture_rows, B10_capture_rows,
+  Capture_data <- dplyr::bind_rows(B6_capture_rows, B8_capture_rows, B9_capture_rows,
                                    B11_capture_rows, B12_capture_rows, B13_capture_rows, C1a_adult_rows, C1a_chick_rows,
                                    C1b_adult_rows, C1b_chick_rows, C2_rows, I1_capture_rows,
                                    I2_capture_rows, I3_capture_rows, I4_capture_rows, I5_capture_rows,
-                                   C3_capture_rows, C4_capture_rows, L1_capture_rows, L2_capture_rows, C5_capture_rows,
-                                   B14_capture_rows, B15_capture_rows, C6_capture_rows)
+                                   C3_capture_rows, B10_capture_rows,C4_capture_rows, L1_capture_rows, L2_capture_rows,
+                                   C5_capture_rows, B14_capture_rows, B15_capture_rows, C6_capture_rows) %>%
+    dplyr::arrange(.data$Row)
 
   Individual_data <- dplyr::bind_rows(B6_indv_rows, B8_indv_rows, B9_indv_rows, C1_indv_rows, C2_indv_rows,
                                       I1_indv_rows, I2_indv_rows, I3_indv_rows, I4_indv_rows, I5_indv_rows,
                                       C3_indv_rows, B10_indv_rows, B11_indv_rows, B12_indv_rows, B13_indv_rows,
                                       C4_indv_rows, L1_indv_rows, L2_indv_rows, C5_indv_rows, B14_indv_rows,
-                                      B15_indv_rows, C6_indv_rows)
+                                      B15_indv_rows, C6_indv_rows) %>%
+    dplyr::arrange(.data$Row)
 
   Location_data <- dplyr::bind_rows(I2_location_rows, C3_location_rows, L1_rows, L2_location_rows, B15_location_rows,
-                                    C6_location_rows)
+                                    C6_location_rows) %>%
+    dplyr::arrange(.data$Row)
 
   # Check whether row numbers are unique
   if(any(duplicated(Brood_data$Row), duplicated(Capture_data$Row), duplicated(Individual_data$Row), duplicated(Location_data$Row))) {
