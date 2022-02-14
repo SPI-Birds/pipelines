@@ -107,8 +107,8 @@ check_coordinates <- function(Location_data, approved_list, output, map){
       tidyr::drop_na(dplyr::any_of(c("Longitude", "Latitude"))) %>%
       dplyr::group_by(.data$PopID) %>%
       # Centre points are determined by calculating the maximum kernel density for Longitude and Latitude
-      dplyr::summarise(Centre_lon = density(Longitude)$x[which(density(Longitude)$y == max(density(Longitude)$y))],
-                       Centre_lat = density(Latitude)$x[which(density(Latitude)$y == max(density(Latitude)$y))],
+      dplyr::summarise(Centre_lon = stats::density(Longitude)$x[which(stats::density(Longitude)$y == max(stats::density(Longitude)$y))],
+                       Centre_lat = stats::density(Latitude)$x[which(stats::density(Latitude)$y == max(stats::density(Latitude)$y))],
                        .groups = "drop")
 
     # Add centre points to original data frame

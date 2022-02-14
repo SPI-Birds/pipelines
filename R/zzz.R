@@ -398,4 +398,5 @@ utils::globalVariables(c(".", "AvgChickTarsus", "AvgChickMass", "AvgTarsus", "Po
                          "Stage", "Logis", "BroodSize_observed", "NumberFledged_observed",
                          "ClutchSize_observed", "HatchDate_observed", "FledgeDate_observed",
                          "LayDate_observed", "IndvSpecies", "SpeciesComp",
-                         "OtherSpeciesChicks", "date_time", "Site", "PLACE", "dummy_data", "where"))
+                         "OtherSpeciesChicks", "date_time", "Site", "PLACE", "dummy_data", "where",
+                         "Distance"))

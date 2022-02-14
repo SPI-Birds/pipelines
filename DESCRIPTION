@@ -29,17 +29,18 @@ Imports: dplyr,
          tibble,
          tidyr,
          readxl,
+         readr,
          janitor,
          here,
          progress,
          tcltk,
-         rlang
+         rlang,
          rgeos,
          rstudioapi,
          sp,
          usethis,
-         rlang,
-         tidyselect
+         tidyselect,
+         ggmap
 RoxygenNote: 7.1.2
 Suggests: 
     knitr,

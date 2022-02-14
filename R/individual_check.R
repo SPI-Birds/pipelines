@@ -13,6 +13,7 @@
 #'
 #' @inheritParams checks_individual_params
 #' @inheritParams checks_capture_params
+#' @param Location_data Data frame. Location data output from pipeline.
 #'
 #' @inherit checks_return return
 #'
