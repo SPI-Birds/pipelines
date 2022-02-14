@@ -4,7 +4,7 @@
 \alias{check_values_capture}
 \title{Check capture variable values against reference values}
 \usage{
-check_values_capture(Capture_data, var, approved_list)
+check_values_capture(Capture_data, var, approved_list, output)
 }
 \arguments{
 \item{Capture_data}{Data frame. Capture data output from pipeline.}
@@ -12,7 +12,9 @@ check_values_capture(Capture_data, var, approved_list)
 \item{var}{Character. Variable to check against reference values.}
 
 \item{approved_list}{List object. List of approved records from brood_approved_list.csv,
-capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv}
+capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv.}
+
+\item{output}{Character. Run checks on potential errors ("errors"), warnings ("warnings"), or both ("both"; default).}
 }
 \value{
 A list of:
@@ -27,25 +29,27 @@ Check variable values against population-species-specific reference values in ca
 }
 \details{
 \strong{Mass} \cr
-Check ID: C2a \cr
+Check ID: C1a \cr
 \itemize{
 \item{Adults}
 \itemize{
-\item{\emph{n >= 100}\cr}{Records are considered unusual if they are smaller than the 1st percentile or larger than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error.}
-\item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as an error.}
+\item{\emph{n >= 100}\cr}{Records are considered impossible if they are negative or larger than 2 times the 99th percentile, and will be flagged as a potential error.}
+\item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as a potential error.}
 }
 \item{Chicks}
 \itemize{
-\item{Reference values for chicks are calculated for each age (in days). This function tries to fit a logistic growth model to determine reference values to each day. If this model fails, reference values are determined per age if the number of observations is sufficiently large (n >= 100). Records are considered unusual if they are smaller than the 1st percentile or larger than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error.}
-\item{In case the logistic growth model fails and the number of observations for an age are too low (n < 100), records are considered impossible if they are negative, and will be flagged as an error.}
+\item{Reference values for chicks are calculated for each age (in days). This function tries to fit a logistic growth model to determine reference values to each day. If this model fails, reference values are determined per age if the number of observations is sufficiently large (n >= 100). Records are considered impossible if they are negative or larger than 2 times the 99th percentile, and will be flagged as a potential error.}
+\item{In case the logistic growth model fails and the number of observations for an age are too low (n < 100), records are considered impossible if they are negative, and will be flagged as a potential error.}
 }
 }
 
 
 \strong{Tarsus} \cr
-Check ID: C2b \cr
+Check ID: C1b \cr
 \itemize{
-\item{\emph{n >= 100}\cr}{Records are considered unusual if they are smaller than the 1st percentile or larger than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error.}
-\item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as an error.}
+\item{\emph{n >= 100}\cr}{Records are considered impossible if they are negative or larger than 2 times the 99th percentile, and will be flagged as a potential error.}
+\item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as a potential error.}
 }
+
+Note: when the number of observations is too low to generate reference values, a message is added to the list of warnings.
 }

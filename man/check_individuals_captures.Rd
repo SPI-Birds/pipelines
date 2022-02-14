@@ -4,7 +4,12 @@
 \alias{check_individuals_captures}
 \title{Check that all individuals in Individual_data appear in Capture_data}
 \usage{
-check_individuals_captures(Individual_data, Capture_data, approved_list)
+check_individuals_captures(
+  Individual_data,
+  Capture_data,
+  approved_list,
+  output
+)
 }
 \arguments{
 \item{Individual_data}{Data frame. Individual data output from pipeline.}
@@ -12,7 +17,9 @@ check_individuals_captures(Individual_data, Capture_data, approved_list)
 \item{Capture_data}{Data frame. Capture data output from pipeline.}
 
 \item{approved_list}{List object. List of approved records from brood_approved_list.csv,
-capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv}
+capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv.}
+
+\item{output}{Character. Run checks on potential errors ("errors"), warnings ("warnings"), or both ("both"; default).}
 }
 \value{
 A list of:
@@ -23,8 +30,8 @@ A list of:
 \item{Errors}{A list of row-by-row errors.}
 }
 \description{
-Check that all individuals recorded in Individual_data appear at least once in Capture_data. This should never occur, because Individual_data is usually a direct product of Capture_data (i.e., all unique individuals from Capture_data). If we find missing individuals, we need to check the pipeline code.
+Check that all individuals recorded in Individual_data appear at least once in Capture_data. Missing individuals should never occur, because Individual_data is usually a direct product of Capture_data (i.e., all unique individuals from Capture_data). Missing individuals will be flagged as a potential error. If there are any missing individuals, the SPI-Birds team needs to check the pipeline code. This check is the opposite of check C5 (\code{\link{check_captures_individuals}}).
 }
 \details{
-Check ID: I6.
+Check ID: I5.
 }

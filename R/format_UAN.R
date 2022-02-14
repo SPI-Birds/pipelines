@@ -425,7 +425,7 @@ create_capture_UAN <- function(data, species_filter, pop_filter){
     # TODO: Verify with Frank Adriaensen
     dplyr::mutate(CaptureAlive = dplyr::case_when(.data$CaptureMethod == "DG" ~ FALSE,
                                                   TRUE ~ TRUE),
-                  ReleaseAlive = CaptureAlive) %>%
+                  ReleaseAlive = .data$CaptureAlive) %>%
     # Determine age at first capture for every individual
     dplyr::mutate(ischick = dplyr::case_when(.data$Age_observed_new <= 3 ~ 1L)) %>%
     calc_age(ID = .data$IndvID, Age = .data$ischick, Date = .data$CaptureDate, Year = .data$BreedingSeason) %>%

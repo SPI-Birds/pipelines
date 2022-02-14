@@ -4,136 +4,193 @@
 #'
 #' The following location data checks are performed:
 #' \itemize{
-#' \item \strong{L1}: Check if the formats of each column in \code{Location_data} match with the standard format using \code{\link{check_format_location}}.
+#' \item \strong{L1}: Check capture location coordinates using \code{\link{check_coordinates}}.
+#' \item \strong{L2}: Check that all locations in Location_data appear in other data tables using \code{\link{check_locations_brood_capture}}.
 #' }
 #'
 #' @inheritParams checks_location_params
-#' @param check_format \code{TRUE} or \code{FALSE}. If \code{TRUE}, the check on variable format (i.e. \code{\link{check_format_location}}) is included in the quality check. Default: \code{TRUE}.
+#' @inheritParams checks_brood_params
+#' @inheritParams checks_capture_params
+#' @param map Logical. Produce map of capture locations? See \code{\link{check_coordinates}}.
 #'
 #' @inherit checks_return return
 #'
 #' @export
 
-location_check <- function(Location_data, check_format=TRUE, approved_list){
+location_check <- function(Location_data, Brood_data, Capture_data, approved_list, output, map){
 
   # Create check list with a summary of warnings and errors per check
-  check_list <- tibble::tibble(CheckID = paste0("L", 1),
-                               CheckDescription = c("Check format of location data"),
+  check_list <- tibble::tibble(CheckID = paste0("L", 1:2),
+                               CheckDescription = c("Check location coordinates",
+                                                    "Check that locations in Location_data appear in other data tables"),
                                Warning = NA,
                                Error = NA)
 
   # Checks
-  message("Location checks")
+  message("Checking location data...")
 
-  # - Check format location data
-  if(check_format) {
-    message("L1: Checking format of location data...")
+  # - Check location coordinates
+  message("L1: Checking location coordinates...")
 
-    check_format_location_output <- check_format_location(Location_data, approved_list)
+  check_coordinates_output <- check_coordinates(Location_data, approved_list, output, map)
 
-    check_list[1,3:4] <- check_format_location_output$CheckList
-  }
+  check_list[1, 3:4] <- check_coordinates_output$CheckList
 
-  if(check_format) {
-    # Warning list
-    warning_list <- list(Check1 = check_format_location_output$WarningOutput)
+  # - Check that all locations in Location_data appear in other data tables
+  message("L2: Checking that locations in Location_data appear in other data tables...")
 
-    # Error list
-    error_list <- list(Check1 = check_format_location_output$ErrorOutput)
-  } else {
-    # Warning list
-    warning_list <- NULL
+  check_locations_brood_capture_output <- check_locations_brood_capture(Location_data, Brood_data, Capture_data, approved_list, output)
 
-    # Error list
-    error_list <- NULL
+  check_list[2, 3:4] <- check_locations_brood_capture_output$CheckList
 
-    check_list <- NULL
-  }
+  # Warning list
+  warning_list <- list(Check1 = check_coordinates_output$WarningOutput,
+                       Check2 = check_locations_brood_capture_output$WarningOutput)
+
+  # Error list
+  error_list <- list(Check1 = check_coordinates_output$ErrorOutput,
+                     Check2 = check_locations_brood_capture_output$ErrorOutput)
 
   return(list(CheckList = check_list,
-              WarningRows = NULL,
-              ErrorRows = NULL,
+              WarningRows = unique(c(check_coordinates_output$WarningRows,
+                                     check_locations_brood_capture_output$WarningRows)),
+              ErrorRows = unique(c(check_coordinates_output$ErrorRows,
+                                   check_locations_brood_capture_output$ErrorRows)),
               Warnings = warning_list,
-              Errors = error_list))
+              Errors = error_list,
+              Maps = check_coordinates_output$Maps))
 }
 
-
-#' Check format of location data
+#' Check coordinates of locations
 #'
-#' Check that the format of each column in the location data match with the standard format.
+#' Check that the coordinates of locations are close to the centre point of the study site. Locations that are farther than 15 km will result in an error. It's optional to print the remaining locations on a map and visualized in the quality check report.
 #'
 #' Check ID: L1.
 #'
 #' @inheritParams checks_location_params
+#' @param map Logical. Produce map of capture locations?
 #'
-#' @inherit checks_return return
+#' @return
+#' A list of:
+#' \item{CheckList}{A summary dataframe of check warnings and errors.}
+#' \item{WarningRows}{A vector of rows with warnings.}
+#' \item{ErrorRows}{A vector of rows with errors.}
+#' \item{Warnings}{A list of row-by-row warnings.}
+#' \item{Errors}{A list of row-by-row errors.}
+#' \item{Maps}{A list of maps with capture locations.}
+#'
+#' @import ggmap
 #'
 #' @export
 
-check_format_location <- function(Location_data, approved_list){
+check_coordinates <- function(Location_data, approved_list, output, map){
 
-  ## Data frame with column names and formats according to the standard protocol
-  Location_data_standard <- tibble::tibble(Variable = c("Row", "LocationID", "NestboxID", "LocationType",
-                                                        "PopID", "Latitude", "Longitude",
-                                                        "StartSeason", "EndSeason", "Habitat"),
-                                           Format_standard = c("integer", "character", "character", "character",
-                                                               "character", "numeric", "numeric",
-                                                               "integer", "integer", "character"))
-
-  ## Data frame with column names and formats from Location data
-  Location_data_col <- tibble::tibble(Variable = names(Location_data),
-                                      Format = unlist(purrr::pmap(list(Location_data), class)))
-
-  ## Mismatches between Location data and standard protocol
-  ## Column format "logical" refers to unmeasured/undetermined variables (NA)
-  Location_data_mismatch <- dplyr::left_join(Location_data_standard, Location_data_col, by = "Variable") %>%
-    filter(.data$Format != "logical" & .data$Format_standard != .data$Format)
-
-  # Errors
+  # Check for potential errors
   err <- FALSE
+  error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  if(nrow(Location_data_mismatch) > 0) {
-    err <- TRUE
+  # Skip if coordinates were not recorded, or if only warnings are flagged
+  if(!any(!is.na(Location_data$Longitude) & !is.na(Location_data$Latitude)) | !(output %in% c("both", "errors"))) {
 
-    error_output <- purrr::map2(.x = Location_data_mismatch$Variable,
-                                .y = Location_data_mismatch$Format_standard,
-                                .f = ~{
-                                  paste0("The format of ", .x, " in Location_data is not ", .y, ".")
-                                })
-  }
-
-
-  # Warnings
-  #Test for empty columns by looking at uniques, rather than using data type
-  warning_output <- purrr::pmap(.l = list(as.list(Location_data), colnames(Location_data)),
-                                .f = ~{
-
-                                  if(all(is.na(unique(..1)))){
-
-                                    return(paste0(..2, " in Location_data is missing, unmeasured or undetermined (NA)."))
-
-                                  } else {
-
-                                    return()
-
-                                  }
-
-                                })
-
-
-
-  #Remove all cases that return NULL
-  #Assigning NULL (rather than returning NULL in function) removes the list item
-  warning_output[sapply(warning_output, is.null)] <- NULL
-
-  if(length(warning_output) > 0){
-
-    war <- TRUE
+    remote_locations <- tibble::tibble(Row = integer())
 
   } else {
 
-    war <- FALSE
+    # Determine centre point per PopID
+    centre_points <- Location_data %>%
+      # Filter out capture locations without coordinates
+      # TODO: Maybe in future only for LocationType NB (nestbox) & MN (mist net),
+      # not FD (dead recoveries)
+      # TODO: For populations with a lot of subplots, or for migratory species,
+      # determine centre points via k-clustering?
+      tidyr::drop_na(dplyr::any_of(c("Longitude", "Latitude"))) %>%
+      dplyr::group_by(.data$PopID) %>%
+      # Centre points are determined by calculating the maximum kernel density for Longitude and Latitude
+      dplyr::summarise(Centre_lon = stats::density(Longitude)$x[which(stats::density(Longitude)$y == max(stats::density(Longitude)$y))],
+                       Centre_lat = stats::density(Latitude)$x[which(stats::density(Latitude)$y == max(stats::density(Latitude)$y))],
+                       .groups = "drop")
+
+    # Add centre points to original data frame
+    locations <- Location_data %>%
+      tidyr::drop_na(dplyr::any_of(c("Longitude", "Latitude"))) %>%
+      dplyr::left_join(centre_points, by = "PopID") %>%
+      # Calculate distance from each capture location to population-specific centre points
+      dplyr::mutate(Coords = sf::st_as_sf(., coords = c("Longitude", "Latitude"),
+                                          crs = "EPSG:4326")$geometry,
+                    Centre = sf::st_as_sf(., coords = c("Centre_lon", "Centre_lat"),
+                                          crs = "EPSG:4326")$geometry,
+                    Distance = as.integer(sf::st_distance(.data$Coords, .data$Centre, by_element = TRUE)))
+
+    # Filter very remote locations (15 km or farther)
+    remote_locations <- locations %>%
+      dplyr::filter(.data$Distance >= 15000) %>%
+      dplyr::select(.data$Row, .data$LocationID, .data$PopID, .data$Distance)
+
+    # If potential errors, add to report
+    if(nrow(remote_locations) > 0) {
+
+      err <- TRUE
+
+      # Compare to approved_list
+      error_records <- remote_locations %>%
+        dplyr::mutate(CheckID = "L1") %>%
+        dplyr::anti_join(approved_list$Location_approved_list, by = c("PopID", "CheckID", "LocationID"))
+
+      # Create quality check report statements
+      error_output <- purrr::pmap(.l = error_records,
+                                  .f = ~{
+
+                                    paste0("Record on row ", ..1, " (LocationID: ", ..2, "; PopID: ", ..3, ")",
+                                           " is ", round(..4 / 1000, 1) , " km away from the centre point of the study site.")
+
+                                  })
+
+    }
+
+  }
+
+  # No check for warnings
+  war <- FALSE
+  #warning_records <- tibble::tibble(Row = NA_character_)
+  warning_output <- NULL
+
+  # Produce map of capture locations
+  if(map & any(!is.na(Location_data$Longitude) & !is.na(Location_data$Latitude)) & output %in% c("both", "errors")) {
+
+    # Only map capture locations within 15 km from study site
+    map_data <- locations %>%
+      dplyr::filter(Distance < 15000)
+
+    suppressMessages({
+
+      # Create map per PopID
+      maps <- purrr::map(.x = unique(map_data$PopID),
+                         .f = ~{
+
+                           ggmap::qmplot(data = map_data[map_data$PopID == .x,], x = Longitude,y = Latitude,
+                                         source = "stamen", maptype = "terrain", extent = "panel",
+                                         color = I("#881f70"), alpha = I(0.4), size = I(2)) +
+                             #ggplot2::geom_point(data = map_data[map_data$PopID == .x, ][1, ], ggplot2::aes(x = Centre_lon, y = Centre_lat), color = "black", shape = 17) +
+                             ggplot2::theme_classic() +
+                             ggplot2::theme(axis.text = ggplot2::element_text(color = "black"),
+                                            axis.title = ggplot2::element_text(size = 12),
+                                            panel.border = ggplot2::element_rect(color = "black", fill = NA)) +
+                             ggplot2::labs(title = pop_codes[pop_codes$PopID == .x, ]$PopName,
+                                           subtitle = paste0("Capture locations within 15 km from centre point (",
+                                                             round(map_data[map_data$PopID == .x,]$Centre_lon[1], 3), ", ",
+                                                             round(map_data[map_data$PopID == .x,]$Centre_lat[1], 3), ")."),
+                                           caption = "Source: Map tiles by Stamen Design, under CC BY 3.0. \nMap data by OpenStreetMap, under ODbL.")
+
+
+                         }) #%>%
+        #setNames(unique(map_data$PopID))
+
+    })
+
+  } else {
+
+    maps <- NULL
 
   }
 
@@ -141,10 +198,97 @@ check_format_location <- function(Location_data, approved_list){
                                Error = err)
 
   return(list(CheckList = check_list,
+              WarningRows = NULL,
+              ErrorRows = error_records$Row,
+              WarningOutput = unlist(warning_output),
+              ErrorOutput = unlist(error_output),
+              Maps = maps))
+
+  # Satisfy RCMD checks
+  approved_list <- NULL
+
+}
+
+#' Check that all locations in Location_data appear in other data tables
+#'
+#' Check that all locations recorded in Location_data appear at least once in Brood_data or Capture_data. Missing locations will be flagged as a potential error. This check is the opposite of checks B15 (\code{\link{check_brood_locations}}) and C6 (\code{\link{check_capture_locations}}).
+#'
+#' Check ID: L2.
+#'
+#' @inheritParams checks_location_params
+#' @inheritParams checks_brood_params
+#' @inheritParams checks_capture_params
+#'
+#' @inherit checks_return return
+#'
+#' @export
+
+check_locations_brood_capture <- function(Location_data, Brood_data, Capture_data, approved_list, output){
+
+  # Check for potential errors
+  err <- FALSE
+  error_records <- tibble::tibble(Row = NA_character_)
+  error_output <- NULL
+
+  if(output %in% c("both", "errors")) {
+
+    # Select locations that are missing from Brood_data and Capture_data
+    missing_locations <- purrr::map(.x = unique(Location_data$PopID),
+                                    .f = ~{
+
+                                      missing_locations_brood <- dplyr::anti_join({Location_data %>% dplyr::filter(.data$PopID == .x)},
+                                                                                  {Brood_data %>% dplyr::filter(.data$PopID == .x)},
+                                                                                  by = "LocationID")
+
+                                      missing_locations_capture <- dplyr::anti_join({Location_data %>% dplyr::filter(.data$PopID == .x)},
+                                                                                    {Capture_data %>% dplyr::filter(.data$CapturePopID == .x)},
+                                                                                    by = "LocationID")
+                                      dplyr::semi_join(missing_locations_brood,
+                                                       missing_locations_capture,
+                                                       by = "LocationID")
+
+                                    }) %>%
+      dplyr::bind_rows() %>%
+      dplyr::select(.data$Row, .data$PopID, .data$LocationID)
+
+    # If potential errors, add to report
+    if(nrow(missing_locations) > 0) {
+
+      err <- TRUE
+
+      # Compare to approved_list
+      error_records <- missing_locations %>%
+        dplyr::mutate(CheckID = "L2") %>%
+        dplyr::anti_join(approved_list$Location_approved_list, by=c("PopID", "CheckID", "LocationID"))
+
+      # Create quality check report statements
+      error_output <- purrr::pmap(.l = error_records,
+                                  .f = ~{
+
+                                    paste0("Record on row ", ..1, " (PopID: ", ..2, "; LocationID: ", ..3, ")",
+                                           " does not appear in either Brood_data or Capture_data.")
+
+                                  })
+
+    }
+
+  }
+
+  # No check for warnings
+  war <- FALSE
+  #warning_records <- tibble::tibble(Row = NA_character_)
+  warning_output <- NULL
+
+  check_list <- tibble::tibble(Warning = war,
+                               Error = err)
+
+  return(list(CheckList = check_list,
+              WarningRows = NULL,
+              ErrorRows = error_records$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
 
-  #Satisfy RCMD Checks
-  Format <- Format_standard <- NULL
+  # Satisfy RCMD checks
+  approved_list <- NULL
 
 }

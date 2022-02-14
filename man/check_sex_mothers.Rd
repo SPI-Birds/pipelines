@@ -4,7 +4,7 @@
 \alias{check_sex_mothers}
 \title{Check sex of mothers}
 \usage{
-check_sex_mothers(Brood_data, Individual_data, approved_list)
+check_sex_mothers(Brood_data, Individual_data, approved_list, output)
 }
 \arguments{
 \item{Brood_data}{Data frame. Brood data output from pipeline.}
@@ -12,7 +12,9 @@ check_sex_mothers(Brood_data, Individual_data, approved_list)
 \item{Individual_data}{Data frame. Individual data output from pipeline.}
 
 \item{approved_list}{List object. List of approved records from brood_approved_list.csv,
-capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv}
+capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv.}
+
+\item{output}{Character. Run checks on potential errors ("errors"), warnings ("warnings"), or both ("both"; default).}
 }
 \value{
 A list of:
@@ -23,8 +25,8 @@ A list of:
 \item{Errors}{A list of row-by-row errors.}
 }
 \description{
-Check that the individuals listed under FemaleID are female. Individuals with conflicted sex ("C") are ignored and checked in check I4.
+Check that the individuals listed under FemaleID are female. Individuals with conflicted sex ("C") are ignored and checked in check I3 \code{\link{check_conflicting_sex}}.
 }
 \details{
-Check ID: B13.
+Check ID: B12.
 }

@@ -4,7 +4,7 @@
 \alias{check_values_brood}
 \title{Check brood variable values against reference values}
 \usage{
-check_values_brood(Brood_data, var, approved_list)
+check_values_brood(Brood_data, var, approved_list, output)
 }
 \arguments{
 \item{Brood_data}{Data frame. Brood data output from pipeline.}
@@ -12,7 +12,9 @@ check_values_brood(Brood_data, var, approved_list)
 \item{var}{Character. Variable to check against reference values.}
 
 \item{approved_list}{List object. List of approved records from brood_approved_list.csv,
-capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv}
+capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv.}
+
+\item{output}{Character. Run checks on potential errors ("errors"), warnings ("warnings"), or both ("both"; default).}
 }
 \value{
 A list of:
@@ -27,16 +29,18 @@ Check variable values against population-species-specific reference values in br
 }
 \details{
 \strong{ClutchSize_observed, BroodSize_observed, NumberFledged_observed} \cr
-Check IDs: B6a-c \cr
+Check IDs: B5a-c \cr
 \itemize{
-\item{\emph{n >= 100}\cr}{Records are considered unusual if they are larger than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error.}
-\item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as an error.}
+\item{\emph{n >= 100}\cr}{Records are considered impossible if they are negative or larger than 2 times the 99th percentile, and will be flagged as a potential error.}
+\item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as a potential error.}
 }
 
 \strong{LayDate_observed} \cr
-Check ID: B6d \cr
+Check ID: B5d \cr
 \itemize{
-\item{\emph{n >= 100}\cr}{Date columns are transformed to Julian days to calculate percentiles. Records are considered unusual if they are earlier than the 1st percentile or later than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are earlier than January 1st or later than December 31st of the current breeding season, and will be flagged as an error.}
-\item{\emph{n < 100}\cr}{Date columns are transformed to Julian days to calculate percentiles. Records are considered impossible if they are earlier than January 1st or later than December 31st of the current breeding season, and will be flagged as an error.}
+\item{\emph{n >= 100}\cr}{Date columns are transformed to Julian days to calculate percentiles. Records are considered impossible if they are earlier than January 1st or later than December 31st of the current breeding season, and will be flagged as a potential error.}
+\item{\emph{n < 100}\cr}{Date columns are transformed to Julian days to calculate percentiles. Records are considered impossible if they are earlier than January 1st or later than December 31st of the current breeding season, and will be flagged as a potential error.}
 }
+
+Note: when the number of observations is too low to generate reference values, a message is added to the list of warnings.
 }

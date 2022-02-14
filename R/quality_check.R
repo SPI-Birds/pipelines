@@ -6,47 +6,51 @@
 #'
 #' @param R_data Output of pipeline as an R object. Generated using
 #' \code{output_type = R} in \code{\link{run_pipelines}}.
-#' @param output \code{TRUE} or \code{FALSE}. If \code{TRUE}, a report is produced. Default: \code{TRUE}.
-#' @param output_format Character. Format of output report. Options: "html", "pdf", and "both" (default).
-#' @param output_file Character. Name of the output file. Default: "output_report".
-#' @param latex_engine Character. LaTeX engine for producing PDF output. Options are "pdflatex" (default), "xelatex", and "lualatex". NB: pdfLaTeX and XeLaTeX have memory limit restrictions, which can be problematic when generating large pdfs. LuaLaTeX has dynamic memory management which may help for generating large pdfs.
-#' @param check_format \code{TRUE} or \code{FALSE}. If \code{TRUE}, the checks on variable format (i.e. \code{\link{check_format_brood}}, \code{\link{check_format_capture}}, \code{\link{check_format_individual}} and \code{\link{check_format_location}}) are included in the quality check. Default: \code{TRUE}.
-#' @param test Logical. Is `quality_check` being used inside package tests? If TRUE, `R_data` is ignored and
+#' @param output Character. Run checks on and produce report of: potential errors ("errors"), warnings and verified records ("warnings"), or both in separate files ("both"; default).
+#' @param report \code{TRUE} or \code{FALSE}. If \code{TRUE}, a report is produced. Default: \code{TRUE}.
+#' @param report_format Character. Format of output report: "html", "pdf", or "both" (default).
+#' @param report_file Character. Name of the output reports. Default: "quality-check-report". Note that to the file name of the report on potential errors the suffix "_errors" is added (i.e. "quality-check-report_errors"), and to the report on warnings and verified records "_warnings" (i.e., "quality-check-report_warnings").
+#' @param latex_engine Character. LaTeX engine for producing PDF output. Options are "pdflatex", "xelatex", and "lualatex" (default). NB: pdfLaTeX and XeLaTeX have memory limit restrictions, which can be problematic when generating large pdfs. LuaLaTeX has dynamic memory management which may help for generating large pdfs.
+#' @param test Logical. Is `quality_check` being used inside package tests? If  \code{TRUE}, `R_data` is ignored and
 #' dummy data will be used instead.
+#' @param map Logical. If  \code{TRUE}, a map of capture locations is added in the report. See \code{\link{check_coordinates}}.
 #'
 #' @return
 #' A list of:
-#' \item{CheckList}{A summary dataframe of check warnings and errors.}
+#' \item{CheckList}{A summary dataframe of check warnings and potential errors.}
 #' \item{NumberChecks}{Number of checks performed.}
 #' \item{NumberWarnings}{Number of checks resulted in warnings.}
-#' \item{NumberErrors}{Number of checks resulted in errors.}
+#' \item{NumberErrors}{Number of checks resulted in potential errors.}
 #' \item{ElapsedTime}{Elapsed time in seconds.}
 #' \item{R_data}{Pipeline output (a list of 4 dataframes) with Warning & Error columns marking the rows with warnings and errors.}
 #'
-#' and a report (pdf, html or both) of row-by-row list of warnings and errors if \code{output_format = TRUE}.
+#' and reports (pdf, html or both) of potential errors and/or warnings if \code{report = TRUE}.
 #'
 #' @examples
 #' \dontrun{
 #'
 #' CHO <- run_pipelines(PopID = "CHO", output_type = "R")
-#' quality_check(CHO)
+#' CHO_checked <- quality_check(R_data = CHO)
 #'
 #' }
 #' @export
 
 quality_check <- function(R_data,
-                          output = TRUE,
-                          output_format = "both",
-                          output_file = "output_report",
-                          latex_engine = "pdflatex",
-                          check_format = TRUE,
-                          test = FALSE){
+                          output = "both",
+                          report = TRUE,
+                          report_format = "both",
+                          report_file = "quality-check-report",
+                          latex_engine = "lualatex",
+                          test = FALSE,
+                          map = TRUE){
 
   start_time <- Sys.time()
 
-  if(output_format == "both"){
+  message("Running quality check")
 
-    output_format <- c("html", "pdf")
+  if(report_format == "both"){
+
+    report_format <- c("html", "pdf")
 
   }
 
@@ -56,7 +60,7 @@ quality_check <- function(R_data,
 
     approved_list <- list(Brood_approved_list = tibble::tibble(PopID = "AAA",
                                                                BroodID = "AAA-2020-0",
-                                                               CheckID = "B4"),
+                                                               CheckID = "B3"),
                           Capture_approved_list = tibble::tibble(PopID = NA_character_,
                                                                  CaptureID = NA_character_,
                                                                  CheckID = NA_character_),
@@ -96,24 +100,16 @@ quality_check <- function(R_data,
 
   # Add temporary empty CaptureID column to allow procedure to approve previously flagged records
   if(!("CaptureID" %in% colnames(Capture_data))) Capture_data$CaptureID <- NA_character_
-  ##FIXME remove after CaptureID column has been added in ALL pipelines
-
-  # Load approved list
-  # message("Loading approved list...")
-  # create_approved_list()
+  # FIXME remove after CaptureID column has been added to ALL pipelines
 
   # Run checks
-  message("Running quality checks...")
-  Brood_checks <- brood_check(Brood_data, Individual_data, check_format, approved_list)
-  message("Check capture data...")
-  Capture_checks <- capture_check(Capture_data, Location_data, Brood_data, check_format, approved_list)
-  message("Check individual data...")
-  Individual_checks <- individual_check(Individual_data, Capture_data, Location_data, check_format, approved_list)
-  message("Check location data...")
-  Location_checks <- location_check(Location_data, check_format, approved_list)
+  Brood_checks <- brood_check(Brood_data, Individual_data, Capture_data, Location_data, approved_list, output)
+  Capture_checks <- capture_check(Capture_data, Location_data, Brood_data, Individual_data, approved_list, output)
+  Individual_checks <- individual_check(Individual_data, Capture_data, Location_data, approved_list, output)
+  Location_checks <- location_check(Location_data, Brood_data, Capture_data, approved_list, output, map)
 
-  #Add warning and error columns to each data frame
-  #We don't do this for location because there are currently now rowwise checks
+  # Add warning and error columns to each data frame
+  # FIXME remove after Warning & Error columns have been added to ALL pipelines
   Brood_data$Warning <- NA
   Brood_data$Error <- NA
   Brood_data[Brood_data$Row %in% Brood_checks$WarningRows, "Warning"] <- TRUE
@@ -129,6 +125,11 @@ quality_check <- function(R_data,
   Individual_data[Individual_data$Row %in% Individual_checks$WarningRows, "Warning"] <- TRUE
   Individual_data[Individual_data$Row %in% Individual_checks$ErrorRows, "Error"] <- TRUE
 
+  Location_data$Warning <- NA
+  Location_data$Error <- NA
+  Location_data[Location_data$Row %in% Location_checks$WarningRows, "Warning"] <- TRUE
+  Location_data[Location_data$Row %in% Location_checks$ErrorRows, "Error"] <- TRUE
+
   # Combine check lists
   check_list <- dplyr::bind_rows(Brood_checks$CheckList,
                                  Capture_checks$CheckList,
@@ -138,19 +139,19 @@ quality_check <- function(R_data,
   # Subset approved list items
   Brood_approved_list <- approved_list$Brood_approved_list %>%
     dplyr::filter(PopID %in% unique(R_data$Brood_data$PopID)) %>%
-    dplyr::arrange(PopID, BroodID, .data$CheckID)
+    dplyr::arrange(.data$PopID, .data$BroodID, .data$CheckID)
 
   Capture_approved_list <- approved_list$Capture_approved_list %>%
     dplyr::filter(PopID %in% unique(R_data$Brood_data$PopID)) %>%
-    dplyr::arrange(PopID, CaptureID, .data$CheckID)
+    dplyr::arrange(.data$PopID, .data$CaptureID, .data$CheckID)
 
   Individual_approved_list <- approved_list$Individual_approved_list %>%
     dplyr::filter(PopID %in% unique(R_data$Brood_data$PopID)) %>%
-    dplyr::arrange(PopID, IndvID, .data$CheckID)
+    dplyr::arrange(.data$PopID, .data$IndvID, .data$CheckID)
 
   Location_approved_list <- approved_list$Location_approved_list %>%
     dplyr::filter(PopID %in% unique(R_data$Brood_data$PopID)) %>%
-    dplyr::arrange(PopID, LocationID, .data$CheckID)
+    dplyr::arrange(.data$PopID, .data$LocationID, .data$CheckID)
 
 
   # Check messages
@@ -172,16 +173,14 @@ quality_check <- function(R_data,
   if(length(pop) == 0) pop <- NA
   species <- unique(Brood_data[!is.na(Brood_data$Species), ]$Species)
 
-  # Title
-  title <- paste0("Quality check report")
-  # title <- paste0("Quality check report for ", species_codes[species_codes$Species == Species, "CommonName"],
-  #                 " in ", pop_codes[pop_codes$PopID == PopID, "PopName"])
+  # Produce report with potential errors
+  if(output %in% c("errors", "both") & report == TRUE) {
 
-  # Produce report
-  if(output == TRUE) {
+    # Title
+    title <- paste0("Quality check report: potential errors")
 
-    #Create body of the Rmd file
-    #This is the same for both html and pdf
+    # Create body of the Rmd file
+    # This is the same for both html and pdf
     body <- c('```{r wrap-hook, include=FALSE}',
     'library(knitr)
       knitr::opts_chunk$set(comment = NA, linewidth=100)
@@ -205,167 +204,83 @@ quality_check <- function(R_data,
     '',
     'All checks performed in `r round(time, 2)` seconds.',
     '',
-    '`r checks_warnings` out of `r nrow(check_list)` checks resulted in warnings.',
-    '',
     '`r checks_errors` out of `r nrow(check_list)` checks resulted in errors.',
     '',
     '# Potential Errors',
     '',
     '## Brood data',
     '',
-    '```{r, echo=FALSE, linewidth=100}',
+    '```{r, echo=FALSE, results="asis", linewidth=100}',
     'purrr::pwalk(.l = list(Brood_checks$Errors,
                             Brood_checks$CheckList$CheckID,
                             Brood_checks$CheckList$CheckDescription),
                   .f = ~{
-                    cat(paste0("Check ", ..2, ": ", ..3), "\n")
-                    cat(..1, sep="\n", "\n")
+                    cat(paste0("**Check ", ..2, ": ", ..3, "**", "  \n"))
+                    cat(paste(" - ", ..1), sep = "  \n")
+                    cat("  \n")
                   })',
     '```',
     '',
     '## Capture data',
     '',
-    '```{r, echo=FALSE}',
+    '```{r, echo=FALSE, results="asis"}',
     'purrr::pwalk(.l = list(Capture_checks$Errors,
                             Capture_checks$CheckList$CheckID,
                             Capture_checks$CheckList$CheckDescription),
                   .f = ~{
-                    cat(paste0("Check ", ..2, ": ", ..3), "\n")
-                    cat(..1, sep="\n", "\n")
+                    cat(paste0("**Check ", ..2, ": ", ..3, "**", "  \n"))
+                    cat(paste(" - ", ..1), sep = "  \n")
+                    cat("  \n")
                   })',
     '```',
     '',
     '## Individual data',
     '',
-    '```{r, echo=FALSE}',
+    '```{r, echo=FALSE, results="asis"}',
     'purrr::pwalk(.l = list(Individual_checks$Errors,
                             Individual_checks$CheckList$CheckID,
                             Individual_checks$CheckList$CheckDescription),
                   .f = ~{
-                    cat(paste0("Check ", ..2, ": ", ..3), "\n")
-                    cat(..1, sep="\n", "\n")
+                    cat(paste0("**Check ", ..2, ": ", ..3, "**", "  \n"))
+                    cat(paste(" - ", ..1), sep = "  \n")
+                    cat("  \n")
                   })',
     '```',
     '',
     '## Location data',
     '',
-    '```{r, echo=FALSE}',
+    '```{r, echo=FALSE, results="asis"}',
     'purrr::pwalk(.l = list(Location_checks$Errors,
                             Location_checks$CheckList$CheckID,
                             Location_checks$CheckList$CheckDescription),
                   .f = ~{
-                    cat(paste0("Check ", ..2, ": ", ..3), "\n")
-                    cat(..1, sep="\n", "\n")
-                  })',
-    '```',
-    '\\newpage',
-    '# Warnings',
-    '',
-    '## Brood data',
-    '',
-    '```{r, echo=FALSE}',
-    'purrr::pwalk(.l = list(Brood_checks$Warnings,
-                            Brood_checks$CheckList$CheckID,
-                            Brood_checks$CheckList$CheckDescription),
-                  .f = ~{
-                    cat(paste0("Check ", ..2, ": ", ..3), "\n")
-                    cat(..1, sep="\n", "\n")
-                  })',
-    '```',
-    '',
-    '## Capture data',
-    '',
-    '```{r, echo=FALSE}',
-    'purrr::pwalk(.l = list(Capture_checks$Warnings,
-                            Capture_checks$CheckList$CheckID,
-                            Capture_checks$CheckList$CheckDescription),
-                  .f = ~{
-                    cat(paste0("Check ", ..2, ": ", ..3), "\n")
-                    cat(..1, sep="\n", "\n")
-                  })',
-    '```',
-    '',
-    '## Individual data',
-    '',
-    '```{r, echo=FALSE}',
-    'purrr::pwalk(.l = list(Individual_checks$Warnings,
-                            Individual_checks$CheckList$CheckID,
-                            Individual_checks$CheckList$CheckDescription),
-                  .f = ~{
-                    cat(paste0("Check ", ..2, ": ", ..3), "\n")
-                    cat(..1, sep="\n", "\n")
-                  })',
-    '```',
-    '',
-    '## Location data',
-    '',
-    '```{r, echo=FALSE}',
-    'purrr::pwalk(.l = list(Location_checks$Warnings,
-                            Location_checks$CheckList$CheckID,
-                            Location_checks$CheckList$CheckDescription),
-                  .f = ~{
-                    cat(paste0("Check ", ..2, ": ", ..3), "\n")
-                    cat(..1, sep="\n", "\n")
-                  })',
-    '```',
-    '\\newpage',
-    '# Verified records',
-    '',
-    '## Brood data',
-    '',
-    '```{r, echo=FALSE}',
-    '    purrr::pwalk(.l = Brood_approved_list,
-                 .f = ~{ cat(paste0("Record with BroodID ", ..2,
-                                    " and PopID ", ..1,
-                                    " violates check ", ..3,
-                                    " but been verified by the data owner and is trustworthy."),
-                                    sep="\n")
-                  })',
-    '```',
-    '',
-    '## Capture data',
-    '',
-    '```{r, echo=FALSE}',
-    '    purrr::pwalk(.l = Capture_approved_list,
-                 .f = ~{ cat(paste0("Record with CaptureID ", ..2,
-                                    " and PopID ", ..1,
-                                    " violates check ", ..3,
-                                    " but been verified by the data owner and is trustworthy."),
-                                    sep="\n")
-                  })',
-    '```',
-    '',
-    '## Individual data',
-    '',
-    '```{r, echo=FALSE}',
-    '    purrr::pwalk(.l = Individual_approved_list,
-                 .f = ~{ cat(paste0("Record with IndvID ", ..2,
-                                    " and PopID ", ..1,
-                                    " violates check ", ..3,
-                                    " but been verified by the data owner and is trustworthy."),
-                                    sep="\n")
-                  })',
-    '```',
-    '',
-    '## Location data',
-    '',
-    '```{r, echo=FALSE}',
-    '    purrr::pwalk(.l = Location_approved_list,
-                 .f = ~{ cat(paste0("Record with LocationID ", ..2,
-                                    " and PopID ", ..1,
-                                    " violates check ", ..3,
-                                    " but been verified by the data owner and is trustworthy."),
-                                    sep="\n")
+                    cat(paste0("**Check ", ..2, ": ", ..3, "**", "  \n"))
+                    cat(paste(" - ", ..1), sep = "  \n")
+                    cat("  \n")
                   })',
     '```',
     '')
 
-    #For the different output formats, create specific yaml and
-    #output the file
-    purrr::pwalk(.l = list(output_format),
+
+    if(!is.null(Location_checks$Maps)) { # Print the Maps section only if a map could be made (e.g., when no coordinates were provided, no map can be made)
+
+        body <- c(body,
+                  '\\newpage',
+                  '**Maps**',
+                  '',
+                  '```{r, echo=FALSE, fig.cap = "", dpi = 300, results="asis"}',
+                  'invisible(lapply(Location_checks$Maps, print))', # To suppress the printing of indices
+                  '```',
+                  '')
+
+    }
+
+    # For the different report formats, create specific yaml and
+    # output the file
+    purrr::pwalk(.l = list(report_format),
                  .f = ~{
 
-                   if("html" %in% output_format){
+                   if("html" %in% report_format){
 
                       mark_output <- c('---',
                                     'title: "`r title`"',
@@ -385,15 +300,15 @@ quality_check <- function(R_data,
                                       mainfont: Arial',
                                     '---', body)
 
-                     knitr::knit(text = mark_output, output = "output-report.md")
+                     knitr::knit(text = mark_output, output = "quality-check-report_errors.md")
 
-                     rmarkdown::render("output-report.md",
+                     rmarkdown::render("quality-check-report_errors.md",
                                        output_format = "html_document",
-                                       output_file = output_file)
+                                       output_file = paste0(report_file, "_errors"))
 
                    }
 
-                   if("pdf" %in% output_format){
+                   if("pdf" %in% report_format){
 
                      mark_output <- c('---',
                                       'output:
@@ -403,20 +318,222 @@ quality_check <- function(R_data,
                                         pdf_document:
                                           toc: false',
                                       '---',
-                                      quality_check_titlepage_pdf,
+                                      titlepage_errors_pdf,
                                       '\\tableofcontents
                                       \\newpage',
-                                      quality_check_description_pdf, body)
+                                      description_errors_pdf,
+                                      check_descriptions_pdf,
+                                      body)
 
-                     knitr::knit(text = mark_output, output = "output-report.md")
+                     knitr::knit(text = mark_output, output = "quality-check-report_errors.md")
 
-                     rmarkdown::render("output-report.md",
+                     rmarkdown::render("quality-check-report_errors.md",
                                        output_format = rmarkdown::pdf_document(latex_engine = latex_engine),
-                                       output_file = output_file)
+                                       output_file = paste0(report_file, "_errors"))
 
                    }
 
                    })
+  }
+
+  # Produce warnings and verified records
+  if(output %in% c("warnings", "both") & report == TRUE) {
+
+    # Title
+    title <- paste0("Quality check report: warnings and verified records")
+
+    # Create body of the Rmd file
+    # This is the same for both html and pdf
+    body <- c('```{r wrap-hook, include=FALSE}',
+              'library(knitr)
+      knitr::opts_chunk$set(comment = NA, linewidth=100)
+      hook_output = knit_hooks$get("output")
+      knit_hooks$set(output = function(x, options) {
+      if (!is.null(n <- options$linewidth)) {
+        x = knitr:::split_lines(x)
+        # any lines wider than n should be wrapped
+        if (any(nchar(x) > n)) x = strwrap(x, width = n)
+        x = paste(x, collapse = "\n")
+      }
+      hook_output(x, options)
+      })',
+              '```',
+              '',
+              '# Summary',
+              '',
+              'Species: `r species_codes[species_codes$Species %in% species,]$CommonName`',
+              '',
+              'Populations: `r pop_codes[pop_codes$PopID %in% pop,]$PopName`',
+              '',
+              'All checks performed in `r round(time, 2)` seconds.',
+              '',
+              '`r checks_warnings` out of `r nrow(check_list)` checks resulted in warnings.',
+              '',
+              '# Warnings',
+              '',
+              '## Brood data',
+              '',
+              '```{r, echo=FALSE, results="asis"}',
+              'purrr::pwalk(.l = list(Brood_checks$Warnings,
+                            Brood_checks$CheckList$CheckID,
+                            Brood_checks$CheckList$CheckDescription),
+                  .f = ~{
+                    cat(paste0("**Check ", ..2, ": ", ..3, "**", "  \n"))
+                    cat(paste(" - ", ..1), sep = "  \n")
+                    cat("  \n")
+                  })',
+              '```',
+              '',
+              '## Capture data',
+              '',
+              '```{r, echo=FALSE, results="asis"}',
+              'purrr::pwalk(.l = list(Capture_checks$Warnings,
+                            Capture_checks$CheckList$CheckID,
+                            Capture_checks$CheckList$CheckDescription),
+                  .f = ~{
+                    cat(paste0("**Check ", ..2, ": ", ..3, "**", "  \n"))
+                    cat(paste(" - ", ..1), sep = "  \n")
+                    cat("  \n")
+                  })',
+              '```',
+              '',
+              '## Individual data',
+              '',
+              '```{r, echo=FALSE, results="asis"}',
+              'purrr::pwalk(.l = list(Individual_checks$Warnings,
+                            Individual_checks$CheckList$CheckID,
+                            Individual_checks$CheckList$CheckDescription),
+                  .f = ~{
+                    cat(paste0("**Check ", ..2, ": ", ..3, "**", "  \n"))
+                    cat(paste(" - ", ..1), sep = "  \n")
+                    cat("  \n")
+                  })',
+              '```',
+              '',
+              '## Location data',
+              '',
+              '```{r, echo=FALSE, results="asis"}',
+              'purrr::pwalk(.l = list(Location_checks$Warnings,
+                            Location_checks$CheckList$CheckID,
+                            Location_checks$CheckList$CheckDescription),
+                  .f = ~{
+                    cat(paste0("**Check ", ..2, ": ", ..3, "**", "  \n"))
+                    cat(paste(" - ", ..1), sep = "  \n")
+                    cat("  \n")
+                  })',
+              '```',
+              '\\newpage',
+              '',
+              '# Verified records',
+              '',
+              '## Brood data',
+              '',
+              '```{r, echo=FALSE, results="asis"}',
+              '    purrr::pwalk(.l = Brood_approved_list,
+                 .f = ~{ cat(paste0("Record with BroodID ", ..2,
+                                    " and PopID ", ..1,
+                                    " violates check ", ..3,
+                                    " but been verified by the data owner and is trustworthy."),
+                                    sep="  \n")
+                  })',
+              '```',
+              '',
+              '## Capture data',
+              '',
+              '```{r, echo=FALSE, results="asis"}',
+              '    purrr::pwalk(.l = Capture_approved_list,
+                 .f = ~{ cat(paste0("Record with CaptureID ", ..2,
+                                    " and PopID ", ..1,
+                                    " violates check ", ..3,
+                                    " but been verified by the data owner and is trustworthy."),
+                                    sep="  \n")
+                  })',
+              '```',
+              '',
+              '## Individual data',
+              '',
+              '```{r, echo=FALSE, results="asis"}',
+              '    purrr::pwalk(.l = Individual_approved_list,
+                 .f = ~{ cat(paste0("Record with IndvID ", ..2,
+                                    " and PopID ", ..1,
+                                    " violates check ", ..3,
+                                    " but been verified by the data owner and is trustworthy."),
+                                    sep="  \n")
+                  })',
+              '```',
+              '',
+              '## Location data',
+              '',
+              '```{r, echo=FALSE, results="asis"}',
+              '    purrr::pwalk(.l = Location_approved_list,
+                 .f = ~{ cat(paste0("Record with LocationID ", ..2,
+                                    " and PopID ", ..1,
+                                    " violates check ", ..3,
+                                    " but been verified by the data owner and is trustworthy."),
+                                    sep="  \n")
+                  })',
+              '```',
+              '')
+
+    #For the different output formats, create specific yaml and
+    #output the file
+    purrr::pwalk(.l = list(report_format),
+                 .f = ~{
+
+                   if("html" %in% report_format){
+
+                     mark_output <- c('---',
+                                      'title: "`r title`"',
+                                      'date: "`r Sys.Date()`"',
+                                      'geometry: margin=0.5in',
+                                      'output:
+                                      html_document:
+                                        css: ./inst/css/quality_check.css
+                                        keep_md: false
+                                        number_sections: true
+                                        theme: cosmo
+                                        toc: true
+                                        toc_depth: 3
+                                        toc_float:
+                                          collapsed: false
+                                          smooth_scroll: true
+                                      mainfont: Arial',
+                                      '---', body)
+
+                     knitr::knit(text = mark_output, output = "quality-check-report_warnings.md")
+
+                     rmarkdown::render("quality-check-report_warnings.md",
+                                       output_format = "html_document",
+                                       output_file = paste0(report_file, "_warnings"))
+
+                   }
+
+                   if("pdf" %in% report_format){
+
+                     mark_output <- c('---',
+                                      'output:
+                                        header-includes:
+                                          - \\linespread{1.2}
+                                          - \\newgeometry{left=29mm, right=29mm, top=20mm, bottom=15mm}
+                                        pdf_document:
+                                          toc: false',
+                                      '---',
+                                      titlepage_warnings_pdf,
+                                      '\\tableofcontents
+                                      \\newpage',
+                                      description_warnings_pdf,
+                                      check_descriptions_pdf,
+                                      body)
+
+                     knitr::knit(text = mark_output, output = "quality-check-report_warnings.md")
+
+                     rmarkdown::render("quality-check-report_warnings.md",
+                                       output_format = rmarkdown::pdf_document(latex_engine = latex_engine),
+                                       output_file = paste0(report_file, "_warnings"))
+
+                   }
+
+                 })
   }
 
   return(list(CheckList = check_list,
@@ -431,4 +548,5 @@ quality_check <- function(R_data,
 
   # Satisfy RCMD checks
   approved_list <- CheckID <- NULL
+
 }

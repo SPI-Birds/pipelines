@@ -4,13 +4,15 @@
 \alias{check_conflicting_sex}
 \title{Check conflicting sex}
 \usage{
-check_conflicting_sex(Individual_data, approved_list)
+check_conflicting_sex(Individual_data, approved_list, output)
 }
 \arguments{
 \item{Individual_data}{Data frame. Individual data output from pipeline.}
 
 \item{approved_list}{List object. List of approved records from brood_approved_list.csv,
-capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv}
+capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv.}
+
+\item{output}{Character. Run checks on potential errors ("errors"), warnings ("warnings"), or both ("both"; default).}
 }
 \value{
 A list of:
@@ -24,5 +26,5 @@ A list of:
 Check that the sex of individuals in Individual_data is recorded consistently. Individuals who have been recorded as both male ('M') and female ('F') will have conflicting sex ('C') in Individual_data.
 }
 \details{
-Check ID: I4.
+Check ID: I3.
 }

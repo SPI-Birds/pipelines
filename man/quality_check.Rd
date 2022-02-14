@@ -6,41 +6,44 @@
 \usage{
 quality_check(
   R_data,
-  output = TRUE,
-  output_format = "both",
-  output_file = "output_report",
-  latex_engine = "pdflatex",
-  check_format = TRUE,
-  test = FALSE
+  output = "both",
+  report = TRUE,
+  report_format = "both",
+  report_file = "quality-check-report",
+  latex_engine = "lualatex",
+  test = FALSE,
+  map = TRUE
 )
 }
 \arguments{
 \item{R_data}{Output of pipeline as an R object. Generated using
 \code{output_type = R} in \code{\link{run_pipelines}}.}
 
-\item{output}{\code{TRUE} or \code{FALSE}. If \code{TRUE}, a report is produced. Default: \code{TRUE}.}
+\item{output}{Character. Run checks on and produce report of: potential errors ("errors"), warnings and verified records ("warnings"), or both in separate files ("both"; default).}
 
-\item{output_format}{Character. Format of output report. Options: "html", "pdf", and "both" (default).}
+\item{report}{\code{TRUE} or \code{FALSE}. If \code{TRUE}, a report is produced. Default: \code{TRUE}.}
 
-\item{output_file}{Character. Name of the output file. Default: "output_report".}
+\item{report_format}{Character. Format of output report: "html", "pdf", or "both" (default).}
 
-\item{latex_engine}{Character. LaTeX engine for producing PDF output. Options are "pdflatex" (default), "xelatex", and "lualatex". NB: pdfLaTeX and XeLaTeX have memory limit restrictions, which can be problematic when generating large pdfs. LuaLaTeX has dynamic memory management which may help for generating large pdfs.}
+\item{report_file}{Character. Name of the output reports. Default: "quality-check-report". Note that to the file name of the report on potential errors the suffix "_errors" is added (i.e. "quality-check-report_errors"), and to the report on warnings and verified records "_warnings" (i.e., "quality-check-report_warnings").}
 
-\item{check_format}{\code{TRUE} or \code{FALSE}. If \code{TRUE}, the checks on variable format (i.e. \code{\link{check_format_brood}}, \code{\link{check_format_capture}}, \code{\link{check_format_individual}} and \code{\link{check_format_location}}) are included in the quality check. Default: \code{TRUE}.}
+\item{latex_engine}{Character. LaTeX engine for producing PDF output. Options are "pdflatex", "xelatex", and "lualatex" (default). NB: pdfLaTeX and XeLaTeX have memory limit restrictions, which can be problematic when generating large pdfs. LuaLaTeX has dynamic memory management which may help for generating large pdfs.}
 
-\item{test}{Logical. Is `quality_check` being used inside package tests? If TRUE, `R_data` is ignored and
+\item{test}{Logical. Is `quality_check` being used inside package tests? If  \code{TRUE}, `R_data` is ignored and
 dummy data will be used instead.}
+
+\item{map}{Logical. If  \code{TRUE}, a map of capture locations is added in the report. See \code{\link{check_coordinates}}.}
 }
 \value{
 A list of:
-\item{CheckList}{A summary dataframe of check warnings and errors.}
+\item{CheckList}{A summary dataframe of check warnings and potential errors.}
 \item{NumberChecks}{Number of checks performed.}
 \item{NumberWarnings}{Number of checks resulted in warnings.}
-\item{NumberErrors}{Number of checks resulted in errors.}
+\item{NumberErrors}{Number of checks resulted in potential errors.}
 \item{ElapsedTime}{Elapsed time in seconds.}
 \item{R_data}{Pipeline output (a list of 4 dataframes) with Warning & Error columns marking the rows with warnings and errors.}
 
-and a report (pdf, html or both) of row-by-row list of warnings and errors if \code{output_format = TRUE}.
+and reports (pdf, html or both) of potential errors and/or warnings if \code{report = TRUE}.
 }
 \description{
 A wrapper function that performs a quality check and produces a report.
@@ -52,7 +55,7 @@ Combines the four data frame-specific wrappers: \code{\link{brood_check}}, \code
 \dontrun{
 
 CHO <- run_pipelines(PopID = "CHO", output_type = "R")
-quality_check(CHO)
+CHO_checked <- quality_check(R_data = CHO)
 
 }
 }

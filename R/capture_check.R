@@ -4,265 +4,158 @@
 #'
 #' The following capture data checks are performed:
 #' \itemize{
-#' \item \strong{C1}: Check if the formats of each column in \code{Capture_data} match with the standard format using \code{\link{check_format_capture}}.
-#' \item \strong{C2a-b}: Check capture variable values against reference values using \code{\link{check_values_capture}}. Capture variables checked for adults and chicks: Mass and Tarsus.
-#' \item \strong{C3}: Check chick age (in numbers of days since hatching) using \code{\link{check_chick_age}}.
-#' \item \strong{C4}: Check that adults caught on nest are listed as parents using \code{\link{check_adult_parent_nest}}.
-#' \item \strong{C5}: Check that the age of subsequent captures of the same individual is correct using \code{\link{check_age_captures}}.
+#' \item \strong{C1a-b}: Check capture variable values against reference values using \code{\link{check_values_capture}}. Capture variables checked for adults and chicks: Mass and Tarsus.
+#' \item \strong{C2}: Check chick age (in numbers of days since hatching) using \code{\link{check_chick_age}}.
+#' \item \strong{C3}: Check that adults caught on nest are listed as parents using \code{\link{check_adult_parent_nest}}.
+#' \item \strong{C4}: Check that the age of subsequent captures of the same individual is correct using \code{\link{check_age_captures}}.
+#' \item \strong{C5}: Check if individuals in Capture_data appear in Individual_data using \code{\link{check_captures_individuals}}.
+#' \item \strong{C6}: Check that capture locations appear in Location_data using \code{\link{check_capture_locations}}.
 #' }
 #'
 #' @inheritParams checks_capture_params
 #' @inheritParams checks_location_params
 #' @inheritParams checks_brood_params
-#' @param check_format \code{TRUE} or \code{FALSE}. If \code{TRUE}, the check on variable format (i.e. \code{\link{check_format_capture}}) is included in the quality check. Default: \code{TRUE}.
+#' @inheritParams checks_individual_params
 #'
 #' @inherit checks_return return
 #'
 #' @export
 
-capture_check <- function(Capture_data, Location_data, Brood_data, check_format=TRUE, approved_list){
+capture_check <- function(Capture_data, Location_data, Brood_data, Individual_data, approved_list, output){
 
   # Create check list with a summary of warnings and errors per check
-  check_list <- tibble::tibble(CheckID = paste0("C", c(1, paste0(2, letters[1:2]), 3:5)),
-                               CheckDescription = c("Check format of capture data",
-                                                    "Check mass values against reference values",
+  check_list <- tibble::tibble(CheckID = paste0("C", c(paste0(1, letters[1:2]), 2:6)),
+                               CheckDescription = c("Check mass values against reference values",
                                                     "Check tarsus values against reference values",
                                                     "Check chick age",
-                                                    "Check that adults caught on nest are listed as the parents",
-                                                    "Check the order in age of subsequent captures"),
+                                                    "Check that adults caught on nest during the breeding season are listed as the parents",
+                                                    "Check the order in age of subsequent captures",
+                                                    "Check that individuals in Capture_data also appear in Individual_data",
+                                                    "Check that capture locations appear in Location_data"),
                                Warning = NA,
                                Error = NA)
 
   # Checks
-  message("Capture checks")
-
-  # - Check format capture data
-  if(check_format) {
-    message("C1: Checking format of capture variables...")
-
-    check_format_capture_output <- check_format_capture(Capture_data, approved_list)
-
-    check_list[1,3:4] <- check_format_capture_output$CheckList
-  }
+  message("Checking capture data...")
 
   # - Check mass values against reference values
-  message("C2a: Checking mass values against reference values...")
+  message("C1a: Checking mass values against reference values...")
 
-  check_values_mass_output <- check_values_capture(Capture_data, "Mass", approved_list)
+  check_values_mass_output <- check_values_capture(Capture_data, "Mass", approved_list, output)
 
-  check_list[2,3:4] <- check_values_mass_output$CheckList
+  check_list[1, 3:4] <- check_values_mass_output$CheckList
 
   # - Check tarsus values against reference values
-  message("C2b: Checking tarsus values against reference values...")
+  message("C1b: Checking tarsus values against reference values...")
 
-  check_values_tarsus_output <- check_values_capture(Capture_data, "Tarsus", approved_list)
+  check_values_tarsus_output <- check_values_capture(Capture_data, "Tarsus", approved_list, output)
 
-  check_list[3,3:4] <- check_values_tarsus_output$CheckList
+  check_list[2, 3:4] <- check_values_tarsus_output$CheckList
 
   # - Check chick age values
-  message("C3: Checking chick age values...")
+  message("C2: Checking chick age values...")
 
-  check_chick_age_output <- check_chick_age(Capture_data, approved_list)
+  check_chick_age_output <- check_chick_age(Capture_data, approved_list, output)
 
-  check_list[4,3:4] <- check_chick_age_output$CheckList
+  check_list[3, 3:4] <- check_chick_age_output$CheckList
 
   # - Check that adults caught on nest are listed are the parents
-  message("C4: Checking that adults caught on nest are listed are the parents...")
+  message("C3: Checking that adults caught on nest during the breeding season are listed as the parents...")
 
-  check_adult_parent_nest_output <- check_adult_parent_nest(Capture_data, Location_data, Brood_data, approved_list)
+  check_adult_parent_nest_output <- check_adult_parent_nest(Capture_data, Location_data,
+                                                            Brood_data, approved_list, output)
 
-  check_list[5,3:4] <- check_adult_parent_nest_output$CheckList
+  check_list[4, 3:4] <- check_adult_parent_nest_output$CheckList
 
   # - Check the order in age of subsequent captures
-  message("C5: Checking that the age of subsequent captures is ordered correctly...")
+  message("C4: Checking that the age of subsequent captures is ordered correctly...")
 
-  check_age_captures_output <- check_age_captures(Capture_data, approved_list)
+  check_age_captures_output <- check_age_captures(Capture_data, approved_list, output)
 
-  check_list[6,3:4] <- check_age_captures_output$CheckList
+  check_list[5, 3:4] <- check_age_captures_output$CheckList
 
-  if(check_format) {
-    # Warning list
-    warning_list <- list(Check1 = check_format_capture_output$WarningOutput,
-                         Check2a = check_values_mass_output$WarningOutput,
-                         Check2b = check_values_tarsus_output$WarningOutput,
-                         Check3 = check_chick_age_output$WarningOutput,
-                         Check4 = check_adult_parent_nest_output$WarningOutput,
-                         Check5 = check_age_captures_output$WarningOutput)
+  # - Check that individuals in Capture_data also appear in Individual_data
+  message("C5: Checking that individuals in Capture_data also appear in Individual_data...")
 
-    # Error list
-    error_list <- list(Check1 = check_format_capture_output$ErrorOutput,
-                       Check2a = check_values_mass_output$ErrorOutput,
-                       Check2b = check_values_tarsus_output$ErrorOutput,
-                       Check3 = check_chick_age_output$ErrorOutput,
-                       Check4 = check_adult_parent_nest_output$ErrorOutput,
-                       Check5 = check_age_captures_output$ErrorOutput)
-  } else {
-    # Warning list
-    warning_list <- list(Check2a = check_values_mass_output$WarningOutput,
-                         Check2b = check_values_tarsus_output$WarningOutput,
-                         Check3 = check_chick_age_output$WarningOutput,
-                         Check4 = check_adult_parent_nest_output$WarningOutput,
-                         Check5 = check_age_captures_output$WarningOutput)
+  check_captures_individuals_output <- check_captures_individuals(Capture_data, Individual_data,
+                                                                  approved_list, output)
 
-    # Error list
-    error_list <- list(Check2a = check_values_mass_output$ErrorOutput,
-                       Check2b = check_values_tarsus_output$ErrorOutput,
-                       Check3 = check_chick_age_output$ErrorOutput,
-                       Check4 = check_adult_parent_nest_output$ErrorOutput,
-                       Check5 = check_age_captures_output$ErrorOutput)
+  check_list[6, 3:4] <- check_captures_individuals_output$CheckList
 
-    check_list <- check_list[-1,]
-  }
+  # - Check that capture locations appear in Location_data
+  message("C6: Checking that capture locations appear in Location_data...")
+
+  check_capture_locations_output <- check_capture_locations(Capture_data, Location_data,
+                                                            approved_list, output)
+
+  check_list[7, 3:4] <- check_capture_locations_output$CheckList
+
+  # Warning list
+  warning_list <- list(Check1a = check_values_mass_output$WarningOutput,
+                       Check1b = check_values_tarsus_output$WarningOutput,
+                       Check2 = check_chick_age_output$WarningOutput,
+                       Check3 = check_adult_parent_nest_output$WarningOutput,
+                       Check4 = check_age_captures_output$WarningOutput,
+                       Check5 = check_captures_individuals_output$WarningOutput,
+                       Check6 = check_capture_locations_output$WarningOutput)
+
+  # Error list
+  error_list <- list(Check1a = check_values_mass_output$ErrorOutput,
+                     Check1b = check_values_tarsus_output$ErrorOutput,
+                     Check2 = check_chick_age_output$ErrorOutput,
+                     Check3 = check_adult_parent_nest_output$ErrorOutput,
+                     Check4 = check_age_captures_output$ErrorOutput,
+                     Check5 = check_captures_individuals_output$ErrorOutput,
+                     Check6 = check_capture_locations_output$ErrorOutput)
 
   return(list(CheckList = check_list,
               WarningRows = unique(c(check_values_mass_output$WarningRows,
                                      check_values_tarsus_output$WarningRows,
                                      check_chick_age_output$WarningRows,
                                      check_adult_parent_nest_output$WarningRows,
-                                     check_age_captures_output$WarningRows)),
+                                     check_age_captures_output$WarningRows,
+                                     check_captures_individuals_output$WarningRows,
+                                     check_capture_locations_output$WarningRows)),
               ErrorRows = unique(c(check_values_mass_output$ErrorRows,
                                    check_values_tarsus_output$ErrorRows,
                                    check_chick_age_output$ErrorRows,
                                    check_adult_parent_nest_output$ErrorRows,
-                                   check_age_captures_output$ErrorRows)),
+                                   check_age_captures_output$ErrorRows,
+                                   check_captures_individuals_output$ErrorRows,
+                                   check_capture_locations_output$ErrorRows)),
               Warnings = warning_list,
               Errors = error_list))
-}
-
-#' Check format of capture data
-#'
-#' Check that the format of each column in the capture data match with the standard format.
-#'
-#' Check ID: C1.
-#'
-#' @inheritParams checks_capture_params
-#'
-#' @inherit checks_return return
-#'
-#' @export
-
-check_format_capture <- function(Capture_data, approved_list){
-
-  ## Data frame with column names and formats according to the standard protocol
-  Capture_data_standard <- tibble::tibble(Variable = c("Row", "IndvID", "Species", "BreedingSeason",
-                                                       "CaptureDate", "CaptureTime", "ObserverID",
-                                                       "LocationID", "CapturePopID", "CapturePlot",
-                                                       "ReleasePopID", "ReleasePlot",
-                                                       "Mass", "Tarsus", "OriginalTarsusMethod",
-                                                       "WingLength", "Age_obsverved", "Age_calculated", "ChickAge"),
-                                          Format_standard = c("integer", "character", "character", "integer",
-                                                              "Date", "character", "character",
-                                                              "character", "character", "character",
-                                                              "character", "character",
-                                                              "numeric", "numeric", "character", "numeric",
-                                                              "integer", "integer", "integer"))
-
-  ## Data frame with column names and formats from Capture data
-  Capture_data_col <- tibble::tibble(Variable = names(Capture_data),
-                                     Format = unlist(purrr::pmap(list(Capture_data), class)))
-
-  ## Mismatches between Capture data and standard protocol
-  ## Column format "logical" refers to unmeasured/undetermined variables (NA)
-  Capture_data_mismatch <- dplyr::left_join(Capture_data_standard, Capture_data_col, by = "Variable") %>%
-    filter(.data$Format != "logical" & .data$Format_standard != .data$Format)
-
-  err <- FALSE
-  error_output <- NULL
-
-  if(nrow(Capture_data_mismatch) > 0) {
-    err <- TRUE
-
-    error_output <- purrr::map2(.x = Capture_data_mismatch$Variable,
-                                .y = Capture_data_mismatch$Format_standard,
-                                .f = ~{
-                                  paste0("The format of ", .x, " in Capture_data is not ", .y, ".")
-                                })
-  }
-
-  ## Missing columns
-  # Capture_data_missing <- dplyr::left_join(Capture_data_standard, Capture_data_col, by="Variable") %>%
-  #   filter(Format == "logical")
-  #
-  # war <- FALSE
-  # warning_output <- NULL
-  #
-  # if(nrow(Capture_data_missing) > 0) {
-  #   war <- TRUE
-  #
-  #   warning_output <- purrr::map(.x = Capture_data_missing$Variable,
-  #                                .f = ~{
-  #                                  paste0(.x, " in Capture_data is missing, unmeasured or undetermined (NA).")
-  #                                })
-  # }
-
-  #Test for empty columns by looking at uniques, rather than using data type
-  warning_output <- purrr::pmap(.l = list(as.list(Capture_data), colnames(Capture_data)),
-                                .f = ~{
-
-                                  if(all(is.na(unique(..1)))){
-
-                                    return(paste0(..2, " in Capture_data is missing, unmeasured or undetermined (NA)."))
-
-                                  } else {
-
-                                    return()
-
-                                  }
-
-                                })
-
-
-
-  #Remove all cases that return NULL
-  #Assigning NULL (rather than returning NULL in function) removes the list item
-  warning_output[sapply(warning_output, is.null)] <- NULL
-
-  if(length(warning_output) > 0){
-
-    war <- TRUE
-
-  } else {
-
-    war <- FALSE
-
-  }
-
-  check_list <- tibble::tibble(Warning = war,
-                               Error = err)
-
-  return(list(CheckList = check_list,
-              WarningOutput = unlist(warning_output),
-              ErrorOutput = unlist(error_output)))
 
 }
-
 
 #' Check capture variable values against reference values
 #'
 #' Check variable values against population-species-specific reference values in capture data. Reference values are based on the data if the number of observations is sufficiently large. Records for population-species combinations that are too low in number are only compared to reference values that are not data generated (see Details below).
 #'
 #' \strong{Mass} \cr
-#' Check ID: C2a \cr
+#' Check ID: C1a \cr
 #' \itemize{
 #' \item{Adults}
 #' \itemize{
-#' \item{\emph{n >= 100}\cr}{Records are considered unusual if they are smaller than the 1st percentile or larger than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error.}
-#' \item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as an error.}
+#' \item{\emph{n >= 100}\cr}{Records are considered impossible if they are negative or larger than 2 times the 99th percentile, and will be flagged as a potential error.}
+#' \item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as a potential error.}
 #' }
 #' \item{Chicks}
 #' \itemize{
-#' \item{Reference values for chicks are calculated for each age (in days). This function tries to fit a logistic growth model to determine reference values to each day. If this model fails, reference values are determined per age if the number of observations is sufficiently large (n >= 100). Records are considered unusual if they are smaller than the 1st percentile or larger than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error.}
-#' \item{In case the logistic growth model fails and the number of observations for an age are too low (n < 100), records are considered impossible if they are negative, and will be flagged as an error.}
+#' \item{Reference values for chicks are calculated for each age (in days). This function tries to fit a logistic growth model to determine reference values to each day. If this model fails, reference values are determined per age if the number of observations is sufficiently large (n >= 100). Records are considered impossible if they are negative or larger than 2 times the 99th percentile, and will be flagged as a potential error.}
+#' \item{In case the logistic growth model fails and the number of observations for an age are too low (n < 100), records are considered impossible if they are negative, and will be flagged as a potential error.}
 #' }
 #' }
 #'
 #'
 #' \strong{Tarsus} \cr
-#' Check ID: C2b \cr
+#' Check ID: C1b \cr
 #' \itemize{
-#' \item{\emph{n >= 100}\cr}{Records are considered unusual if they are smaller than the 1st percentile or larger than the 99th percentile, and will be flagged as a warning. Records are considered impossible if they are negative or larger than 4 times the 99th percentile, and will be flagged as an error.}
-#' \item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as an error.}
+#' \item{\emph{n >= 100}\cr}{Records are considered impossible if they are negative or larger than 2 times the 99th percentile, and will be flagged as a potential error.}
+#' \item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as a potential error.}
 #' }
+#'
+#' Note: when the number of observations is too low to generate reference values, a message is added to the list of warnings.
 #'
 #' @inheritParams checks_capture_params
 #' @param var Character. Variable to check against reference values.
@@ -271,7 +164,7 @@ check_format_capture <- function(Capture_data, approved_list){
 #'
 #' @export
 
-check_values_capture <- function(Capture_data, var, approved_list) {
+check_values_capture <- function(Capture_data, var, approved_list, output) {
 
   # Stop if "var" is missing
   if(missing(var)) {
@@ -280,8 +173,8 @@ check_values_capture <- function(Capture_data, var, approved_list) {
 
   }
 
-  # If "var" is unmeasured, this check is skipped
-  if(all(is.na(Capture_data[,var]))) {
+  # If "var" is unmeasured, or if only warnings are flagged, this check is skipped
+  if(all(is.na(Capture_data[,var]), !(output %in% c("both", "errors")))) {
 
     ref <- tibble::tibble(NULL)
 
@@ -298,14 +191,12 @@ check_values_capture <- function(Capture_data, var, approved_list) {
           TRUE ~ "Chick"
         )) %>%
         dplyr::group_by(.data$Species, .data$CapturePopID, .data$Stage) %>%
-        dplyr::summarise(Warning_min = round(stats::quantile(!!rlang::sym(var), probs = 0.01, na.rm = TRUE), 1),
-                         Warning_max = round(stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE), 1),
-                         Error_min = 0,
-                         Error_max = 4 * .data$Warning_max,
-                         n = n(),
+        dplyr::summarise(Error_min = 0,
+                         Error_max = 2 * round(stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE), 1),
+                         n = dplyr::n(),
                          Logis = FALSE) %>%
         dplyr::rename(PopID = .data$CapturePopID) %>%
-        dplyr::mutate_at(c("Warning_min", "Warning_max", "Error_min", "Error_max"), ~round(., 2))
+        dplyr::mutate_at(c("Error_min", "Error_max"), ~round(., 2))
 
       # Print message for population-species combinations with too low number of observations
       if(any(ref$n < 100)) {
@@ -337,14 +228,12 @@ check_values_capture <- function(Capture_data, var, approved_list) {
         dplyr::filter(!is.na(!!rlang::sym(var)), !is.na(.data$Species), .data$Age_calculated > 3) %>%
         dplyr::group_by(.data$Species, .data$CapturePopID) %>%
         dplyr::summarise(Stage = "Adult",
-                         Warning_min = stats::quantile(!!rlang::sym(var), probs = 0.01, na.rm = TRUE),
-                         Warning_max = stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE),
                          Error_min = 0,
-                         Error_max = 4 * .data$Warning_max,
-                         n = n(),
+                         Error_max = 2 * stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE),
+                         n = dplyr::n(),
                          Logis = FALSE) %>%
         dplyr::rename(PopID = .data$CapturePopID) %>%
-        dplyr::mutate_at(c("Warning_min", "Warning_max", "Error_min", "Error_max"), ~round(., 2))
+        dplyr::mutate_at(c("Error_min", "Error_max"), ~round(., 2))
 
       # Print message for population-species combinations with too low number of observations for adults
       if(any(ref_adults$n < 100)) {
@@ -396,11 +285,9 @@ check_values_capture <- function(Capture_data, var, approved_list) {
               ..1 %>%
                 dplyr::mutate(Stage = as.character(.data$ChickAge)) %>%
                 dplyr::group_by(.data$Species, .data$CapturePopID, .data$Stage) %>%
-                dplyr::summarise(Warning_min = stats::quantile(!!rlang::sym(var), probs = 0.01, na.rm = TRUE),
-                                 Warning_max = stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE),
-                                 Error_min = 0,
-                                 Error_max = 4 * .data$Warning_max,
-                                 n = n(),
+                dplyr::summarise(Error_min = 0,
+                                 Error_max = 2 * stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE),
+                                 n = dplyr::n(),
                                  Logis = FALSE) %>%
                 dplyr::rename(PopID = .data$CapturePopID)
 
@@ -409,13 +296,13 @@ check_values_capture <- function(Capture_data, var, approved_list) {
           return(out)
 
         })  %>%
-        dplyr::mutate_at(c("Warning_min", "Warning_max", "Error_min", "Error_max"), ~round(., 2))
+        dplyr::mutate_at(c("Error_min", "Error_max"), ~round(., 2))
 
       # Print message for population-species combinations with too low number of observations for chicks
       if(any(ref_chicks$Logis == FALSE & ref_chicks$n < 100)) {
 
         low_obs_chicks <- ref_chicks %>%
-          dplyr::filter(.data$Logis == FALSE & .data$n < 100) %>%
+          dplyr::filter(.data$Logis == FALSE & .data$n < 100 & !is.na(.data$Stage)) %>%
           dplyr::select(.data$Species, .data$PopID, .data$Stage)
 
         purrr::pwalk(.l = list(low_obs_chicks$Species,
@@ -465,235 +352,151 @@ check_values_capture <- function(Capture_data, var, approved_list) {
 
   }
 
-  # Set error and warning trackers and objects
+  # Check for potential errors
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  war <- FALSE
-  warning_records <- tibble::tibble(Row = NA_character_)
-  warning_output <- NULL
+  if(output %in% c("both", "errors")) {
 
-  if(nrow(ref) > 0 && !all(is.na(Capture_data[,var]))) {
+    if(nrow(ref) > 0 && !all(is.na(Capture_data[,var]))) {
 
-    # Create progress bar
-    pb <- progress::progress_bar$new(total = 2*nrow(ref),
-                                     format = "[:bar] :percent ~:eta remaining",
-                                     clear = FALSE)
+      # Create progress bar
+      pb <- progress::progress_bar$new(total = 2*nrow(ref),
+                                       format = "[:bar] :percent ~:eta remaining")
 
-    # Not all chicks have a recorded ChickAge. To still verify their values against reference values,
-    # we create a new Column with CurrentChickAge, which follows the following rules:
-    Capture_data <- Capture_data %>%
-      dplyr::mutate(CurrentChickAge = dplyr::case_when(
-        .data$Age_calculated > 3 ~ NA_real_, # Adults have no chick age
-        .data$Age_calculated == 3 ~ as.numeric(max(Capture_data$ChickAge, na.rm = TRUE)), # Chicks age 3 have the maximum chick age
-        .data$Age_calculated == 1 & is.na(.data$ChickAge) ~ 14, # Chicks age 1 and unknown chick age: 14
-        .data$Age_calculated == 1 & .data$ChickAge < 0 ~ 14, # Chicks age 1 and impossible chick age: 14
-        TRUE ~ as.numeric(.data$ChickAge) # Remaining chicks (chicks with known chick age) get recorded chick age
-      ))
+      if(var == "Mass") {
 
-    # Errors
-    Capture_err <- purrr::pmap(.l = ref,
-                               .f = ~{
+        # Not all chicks have a recorded ChickAge. To still verify their values against age-specific reference values,
+        # we create a new Column with CurrentChickAge, which follows the following rules:
+        Capture_data <- Capture_data %>%
+          dplyr::mutate(CurrentChickAge = dplyr::case_when(
+            .data$Age_calculated > 3 ~ NA_real_, # Adults have no chick age
+            .data$Age_calculated == 3 ~ as.numeric(max(Capture_data$ChickAge, na.rm = TRUE)), # Chicks age 3 have the maximum chick age
+            .data$Age_calculated == 1 & is.na(.data$ChickAge) ~ 14, # Chicks age 1 and unknown chick age: 14
+            .data$Age_calculated == 1 & .data$ChickAge < 0 ~ 14, # Chicks age 1 and impossible chick age: 14
+            TRUE ~ as.numeric(.data$ChickAge) # Remaining chicks (chicks with known chick age) get recorded chick age
+          ))
 
-                                 pb$tick()
+      } else if(var == "Tarsus") {
 
-                                 if(..3 == "Adult") {
+        Capture_data <- Capture_data %>%
+          dplyr::mutate(CurrentChickAge = dplyr::case_when(.data$Age_calculated > 3 ~ "Adult",
+                                                           TRUE ~ "Chick"))
 
-                                   # If number of observations is large enough, compare brood values
-                                   # to all reference values
-                                   if(..8 >= "100") {
+      }
 
-                                     # Capture records below lower error threshold
-                                     lower_err <- Capture_data %>%
-                                       dplyr::mutate(Variable = var,
-                                                     Threshold = "L",
-                                                     Ref = ..6) %>%
-                                       dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2, .data$Age_calculated > 3,
-                                                     !!rlang::sym(var) < ..6) %>%
-                                       dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
-                                                     .data$Species, .data$Variable, .data$Threshold, .data$Ref)
+      Capture_err <- purrr::pmap(.l = ref,
+                                 .f = ~{
 
-                                     # Capture records above upper error threshold
-                                     upper_err <- Capture_data %>%
-                                       dplyr::mutate(Variable = var,
-                                                     Threshold = "U",
-                                                     Ref = ..7) %>%
-                                       dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2, .data$Age_calculated > 3,
-                                                     !!rlang::sym(var) > ..7) %>%
-                                       dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
-                                                     .data$Species, .data$Variable, .data$Threshold, .data$Ref)
+                                   pb$tick()
 
-                                     dplyr::bind_rows(lower_err, upper_err)
+                                   if(..3 == "Adult") {
 
-                                     # If number of observations is too low, only compare brood values
+                                     # If number of observations is large enough, compare brood values
+                                     # to all reference values
+                                     if(..6 >= "100") {
+
+                                       # Capture records below lower error threshold
+                                       lower_err <- Capture_data %>%
+                                         dplyr::mutate(Variable = var,
+                                                       Threshold = "L",
+                                                       Ref = ..4) %>%
+                                         dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2, .data$Age_calculated > 3,
+                                                       !!rlang::sym(var) < ..4) %>%
+                                         dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
+                                                       .data$Species, .data$Variable, .data$Threshold, .data$Ref)
+
+                                       # Capture records above upper error threshold
+                                       upper_err <- Capture_data %>%
+                                         dplyr::mutate(Variable = var,
+                                                       Threshold = "U",
+                                                       Ref = ..5) %>%
+                                         dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2, .data$Age_calculated > 3,
+                                                       !!rlang::sym(var) > ..5) %>%
+                                         dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
+                                                       .data$Species, .data$Variable, .data$Threshold, .data$Ref)
+
+                                       dplyr::bind_rows(lower_err, upper_err)
+
+                                       # If number of observations is too low, only compare brood values
+                                       # to reference values not based on quantiles
+                                     } else {
+
+                                       # Capture records below lower error threshold
+                                       Capture_data %>%
+                                         dplyr::mutate(Variable = var,
+                                                       Threshold = "L",
+                                                       Ref = ..4) %>%
+                                         dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2, .data$Age_calculated > 3,
+                                                       !!rlang::sym(var) < ..4) %>%
+                                         dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
+                                                       .data$Species, .data$Variable, .data$Threshold, .data$Ref)
+
+                                     }
+
+                                   } else if(..3 != "Adult") {
+
+                                     # If logistic model failed and number of observations is too low, only compare brood values
                                      # to reference values not based on quantiles
-                                   } else {
+                                     if(..7 == FALSE & ..6 < 100) {
 
-                                     # Capture records below lower error threshold
-                                     Capture_data %>%
-                                       dplyr::mutate(Variable = var,
-                                                     Threshold = "L",
-                                                     Ref = ..6) %>%
-                                       dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2, .data$Age_calculated > 3,
-                                                     !!rlang::sym(var) < ..6) %>%
-                                       dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
-                                                     .data$Species, .data$Variable, .data$Threshold, .data$Ref)
+                                       # Capture records below lower error threshold
+                                       Capture_data %>%
+                                         dplyr::mutate(Variable = var,
+                                                       Threshold = "L",
+                                                       Ref = ..4) %>%
+                                         dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2, .data$CurrentChickAge == ..3,
+                                                       !!rlang::sym(var) < ..4) %>%
+                                         dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
+                                                       .data$Species, .data$Variable, .data$Threshold, .data$Ref)
+
+                                       # Else, compare to all reference values
+                                     } else {
+
+                                       # Capture records below lower error threshold
+                                       lower_err <- Capture_data %>%
+                                         dplyr::mutate(Variable = var,
+                                                       Threshold = "L",
+                                                       Ref = ..4) %>%
+                                         dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2,
+                                                       .data$CurrentChickAge == ..3, !!rlang::sym(var) < ..4) %>%
+                                         dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
+                                                       .data$Species, .data$Variable, .data$Threshold, .data$Ref)
+
+                                       # Capture records above upper error threshold
+                                       upper_err <- Capture_data %>%
+                                         dplyr::mutate(Variable = var,
+                                                       Threshold = "U",
+                                                       Ref = ..5) %>%
+                                         dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2,
+                                                       .data$CurrentChickAge == ..3, !!rlang::sym(var) > ..5) %>%
+                                         dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
+                                                       .data$Species, .data$Variable, .data$Threshold, .data$Ref)
+
+                                       dplyr::bind_rows(lower_err, upper_err)
+
+                                     }
+
 
                                    }
 
-                                 } else if(..3 != "Adult") {
+                                 }) %>%
+        dplyr::bind_rows()
 
-                                   # If logistic model failed and number of observations is too low, only compare brood values
-                                   # to reference values not based on quantiles
-                                   if(..9 == FALSE & ..8 < 100) {
+      # If potential errors, add to report
+      if(nrow(Capture_err) > 0) {
 
-                                     # Capture records below lower error threshold
-                                     Capture_data %>%
-                                       dplyr::mutate(Variable = var,
-                                                     Threshold = "L",
-                                                     Ref = ..6) %>%
-                                       dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2, .data$CurrentChickAge == ..3,
-                                                     !!rlang::sym(var) < ..6) %>%
-                                       dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
-                                                     .data$Species, .data$Variable, .data$Threshold, .data$Ref)
+        err <- TRUE
 
-                                     # Else, compare to all reference values
-                                   } else {
+        # Compare to approved_list
+        error_records <- Capture_err %>%
+          dplyr::mutate(CheckID = checkID_variable_combos[checkID_variable_combos$Variable == var,]$CheckID) %>%
+          dplyr::anti_join(approved_list$Capture_approved_list, by=c("PopID", "CheckID", "CaptureID")) %>%
+          dplyr::arrange(.data$Row)
 
-                                     # Capture records below lower error threshold
-                                     lower_err <- Capture_data %>%
-                                       dplyr::mutate(Variable = var,
-                                                     Threshold = "L",
-                                                     Ref = ..6) %>%
-                                       dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2,
-                                                     .data$CurrentChickAge == ..3, !!rlang::sym(var) < ..6) %>%
-                                       dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
-                                                     .data$Species, .data$Variable, .data$Threshold, .data$Ref)
-
-                                     # Capture records above upper error threshold
-                                     upper_err <- Capture_data %>%
-                                       dplyr::mutate(Variable = var,
-                                                     Threshold = "U",
-                                                     Ref = ..7) %>%
-                                       dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2,
-                                                     .data$CurrentChickAge == ..3, !!rlang::sym(var) > ..7) %>%
-                                       dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
-                                                     .data$Species, .data$Variable, .data$Threshold, .data$Ref)
-
-                                     dplyr::bind_rows(lower_err, upper_err)
-
-                                   }
-
-
-                                 }
-
-                               }) %>%
-      dplyr::bind_rows()
-
-    if(nrow(Capture_err) > 0) {
-
-      err <- TRUE
-
-      # Compare to approved_list
-      error_records <- Capture_err %>%
-        dplyr::mutate(CheckID = checkID_variable_combos[checkID_variable_combos$Variable == var,]$CheckID) %>%
-        dplyr::anti_join(approved_list$Capture_approved_list, by=c("PopID", "CheckID", "CaptureID")) %>%
-        dplyr::arrange(.data$Row)
-
-      # Create quality check report statements
-      error_output <- purrr::pmap(.l = error_records,
-                                  .f = ~{
-
-                                    paste0("Record on row ", ..1,
-                                           " (PopID: ", ..2, "; ",
-                                           "CaptureID: ", ..3, "; ",
-                                           species_codes[species_codes$Species == ..5, "CommonName"], ")",
-                                           " has a ", ifelse(..7 == "U", "larger", "smaller"), " value in ",
-                                           ..6, " (", ..4, ") than the ", ifelse(..7 == "U", "upper", "lower"),
-                                           " reference value (", ..8, "), which is considered impossible.")
-
-                                  })
-
-    }
-
-    # Warnings
-    # Warnings are only checked for population-species combinations with at least 100 observations
-    warning_ref <- ref %>%
-      dplyr::filter((.data$Stage == "Adult" & n >= 100) | (.data$Logis == TRUE) | (.data$Logis == FALSE & .data$n >= 100))
-
-    Capture_war <- purrr::pmap(.l = warning_ref,
-                               .f = ~{
-
-                                 pb$tick()
-
-                                 if(..3 == "Adult") {
-
-                                   # Capture records below lower warning threshold
-                                   lower_war <- Capture_data %>%
-                                     dplyr::mutate(Variable = var,
-                                                   Threshold = "L",
-                                                   Ref = ..4) %>%
-                                     dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2, .data$Age_calculated > 3,
-                                                   !!rlang::sym(var) < ..4, !!rlang::sym(var) >= ..6) %>%
-                                     dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
-                                                   .data$Species, .data$Variable, .data$Threshold, .data$Ref)
-
-                                   # Capture records above upper warning threshold
-                                   upper_war <- Capture_data %>%
-                                     dplyr::mutate(Variable = var,
-                                                   Threshold = "U",
-                                                   Ref = ..5) %>%
-                                     dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2, .data$Age_calculated > 3,
-                                                   !!rlang::sym(var) > ..5, !!rlang::sym(var) <= ..7) %>%
-                                     dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
-                                                   .data$Species, .data$Variable, .data$Threshold, .data$Ref)
-
-                                   dplyr::bind_rows(lower_war, upper_war)
-
-                                 } else if(..3 != "Adult") {
-
-                                   # Capture records below lower warning threshold
-                                   lower_war <- Capture_data %>%
-                                     dplyr::mutate(Variable = var,
-                                                   Threshold = "L",
-                                                   Ref = ..4) %>%
-                                     dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2,
-                                                   .data$CurrentChickAge == ..3, !!rlang::sym(var) < ..4,
-                                                   !!rlang::sym(var) >= ..6) %>%
-                                     dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
-                                                   .data$Species, .data$Variable, .data$Threshold, .data$Ref)
-
-                                   # Capture records above upper warning threshold
-                                   upper_war <- Capture_data %>%
-                                     dplyr::mutate(Variable = var,
-                                                   Threshold = "U",
-                                                   Ref = ..5) %>%
-                                     dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2,
-                                                   .data$CurrentChickAge == ..3, !!rlang::sym(var) > ..5,
-                                                   !!rlang::sym(var) <= ..7) %>%
-                                     dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
-                                                   .data$Species, .data$Variable, .data$Threshold, .data$Ref)
-
-                                   dplyr::bind_rows(lower_war, upper_war)
-
-                                 }
-
-                               }) %>%
-      dplyr::bind_rows()
-
-    if(nrow(Capture_war) > 0) {
-
-      war <- TRUE
-
-      # Compare to approved_list
-      warning_records <- Capture_war %>%
-        dplyr::mutate(CheckID = checkID_variable_combos[checkID_variable_combos$Variable == var,]$CheckID) %>%
-        dplyr::anti_join(approved_list$Capture_approved_list, by=c("PopID", "CheckID", "CaptureID")) %>%
-        dplyr::arrange(.data$Row)
-
-      # Create quality check report statements
-      warning_output <- purrr::pmap(.l = warning_records,
+        # Create quality check report statements
+        error_output <- purrr::pmap(.l = error_records,
                                     .f = ~{
 
                                       paste0("Record on row ", ..1,
@@ -702,11 +505,22 @@ check_values_capture <- function(Capture_data, var, approved_list) {
                                              species_codes[species_codes$Species == ..5, "CommonName"], ")",
                                              " has a ", ifelse(..7 == "U", "larger", "smaller"), " value in ",
                                              ..6, " (", ..4, ") than the ", ifelse(..7 == "U", "upper", "lower"),
-                                             " reference value (", ..8, "), which is considered unusual.")
+                                             " reference value (", ..8, "), which is considered impossible.")
 
                                     })
 
+      }
+
     }
+
+  }
+
+  # No check for warnings
+  war <- FALSE
+  #warning_records <- tibble::tibble(Row = NA_character_)
+  warning_output <- NULL
+
+  if(output %in% c("both", "warnings")) {
 
     # Add messages about skipped population-species combinations to warning outputs
     if(var == "Tarsus") {
@@ -726,7 +540,7 @@ check_values_capture <- function(Capture_data, var, approved_list) {
 
                                     })
 
-      warning_output <- c(skipped_output, warning_output)
+      warning_output <- skipped_output
 
     }
 
@@ -751,7 +565,7 @@ check_values_capture <- function(Capture_data, var, approved_list) {
                                              })
 
         low_obs_chicks <- ref_chicks %>%
-          dplyr::filter(is.na(.data$Stage) | (.data$Logis == FALSE & .data$n < 100)) %>%
+          dplyr::filter(.data$Logis == FALSE & .data$n < 100 & !is.na(.data$Stage)) %>%
           dplyr::select(.data$Species, .data$PopID, .data$Stage)
 
         skipped_chicks_output <- purrr::pmap(.l = list(low_obs_chicks$Species,
@@ -777,7 +591,7 @@ check_values_capture <- function(Capture_data, var, approved_list) {
                                Error = err)
 
   return(list(CheckList = check_list,
-              WarningRows = warning_records$Row,
+              WarningRows = NULL,
               ErrorRows = error_records$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))
@@ -789,9 +603,9 @@ check_values_capture <- function(Capture_data, var, approved_list) {
 
 #' Check chick age
 #'
-#' Check whether chick ages (in number of days since hatching) are within the range of 0 and 30 days since hatching. Values outside this range will result in an error.
+#' Check whether chick ages (in number of days since hatching) are within the range of 0 and 30 days since hatching. Values outside this range will be flagged as a potential error.
 #'
-#' Check ID: C3.
+#' Check ID: C2.
 #'
 #' @inheritParams checks_capture_params
 #'
@@ -799,41 +613,46 @@ check_values_capture <- function(Capture_data, var, approved_list) {
 #'
 #' @export
 
-check_chick_age <- function(Capture_data, approved_list){
+check_chick_age <- function(Capture_data, approved_list, output){
 
-  # Errors
-  # Select records with chick age < 0 OR > 30
-  chick_age_err <- Capture_data %>%
-    dplyr::filter(.data$ChickAge < 0 | .data$ChickAge > 30) %>% #TODO: make species-specific
-    dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, .data$Species, .data$ChickAge)
-
+  # Check for potential errors
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  if(nrow(chick_age_err) > 0) {
+  if(output %in% c("both", "errors")) {
 
-    err <- TRUE
+    # Select records with chick age < 0 OR > 30
+    chick_age_err <- Capture_data %>%
+      dplyr::filter(.data$ChickAge < 0 | .data$ChickAge > 30) %>% #TODO: make species-specific
+      dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, .data$Species, .data$ChickAge)
 
-    # Compare to approved_list
-    error_records <- chick_age_err %>%
-      dplyr::mutate(CheckID = "C3") %>%
-      dplyr::anti_join(approved_list$Capture_approved_list, by=c("PopID", "CheckID", "CaptureID"))
+    # If potential errors, add to report
+    if(nrow(chick_age_err) > 0) {
 
-    # Create quality check report statements
-    error_output <- purrr::pmap(.l = error_records,
-                                .f = ~{
+      err <- TRUE
 
-                                  paste0("Record on row ", ..1,
-                                         " (PopID: ", ..2,
-                                         "; CaptureID: ", ..3, ", ", species_codes[species_codes$Species == ..4, "CommonName"], ")",
-                                         " has an impossible value in ChickAge (", ..5, ").")
+      # Compare to approved_list
+      error_records <- chick_age_err %>%
+        dplyr::mutate(CheckID = "C2") %>%
+        dplyr::anti_join(approved_list$Capture_approved_list, by=c("PopID", "CheckID", "CaptureID"))
 
-                                })
+      # Create quality check report statements
+      error_output <- purrr::pmap(.l = error_records,
+                                  .f = ~{
+
+                                    paste0("Record on row ", ..1,
+                                           " (PopID: ", ..2,
+                                           "; CaptureID: ", ..3, ", ", species_codes[species_codes$Species == ..4, "CommonName"], ")",
+                                           " has an impossible value in ChickAge (", ..5, ").")
+
+                                  })
+
+    }
 
   }
 
-  # No warnings
+  # No check for warnings
   war <- FALSE
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
@@ -849,14 +668,15 @@ check_chick_age <- function(Capture_data, approved_list){
 
   # Satisfy RCMD checks
   approved_list <- NULL
+
 }
 
 
-#' Check that adults captured on a nest are listed as parents of that nest
+#' Check that adults captured on a nest during the breeding season are listed as parents of that nest
 #'
-#' Check that adults captured on a nest are are listed as the parents of that nest in Brood_data. If not, records will be flagged as a warning. Adults can be caught near a nest box.
+#' Check that adults captured on a nest during the breeding season are are listed as the parents of that nest in Brood_data. If not, records will be flagged as a warning. Adults can be caught near a nest box. Records outside the breeding season but on a nesting location are ignored. The breeding season is determined annually and lasts from the minimum lay date in Brood_data that year to the maximum fledge date in Brood_data that year.
 #'
-#' Check ID: C4.
+#' Check ID: C3.
 #'
 #' @inheritParams checks_capture_params
 #' @inheritParams checks_location_params
@@ -866,96 +686,100 @@ check_chick_age <- function(Capture_data, approved_list){
 #'
 #' @export
 
-check_adult_parent_nest <- function(Capture_data, Location_data, Brood_data, approved_list){
+check_adult_parent_nest <- function(Capture_data, Location_data, Brood_data, approved_list, output){
 
-  # Select adults
-  adults <- Capture_data %>%
-    dplyr::filter(.data$Age_calculated > 3)
-
-  # Determine location type of their capture locations
-  pb1 <- progress::progress_bar$new(total = nrow(adults),
-                                    format = "[:bar] :percent ~:eta remaining",
-                                    clear = FALSE)
-
-  location_type <- purrr::pmap(.l = list(adults$LocationID,
-                                         adults$BreedingSeason,
-                                         adults$CapturePopID),
-                               .f = ~{
-
-                                 pb1$tick()
-
-                                 Location_type <- Location_data %>%
-                                   dplyr::filter(.data$LocationID == ..1
-                                                 & .data$StartSeason <= ..2
-                                                 & (.data$EndSeason >= ..2 | is.na(.data$EndSeason))
-                                                 & .data$PopID == ..3) %>%
-                                   dplyr::pull(.data$LocationType)
-
-                                 ifelse(is.null(Location_type), NA, Location_type)
-
-                               })
-
-  # Add location type to adults data frame and filter captures on nest box
-  adults_nest_box <- adults %>%
-    dplyr::mutate(LocationType = unlist(location_type)) %>%
-    dplyr::filter(LocationType == "NB")
-
-  # Check whether adults caught in nest box are associated with that nest in Brood data
-  pb2 <- progress::progress_bar$new(total = nrow(adults_nest_box),
-                                    format = "[:bar] :percent ~:eta remaining",
-                                    clear = FALSE)
-
-  parents_nests <- purrr::pmap_lgl(.l = list(adults_nest_box$CapturePopID,
-                                             adults_nest_box$BreedingSeason,
-                                             adults_nest_box$LocationID,
-                                             adults_nest_box$IndvID),
-                                   .f = ~{
-
-                                     pb2$tick()
-
-                                     Brood_parents <- Brood_data %>%
-                                       dplyr::filter(.data$PopID == ..1
-                                                     & .data$BreedingSeason == ..2
-                                                     &  .data$LocationID == ..3) %>%
-                                       dplyr::select(.data$FemaleID, .data$MaleID)
-
-                                     ..4 %in% Brood_parents$FemaleID | ..4 %in% Brood_parents$MaleID
-                                   })
-
-  # Select adults caught in a nest box that are NOT associated with that nest
-  unassociated_adults <- adults_nest_box[!parents_nests,] %>%
-    dplyr::select(.data$Row, .data$CaptureID, .data$IndvID, PopID = .data$CapturePopID)
-
-  # Warnings
+  # Check for warnings
   war <- FALSE
   warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
-  if(nrow(unassociated_adults) > 0) {
+  if(output %in% c("both", "warnings")) {
 
-    war <- TRUE
+    # Select adults captured in the "breeding season"
+    # Here we define a population's breeding season annually, which, for now, runs from the minimum lay date in Brood_data,
+    # to the maximum fledge date in Brood_data (both in Julian day/day of the year)
+    # TODO: Note that errors in either lay date or fledge date permeate here.
+    # TODO: Update breeding season definition for birds breeding in winter, in the tropics, or the Southern Hemisphere
+    breeding_season <- Brood_data %>%
+      dplyr::group_by(.data$PopID, .data$BreedingSeason) %>%
+      dplyr::summarise(StartBreeding = lubridate::yday(min(.data$LayDate_observed, na.rm = TRUE)),
+                       EndBreeding = lubridate::yday(max(.data$FledgeDate_observed, na.rm = TRUE)),
+                       .groups = "drop")
 
-    # Compare to approved_list
-    warning_records <- unassociated_adults %>%
-      dplyr::mutate(CheckID = "C4") %>%
-      dplyr::anti_join(approved_list$Capture_approved_list, by=c("PopID", "CheckID", "CaptureID"))
+    adults <- Capture_data %>%
+      dplyr::left_join(breeding_season, by = c("BreedingSeason", "CapturePopID" = "PopID")) %>%
+      dplyr::filter(.data$Age_calculated > 3,
+                    lubridate::yday(.data$CaptureDate) >= .data$StartBreeding,
+                    lubridate::yday(.data$CaptureDate) <= .data$EndBreeding)
 
-    # Create quality check report statements
-    warning_output <- purrr::pmap(.l = warning_records,
-                                  .f = ~{
+    # Determine location type of their capture locations
+    # Duplicate location rows according to the number of years they were used for easy joining with adult data
+    annual_locations <- Location_data %>%
+      dplyr::mutate(EndSeason = dplyr::case_when(is.na(EndSeason) ~ as.integer(lubridate::year(Sys.Date())),
+                                                 !is.na(EndSeason) ~ EndSeason)) %>%
+      tidyr::uncount(weights = .data$EndSeason - .data$StartSeason + 1) %>%
+      dplyr::group_by(.data$Row) %>%
+      dplyr::mutate(BreedingSeason = StartSeason + row_number() - 1) %>%
+      dplyr::ungroup() %>%
+      dplyr::select(-Row)
 
-                                    paste0("Record on row ", ..1,
-                                           " (PopID: ", ..4,
-                                           "; CaptureID: ", ..2,
-                                           "; IndvID: ", ..3, ")",
-                                           " is caught on a location marked as a nest box but is not listed as the parent of that nest in Brood_data.")
+    # Add location type to adults data frame and filter captures on nest box
+    adults_nest_box <- adults %>%
+      dplyr::left_join(annual_locations, by = c("CapturePopID" = "PopID", "LocationID", "BreedingSeason")) %>%
+      dplyr::filter(LocationType == "NB")
 
-                                  })
+    # Check whether adults caught in nest box are associated with that nest in Brood data
+    pb <- progress::progress_bar$new(total = nrow(adults_nest_box),
+                                     format = "[:bar] :percent ~:eta remaining")
+
+    parents_nests <- purrr::pmap_lgl(.l = list(adults_nest_box$CapturePopID,
+                                               adults_nest_box$BreedingSeason,
+                                               adults_nest_box$LocationID,
+                                               adults_nest_box$IndvID),
+                                     .f = ~{
+
+                                       pb$tick()
+
+                                       Brood_parents <- Brood_data %>%
+                                         dplyr::filter(.data$PopID == ..1
+                                                       & .data$BreedingSeason == ..2
+                                                       &  .data$LocationID == ..3) %>%
+                                         dplyr::select(.data$FemaleID, .data$MaleID)
+
+                                       ..4 %in% Brood_parents$FemaleID | ..4 %in% Brood_parents$MaleID
+                                     })
+
+    # Select adults caught in a nest box that are NOT associated with that nest
+    unassociated_adults <- adults_nest_box[!parents_nests,] %>%
+      dplyr::select(.data$Row, .data$CaptureID, .data$IndvID, PopID = .data$CapturePopID)
+
+    # If warnings, add to report
+    if(nrow(unassociated_adults) > 0) {
+
+      war <- TRUE
+
+      # Compare to approved_list
+      warning_records <- unassociated_adults %>%
+        dplyr::mutate(CheckID = "C3") %>%
+        dplyr::anti_join(approved_list$Capture_approved_list, by=c("PopID", "CheckID", "CaptureID"))
+
+      # Create quality check report statements
+      warning_output <- purrr::pmap(.l = warning_records,
+                                    .f = ~{
+
+                                      paste0("Record on row ", ..1,
+                                             " (PopID: ", ..4,
+                                             "; CaptureID: ", ..2,
+                                             "; IndvID: ", ..3, ")",
+                                             " is caught on a location marked as a nest box but is not listed as the parent of that nest in Brood_data.")
+
+                                    })
+
+    }
 
   }
 
-
-  # No errors
+  # No check for errors
   err <- FALSE
   #error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
@@ -977,9 +801,9 @@ check_adult_parent_nest <- function(Capture_data, Location_data, Brood_data, app
 
 #' Check age of subsequent captures
 #'
-#' Check that the observed age of chronologically ordered captures is correct. Individuals who have a record as a chick in the same or a later year than a record of an adult will be flagged as an error. Other cases where the age of the subsequent capture is not equal or greater than the previous will be flagged as a warning.
+#' Check that the observed age of chronologically ordered captures is correct. Individuals who have a record as a chick in the same or a later year than a record of an adult will be flagged as a potential error. Other cases where the age of the subsequent capture is not equal or greater than the previous will be flagged as a warning.
 #'
-#' Check ID: C5.
+#' Check ID: C4.
 #'
 #' @inheritParams checks_capture_params
 #'
@@ -987,85 +811,95 @@ check_adult_parent_nest <- function(Capture_data, Location_data, Brood_data, app
 #'
 #' @export
 
-check_age_captures <- function(Capture_data, approved_list){
+check_age_captures <- function(Capture_data, approved_list, output){
 
-  # Warnings
-  # Select records of captures with an age larger than the subsequent capture.
-  # This may happen when age determination and uncertainty vary over time, but should be flagged as a warning.
-  wrong_age_order <- Capture_data %>%
-    dplyr::group_by(.data$CapturePopID, .data$IndvID) %>%
-    dplyr::arrange(.data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
-    dplyr::mutate(Age_observed_next = lead(.data$Age_observed)) %>%
-    dplyr::filter(.data$Age_observed > .data$Age_observed_next &
-                    ((.data$Age_observed <= 3 & .data$Age_observed_next <= 3) |
-                       (.data$Age_observed > 3 & .data$Age_observed_next > 3))) %>%
-    dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$IndvID, .data$CaptureID,
-                  .data$Species, .data$Age_observed, .data$Age_observed_next)
-
+  # Check for warnings
   war <- FALSE
   warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
-  if(nrow(wrong_age_order) > 0) {
+  if(output %in% c("both", "warnings")) {
 
-    war <- TRUE
+    # Select records of captures with an age larger than the subsequent capture.
+    # This may happen when age determination and uncertainty vary over time, but should be flagged as a warning.
+    wrong_age_order <- Capture_data %>%
+      dplyr::group_by(.data$CapturePopID, .data$IndvID) %>%
+      dplyr::arrange(.data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
+      dplyr::mutate(Age_observed_next = lead(.data$Age_observed)) %>%
+      dplyr::filter(.data$Age_observed > .data$Age_observed_next &
+                      ((.data$Age_observed <= 3 & .data$Age_observed_next <= 3) |
+                         (.data$Age_observed > 3 & .data$Age_observed_next > 3))) %>%
+      dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$IndvID, .data$CaptureID,
+                    .data$Species, .data$Age_observed, .data$Age_observed_next)
 
-    # Compare to approved_list
-    warning_records <- wrong_age_order %>%
-      dplyr::mutate(CheckID = "C5") %>%
-      dplyr::anti_join(approved_list$Capture_approved_list, by=c("PopID", "CheckID", "CaptureID"))
+    # If warnings, add to report
+    if(nrow(wrong_age_order) > 0) {
 
-    # Create quality check report statements
-    warning_output <- purrr::pmap(.l = warning_records,
+      war <- TRUE
+
+      # Compare to approved_list
+      warning_records <- wrong_age_order %>%
+        dplyr::mutate(CheckID = "C4") %>%
+        dplyr::anti_join(approved_list$Capture_approved_list, by=c("PopID", "CheckID", "CaptureID"))
+
+      # Create quality check report statements
+      warning_output <- purrr::pmap(.l = warning_records,
+                                    .f = ~{
+
+                                      paste0("Record on row ", ..1,
+                                             " (PopID: ", ..2,
+                                             "; IndvID: ", ..3,
+                                             "; CaptureID: ", ..4, "; ", species_codes[species_codes$Species == ..5, "CommonName"], ")",
+                                             " has an older observed age (Age: ", ..6, ") than the next capture of this individual (Age: ", ..7, ").")
+
+                                    })
+
+    }
+
+  }
+
+  # Check for potential errors
+  err <- FALSE
+  error_records <- tibble::tibble(Row = NA_character_)
+  error_output <- NULL
+
+  if(output %in% c("both", "errors")) {
+
+    # Select records of chick captures that happened after adult captures of the same individual
+    # This is impossible and should be flagged as an error.
+    chicks_caught_after_adults <- Capture_data %>%
+      dplyr::group_by(.data$CapturePopID, .data$IndvID) %>%
+      dplyr::arrange(.data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
+      dplyr::mutate(Age_observed_next = lead(.data$Age_observed)) %>%
+      dplyr::filter(.data$Age_observed > .data$Age_observed_next &
+                      .data$Age_observed > 3 &
+                      .data$Age_observed_next <= 3) %>%
+      dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$IndvID, .data$CaptureID,
+                    .data$Species, .data$Age_observed, .data$Age_observed_next)
+
+    # If potential errors, add to report
+    if(nrow(chicks_caught_after_adults) > 0) {
+
+      err <- TRUE
+
+      # Compare to approved_list
+      error_records <- chicks_caught_after_adults %>%
+        dplyr::mutate(CheckID = "C4") %>%
+        dplyr::anti_join(approved_list$Capture_approved_list, by=c("PopID", "CheckID", "CaptureID"))
+
+      # Create quality check report statements
+      error_output <- purrr::pmap(.l = error_records,
                                   .f = ~{
 
                                     paste0("Record on row ", ..1,
                                            " (PopID: ", ..2,
                                            "; IndvID: ", ..3,
                                            "; CaptureID: ", ..4, "; ", species_codes[species_codes$Species == ..5, "CommonName"], ")",
-                                           " has an older observed age (Age: ", ..6, ") than the next capture of this individual (Age: ", ..7, ").")
+                                           " has been caught as an adult (Age: ", ..6, ") before it was caught as a chick (Age: ", ..7, ").")
 
                                   })
 
-  }
-
-  # Errors
-  # Select records of chick captures that happened after adult captures of the same individual
-  # This is impossible and should be flagged as an error.
-  chicks_caught_after_adults <- Capture_data %>%
-    dplyr::group_by(.data$CapturePopID, .data$IndvID) %>%
-    dplyr::arrange(.data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
-    dplyr::mutate(Age_observed_next = lead(.data$Age_observed)) %>%
-    dplyr::filter(.data$Age_observed > .data$Age_observed_next &
-                  .data$Age_observed > 3 &
-                    .data$Age_observed_next <= 3) %>%
-    dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$IndvID, .data$CaptureID,
-                  .data$Species, .data$Age_observed, .data$Age_observed_next)
-
-  err <- FALSE
-  error_records <- tibble::tibble(Row = NA_character_)
-  error_output <- NULL
-
-  if(nrow(chicks_caught_after_adults) > 0) {
-
-    err <- TRUE
-
-    # Compare to approved_list
-    error_records <- chicks_caught_after_adults %>%
-      dplyr::mutate(CheckID = "C5") %>%
-      dplyr::anti_join(approved_list$Capture_approved_list, by=c("PopID", "CheckID", "CaptureID"))
-
-    # Create quality check report statements
-    error_output <- purrr::pmap(.l = error_records,
-                                .f = ~{
-
-                                  paste0("Record on row ", ..1,
-                                         " (PopID: ", ..2,
-                                         "; IndvID: ", ..3,
-                                         "; CaptureID: ", ..4, "; ", species_codes[species_codes$Species == ..5, "CommonName"], ")",
-                                         " has been caught as an adult (Age: ", ..6, ") before it was caught as a chick (Age: ", ..7, ").")
-
-                                })
+    }
 
   }
 
@@ -1074,6 +908,162 @@ check_age_captures <- function(Capture_data, approved_list){
 
   return(list(CheckList = check_list,
               WarningRows = warning_records$Row,
+              ErrorRows = error_records$Row,
+              WarningOutput = unlist(warning_output),
+              ErrorOutput = unlist(error_output)))
+
+  # Satisfy RCMD checks
+  approved_list <- NULL
+
+}
+
+#' Check that all individuals captured in Capture_data appear in Individual_data
+#'
+#' Check that all individuals recorded in Capture_data have a record in Individual_data. Missing individuals should never occur, because Individual_data is usually a direct product of Capture_data (i.e., all unique individuals from Capture_data). Missing individuals will be flagged as a potential error. If there are any missing individuals, the SPI-Birds team needs to check the pipeline code. This check is the opposite of check I5 (\code{\link{check_individuals_captures}}).
+#'
+#' Check ID: C5.
+#'
+#' @inheritParams checks_capture_params
+#' @inheritParams checks_individual_params
+#'
+#' @inherit checks_return return
+#'
+#' @export
+
+check_captures_individuals <- function(Capture_data, Individual_data, approved_list, output){
+
+  # Check for potential errors
+  err <- FALSE
+  error_records <- tibble::tibble(Row = NA_character_)
+  error_output <- NULL
+
+  if(output %in% c("both", "errors")) {
+
+    # Select individuals that are missing from Individual_data
+    missing_individuals <- purrr::map(.x = unique(Capture_data$CapturePopID),
+                                      .f = ~{
+
+                                        dplyr::anti_join({Capture_data %>% dplyr::filter(.data$CapturePopID == .x)},
+                                                         {Individual_data %>% dplyr::filter(.data$PopID == .x)},
+                                                         by = "IndvID")
+
+                                      }) %>%
+      dplyr::bind_rows() %>%
+      dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, .data$IndvID)
+
+    # If potential errors, add to report
+    if(nrow(missing_individuals) > 0) {
+
+      err <- TRUE
+
+      # Compare to approved_list
+      error_records <- missing_individuals %>%
+        dplyr::mutate(CheckID = "C5") %>%
+        dplyr::anti_join(approved_list$Capture_approved_list, by=c("PopID", "CheckID", "CaptureID"))
+
+      # Create quality check report statements
+      error_output <- purrr::pmap(.l = error_records,
+                                  .f = ~{
+
+                                    paste0("Record on row ", ..1,
+                                           " (PopID: ", ..2,
+                                           "; CaptureID: ", ..3,
+                                           "; IndvID: ", ..4, ")",
+                                           " does not appear in Individual_data.")
+
+                                  })
+
+    }
+
+  }
+
+  # No check for warnings
+  war <- FALSE
+  #warning_records <- tibble::tibble(Row = NA_character_)
+  warning_output <- NULL
+
+  check_list <- tibble::tibble(Warning = war,
+                               Error = err)
+
+  return(list(CheckList = check_list,
+              WarningRows = NULL,
+              ErrorRows = error_records$Row,
+              WarningOutput = unlist(warning_output),
+              ErrorOutput = unlist(error_output)))
+
+  # Satisfy RCMD checks
+  approved_list <- NULL
+
+}
+
+
+#' Check that all capture locations in Capture_data appear in Location_data
+#'
+#' Check that all capture locations recorded in Capture_data appear in Location_data. Missing locations will be flagged as a potential error. This check is the opposite of check L2 (\code{\link{check_locations_brood_capture}}).
+#'
+#' Check ID: C6.
+#'
+#' @inheritParams checks_capture_params
+#' @inheritParams checks_location_params
+#'
+#' @inherit checks_return return
+#'
+#' @export
+
+check_capture_locations <- function(Capture_data, Location_data, approved_list, output){
+
+  # Check for potential errors
+  err <- FALSE
+  error_records <- tibble::tibble(Row = NA_character_)
+  error_output <- NULL
+
+  if(output %in% c("both", "errors")) {
+
+    # Select locations that are missing from Locations_data
+    missing_locations <- purrr::map(.x = unique(Capture_data$CapturePopID),
+                                    .f = ~{
+
+                                      dplyr::anti_join({Capture_data %>% dplyr::filter(!is.na(LocationID) & .data$CapturePopID == .x)},
+                                                       {Location_data %>% dplyr::filter(.data$PopID == .x)},
+                                                       by = "LocationID")
+
+                                    }) %>%
+      dplyr::bind_rows() %>%
+      dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, .data$LocationID)
+
+    # If potential errors, add to report
+    if(nrow(missing_locations) > 0) {
+
+      err <- TRUE
+
+      # Compare to approved_list
+      error_records <- missing_locations %>%
+        dplyr::mutate(CheckID = "C6") %>%
+        dplyr::anti_join(approved_list$Capture_approved_list, by=c("PopID", "CheckID", "CaptureID"))
+
+      # Create quality check report statements
+      error_output <- purrr::pmap(.l = error_records,
+                                  .f = ~{
+
+                                    paste0("Record on row ", ..1, " (PopID: ", ..2, "; CaptureID: ", ..3, ")",
+                                           " has a location (LocationID: ", ..4, ") that does not appear in Location_data.")
+
+                                  })
+
+    }
+
+  }
+
+  # No check for warnings
+  war <- FALSE
+  #warning_records <- tibble::tibble(Row = NA_character_)
+  warning_output <- NULL
+
+  check_list <- tibble::tibble(Warning = war,
+                               Error = err)
+
+  return(list(CheckList = check_list,
+              WarningRows = NULL,
               ErrorRows = error_records$Row,
               WarningOutput = unlist(warning_output),
               ErrorOutput = unlist(error_output)))

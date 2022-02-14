@@ -8,8 +8,9 @@ capture_check(
   Capture_data,
   Location_data,
   Brood_data,
-  check_format = TRUE,
-  approved_list
+  Individual_data,
+  approved_list,
+  output
 )
 }
 \arguments{
@@ -19,10 +20,12 @@ capture_check(
 
 \item{Brood_data}{Data frame. Brood data output from pipeline.}
 
-\item{check_format}{\code{TRUE} or \code{FALSE}. If \code{TRUE}, the check on variable format (i.e. \code{\link{check_format_capture}}) is included in the quality check. Default: \code{TRUE}.}
+\item{Individual_data}{Data frame. Individual data output from pipeline.}
 
 \item{approved_list}{List object. List of approved records from brood_approved_list.csv,
-capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv}
+capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv.}
+
+\item{output}{Character. Run checks on potential errors ("errors"), warnings ("warnings"), or both ("both"; default).}
 }
 \value{
 A list of:
@@ -38,10 +41,11 @@ A wrapper that runs all single checks related to \code{Capture_data}.
 \details{
 The following capture data checks are performed:
 \itemize{
-\item \strong{C1}: Check if the formats of each column in \code{Capture_data} match with the standard format using \code{\link{check_format_capture}}.
-\item \strong{C2a-b}: Check capture variable values against reference values using \code{\link{check_values_capture}}. Capture variables checked for adults and chicks: Mass and Tarsus.
-\item \strong{C3}: Check chick age (in numbers of days since hatching) using \code{\link{check_chick_age}}.
-\item \strong{C4}: Check that adults caught on nest are listed as parents using \code{\link{check_adult_parent_nest}}.
-\item \strong{C5}: Check that the age of subsequent captures of the same individual is correct using \code{\link{check_age_captures}}.
+\item \strong{C1a-b}: Check capture variable values against reference values using \code{\link{check_values_capture}}. Capture variables checked for adults and chicks: Mass and Tarsus.
+\item \strong{C2}: Check chick age (in numbers of days since hatching) using \code{\link{check_chick_age}}.
+\item \strong{C3}: Check that adults caught on nest are listed as parents using \code{\link{check_adult_parent_nest}}.
+\item \strong{C4}: Check that the age of subsequent captures of the same individual is correct using \code{\link{check_age_captures}}.
+\item \strong{C5}: Check if individuals in Capture_data appear in Individual_data using \code{\link{check_captures_individuals}}.
+\item \strong{C6}: Check that capture locations appear in Location_data using \code{\link{check_capture_locations}}.
 }
 }
