@@ -39,7 +39,7 @@ check_descriptions_pdf <- "
 
 \\subsection{Check descriptions}
 
-Below is a summary of all standard data quality checks included in the SPI-Birds quality check procedure. A detailed description checks can be found \\href{https://github.com/SPI-Birds/documentation/blob/master/quality_check/SPI-Birds_quality-check-protocol_v1.0.pdf}{\\underline{here}}.
+Below is a summary of all standard data quality checks included in the SPI-Birds quality check procedure. A detailed description checks can be found \\href{https://github.com/SPI-Birds/documentation/blob/master/quality_check/SPI-Birds_quality-check-protocol_v1.1.pdf}{\\underline{here}}.
 
 Brood checks:
   \\begin{itemize}
