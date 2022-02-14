@@ -2,7 +2,7 @@
 % Please edit documentation in R/capture_check.R
 \name{check_adult_parent_nest}
 \alias{check_adult_parent_nest}
-\title{Check that adults captured on a nest are listed as parents of that nest}
+\title{Check that adults captured on a nest during the breeding season are listed as parents of that nest}
 \usage{
 check_adult_parent_nest(
   Capture_data,
@@ -33,7 +33,7 @@ A list of:
 \item{Errors}{A list of row-by-row errors.}
 }
 \description{
-Check that adults captured on a nest in the breeding season are are listed as the parents of that nest in Brood_data. If not, records will be flagged as a warning. Adults can be caught near a nest box. Records outside the breeding season but on a nesting location are ignored. The breeding season is determined annually and lasts from the minimum lay date in Brood_data that year to the maximum fledge date in Brood_data that year.
+Check that adults captured on a nest during the breeding season are are listed as the parents of that nest in Brood_data. If not, records will be flagged as a warning. Adults can be caught near a nest box. Records outside the breeding season but on a nesting location are ignored. The breeding season is determined annually and lasts from the minimum lay date in Brood_data that year to the maximum fledge date in Brood_data that year.
 }
 \details{
 Check ID: C3.

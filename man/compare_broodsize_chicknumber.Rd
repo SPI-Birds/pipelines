@@ -2,7 +2,7 @@
 % Please edit documentation in R/brood_check.R
 \name{compare_broodsize_chicknumber}
 \alias{compare_broodsize_chicknumber}
-\title{Compare brood size with number of chicks captured}
+\title{Compare brood size with number of chicks in Individual_data}
 \usage{
 compare_broodsize_chicknumber(
   Brood_data,
@@ -30,7 +30,7 @@ A list of:
 \item{Errors}{A list of row-by-row errors.}
 }
 \description{
-Compare BroodSize in Brood_data with the number of chicks captured in Capture_data. We expect these numbers to be equal. Records where BroodSize is larger than the number of chicks captured will be flagged as a warning, because chicks might have died before ringing and measuring. Records where BroodSize is smaller than the number of chicks captured will be flagged as a potential error, because this should not be possible.
+Compare BroodSize in Brood_data with the number of chicks recorded in Individual_data. We expect these numbers to be equal. Records where BroodSize is larger than the number of chicks recorded will be flagged as a warning, because chicks might have died before ringing and measuring. In experimentally manipulated broods, BroodSize may be smaller than the number of chicks in Individual_data. If so, the record will be flagged as a warning. In non-manipulated broods, BroodSize should never be smaller than the number of chicks in Individual_data. If so, the records will be flagged as a potential error.
 }
 \details{
 Check ID: B6.
