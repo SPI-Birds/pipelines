@@ -4,10 +4,18 @@
 \alias{create_individual_NIOO}
 \title{Create individual data table for NIOO pipeline.}
 \usage{
-create_individual_NIOO(database, location_data, species_filter, pop_filter)
+create_individual_NIOO(
+  database,
+  Capture_data,
+  location_data,
+  species_filter,
+  pop_filter
+)
 }
 \arguments{
 \item{database}{Connection to NIOO Access database.}
+
+\item{Capture_data}{}
 
 \item{location_data}{Data frame with location codes and corresponding PopID.}
 

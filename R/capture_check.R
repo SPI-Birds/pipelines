@@ -28,7 +28,7 @@ capture_check <- function(Capture_data, Location_data, Brood_data, Individual_da
                                CheckDescription = c("Check mass values against reference values",
                                                     "Check tarsus values against reference values",
                                                     "Check chick age",
-                                                    "Check that adults caught on nest are listed as the parents",
+                                                    "Check that adults caught on nest during the breeding season are listed as the parents",
                                                     "Check the order in age of subsequent captures",
                                                     "Check that individuals in Capture_data also appear in Individual_data",
                                                     "Check that capture locations appear in Location_data"),
@@ -60,7 +60,7 @@ capture_check <- function(Capture_data, Location_data, Brood_data, Individual_da
   check_list[3, 3:4] <- check_chick_age_output$CheckList
 
   # - Check that adults caught on nest are listed are the parents
-  message("C3: Checking that adults caught on nest are listed as the parents...")
+  message("C3: Checking that adults caught on nest during the breeding season are listed as the parents...")
 
   check_adult_parent_nest_output <- check_adult_parent_nest(Capture_data, Location_data,
                                                             Brood_data, approved_list, output)
@@ -672,9 +672,9 @@ check_chick_age <- function(Capture_data, approved_list, output){
 }
 
 
-#' Check that adults captured on a nest are listed as parents of that nest
+#' Check that adults captured on a nest during the breeding season are listed as parents of that nest
 #'
-#' Check that adults captured on a nest in the breeding season are are listed as the parents of that nest in Brood_data. If not, records will be flagged as a warning. Adults can be caught near a nest box. Records outside the breeding season but on a nesting location are ignored. The breeding season is determined annually and lasts from the minimum lay date in Brood_data that year to the maximum fledge date in Brood_data that year.
+#' Check that adults captured on a nest during the breeding season are are listed as the parents of that nest in Brood_data. If not, records will be flagged as a warning. Adults can be caught near a nest box. Records outside the breeding season but on a nesting location are ignored. The breeding season is determined annually and lasts from the minimum lay date in Brood_data that year to the maximum fledge date in Brood_data that year.
 #'
 #' Check ID: C3.
 #'

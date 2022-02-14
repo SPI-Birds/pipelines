@@ -911,9 +911,9 @@ check_values_brood <- function(Brood_data, var, approved_list, output) {
 }
 
 
-#' Compare brood size with number of chicks captured
+#' Compare brood size with number of chicks in Individual_data
 #'
-#' Compare BroodSize in Brood_data with the number of chicks captured in Capture_data. We expect these numbers to be equal. Records where BroodSize is larger than the number of chicks captured will be flagged as a warning, because chicks might have died before ringing and measuring. Records where BroodSize is smaller than the number of chicks captured will be flagged as a potential error, because this should not be possible.
+#' Compare BroodSize in Brood_data with the number of chicks recorded in Individual_data. We expect these numbers to be equal. Records where BroodSize is larger than the number of chicks recorded will be flagged as a warning, because chicks might have died before ringing and measuring. In experimentally manipulated broods, BroodSize may be smaller than the number of chicks in Individual_data. If so, the record will be flagged as a warning. In non-manipulated broods, BroodSize should never be smaller than the number of chicks in Individual_data. If so, the records will be flagged as a potential error.
 #'
 #' Check ID: B6.
 #'

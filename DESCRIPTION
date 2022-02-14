@@ -33,7 +33,7 @@ Imports: dplyr,
          here,
          progress,
          tcltk,
-         rlang
+         rlang,
          rgeos,
          rstudioapi,
          sp,

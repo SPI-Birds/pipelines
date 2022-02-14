@@ -40,7 +40,7 @@ populations at the Netherlands Institute of Ecology (NIOO-KNAW).
 \details{
 This section provides details on data management choices that are unique to
 the NIOO database. For a general description of the standard format please see
-\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
+\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 
 \strong{Species}: By default the pipeline will include great tit \emph{Parus
 major}; blue tit \emph{Cyanistes caeruleus}; pied flycatcher \emph{Ficedula
@@ -74,6 +74,8 @@ information.
 Values >1 are inaccurate and are ignored. A value of 0 is unknown. These are likely
 mistakes in the primary data (i.e. the accuracy should always be known). For now,
 we include captures with accuracy of both 0 and 1 in the final data.
+N.B This is no longer applied as it led to many individuals that were considered 'never captured'.
+Will talk to data owner about this.
 
 \strong{AvgEggMass} Egg measurements are included in the NIOO database, but these are a bit more difficult to include
 because they aren't associated with a given brood (they can be weighed before and after a cross fostering). For now,
@@ -81,5 +83,5 @@ we don't include this data, but we hope to in the future. Therefore, AvgEggMass 
 
 \strong{ChickAge:} For every capture, we estimate the age of a chick as the difference between the hatch date
 taken from BroodIDFledged (in Individual_data) and the CaptureDate. We include chick ages for all individuals
-up until 30 days post hatching to accomodate possible late fledging.
+up until 30 days post hatching to accommodate possible late fledging.
 }
