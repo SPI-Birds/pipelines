@@ -177,7 +177,7 @@ create_brood_SSQ <- function(data){
     ## Keep only necessary columns
     dplyr::select(dplyr::contains(names(brood_data_template))) %>%
     ## Add missing columns
-    dplyr::bind_cols(brood_data_template[, !(names(brood_data_template) %in% names(.))]) %>%
+    dplyr::bind_cols(brood_data_template[1, !(names(brood_data_template) %in% names(.))]) %>%
     ## Reorder columns
     dplyr::select(names(brood_data_template))
 
@@ -248,7 +248,7 @@ create_capture_SSQ <- function(data){
     ## Keep only necessary columns
     dplyr::select(dplyr::contains(names(capture_data_template))) %>%
     ## Add missing columns
-    dplyr::bind_cols(capture_data_template[,!(names(capture_data_template) %in% names(.))]) %>%
+    dplyr::bind_cols(capture_data_template[1, !(names(capture_data_template) %in% names(.))]) %>%
     ## Reorder columns
     dplyr::select(names(capture_data_template))
 
@@ -295,7 +295,7 @@ create_individual_SSQ <- function(data, Capture_data, Brood_data){
     ## Keep only necessary columns
     dplyr::select(dplyr::contains(names(individual_data_template))) %>%
     ## Add missing columns
-    dplyr::bind_cols(individual_data_template[,!(names(individual_data_template) %in% names(.))]) %>%
+    dplyr::bind_cols(individual_data_template[1, !(names(individual_data_template) %in% names(.))]) %>%
     ## Reorder columns
     dplyr::select(names(individual_data_template))
 
@@ -323,7 +323,7 @@ create_location_SSQ <- function(data){
     ## Keep only necessary columns
     dplyr::select(dplyr::contains(names(location_data_template))) %>%
     ## Add missing columns
-    dplyr::bind_cols(location_data_template[,!(names(location_data_template) %in% names(.))]) %>%
+    dplyr::bind_cols(location_data_template[1, !(names(location_data_template) %in% names(.))]) %>%
     ## Reorder columns
     dplyr::select(names(location_data_template))
 

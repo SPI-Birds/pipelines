@@ -184,7 +184,7 @@ format_NIOO <- function(db = choose_directory(),
     ## Keep only necessary columns
     dplyr::select(dplyr::contains(names(brood_data_template))) %>%
     ## Add missing columns
-    dplyr::bind_cols(brood_data_template[,!(names(brood_data_template) %in% names(.))]) %>%
+    dplyr::bind_cols(brood_data_template[1, !(names(brood_data_template) %in% names(.))]) %>%
     ## Reorder columns
     dplyr::select(names(brood_data_template))
 
@@ -275,9 +275,14 @@ create_brood_NIOO <- function(database, location_data, species_filter, pop_filte
     dplyr::left_join(Female_rings, by = "Female_ring") %>%
     dplyr::collect() %>%
     dplyr::mutate(HatchDate_observed = lubridate::ymd(.data$HatchDate),
+                  ##FIXME: Translate HatchDateAccuracy into min & max
                   LayDate_observed = lubridate::ymd(.data$LayDate),
                   LayDate_min = .data$LayDate_observed - .data$LayDateDeviation,
                   LayDate_max = .data$LayDate_observed + .data$LayDateDeviation,
+                  FledgeDate_observed = .data$FledgeDate,
+                  ##FIXME: Translate HatchDateAccuracy into min & max
+                  ClutchSize_observed = .data$ClutchSize,
+                  ClutchSize_min = .data$ClutchSizeMinimum,
                   BroodSize_observed = .data$NumberHatched,
                   BroodSize_min = .data$NumberHatched - .data$NumberHatchedDeviation,
                   BroodSize_max = .data$NumberHatched + .data$NumberHatchedDeviation,
@@ -286,7 +291,8 @@ create_brood_NIOO <- function(database, location_data, species_filter, pop_filte
                   NumberFledged_max = .data$NumberFledged + .data$NumberFledgedDeviation,
                   ClutchType_observed = .data$Description,
                   BreedingSeason = .data$BroodYear,
-                  BroodID = .data$ID) %>%
+                  BroodID = .data$ID,
+                  LocationID = .data$BroodLocationID) %>%
     dplyr::left_join(dplyr::select(location_data, Plot = .data$AreaID, BroodLocationID = .data$ID, .data$PopID), by = "BroodLocationID") %>%
     dplyr::mutate(Species = dplyr::case_when(.$BroodSpecies == 14400 ~ species_codes[species_codes$SpeciesID == 14400, ]$Species,
                                              .$BroodSpecies == 14640 ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
@@ -306,7 +312,7 @@ create_brood_NIOO <- function(database, location_data, species_filter, pop_filte
     ## Keep only necessary columns
     dplyr::select(dplyr::contains(names(brood_data_template))) %>%
     ## Add missing columns
-    dplyr::bind_cols(brood_data_template[,!(names(brood_data_template) %in% names(.))]) %>%
+    dplyr::bind_cols(brood_data_template[1 ,!(names(brood_data_template) %in% names(.))]) %>%
     ## Reorder columns
     dplyr::select(names(brood_data_template))
 
@@ -409,10 +415,10 @@ create_capture_NIOO <- function(database, Brood_data, location_data, species_fil
     ## Keep only necessary columns
     dplyr::select(dplyr::contains(names(capture_data_template))) %>%
     ## Add missing columns
-    dplyr::bind_cols(capture_data_template[,!(names(capture_data_template) %in% names(.))]) %>%
+    dplyr::bind_cols(capture_data_template[1, !(names(capture_data_template) %in% names(.))]) %>%
     ## Reorder columns
     dplyr::select(names(capture_data_template))
-
+C
   return(Capture_data)
 
 }
@@ -470,7 +476,7 @@ create_individual_NIOO <- function(database, Capture_data, location_data, specie
     ## Keep only necessary columns
     dplyr::select(dplyr::contains(names(individual_data_template))) %>%
     ## Add missing columns
-    dplyr::bind_cols(individual_data_template[,!(names(individual_data_template) %in% names(.))]) %>%
+    dplyr::bind_cols(individual_data_template[1, !(names(individual_data_template) %in% names(.))]) %>%
     ## Reorder columns
     dplyr::select(names(individual_data_template))
 
