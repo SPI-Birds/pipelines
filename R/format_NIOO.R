@@ -270,6 +270,7 @@ create_brood_NIOO <- function(database, location_data, species_filter, pop_filte
                        dplyr::select(BroodType = .data$ID, .data$Description), by = "BroodType") %>%
     dplyr::mutate(Female_ring = dplyr::sql("IIF(RingNumberFemale = '0000000000' OR RingNumberFemale = '', NULL, CStr(RingNumberFemale))"),
                   Male_ring = dplyr::sql("IIF(RingNumberMale = '0000000000' OR RingNumberMale = '', NULL, Cstr(RingNumberMale))"),
+                  ##FIXME: Translate ExperimentID to the standard format
                   ExperimentID = dplyr::sql("IIF(IsNull(ExperimentCode) OR ExperimentCode = '', Null, CStr(ExperimentCode))")) %>%
     dplyr::left_join(Male_rings, by = "Male_ring") %>%
     dplyr::left_join(Female_rings, by = "Female_ring") %>%
@@ -279,7 +280,7 @@ create_brood_NIOO <- function(database, location_data, species_filter, pop_filte
                   LayDate_observed = lubridate::ymd(.data$LayDate),
                   LayDate_min = .data$LayDate_observed - .data$LayDateDeviation,
                   LayDate_max = .data$LayDate_observed + .data$LayDateDeviation,
-                  FledgeDate_observed = .data$FledgeDate,
+                  FledgeDate_observed = lubridate::ymd(.data$FledgeDate),
                   ##FIXME: Translate HatchDateAccuracy into min & max
                   ClutchSize_observed = .data$ClutchSize,
                   ClutchSize_min = .data$ClutchSizeMinimum,
@@ -291,8 +292,8 @@ create_brood_NIOO <- function(database, location_data, species_filter, pop_filte
                   NumberFledged_max = .data$NumberFledged + .data$NumberFledgedDeviation,
                   ClutchType_observed = .data$Description,
                   BreedingSeason = .data$BroodYear,
-                  BroodID = .data$ID,
-                  LocationID = .data$BroodLocationID) %>%
+                  BroodID = as.character(.data$ID),
+                  LocationID = as.character(.data$BroodLocationID)) %>%
     dplyr::left_join(dplyr::select(location_data, Plot = .data$AreaID, BroodLocationID = .data$ID, .data$PopID), by = "BroodLocationID") %>%
     dplyr::mutate(Species = dplyr::case_when(.$BroodSpecies == 14400 ~ species_codes[species_codes$SpeciesID == 14400, ]$Species,
                                              .$BroodSpecies == 14640 ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
@@ -306,7 +307,8 @@ create_brood_NIOO <- function(database, location_data, species_filter, pop_filte
                   #ClutchTypes like 'different species inside one clutch' are listed as NA.
                   ClutchType_observed = dplyr::case_when(grepl(pattern = "replacement", .$ClutchType_observed) ~ "replacement",
                                                          grepl(pattern = "second clutch after|probably second|third clutch", .$ClutchType_observed) ~ "second",
-                                                         grepl(pattern = "first clutch", .$ClutchType_observed) ~ "first")) %>%
+                                                         grepl(pattern = "first clutch", .$ClutchType_observed) ~ "first"),
+                  Plot = as.character(.data$Plot)) %>%
     dplyr::arrange(.data$PopID, .data$BreedingSeason, .data$Species, .data$FemaleID, .data$LayDate_observed) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = TRUE, protocol_version = "1.1")) %>%
     ## Keep only necessary columns
@@ -396,7 +398,8 @@ create_capture_NIOO <- function(database, Brood_data, location_data, species_fil
     #Is Heikamp inside HOG? Is it a different location? If so, are these mistakes?
     dplyr::filter(.data$CapturePopID %in% pop_filter) %>%
     #Make mass and tarsus into g and mm
-    dplyr::mutate(LocationID = .data$CaptureLocation,
+    dplyr::mutate(BroodID = as.character(.data$BroodID),
+                  LocationID = as.character(.data$CaptureLocation),
                   Mass = dplyr::na_if(.data$Weight/100, y = 0),
                   Tarsus = dplyr::na_if(.data$Tarsus/10, 0))
 
@@ -418,7 +421,7 @@ create_capture_NIOO <- function(database, Brood_data, location_data, species_fil
     dplyr::bind_cols(capture_data_template[1, !(names(capture_data_template) %in% names(.))]) %>%
     ## Reorder columns
     dplyr::select(names(capture_data_template))
-C
+
   return(Capture_data)
 
 }
@@ -472,7 +475,10 @@ create_individual_NIOO <- function(database, Capture_data, location_data, specie
                                              .$SpeciesID == 14620 ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
                                              .$SpeciesID == 14790 ~ species_codes[species_codes$SpeciesID == 14790, ]$Species,
                                              .$SpeciesID == 15980 ~ species_codes[species_codes$SpeciesID == 15980, ]$Species,
-                                             .$SpeciesID == 14610 ~ species_codes[species_codes$SpeciesID == 14610, ]$Species)) %>%
+                                             .$SpeciesID == 14610 ~ species_codes[species_codes$SpeciesID == 14610, ]$Species),
+                  RingAge = .data$RingAge_category,
+                  BroodIDLaid = as.character(.data$BroodIDLaid),
+                  BroodIDFledged = as.character(.data$BroodIDFledged)) %>%
     ## Keep only necessary columns
     dplyr::select(dplyr::contains(names(individual_data_template))) %>%
     ## Add missing columns
@@ -513,11 +519,18 @@ create_location_NIOO <- function(database, location_data, species_filter, pop_fi
                   StartSeason = .data$StartYear, EndSeason = .data$EndYear) %>%
     dplyr::mutate(LocationID = as.character(.data$LocationID),
                   NestboxID = as.character(.data$NestboxID),
-                  LocationType = dplyr::case_when(.$LocationType %in% c(0:22, 40:41) ~ "NB",
-                                                  .$LocationType %in% c(90, 101) ~ "MN"),
-                  Habitat = dplyr::case_when(.$PopID %in% c("VLI", "HOG", "WES", "BUU") ~ "Mixed",
-                                             .$PopID %in% c("OOS", "LIE", "WAR") ~ "Deciduous")) %>%
-    dplyr::arrange(.data$LocationID, .data$StartSeason)
+                  LocationType = dplyr::case_when(.data$LocationType %in% c(0:22, 40:41) ~ "NB",
+                                                  .data$LocationType %in% c(90, 101) ~ "MN"),
+                  HabitatType = dplyr::case_when(.data$PopID %in% c("VLI", "HOG", "WES", "BUU") ~ "mixed",
+                                                 .data$PopID %in% c("OOS", "LIE", "WAR") ~ "deciduous")) %>%
+    dplyr::arrange(.data$LocationID, .data$StartSeason) %>%
+    ## Keep only necessary columns
+    dplyr::select(dplyr::contains(names(location_data_template))) %>%
+    ## Add missing columns
+    dplyr::bind_cols(location_data_template[1, !(names(location_data_template) %in% names(.))]) %>%
+    ## Reorder columns
+    dplyr::select(names(location_data_template))
+
 
   return(Location_data)
 
