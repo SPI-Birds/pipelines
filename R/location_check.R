@@ -8,13 +8,15 @@
 #' }
 #'
 #' @inheritParams checks_location_params
+#' @inheritParams checks_brood_params
+#' @inheritParams checks_capture_params
 #' @param map Logical. Produce map of locations? See \code{\link{check_coordinates}}.
 #'
 #' @inherit checks_return return
 #'
 #' @export
 
-location_check <- function(Location_data, approved_list, output, map){
+location_check <- function(Location_data, Brood_data, Capture_data, approved_list, output, map){
 
   # Create check list with a summary of warnings and errors per check
   check_list <- tibble::tibble(CheckID = paste0("L", 1),
@@ -28,7 +30,7 @@ location_check <- function(Location_data, approved_list, output, map){
   # - Check location coordinates
   message("L1: Checking location coordinates...")
 
-  check_coordinates_output <- check_coordinates(Location_data, approved_list, output, map)
+  check_coordinates_output <- check_coordinates(Location_data, Brood_data, Capture_data, approved_list, output, map)
 
   check_list[1, 3:4] <- check_coordinates_output$CheckList
 
@@ -48,11 +50,13 @@ location_check <- function(Location_data, approved_list, output, map){
 
 #' Check coordinates of locations
 #'
-#' Check that the coordinates of locations are close to the centre point of the study site. Locations that are farther than 20 km will result in an error. It's optional to print the remaining locations on a map and visualized in the quality check report.
+#' Check that the coordinates of locations recorded in Brood_data and/or Capture_Data are close to the centre point of the study site. Locations that are farther than 20 km will result in an error. It's optional to print the locations on a map, which is then visualized in the quality check report.
 #'
 #' Check ID: L1.
 #'
 #' @inheritParams checks_location_params
+#' @inheritParams checks_brood_params
+#' @inheritParams checks_capture_params
 #' @param map Logical. Produce map of capture locations?
 #'
 #' @return
@@ -68,7 +72,7 @@ location_check <- function(Location_data, approved_list, output, map){
 #'
 #' @export
 
-check_coordinates <- function(Location_data, approved_list, output, map){
+check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_list, output, map){
 
   # Check for potential errors
   err <- FALSE
@@ -85,6 +89,8 @@ check_coordinates <- function(Location_data, approved_list, output, map){
     # Keep records with known longitude/latitudes
     records_w_longlat <- Location_data %>%
       tidyr::drop_na(dplyr::any_of(c("Longitude", "Latitude"))) %>%
+      # Filter location records that appear in Brood_data and/or Capture_data only
+      dplyr::filter(.data$LocationID %in% unique(Brood_data$LocationID, Capture_data$LocationID)) %>%
       dplyr::group_by(.data$PopID) %>%
       dplyr::summarise(n = dplyr::n(),
                        .groups = "drop")
@@ -114,7 +120,10 @@ check_coordinates <- function(Location_data, approved_list, output, map){
       # TODO: For populations with a lot of subplots, or for migratory species,
       # determine centre points via k-clustering?
       tidyr::drop_na(dplyr::any_of(c("Longitude", "Latitude"))) %>%
-      dplyr::filter(.data$PopID %in% {records_w_longlat %>% dplyr::filter(.data$n >= 2) %>% dplyr::pull(.data$PopID)}) %>%
+      # Filter location records that appear in Brood_data and/or Capture_data only
+      # And keep populations with at least 2 records with known coordinates
+      dplyr::filter(.data$LocationID %in% unique(Brood_data$LocationID, Capture_data$LocationID) &
+                      .data$PopID %in% {records_w_longlat %>% dplyr::filter(.data$n >= 2) %>% dplyr::pull(.data$PopID)}) %>%
       dplyr::group_by(.data$PopID) %>%
       # Centre points are determined by calculating the maximum kernel density for Longitude and Latitude
       dplyr::summarise(Centre_lon = stats::density(Longitude)$x[which(stats::density(Longitude)$y == max(stats::density(Longitude)$y))],
@@ -124,6 +133,7 @@ check_coordinates <- function(Location_data, approved_list, output, map){
     # Add centre points to original data frame
     locations <- Location_data %>%
       tidyr::drop_na(dplyr::any_of(c("Longitude", "Latitude"))) %>%
+      dplyr::filter(.data$LocationID %in% unique(Brood_data$LocationID, Capture_data$LocationID)) %>%
       dplyr::left_join(centre_points, by = "PopID") %>%
       dplyr::filter(!is.na(Centre_lon) & !is.na(Centre_lat)) %>%
       # Calculate distance from each capture location to population-specific centre points

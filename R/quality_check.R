@@ -106,7 +106,7 @@ quality_check <- function(R_data,
   Brood_checks <- brood_check(Brood_data, Individual_data, Capture_data, Location_data, approved_list, output)
   Capture_checks <- capture_check(Capture_data, Location_data, Brood_data, Individual_data, approved_list, output)
   Individual_checks <- individual_check(Individual_data, Capture_data, Location_data, approved_list, output)
-  Location_checks <- location_check(Location_data, approved_list, output, map)
+  Location_checks <- location_check(Location_data, Brood_data, Capture_data, approved_list, output, map)
 
   # Add warning and error columns to each data frame
   # FIXME remove after Warning & Error columns have been added to ALL pipelines

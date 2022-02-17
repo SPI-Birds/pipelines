@@ -4,10 +4,21 @@
 \alias{check_coordinates}
 \title{Check coordinates of locations}
 \usage{
-check_coordinates(Location_data, approved_list, output, map)
+check_coordinates(
+  Location_data,
+  Brood_data,
+  Capture_data,
+  approved_list,
+  output,
+  map
+)
 }
 \arguments{
 \item{Location_data}{Data frame. Location data output from pipeline.}
+
+\item{Brood_data}{Data frame. Brood data output from pipeline.}
+
+\item{Capture_data}{Data frame. Capture data output from pipeline.}
 
 \item{approved_list}{List object. List of approved records from brood_approved_list.csv,
 capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv.}
@@ -26,7 +37,7 @@ A list of:
 \item{Maps}{A list of maps with capture locations.}
 }
 \description{
-Check that the coordinates of locations are close to the centre point of the study site. Locations that are farther than 20 km will result in an error. It's optional to print the remaining locations on a map and visualized in the quality check report.
+Check that the coordinates of locations recorded in Brood_data and/or Capture_Data are close to the centre point of the study site. Locations that are farther than 20 km will result in an error. It's optional to print the locations on a map, which is then visualized in the quality check report.
 }
 \details{
 Check ID: L1.
