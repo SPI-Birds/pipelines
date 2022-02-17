@@ -1309,91 +1309,13 @@ create_dummy_data <- function() {
       CheckID = "L1"
     )
 
-  # L2: Checking that locations in Location_data appear in other data tables ####
-  L2_location_rows <- Location_data %>%
-    dplyr::mutate( # Probable
-      Row = max(L1_rows$Row) + 1,
-    ) %>%
-    dplyr::add_row( # Missing from Brood_data
-      Row = max(L1_rows$Row) + 2,
-    ) %>%
-    dplyr::add_row( # Missing from Capture_data
-      Row = max(L1_rows$Row) + 3,
-    ) %>%
-    dplyr::add_row( # Missing from both
-      Row = max(L1_rows$Row) + 4,
-    ) %>%
-    dplyr::mutate(
-      PopID = "AAA",
-      StartSeason = as.integer(2019),
-      EndSeason = as.integer(2021),
-      LocationType = "NB",
-      LocationID = paste0("AAA_NB_", .data$Row),
-      NestboxID = .data$LocationID,
-      CheckID = "L2"
-    )
-
-  L2_brood_rows <- Brood_data %>%
-    dplyr::mutate( # Probable
-      LocationID = paste0("AAA_NB_", L2_location_rows$Row[1])
-    ) %>%
-    dplyr::add_row( # Missing from Capture_data
-      LocationID = paste0("AAA_NB_", L2_location_rows$Row[3])
-    ) %>%
-    dplyr::mutate(
-      Row = seq(max(B13_brood_rows$Row) + 1, length.out = dplyr::n()),
-      PopID = "AAA",
-      BreedingSeason = as.integer(2020),
-      Species = "PARMAJ",
-      BroodID = paste(.data$PopID, .data$BreedingSeason, .data$Row, sep = "-"),
-      FemaleID = paste0("K", .data$Row),
-      MaleID = paste0("L", .data$Row),
-      CheckID = "L2"
-    )
-
-  L2_capture_rows <- Capture_data %>%
-    dplyr::mutate( # Probable
-      LocationID = paste0("AAA_NB_", L2_location_rows$Row[1]),
-      CaptureDate = c("2020-05-01"),
-      Row = max(L1_capture_rows$Row) + 1,
-      IndvID = paste0("K", L2_brood_rows$Row[1])
-    ) %>%
-    dplyr::add_row( # Missing from Brood_data
-      LocationID = paste0("AAA_NB_", L2_location_rows$Row[2]),
-      CaptureDate = c("2020-05-01"),
-      Row = max(L1_capture_rows$Row) + 2,
-      IndvID = paste0("L", Row)
-    ) %>%
-    dplyr::mutate(
-      BreedingSeason = as.integer(2020),
-      CapturePopID = "AAA",
-      Species = "PARMAJ",
-      CaptureID = paste(.data$CapturePopID, .data$IndvID, .data$CaptureDate, sep="_"),
-      CheckID = "L2"
-    )
-
-  L2_indv_rows <- Individual_data %>%
-    dplyr::mutate(
-      IndvID = L2_capture_rows$IndvID[1]
-    ) %>%
-    dplyr::add_row(
-      IndvID = L2_capture_rows$IndvID[2]
-    ) %>%
-    dplyr::mutate(
-      Row = seq(max(L1_indv_rows$Row) + 1, length.out = dplyr::n()),
-      PopID = "AAA",
-      Species = "PARMAJ",
-      RingSeason = as.integer(2020),
-      CheckID = "L2"
-    )
-
   # C5: Checking that individuals in Capture_data also appear in Individual_data ####
   C5_capture_rows <- Capture_data %>%
     dplyr::mutate( # Present in Individual_data
-      Row = max(L2_capture_rows$Row) + 1,
+      Row = max(L1_capture_rows$Row) + 1,
     ) %>%
     dplyr::add_row( # Missing from Individual_data
-      Row = max(L2_capture_rows$Row) + 2,
+      Row = max(L1_capture_rows$Row) + 2,
     ) %>%
     dplyr::mutate( # Probable
       IndvID = paste0("I", Row),
@@ -1407,8 +1329,8 @@ create_dummy_data <- function() {
 
   C5_indv_rows <- Individual_data %>%
     dplyr::mutate(
-      Row = max(L2_indv_rows$Row) + 1,
-      IndvID = paste0("I", max(L2_capture_rows$Row) + 1),
+      Row = max(L1_indv_rows$Row) + 1,
+      IndvID = paste0("I", max(L1_capture_rows$Row) + 1),
       PopID = "AAA",
       RingSeason = as.integer(2020),
       Species = "PARMAJ",
@@ -1419,16 +1341,16 @@ create_dummy_data <- function() {
   # B14: Checking that parents appear in Capture_data ####
   B14_brood_rows <- Brood_data %>%
     dplyr::mutate( # Probable
-      Row = max(L2_brood_rows$Row) + 1
+      Row = max(B13_brood_rows$Row) + 1
     ) %>%
     dplyr::add_row( # Mother missing from Capture_data
-      Row = max(L2_brood_rows$Row) + 2
+      Row = max(B13_brood_rows$Row) + 2
     ) %>%
     dplyr::add_row( # Father missing from Capture_data
-      Row = max(L2_brood_rows$Row) + 3
+      Row = max(B13_brood_rows$Row) + 3
     ) %>%
     dplyr::add_row( # Both parents missing from Capture_data
-      Row = max(L2_brood_rows$Row) + 4
+      Row = max(B13_brood_rows$Row) + 4
     ) %>%
     dplyr::mutate(
       FemaleID = paste0("K", Row),
@@ -1549,7 +1471,7 @@ create_dummy_data <- function() {
 
   B15_location_rows <- Location_data %>%
     dplyr::mutate( # Probable
-      Row = max(L2_location_rows$Row) + 1,
+      Row = max(L1_rows$Row) + 1,
       PopID = "AAA",
       StartSeason = as.integer(2019),
       EndSeason = as.integer(2021),
@@ -1633,18 +1555,18 @@ create_dummy_data <- function() {
                                    B11_capture_rows, B12_capture_rows, B13_capture_rows, C1a_adult_rows, C1a_chick_rows,
                                    C1b_adult_rows, C1b_chick_rows, C2_rows, I1_capture_rows,
                                    I2_capture_rows, I3_capture_rows, I4_capture_rows, I5_capture_rows,
-                                   C3_capture_rows, B10_capture_rows,C4_capture_rows, L1_capture_rows, L2_capture_rows,
+                                   C3_capture_rows, B10_capture_rows,C4_capture_rows, L1_capture_rows,
                                    C5_capture_rows, B14_capture_rows, B15_capture_rows, C6_capture_rows) %>%
     dplyr::arrange(.data$Row)
 
   Individual_data <- dplyr::bind_rows(B6_indv_rows, B8_indv_rows, B9_indv_rows, C1_indv_rows, C2_indv_rows,
                                       I1_indv_rows, I2_indv_rows, I3_indv_rows, I4_indv_rows, I5_indv_rows,
                                       C3_indv_rows, B10_indv_rows, B11_indv_rows, B12_indv_rows, B13_indv_rows,
-                                      C4_indv_rows, L1_indv_rows, L2_indv_rows, C5_indv_rows, B14_indv_rows,
+                                      C4_indv_rows, L1_indv_rows, C5_indv_rows, B14_indv_rows,
                                       B15_indv_rows, C6_indv_rows) %>%
     dplyr::arrange(.data$Row)
 
-  Location_data <- dplyr::bind_rows(I2_location_rows, C3_location_rows, L1_rows, L2_location_rows, B15_location_rows,
+  Location_data <- dplyr::bind_rows(I2_location_rows, C3_location_rows, L1_rows, B15_location_rows,
                                     C6_location_rows) %>%
     dplyr::arrange(.data$Row)
 
