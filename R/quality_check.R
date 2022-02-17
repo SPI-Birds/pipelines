@@ -13,7 +13,7 @@
 #' @param latex_engine Character. LaTeX engine for producing PDF output. Options are "pdflatex", "xelatex", and "lualatex" (default). NB: pdfLaTeX and XeLaTeX have memory limit restrictions, which can be problematic when generating large pdfs. LuaLaTeX has dynamic memory management which may help for generating large pdfs.
 #' @param test Logical. Is `quality_check` being used inside package tests? If  \code{TRUE}, `R_data` is ignored and
 #' dummy data will be used instead.
-#' @param map Logical. If  \code{TRUE}, a map of capture locations is added in the report. See \code{\link{check_coordinates}}.
+#' @param map Logical. If  \code{TRUE}, a map of locations is added in the report. See \code{\link{check_coordinates}}.
 #'
 #' @return
 #' A list of:
@@ -106,7 +106,7 @@ quality_check <- function(R_data,
   Brood_checks <- brood_check(Brood_data, Individual_data, Capture_data, Location_data, approved_list, output)
   Capture_checks <- capture_check(Capture_data, Location_data, Brood_data, Individual_data, approved_list, output)
   Individual_checks <- individual_check(Individual_data, Capture_data, Location_data, approved_list, output)
-  Location_checks <- location_check(Location_data, Brood_data, Capture_data, approved_list, output, map)
+  Location_checks <- location_check(Location_data, approved_list, output, map)
 
   # Add warning and error columns to each data frame
   # FIXME remove after Warning & Error columns have been added to ALL pipelines
@@ -268,8 +268,16 @@ quality_check <- function(R_data,
                   '\\newpage',
                   '**Maps**',
                   '',
-                  '```{r, echo=FALSE, fig.cap = "", dpi = 300, results="asis"}',
-                  'invisible(lapply(Location_checks$Maps, print))', # To suppress the printing of indices
+                  '```{r, echo = FALSE, fig.cap = "", dpi = 300, results = "asis"}',
+                  #'invisible(lapply(Location_checks$Maps, print))', # To suppress the printing of indices
+                  #'invisible(purrr::map(.x = Location_checks$Maps, .f = ~{.x}))', # To suppress the printing of indices
+                  'invisible(
+                    map(.x = Location_checks$Maps,
+                        .f = ~{
+                          print(.x)
+                          cat("\n")
+                        })
+                  )',
                   '```',
                   '')
 

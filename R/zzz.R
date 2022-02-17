@@ -82,8 +82,7 @@ Individual checks:
 
 Location checks:
   \\begin{itemize}
-\\item \\textbf{L1}. Check that the coordinates of capture locations are close to the centre point of the study site. Records that are 15 km or farther from the centre point are flagged as a potential error. This check also produces a map with the capture locations within 15 km of the centre point.
-\\item \\textbf{L2}. Check that all locations appear at least once in either Brood data or Capture data. Missing locations are flagged as a potential error.
+\\item \\textbf{L1}. Check that the coordinates of locations are close to the centre point of the study site. Records that are 20 km or farther from the centre point are flagged as a potential error. This check also produces a map of all location records.
 \\end{itemize}"
 
 titlepage_errors_pdf <- "\\renewcommand{\\familydefault}{\\sfdefault}

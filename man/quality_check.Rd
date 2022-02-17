@@ -32,7 +32,7 @@ quality_check(
 \item{test}{Logical. Is `quality_check` being used inside package tests? If  \code{TRUE}, `R_data` is ignored and
 dummy data will be used instead.}
 
-\item{map}{Logical. If  \code{TRUE}, a map of capture locations is added in the report. See \code{\link{check_coordinates}}.}
+\item{map}{Logical. If  \code{TRUE}, a map of locations is added in the report. See \code{\link{check_coordinates}}.}
 }
 \value{
 A list of:

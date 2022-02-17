@@ -26,7 +26,7 @@ A list of:
 \item{Maps}{A list of maps with capture locations.}
 }
 \description{
-Check that the coordinates of locations are close to the centre point of the study site. Locations that are farther than 15 km will result in an error. It's optional to print the remaining locations on a map and visualized in the quality check report.
+Check that the coordinates of locations are close to the centre point of the study site. Locations that are farther than 20 km will result in an error. It's optional to print the remaining locations on a map and visualized in the quality check report.
 }
 \details{
 Check ID: L1.

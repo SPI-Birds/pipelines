@@ -90,7 +90,7 @@ A dummy pipeline output specifically created to test single checks from \code{\l
 \itemize{
   \item Rows 1-2 are records that are used to test the functionality of check 'I2: Checking that chicks have BroodIDs' (see \code{\link{check_BroodID_chicks}}). The records describe location information of a nest box.
   \item Rows 3-5 are records that are used to test the functionality of check 'C3: Checking that adults caught on nest are listed are the parents' (see \code{\link{check_adult_parent_nest}}). The records describe location information of two nest boxes and a mist net.
-  \item Rows 6-107 are records that are used to test the functionality of check 'L1: Checking location coordinates' (see \code{\link{check_coordinates}}). The records are capture locations within 15 km of study site centre point and one capture locations farther away.
+  \item Rows 6-107 are records that are used to test the functionality of check 'L1: Checking location coordinates' (see \code{\link{check_coordinates}}). The records are locations within 20 km of study site centre point and one location farther away.
   \item Row 108 is a record that is used to test the functionality of check 'B15: Checking that nest locations appear in Location_data' (see \code{\link{check_brood_locations}}). The record is a nest location of a brood in Brood_data.
   \item Rows 109 is a record that is used to test the functionality of check 'C6: Checking that capture locations appear in Location_data' (see \code{\link{check_capture_locations}}). The record is a capture location of an individual in Capture_data.
 }

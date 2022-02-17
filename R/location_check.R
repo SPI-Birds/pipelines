@@ -4,11 +4,11 @@
 #'
 #' The following location data checks are performed:
 #' \itemize{
-#' \item \strong{L1}: Check capture location coordinates using \code{\link{check_coordinates}}.
+#' \item \strong{L1}: Check location coordinates using \code{\link{check_coordinates}}.
 #' }
 #'
 #' @inheritParams checks_location_params
-#' @param map Logical. Produce map of capture locations? See \code{\link{check_coordinates}}.
+#' @param map Logical. Produce map of locations? See \code{\link{check_coordinates}}.
 #'
 #' @inherit checks_return return
 #'
@@ -48,7 +48,7 @@ location_check <- function(Location_data, approved_list, output, map){
 
 #' Check coordinates of locations
 #'
-#' Check that the coordinates of locations are close to the centre point of the study site. Locations that are farther than 15 km will result in an error. It's optional to print the remaining locations on a map and visualized in the quality check report.
+#' Check that the coordinates of locations are close to the centre point of the study site. Locations that are farther than 20 km will result in an error. It's optional to print the remaining locations on a map and visualized in the quality check report.
 #'
 #' Check ID: L1.
 #'
@@ -133,9 +133,9 @@ check_coordinates <- function(Location_data, approved_list, output, map){
                                           crs = "EPSG:4326")$geometry,
                     Distance = as.integer(sf::st_distance(.data$Coords, .data$Centre, by_element = TRUE)))
 
-    # Filter very remote locations (15 km or farther)
+    # Filter very remote locations (20 km or farther)
     remote_locations <- locations %>%
-      dplyr::filter(.data$Distance >= 15000) %>%
+      dplyr::filter(.data$Distance >= 20000) %>%
       dplyr::select(.data$Row, .data$LocationID, .data$PopID, .data$Distance)
 
     # If potential errors, add to report
@@ -181,31 +181,29 @@ check_coordinates <- function(Location_data, approved_list, output, map){
 
   }
 
-  # Produce map of capture locations
+  # Produce map of locations
   if(map & any(!is.na(Location_data$Longitude) & !is.na(Location_data$Latitude)) & output %in% c("both", "errors")) {
-
-    # Only map capture locations within 15 km from study site
-    map_data <- locations %>%
-      dplyr::filter(Distance < 15000)
 
     suppressMessages({
 
       # Create map per PopID
-      maps <- purrr::map(.x = unique(map_data$PopID),
+      maps <- purrr::map(.x = unique(locations$PopID),
                          .f = ~{
 
-                           ggmap::qmplot(data = map_data[map_data$PopID == .x,], x = Longitude,y = Latitude,
+                           ggmap::qmplot(data = locations[locations$PopID == .x,], x = Longitude,y = Latitude,
                                          source = "stamen", maptype = "terrain", extent = "panel",
                                          color = I("#881f70"), alpha = I(0.4), size = I(2)) +
-                             #ggplot2::geom_point(data = map_data[map_data$PopID == .x, ][1, ], ggplot2::aes(x = Centre_lon, y = Centre_lat), color = "black", shape = 17) +
+                             ggplot2::geom_point(data = locations[locations$PopID == .x, ][1, ],
+                                                 ggplot2::aes(x = Centre_lon, y = Centre_lat),
+                                                 color = "black", shape = "*", size = 8) + # Centre point
                              ggplot2::theme_classic() +
                              ggplot2::theme(axis.text = ggplot2::element_text(color = "black"),
                                             axis.title = ggplot2::element_text(size = 12),
                                             panel.border = ggplot2::element_rect(color = "black", fill = NA)) +
-                             ggplot2::labs(title = pop_codes[pop_codes$PopID == .x, ]$PopName,
-                                           subtitle = paste0("Capture locations within 15 km from centre point (",
-                                                             round(map_data[map_data$PopID == .x,]$Centre_lon[1], 3), ", ",
-                                                             round(map_data[map_data$PopID == .x,]$Centre_lat[1], 3), ")."),
+                             ggplot2::labs(title = paste0(pop_codes[pop_codes$PopID == .x, ]$PopName, " (", .x, ")"),
+                                           subtitle = paste0("Centre point: ",
+                                                             round(locations[locations$PopID == .x,]$Centre_lon[1], 3), ", ",
+                                                             round(locations[locations$PopID == .x,]$Centre_lat[1], 3)),
                                            caption = "Source: Map tiles by Stamen Design, under CC BY 3.0. \nMap data by OpenStreetMap, under ODbL.")
 
 

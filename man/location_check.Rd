@@ -14,7 +14,7 @@ capture_approved_list.csv, individual_approved_list.csv, location_approved_list.
 
 \item{output}{Character. Run checks on potential errors ("errors"), warnings ("warnings"), or both ("both"; default).}
 
-\item{map}{Logical. Produce map of capture locations? See \code{\link{check_coordinates}}.}
+\item{map}{Logical. Produce map of locations? See \code{\link{check_coordinates}}.}
 }
 \value{
 A list of:
@@ -30,6 +30,6 @@ A wrapper that runs all single checks related to \code{Location_data}.
 \details{
 The following location data checks are performed:
 \itemize{
-\item \strong{L1}: Check capture location coordinates using \code{\link{check_coordinates}}.
+\item \strong{L1}: Check location coordinates using \code{\link{check_coordinates}}.
 }
 }
