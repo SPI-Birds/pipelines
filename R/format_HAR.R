@@ -304,6 +304,12 @@ create_brood_HAR <- function(db, species_filter){
            BroodSize, BroodSizeError, FledgeDate, FledgeDateError, NumberFledged, NumberFledgedError,
            ExperimentID)
 
+  ## Set non-conforming IDs to NA
+  Brood_data <- Brood_data %>%
+    dplyr::mutate(dplyr::across(c(.data$FemaleID, .data$MaleID),
+                                ~ dplyr::case_when(stringr::str_detect(., "^[:alpha:]{1,2}[-][:digit:]{5,6}$") ~ .,
+                                                   TRUE ~ NA_character_)))
+
   return(Brood_data)
 
   #Satisfy RCMD Check
@@ -682,7 +688,10 @@ create_capture_HAR    <- function(db, Brood_data, species_filter, return_errors)
     dplyr::arrange(IndvID, CaptureDate, CaptureTime) %>%
     #Calculate age at each capture based on first capture
     calc_age(ID = IndvID, Age = Age_observed, Date = CaptureDate, Year = BreedingSeason) %>%
-    dplyr::mutate(Tarsus = NA_real_, OriginalTarsusMethod = NA_character_) %>%
+    dplyr::mutate(Tarsus = NA_real_, OriginalTarsusMethod = NA_character_,
+                  ## Set non-conforming IDs to NA
+                  IndvID = dplyr::case_when(stringr::str_detect(.data$IndvID, "^[:alpha:]{1,2}[-][:digit:]{5,6}$") ~ .data$IndvID,
+                                            TRUE ~ NA_character_)) %>%
     dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, CapturePopID, CapturePlot,
                   ReleasePopID, ReleasePlot, Mass, Tarsus, OriginalTarsusMethod, WingLength, Age_observed, Age_calculated, ChickAge, Sex, BroodID, CaptureType, BirdStatus) %>%
     #Remove duplicates that can arise from cases when CaptureDate is the same in Capture and Nestling
