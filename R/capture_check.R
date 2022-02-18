@@ -700,11 +700,23 @@ check_adult_parent_nest <- function(Capture_data, Location_data, Brood_data, app
     # to the maximum fledge date in Brood_data (both in Julian day/day of the year)
     # TODO: Note that errors in either lay date or fledge date permeate here.
     # TODO: Update breeding season definition for birds breeding in winter, in the tropics, or the Southern Hemisphere
-    breeding_season <- Brood_data %>%
-      dplyr::group_by(.data$PopID, .data$BreedingSeason) %>%
-      dplyr::summarise(StartBreeding = lubridate::yday(min(.data$LayDate_observed, na.rm = TRUE)),
-                       EndBreeding = lubridate::yday(max(.data$FledgeDate_observed, na.rm = TRUE)),
-                       .groups = "drop")
+    if(all(c("LayDate", "FledgeDate") %in% colnames(Brood_data))) {
+
+      breeding_season <- Brood_data %>%
+        dplyr::group_by(.data$PopID, .data$BreedingSeason) %>%
+        dplyr::summarise(StartBreeding = lubridate::yday(min(.data$LayDate, na.rm = TRUE)),
+                         EndBreeding = lubridate::yday(max(.data$FledgeDate, na.rm = TRUE)),
+                         .groups = "drop")
+
+    } else {
+
+      breeding_season <- Brood_data %>%
+        dplyr::group_by(.data$PopID, .data$BreedingSeason) %>%
+        dplyr::summarise(StartBreeding = lubridate::yday(min(.data$LayDate_observed, na.rm = TRUE)),
+                         EndBreeding = lubridate::yday(max(.data$FledgeDate_observed, na.rm = TRUE)),
+                         .groups = "drop")
+
+    }
 
     adults <- Capture_data %>%
       dplyr::left_join(breeding_season, by = c("BreedingSeason", "CapturePopID" = "PopID")) %>%
