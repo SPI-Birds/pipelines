@@ -266,7 +266,7 @@ quality_check <- function(R_data,
 
         body <- c(body,
                   '\\newpage',
-                  '**Maps**',
+                  '# Maps',
                   '',
                   '```{r, echo = FALSE, fig.cap = "", dpi = 300, results = "asis"}',
                   #'invisible(lapply(Location_checks$Maps, print))', # To suppress the printing of indices

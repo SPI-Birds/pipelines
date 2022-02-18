@@ -1145,6 +1145,9 @@ check_clutch_type_order <- function(Brood_data, approved_list, output){
 
     # Select breeding females with ClutchType_calculated == "first" not as first clutch in a particular breeding season
     brood_err <- Brood_data %>%
+      {if("LayDate" %in% colnames(.)) dplyr::arrange(., .data$LayDate)
+        else dplyr::arrange(., .data$LayDate_observed)} %>%
+      dplyr::arrange(.data$LayDate) %>%
       dplyr::filter(!is.na(.data$FemaleID) & !is.na(.data$ClutchType_calculated)) %>%
       dplyr::group_by(.data$PopID, .data$BreedingSeason, .data$FemaleID) %>%
       dplyr::summarise(CTcal = ifelse(any(.data$ClutchType_calculated == "first"),
@@ -1787,14 +1790,14 @@ check_parents_captures <- function(Brood_data, Capture_data, approved_list, outp
                                     # Missing mothers
                                     missing_mothers <- dplyr::anti_join({Brood_data %>% dplyr::filter(!is.na(FemaleID) &.data$PopID == .x)},
                                                                         {Capture_data %>% dplyr::filter(.data$CapturePopID == .x)},
-                                                                        by = c("FemaleID" = "IndvID")) %>%
+                                                                        by = c("FemaleID" = "IndvID", "PopID" = "CapturePopID")) %>%
                                       dplyr::select(.data$Row, .data$PopID, .data$BroodID, IndvID = .data$FemaleID) %>%
                                       dplyr::mutate(Parent = "mother")
 
                                     # Missing fathers
                                     missing_fathers <- dplyr::anti_join({Brood_data %>% dplyr::filter(!is.na(MaleID) & .data$PopID == .x)},
                                                                         {Capture_data %>% dplyr::filter(.data$CapturePopID == .x)},
-                                                                        by = c("MaleID" = "IndvID")) %>%
+                                                                        by = c("MaleID" = "IndvID", "PopID" = "CapturePopID")) %>%
                                       dplyr::select(.data$Row, .data$PopID, .data$BroodID, IndvID = .data$MaleID) %>%
                                       dplyr::mutate(Parent = "father")
 
