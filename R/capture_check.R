@@ -674,7 +674,7 @@ check_chick_age <- function(Capture_data, approved_list, output){
 
 #' Check that adults captured on a nest during the breeding season are listed as parents of that nest
 #'
-#' Check that adults captured on a nest during the breeding season are are listed as the parents of that nest in Brood_data. If not, records will be flagged as a warning. Adults can be caught near a nest box. Records outside the breeding season but on a nesting location are ignored. The breeding season is determined annually and lasts from the minimum lay date in Brood_data that year to the maximum fledge date in Brood_data that year.
+#' Check that adults captured on a nest during the breeding season are are listed as the parents of that nest in Brood_data. If not, records will be flagged as a warning. Adults can be caught near a nest box. Records outside the breeding season but on a nesting location are ignored. The breeding season is determined annually and lasts from the minimum lay date in Brood_data that year to the maximum fledge date in Brood_data that year. If lay dates are not recorded in a population, the start of the breeding season is set to 1st of March; if fledge dates are not recorded, the end of the breeding season is set to 31st of August.
 #'
 #' Check ID: C3.
 #'
@@ -699,22 +699,45 @@ check_adult_parent_nest <- function(Capture_data, Location_data, Brood_data, app
     # Here we define a population's breeding season annually, which, for now, runs from the minimum lay date in Brood_data,
     # to the maximum fledge date in Brood_data (both in Julian day/day of the year)
     # TODO: Note that errors in either lay date or fledge date permeate here.
+    # FIXME: Work-around when *ALL* FledgeDate or LayDate are NA
     # TODO: Update breeding season definition for birds breeding in winter, in the tropics, or the Southern Hemisphere
     if(all(c("LayDate", "FledgeDate") %in% colnames(Brood_data))) {
 
       breeding_season <- Brood_data %>%
         dplyr::group_by(.data$PopID, .data$BreedingSeason) %>%
-        dplyr::summarise(StartBreeding = lubridate::yday(min(.data$LayDate, na.rm = TRUE)),
-                         EndBreeding = lubridate::yday(max(.data$FledgeDate, na.rm = TRUE)),
-                         .groups = "drop")
+        # If all Lay dates are NA, the start of the breeding season is set to March 1st
+        # If all Fledge dates are NA, the end of the breeding season is set to August 31st
+        dplyr::summarise(StartBreeding = ifelse(all(is.na(.data$LayDate)), lubridate::yday(paste0(unique(.data$BreedingSeason), "-03-01")),
+                                                lubridate::yday(min(.data$LayDate, na.rm = TRUE))),
+                         EndBreeding = ifelse(all(is.na(.data$FledgeDate)), lubridate::yday(paste0(unique(.data$BreedingSeason), "-08-31")),
+                                              lubridate::yday(max(.data$FledgeDate, na.rm = TRUE))),
+                         .groups = "drop") %>%
+        dplyr::group_by(.data$PopID) %>%
+        # Years with missing start/end of breeding season, take the earliest or latest value across years, respectively
+        dplyr::mutate(StartBreeding = dplyr::case_when(is.na(.data$StartBreeding) ~ min(.data$StartBreeding, na.rm = TRUE),
+                                                       TRUE ~ .data$StartBreeding),
+                      EndBreeding = dplyr::case_when(is.na(.data$EndBreeding) ~ max(.data$EndBreeding, na.rm = TRUE),
+                                                     TRUE ~ .data$EndBreeding)) %>%
+        dplyr::ungroup()
 
     } else {
 
       breeding_season <- Brood_data %>%
         dplyr::group_by(.data$PopID, .data$BreedingSeason) %>%
-        dplyr::summarise(StartBreeding = lubridate::yday(min(.data$LayDate_observed, na.rm = TRUE)),
-                         EndBreeding = lubridate::yday(max(.data$FledgeDate_observed, na.rm = TRUE)),
-                         .groups = "drop")
+        # If all Lay dates are NA, the start of the breeding season is set to March 1st
+        # If all Fledge dates are NA, the end of the breeding season is set to August 31st
+        dplyr::summarise(StartBreeding = ifelse(all(is.na(.data$LayDate_observed)), lubridate::yday(paste0(unique(.data$BreedingSeason), "-03-01")),
+                                                lubridate::yday(min(.data$LayDate_observed, na.rm = TRUE))),
+                         EndBreeding = ifelse(all(is.na(.data$FledgeDate_observed)), lubridate::yday(paste0(unique(.data$BreedingSeason), "-08-31")),
+                                              lubridate::yday(max(.data$FledgeDate_observed, na.rm = TRUE))),
+                         .groups = "drop") %>%
+        dplyr::group_by(.data$PopID) %>%
+        # Years with missing start/end of breeding season, take the earliest or latest value across years, respectively
+        dplyr::mutate(StartBreeding = dplyr::case_when(is.na(.data$StartBreeding) ~ min(.data$StartBreeding, na.rm = TRUE),
+                                                       TRUE ~ .data$StartBreeding),
+                      EndBreeding = dplyr::case_when(is.na(.data$EndBreeding) ~ max(.data$EndBreeding, na.rm = TRUE),
+                                                     TRUE ~ .data$EndBreeding)) %>%
+        dplyr::ungroup()
 
     }
 
@@ -727,13 +750,15 @@ check_adult_parent_nest <- function(Capture_data, Location_data, Brood_data, app
     # Determine location type of their capture locations
     # Duplicate location rows according to the number of years they were used for easy joining with adult data
     annual_locations <- Location_data %>%
-      dplyr::mutate(EndSeason = dplyr::case_when(is.na(EndSeason) ~ as.integer(lubridate::year(Sys.Date())),
-                                                 !is.na(EndSeason) ~ EndSeason)) %>%
+      dplyr::mutate(EndSeason = dplyr::case_when(is.na(.data$EndSeason) ~ as.integer(lubridate::year(Sys.Date())),
+                                                 !is.na(.data$EndSeason) ~ .data$EndSeason),
+                    StartSeason = dplyr::case_when(is.na(.data$StartSeason) ~ min(.data$StartSeason, na.rm = TRUE),
+                                                   !is.na(.data$StartSeason) ~ .data$StartSeason)) %>%
       tidyr::uncount(weights = .data$EndSeason - .data$StartSeason + 1) %>%
       dplyr::group_by(.data$Row) %>%
-      dplyr::mutate(BreedingSeason = StartSeason + row_number() - 1) %>%
+      dplyr::mutate(BreedingSeason = .data$StartSeason + row_number() - 1) %>%
       dplyr::ungroup() %>%
-      dplyr::select(-Row)
+      dplyr::select(-.data$Row)
 
     # Add location type to adults data frame and filter captures on nest box
     adults_nest_box <- adults %>%
@@ -741,28 +766,18 @@ check_adult_parent_nest <- function(Capture_data, Location_data, Brood_data, app
       dplyr::filter(LocationType == "NB")
 
     # Check whether adults caught in nest box are associated with that nest in Brood data
-    pb <- progress::progress_bar$new(total = nrow(adults_nest_box),
-                                     format = "[:bar] :percent ~:eta remaining")
+    females_w_nests <- adults_nest_box %>%
+      dplyr::semi_join(Brood_data,
+                       by = c("CapturePopID" = "PopID", "BreedingSeason", "LocationID", "IndvID" = "FemaleID"))
 
-    parents_nests <- purrr::pmap_lgl(.l = list(adults_nest_box$CapturePopID,
-                                               adults_nest_box$BreedingSeason,
-                                               adults_nest_box$LocationID,
-                                               adults_nest_box$IndvID),
-                                     .f = ~{
-
-                                       pb$tick()
-
-                                       Brood_parents <- Brood_data %>%
-                                         dplyr::filter(.data$PopID == ..1
-                                                       & .data$BreedingSeason == ..2
-                                                       &  .data$LocationID == ..3) %>%
-                                         dplyr::select(.data$FemaleID, .data$MaleID)
-
-                                       ..4 %in% Brood_parents$FemaleID | ..4 %in% Brood_parents$MaleID
-                                     })
+    males_w_nests <- adults_nest_box %>%
+      dplyr::semi_join(Brood_data,
+                       by = c("CapturePopID" = "PopID", "BreedingSeason", "LocationID", "IndvID" = "MaleID"))
 
     # Select adults caught in a nest box that are NOT associated with that nest
-    unassociated_adults <- adults_nest_box[!parents_nests,] %>%
+    unassociated_adults <- adults_nest_box %>%
+      dplyr::anti_join(females_w_nests, by = c("CapturePopID", "BreedingSeason", "LocationID", "IndvID")) %>%
+      dplyr::anti_join(males_w_nests, by = c("CapturePopID", "BreedingSeason", "LocationID", "IndvID")) %>%
       dplyr::select(.data$Row, .data$CaptureID, .data$IndvID, PopID = .data$CapturePopID)
 
     # If warnings, add to report
@@ -955,7 +970,7 @@ check_captures_individuals <- function(Capture_data, Individual_data, approved_l
     missing_individuals <- purrr::map(.x = unique(Capture_data$CapturePopID),
                                       .f = ~{
 
-                                        dplyr::anti_join({Capture_data %>% dplyr::filter(.data$CapturePopID == .x)},
+                                        dplyr::anti_join({Capture_data %>% dplyr::filter(!is.na(.data$IndvID) & .data$CapturePopID == .x)},
                                                          {Individual_data %>% dplyr::filter(.data$PopID == .x)},
                                                          by = "IndvID")
 
