@@ -136,7 +136,7 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
       tidyr::drop_na(dplyr::any_of(c("Longitude", "Latitude"))) %>%
       dplyr::filter(.data$LocationID %in% unique(Brood_data$LocationID) | .data$LocationID %in% unique(Capture_data$LocationID)) %>%
       dplyr::left_join(centre_points, by = "PopID") %>%
-      dplyr::filter(!is.na(Centre_lon) & !is.na(Centre_lat)) %>%
+      dplyr::filter(!is.na(.data$Centre_lon) & !is.na(.data$Centre_lat)) %>%
       # Calculate distance from each capture location to population-specific centre points
       dplyr::mutate(Coords = sf::st_as_sf(., coords = c("Longitude", "Latitude"),
                                           crs = "EPSG:4326")$geometry,

@@ -25,7 +25,7 @@ A list of:
 \item{Errors}{A list of row-by-row errors.}
 }
 \description{
-Check that all capture locations recorded in Capture_data appear in Location_data. Missing locations will be flagged as a potential error. This check is the opposite of check L2 (\code{\link{check_locations_brood_capture}}).
+Check that all capture locations recorded in Capture_data appear in Location_data. Missing locations will be flagged as a potential error.
 }
 \details{
 Check ID: C6.

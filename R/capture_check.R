@@ -1026,7 +1026,7 @@ check_captures_individuals <- function(Capture_data, Individual_data, approved_l
 
 #' Check that all capture locations in Capture_data appear in Location_data
 #'
-#' Check that all capture locations recorded in Capture_data appear in Location_data. Missing locations will be flagged as a potential error. This check is the opposite of check L2 (\code{\link{check_locations_brood_capture}}).
+#' Check that all capture locations recorded in Capture_data appear in Location_data. Missing locations will be flagged as a potential error.
 #'
 #' Check ID: C6.
 #'
