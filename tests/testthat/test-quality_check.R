@@ -216,10 +216,6 @@ test_that("Single checks function as expected...", {
   expect_equal(subset(dummy_check$R_data$Location_data, CheckID == "L1")$Warning[c(1, 102)], c(NA, NA))
   expect_equal(subset(dummy_check$R_data$Location_data, CheckID == "L1")$Error[c(1, 102)], c(NA, TRUE))
 
-  # Test check L2
-  expect_equal(subset(dummy_check$R_data$Location_data, CheckID == "L2")$Warning, c(NA, NA, NA, NA))
-  expect_equal(subset(dummy_check$R_data$Location_data, CheckID == "L2")$Error, c(NA, NA, NA, TRUE))
-
 })
 
 test_that("Approved-listing procedure functions as expected...", {

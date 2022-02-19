@@ -1259,8 +1259,8 @@ create_dummy_data <- function() {
       Latitude = stats::rnorm(n = 100, mean = 63.43735, sd = 0.001)
     ) %>%
     dplyr::add_row( # Impossible (error)
-      Longitude = 10.37036,
-      Latitude = 63.87768
+      Longitude = 10.29036,
+      Latitude = 63.17768
     ) %>%
     dplyr::mutate(
       Row = seq(max(C3_location_rows$Row) + 1, length.out = dplyr::n()),
@@ -1548,7 +1548,7 @@ create_dummy_data <- function() {
   Brood_data <- dplyr::bind_rows(al_rows, B1_rows, B2_rows, B3_rows, B4_rows, B5a_rows, B5b_rows,
                                  B5c_rows, B5d_rows, B6_brood_rows, B7_rows, B8_rows, B9_brood_rows,
                                  C3_brood_rows, B10_brood_rows, B11_brood_rows, B12_brood_rows, B13_brood_rows,
-                                 L2_brood_rows, B14_brood_rows, B15_brood_rows) %>%
+                                 B14_brood_rows, B15_brood_rows) %>%
     dplyr::arrange(.data$Row)
 
   Capture_data <- dplyr::bind_rows(B6_capture_rows, B8_capture_rows, B9_capture_rows,

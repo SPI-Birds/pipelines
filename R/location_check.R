@@ -89,8 +89,8 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
     # Keep records with known & unique longitude/latitudes
     records_w_longlat <- Location_data %>%
       tidyr::drop_na(dplyr::any_of(c("Longitude", "Latitude"))) %>%
-      # Filter location records that appear in Brood_data and/or Capture_data only
-      dplyr::filter(.data$LocationID %in% unique(Brood_data$LocationID, Capture_data$LocationID)) %>%
+      # Filter location records that appear in Brood_data or Capture_data only
+      dplyr::filter(.data$LocationID %in% unique(Brood_data$LocationID) | .data$LocationID %in% unique(Capture_data$LocationID)) %>%
       dplyr::group_by(.data$PopID) %>%
       dplyr::summarise(n_unique_lon = length(unique(.data$Longitude)),
                        n_unique_lat = length(unique(.data$Latitude)),
@@ -123,7 +123,7 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
       tidyr::drop_na(dplyr::any_of(c("Longitude", "Latitude"))) %>%
       # Filter location records that appear in Brood_data and/or Capture_data only
       # And keep populations with at least 2 records with known coordinates
-      dplyr::filter(.data$LocationID %in% unique(Brood_data$LocationID, Capture_data$LocationID) &
+      dplyr::filter(.data$LocationID %in% unique(Brood_data$LocationID) | .data$LocationID %in% unique(Capture_data$LocationID) &
                       .data$PopID %in% {records_w_longlat %>% dplyr::filter(.data$n_unique_lon >= 2 & .data$n_unique_lat >= 2) %>% dplyr::pull(.data$PopID)}) %>%
       dplyr::group_by(.data$PopID) %>%
       # Centre points are determined by calculating the maximum kernel density for Longitude and Latitude
@@ -134,7 +134,7 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
     # Add centre points to original data frame
     locations <- Location_data %>%
       tidyr::drop_na(dplyr::any_of(c("Longitude", "Latitude"))) %>%
-      dplyr::filter(.data$LocationID %in% unique(Brood_data$LocationID, Capture_data$LocationID)) %>%
+      dplyr::filter(.data$LocationID %in% unique(Brood_data$LocationID) | .data$LocationID %in% unique(Capture_data$LocationID)) %>%
       dplyr::left_join(centre_points, by = "PopID") %>%
       dplyr::filter(!is.na(Centre_lon) & !is.na(Centre_lat)) %>%
       # Calculate distance from each capture location to population-specific centre points
