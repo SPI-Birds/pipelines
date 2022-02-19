@@ -86,20 +86,21 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
 
   } else {
 
-    # Keep records with known longitude/latitudes
+    # Keep records with known & unique longitude/latitudes
     records_w_longlat <- Location_data %>%
       tidyr::drop_na(dplyr::any_of(c("Longitude", "Latitude"))) %>%
       # Filter location records that appear in Brood_data and/or Capture_data only
       dplyr::filter(.data$LocationID %in% unique(Brood_data$LocationID, Capture_data$LocationID)) %>%
       dplyr::group_by(.data$PopID) %>%
-      dplyr::summarise(n = dplyr::n(),
+      dplyr::summarise(n_unique_lon = length(unique(.data$Longitude)),
+                       n_unique_lat = length(unique(.data$Latitude)),
                        .groups = "drop")
 
-    # Print message for populations with too few known coordinates
-    if(any(records_w_longlat$n < 2)) {
+    # Print message for populations with too few known, unique coordinates
+    if(any(records_w_longlat$n_unique_lon < 2 | records_w_longlat$n_unique_lat < 2)) {
 
       few_coords <- records_w_longlat %>%
-        dplyr::filter(.data$n < 2) %>%
+        dplyr::filter(.data$n_unique_lon < 2 | records_w_longlat$n_unique_lat < 2) %>%
         dplyr::select(.data$PopID)
 
       purrr::walk(.x = list(few_coords$PopID),
@@ -123,11 +124,11 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
       # Filter location records that appear in Brood_data and/or Capture_data only
       # And keep populations with at least 2 records with known coordinates
       dplyr::filter(.data$LocationID %in% unique(Brood_data$LocationID, Capture_data$LocationID) &
-                      .data$PopID %in% {records_w_longlat %>% dplyr::filter(.data$n >= 2) %>% dplyr::pull(.data$PopID)}) %>%
+                      .data$PopID %in% {records_w_longlat %>% dplyr::filter(.data$n_unique_lon >= 2 & .data$n_unique_lat >= 2) %>% dplyr::pull(.data$PopID)}) %>%
       dplyr::group_by(.data$PopID) %>%
       # Centre points are determined by calculating the maximum kernel density for Longitude and Latitude
-      dplyr::summarise(Centre_lon = stats::density(Longitude)$x[which(stats::density(Longitude)$y == max(stats::density(Longitude)$y))],
-                       Centre_lat = stats::density(Latitude)$x[which(stats::density(Latitude)$y == max(stats::density(Latitude)$y))],
+      dplyr::summarise(Centre_lon = mean(stats::density(Longitude)$x[which(stats::density(Longitude)$y == max(stats::density(Longitude)$y))]),
+                       Centre_lat = mean(stats::density(Latitude)$x[which(stats::density(Latitude)$y == max(stats::density(Latitude)$y))]),
                        .groups = "drop")
 
     # Add centre points to original data frame

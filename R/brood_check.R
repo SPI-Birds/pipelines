@@ -1147,7 +1147,6 @@ check_clutch_type_order <- function(Brood_data, approved_list, output){
     brood_err <- Brood_data %>%
       {if("LayDate" %in% colnames(.)) dplyr::arrange(., .data$LayDate)
         else dplyr::arrange(., .data$LayDate_observed)} %>%
-      dplyr::arrange(.data$LayDate) %>%
       dplyr::filter(!is.na(.data$FemaleID) & !is.na(.data$ClutchType_calculated)) %>%
       dplyr::group_by(.data$PopID, .data$BreedingSeason, .data$FemaleID) %>%
       dplyr::summarise(CTcal = ifelse(any(.data$ClutchType_calculated == "first"),

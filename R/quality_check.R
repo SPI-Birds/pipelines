@@ -275,7 +275,7 @@ quality_check <- function(R_data,
                     map(.x = Location_checks$Maps,
                         .f = ~{
                           print(.x)
-                          cat("\n")
+                          cat("\\\\clearpage")
                         })
                   )',
                   '```',
