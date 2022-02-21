@@ -22,7 +22,8 @@ location_check <- function(Location_data, Brood_data, Capture_data, approved_lis
   check_list <- tibble::tibble(CheckID = paste0("L", 1),
                                CheckDescription = c("Check location coordinates"),
                                Warning = NA,
-                               Error = NA)
+                               Error = NA,
+                               Skipped = NA)
 
   # Checks
   message("Checking location data...")
@@ -32,7 +33,7 @@ location_check <- function(Location_data, Brood_data, Capture_data, approved_lis
 
   check_coordinates_output <- check_coordinates(Location_data, Brood_data, Capture_data, approved_list, output, skip, map)
 
-  check_list[1, 3:4] <- check_coordinates_output$CheckList
+  check_list[1, 3:5] <- check_coordinates_output$CheckList
 
   # Warning list
   warning_list <- list(Check1 = check_coordinates_output$WarningOutput)
@@ -74,13 +75,17 @@ location_check <- function(Location_data, Brood_data, Capture_data, approved_lis
 
 check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_list, output, skip, map){
 
+  # Check whether this check should be skipped
+  skip_check <- dplyr::case_when("L1" %in% skip ~ TRUE,
+                                 TRUE ~ FALSE)
+
   # Check for potential errors
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
   # Skip if coordinates were not recorded, or if only warnings are flagged
-  if(!any(!is.na(Location_data$Longitude) & !is.na(Location_data$Latitude)) | !(output %in% c("both", "errors")) | "L1" %in% skip) {
+  if(!any(!is.na(Location_data$Longitude) & !is.na(Location_data$Latitude)) | !(output %in% c("both", "errors")) | skip_check == TRUE) {
 
     remote_locations <- tibble::tibble(Row = integer())
 
@@ -178,7 +183,7 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
   warning_output <- NULL
 
   # Add messages about populations with too few records with known coordinates to warning output
-  if(output %in% c("both", "warnings") & exists("few_coords") & !("L1" %in% skip)) {
+  if(output %in% c("both", "warnings") & exists("few_coords") & skip_check == FALSE) {
 
     skipped_output <- purrr::map(.x = few_coords$PopID,
                                  .f = ~{
@@ -193,7 +198,7 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
   }
 
   # Produce map of locations
-  if(map & any(!is.na(Location_data$Longitude) & !is.na(Location_data$Latitude)) & output %in% c("both", "errors") & !("L1" %in% skip)) {
+  if(map & any(!is.na(Location_data$Longitude) & !is.na(Location_data$Latitude)) & output %in% c("both", "errors") & skip == FALSE) {
 
     suppressMessages({
 
@@ -230,7 +235,8 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
   }
 
   check_list <- tibble::tibble(Warning = war,
-                               Error = err)
+                               Error = err,
+                               Skipped = skip_check)
 
   return(list(CheckList = check_list,
               WarningRows = NULL,

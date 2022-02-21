@@ -33,7 +33,8 @@ capture_check <- function(Capture_data, Location_data, Brood_data, Individual_da
                                                     "Check that individuals in Capture_data also appear in Individual_data",
                                                     "Check that capture locations appear in Location_data"),
                                Warning = NA,
-                               Error = NA)
+                               Error = NA,
+                               Skipped = NA)
 
   # Checks
   message("Checking capture data...")
@@ -43,21 +44,21 @@ capture_check <- function(Capture_data, Location_data, Brood_data, Individual_da
 
   check_values_mass_output <- check_values_capture(Capture_data, "Mass", approved_list, output, skip)
 
-  check_list[1, 3:4] <- check_values_mass_output$CheckList
+  check_list[1, 3:5] <- check_values_mass_output$CheckList
 
   # - Check tarsus values against reference values
   message("C1b: Checking tarsus values against reference values...")
 
   check_values_tarsus_output <- check_values_capture(Capture_data, "Tarsus", approved_list, output, skip)
 
-  check_list[2, 3:4] <- check_values_tarsus_output$CheckList
+  check_list[2, 3:5] <- check_values_tarsus_output$CheckList
 
   # - Check chick age values
   message("C2: Checking chick age values...")
 
   check_chick_age_output <- check_chick_age(Capture_data, approved_list, output, skip)
 
-  check_list[3, 3:4] <- check_chick_age_output$CheckList
+  check_list[3, 3:5] <- check_chick_age_output$CheckList
 
   # - Check that adults caught on nest are listed are the parents
   message("C3: Checking that adults caught on nest during the breeding season are listed as the parents...")
@@ -65,14 +66,14 @@ capture_check <- function(Capture_data, Location_data, Brood_data, Individual_da
   check_adult_parent_nest_output <- check_adult_parent_nest(Capture_data, Location_data,
                                                             Brood_data, approved_list, output, skip)
 
-  check_list[4, 3:4] <- check_adult_parent_nest_output$CheckList
+  check_list[4, 3:5] <- check_adult_parent_nest_output$CheckList
 
   # - Check the order in age of subsequent captures
   message("C4: Checking that the age of subsequent captures is ordered correctly...")
 
   check_age_captures_output <- check_age_captures(Capture_data, approved_list, output, skip)
 
-  check_list[5, 3:4] <- check_age_captures_output$CheckList
+  check_list[5, 3:5] <- check_age_captures_output$CheckList
 
   # - Check that individuals in Capture_data also appear in Individual_data
   message("C5: Checking that individuals in Capture_data also appear in Individual_data...")
@@ -80,7 +81,7 @@ capture_check <- function(Capture_data, Location_data, Brood_data, Individual_da
   check_captures_individuals_output <- check_captures_individuals(Capture_data, Individual_data,
                                                                   approved_list, output, skip)
 
-  check_list[6, 3:4] <- check_captures_individuals_output$CheckList
+  check_list[6, 3:5] <- check_captures_individuals_output$CheckList
 
   # - Check that capture locations appear in Location_data
   message("C6: Checking that capture locations appear in Location_data...")
@@ -88,7 +89,7 @@ capture_check <- function(Capture_data, Location_data, Brood_data, Individual_da
   check_capture_locations_output <- check_capture_locations(Capture_data, Location_data,
                                                             approved_list, output, skip)
 
-  check_list[7, 3:4] <- check_capture_locations_output$CheckList
+  check_list[7, 3:5] <- check_capture_locations_output$CheckList
 
   # Warning list
   warning_list <- list(Check1a = check_values_mass_output$WarningOutput,
@@ -187,7 +188,7 @@ check_values_capture <- function(Capture_data, var, approved_list, output, skip)
   } else {
 
     # Tarsus reference values
-    if(var == "Tarsus" & skip_check != TRUE) {
+    if(var == "Tarsus" & skip_check == FALSE) {
 
       # Create reference values for adults & chicks from data
       ref <- Capture_data %>%
@@ -227,7 +228,7 @@ check_values_capture <- function(Capture_data, var, approved_list, output, skip)
     }
 
     # Mass reference values
-    if(var == "Mass" & skip_check != TRUE) {
+    if(var == "Mass" & skip_check == FALSE) {
 
       # Create reference values for adults from data
       ref_adults <- Capture_data %>%
@@ -363,7 +364,7 @@ check_values_capture <- function(Capture_data, var, approved_list, output, skip)
   error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  if(output %in% c("both", "errors") & skip_check != TRUE) {
+  if(output %in% c("both", "errors") & skip_check == FALSE) {
 
     if(nrow(ref) > 0 && !all(is.na(Capture_data[,var]))) {
 
@@ -526,7 +527,7 @@ check_values_capture <- function(Capture_data, var, approved_list, output, skip)
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
-  if(output %in% c("both", "warnings") & skip_check != TRUE) {
+  if(output %in% c("both", "warnings") & skip_check == FALSE) {
 
     # Add messages about skipped population-species combinations to warning outputs
     if(var == "Tarsus") {
@@ -594,7 +595,8 @@ check_values_capture <- function(Capture_data, var, approved_list, output, skip)
   }
 
   check_list <- tibble::tibble(Warning = war,
-                               Error = err)
+                               Error = err,
+                               Skipped = skip_check)
 
   return(list(CheckList = check_list,
               WarningRows = NULL,
@@ -621,12 +623,16 @@ check_values_capture <- function(Capture_data, var, approved_list, output, skip)
 
 check_chick_age <- function(Capture_data, approved_list, output, skip){
 
+  # Check whether this check should be skipped
+  skip_check <- dplyr::case_when("C2" %in% skip ~ TRUE,
+                                 TRUE ~ FALSE)
+
   # Check for potential errors
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  if(output %in% c("both", "errors") &  !("C2" %in% skip)) {
+  if(output %in% c("both", "errors") & skip_check == FALSE) {
 
     # Select records with chick age < 0 OR > 30
     chick_age_err <- Capture_data %>%
@@ -664,7 +670,8 @@ check_chick_age <- function(Capture_data, approved_list, output, skip){
   warning_output <- NULL
 
   check_list <- tibble::tibble(Warning = war,
-                               Error = err)
+                               Error = err,
+                               Skipped = skip_check)
 
   return(list(CheckList = check_list,
               WarningRows = NULL,
@@ -694,12 +701,16 @@ check_chick_age <- function(Capture_data, approved_list, output, skip){
 
 check_adult_parent_nest <- function(Capture_data, Location_data, Brood_data, approved_list, output, skip){
 
+  # Check whether this check should be skipped
+  skip_check <- dplyr::case_when("C3" %in% skip ~ TRUE,
+                                 TRUE ~ FALSE)
+
   # Check for warnings
   war <- FALSE
   warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
-  if(output %in% c("both", "warnings") &  !("C3" %in% skip)) {
+  if(output %in% c("both", "warnings") & skip_check == FALSE) {
 
     # Select adults captured in the "breeding season"
     # Here we define a population's breeding season annually, which, for now, runs from the minimum lay date in Brood_data,
@@ -818,7 +829,8 @@ check_adult_parent_nest <- function(Capture_data, Location_data, Brood_data, app
   error_output <- NULL
 
   check_list <- tibble::tibble(Warning = war,
-                               Error = err)
+                               Error = err,
+                               Skipped = skip_check)
 
   return(list(CheckList = check_list,
               WarningRows = warning_records$Row,
@@ -846,12 +858,16 @@ check_adult_parent_nest <- function(Capture_data, Location_data, Brood_data, app
 
 check_age_captures <- function(Capture_data, approved_list, output, skip){
 
+  # Check whether this check should be skipped
+  skip_check <- dplyr::case_when("C4" %in% skip ~ TRUE,
+                                 TRUE ~ FALSE)
+
   # Check for warnings
   war <- FALSE
   warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
-  if(output %in% c("both", "warnings") &  !("C4" %in% skip)) {
+  if(output %in% c("both", "warnings") & skip_check == FALSE) {
 
     # Select records of captures with an age larger than the subsequent capture.
     # This may happen when age determination and uncertainty vary over time, but should be flagged as a warning.
@@ -896,7 +912,7 @@ check_age_captures <- function(Capture_data, approved_list, output, skip){
   error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  if(output %in% c("both", "errors") &  !("C4" %in% skip)) {
+  if(output %in% c("both", "errors") & skip_check == FALSE) {
 
     # Select records of chick captures that happened after adult captures of the same individual
     # This is impossible and should be flagged as an error.
@@ -937,7 +953,8 @@ check_age_captures <- function(Capture_data, approved_list, output, skip){
   }
 
   check_list <- tibble::tibble(Warning = war,
-                               Error = err)
+                               Error = err,
+                               Skipped = skip_check)
 
   return(list(CheckList = check_list,
               WarningRows = warning_records$Row,
@@ -965,12 +982,16 @@ check_age_captures <- function(Capture_data, approved_list, output, skip){
 
 check_captures_individuals <- function(Capture_data, Individual_data, approved_list, output, skip){
 
+  # Check whether this check should be skipped
+  skip_check <- dplyr::case_when("C5" %in% skip ~ TRUE,
+                                 TRUE ~ FALSE)
+
   # Check for potential errors
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  if(output %in% c("both", "errors") &  !("C5" %in% skip)) {
+  if(output %in% c("both", "errors") & skip_check == FALSE) {
 
     # Select individuals that are missing from Individual_data
     missing_individuals <- purrr::map(.x = unique(Capture_data$CapturePopID),
@@ -1016,7 +1037,8 @@ check_captures_individuals <- function(Capture_data, Individual_data, approved_l
   warning_output <- NULL
 
   check_list <- tibble::tibble(Warning = war,
-                               Error = err)
+                               Error = err,
+                               Skipped = skip_check)
 
   return(list(CheckList = check_list,
               WarningRows = NULL,
@@ -1045,12 +1067,16 @@ check_captures_individuals <- function(Capture_data, Individual_data, approved_l
 
 check_capture_locations <- function(Capture_data, Location_data, approved_list, output, skip){
 
+  # Check whether this check should be skipped
+  skip_check <- dplyr::case_when("C6" %in% skip ~ TRUE,
+                                 TRUE ~ FALSE)
+
   # Check for potential errors
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  if(output %in% c("both", "errors") &  !("C6" %in% skip)) {
+  if(output %in% c("both", "errors") & skip_check == FALSE) {
 
     # Select locations that are missing from Locations_data
     missing_locations <- purrr::map(.x = unique(Capture_data$CapturePopID),
@@ -1093,7 +1119,8 @@ check_capture_locations <- function(Capture_data, Location_data, approved_list, 
   warning_output <- NULL
 
   check_list <- tibble::tibble(Warning = war,
-                               Error = err)
+                               Error = err,
+                               Skipped = skip_check)
 
   return(list(CheckList = check_list,
               WarningRows = NULL,

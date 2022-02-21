@@ -20,8 +20,9 @@
 #' A list of:
 #' \item{CheckList}{A summary dataframe of check warnings and potential errors.}
 #' \item{NumberChecks}{Number of checks performed.}
-#' \item{NumberWarnings}{Number of checks resulted in warnings.}
-#' \item{NumberErrors}{Number of checks resulted in potential errors.}
+#' \item{SkippedChecks}{Number of checks manually skipped.}
+#' \item{WarningChecks}{Number of checks resulted in warnings.}
+#' \item{ErrorChecks}{Number of checks resulted in potential errors.}
 #' \item{ElapsedTime}{Elapsed time in seconds.}
 #' \item{R_data}{Pipeline output (a list of 4 dataframes) with Warning & Error columns marking the rows with warnings and errors.}
 #'
@@ -161,11 +162,11 @@ quality_check <- function(R_data,
 
   cat(paste0("\nAll checks performed in ", round(time, 2), " seconds"))
 
-  checks_warnings <- sum(check_list$Warning == TRUE, na.rm=TRUE)
+  checks_warnings <- sum(check_list$Warning == TRUE, na.rm = TRUE)
 
-  checks_errors <- sum(check_list$Error == TRUE, na.rm=TRUE)
+  checks_errors <- sum(check_list$Error == TRUE, na.rm = TRUE)
 
-  checks_skipped <- ifelse(is.null(skip), 0, length(unique(skip)))
+  checks_skipped <- sum(check_list$Skipped == TRUE, na.rm = TRUE)
 
   cat(crayon::yellow(paste0("\n", checks_warnings, " out of ", nrow(check_list), " checks resulted in warnings.")),
       crayon::red(paste0("\n", checks_errors, " out of ", nrow(check_list), " checks resulted in errors.\n\n")))
@@ -550,8 +551,9 @@ quality_check <- function(R_data,
 
   return(list(CheckList = check_list,
               NumberChecks = nrow(check_list),
-              NumberWarnings = checks_warnings,
-              NumberErrors = checks_errors,
+              SkippedChecks = checks_skipped,
+              WarningChecks = checks_warnings,
+              ErrorChecks = checks_errors,
               ElapsedTime = round(time, 2),
               R_data = list(Brood_data = Brood_data,
                             Capture_data = Capture_data,
