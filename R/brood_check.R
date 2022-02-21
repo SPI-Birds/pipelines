@@ -570,7 +570,7 @@ compare_laying_hatching <- function(Brood_data, approved_list, output, skip){
   }
 
   # No check for warnings
-  war <- FALSE
+  war <- NA
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
@@ -657,7 +657,7 @@ compare_hatching_fledging <- function(Brood_data, approved_list, output, skip){
   }
 
   # No check for warnings
-  war <- FALSE
+  war <- NA
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
@@ -915,7 +915,7 @@ check_values_brood <- function(Brood_data, var, approved_list, output, skip) {
   }
 
   # No check for warnings
-  war <- FALSE
+  war <- NA
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
@@ -1158,7 +1158,7 @@ check_unique_BroodID <- function(Brood_data, approved_list, output, skip){
   }
 
   # No check for warnings
-  war <- FALSE
+  war <- NA
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
@@ -1239,7 +1239,7 @@ check_clutch_type_order <- function(Brood_data, approved_list, output, skip){
   }
 
   # No check for warnings
-  war <- FALSE
+  war <- NA
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
@@ -1742,7 +1742,7 @@ check_sex_mothers <- function(Brood_data, Individual_data, approved_list, output
   }
 
   # No check for warnings
-  war <- FALSE
+  war <- NA
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
@@ -1837,7 +1837,7 @@ check_sex_fathers <- function(Brood_data, Individual_data, approved_list, output
   }
 
   # No check for warnings
-  war <- FALSE
+  war <- NA
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
@@ -1946,7 +1946,7 @@ check_parents_captures <- function(Brood_data, Capture_data, approved_list, outp
   }
 
   # No check for warnings
-  war <- FALSE
+  war <- NA
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
@@ -2028,7 +2028,7 @@ check_brood_locations <- function(Brood_data, Location_data, approved_list, outp
   }
 
   # No check for warnings
-  war <- FALSE
+  war <- NA
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 

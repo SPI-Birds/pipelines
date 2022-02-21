@@ -166,7 +166,7 @@ check_unique_IndvID <- function(Individual_data, approved_list, output, skip){
   }
 
   # No check for warnings
-  war <- FALSE
+  war <- NA
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
@@ -253,7 +253,7 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data, a
   }
 
   # No check for warnings
-  war <- FALSE
+  war <- NA
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
@@ -328,7 +328,7 @@ check_conflicting_sex <- function(Individual_data, approved_list, output, skip) 
   }
 
   # No check for warnings
-  war <- FALSE
+  war <- NA
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
@@ -402,7 +402,7 @@ check_conflicting_species <- function(Individual_data, approved_list, output, sk
   }
 
   # No check for warnings
-  war <- FALSE
+  war <- NA
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
@@ -483,7 +483,7 @@ check_individuals_captures <- function(Individual_data, Capture_data, approved_l
   }
 
   # No check for warnings
-  war <- FALSE
+  war <- NA
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 

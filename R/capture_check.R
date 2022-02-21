@@ -523,7 +523,7 @@ check_values_capture <- function(Capture_data, var, approved_list, output, skip)
   }
 
   # No check for warnings
-  war <- FALSE
+  war <- NA
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
@@ -665,7 +665,7 @@ check_chick_age <- function(Capture_data, approved_list, output, skip){
   }
 
   # No check for warnings
-  war <- FALSE
+  war <- NA
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
@@ -824,7 +824,7 @@ check_adult_parent_nest <- function(Capture_data, Location_data, Brood_data, app
   }
 
   # No check for errors
-  err <- FALSE
+  err <- NA
   #error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
@@ -1032,7 +1032,7 @@ check_captures_individuals <- function(Capture_data, Individual_data, approved_l
   }
 
   # No check for warnings
-  war <- FALSE
+  war <- NA
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
@@ -1114,7 +1114,7 @@ check_capture_locations <- function(Capture_data, Location_data, approved_list, 
   }
 
   # No check for warnings
-  war <- FALSE
+  war <- NA
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 

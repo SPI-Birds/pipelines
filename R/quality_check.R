@@ -162,16 +162,34 @@ quality_check <- function(R_data,
 
   cat(paste0("\nData quality check procedure took ", round(time, 2), " seconds"))
 
-  checks_warnings <- sum(check_list$Warning == TRUE, na.rm = TRUE)
+  checks_warnings <- sum(check_list$Warning == TRUE, na.rm = TRUE) # Number of checks resulting in warnings
 
-  checks_errors <- sum(check_list$Error == TRUE, na.rm = TRUE)
+  checks_errors <- sum(check_list$Error == TRUE, na.rm = TRUE) # Number of checks resulting in errors
 
-  checks_skipped <- sum(check_list$Skipped == TRUE, na.rm = TRUE)
+  checks_skipped <- sum(check_list$Skipped == TRUE, na.rm = TRUE) # Total number of checks skipped
 
-  cat(paste0("\n", checks_skipped, " checks were manually skipped."),
-      crayon::yellow(paste0("\n", checks_warnings, " out of ", nrow(check_list), " checks flagged warnings.")),
-      crayon::red(paste0("\n", checks_errors, " out of ", nrow(check_list), " checks flagged potential errors.\n\n")))
+  skipped_errors <- check_list %>% dplyr::filter(!is.na(.data$Error), .data$Skipped == TRUE) %>% nrow() # Number of potential error checks skipped
 
+  skipped_warnings <- check_list %>% dplyr::filter(!is.na(.data$Warning), .data$Skipped == TRUE) %>% nrow() # Number of warning checks skipped
+
+  if(output %in% c("warnings", "both")) {
+
+    cat(crayon::yellow(paste0("\nOut of ", sum(!is.na(check_list$Warning)), " checks that check for warnings, ", skipped_warnings,
+                              " were manually skipped, and ", checks_warnings, " flagged one or more warnings.")))
+
+  }
+
+  if(output %in% c("errors", "both")) {
+
+    cat(crayon::red(paste0("\nOut of ", sum(!is.na(check_list$Error)), " checks that check for potential errors, ", skipped_errors,
+                           " were manually skipped, and ", checks_errors, " flagged one or more potential errors.")))
+
+  }
+
+  # Number of checks performed
+  number_checks <- dplyr::case_when(output == "both" ~ check_list %>% dplyr::filter(.data$Skipped == FALSE) %>% nrow(),
+                                    output == "errors" ~ check_list %>% dplyr::filter(.data$Skipped == FALSE & !is.na(.data$Error)) %>% nrow(),
+                                    output == "warnings" ~ check_list %>% dplyr::filter(.data$Skipped == FALSE & !is.na(.data$Warning)) %>% nrow())
 
   # Create output file
   # Unique PopIDs and Species for report title
@@ -210,7 +228,7 @@ quality_check <- function(R_data,
     '',
     '- Data quality check for potential errors performed in `r round(time, 2)` seconds.',
     '',
-    '- Out of `r nrow(check_list)` individual checks, `r checks_skipped` were manually skipped, and `r checks_errors` flagged potential errors.',
+    '- Out of `r sum(!is.na(check_list$Error))` individual checks that check for potential errors, `r skipped_errors` were manually skipped, and `r checks_errors` flagged one or more potential errors.',
     '',
     '# Potential Errors',
     '',
@@ -381,7 +399,7 @@ quality_check <- function(R_data,
               '',
               '- Data quality check for warnings performed in `r round(time, 2)` seconds.',
               '',
-              '- Out of `r nrow(check_list)` individual checks, `r checks_skipped` were manually skipped, and `r checks_errors` flagged warnings.',
+              '- Out of `r sum(!is.na(check_list$Warning))` individual checks that check for warnings, `r skipped_warnings` were manually skipped, and `r checks_warnings` flagged one or more warnings.',
               '',
               '# Warnings',
               '',
@@ -551,7 +569,7 @@ quality_check <- function(R_data,
   }
 
   return(list(CheckList = check_list,
-              NumberChecks = nrow(check_list),
+              NumberChecks = number_checks,
               SkippedChecks = checks_skipped,
               WarningChecks = checks_warnings,
               ErrorChecks = checks_errors,

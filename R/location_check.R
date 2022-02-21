@@ -178,7 +178,7 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
   }
 
   # No check for warnings
-  war <- FALSE
+  war <- NA
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
@@ -198,7 +198,7 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
   }
 
   # Produce map of locations
-  if(map & any(!is.na(Location_data$Longitude) & !is.na(Location_data$Latitude)) & output %in% c("both", "errors") & skip == FALSE) {
+  if(map & any(!is.na(Location_data$Longitude) & !is.na(Location_data$Latitude)) & output %in% c("both", "errors") & skip_check == FALSE) {
 
     suppressMessages({
 
