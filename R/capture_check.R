@@ -39,53 +39,39 @@ capture_check <- function(Capture_data, Location_data, Brood_data, Individual_da
   # Checks
   message("Checking capture data...")
 
-  # - Check mass values against reference values
-  message("C1a: Checking mass values against reference values...")
-
+  # - C1a: Check mass values against reference values
   check_values_mass_output <- check_values_capture(Capture_data, "Mass", approved_list, output, skip)
 
   check_list[1, 3:5] <- check_values_mass_output$CheckList
 
-  # - Check tarsus values against reference values
-  message("C1b: Checking tarsus values against reference values...")
-
+  # - C1b: Check tarsus values against reference values
   check_values_tarsus_output <- check_values_capture(Capture_data, "Tarsus", approved_list, output, skip)
 
   check_list[2, 3:5] <- check_values_tarsus_output$CheckList
 
-  # - Check chick age values
-  message("C2: Checking chick age values...")
-
+  # - C2: Check chick age values
   check_chick_age_output <- check_chick_age(Capture_data, approved_list, output, skip)
 
   check_list[3, 3:5] <- check_chick_age_output$CheckList
 
-  # - Check that adults caught on nest are listed are the parents
-  message("C3: Checking that adults caught on nest during the breeding season are listed as the parents...")
-
+  # - C3: Check that adults caught on nest are listed are the parents
   check_adult_parent_nest_output <- check_adult_parent_nest(Capture_data, Location_data,
                                                             Brood_data, approved_list, output, skip)
 
   check_list[4, 3:5] <- check_adult_parent_nest_output$CheckList
 
-  # - Check the order in age of subsequent captures
-  message("C4: Checking that the age of subsequent captures is ordered correctly...")
-
+  # - C4: Check the order in age of subsequent captures
   check_age_captures_output <- check_age_captures(Capture_data, approved_list, output, skip)
 
   check_list[5, 3:5] <- check_age_captures_output$CheckList
 
-  # - Check that individuals in Capture_data also appear in Individual_data
-  message("C5: Checking that individuals in Capture_data also appear in Individual_data...")
-
+  # - C5: Check that individuals in Capture_data also appear in Individual_data
   check_captures_individuals_output <- check_captures_individuals(Capture_data, Individual_data,
                                                                   approved_list, output, skip)
 
   check_list[6, 3:5] <- check_captures_individuals_output$CheckList
 
-  # - Check that capture locations appear in Location_data
-  message("C6: Checking that capture locations appear in Location_data...")
-
+  # - C6: Check that capture locations appear in Location_data
   check_capture_locations_output <- check_capture_locations(Capture_data, Location_data,
                                                             approved_list, output, skip)
 
@@ -179,6 +165,23 @@ check_values_capture <- function(Capture_data, var, approved_list, output, skip)
                                  var %in% c("Tarsus") & "C1b" %in% skip ~ TRUE,
                                  "C1" %in% skip ~ TRUE,
                                  TRUE ~ FALSE)
+
+  # Print check messages
+  if(skip_check == FALSE) {
+
+    check_message <- dplyr::case_when(var %in% c("Mass") ~ c("C1a", "mass"),
+                                      var %in% c("Tarsus") ~ c("C1b", "tarsus"))
+
+    message(paste0(check_message[1], ": Checking ", check_message[2], " values against reference values..."))
+
+  } else {
+
+    id_message <- dplyr::case_when(var %in% c("Mass") ~ "C1a",
+                                   var %in% c("Tarsus") ~ "C1b")
+
+    message(paste0("<< ", id_message, " is skipped >>"))
+
+  }
 
   # If "var" is unmeasured, or if only warnings are flagged, this check is skipped
   if(all(is.na(Capture_data[,var]), !(output %in% c("both", "errors"))) | skip_check == TRUE) {
@@ -627,6 +630,17 @@ check_chick_age <- function(Capture_data, approved_list, output, skip){
   skip_check <- dplyr::case_when("C2" %in% skip ~ TRUE,
                                  TRUE ~ FALSE)
 
+  # Print check message
+  if(skip_check == FALSE) {
+
+    message("C2: Checking chick age values...")
+
+  } else {
+
+    message("<< C2 is skipped >>")
+
+  }
+
   # Check for potential errors
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
@@ -704,6 +718,17 @@ check_adult_parent_nest <- function(Capture_data, Location_data, Brood_data, app
   # Check whether this check should be skipped
   skip_check <- dplyr::case_when("C3" %in% skip ~ TRUE,
                                  TRUE ~ FALSE)
+
+  # Print check message
+  if(skip_check == FALSE) {
+
+    message("C3: Checking that adults caught on nest during the breeding season are listed as the parents...")
+
+  } else {
+
+    message("<< C3 is skipped >>")
+
+  }
 
   # Check for warnings
   war <- FALSE
@@ -862,6 +887,17 @@ check_age_captures <- function(Capture_data, approved_list, output, skip){
   skip_check <- dplyr::case_when("C4" %in% skip ~ TRUE,
                                  TRUE ~ FALSE)
 
+  # Print check message
+  if(skip_check == FALSE) {
+
+    message("C4: Checking that the age of subsequent captures is ordered correctly...")
+
+  } else {
+
+    message("<< C4 is skipped >>")
+
+  }
+
   # Check for warnings
   war <- FALSE
   warning_records <- tibble::tibble(Row = NA_character_)
@@ -986,6 +1022,17 @@ check_captures_individuals <- function(Capture_data, Individual_data, approved_l
   skip_check <- dplyr::case_when("C5" %in% skip ~ TRUE,
                                  TRUE ~ FALSE)
 
+  # Print check message
+  if(skip_check == FALSE) {
+
+    message("C5: Checking that individuals in Capture_data also appear in Individual_data...")
+
+  } else {
+
+    message("<< C5 is skipped >>")
+
+  }
+
   # Check for potential errors
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
@@ -1070,6 +1117,17 @@ check_capture_locations <- function(Capture_data, Location_data, approved_list, 
   # Check whether this check should be skipped
   skip_check <- dplyr::case_when("C6" %in% skip ~ TRUE,
                                  TRUE ~ FALSE)
+
+  # Print check message
+  if(skip_check == FALSE) {
+
+    message("C6: Checking that capture locations appear in Location_data...")
+
+  } else {
+
+    message("<< C6 is skipped >>")
+
+  }
 
   # Check for potential errors
   err <- FALSE

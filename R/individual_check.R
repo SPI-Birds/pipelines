@@ -35,38 +35,28 @@ individual_check <- function(Individual_data, Capture_data, Location_data, appro
   # Checks
   message("Checking individual data...")
 
-  # - Check unique individual IDs
-  message("I1: Checking that individual IDs are unique...")
-
+  # - I1: Check unique individual IDs
   check_unique_IndvID_output <- check_unique_IndvID(Individual_data, approved_list, output, skip)
 
   check_list[1, 3:5] <- check_unique_IndvID_output$CheckList
 
-  # - Check that chicks have BroodIDs
-  message("I2: Checking that chicks have BroodIDs...")
-
+  # - I2: Check that chicks have BroodIDs
   check_BroodID_chicks_output <- check_BroodID_chicks(Individual_data, Capture_data, Location_data,
                                                       approved_list, output, skip)
 
   check_list[2, 3:5] <- check_BroodID_chicks_output$CheckList
 
-  # - Check that individuals have no conflicting sex
-  message("I3: Checking that individuals have no conflicting sex...")
-
+  # - I3: Check that individuals have no conflicting sex
   check_conflicting_sex_output <- check_conflicting_sex(Individual_data, approved_list, output, skip)
 
   check_list[3, 3:5] <- check_conflicting_sex_output$CheckList
 
-  # - Check that individuals have no conflicting species
-  message("I4: Checking that individuals have no conflicting species...")
-
+  # - I4: Check that individuals have no conflicting species
   check_conflicting_species_output <- check_conflicting_species(Individual_data, approved_list, output, skip)
 
   check_list[4, 3:5] <- check_conflicting_species_output$CheckList
 
-  # - Check that individuals in Individual_data also appear in Capture_data
-  message("I5: Checking that individuals in Individual_data also appear in Capture_data...")
-
+  # - I5: Check that individuals in Individual_data also appear in Capture_data
   check_individuals_captures_output <- check_individuals_captures(Individual_data, Capture_data,
                                                                   approved_list, output, skip)
 
@@ -119,6 +109,17 @@ check_unique_IndvID <- function(Individual_data, approved_list, output, skip){
   # Check whether this check should be skipped
   skip_check <- dplyr::case_when("I1" %in% skip ~ TRUE,
                                  TRUE ~ FALSE)
+
+  # Print check message
+  if(skip_check == FALSE) {
+
+    message("I1: Checking that individual IDs are unique...")
+
+  } else {
+
+    message("<< I1 is skipped >>")
+
+  }
 
   # Check for potential errors
   err <- FALSE
@@ -206,6 +207,17 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data, a
   skip_check <- dplyr::case_when("I2" %in% skip ~ TRUE,
                                  TRUE ~ FALSE)
 
+  # Print check message
+  if(skip_check == FALSE) {
+
+    message("I2: Checking that chicks have BroodIDs...")
+
+  } else {
+
+    message("<< I2 is skipped >>")
+
+  }
+
   # Check for potential errors
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
@@ -291,6 +303,17 @@ check_conflicting_sex <- function(Individual_data, approved_list, output, skip) 
   skip_check <- dplyr::case_when("I3" %in% skip ~ TRUE,
                                  TRUE ~ FALSE)
 
+  # Print check message
+  if(skip_check == FALSE) {
+
+    message("I3: Checking that individuals have no conflicting sex...")
+
+  } else {
+
+    message("<< I3 is skipped >>")
+
+  }
+
   # Check for potential errors
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
@@ -367,6 +390,17 @@ check_conflicting_species <- function(Individual_data, approved_list, output, sk
   skip_check <- dplyr::case_when("I4" %in% skip ~ TRUE,
                                  TRUE ~ FALSE)
 
+  # Print check message
+  if(skip_check == FALSE) {
+
+    message("I4: Checking that individuals have no conflicting species...")
+
+  } else {
+
+    message("<< I4 is skipped >>")
+
+  }
+
   # Check for potential errors
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
@@ -440,6 +474,17 @@ check_individuals_captures <- function(Individual_data, Capture_data, approved_l
   # Check whether this check should be skipped
   skip_check <- dplyr::case_when("I5" %in% skip ~ TRUE,
                                  TRUE ~ FALSE)
+
+  # Print check message
+  if(skip_check == FALSE) {
+
+    message("I5: Checking that individuals in Individual_data also appear in Capture_data...")
+
+  } else {
+
+    message("<< I5 is skipped >>")
+
+  }
 
   # Check for potential errors
   err <- FALSE

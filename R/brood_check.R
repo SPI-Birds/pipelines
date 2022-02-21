@@ -60,37 +60,27 @@ brood_check <- function(Brood_data, Individual_data, Capture_data, Location_data
   # Checks
   message("Checking brood data...")
 
-  # - Compare clutch and brood sizes
-  message("B1: Comparing clutch and brood sizes...")
-
+  # - B1: Compare clutch and brood sizes
   compare_clutch_brood_output <- compare_clutch_brood(Brood_data, approved_list, output, skip)
 
   check_list[1, 3:5] <- compare_clutch_brood_output$CheckList
 
-  # - Compare brood sizes and fledgling numbers
-  message("B2: Comparing brood sizes and fledgling numbers...")
-
+  # - B2: Compare brood sizes and fledgling numbers
   compare_brood_fledglings_output <- compare_brood_fledglings(Brood_data, approved_list, output, skip)
 
   check_list[2, 3:5] <- compare_brood_fledglings_output$CheckList
 
-  # - Compare lay and hatch dates
-  message("B3: Comparing lay and hatch dates...")
-
+  # - B3: Compare lay and hatch dates
   compare_laying_hatching_output <- compare_laying_hatching(Brood_data, approved_list, output, skip)
 
   check_list[3, 3:5] <- compare_laying_hatching_output$CheckList
 
-  # - Compare hatch and fledge dates
-  message("B4: Comparing hatch and fledge dates...")
-
+  # - B4: Compare hatch and fledge dates
   compare_hatching_fledging_output <- compare_hatching_fledging(Brood_data, approved_list, output, skip)
 
   check_list[4, 3:5] <- compare_hatching_fledging_output$CheckList
 
-  # - Check clutch size values against reference values
-  message("B5a: Checking clutch size values against reference values...")
-
+  # - B5a: Check clutch size values against reference values
   var_ext <- ifelse("ClutchSize" %in% colnames(Brood_data),
                     ifelse(all(is.na(Brood_data$ClutchSize)), "_observed", ""), "_observed")
 
@@ -99,99 +89,73 @@ brood_check <- function(Brood_data, Individual_data, Capture_data, Location_data
 
   check_list[5, 3:5] <- check_values_clutch_size_output$CheckList
 
-  # - Check brood size values against reference values
-  message("B5b: Checking brood size values against reference values...")
-
+  # - B5b: Check brood size values against reference values
   check_values_brood_size_output <- check_values_brood(Brood_data,
                                                        paste0("BroodSize", var_ext), approved_list, output, skip)
 
   check_list[6, 3:5] <- check_values_brood_size_output$CheckList
 
-  # - Check fledgling number values against reference values
-  message("B5c: Checking fledgling number values against reference values...")
-
+  # - B5c: Check fledgling number values against reference values
   check_values_fledgling_number_output <- check_values_brood(Brood_data,
                                                              paste0("NumberFledged", var_ext), approved_list, output, skip)
 
   check_list[7, 3:5] <- check_values_fledgling_number_output$CheckList
 
-  # - Check lay date values against reference values
-  message("B5d: Checking lay date values against reference values...")
-
+  # - B5d: Check lay date values against reference values
   check_values_lay_date_output <- check_values_brood(Brood_data,
                                                      paste0("LayDate", var_ext), approved_list, output, skip)
 
   check_list[8, 3:5] <- check_values_lay_date_output$CheckList
 
-  # - Compare brood size and number of chicks in Individual_data
-  message("B6: Comparing brood size and number of chicks in Individual_data...")
-
+  # - B6: Compare brood size and number of chicks in Individual_data
   compare_broodsize_chicknumber_output <- compare_broodsize_chicknumber(Brood_data, Individual_data,
                                                                         approved_list, output, skip)
 
   check_list[9, 3:5] <- compare_broodsize_chicknumber_output$CheckList
 
-  # - Check that BroodIDs are unique
-  message("B7: Checking that brood IDs are unique...")
-
+  # - B7: Check that BroodIDs are unique
   check_unique_BroodID_output <- check_unique_BroodID(Brood_data, approved_list, output, skip)
 
   check_list[10, 3:5] <- check_unique_BroodID_output$CheckList
 
-  # - Check clutch type order
-  message("B8: Checking that clutch type order is correct..")
-
+  # - B8: Check clutch type order
   check_clutch_type_order_output <- check_clutch_type_order(Brood_data, approved_list, output, skip)
 
   check_list[11, 3:5] <- check_clutch_type_order_output$CheckList
 
-  # - Compare species of mother and father
-  message("B9: Comparing species of mother and father...")
-
+  # - B9: Compare species of mother and father
   compare_species_parents_output <- compare_species_parents(Brood_data, Individual_data, approved_list, output, skip)
 
   check_list[12, 3:5] <- compare_species_parents_output$CheckList
 
-  # - Compare species of brood and parents
-  message("B10: Comparing species of brood and parents...")
-
+  # - B10: Compare species of brood and parents
   compare_species_brood_parents_output <- compare_species_brood_parents(Brood_data, Individual_data,
                                                                         approved_list, output, skip)
 
   check_list[13, 3:5] <- compare_species_brood_parents_output$CheckList
 
-  # - Compare species of brood and chicks
-  message("B11: Comparing species of brood and chicks...")
-
+  # - B11: Compare species of brood and chicks
   compare_species_brood_chicks_output <- compare_species_brood_chicks(Brood_data, Individual_data,
                                                                       approved_list, output, skip)
 
   check_list[14, 3:5] <- compare_species_brood_chicks_output$CheckList
 
-  # - Check sex of mothers
-  message("B12: Checking sex of mothers...")
-
+  # - B12: Check sex of mothers
   check_sex_mothers_output <- check_sex_mothers(Brood_data, Individual_data, approved_list, output, skip)
 
   check_list[15, 3:5] <- check_sex_mothers_output$CheckList
 
-  # - Check sex of fathers
-  message("B13: Checking sex of fathers...")
-
+  # - B13: Check sex of fathers
   check_sex_fathers_output <- check_sex_fathers(Brood_data, Individual_data, approved_list, output, skip)
 
   check_list[16, 3:5] <- check_sex_fathers_output$CheckList
 
-  # - Check that parents appear in Capture_data
-  message("B14: Checking that parents appear in Capture_data...")
-
+  # - B14: Check that parents appear in Capture_data
   check_parents_captures_output <- check_parents_captures(Brood_data, Capture_data, approved_list, output, skip)
 
   check_list[17, 3:5] <- check_parents_captures_output$CheckList
 
-  # - Check that nest locations appear in Location_data
-  message("B15: Checking that nest locations appear in Location_data...")
-
+  # - B15: Check that nest locations appear in Location_data
   check_brood_locations_output <- check_brood_locations(Brood_data, Location_data, approved_list, output, skip)
 
   check_list[18, 3:5] <- check_brood_locations_output$CheckList
@@ -294,6 +258,17 @@ compare_clutch_brood <- function(Brood_data, approved_list, output, skip){
   # Check whether this check should be skipped
   skip_check <- dplyr::case_when("B1" %in% skip ~ TRUE,
                                  TRUE ~ FALSE)
+
+  # Print check message
+  if(skip_check == FALSE) {
+
+    message("B1: Comparing clutch and brood sizes...")
+
+  } else {
+
+    message("<< B1 is skipped >>")
+
+  }
 
   # Check for potential errors
   err <- FALSE
@@ -408,6 +383,17 @@ compare_brood_fledglings <- function(Brood_data, approved_list, output, skip){
   skip_check <- dplyr::case_when("B2" %in% skip ~ TRUE,
                                  TRUE ~ FALSE)
 
+  # Print check message
+  if(skip_check == FALSE) {
+
+    message("B2: Comparing brood sizes and fledgling numbers...")
+
+  } else {
+
+    message("<< B2 is skipped >>")
+
+  }
+
   # Check for potential errors
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
@@ -521,6 +507,17 @@ compare_laying_hatching <- function(Brood_data, approved_list, output, skip){
   skip_check <- dplyr::case_when("B3" %in% skip ~ TRUE,
                                  TRUE ~ FALSE)
 
+  # Print check message
+  if(skip_check == FALSE) {
+
+    message("B3: Comparing lay and hatch dates...")
+
+  } else {
+
+    message("<< B3 is skipped >>")
+
+  }
+
   # TODO
   # Broods with laying date earlier than hatching date but the difference
   # in number of days is smaller than incubation time
@@ -607,6 +604,17 @@ compare_hatching_fledging <- function(Brood_data, approved_list, output, skip){
   # Check whether this check should be skipped
   skip_check <- dplyr::case_when("B4" %in% skip ~ TRUE,
                                  TRUE ~ FALSE)
+
+  # Print check message
+  if(skip_check == FALSE) {
+
+    message("B4: Comparing hatch and fledge dates...")
+
+  } else {
+
+    message("<< B4 is skipped >>")
+
+  }
 
   # TODO
   # Broods with hatching date earlier than fledging date but the difference
@@ -720,6 +728,27 @@ check_values_brood <- function(Brood_data, var, approved_list, output, skip) {
                                  var %in% c("LayDate", "LayDate_observed") & "B5c" %in% skip ~ TRUE,
                                  "B5" %in% skip ~ TRUE,
                                  TRUE ~ FALSE)
+
+  # Print check messages
+  if(skip_check == FALSE) {
+
+    check_message <- dplyr::case_when(var %in% c("ClutchSize", "ClutchSize_observed") ~ c("B5a", "clutch size"),
+                                      var %in% c("BroodSize", "BroodSize_observed") ~ c("B5b", "brood size"),
+                                      var %in% c("NumberFledged", "NumberFledged_observed") ~ c("B5c", "fledgling number"),
+                                      var %in% c("LayDate", "LayDate_observed") ~ c("B5d", "lay date"))
+
+    message(paste0(check_message[1], ": Checking ", check_message[2], " values against reference values..."))
+
+  } else {
+
+    id_message <- dplyr::case_when(var %in% c("ClutchSize", "ClutchSize_observed") ~ "B5a",
+                                   var %in% c("BroodSize", "BroodSize_observed") ~ "B5b",
+                                   var %in% c("NumberFledged", "NumberFledged_observed") ~ "B5c",
+                                   var %in% c("LayDate", "LayDate_observed") ~ "B5d")
+
+    message(paste0("<< ", id_message, " is skipped >>"))
+
+  }
 
   # Create reference values from data
   # Numeric & integer columns
@@ -971,6 +1000,17 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data, approved_
   skip_check <- dplyr::case_when("B6" %in% skip ~ TRUE,
                                  TRUE ~ FALSE)
 
+  # Print check message
+  if(skip_check == FALSE) {
+
+    message("B6: Comparing brood size and number of chicks in Individual_data...")
+
+  } else {
+
+    message("<< B6 is skipped >>")
+
+  }
+
   if(skip_check == FALSE) {
 
     # Link BroodID from Individual_data to each capture in Capture_data
@@ -1111,6 +1151,17 @@ check_unique_BroodID <- function(Brood_data, approved_list, output, skip){
   skip_check <- dplyr::case_when("B7" %in% skip ~ TRUE,
                                  TRUE ~ FALSE)
 
+  # Print check message
+  if(skip_check == FALSE) {
+
+    message("B7: Checking that brood IDs are unique...")
+
+  } else {
+
+    message("<< B7 is skipped >>")
+
+  }
+
   # Check for potential errors
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
@@ -1195,6 +1246,17 @@ check_clutch_type_order <- function(Brood_data, approved_list, output, skip){
   skip_check <- dplyr::case_when("B8" %in% skip ~ TRUE,
                                  TRUE ~ FALSE)
 
+  # Print check message
+  if(skip_check == FALSE) {
+
+    message("B8: Checking that clutch type order is correct..")
+
+  } else {
+
+    message("<< B8 is skipped >>")
+
+  }
+
   # Check for potential errors
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
@@ -1277,6 +1339,17 @@ compare_species_parents <- function(Brood_data, Individual_data, approved_list, 
   # Check whether this check should be skipped
   skip_check <- dplyr::case_when("B9" %in% skip ~ TRUE,
                                  TRUE ~ FALSE)
+
+  # Print check message
+  if(skip_check == FALSE) {
+
+    message("B9: Comparing species of mother and father...")
+
+  } else {
+
+    message("<< B9 is skipped >>")
+
+  }
 
   if(skip_check == FALSE) {
 
@@ -1406,6 +1479,17 @@ compare_species_brood_parents <- function(Brood_data, Individual_data, approved_
   # Check whether this check should be skipped
   skip_check <- dplyr::case_when("B10" %in% skip ~ TRUE,
                                  TRUE ~ FALSE)
+
+  # Print check message
+  if(skip_check == FALSE) {
+
+    message("B10: Comparing species of brood and parents...")
+
+  } else {
+
+    message("<< B10 is skipped >>")
+
+  }
 
   if(skip_check == FALSE) {
 
@@ -1557,6 +1641,17 @@ compare_species_brood_chicks <- function(Brood_data, Individual_data, approved_l
   skip_check <- dplyr::case_when("B11" %in% skip ~ TRUE,
                                  TRUE ~ FALSE)
 
+  # Print check message
+  if(skip_check == FALSE) {
+
+    message("B11: Comparing species of brood and chicks...")
+
+  } else {
+
+    message("<< B11 is skipped >>")
+
+  }
+
   if(skip_check == FALSE) {
 
     individuals <- Individual_data %>%
@@ -1686,6 +1781,17 @@ check_sex_mothers <- function(Brood_data, Individual_data, approved_list, output
   skip_check <- dplyr::case_when("B12" %in% skip ~ TRUE,
                                  TRUE ~ FALSE)
 
+  # Print check message
+  if(skip_check == FALSE) {
+
+    message("B12: Checking sex of mothers...")
+
+  } else {
+
+    message("<< B12 is skipped >>")
+
+  }
+
   # Check for potential errors
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
@@ -1781,6 +1887,17 @@ check_sex_fathers <- function(Brood_data, Individual_data, approved_list, output
   skip_check <- dplyr::case_when("B13" %in% skip ~ TRUE,
                                  TRUE ~ FALSE)
 
+  # Print check message
+  if(skip_check == FALSE) {
+
+    message("B13: Checking sex of fathers...")
+
+  } else {
+
+    message("<< B13 is skipped >>")
+
+  }
+
   # Check for potential errors
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
@@ -1875,6 +1992,17 @@ check_parents_captures <- function(Brood_data, Capture_data, approved_list, outp
   # Check whether this check should be skipped
   skip_check <- dplyr::case_when("B14" %in% skip ~ TRUE,
                                  TRUE ~ FALSE)
+
+  # Print check message
+  if(skip_check == FALSE) {
+
+    message("B14: Checking that parents appear in Capture_data...")
+
+  } else {
+
+    message("<< B14 is skipped >>")
+
+  }
 
   # Check for potential errors
   err <- FALSE
@@ -1984,6 +2112,17 @@ check_brood_locations <- function(Brood_data, Location_data, approved_list, outp
   # Check whether this check should be skipped
   skip_check <- dplyr::case_when("B15" %in% skip ~ TRUE,
                                  TRUE ~ FALSE)
+
+  # Print check message
+  if(skip_check == FALSE) {
+
+    message("B15: Checking that nest locations appear in Location_data...")
+
+  } else {
+
+    message("<< B15 is skipped >>")
+
+  }
 
   # Check for potential errors
   err <- FALSE

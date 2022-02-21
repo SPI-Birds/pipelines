@@ -28,9 +28,7 @@ location_check <- function(Location_data, Brood_data, Capture_data, approved_lis
   # Checks
   message("Checking location data...")
 
-  # - Check location coordinates
-  message("L1: Checking location coordinates...")
-
+  # - L1: Check location coordinates
   check_coordinates_output <- check_coordinates(Location_data, Brood_data, Capture_data, approved_list, output, skip, map)
 
   check_list[1, 3:5] <- check_coordinates_output$CheckList
@@ -78,6 +76,17 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
   # Check whether this check should be skipped
   skip_check <- dplyr::case_when("L1" %in% skip ~ TRUE,
                                  TRUE ~ FALSE)
+
+  # Print check message
+  if(skip_check == FALSE) {
+
+    message("L1: Checking location coordinates...")
+
+  } else {
+
+    message("<< L1 is skipped >>")
+
+  }
 
   # Check for potential errors
   err <- FALSE
