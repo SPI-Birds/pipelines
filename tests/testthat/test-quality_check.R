@@ -7,8 +7,9 @@ test_that("All quality check summary items are returned...", {
 
   expect_true(exists("CheckList", where = dummy_check))
   expect_true(exists("NumberChecks", where = dummy_check))
-  expect_true(exists("NumberWarnings", where = dummy_check))
-  expect_true(exists("NumberErrors", where = dummy_check))
+  expect_true(exists("WarningChecks", where = dummy_check))
+  expect_true(exists("SkippedChecks", where = dummy_check))
+  expect_true(exists("ErrorChecks", where = dummy_check))
   expect_true(exists("ElapsedTime", where = dummy_check))
   expect_true(exists("R_data", where = dummy_check))
 
@@ -222,5 +223,18 @@ test_that("Approved-listing procedure functions as expected...", {
 
   expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "Approved list")$Warning, NA)
   expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "Approved list")$Error, NA)
+
+})
+
+# Run quality check for dummy data and produce no report
+message("Create dummy data quality check output and skip check B5...")
+
+dummy_check_skip <- quality_check(test = TRUE,
+                                  report = FALSE,
+                                  skip = "B5")
+
+test_that("Skipping checks functions as expected...", {
+
+  expect_equal(dummy_check_skip$SkippedChecks, 4)
 
 })

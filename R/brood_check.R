@@ -752,11 +752,13 @@ check_values_brood <- function(Brood_data, var, approved_list, output, skip) {
   }
 
   # Print message for population-species combinations with too low number of observations
-  if(any(ref$n < 100) & skip_check == FALSE) {
+  if(skip_check == FALSE) {
 
-    low_obs <- ref %>%
-      dplyr::filter(.data$n < 100) %>%
-      dplyr::select(.data$Species, .data$PopID)
+    if(any(ref$n < 100)) {
+
+      low_obs <- ref %>%
+        dplyr::filter(.data$n < 100) %>%
+        dplyr::select(.data$Species, .data$PopID)
 
       purrr::pwalk(.l = list(low_obs$Species,
                              low_obs$PopID,
@@ -767,6 +769,8 @@ check_values_brood <- function(Brood_data, var, approved_list, output, skip) {
                                     " is too low (< 100) to create reliable reference values."))
 
                    })
+
+    }
 
   }
 
@@ -983,7 +987,7 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data, approved_
   error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  if(output %in% c("both", "errors") & skip_check == FALSe) {
+  if(output %in% c("both", "errors") & skip_check == FALSE) {
 
     # Select non-experimental records where number of chicks in Capture_data > brood size in Brood_data
     # (this should not be possible when no experimental manipulations have been done)

@@ -160,7 +160,7 @@ quality_check <- function(R_data,
   # Check messages
   time <- difftime(Sys.time(), start_time, units = "sec")
 
-  cat(paste0("\nAll checks performed in ", round(time, 2), " seconds"))
+  cat(paste0("\nData quality check procedure took ", round(time, 2), " seconds"))
 
   checks_warnings <- sum(check_list$Warning == TRUE, na.rm = TRUE)
 
@@ -168,8 +168,9 @@ quality_check <- function(R_data,
 
   checks_skipped <- sum(check_list$Skipped == TRUE, na.rm = TRUE)
 
-  cat(crayon::yellow(paste0("\n", checks_warnings, " out of ", nrow(check_list), " checks resulted in warnings.")),
-      crayon::red(paste0("\n", checks_errors, " out of ", nrow(check_list), " checks resulted in errors.\n\n")))
+  cat(paste0("\n", checks_skipped, " checks were manually skipped."),
+      crayon::yellow(paste0("\n", checks_warnings, " out of ", nrow(check_list), " checks flagged warnings.")),
+      crayon::red(paste0("\n", checks_errors, " out of ", nrow(check_list), " checks flagged potential errors.\n\n")))
 
 
   # Create output file
