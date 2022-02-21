@@ -206,6 +206,7 @@ NULL
 #' @param approved_list List object. List of approved records from brood_approved_list.csv,
 #' capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv.
 #' @param output Character. Run checks on potential errors ("errors"), warnings ("warnings"), or both ("both"; default).
+#' @param skip Character. Identifiers of the individual quality checks (CheckID) that should be skipped.
 #'
 #'@name checks_brood_params
 NULL
@@ -216,6 +217,7 @@ NULL
 #' @param approved_list List object. List of approved records from brood_approved_list.csv,
 #' capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv.
 #' @param output Character. Run checks on potential errors ("errors"), warnings ("warnings"), or both ("both"; default).
+#' @param skip Character. Identifiers of the individual quality checks (CheckID) that should be skipped.
 #'
 #'@name checks_capture_params
 NULL
@@ -226,6 +228,7 @@ NULL
 #' @param approved_list List object. List of approved records from brood_approved_list.csv,
 #' capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv.
 #' @param output Character. Run checks on potential errors ("errors"), warnings ("warnings"), or both ("both"; default).
+#' @param skip Character. Identifiers of the individual quality checks (CheckID) that should be skipped.
 #'
 #'@name checks_individual_params
 NULL
@@ -236,6 +239,7 @@ NULL
 #' @param approved_list List object. List of approved records from brood_approved_list.csv,
 #' capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv.
 #' @param output Character. Run checks on potential errors ("errors"), warnings ("warnings"), or both ("both"; default).
+#' @param skip Character. Identifiers of the individual quality checks (CheckID) that should be skipped.
 #'
 #'@name checks_location_params
 NULL

@@ -7,13 +7,14 @@
 #' @param R_data Output of pipeline as an R object. Generated using
 #' \code{output_type = R} in \code{\link{run_pipelines}}.
 #' @param output Character. Run checks on and produce report of: potential errors ("errors"), warnings and verified records ("warnings"), or both in separate files ("both"; default).
-#' @param report \code{TRUE} or \code{FALSE}. If \code{TRUE}, a report is produced. Default: \code{TRUE}.
+#' @param report Logical. If \code{TRUE}, a report is produced. Default: \code{TRUE}.
 #' @param report_format Character. Format of output report: "html", "pdf", or "both" (default).
 #' @param report_file Character. Name of the output reports. Default: "quality-check-report". Note that to the file name of the report on potential errors the suffix "_errors" is added (i.e. "quality-check-report_errors"), and to the report on warnings and verified records "_warnings" (i.e., "quality-check-report_warnings").
 #' @param latex_engine Character. LaTeX engine for producing PDF output. Options are "pdflatex", "xelatex", and "lualatex" (default). NB: pdfLaTeX and XeLaTeX have memory limit restrictions, which can be problematic when generating large pdfs. LuaLaTeX has dynamic memory management which may help for generating large pdfs.
-#' @param test Logical. Is `quality_check` being used inside package tests? If  \code{TRUE}, `R_data` is ignored and
+#' @param test Logical. Is \code{quality_check} being used inside package tests? If  \code{TRUE}, \code{R_data} is ignored and
 #' dummy data will be used instead.
 #' @param map Logical. If  \code{TRUE}, a map of locations is added in the report. See \code{\link{check_coordinates}}.
+#' @param skip Character. Identifiers of the individual quality checks (CheckID) that should be skipped.
 #'
 #' @return
 #' A list of:
@@ -42,7 +43,8 @@ quality_check <- function(R_data,
                           report_file = "quality-check-report",
                           latex_engine = "lualatex",
                           test = FALSE,
-                          map = TRUE){
+                          map = TRUE,
+                          skip = NULL){
 
   start_time <- Sys.time()
 
@@ -103,10 +105,10 @@ quality_check <- function(R_data,
   # FIXME remove after CaptureID column has been added to ALL pipelines
 
   # Run checks
-  Brood_checks <- brood_check(Brood_data, Individual_data, Capture_data, Location_data, approved_list, output)
-  Capture_checks <- capture_check(Capture_data, Location_data, Brood_data, Individual_data, approved_list, output)
-  Individual_checks <- individual_check(Individual_data, Capture_data, Location_data, approved_list, output)
-  Location_checks <- location_check(Location_data, Brood_data, Capture_data, approved_list, output, map)
+  Brood_checks <- brood_check(Brood_data, Individual_data, Capture_data, Location_data, approved_list, output, skip)
+  Capture_checks <- capture_check(Capture_data, Location_data, Brood_data, Individual_data, approved_list, output, skip)
+  Individual_checks <- individual_check(Individual_data, Capture_data, Location_data, approved_list, output, skip)
+  Location_checks <- location_check(Location_data, Brood_data, Capture_data, approved_list, output, skip, map)
 
   # Add warning and error columns to each data frame
   # FIXME remove after Warning & Error columns have been added to ALL pipelines
@@ -163,6 +165,8 @@ quality_check <- function(R_data,
 
   checks_errors <- sum(check_list$Error == TRUE, na.rm=TRUE)
 
+  checks_skipped <- ifelse(is.null(skip), 0, length(unique(skip)))
+
   cat(crayon::yellow(paste0("\n", checks_warnings, " out of ", nrow(check_list), " checks resulted in warnings.")),
       crayon::red(paste0("\n", checks_errors, " out of ", nrow(check_list), " checks resulted in errors.\n\n")))
 
@@ -198,13 +202,13 @@ quality_check <- function(R_data,
     '',
     '# Summary',
     '',
-    'Species: `r species_codes[species_codes$Species %in% species,]$CommonName`',
+    '- Species: `r species_codes[species_codes$Species %in% species,]$CommonName`',
     '',
-    'Populations: `r pop_codes[pop_codes$PopID %in% pop,]$PopName`',
+    '- Populations: `r pop_codes[pop_codes$PopID %in% pop,]$PopName`',
     '',
-    'All checks performed in `r round(time, 2)` seconds.',
+    '- Data quality check for potential errors performed in `r round(time, 2)` seconds.',
     '',
-    '`r checks_errors` out of `r nrow(check_list)` checks resulted in errors.',
+    '- Out of `r nrow(check_list)` individual checks, `r checks_skipped` were manually skipped, and `r checks_errors` flagged potential errors.',
     '',
     '# Potential Errors',
     '',
@@ -369,13 +373,13 @@ quality_check <- function(R_data,
               '',
               '# Summary',
               '',
-              'Species: `r species_codes[species_codes$Species %in% species,]$CommonName`',
+              '- Species: `r species_codes[species_codes$Species %in% species,]$CommonName`',
               '',
-              'Populations: `r pop_codes[pop_codes$PopID %in% pop,]$PopName`',
+              '- Populations: `r pop_codes[pop_codes$PopID %in% pop,]$PopName`',
               '',
-              'All checks performed in `r round(time, 2)` seconds.',
+              '- Data quality check for warnings performed in `r round(time, 2)` seconds.',
               '',
-              '`r checks_warnings` out of `r nrow(check_list)` checks resulted in warnings.',
+              '- Out of `r nrow(check_list)` individual checks, `r checks_skipped` were manually skipped, and `r checks_errors` flagged warnings.',
               '',
               '# Warnings',
               '',

@@ -31,7 +31,7 @@
 #' @importFrom progress progress_bar
 #' @export
 
-brood_check <- function(Brood_data, Individual_data, Capture_data, Location_data, approved_list, output){
+brood_check <- function(Brood_data, Individual_data, Capture_data, Location_data, approved_list, output, skip){
 
   # Create check list with a summary of warnings and errors per check
   check_list <- tibble::tibble(CheckID = paste0("B", c(1:4, paste0(5, letters[1:4]), 6:15)),
@@ -62,28 +62,28 @@ brood_check <- function(Brood_data, Individual_data, Capture_data, Location_data
   # - Compare clutch and brood sizes
   message("B1: Comparing clutch and brood sizes...")
 
-  compare_clutch_brood_output <- compare_clutch_brood(Brood_data, approved_list, output)
+  compare_clutch_brood_output <- compare_clutch_brood(Brood_data, approved_list, output, skip)
 
   check_list[1, 3:4] <- compare_clutch_brood_output$CheckList
 
   # - Compare brood sizes and fledgling numbers
   message("B2: Comparing brood sizes and fledgling numbers...")
 
-  compare_brood_fledglings_output <- compare_brood_fledglings(Brood_data, approved_list, output)
+  compare_brood_fledglings_output <- compare_brood_fledglings(Brood_data, approved_list, output, skip)
 
   check_list[2, 3:4] <- compare_brood_fledglings_output$CheckList
 
   # - Compare lay and hatch dates
   message("B3: Comparing lay and hatch dates...")
 
-  compare_laying_hatching_output <- compare_laying_hatching(Brood_data, approved_list, output)
+  compare_laying_hatching_output <- compare_laying_hatching(Brood_data, approved_list, output, skip)
 
   check_list[3, 3:4] <- compare_laying_hatching_output$CheckList
 
   # - Compare hatch and fledge dates
   message("B4: Comparing hatch and fledge dates...")
 
-  compare_hatching_fledging_output <- compare_hatching_fledging(Brood_data, approved_list, output)
+  compare_hatching_fledging_output <- compare_hatching_fledging(Brood_data, approved_list, output, skip)
 
   check_list[4, 3:4] <- compare_hatching_fledging_output$CheckList
 
@@ -93,98 +93,105 @@ brood_check <- function(Brood_data, Individual_data, Capture_data, Location_data
   var_ext <- ifelse("ClutchSize" %in% colnames(Brood_data),
                     ifelse(all(is.na(Brood_data$ClutchSize)), "_observed", ""), "_observed")
 
-  check_values_clutch_size_output <- check_values_brood(Brood_data, paste0("ClutchSize", var_ext), approved_list, output)
+  check_values_clutch_size_output <- check_values_brood(Brood_data,
+                                                        paste0("ClutchSize", var_ext), approved_list, output, skip)
 
   check_list[5, 3:4] <- check_values_clutch_size_output$CheckList
 
   # - Check brood size values against reference values
   message("B5b: Checking brood size values against reference values...")
 
-  check_values_brood_size_output <- check_values_brood(Brood_data, paste0("BroodSize", var_ext), approved_list, output)
+  check_values_brood_size_output <- check_values_brood(Brood_data,
+                                                       paste0("BroodSize", var_ext), approved_list, output, skip)
 
   check_list[6, 3:4] <- check_values_brood_size_output$CheckList
 
   # - Check fledgling number values against reference values
   message("B5c: Checking fledgling number values against reference values...")
 
-  check_values_fledgling_number_output <- check_values_brood(Brood_data, paste0("NumberFledged", var_ext), approved_list, output)
+  check_values_fledgling_number_output <- check_values_brood(Brood_data,
+                                                             paste0("NumberFledged", var_ext), approved_list, output, skip)
 
   check_list[7, 3:4] <- check_values_fledgling_number_output$CheckList
 
   # - Check lay date values against reference values
   message("B5d: Checking lay date values against reference values...")
 
-  check_values_lay_date_output <- check_values_brood(Brood_data, paste0("LayDate", var_ext), approved_list, output)
+  check_values_lay_date_output <- check_values_brood(Brood_data,
+                                                     paste0("LayDate", var_ext), approved_list, output, skip)
 
   check_list[8, 3:4] <- check_values_lay_date_output$CheckList
 
   # - Compare brood size and number of chicks in Individual_data
   message("B6: Comparing brood size and number of chicks in Individual_data...")
 
-  compare_broodsize_chicknumber_output <- compare_broodsize_chicknumber(Brood_data, Individual_data, approved_list, output)
+  compare_broodsize_chicknumber_output <- compare_broodsize_chicknumber(Brood_data, Individual_data,
+                                                                        approved_list, output, skip)
 
   check_list[9, 3:4] <- compare_broodsize_chicknumber_output$CheckList
 
   # - Check that BroodIDs are unique
   message("B7: Checking that brood IDs are unique...")
 
-  check_unique_BroodID_output <- check_unique_BroodID(Brood_data, approved_list, output)
+  check_unique_BroodID_output <- check_unique_BroodID(Brood_data, approved_list, output, skip)
 
   check_list[10, 3:4] <- check_unique_BroodID_output$CheckList
 
   # - Check clutch type order
   message("B8: Checking that clutch type order is correct..")
 
-  check_clutch_type_order_output <- check_clutch_type_order(Brood_data, approved_list, output)
+  check_clutch_type_order_output <- check_clutch_type_order(Brood_data, approved_list, output, skip)
 
   check_list[11, 3:4] <- check_clutch_type_order_output$CheckList
 
   # - Compare species of mother and father
   message("B9: Comparing species of mother and father...")
 
-  compare_species_parents_output <- compare_species_parents(Brood_data, Individual_data, approved_list, output)
+  compare_species_parents_output <- compare_species_parents(Brood_data, Individual_data, approved_list, output, skip)
 
   check_list[12, 3:4] <- compare_species_parents_output$CheckList
 
   # - Compare species of brood and parents
   message("B10: Comparing species of brood and parents...")
 
-  compare_species_brood_parents_output <- compare_species_brood_parents(Brood_data, Individual_data, approved_list, output)
+  compare_species_brood_parents_output <- compare_species_brood_parents(Brood_data, Individual_data,
+                                                                        approved_list, output, skip)
 
   check_list[13, 3:4] <- compare_species_brood_parents_output$CheckList
 
   # - Compare species of brood and chicks
   message("B11: Comparing species of brood and chicks...")
 
-  compare_species_brood_chicks_output <- compare_species_brood_chicks(Brood_data, Individual_data, approved_list, output)
+  compare_species_brood_chicks_output <- compare_species_brood_chicks(Brood_data, Individual_data,
+                                                                      approved_list, output, skip)
 
   check_list[14, 3:4] <- compare_species_brood_chicks_output$CheckList
 
   # - Check sex of mothers
   message("B12: Checking sex of mothers...")
 
-  check_sex_mothers_output <- check_sex_mothers(Brood_data, Individual_data, approved_list, output)
+  check_sex_mothers_output <- check_sex_mothers(Brood_data, Individual_data, approved_list, output, skip)
 
   check_list[15, 3:4] <- check_sex_mothers_output$CheckList
 
   # - Check sex of fathers
   message("B13: Checking sex of fathers...")
 
-  check_sex_fathers_output <- check_sex_fathers(Brood_data, Individual_data, approved_list, output)
+  check_sex_fathers_output <- check_sex_fathers(Brood_data, Individual_data, approved_list, output, skip)
 
   check_list[16, 3:4] <- check_sex_fathers_output$CheckList
 
   # - Check that parents appear in Capture_data
   message("B14: Checking that parents appear in Capture_data...")
 
-  check_parents_captures_output <- check_parents_captures(Brood_data, Capture_data, approved_list, output)
+  check_parents_captures_output <- check_parents_captures(Brood_data, Capture_data, approved_list, output, skip)
 
   check_list[17, 3:4] <- check_parents_captures_output$CheckList
 
   # - Check that nest locations appear in Location_data
   message("B15: Checking that nest locations appear in Location_data...")
 
-  check_brood_locations_output <- check_brood_locations(Brood_data, Location_data, approved_list, output)
+  check_brood_locations_output <- check_brood_locations(Brood_data, Location_data, approved_list, output, skip)
 
   check_list[18, 3:4] <- check_brood_locations_output$CheckList
 
@@ -281,14 +288,14 @@ brood_check <- function(Brood_data, Individual_data, Capture_data, Location_data
 #'
 #' @export
 
-compare_clutch_brood <- function(Brood_data, approved_list, output){
+compare_clutch_brood <- function(Brood_data, approved_list, output, skip){
 
   # Check for potential errors
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  if(output %in% c("both", "errors")) {
+  if(output %in% c("both", "errors") & !("B1" %in% skip)) {
 
     # Non-manipulated broods
     # NB: allows v1.0 & v1.1 variable names of the standard format
@@ -327,7 +334,7 @@ compare_clutch_brood <- function(Brood_data, approved_list, output){
   warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
-  if(output %in% c("both", "warnings")) {
+  if(output %in% c("both", "warnings") & !("B1" %in% skip)) {
 
     # Manipulated broods
     # NB: allows v1.0 & v1.1 variable names of the standard format
@@ -389,14 +396,14 @@ compare_clutch_brood <- function(Brood_data, approved_list, output){
 #'
 #' @export
 
-compare_brood_fledglings <- function(Brood_data, approved_list, output){
+compare_brood_fledglings <- function(Brood_data, approved_list, output, skip){
 
   # Check for potential errors
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  if(output %in% c("both", "errors")) {
+  if(output %in% c("both", "errors") & !("B2" %in% skip)) {
 
     # Non-manipulated broods
     # NB: allows v1.0 & v1.1 variable names of the standard format
@@ -435,7 +442,7 @@ compare_brood_fledglings <- function(Brood_data, approved_list, output){
   warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
-  if(output %in% c("both", "warnings")) {
+  if(output %in% c("both", "warnings") & !("B2" %in% skip)) {
 
     # Manipulated broods
     # NB: allows v1.0 & v1.1 variable names of the standard format
@@ -497,7 +504,7 @@ compare_brood_fledglings <- function(Brood_data, approved_list, output){
 #'
 #' @export
 
-compare_laying_hatching <- function(Brood_data, approved_list, output){
+compare_laying_hatching <- function(Brood_data, approved_list, output, skip){
 
   # TODO
   # Broods with laying date earlier than hatching date but the difference
@@ -513,7 +520,7 @@ compare_laying_hatching <- function(Brood_data, approved_list, output){
   error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  if(output %in% c("both", "errors")) {
+  if(output %in% c("both", "errors") & !("B3" %in% skip)) {
 
     # Broods with laying date later than hatching date
     # NB: allows v1.0 & v1.1 variable names of the standard format
@@ -579,7 +586,7 @@ compare_laying_hatching <- function(Brood_data, approved_list, output){
 #'
 #' @export
 
-compare_hatching_fledging <- function(Brood_data, approved_list, output){
+compare_hatching_fledging <- function(Brood_data, approved_list, output, skip){
 
   # TODO
   # Broods with hatching date earlier than fledging date but the difference
@@ -595,7 +602,7 @@ compare_hatching_fledging <- function(Brood_data, approved_list, output){
   error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  if(output %in% c("both", "errors")) {
+  if(output %in% c("both", "errors") & !("B4" %in% skip)) {
 
     # Broods with laying date later than hatching date
     # NB: allows v1.0 & v1.1 variable names of the standard format
@@ -676,7 +683,7 @@ compare_hatching_fledging <- function(Brood_data, approved_list, output){
 #'
 #' @export
 
-check_values_brood <- function(Brood_data, var, approved_list, output) {
+check_values_brood <- function(Brood_data, var, approved_list, output, skip) {
 
   # Stop if "var" is missing
   if(missing(var)) {
@@ -685,10 +692,18 @@ check_values_brood <- function(Brood_data, var, approved_list, output) {
 
   }
 
+  # Check whether this check needs to be skipped
+  skip_check <- dplyr::case_when(var %in% c("ClutchSize", "ClutchSize_observed") & "B5a" %in% skip ~ TRUE,
+                                 var %in% c("BroodSize", "BroodSize_observed") & "B5b" %in% skip ~ TRUE,
+                                 var %in% c("NumberFledged", "NumberFledged_observed") & "B5c" %in% skip ~ TRUE,
+                                 var %in% c("LayDate", "LayDate_observed") & "B5c" %in% skip ~ TRUE,
+                                 "B5" %in% skip ~ TRUE,
+                                 TRUE ~ FALSE)
+
   # Create reference values from data
   # Numeric & integer columns
   if(var %in% c("ClutchSize", "BroodSize", "NumberFledged",
-                "ClutchSize_observed", "BroodSize_observed", "NumberFledged_observed")) {
+                "ClutchSize_observed", "BroodSize_observed", "NumberFledged_observed") & skip_check != TRUE) {
 
     ref <- Brood_data %>%
       dplyr::filter(!is.na(!!rlang::sym(var)) & !is.na(.data$Species)) %>%
@@ -699,7 +714,7 @@ check_values_brood <- function(Brood_data, var, approved_list, output) {
       dplyr::arrange(.data$PopID, .data$Species)
 
     # Date columns
-  } else if(var %in% c("LayDate", "LayDate_observed")) {
+  } else if(var %in% c("LayDate", "LayDate_observed") & skip_check != TRUE) {
 
     ref <- Brood_data %>%
       dplyr::filter(!is.na(!!rlang::sym(var)) & !is.na(.data$Species)) %>%
@@ -716,7 +731,7 @@ check_values_brood <- function(Brood_data, var, approved_list, output) {
   }
 
   # Print message for population-species combinations with too low number of observations
-  if(any(ref$n < 100)) {
+  if(any(ref$n < 100) & skip_check != TRUE) {
 
     low_obs <- ref %>%
       dplyr::filter(.data$n < 100) %>%
@@ -739,7 +754,7 @@ check_values_brood <- function(Brood_data, var, approved_list, output) {
   error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  if(output %in% c("both", "errors")) {
+  if(output %in% c("both", "errors") & skip_check != TRUE) {
 
     # Progress bar
     pb <- progress::progress_bar$new(total = 2 * nrow(ref),
@@ -880,7 +895,7 @@ check_values_brood <- function(Brood_data, var, approved_list, output) {
   warning_output <- NULL
 
   # Add messages about population-species combinations with low n to warning outputs
-  if(output %in% c("both", "warnings") & exists("low_obs")) {
+  if(output %in% c("both", "warnings") & exists("low_obs") & skip_check != TRUE) {
 
     skipped_output <- purrr::pmap(.l = list(low_obs$Species,
                                             low_obs$PopID),
@@ -924,7 +939,7 @@ check_values_brood <- function(Brood_data, var, approved_list, output) {
 #'
 #' @export
 
-compare_broodsize_chicknumber <- function(Brood_data, Individual_data, approved_list, output) {
+compare_broodsize_chicknumber <- function(Brood_data, Individual_data, approved_list, output, skip) {
 
   # Link BroodID from Individual_data to each capture in Capture_data
   chicks_captured <- Individual_data %>%
@@ -938,7 +953,7 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data, approved_
   error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  if(output %in% c("both", "errors")) {
+  if(output %in% c("both", "errors") & !("B6" %in% skip)) {
 
     # Select non-experimental records where number of chicks in Capture_data > brood size in Brood_data
     # (this should not be possible when no experimental manipulations have been done)
@@ -980,7 +995,7 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data, approved_
   warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
-  if(output %in% c("both", "warnings")) {
+  if(output %in% c("both", "warnings") & !("B6" %in% skip)) {
 
     # Select records where number of chicks in Capture_data < brood size in Brood_data
     # Yet, chicks might have died before measuring/ringing, or experimentally manipulated
@@ -1055,14 +1070,14 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data, approved_
 #'
 #' @export
 
-check_unique_BroodID <- function(Brood_data, approved_list, output){
+check_unique_BroodID <- function(Brood_data, approved_list, output, skip){
 
   # Check for potential errors
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  if(output %in% c("both", "errors")) {
+  if(output %in% c("both", "errors") & !("B7" %in% skip)) {
 
     # Select records that are duplicated within populations
     duplicated <- Brood_data %>%
@@ -1134,14 +1149,14 @@ check_unique_BroodID <- function(Brood_data, approved_list, output){
 #'
 #' @export
 
-check_clutch_type_order <- function(Brood_data, approved_list, output){
+check_clutch_type_order <- function(Brood_data, approved_list, output, skip){
 
   # Check for potential errors
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  if(output %in% c("both", "errors")) {
+  if(output %in% c("both", "errors") & !("B8" %in% skip)) {
 
     # Select breeding females with ClutchType_calculated == "first" not as first clutch in a particular breeding season
     brood_err <- Brood_data %>%
@@ -1212,34 +1227,38 @@ check_clutch_type_order <- function(Brood_data, approved_list, output){
 #'
 #' @export
 
-compare_species_parents <- function(Brood_data, Individual_data, approved_list, output) {
+compare_species_parents <- function(Brood_data, Individual_data, approved_list, output, skip) {
 
-  # Find species information of mothers
-  females <- Brood_data %>%
-    dplyr::filter(!is.na(.data$FemaleID) & !is.na(.data$MaleID)) %>%
-    dplyr::select(.data$Row, .data$PopID, .data$BroodID, .data$FemaleID) %>%
-    dplyr::left_join(Individual_data[,c("IndvID", "Species")], by=c("FemaleID" = "IndvID")) %>%
-    dplyr::rename(FemaleSpecies = .data$Species)
+  if(!("B9" %in% skip)) {
 
-  # Find species information of fathers
-  males <- Brood_data %>%
-    dplyr::filter(!is.na(.data$FemaleID) & !is.na(.data$MaleID)) %>%
-    dplyr::select(.data$Row, .data$PopID, .data$BroodID, .data$MaleID) %>%
-    dplyr::left_join(Individual_data[,c("IndvID", "Species")],
-                     by=c("MaleID" = "IndvID")) %>%
-    dplyr::rename(MaleSpecies = .data$Species)
+    # Find species information of mothers
+    females <- Brood_data %>%
+      dplyr::filter(!is.na(.data$FemaleID) & !is.na(.data$MaleID)) %>%
+      dplyr::select(.data$Row, .data$PopID, .data$BroodID, .data$FemaleID) %>%
+      dplyr::left_join(Individual_data[,c("IndvID", "Species")], by=c("FemaleID" = "IndvID")) %>%
+      dplyr::rename(FemaleSpecies = .data$Species)
 
-  # Select records where parents are different species
-  hybrid_broods <- dplyr::left_join(females, males,
-                                           by=c("Row", "PopID", "BroodID")) %>%
-    dplyr::filter(.data$FemaleSpecies != .data$MaleSpecies)
+    # Find species information of fathers
+    males <- Brood_data %>%
+      dplyr::filter(!is.na(.data$FemaleID) & !is.na(.data$MaleID)) %>%
+      dplyr::select(.data$Row, .data$PopID, .data$BroodID, .data$MaleID) %>%
+      dplyr::left_join(Individual_data[,c("IndvID", "Species")],
+                       by=c("MaleID" = "IndvID")) %>%
+      dplyr::rename(MaleSpecies = .data$Species)
+
+    # Select records where parents are different species
+    hybrid_broods <- dplyr::left_join(females, males,
+                                      by=c("Row", "PopID", "BroodID")) %>%
+      dplyr::filter(.data$FemaleSpecies != .data$MaleSpecies)
+
+  }
 
   # Check for warnings
   war <- FALSE
   warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
-  if(output %in% c("both", "warnings")) {
+  if(output %in% c("both", "warnings") & !("B9" %in% skip)) {
 
     # Common cross-fostering and hybrids are considered "warnings"
     common_hybrid_broods <- hybrid_broods %>%
@@ -1276,7 +1295,7 @@ compare_species_parents <- function(Brood_data, Individual_data, approved_list, 
   error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  if(output %in% c("both", "errors")) {
+  if(output %in% c("both", "errors") & !("B9" %in% skip)) {
 
     # Uncommon hybrid broods (other than above) are considered "potential errors"
     uncommon_hybrid_broods <- hybrid_broods %>%
@@ -1332,36 +1351,40 @@ compare_species_parents <- function(Brood_data, Individual_data, approved_list, 
 #'
 #' @export
 
-compare_species_brood_parents <- function(Brood_data, Individual_data, approved_list, output) {
+compare_species_brood_parents <- function(Brood_data, Individual_data, approved_list, output, skip) {
 
-  # Find species information of mothers
-  females <- Brood_data %>%
-    dplyr::filter(!is.na(.data$FemaleID) & !is.na(.data$MaleID)) %>%
-    dplyr::select(.data$Row, .data$PopID, .data$BroodID,
-                  .data$FemaleID, "BroodSpecies" = .data$Species) %>%
-    dplyr::left_join(Individual_data[,c("IndvID", "Species")],
-                     by=c("FemaleID" = "IndvID")) %>%
-    dplyr::rename("FemaleSpecies" = .data$Species)
+  if(!("B10" %in% skip)) {
 
-  # Find species information of fathers
-  males <- Brood_data %>%
-    dplyr::filter(!is.na(.data$FemaleID) & !is.na(.data$MaleID)) %>%
-    dplyr::select(.data$Row, .data$PopID, .data$BroodID,
-                  .data$MaleID, "BroodSpecies" = .data$Species) %>%
-    dplyr::left_join(Individual_data[,c("IndvID", "Species")],
-                     by=c("MaleID" = "IndvID")) %>%
-    dplyr::rename("MaleSpecies" = .data$Species)
+    # Find species information of mothers
+    females <- Brood_data %>%
+      dplyr::filter(!is.na(.data$FemaleID) & !is.na(.data$MaleID)) %>%
+      dplyr::select(.data$Row, .data$PopID, .data$BroodID,
+                    .data$FemaleID, "BroodSpecies" = .data$Species) %>%
+      dplyr::left_join(Individual_data[,c("IndvID", "Species")],
+                       by=c("FemaleID" = "IndvID")) %>%
+      dplyr::rename("FemaleSpecies" = .data$Species)
 
-  # Select records where parents are not of the same species as the brood
-  females_males <- dplyr::left_join(females, males,
-                                    by=c("Row", "PopID", "BroodID", "BroodSpecies"))
+    # Find species information of fathers
+    males <- Brood_data %>%
+      dplyr::filter(!is.na(.data$FemaleID) & !is.na(.data$MaleID)) %>%
+      dplyr::select(.data$Row, .data$PopID, .data$BroodID,
+                    .data$MaleID, "BroodSpecies" = .data$Species) %>%
+      dplyr::left_join(Individual_data[,c("IndvID", "Species")],
+                       by=c("MaleID" = "IndvID")) %>%
+      dplyr::rename("MaleSpecies" = .data$Species)
+
+    # Select records where parents are not of the same species as the brood
+    females_males <- dplyr::left_join(females, males,
+                                      by=c("Row", "PopID", "BroodID", "BroodSpecies"))
+
+  }
 
   # Check for warnings
   war <- FALSE
   warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
-  if(output %in% c("both", "warnings")) {
+  if(output %in% c("both", "warnings") & !("B10" %in% skip)) {
 
     # Common cross-fostering and hybrids are considered "warnings"
     common_females <- females_males %>%
@@ -1406,7 +1429,7 @@ compare_species_brood_parents <- function(Brood_data, Individual_data, approved_
   error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  if(output %in% c("both", "errors")) {
+  if(output %in% c("both", "errors") & !("B10" %in% skip)) {
 
     # Uncommon cross-fostering and hybrids are considered "potential errors"
     uncommon_females <-  females_males %>%
@@ -1473,20 +1496,24 @@ compare_species_brood_parents <- function(Brood_data, Individual_data, approved_
 #'
 #' @export
 
-compare_species_brood_chicks <- function(Brood_data, Individual_data, approved_list, output) {
+compare_species_brood_chicks <- function(Brood_data, Individual_data, approved_list, output, skip) {
 
-  individuals <- Individual_data %>%
-    # Do not select individuals without BroodID and conflicted species
-    # The latter is evaluated in check I5.
-    dplyr::filter(!is.na(.data$BroodIDLaid) & (.data$Species != "CONFLICTED" | .data$Species != "CCCCCC")) %>%
-    dplyr::select(.data$IndvID, "IndvSpecies" = .data$Species, .data$BroodIDLaid, .data$PopID)
+  if(!("B11" %in% skip)) {
+
+    individuals <- Individual_data %>%
+      # Do not select individuals without BroodID and conflicted species
+      # The latter is evaluated in check I5.
+      dplyr::filter(!is.na(.data$BroodIDLaid) & (.data$Species != "CONFLICTED" | .data$Species != "CCCCCC")) %>%
+      dplyr::select(.data$IndvID, "IndvSpecies" = .data$Species, .data$BroodIDLaid, .data$PopID)
+
+  }
 
   # Check for warnings
   war <- FALSE
   warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
-  if(output %in% c("both", "warnings")) {
+  if(output %in% c("both", "warnings") & !("B11" %in% skip)) {
 
     # Common cross-fostering and hybrids are considered "warnings"
     common_different_species_brood_chicks <- Brood_data %>%
@@ -1528,7 +1555,7 @@ compare_species_brood_chicks <- function(Brood_data, Individual_data, approved_l
   error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  if(output %in% c("both", "errors")) {
+  if(output %in% c("both", "errors") & !("B11" %in% skip)) {
 
     # Uncommon cross-fostering and hybrids are considered "potential errors"
     uncommon_different_species_brood_chicks <- Brood_data %>%
@@ -1593,14 +1620,14 @@ compare_species_brood_chicks <- function(Brood_data, Individual_data, approved_l
 #'
 #' @export
 
-check_sex_mothers <- function(Brood_data, Individual_data, approved_list, output) {
+check_sex_mothers <- function(Brood_data, Individual_data, approved_list, output, skip) {
 
   # Check for potential errors
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  if(output %in% c("both", "errors")) {
+  if(output %in% c("both", "errors") & !("B12" %in% skip)) {
 
     # Select parents from Individual_data
     if("Sex" %in% colnames(Individual_data)) {
@@ -1683,14 +1710,14 @@ check_sex_mothers <- function(Brood_data, Individual_data, approved_list, output
 #'
 #' @export
 
-check_sex_fathers <- function(Brood_data, Individual_data, approved_list, output) {
+check_sex_fathers <- function(Brood_data, Individual_data, approved_list, output, skip) {
 
   # Check for potential errors
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  if(output %in% c("both", "errors")) {
+  if(output %in% c("both", "errors") & !("B13" %in% skip)) {
 
     # Select parents from Individual_data
     if("Sex" %in% colnames(Individual_data)) {
@@ -1773,14 +1800,14 @@ check_sex_fathers <- function(Brood_data, Individual_data, approved_list, output
 #'
 #' @export
 
-check_parents_captures <- function(Brood_data, Capture_data, approved_list, output){
+check_parents_captures <- function(Brood_data, Capture_data, approved_list, output, skip){
 
   # Check for potential errors
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  if(output %in% c("both", "errors")) {
+  if(output %in% c("both", "errors") & !("B14" %in% skip)) {
 
     # Select parents that are missing from Capture_data
     missing_parents <- purrr::map(.x = unique(Brood_data$PopID),
@@ -1877,14 +1904,14 @@ check_parents_captures <- function(Brood_data, Capture_data, approved_list, outp
 #'
 #' @export
 
-check_brood_locations <- function(Brood_data, Location_data, approved_list, output){
+check_brood_locations <- function(Brood_data, Location_data, approved_list, output, skip){
 
   # Check for potential errors
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  if(output %in% c("both", "errors")) {
+  if(output %in% c("both", "errors") & !("B15" %in% skip)) {
 
     # Select locations that are missing from Locations_data
     missing_locations <- purrr::map(.x = unique(Brood_data$PopID),
