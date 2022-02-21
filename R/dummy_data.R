@@ -870,7 +870,7 @@ create_dummy_data <- function() {
     dplyr::mutate(
       Age_calculated = 5,
       Sex_observed = "F",
-      Row = seq(max(I5_capture_rows$Row) + 1, length.out = dplyr::n()),
+      Row = seq(max(I5_capture_rows$Row) + 2, length.out = dplyr::n()), # +2 because I5's second dummy record should be missing
       IndvID = paste0("I", .data$Row),
       CapturePopID = "AAA",
       BreedingSeason = as.integer(2020),
