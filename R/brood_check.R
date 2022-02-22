@@ -714,7 +714,7 @@ compare_hatching_fledging <- function(Brood_data, approved_list, output, skip){
 
 check_values_brood <- function(Brood_data, var, approved_list, output, skip) {
 
-  # Stop if "var" is missing
+  # Stop if {var} is missing
   if(missing(var)) {
 
     stop("Please select a variable in Brood_data to check against reference values.")
@@ -750,38 +750,51 @@ check_values_brood <- function(Brood_data, var, approved_list, output, skip) {
 
   }
 
+  # Check for each population & species if {var} was recorded
+  var_recorded <- Brood_data %>%
+    dplyr::filter(!is.na(.data$Species)) %>%
+    dplyr::group_by(.data$PopID, .data$Species) %>%
+    dplyr::summarise(recorded = ifelse(!all(is.na(!!rlang::sym(var))), TRUE, FALSE),
+                     .groups = "drop")
+
+  var_not_recorded <- var_recorded %>%
+    dplyr::filter(recorded == FALSE)
+
+
   # Create reference values from data
-  # Numeric & integer columns
+  # Numeric & integer {vars}
   if(var %in% c("ClutchSize", "BroodSize", "NumberFledged",
-                "ClutchSize_observed", "BroodSize_observed", "NumberFledged_observed") & skip_check == FALSE) {
+                "ClutchSize_observed", "BroodSize_observed", "NumberFledged_observed") & skip_check == FALSE & any(var_recorded$recorded == TRUE)) {
 
     ref <- Brood_data %>%
       dplyr::filter(!is.na(!!rlang::sym(var)) & !is.na(.data$Species)) %>%
+      dplyr::anti_join(var_not_recorded, by = c("PopID", "Species")) %>%
       dplyr::group_by(.data$Species, .data$PopID) %>%
       dplyr::summarise(Error_min = 0,
                        Error_max = 2 * ceiling(stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE)),
-                       n = n()) %>%
+                       n = dplyr::n(),
+                       .groups = "drop") %>%
       dplyr::arrange(.data$PopID, .data$Species)
 
-    # Date columns
-  } else if(var %in% c("LayDate", "LayDate_observed") & skip_check == FALSE) {
+    # Date {vars}
+  } else if(var %in% c("LayDate", "LayDate_observed") & skip_check == FALSE & any(var_recorded$recorded == TRUE)) {
 
     ref <- Brood_data %>%
       dplyr::filter(!is.na(!!rlang::sym(var)) & !is.na(.data$Species)) %>%
-      dplyr::group_by(.data$BreedingSeason) %>%
+      dplyr::anti_join(var_not_recorded, by = c("PopID", "Species")) %>%
       # Transform dates to Julian days (while accounting for year) to calculate quantiles
       dplyr::mutate(!!paste0(var, "_julian") := as.numeric(!!rlang::sym(var) - lubridate::ymd(paste(.data$BreedingSeason, "1", "1", sep = "-")) + 1)) %>%
-      dplyr::ungroup() %>%
       dplyr::group_by(.data$Species, .data$PopID) %>%
       dplyr::summarise(Error_min = 1,
                        Error_max = 366, #TODO: Update for birds breeding in winter, in the tropics, or the Southern Hemisphere
-                       n = n()) %>%
+                       n = dplyr::n(),
+                       .groups = "drop") %>%
       dplyr::arrange(.data$PopID, .data$Species)
 
   }
 
   # Print message for population-species combinations with too low number of observations
-  if(skip_check == FALSE) {
+  if(skip_check == FALSE & exists("ref")) {
 
     if(any(ref$n < 100)) {
 
@@ -803,12 +816,25 @@ check_values_brood <- function(Brood_data, var, approved_list, output, skip) {
 
   }
 
+  # Print message for population-species combinations for which {var} was not recorded
+  if(skip_check == FALSE & nrow(var_not_recorded) > 0) {
+
+    purrr::pwalk(.l = list(var_not_recorded$Species,
+                           var_not_recorded$PopID),
+                 .f = ~{
+
+                   message(paste0(var, " was not recorded for ", ..2, ": ", ..1, "."))
+
+                 })
+
+  }
+
   # Check for potential errors
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  if(output %in% c("both", "errors") & skip_check == FALSE) {
+  if(output %in% c("both", "errors") & skip_check == FALSE & exists("ref")) {
 
     # Progress bar
     pb <- progress::progress_bar$new(total = 2 * nrow(ref),
@@ -948,20 +974,39 @@ check_values_brood <- function(Brood_data, var, approved_list, output, skip) {
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
-  # Add messages about population-species combinations with low n to warning outputs
-  if(output %in% c("both", "warnings") & exists("low_obs") & skip_check == FALSE) {
+  # Add messages about population-species combinations with low n to warning outputs & with no records for {var}
+  if(output %in% c("both", "warnings") & skip_check == FALSE) {
 
-    skipped_output <- purrr::pmap(.l = list(low_obs$Species,
-                                            low_obs$PopID),
-                                  .f = ~{
+    if(exists("low_obs")) {
 
-                                    paste0("Number of records for ", ..2, ", ",
-                                           species_codes[species_codes$Species == ..1, "CommonName"],
-                                           ", is too low to create reliable reference values, so records are only checked for impossible/negative values.")
+      skipped_output <- purrr::pmap(.l = list(low_obs$Species,
+                                              low_obs$PopID),
+                                    .f = ~{
 
-                                  })
+                                      paste0("Number of records for ", ..2, ", ",
+                                             species_codes[species_codes$Species == ..1, "CommonName"],
+                                             ", is too low to create reliable reference values, so records are only checked for impossible/negative values.")
 
-    warning_output <- skipped_output
+                                    })
+
+      warning_output <- c(skipped_output, warning_output)
+
+    }
+
+    if(nrow(var_not_recorded) > 0) {
+
+      not_recorded_output <- purrr::pmap(.l = list(var_not_recorded$Species,
+                                                   var_not_recorded$PopID),
+                                         .f = ~{
+
+                                           paste0("This check was skipped for ", species_codes[species_codes$Species == ..1, "CommonName"], " in ", ..2,
+                                                  " because ", var, " was not recorded.")
+
+                                         })
+
+    }
+
+    warning_output <- c(not_recorded_output, warning_output)
 
   }
 
