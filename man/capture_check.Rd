@@ -10,7 +10,8 @@ capture_check(
   Brood_data,
   Individual_data,
   approved_list,
-  output
+  output,
+  skip
 )
 }
 \arguments{
@@ -26,6 +27,8 @@ capture_check(
 capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv.}
 
 \item{output}{Character. Run checks on potential errors ("errors"), warnings ("warnings"), or both ("both"; default).}
+
+\item{skip}{Character. Identifiers of the individual quality checks (CheckID) that should be skipped.}
 }
 \value{
 A list of:

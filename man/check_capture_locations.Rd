@@ -4,7 +4,13 @@
 \alias{check_capture_locations}
 \title{Check that all capture locations in Capture_data appear in Location_data}
 \usage{
-check_capture_locations(Capture_data, Location_data, approved_list, output)
+check_capture_locations(
+  Capture_data,
+  Location_data,
+  approved_list,
+  output,
+  skip
+)
 }
 \arguments{
 \item{Capture_data}{Data frame. Capture data output from pipeline.}
@@ -15,6 +21,8 @@ check_capture_locations(Capture_data, Location_data, approved_list, output)
 capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv.}
 
 \item{output}{Character. Run checks on potential errors ("errors"), warnings ("warnings"), or both ("both"; default).}
+
+\item{skip}{Character. Identifiers of the individual quality checks (CheckID) that should be skipped.}
 }
 \value{
 A list of:

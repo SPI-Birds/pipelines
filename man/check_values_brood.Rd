@@ -4,7 +4,7 @@
 \alias{check_values_brood}
 \title{Check brood variable values against reference values}
 \usage{
-check_values_brood(Brood_data, var, approved_list, output)
+check_values_brood(Brood_data, var, approved_list, output, skip)
 }
 \arguments{
 \item{Brood_data}{Data frame. Brood data output from pipeline.}
@@ -15,6 +15,8 @@ check_values_brood(Brood_data, var, approved_list, output)
 capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv.}
 
 \item{output}{Character. Run checks on potential errors ("errors"), warnings ("warnings"), or both ("both"; default).}
+
+\item{skip}{Character. Identifiers of the individual quality checks (CheckID) that should be skipped.}
 }
 \value{
 A list of:
@@ -35,8 +37,8 @@ Check IDs: B5a-c \cr
 \item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as a potential error.}
 }
 
-\strong{LayDate_observed} \cr
-Check ID: B5d \cr
+\strong{LayDate_observed, HatchDate_observed, FledgeDate_observed} \cr
+Check ID: B5d-f \cr
 \itemize{
 \item{\emph{n >= 100}\cr}{Date columns are transformed to Julian days to calculate percentiles. Records are considered impossible if they are earlier than January 1st or later than December 31st of the current breeding season, and will be flagged as a potential error.}
 \item{\emph{n < 100}\cr}{Date columns are transformed to Julian days to calculate percentiles. Records are considered impossible if they are earlier than January 1st or later than December 31st of the current breeding season, and will be flagged as a potential error.}

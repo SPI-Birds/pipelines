@@ -28,6 +28,7 @@
 #'
 #' and reports (pdf, html or both) of potential errors and/or warnings if \code{report = TRUE}.
 #'
+#' @export
 #' @examples
 #' \dontrun{
 #'
@@ -35,7 +36,7 @@
 #' CHO_checked <- quality_check(R_data = CHO)
 #'
 #' }
-#' @export
+
 
 quality_check <- function(R_data,
                           output = "both",

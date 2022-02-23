@@ -4,7 +4,7 @@
 \alias{check_sex_fathers}
 \title{Check sex of fathers}
 \usage{
-check_sex_fathers(Brood_data, Individual_data, approved_list, output)
+check_sex_fathers(Brood_data, Individual_data, approved_list, output, skip)
 }
 \arguments{
 \item{Brood_data}{Data frame. Brood data output from pipeline.}
@@ -15,6 +15,8 @@ check_sex_fathers(Brood_data, Individual_data, approved_list, output)
 capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv.}
 
 \item{output}{Character. Run checks on potential errors ("errors"), warnings ("warnings"), or both ("both"; default).}
+
+\item{skip}{Character. Identifiers of the individual quality checks (CheckID) that should be skipped.}
 }
 \value{
 A list of:

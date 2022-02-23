@@ -9,7 +9,8 @@ individual_check(
   Capture_data,
   Location_data,
   approved_list,
-  output
+  output,
+  skip
 )
 }
 \arguments{
@@ -23,6 +24,8 @@ individual_check(
 capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv.}
 
 \item{output}{Character. Run checks on potential errors ("errors"), warnings ("warnings"), or both ("both"; default).}
+
+\item{skip}{Character. Identifiers of the individual quality checks (CheckID) that should be skipped.}
 }
 \value{
 A list of:

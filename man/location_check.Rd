@@ -10,6 +10,7 @@ location_check(
   Capture_data,
   approved_list,
   output,
+  skip,
   map
 )
 }
@@ -24,6 +25,8 @@ location_check(
 capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv.}
 
 \item{output}{Character. Run checks on potential errors ("errors"), warnings ("warnings"), or both ("both"; default).}
+
+\item{skip}{Character. Identifiers of the individual quality checks (CheckID) that should be skipped.}
 
 \item{map}{Logical. Produce map of locations? See \code{\link{check_coordinates}}.}
 }
