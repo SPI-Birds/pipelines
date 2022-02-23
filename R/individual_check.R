@@ -21,6 +21,22 @@
 
 individual_check <- function(Individual_data, Capture_data, Location_data, approved_list, output, skip){
 
+  # Perform individual checks
+  message("Checking individual data...")
+
+  # Run checks and create list of check outputs
+  check_outputs <- tibble::lst(I1 = check_unique_IndvID(Individual_data, approved_list, output, skip), # I1: Check unique individual IDs
+                               I2 = check_BroodID_chicks(Individual_data, Capture_data, Location_data,
+                                                         approved_list, output, skip), # I2: Check that chicks have BroodIDs
+                               I3 = check_conflicting_sex(Individual_data,
+                                                          approved_list, output, skip), # I3: Check that individuals have no conflicting sex
+                               I4 = check_conflicting_species(Individual_data,
+                                                              approved_list, output, skip), # I4: Check that individuals have no conflicting species
+                               I5 = check_individuals_captures(Individual_data, Capture_data,
+                                                               approved_list, output, skip) # I5: Check that individuals in Individual_data also appear in Capture_data
+
+  )
+
   # Create check list with a summary of warnings and errors per check
   check_list <- tibble::tibble(CheckID = paste0("I", 1:5),
                                CheckDescription = c("Check that individual IDs are unique",
@@ -32,62 +48,17 @@ individual_check <- function(Individual_data, Capture_data, Location_data, appro
                                Error = NA,
                                Skipped = NA)
 
-  # Checks
-  message("Checking individual data...")
+  check_list[,3:5] <- purrr::map_dfr(.x = check_outputs, .f = 1) # Combine check lists of single checks
 
-  # - I1: Check unique individual IDs
-  check_unique_IndvID_output <- check_unique_IndvID(Individual_data, approved_list, output, skip)
+  # Create list of 'warning' messages
+  warning_list <- purrr::map(.x = check_outputs, .f = 4)
 
-  check_list[1, 3:5] <- check_unique_IndvID_output$CheckList
-
-  # - I2: Check that chicks have BroodIDs
-  check_BroodID_chicks_output <- check_BroodID_chicks(Individual_data, Capture_data, Location_data,
-                                                      approved_list, output, skip)
-
-  check_list[2, 3:5] <- check_BroodID_chicks_output$CheckList
-
-  # - I3: Check that individuals have no conflicting sex
-  check_conflicting_sex_output <- check_conflicting_sex(Individual_data, approved_list, output, skip)
-
-  check_list[3, 3:5] <- check_conflicting_sex_output$CheckList
-
-  # - I4: Check that individuals have no conflicting species
-  check_conflicting_species_output <- check_conflicting_species(Individual_data, approved_list, output, skip)
-
-  check_list[4, 3:5] <- check_conflicting_species_output$CheckList
-
-  # - I5: Check that individuals in Individual_data also appear in Capture_data
-  check_individuals_captures_output <- check_individuals_captures(Individual_data, Capture_data,
-                                                                  approved_list, output, skip)
-
-  check_list[5, 3:5] <- check_individuals_captures_output$CheckList
-
-
-  # Warning list
-  warning_list <- list(Check1 = check_unique_IndvID_output$WarningOutput,
-                       Check2 = check_BroodID_chicks_output$WarningOutput,
-                       Check3 = check_conflicting_sex_output$WarningOutput,
-                       Check4 = check_conflicting_species_output$WarningOutput,
-                       Check5 = check_individuals_captures_output$WarningOutput)
-
-  # Error list
-  error_list <- list(Check1 = check_unique_IndvID_output$ErrorOutput,
-                     Check2 = check_BroodID_chicks_output$ErrorOutput,
-                     Check3 = check_conflicting_sex_output$ErrorOutput,
-                     Check4 = check_conflicting_species_output$ErrorOutput,
-                     Check5 = check_individuals_captures_output$ErrorOutput)
+  # Create list of 'potential error' messages
+  error_list <- purrr::map(.x = check_outputs, .f = 5)
 
   return(list(CheckList = check_list,
-              WarningRows = unique(c(check_unique_IndvID_output$WarningRows,
-                                     check_BroodID_chicks_output$WarningRows,
-                                     check_conflicting_sex_output$WarningRows,
-                                     check_conflicting_species_output$WarningRows,
-                                     check_individuals_captures_output$WarningRows)),
-              ErrorRows = unique(c(check_unique_IndvID_output$ErrorRows,
-                                   check_BroodID_chicks_output$ErrorRows,
-                                   check_conflicting_sex_output$ErrorRows,
-                                   check_conflicting_species_output$ErrorRows,
-                                   check_individuals_captures_output$ErrorRows)),
+              WarningRows = purrr::map(.x = check_outputs, .f = 2) %>% unlist(use.names = FALSE) %>% unique(),
+              ErrorRows = purrr::map(.x = check_outputs, .f = 3) %>% unlist(use.names = FALSE) %>% unique(),
               Warnings = warning_list,
               Errors = error_list))
 }

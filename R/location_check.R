@@ -18,6 +18,15 @@
 
 location_check <- function(Location_data, Brood_data, Capture_data, approved_list, output, skip, map){
 
+  # Perform location checks
+  message("Checking location data...")
+
+  # Run checks and create list of check outputs
+  check_outputs <- tibble::lst(L1 = check_coordinates(Location_data, Brood_data, Capture_data,
+                                                      approved_list, output, skip, map) # L1: Check location coordinates
+
+  )
+
   # Create check list with a summary of warnings and errors per check
   check_list <- tibble::tibble(CheckID = paste0("L", 1),
                                CheckDescription = c("Check location coordinates"),
@@ -25,26 +34,21 @@ location_check <- function(Location_data, Brood_data, Capture_data, approved_lis
                                Error = NA,
                                Skipped = NA)
 
-  # Checks
-  message("Checking location data...")
+  check_list[,3:5] <- purrr::map_dfr(.x = check_outputs, .f = 1) # Combine check lists of single checks
 
-  # - L1: Check location coordinates
-  check_coordinates_output <- check_coordinates(Location_data, Brood_data, Capture_data, approved_list, output, skip, map)
+  # Create list of 'warning' messages
+  warning_list <- purrr::map(.x = check_outputs, .f = 4)
 
-  check_list[1, 3:5] <- check_coordinates_output$CheckList
-
-  # Warning list
-  warning_list <- list(Check1 = check_coordinates_output$WarningOutput)
-
-  # Error list
-  error_list <- list(Check1 = check_coordinates_output$ErrorOutput)
+  # Create list of 'potential error' messages
+  error_list <- purrr::map(.x = check_outputs, .f = 5)
 
   return(list(CheckList = check_list,
-              WarningRows = unique(c(check_coordinates_output$WarningRows)),
-              ErrorRows = unique(c(check_coordinates_output$ErrorRows)),
+              WarningRows = purrr::map(.x = check_outputs, .f = 2) %>% unlist(use.names = FALSE) %>% unique(),
+              ErrorRows = purrr::map(.x = check_outputs, .f = 3) %>% unlist(use.names = FALSE) %>% unique(),
               Warnings = warning_list,
               Errors = error_list,
-              Maps = check_coordinates_output$Maps))
+              Maps = check_outputs$L1$Maps))
+
 }
 
 #' Check coordinates of locations

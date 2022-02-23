@@ -23,6 +23,22 @@
 
 capture_check <- function(Capture_data, Location_data, Brood_data, Individual_data, approved_list, output, skip){
 
+  # Perform capture checks
+  message("Checking capture data...")
+
+  # Run checks and create list of check outputs
+  check_outputs <- tibble::lst(C1a = check_values_capture(Capture_data, "Mass", approved_list, output, skip), # C1a: Check mass values against reference values
+                               C1b = check_values_capture(Capture_data, "Tarsus", approved_list, output, skip), # C1b: Check tarsus values against reference values
+                               C2 = check_chick_age(Capture_data, approved_list, output, skip), # C2: Check chick age values
+                               C3 = check_adult_parent_nest(Capture_data, Location_data,
+                                                            Brood_data, approved_list, output, skip), # C3: Check that adults caught on nest are listed are the parents
+                               C4 = check_age_captures(Capture_data, approved_list, output, skip), # C4: Check the order in age of subsequent captures
+                               C5 = check_captures_individuals(Capture_data, Individual_data,
+                                                               approved_list, output, skip), # C5: Check that individuals in Capture_data also appear in Individual_data
+                               C6 = check_capture_locations(Capture_data, Location_data,
+                                                            approved_list, output, skip) # C6: Check that capture locations appear in Location_data
+  )
+
   # Create check list with a summary of warnings and errors per check
   check_list <- tibble::tibble(CheckID = paste0("C", c(paste0(1, letters[1:2]), 2:6)),
                                CheckDescription = c("Check mass values against reference values",
@@ -36,80 +52,17 @@ capture_check <- function(Capture_data, Location_data, Brood_data, Individual_da
                                Error = NA,
                                Skipped = NA)
 
-  # Checks
-  message("Checking capture data...")
+  check_list[,3:5] <- purrr::map_dfr(.x = check_outputs, .f = 1) # Combine check lists of single checks
 
-  # - C1a: Check mass values against reference values
-  check_values_mass_output <- check_values_capture(Capture_data, "Mass", approved_list, output, skip)
+  # Create list of 'warning' messages
+  warning_list <- purrr::map(.x = check_outputs, .f = 4)
 
-  check_list[1, 3:5] <- check_values_mass_output$CheckList
-
-  # - C1b: Check tarsus values against reference values
-  check_values_tarsus_output <- check_values_capture(Capture_data, "Tarsus", approved_list, output, skip)
-
-  check_list[2, 3:5] <- check_values_tarsus_output$CheckList
-
-  # - C2: Check chick age values
-  check_chick_age_output <- check_chick_age(Capture_data, approved_list, output, skip)
-
-  check_list[3, 3:5] <- check_chick_age_output$CheckList
-
-  # - C3: Check that adults caught on nest are listed are the parents
-  check_adult_parent_nest_output <- check_adult_parent_nest(Capture_data, Location_data,
-                                                            Brood_data, approved_list, output, skip)
-
-  check_list[4, 3:5] <- check_adult_parent_nest_output$CheckList
-
-  # - C4: Check the order in age of subsequent captures
-  check_age_captures_output <- check_age_captures(Capture_data, approved_list, output, skip)
-
-  check_list[5, 3:5] <- check_age_captures_output$CheckList
-
-  # - C5: Check that individuals in Capture_data also appear in Individual_data
-  check_captures_individuals_output <- check_captures_individuals(Capture_data, Individual_data,
-                                                                  approved_list, output, skip)
-
-  check_list[6, 3:5] <- check_captures_individuals_output$CheckList
-
-  # - C6: Check that capture locations appear in Location_data
-  check_capture_locations_output <- check_capture_locations(Capture_data, Location_data,
-                                                            approved_list, output, skip)
-
-  check_list[7, 3:5] <- check_capture_locations_output$CheckList
-
-  # Warning list
-  warning_list <- list(Check1a = check_values_mass_output$WarningOutput,
-                       Check1b = check_values_tarsus_output$WarningOutput,
-                       Check2 = check_chick_age_output$WarningOutput,
-                       Check3 = check_adult_parent_nest_output$WarningOutput,
-                       Check4 = check_age_captures_output$WarningOutput,
-                       Check5 = check_captures_individuals_output$WarningOutput,
-                       Check6 = check_capture_locations_output$WarningOutput)
-
-  # Error list
-  error_list <- list(Check1a = check_values_mass_output$ErrorOutput,
-                     Check1b = check_values_tarsus_output$ErrorOutput,
-                     Check2 = check_chick_age_output$ErrorOutput,
-                     Check3 = check_adult_parent_nest_output$ErrorOutput,
-                     Check4 = check_age_captures_output$ErrorOutput,
-                     Check5 = check_captures_individuals_output$ErrorOutput,
-                     Check6 = check_capture_locations_output$ErrorOutput)
+  # Create list of 'potential error' messages
+  error_list <- purrr::map(.x = check_outputs, .f = 5)
 
   return(list(CheckList = check_list,
-              WarningRows = unique(c(check_values_mass_output$WarningRows,
-                                     check_values_tarsus_output$WarningRows,
-                                     check_chick_age_output$WarningRows,
-                                     check_adult_parent_nest_output$WarningRows,
-                                     check_age_captures_output$WarningRows,
-                                     check_captures_individuals_output$WarningRows,
-                                     check_capture_locations_output$WarningRows)),
-              ErrorRows = unique(c(check_values_mass_output$ErrorRows,
-                                   check_values_tarsus_output$ErrorRows,
-                                   check_chick_age_output$ErrorRows,
-                                   check_adult_parent_nest_output$ErrorRows,
-                                   check_age_captures_output$ErrorRows,
-                                   check_captures_individuals_output$ErrorRows,
-                                   check_capture_locations_output$ErrorRows)),
+              WarningRows = purrr::map(.x = check_outputs, .f = 2) %>% unlist(use.names = FALSE) %>% unique(),
+              ErrorRows = purrr::map(.x = check_outputs, .f = 3) %>% unlist(use.names = FALSE) %>% unique(),
               Warnings = warning_list,
               Errors = error_list))
 
