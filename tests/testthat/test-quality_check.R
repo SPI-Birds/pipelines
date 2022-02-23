@@ -33,19 +33,25 @@ test_that("NumberChecks returns an expected outcome...", {
 
 })
 
-test_that("NumberWarnings returns an expected outcome...", {
+test_that("SkippedChecks returns an expected outcome...", {
 
-  expect_equal(class(dummy_check$NumberWarnings), "integer")
-  expect_lte(dummy_check$NumberWarnings, dummy_check$NumberChecks)
-  expect_equal(dummy_check$NumberWarnings, sum(dplyr::pull(dummy_check$CheckList[, "Warning"])))
+  expect_equal(dummy_check$SkippedChecks, 0)
 
 })
 
-test_that("NumberErrors returns an expected outcome...", {
+test_that("WarningChecks returns an expected outcome...", {
 
-  expect_equal(class(dummy_check$NumberErrors), "integer")
-  expect_lte(dummy_check$NumberErrors, dummy_check$NumberChecks)
-  expect_equal(dummy_check$NumberErrors, sum(dplyr::pull(dummy_check$CheckList[, "Error"])))
+  expect_equal(class(dummy_check$WarningChecks), "integer")
+  expect_lte(dummy_check$WarningChecks, dummy_check$NumberChecks)
+  expect_equal(dummy_check$WarningChecks, sum(dplyr::pull(dummy_check$CheckList[, "Warning"]), na.rm = TRUE))
+
+})
+
+test_that("ErrorChecks returns an expected outcome...", {
+
+  expect_equal(class(dummy_check$ErrorChecks), "integer")
+  expect_lte(dummy_check$ErrorChecks, dummy_check$NumberChecks)
+  expect_equal(dummy_check$ErrorChecks, sum(dplyr::pull(dummy_check$CheckList[, "Error"]), na.rm = TRUE))
 
 })
 
@@ -93,20 +99,28 @@ test_that("Single checks function as expected...", {
   expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B4")$Error, c(NA, TRUE))
 
   # Test check B5a
-  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B5a")$Warning[c(1, 152, 153, 154)], c(NA, NA, NA, NA))
-  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B5a")$Error[c(1, 152, 153, 154)], c(NA, NA, TRUE, TRUE))
+  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B5a")$Warning[c(1, 152, 153)], c(NA, NA, NA))
+  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B5a")$Error[c(1, 152, 153)], c(NA, TRUE, TRUE))
 
   # Test check B5b
-  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B5b")$Warning[c(1, 152, 153, 154)], c(NA, NA, NA, NA))
-  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B5b")$Error[c(1, 152, 153, 154)], c(NA, NA, TRUE, TRUE))
+  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B5b")$Warning[c(1, 152, 153)], c(NA, NA, NA))
+  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B5b")$Error[c(1, 152, 153)], c(NA, TRUE, TRUE))
 
   # Test check B5c
-  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B5c")$Warning[c(1, 152, 153, 154)], c(NA, NA, NA, NA))
-  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B5c")$Error[c(1, 152, 153, 154)], c(NA, NA, TRUE, TRUE))
+  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B5c")$Warning[c(1, 152, 153)], c(NA, NA, NA))
+  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B5c")$Error[c(1, 152, 153)], c(NA, TRUE, TRUE))
 
   # Test check B5d
-  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B5d")$Warning[c(1, 152, 153, 154, 155)], c(NA, NA, NA, NA, NA))
-  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B5d")$Error[c(1, 152, 153, 154, 155)], c(NA, NA, NA, TRUE, TRUE))
+  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B5d")$Warning[c(1, 152, 153)], c(NA, NA, NA))
+  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B5d")$Error[c(1, 152, 153)], c(NA, TRUE, TRUE))
+
+  # Test check B5e
+  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B5e")$Warning[c(1, 152, 153)], c(NA, NA, NA))
+  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B5e")$Error[c(1, 152, 153)], c(NA, TRUE, TRUE))
+
+  # Test check B5f
+  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B5f")$Warning[c(1, 152, 153)], c(NA, NA, NA))
+  expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B5f")$Error[c(1, 152, 153)], c(NA, TRUE, TRUE))
 
   # Test check B6
   expect_equal(subset(dummy_check$R_data$Brood_data, CheckID == "B6")$Warning, c(NA, TRUE, NA))
@@ -236,6 +250,6 @@ dummy_check_skip <- quality_check(test = TRUE,
 
 test_that("Skipping checks functions as expected...", {
 
-  expect_equal(dummy_check_skip$SkippedChecks, 4)
+  expect_equal(dummy_check_skip$SkippedChecks, 6)
 
 })
