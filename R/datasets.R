@@ -175,21 +175,6 @@ NULL
 #' @name checkID_variable_combos
 checkID_variable_combos <- utils::read.csv(system.file("extdata", "checkID_variable_combos.csv", package = "pipelines", mustWork = TRUE))
 
-
-#' List of cutoffs used to define errors and warnings for chick mass
-#'
-#'
-#' @format Data frame with 4 variables and 248 rows:
-#' \describe{
-#' \item{Species}{6 letter code to identify species}
-#' \item{ChickAge}{Age at which cutoff is applied}
-#' \item{Reference}{In what context should the cutoff be used (e.g. warning, error)}
-#' \item{Value}{Value of the cutoff}
-#' }
-#'
-#' @name chick_mass_cutoffs
-NULL
-
 #' Common hybrids
 #'
 #' Data frame with common hybrid broods. Can be used in quality checks to compare species across parents, between parents and brood, and between brood and nestlings.
@@ -251,31 +236,3 @@ column_names_v1.1 <- list(
   Location = column_names_df_v1.1$Location[which(!is.na(column_names_df_v1.1$Location))]
 )
 rm(column_names_df_v1.1)
-
-#' Brood data template in standard format (version 1.1.0)
-#'
-#' @format Data frame with 1 row and 36 variables:
-#'
-#' @name brood_data_template
-NULL
-
-#' Capture data template in standard format (version 1.1.0)
-#'
-#' @format Data frame with 1 row and 23 variables:
-#'
-#' @name capture_data_template
-NULL
-
-#' Individual data template in standard format (version 1.1.0)
-#'
-#' @format Data frame with 1 row and 9 variables:
-#'
-#' @name individual_data_template
-NULL
-
-#' Location data template in standard format (version 1.1.0)
-#'
-#' @format Data frame with 1 row and 9 variables:
-#'
-#' @name location_data_template
-NULL
