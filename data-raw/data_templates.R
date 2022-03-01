@@ -2,6 +2,7 @@
 # Create templates of the data tables that are part of SPI-Birds standard format. These are used to ensure that the output of each pipeline conforms to the standard format, in terms of variable names and variable types/classes. For each version of the standard format, templates can be generated.
 
 # Data template for standard format version 1.0
+# Source: https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf
 v1.0 <- tibble::lst(
 
   ## Individual data
@@ -88,6 +89,7 @@ v1.0 <- tibble::lst(
 )
 
 # Data template for standard format version 1.1
+# Source: https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf
 v1.1 <- tibble::lst(
 
   ## Individual data
@@ -185,8 +187,159 @@ v1.1 <- tibble::lst(
 
 )
 
+
+# Data template for standard format version 1.2
+v1.2 <- tibble::lst(
+
+  ## Individual data
+  Individual_data = tibble::tibble(
+    individualID = NA_character_,
+    speciesID = NA_character_,
+    siteID = NA_character_,
+    broodIDLaid = NA_character_,
+    broodIDFledged = NA_character_,
+    ringYear = NA_integer_,
+    ringStage = NA_character_,
+    ringSiteID = NA_character_,
+    sexCalculated = NA_character_,
+    sexGenetic = NA_character_,
+    individualRecordWarning = NA,
+    individualRecordError = NA
+  ),
+
+  ## Brood data
+  Brood_data = tibble::tibble(
+    broodID = NA_character_,
+    siteID = NA_character_,
+    breedingSeason = NA_integer_,
+    speciesID = NA_character_,
+    plot = NA_character_,
+    locationID = NA_character_,
+    femaleID = NA_character_,
+    maleID = NA_character_,
+    observedClutchType = NA_character_,
+    nestAttemptNumber = NA_integer_,
+    observedLayYear = NA_integer_,
+    observedLayMonth = NA_integer_,
+    observedLayDay = NA_integer_,
+    minimumLayYear = NA_integer_,
+    minimumLayMonth = NA_integer_,
+    minimumLayDay = NA_integer_,
+    maximumLayYear = NA_integer_,
+    maximumLayMonth = NA_integer_,
+    maximumLayDay = NA_integer_,
+    observedClutchSize = NA_integer_,
+    minimumClutchSize = NA_integer_,
+    maximumClutchSize = NA_integer_,
+    observedHatchYear = NA_integer_,
+    observedHatchMonth = NA_integer_,
+    observedHatchDay = NA_integer_,
+    minimumHatchYear = NA_integer_,
+    minimumHatchMonth = NA_integer_,
+    minimumHatchDay = NA_integer_,
+    maximumHatchYear = NA_integer_,
+    maximumHatchMonth = NA_integer_,
+    maximumHatchDay = NA_integer_,
+    observedBroodSize = NA_integer_,
+    minimumBroodSize = NA_integer_,
+    maximumBroodsize = NA_integer_,
+    observedFledgeYear = NA_integer_,
+    observedFledgeMonth = NA_integer_,
+    observedFledgeDay = NA_integer_,
+    minimumFledgeYear = NA_integer_,
+    minimumFledgeMonth = NA_integer_,
+    minimumFledgeDay = NA_integer_,
+    maximumFledgeYear = NA_integer_,
+    maximumFledgeMonth = NA_integer_,
+    maximumFledgeDay = NA_integer_,
+    observedNumberFledged = NA_integer_,
+    minimumNumberFledged = NA_integer_,
+    maximumNumberFledged = NA_integer_,
+    treatmentID = NA_character_,
+    recordedBy = NA_character_,
+    broodRecordWarning = NA,
+    broodRecordError = NA
+  ),
+
+  ## Capture data
+  Capture_data = tibble::tibble(
+    captureID = NA_character_,
+    individualID = NA_character_,
+    captureRingNumber = NA_character_,
+    releaseRingNumber = NA_character_,
+    speciesID = NA_character_,
+    sexObserved = NA_character_,
+    breedingSeason = NA_integer_,
+    captureYear = NA_integer_,
+    captureMonth = NA_integer_,
+    captureDay = NA_integer_,
+    captureTime = NA_character_,
+    captureType = NA_character_,
+    recordedBy = NA_character_,
+    locationID = NA_character_,
+    captureAlive = NA,
+    releaseAlive = NA,
+    captureSiteID = NA_character_,
+    capturePlot = NA_character_,
+    releaseSiteID = NA_character_,
+    releasePlot = NA_character_,
+    minimumAge = NA_integer_,
+    exactAge = NA_integer_,
+    chickAge = NA_real_,
+    treatmentID = NA_character_,
+    captureRecordWarning = NA,
+    captureRecordError = NA
+  ),
+
+  ## Location data
+  Location_data = tibble::tibble(
+    locationID = NA_character_,
+    locationType = NA_character_,
+    siteID = NA_character_,
+    decimalLatitude = NA_real_,
+    decimalLongitude = NA_real_,
+    startYear = NA_real_,
+    endYear = NA_real_,
+    habitatType = NA_character_,
+    locationRecordWarning = NA,
+    locationRecordError = NA
+  ),
+
+  ## Measurement data
+  Measurement_data = tibble::tibble(
+    measurementID = NA_character_,
+    recordID = NA_character_,
+    siteID = NA_character_,
+    measurementType = NA_character_,
+    measurementValue = NA_real_,
+    measurementAccuacy = NA_real_,
+    measurementUnit = NA_character_,
+    measurementDeterminedYear = NA_integer_,
+    measurementDeterminedMonth = NA_integer_,
+    measurementDeterminedDay = NA_integer_,
+    measurementDeterminedBy = NA_character_,
+    measurementMethod = NA_character_,
+    measurementRecordWarning = NA,
+    measurementRecordError = NA
+  ),
+
+  ## Experiment data
+  Experiment_data = tibble::tibble(
+    experimentID = NA_character_,
+    treatmentID = NA_character_,
+    treamentType = NA_character_,
+    treatmentStage = NA_character_,
+    treatmentDetails = NA_character_,
+    treatmentConductedBy = NA_character_,
+    reference = NA_character_,
+    experimentRecordWarning = NA,
+    experimentRecordError = NA
+  )
+
+)
+
 # Combine data templates of different versions
-data_templates <- tibble::lst(v1.0, v1.1)
+data_templates <- tibble::lst(v1.0, v1.1, v1.2)
 
 # Save templates as internal data, i.e., sysdata.rda
 usethis::use_data(data_templates, internal = TRUE, overwrite = TRUE, compress = "xz")
