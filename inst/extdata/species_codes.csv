@@ -1,11 +1,21 @@
-SpeciesID,Species,CommonName,BinomialName
-14640,PARMAJ,Great tit,Parus major
-14620,CYACAE,Blue tit,Cyanistes caeruleus
-13490,FICHYP,Pied flycatcher,Ficedula hypoleuca
-14790,SITEUR,Eurasian nuthatch,Sitta europaea
-14610,PERATE,Coal tit,Periparus ater
-15980,PASMON,Eurasian tree sparrow,Passer montanus
-13480,FICALB,Collared flycatcher,Ficedula albicollis
-14400,POEPAL,Marsh tit,Poecile palustris
-14480,POECIN,Siberian tit,Poecile cinctus
-11220,PHOPHO,Common redstart,Phoenicurus phoenicurus
+speciesEURINGCode,speciesID,order,family,genus,specificEpithet,infraspecificEpithet,scientificNameAuthorship,vernacularName
+14640,PARMAJ,Passeriformes,Paridae,Parus,major,,"Linnaeus, 1758",Great tit
+14620,CYACAE,Passeriformes,Paridae,Cyanistes,caeruleus,,"Linnaeus, 1758",Blue tit
+13490,FICHYP,Passeriformes,Muscicapidae,Ficedula,hypoleuca,,"Pallas, 1764",Pied flycatcher
+14790,SITEUR,Passeriformes,Sittidae,Sitta,europaea,,"Linnaeus, 1758",Eurasian nuthatch
+14610,PERATE,Passeriformes,Paridae,Periparus,ater,,"Linnaeus, 1758",Coal tit
+15980,PASMON,Passeriformes,Passeridae,Passer,montanus,,"Linnaeus, 1758",Eurasian tree sparrow
+13480,FICALB,Passeriformes,Muscicapidae,Ficedula,albicolis,,"Temminck, 1815",Collared flycatcher
+14400,POEPAL,Passeriformes,Paridae,Poecile,palustris,,"Linnaeus, 1758",Marsh tit
+14480,POECIN,Passeriformes,Paridae,Poecile,cinctus,,"Boddaert, 1783",Siberian tit
+11220,PHOPHO,Passeriformes,Muscicapidae,Phoenicurus,phoenicurus,,"Linnaeus, 1758",Common redstart
+08480,JYNTOR,Piciformes,Picidae,Jynx,torquilla,,"Linnaeus, 1758",Eurasian wryneck
+14540,LOPCRI,Passeriformes,Paridae,Lophophanes,cristatus,,"Linnaeus, 1758",European crested tit
+18810,EMBMEL,Passeriformes,Emberizidae,Emberiza,melanocephala,,"Scopoli, 1769",Black-headed bunting
+10840,PRUMOD,Passeriformes,Prunellidae,Prunella,modularis,,"Linnaeus, 1758",Dunnock
+15600,CORMON,Passeriformes,Corvidae,Corvus,monedula,,"Linnaeus, 1758",Western jackdaw
+14860,CERFAM,Passeriformes,Certhiidae,Certhia,familiaris,,"Linnaeus, 1758",Eurasian treecreeper
+07610,STRALU,Strigiformes,Strigidae,Strix,aluco,,"Linnaeus, 1758",Tawny owl
+,SITVAR,Passeriformes,Paridae,Sittiparus ,varius,,"Temminck & Schlegel, 1845",Varied tit
+,PARMIN,Passeriformes,Paridae,Parus,minor,,"Temminck & Schlegel, 1848",Japanese tit
+06150,STEHIR,Charadriiformes,Laridae,Sterna,hirundo,,"Linnaeus, 1758",Common tern
