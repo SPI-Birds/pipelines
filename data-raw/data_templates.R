@@ -1,5 +1,5 @@
 # Data data templates
-# Create templates of the data tables that are part of SPI-Birds standard format. These are used to ensure that the output of each pipeline conforms to the standard format, in terms of variable names and variable types/classes. For each version of the standard format, templates can be generated.
+# Create templates of the data tables that are part of SPI-Birds standard format. These are used to ensure that the output of each pipeline conforms to the standard format, in terms of variable names and variable types/classes. For each version of the standard format, templates are available.
 
 # Data template for standard format version 1.0
 # Source: https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf
@@ -338,8 +338,8 @@ v1.2 <- tibble::lst(
 
 )
 
-# Combine data templates of different versions
+# Combine data templates of different versions in a list
 data_templates <- tibble::lst(v1.0, v1.1, v1.2)
 
-# Save templates as internal data, i.e., sysdata.rda
+# Save templates as internal data in R/sysdata.rda
 usethis::use_data(data_templates, internal = TRUE, overwrite = TRUE, compress = "xz")
