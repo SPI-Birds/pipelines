@@ -114,11 +114,11 @@ format_NIOO <- function(db = choose_directory(),
   #Where argument 'species' is unused, include all species in the table (listed in description)
   if(is.null(species)){
 
-    species_filter <- species_codes$SpeciesID
+    species_filter <- species_codes$speciesEURINGCode
 
   } else {
 
-    species_filter <- species_codes[species_codes$Species %in% species, ]$SpeciesID
+    species_filter <- species_codes[species_codes$speciesID %in% species, ]$speciesEURINGCode
 
   }
 
@@ -295,13 +295,13 @@ create_brood_NIOO <- function(database, location_data, species_filter, pop_filte
                   BroodID = as.character(.data$ID),
                   LocationID = as.character(.data$BroodLocationID)) %>%
     dplyr::left_join(dplyr::select(location_data, Plot = .data$AreaID, BroodLocationID = .data$ID, .data$PopID), by = "BroodLocationID") %>%
-    dplyr::mutate(Species = dplyr::case_when(.$BroodSpecies == 14400 ~ species_codes[species_codes$SpeciesID == 14400, ]$Species,
-                                             .$BroodSpecies == 14640 ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
-                                             .$BroodSpecies == 13490 ~ species_codes[species_codes$SpeciesID == 13490, ]$Species,
-                                             .$BroodSpecies == 14620 ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
-                                             .$BroodSpecies == 14790 ~ species_codes[species_codes$SpeciesID == 14790, ]$Species,
-                                             .$BroodSpecies == 15980 ~ species_codes[species_codes$SpeciesID == 15980, ]$Species,
-                                             .$BroodSpecies == 14610 ~ species_codes[species_codes$SpeciesID == 14610, ]$Species),
+    dplyr::mutate(Species = dplyr::case_when(.$BroodSpecies == 14400 ~ species_codes[species_codes$speciesEURINGCode == 14400, ]$speciesID,
+                                             .$BroodSpecies == 14640 ~ species_codes[species_codes$speciesEURINGCode == 14640, ]$speciesID,
+                                             .$BroodSpecies == 13490 ~ species_codes[species_codes$speciesEURINGCode == 13490, ]$speciesID,
+                                             .$BroodSpecies == 14620 ~ species_codes[species_codes$speciesEURINGCode == 14620, ]$speciesID,
+                                             .$BroodSpecies == 14790 ~ species_codes[species_codes$speciesEURINGCode == 14790, ]$speciesID,
+                                             .$BroodSpecies == 15980 ~ species_codes[species_codes$speciesEURINGCode == 15980, ]$speciesID,
+                                             .$BroodSpecies == 14610 ~ species_codes[species_codes$speciesEURINGCode == 14610, ]$speciesID),
                   #Adjust ClutchType names to fit "first", "second", "replacement".
                   #We ignore any uncertainty (e.g. "probably second" is just listed as "second")
                   #ClutchTypes like 'different species inside one clutch' are listed as NA.
@@ -377,13 +377,13 @@ create_capture_NIOO <- function(database, Brood_data, location_data, species_fil
              Date = .data$CaptureDate, Year = .data$BreedingSeason, showpb = TRUE) %>%
     #Include species letter codes for all species
     dplyr::ungroup() %>%
-    dplyr::mutate(Species = dplyr::case_when(.$SpeciesID == 14400 ~ species_codes[species_codes$SpeciesID == 14400, ]$Species,
-                                             .$SpeciesID == 14640 ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
-                                             .$SpeciesID == 13490 ~ species_codes[species_codes$SpeciesID == 13490, ]$Species,
-                                             .$SpeciesID == 14620 ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
-                                             .$SpeciesID == 14790 ~ species_codes[species_codes$SpeciesID == 14790, ]$Species,
-                                             .$SpeciesID == 15980 ~ species_codes[species_codes$SpeciesID == 15980, ]$Species,
-                                             .$SpeciesID == 14610 ~ species_codes[species_codes$SpeciesID == 14610, ]$Species),
+    dplyr::mutate(Species = dplyr::case_when(.$SpeciesID == 14400 ~ species_codes[species_codes$speciesEURINGCode == 14400, ]$speciesID,
+                                             .$SpeciesID == 14640 ~ species_codes[species_codes$speciesEURINGCode == 14640, ]$speciesID,
+                                             .$SpeciesID == 13490 ~ species_codes[species_codes$speciesEURINGCode == 13490, ]$speciesID,
+                                             .$SpeciesID == 14620 ~ species_codes[species_codes$speciesEURINGCode == 14620, ]$speciesID,
+                                             .$SpeciesID == 14790 ~ species_codes[species_codes$speciesEURINGCode == 14790, ]$speciesID,
+                                             .$SpeciesID == 15980 ~ species_codes[species_codes$speciesEURINGCode == 15980, ]$speciesID,
+                                             .$SpeciesID == 14610 ~ species_codes[species_codes$speciesEURINGCode == 14610, ]$speciesID),
                   #Add original tarsus method
                   OriginalTarsusMethod = dplyr::case_when(!is.na(.$Tarsus) ~ "Alternative"),
                   ObserverID = as.character(.data$Observer)) %>%
@@ -469,13 +469,13 @@ create_individual_NIOO <- function(database, Capture_data, location_data, specie
     #Filter only chosen pops
     dplyr::filter(.data$PopID %in% pop_filter) %>%
     #Convert numbers to species codes
-    dplyr::mutate(Species = dplyr::case_when(.$SpeciesID == 14400 ~ species_codes[species_codes$SpeciesID == 14400, ]$Species,
-                                             .$SpeciesID == 14640 ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
-                                             .$SpeciesID == 13490 ~ species_codes[species_codes$SpeciesID == 13490, ]$Species,
-                                             .$SpeciesID == 14620 ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
-                                             .$SpeciesID == 14790 ~ species_codes[species_codes$SpeciesID == 14790, ]$Species,
-                                             .$SpeciesID == 15980 ~ species_codes[species_codes$SpeciesID == 15980, ]$Species,
-                                             .$SpeciesID == 14610 ~ species_codes[species_codes$SpeciesID == 14610, ]$Species),
+    dplyr::mutate(Species = dplyr::case_when(.$SpeciesID == 14400 ~ species_codes[species_codes$speciesEURINGCode == 14400, ]$speciesID,
+                                             .$SpeciesID == 14640 ~ species_codes[species_codes$speciesEURINGCode == 14640, ]$speciesID,
+                                             .$SpeciesID == 13490 ~ species_codes[species_codes$speciesEURINGCode == 13490, ]$speciesID,
+                                             .$SpeciesID == 14620 ~ species_codes[species_codes$speciesEURINGCode == 14620, ]$speciesID,
+                                             .$SpeciesID == 14790 ~ species_codes[species_codes$speciesEURINGCode == 14790, ]$speciesID,
+                                             .$SpeciesID == 15980 ~ species_codes[species_codes$speciesEURINGCode == 15980, ]$speciesID,
+                                             .$SpeciesID == 14610 ~ species_codes[species_codes$speciesEURINGCode == 14610, ]$speciesID),
                   RingAge = .data$RingAge_category,
                   BroodIDLaid = as.character(.data$BroodIDLaid),
                   BroodIDFledged = as.character(.data$BroodIDFledged)) %>%

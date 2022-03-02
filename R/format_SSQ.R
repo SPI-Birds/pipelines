@@ -50,7 +50,7 @@ format_SSQ <- function(db = choose_directory(),
 
   if(is.null(species)){
 
-    species <- species_codes$Species
+    species <- species_codes$speciesID
 
   }
 
@@ -73,8 +73,8 @@ format_SSQ <- function(db = choose_directory(),
                   Plot = .data$HabitatOfRinging,
                   Latitude = .data$YCoord, Longitude = .data$XCoord) %>%
     #Add species codes
-    dplyr::mutate(Species = dplyr::case_when(.$Species == "Parus major" ~ species_codes[which(species_codes$SpeciesID == 14640), ]$Species,
-                                             .$Species == "Cyanistes caeruleus" ~ species_codes[which(species_codes$SpeciesID == 14620), ]$Species)) %>%
+    dplyr::mutate(Species = dplyr::case_when(.$Species == "Parus major" ~ species_codes[which(species_codes$speciesEURINGCode == 14640), ]$speciesID,
+                                             .$Species == "Cyanistes caeruleus" ~ species_codes[which(species_codes$speciesEURINGCode == 14620), ]$speciesID)) %>%
     #Filter species
     dplyr::filter(.data$Species %in% species) %>%
     #Add other missing data:

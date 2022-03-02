@@ -502,7 +502,7 @@ check_values_capture <- function(Capture_data, var, approved_list, output) {
                                       paste0("Record on row ", ..1,
                                              " (PopID: ", ..2, "; ",
                                              "CaptureID: ", ..3, "; ",
-                                             species_codes[species_codes$Species == ..5, "CommonName"], ")",
+                                             species_codes[species_codes$speciesID == ..5, "vernacularName"], ")",
                                              " has a ", ifelse(..7 == "U", "larger", "smaller"), " value in ",
                                              ..6, " (", ..4, ") than the ", ifelse(..7 == "U", "upper", "lower"),
                                              " reference value (", ..8, "), which is considered impossible.")
@@ -534,7 +534,7 @@ check_values_capture <- function(Capture_data, var, approved_list, output) {
                                               low_obs$Stage),
                                     .f = ~{
 
-                                      paste0("Number of records for ", species_codes[species_codes$Species == ..1, "CommonName"],
+                                      paste0("Number of records for ", species_codes[species_codes$speciesID == ..1, "vernacularName"],
                                              " ", paste0(tolower(..3), "s"), " in ", ..2,
                                              ", is too low to create reliable reference values, so records are only checked for impossible/negative values.")
 
@@ -558,7 +558,7 @@ check_values_capture <- function(Capture_data, var, approved_list, output) {
                                                        low_obs_adults$Stage),
                                              .f = ~{
 
-                                               paste0("Number of records for ", species_codes[species_codes$Species == ..1, "CommonName"],
+                                               paste0("Number of records for ", species_codes[species_codes$speciesID == ..1, "vernacularName"],
                                                       " ", ..3, " in ", ..2,
                                                       ", is too low to create reliable reference values, so records are only checked for impossible/negative values.")
 
@@ -573,7 +573,7 @@ check_values_capture <- function(Capture_data, var, approved_list, output) {
                                                        low_obs_chicks$Stage),
                                              .f = ~{
 
-                                               paste0("Number of records for ", species_codes[species_codes$Species == ..1, "CommonName"],
+                                               paste0("Number of records for ", species_codes[species_codes$speciesID == ..1, "vernacularName"],
                                                       " ", ..3, "-day-old chicks in ", ..2,
                                                       ", is too low to create reliable reference values, so records are only checked for impossible/negative values.")
 
@@ -643,7 +643,7 @@ check_chick_age <- function(Capture_data, approved_list, output){
 
                                     paste0("Record on row ", ..1,
                                            " (PopID: ", ..2,
-                                           "; CaptureID: ", ..3, ", ", species_codes[species_codes$Species == ..4, "CommonName"], ")",
+                                           "; CaptureID: ", ..3, ", ", species_codes[species_codes$speciesID == ..4, "vernacularName"], ")",
                                            " has an impossible value in ChickAge (", ..5, ").")
 
                                   })
@@ -876,7 +876,7 @@ check_age_captures <- function(Capture_data, approved_list, output){
                                       paste0("Record on row ", ..1,
                                              " (PopID: ", ..2,
                                              "; IndvID: ", ..3,
-                                             "; CaptureID: ", ..4, "; ", species_codes[species_codes$Species == ..5, "CommonName"], ")",
+                                             "; CaptureID: ", ..4, "; ", species_codes[species_codes$speciesID == ..5, "vernacularName"], ")",
                                              " has an older observed age (Age: ", ..6, ") than the next capture of this individual (Age: ", ..7, ").")
 
                                     })
@@ -921,7 +921,7 @@ check_age_captures <- function(Capture_data, approved_list, output){
                                     paste0("Record on row ", ..1,
                                            " (PopID: ", ..2,
                                            "; IndvID: ", ..3,
-                                           "; CaptureID: ", ..4, "; ", species_codes[species_codes$Species == ..5, "CommonName"], ")",
+                                           "; CaptureID: ", ..4, "; ", species_codes[species_codes$speciesID == ..5, "vernacularName"], ")",
                                            " has been caught as an adult (Age: ", ..6, ") before it was caught as a chick (Age: ", ..7, ").")
 
                                   })

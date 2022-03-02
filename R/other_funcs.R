@@ -1,6 +1,6 @@
 #' Check that a species entry is correct
 #'
-#' @param Species Vector of 6-letter species codes as recorded in `Species_codes`.
+#' @param Species Vector of 6-letter species codes as recorded in `species_codes`.
 #'
 #' @return Vector of 6-letter species codes.
 #' @export
@@ -14,10 +14,10 @@
 
 check_species <- function(Species) {
 
-  if (any(!Species %in% species_codes$Species)) {
+  if (any(!Species %in% species_codes$speciesID)) {
 
     stop(paste("\n Species code is incorrect:",
-               crayon::yellow(Species[!Species %in% species_codes$Species])))
+               crayon::yellow(Species[!Species %in% species_codes$speciesID])))
 
   }
 
@@ -27,7 +27,7 @@ check_species <- function(Species) {
 
 #' Check that a species entry is correct
 #'
-#' @param PopID Vector of 6-letter species codes as recorded in `Species_codes`.
+#' @param PopID Vector of 6-letter species codes as recorded in `species_codes`.
 #'
 #' @return Vector of 3-letter population codes.
 #' @export

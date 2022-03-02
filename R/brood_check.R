@@ -851,7 +851,7 @@ check_values_brood <- function(Brood_data, var, approved_list, output) {
                                       paste0("Record on row ", ..1,
                                              " (PopID: ", ..2, "; ",
                                              "BroodID: ", ..3, "; ",
-                                             species_codes[species_codes$Species == ..5, "CommonName"], ")",
+                                             species_codes[species_codes$speciesID == ..5, "vernacularName"], ")",
                                              " has a ", ifelse(..7 == "U", "larger", "smaller"), " value in ",
                                              ..6, " (", ..4, ") than the ", ifelse(..7 == "U", "upper", "lower"),
                                              " reference value (", ..8, "), which is considered impossible.")
@@ -861,7 +861,7 @@ check_values_brood <- function(Brood_data, var, approved_list, output) {
                                       paste0("Record on row ", ..1,
                                              " (PopID: ", ..2, "; ",
                                              "BroodID: ", ..3, "; ",
-                                             species_codes[species_codes$Species == ..5, "CommonName"], ")",
+                                             species_codes[species_codes$speciesID == ..5, "vernacularName"], ")",
                                              " has ", ifelse(..7 == "U", "a later", "an earlier"), " value in ",
                                              ..6, " (", ..4, ") than the ", ifelse(..7 == "U", "upper", "lower"),
                                              " reference value (", ..8, "), which is considered impossible.")
@@ -887,7 +887,7 @@ check_values_brood <- function(Brood_data, var, approved_list, output) {
                                   .f = ~{
 
                                     paste0("Number of records for ", ..2, ", ",
-                                           species_codes[species_codes$Species == ..1, "CommonName"],
+                                           species_codes[species_codes$speciesID == ..1, "vernacularName"],
                                            ", is too low to create reliable reference values, so records are only checked for impossible/negative values.")
 
                                   })
@@ -1261,8 +1261,8 @@ compare_species_parents <- function(Brood_data, Individual_data, approved_list, 
 
                                       paste0("Record on row ", ..1, " (PopID: ", ..2, "; BroodID: ", ..3, ")",
                                              " has parents of different species",
-                                             " (Mother: ", species_codes[species_codes$Species == ..5, "CommonName"],
-                                             ", father: ", species_codes[species_codes$Species == ..7, "CommonName"],
+                                             " (Mother: ", species_codes[species_codes$speciesID == ..5, "vernacularName"],
+                                             ", father: ", species_codes[species_codes$speciesID == ..7, "vernacularName"],
                                              "), which are known to cross-foster/hybridize.")
 
                                     })
@@ -1298,8 +1298,8 @@ compare_species_parents <- function(Brood_data, Individual_data, approved_list, 
 
                                     paste0("Record on row ", ..1, " (PopID: ", ..2, "; BroodID: ", ..3, ")",
                                            " has parents of different species",
-                                           " (Mother: ", species_codes[species_codes$Species == ..5, "CommonName"],
-                                           ", father: ", species_codes[species_codes$Species == ..7, "CommonName"],
+                                           " (Mother: ", species_codes[species_codes$speciesID == ..5, "vernacularName"],
+                                           ", father: ", species_codes[species_codes$speciesID == ..7, "vernacularName"],
                                            "), which do not commonly cross-foster/hybridize.")
 
                                   })
@@ -1391,8 +1391,8 @@ compare_species_brood_parents <- function(Brood_data, Individual_data, approved_
 
                                       paste0("Record on row ", ..1, " (PopID: ", ..2, "; BroodID: ", ..3, ")",
                                              " is recorded as a different species than any of the parents",
-                                             " (Mother: ", species_codes[species_codes$Species == ..6, "CommonName"],
-                                             ", father: ", species_codes[species_codes$Species == ..8, "CommonName"],
+                                             " (Mother: ", species_codes[species_codes$speciesID == ..6, "vernacularName"],
+                                             ", father: ", species_codes[species_codes$speciesID == ..8, "vernacularName"],
                                              "). Species are known to cross-foster/hybridize.")
 
                                     })
@@ -1436,8 +1436,8 @@ compare_species_brood_parents <- function(Brood_data, Individual_data, approved_
 
                                     paste0("Record on row ", ..1, " (PopID: ", ..2, "; BroodID: ", ..3, ")",
                                            " is recorded as a different species than any of the parents",
-                                           " (Mother: ", species_codes[species_codes$Species == ..6, "CommonName"],
-                                           ", father: ", species_codes[species_codes$Species == ..8, "CommonName"],
+                                           " (Mother: ", species_codes[species_codes$speciesID == ..6, "vernacularName"],
+                                           ", father: ", species_codes[species_codes$speciesID == ..8, "vernacularName"],
                                            "). Species do not commonly cross-foster/hybridize.")
 
                                   })

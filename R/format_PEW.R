@@ -91,7 +91,7 @@ format_PEW <- function(db = choose_directory(),
   #### Determine species codes for filtering
   if(is.null(species)){
 
-    species <- species_codes$Species
+    species <- species_codes$speciesID
 
   }
 
@@ -141,7 +141,7 @@ format_PEW <- function(db = choose_directory(),
                   BroodMassD3  = as.numeric(dplyr::case_when(.data$BroodMassD3 == "dead" ~ NA_character_,
                                                              TRUE ~ .data$BroodMassD3)),
                   NewRing = toupper(.data$NewRing),
-                  Species = species_codes[which(species_codes$SpeciesID == 14620), ]$Species,
+                  Species = species_codes[which(species_codes$speciesEURINGCode == 14620), ]$speciesID,
                   PopID = "PEW",
                   NestboxID = tolower(.data$Nest),
                   BroodID = ifelse(.data$Method %in% c("Catch adults nestbox", "ChickRinging",

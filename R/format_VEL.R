@@ -60,7 +60,7 @@ format_VEL <- function(db = choose_directory(),
   #Add species filter
   if(is.null(species)){
 
-    species <- species_codes$Species
+    species <- species_codes$speciesID
 
   }
 
@@ -122,7 +122,7 @@ format_VEL <- function(db = choose_directory(),
     ## CHANGE COL NAMES TO MATCH STANDARD FORMAT
     dplyr::mutate(PopID = "VEL",
                   BreedingSeason = as.integer(.data$year),
-                  Species = species_codes[which(species_codes$SpeciesID == 13480), ]$Species,
+                  Species = species_codes[which(species_codes$speciesEURINGCode == 13480), ]$speciesID,
                   Plot = .data$plot,
                   LocationID = paste0(toupper(stringr::str_sub(.data$plot, end = 1)), .data$nest),
                   BroodID = paste(.data$BreedingSeason, .data$plot, stringr::str_pad(string = .data$nest, width = 2, pad = "0"),
@@ -214,8 +214,8 @@ format_VEL <- function(db = choose_directory(),
 
   TIT_data <- TIT_data %>%
     dplyr::mutate(BreedingSeason = as.integer(.data$year),
-                  Species = dplyr::case_when(.data$species == "blue tit" ~ species_codes[which(species_codes$SpeciesID == 14620), ]$Species,
-                                             .data$species == "great tit" ~ species_codes[which(species_codes$SpeciesID == 14640), ]$Species),
+                  Species = dplyr::case_when(.data$species == "blue tit" ~ species_codes[which(species_codes$speciesEURINGCode == 14620), ]$speciesID,
+                                             .data$species == "great tit" ~ species_codes[which(species_codes$speciesEURINGCode == 14640), ]$speciesID),
                   PopID = "VEL",
                   Plot = .data$plot,
                   LocationID = paste0(toupper(stringr::str_sub(.data$plot, end = 1)), .data$nest_box),
@@ -583,8 +583,8 @@ create_capture_VEL_TIT    <- function(TIT_data) {
   ## Assume that an individual was caught at the start of incubation.
   TIT_capture <- TIT_data %>%
     dplyr::filter(!is.na(.data$FemaleID)) %>%
-    dplyr::mutate(Species = dplyr::case_when(.data$species == "blue tit" ~ species_codes[which(species_codes$SpeciesID == 14620), ]$Species,
-                                             .data$species == "great tit" ~ species_codes[which(species_codes$SpeciesID == 14640), ]$Species),
+    dplyr::mutate(Species = dplyr::case_when(.data$species == "blue tit" ~ species_codes[which(species_codes$speciesEURINGCode == 14620), ]$speciesID,
+                                             .data$species == "great tit" ~ species_codes[which(species_codes$speciesEURINGCode == 14640), ]$speciesID),
                   ## Make the capture date the date that incubation would start (laying date + clutch size)
                   CaptureDate = .data$LayDate_observed + .data$ClutchSize_observed,
                   IndvID = .data$FemaleID,

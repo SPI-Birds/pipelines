@@ -52,7 +52,7 @@ format_HOC <- function(db = choose_directory(),
   #Determine species codes for filtering
   if(is.null(species)){
 
-    species <- species_codes$Species
+    species <- species_codes$speciesID
 
   }
 

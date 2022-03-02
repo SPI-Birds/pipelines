@@ -94,9 +94,9 @@ run_pipelines <- function(path = choose_directory(),
   #Assign species for filtering
   if(is.null(Species)){
 
-    Species <- species_codes$Species
+    Species <- species_codes$speciesID
 
-  } else if(all(!Species %in% species_codes$Species)){
+  } else if(all(!Species %in% species_codes$speciesID)){
 
     stop("Species provided are not included in the pipelines. Please select from species listed in species_codes")
 
