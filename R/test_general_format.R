@@ -182,6 +182,7 @@ test_ID_format <- function(pipeline_output,
   )))
 
 }
+
 #' Test unique values in key columns
 #'
 #' Some columns are not allowed to have duplicated values. Namely, BroodID (Brood data), CaptureID (Capture data),
@@ -226,6 +227,7 @@ test_unique_values <- function(pipeline_output,
   )))
 
 }
+
 #' Test for NAs in key columns
 #'
 #'Some key columns are not allowed to have NAs. The data templates for each table have dummy values entered when the column cannot contain any NAs.
@@ -244,56 +246,29 @@ test_unique_values <- function(pipeline_output,
 test_NA_columns <- function(pipeline_output,
                             table){
 
-  ## Test for NAs
-  eval(bquote(expect_false(
+  # Select data table
+  data_table <- pipeline_output[[paste0(table, "_data")]]
 
-    if (table == "Brood") {
+  # List of key variables in the selected data table that should not have missing values
+  key_vars <- key_variables[[paste0(table, "_data")]]
 
-      ## Check for NAs in key columns
-      any(
-        is.na(pipeline_output[[1]] %>%
-                dplyr::select(names(brood_data_template %>%
-                                      dplyr::select_if(~!any(is.na(.))))))
-      )
+  # Remove absent key variables from categories
+  # NB: Key variable may be absent because key_variables list has all key variables from all versions of the standard format
+  key_vars <- key_vars[key_vars %in% names(data_table)]
 
-    }
+  # Test for NAs
+  eval(bquote(
+    expect_equal(
 
-    else if (table == "Capture") {
+      data_table %>%
+        dplyr::select(tidyselect::all_of(key_vars)) %>% # Select key columns
+        dplyr::select(where(~ any(is.na(.)))) %>% # Select any key column that has NAs
+        ncol(),
+      0 # If number of columns is larger than 0, test fails
+    )
+  ))
 
-      ## Check for NAs in key columns
-      any(
-        is.na(pipeline_output[[2]] %>%
-                dplyr::select(names(capture_data_template %>%
-                                      dplyr::select_if(~!any(is.na(.))))))
-      )
-    }
-
-    else if (table == "Individual") {
-
-      ## Check for NAs in key columns
-      any(
-        is.na(pipeline_output[[3]] %>%
-                dplyr::select(names(individual_data_template %>%
-                                      dplyr::select_if(~!any(is.na(.))))))
-      )
-
-    }
-
-
-    else if (table == "Location") {
-
-      ## Check for NAs in key columns
-      any(
-        is.na(pipeline_output[[4]] %>%
-                dplyr::select(names(location_data_template %>%
-                                      dplyr::select_if(~!any(is.na(.))))))
-      )
-
-    }
-
-  )))
 }
-
 
 #' Test category columns
 #'
@@ -311,58 +286,34 @@ test_NA_columns <- function(pipeline_output,
 test_category_columns <- function(pipeline_output,
                                   table){
 
-  if (table == "Brood") {
+  # Select data table
+  data_table <- pipeline_output[[paste0(table, "_data")]]
 
-    category_columns <- brood_data_template %>%
-      dplyr::select_if(~dplyr::n_distinct(.) > 1) %>%
-      dplyr::select(-BroodID)
+  # List of categorical variables and their possible categories present in the selected data table
+  categories <- categorical_variables[[paste0(table, "_data")]]
 
-  }
+  # Remove absent categorical variables from categories
+  # NB: Categorical variable may be absent because categorical_variables list has all categorical variables from all versions of the standard format
+  categories <- categories[names(categories) %in% names(data_table)]
 
-  else if (table == "Capture") {
+  # Check for each variable whether unique values are possible categories
+  lgl <- purrr::imap_lgl(.x = categories,
+                         .f = ~{
 
-    category_columns <- capture_data_template %>%
-      dplyr::select_if(~dplyr::n_distinct(.) > 1) %>%
-      dplyr::select(-CaptureID)
+                           # Get unique variable values
+                           column_vals <- data_table %>%
+                             dplyr::select({{.y}}) %>%
+                             dplyr::pull() %>%
+                             unique %>%
+                             strsplit(split = "; ") %>% # Split if multiple categories are concatenated
+                             unlist() %>%
+                             as.character
 
-  }
+                           all(column_vals %in% .x)
 
-  else if (table == "Individual") {
+                         })
 
-    category_columns <- individual_data_template %>%
-      dplyr::select_if(~dplyr::n_distinct(.) > 1) %>%
-      dplyr::select(-IndvID)
-
-  }
-
-  else if (table == "Location") {
-
-    category_columns <- location_data_template %>%
-      dplyr::select_if(~dplyr::n_distinct(.) > 1)
-
-  }
-
-  lgl <- logical(length = 0)
-  for (i in names(category_columns)) {
-
-    ## Get column values
-    column_vals <- pipeline_output[[paste0(table, "_data")]] %>%
-      dplyr::select(tidyselect::all_of(i)) %>%
-      unique %>%
-      dplyr::pull(i) %>%
-      strsplit(split = "; ") %>%
-      unlist() %>%
-      as.character
-
-    ## Get categories
-    cats <- dplyr::pull(category_columns, var = i)
-
-    ## Add
-    lgl <- c(lgl, all(column_vals %in% cats))
-
-  }
-
-  ## Test
+  # Test
   eval(bquote(testthat::expect_true(
 
     all(lgl)
