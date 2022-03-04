@@ -1,4 +1,8 @@
-# Data data templates
+#### Internal data objects ####
+
+# Create tables and lists that are intended to be used internally.
+
+# 1. Data data templates ####
 # Create templates of the data tables that are part of SPI-Birds standard format. These are used to ensure that the output of each pipeline conforms to the standard format, in terms of variable names and variable types/classes. For each version of the standard format, templates are available.
 
 # Data template for standard format version 1.0
@@ -203,6 +207,7 @@ v1.2 <- tibble::lst(
     ringSiteID = NA_character_,
     sexCalculated = NA_character_,
     sexGenetic = NA_character_,
+    individualRecordID = NA_integer_,
     individualRecordWarning = NA,
     individualRecordError = NA
   ),
@@ -213,7 +218,7 @@ v1.2 <- tibble::lst(
     siteID = NA_character_,
     breedingSeason = NA_integer_,
     speciesID = NA_character_,
-    plot = NA_character_,
+    plotID = NA_character_,
     locationID = NA_character_,
     femaleID = NA_character_,
     maleID = NA_character_,
@@ -257,6 +262,7 @@ v1.2 <- tibble::lst(
     maximumNumberFledged = NA_integer_,
     treatmentID = NA_character_,
     recordedBy = NA_character_,
+    broodRecordID = NA_integer_,
     broodRecordWarning = NA,
     broodRecordError = NA
   ),
@@ -280,13 +286,14 @@ v1.2 <- tibble::lst(
     captureAlive = NA,
     releaseAlive = NA,
     captureSiteID = NA_character_,
-    capturePlot = NA_character_,
+    capturePlotID = NA_character_,
     releaseSiteID = NA_character_,
-    releasePlot = NA_character_,
+    releasePlotID = NA_character_,
     minimumAge = NA_integer_,
     exactAge = NA_integer_,
     chickAge = NA_real_,
     treatmentID = NA_character_,
+    captureRecordID = NA_integer_,
     captureRecordWarning = NA,
     captureRecordError = NA
   ),
@@ -301,6 +308,7 @@ v1.2 <- tibble::lst(
     startYear = NA_real_,
     endYear = NA_real_,
     habitatType = NA_character_,
+    locationRecordID = NA_integer_,
     locationRecordWarning = NA,
     locationRecordError = NA
   ),
@@ -319,6 +327,7 @@ v1.2 <- tibble::lst(
     measurementDeterminedDay = NA_integer_,
     measurementDeterminedBy = NA_character_,
     measurementMethod = NA_character_,
+    measurementRecordID = NA_integer_,
     measurementRecordWarning = NA,
     measurementRecordError = NA
   ),
@@ -332,6 +341,7 @@ v1.2 <- tibble::lst(
     treatmentDetails = NA_character_,
     treatmentConductedBy = NA_character_,
     reference = NA_character_,
+    experimentRecordID = NA_integer_,
     experimentRecordWarning = NA,
     experimentRecordError = NA
   )
@@ -341,5 +351,106 @@ v1.2 <- tibble::lst(
 # Combine data templates of different versions in a list
 data_templates <- tibble::lst(v1.0, v1.1, v1.2)
 
-# Save templates as internal data in R/sysdata.rda
-usethis::use_data(data_templates, internal = TRUE, overwrite = TRUE, compress = "xz")
+
+# 2. Variable lists for standard format testing ####
+# Create a list of variables that are key and cannot have missing values (i.e., NA), and a list of variables that can only contain a limited number of categories (e.g., "M", "F" or "C" in Sex_observed). These lists are intended to be used in pipeline tests (see R/test_general_format.R) that ensure pipeline robustness and consistency.
+
+# Create list of key variables
+key_variables <- tibble::lst(
+
+  # Individual data
+  Individual_data = c("IndvID", "Species", "PopID", "RingSeason", # v1.0 & v1.1 variables
+                      "individualID", "speciesID", "siteID", "ringYear", "ringSiteID"),  # v1.2 variables
+
+  # Brood data
+  Brood_data = c("BroodID", "PopID", "BreedingSeason", "Species", # v1.0 & v1.1 variables
+                 "broodID", "siteID", "speciesID"), # v1.2 variables
+
+  # Capture data
+  Capture_data = c("IndvID", "Species", "BreedingSeason", "CaptureDate", "CapturePopID", # v1.0 variables
+                   "CaptureID", "CaptureAlive", "ReleaseAlive", # v1.1 variables
+                   "captureID", "individualID", "releaseRingNumber", "speciesID", "captureYear", "captureMonth", "captureDay", # v1.2 variables
+                   "captureSiteID"),
+
+  # Location data
+  Location_data = c("LocationID", "NestboxID", "LocationType", "PopID", # v1.0 & v1.1 variables
+                    "locationID", "locationType", "siteID"), # v1.2 variables
+
+  # Measurement data
+  Measurement_data = c("measurementID", "measurementOnID", "siteID", "measurementType", "measurementValue", # v1.2 variables
+                       "measurementUnit", "measurementDeterminedYear"),
+
+  # Experiment data
+  Experiment_data = c("experimentID", "treatmentID", "treatmentType", "treatmentStage", "treatmentDetails") # v1.2 variables
+
+)
+
+# Create list of categorical variables and their possible categories
+categorical_variables <- tibble::lst(
+
+  # Individual data
+  Individual_data = tibble::lst(
+    Species = species_codes$speciesID, # v1.0 & v1.1
+    PopID = pop_codes$PopID, # v1.0 & v1.1
+    RingAge = c("chick", "adult", NA), # v1.0 & v1.1
+    Sex = c("F", "M", "C", NA), # v1.0
+    Sex_calculated = c("F", "M", "C", NA), # v1.1
+    Sex_genetic = c("F", "M", "C", NA), # v1.1
+    speciesID = species_codes$speciesID, # v1.2
+    siteID = pop_codes$PopID, # v1.2
+    ringStage = .data$RingAge, # v1.2
+    sexGenetic = c("F", "M", "C", NA) # v1.2
+  ),
+
+  # Brood data
+  Brood_data = tibble::lst(
+    Species = species_codes$speciesID, # v1.0 & v1.1
+    PopID = pop_codes$PopID, # v1.0 & v1.1
+    ClutchType_observed = c("first", "second", "replacement", NA), # v1.0 & v1.1
+    ClutchType_calculated = c("first", "second", "replacement", NA), # v1.0 & v1.1
+    OriginalTarsusMethod = c("Alternative", "Standard", "Oxford", NA), # v1.0 & v1.1
+    ExperimentID = c("PHENOLOGY", "COHORT", "PARENTAGE", "SURVIVAL", "OTHER", "SURVIVAL; OTHER", NA), # v1.0 & v1.1
+    speciesID = unique(species_codes$speciesID), # v1.2
+    siteID = pop_codes$PopID, # v1.2
+    observedClutchType = c("first", "second", "replacement", NA) # v1.2
+  ),
+
+  # Capture data
+  Capture_data = tibble::lst(
+    Species = species_codes$speciesID, # v1.0 & v1.1
+    CapturePopID = pop_codes$PopID, # v1.0 & v1.1
+    ReleasePopID = c(pop_codes$PopID, NA), # v1.0 & v1.1
+    OriginalTarsusMethod = c("Alternative", "Standard", "Oxford", NA), # v1.0 & v1.1
+    ExperimentID = c("PHENOLOGY", "COHORT", "PARENTAGE", "SURVIVAL", "OTHER", "SURVIVAL; OTHER", NA), # v1.1
+    speciesID = species_codes$speciesID, # v1.2
+    captureSiteID = pop_codes$PopID, # v1.2
+    releaseSiteID = c(pop_codes$PopID, NA) # v1.2
+  ),
+
+  # Location data
+  Location_data = tibble::lst(
+    LocationType = c("NB", "MN", NA), # v1.0 & v1.1
+    Habitat = c("deciduous", "evergreen", "mixed", NA), # v1.0
+    HabitatType = c("deciduous", "evergreen", "mixed", "urban", NA), # v1.1
+    # FIXME: add location type categories when v1.2 is finalised
+    #locationType = c(),
+    habitatType = c("deciduous", "evergreen", "mixed", "urban", NA), # v1.2
+  )
+
+  # Measurement data
+  # FIXME: add measurement type categories when v1.2 is finalised
+  # Measurement_data = tibble::lst( # v1.2
+  #   measurementType = c()
+  # )
+
+  # Experiment data
+  # FIXME: add treatment type categories when v1.2 is finalised
+  # Experiment_data = tibble::lst( # v1.2
+  #   treatmentType = c()
+  # )
+
+)
+
+# 3. Save ####
+# Save objects as internal data in R/sysdata.rda
+usethis::use_data(data_templates, key_variables, categorical_variables, internal = TRUE, overwrite = TRUE, compress = "xz")
