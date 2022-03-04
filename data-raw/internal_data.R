@@ -373,7 +373,7 @@ key_variables <- tibble::lst(
                    "captureSiteID"),
 
   # Location data
-  Location_data = c("LocationID", "NestboxID", "LocationType", "PopID", # v1.0 & v1.1 variables
+  Location_data = c("LocationID", "LocationType", "PopID", # v1.0 & v1.1 variables
                     "locationID", "locationType", "siteID"), # v1.2 variables
 
   # Measurement data
@@ -429,7 +429,7 @@ categorical_variables <- tibble::lst(
 
   # Location data
   Location_data = tibble::lst(
-    LocationType = c("NB", "MN", NA), # v1.0 & v1.1
+    LocationType = c("NB", "MN"), # v1.0 & v1.1
     Habitat = c("deciduous", "evergreen", "mixed", NA), # v1.0
     HabitatType = c("deciduous", "evergreen", "mixed", "urban", NA), # v1.1
     # FIXME: add location type categories when v1.2 is finalised

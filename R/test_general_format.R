@@ -15,34 +15,18 @@
 #' @export
 #'
 test_col_present <- function(pipeline_output,
-                              data_template) {
+                             data_template) {
 
-  ## Test
+  # Select data table
+  data_table <- pipeline_output[[paste0(data_template, "_data")]]
+
+  # Select template
+  template <- data_templates$v1.1[[paste0(data_template, "_data")]]
+
+  # Test
   eval(bquote(testthat::expect_true(
 
-    if (data_template == "Brood"){
-
-      setequal(names(brood_data_template), names(pipeline_output[[1]]))
-
-    }
-
-    else if (data_template == "Capture") {
-
-      setequal(names(capture_data_template), names(pipeline_output[[2]]))
-
-    }
-
-    else if (data_template == "Individual") {
-
-      setequal(names(individual_data_template), names(pipeline_output[[3]]))
-
-    }
-
-    else if (data_template == "Location") {
-
-      setequal(names(location_data_template), names(pipeline_output[[4]]))
-
-    }
+    setequal(names(template), names(data_table))
 
   )))
 
@@ -67,56 +51,23 @@ test_col_present <- function(pipeline_output,
 test_col_classes <- function(pipeline_output,
                              data_template) {
 
-  ## Test
+  # Select data table
+  data_table <- pipeline_output[[paste0(data_template, "_data")]]
+
+  # Select template
+  template <- data_templates$v1.1[[paste0(data_template, "_data")]]
+
+  # Match columns in data table and template
+  selected_cols_data <- data_table %>%
+    dplyr::select(tidyselect::any_of(names(template)))
+
+  selected_cols_template <- template %>%
+    dplyr::select(tidyselect::any_of(names(data_table)))
+
+  # Test
   eval(bquote(testthat::expect_true(
 
-    if (data_template == "Brood"){
-
-      brood <- pipeline_output[[1]] %>%
-        dplyr::select(tidyselect::any_of(names(brood_data_template)))
-
-      brood_data_template_ab <- brood_data_template %>%
-        dplyr::select(tidyselect::any_of(names(pipeline_output[[1]])))
-
-      all(purrr::map_df(brood_data_template_ab, class) == purrr::map_df(brood, class))
-
-    }
-
-
-    else if (data_template == "Capture") {
-
-      capture <- pipeline_output[[2]] %>%
-        dplyr::select(tidyselect::any_of(names(capture_data_template)))
-
-      capture_data_template_ab <- capture_data_template %>%
-        dplyr::select(tidyselect::any_of(names(pipeline_output[[2]])))
-
-      all(purrr::map_df(capture_data_template_ab, class) == purrr::map_df(capture, class))
-
-    }
-
-    else if (data_template == "Individual") {
-
-      individual <- pipeline_output[[3]] %>%
-        dplyr::select(tidyselect::any_of(names(individual_data_template)))
-
-      individual_data_template_ab <- individual_data_template %>%
-        dplyr::select(tidyselect::any_of(names(pipeline_output[[3]])))
-
-      all(purrr::map_df(individual_data_template_ab, class) == purrr::map_df(individual, class))
-
-    }
-
-    else if (data_template == "Location") {
-
-      location <- pipeline_output[[4]] %>%
-        dplyr::select(tidyselect::any_of(names(location_data_template)))
-
-      location_data_template_ab <- location_data_template %>%
-        dplyr::select(tidyselect::any_of(names(pipeline_output[[4]])))
-
-      all(purrr::map_df(location_data_template_ab, class) == purrr::map_df(location, class))
-    }
+    all(purrr::map_df(selected_cols_template, class) == purrr::map_df(selected_cols_data, class))
 
   )))
 
