@@ -6,8 +6,8 @@
 \usage{
 run_pipelines(
   path = choose_directory(),
-  PopID = NULL,
-  Species = NULL,
+  site = NULL,
+  species = NULL,
   output_type = "R",
   save = FALSE,
   save_path = NULL,
@@ -15,19 +15,11 @@ run_pipelines(
 )
 }
 \arguments{
-\item{path}{File path. Location of all folders for data owners. Note, the
-folders for each data owner must include the unique code of the data owner
-as seen in pop_codes.}
+\item{path}{File path. Location of all folders for data owners. Note, the folders for each data owner must include the unique code of the data owner as seen in `site_codes`.}
 
-\item{PopID}{The three-letter code of populations to format as listed in the
-\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{standard
- protocol}.}
+\item{site}{The three-letter code of sites to format as listed in `site_codes`.}
 
-\item{Species}{The six-letter code of species to include as listed in the
-\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{standard
- protocol}. Note, this argument takes precedence over argument PopID (i.e.
-if a population doesn't have the requested species it will not be
-formatted.)}
+\item{species}{The six-letter code of species to include as listed in `species_codes`. Note, this argument takes precedence over argument siteID (i.e., if a site doesn't have the requested species it will not be formatted.)}
 
 \item{output_type}{Should the pipeline generate .csv files ('csv') or R objects ('R'). Default: R.}
 
@@ -39,22 +31,21 @@ and `save` is TRUE, an .RDS file will be created in the save path.}
 \item{save_path}{Path where files will be saved if `save` is TRUE. By default, the save
 path will be path/standard_format.}
 
-\item{filename}{The filename of the saved file. No file extension is
-needed, as this will differ depending on `output_type`. By default, filename is
+\item{filename}{The file name of the saved file. No file extension is
+needed, as this will differ depending on `output_type`. By default, file name is
 "standard_format".}
 }
 \value{
 Generate .csv files or return an R list object with 4 items
 }
 \description{
-Run multiple data pipelines. Currently, this produces separate .csv files but
-will eventually produce combined .csv files for all populations.
+Run multiple data pipelines. Currently, this produces separate .csv files but will eventually produce combined .csv files for all sites.
 }
 \examples{
 \dontrun{
 
 #Create an R list of Harjavalta data
-HAR_data <- run_pipelines(PopID = "HAR", Species = "PARMAJ", output_type = "R")
+HAR_data <- run_pipelines(site = "HAR", species = "PARMAJ", output_type = "R")
 
 }
 }

@@ -7,7 +7,7 @@
 archive(
   data_folder = choose_directory(),
   update_type = "major",
-  OwnerID,
+  institutionID,
   new_data_path,
   new_data_date = NULL,
   initial = FALSE
@@ -19,11 +19,11 @@ archive(
 \item{update_type}{Character string. Have we received a new year of data ("major")
 or data with bug/error fixes ("minor")?}
 
-\item{OwnerID}{Character string. 3-4 letter code for data owner.
+\item{institutionID}{Character string. 3-4 letter-code for data owner.
 Should be the same as the folder name where data are saved.}
 
 \item{new_data_path}{File path. Updated data to use as current data in the system.
-Where a population uses multiple files provide a list of file paths.}
+Where a site uses multiple files provide a list of file paths.}
 
 \item{new_data_date}{Date at which archiving should be recorded (i.e. the name of the folder
 where archived data will be stored.)}

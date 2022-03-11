@@ -54,7 +54,7 @@ Combines the four data frame-specific wrappers: \code{\link{brood_check}}, \code
 \examples{
 \dontrun{
 
-CHO <- run_pipelines(PopID = "CHO", output_type = "R")
+CHO <- run_pipelines(site = "CHO", output_type = "R")
 CHO_checked <- quality_check(R_data = CHO)
 
 }

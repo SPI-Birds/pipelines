@@ -6,9 +6,9 @@
 \usage{
 subset_datarqst(
   file = file.choose(),
-  PopID = unique(pop_codes$PopID),
-  Species = unique(species_codes$Species),
-  PopSpec = NULL,
+  site = unique(site_codes$siteID),
+  species = unique(species_codes$speciesID),
+  site_spec = NULL,
   include_conflicting = FALSE,
   output_type = "R",
   save = TRUE
@@ -17,18 +17,18 @@ subset_datarqst(
 \arguments{
 \item{file}{The location of the file in the standard format (.RDS file). This file is created using `run_pipelines`.}
 
-\item{PopID}{Character vector of three letter population codes. Include all populations that are requested.}
+\item{site}{Character vector of three letter site codes. Include all sites that are requested.}
 
-\item{Species}{Character vector of six letter species codes. Include all species that are requested.}
+\item{species}{Character vector of six letter species codes. Include all species that are requested.}
 
-\item{PopSpec}{Character vector of unique population species combinations (in the format PopID_Species).
-Include all unique population species combinations requested. Can be used instead of `PopID` and `Species` arguments.}
+\item{site_spec}{Character vector of unique site species combinations (in the format siteID_speciesID).
+Include all unique site species combinations requested. Can be used instead of `site` and `species` arguments.}
 
 \item{include_conflicting}{= TRUE, individuals with conflicting species information
 are included in the subset of data. If include_conflicting = FALSE (default), these individuals are removed.
 Note that this applies only to conflicted species individuals that were identified at least once as any
-of the species specified in `Species` or `PopSpec`. Data on conflicted species individuals that were never
-identified as any of the species specified in `Species` or `PopSpec` is never returned.}
+of the species specified in `species` or `site_spec`. Data on conflicted species individuals that were never
+identified as any of the species specified in `species` or `site_spec` is never returned.}
 
 \item{output_type}{is 'R' and can be set to 'csv'. If output_type is 'csv' 4 .csv files will be created in the save path.
 If output_type is 'R' an .RDS file will be created in the save path, and an R object in the
@@ -45,26 +45,26 @@ Create a subset of data stored in the standard format.
 }
 \details{
 The SPI-Birds team should use the function `run_pipelines`
-to create a copy of all populations in the standard format,
+to create a copy of all sites in the standard format,
 which can be stored locally on the SPI-Birds computer.
 
 When a request is made, `subset_datarqst` can be used
 to take a subset of this larger file to cover the specific
-populations/species requested by a user. The request can be specified
-either through the \code{PopID} and \code{Species} arguments, or through
-the \code{PopSpec} argument.
+sites/species requested by a user. The request can be specified
+either through the \code{site} and \code{species} arguments, or through
+the \code{site_spec} argument.
 }
 \examples{
 \dontrun{
 
-#Subset data on all species from two populations
-subset_datarqst(PopID = c("HOG", "CHO"))
+#Subset data on all species from two sites
+subset_datarqst(site = c("HOG", "CHO"))
 
-#Subset data on all population where two species occurs
-subset_datarqst(Species = c("PARMAJ", "FICALB"))
+#Subset data on all sites where two species occurs
+subset_datarqst(species = c("PARMAJ", "FICALB"))
 
-#Create a specific subset of species and population combinations
-subset_datarqst(PopSpec = c("HOG_PARMAJ", "VEL_FICALB", "VLI_PARMAJ"))
+#Create a specific subset of species and site combinations
+subset_datarqst(site_spec = c("HOG_PARMAJ", "VEL_FICALB", "VLI_PARMAJ"))
 
 }
 }

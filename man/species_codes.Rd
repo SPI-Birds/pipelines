@@ -3,20 +3,25 @@
 \docType{data}
 \name{species_codes}
 \alias{species_codes}
-\title{Species EURING codes and letter codes}
+\title{Species taxonomic ranks and codes}
 \format{
-A data frame with 10 rows and 4 variables
+A data frame with 20 rows and 9 variables
 \describe{
-  \item{SpeciesID}{Species EUring code.}
-  \item{Species}{Species letter code.}
-  \item{CommonName}{Common English name.}
-  \item{BinomialName}{Genus and species name.}
+  \item{speciesEURINGCode}{Species code used in EURING. NA for non-European species.}
+  \item{speciesID}{SPI-Birds' 6-letter species code. First three letters indicate the generic name, last three letters indicate the specific epithet.}
+  \item{order}{Scientific name of the order in which the species is identified.}
+  \item{family}{Scientific name of the family in which the species is identified.}
+  \item{genus}{Scientific name of the genus in which the species is identified.}
+  \item{specificEpithet}{Scientific name of the species epithet.}
+  \item{infraspecificEpithet}{Scientific name of the infraspecific epithet (e.g. sub-species).}
+  \item{scientificNameAuthorship}{Authorship information of the scientific name, including date information if known.}
+  \item{vernacularName}{Common English name.}
   }
 }
 \usage{
 species_codes
 }
 \description{
-Letter codes to easily identify species (English names)
+Species information, including various taxonomic ranks, internal and external codes.
 }
 \keyword{datasets}

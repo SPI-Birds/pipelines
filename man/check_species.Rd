@@ -7,7 +7,7 @@
 check_species(Species)
 }
 \arguments{
-\item{Species}{Vector of 6-letter species codes as recorded in `Species_codes`.}
+\item{Species}{Vector of 6-letter species codes as recorded in `species_codes`.}
 }
 \value{
 Vector of 6-letter species codes.
