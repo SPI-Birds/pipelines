@@ -1,10 +1,10 @@
 #' Archive SPI-Birds raw data
 #'
 #' @param data_folder Path. Folder containing all current SPI-Birds data (N drive)
-#' @param OwnerID Character string. 3-4 letter code for data owner.
+#' @param institutionID Character string. 3-4 letter-code for data owner.
 #' Should be the same as the folder name where data are saved.
 #' @param new_data_path File path. Updated data to use as current data in the system.
-#' Where a population uses multiple files provide a list of file paths.
+#' Where a site uses multiple files provide a list of file paths.
 #' @param update_type Character string. Have we received a new year of data ("major")
 #' or data with bug/error fixes ("minor")?
 #' @param initial Logical. Are we creating the initial archiving information? If TRUE, will create
@@ -15,16 +15,16 @@
 #' @return Returns nothing.
 #' @export
 
-archive <- function(data_folder = choose_directory(), update_type = "major", OwnerID, new_data_path,
+archive <- function(data_folder = choose_directory(), update_type = "major", institutionID, new_data_path,
                     new_data_date = NULL, initial = FALSE) {
 
   #Run all checks that are required for both initial and updating archiving process
   #Force the directory find
   force(data_folder)
 
-  #Check that OwnerID has been provided correctly...
-  if (missing(OwnerID)) {
-    stop("Provide the OwnerID that you wish to archive")
+  #Check that institutionID has been provided correctly...
+  if (missing(institutionID)) {
+    stop("Provide the institutionID that you wish to archive")
   }
 
   #Define the date for archiving purposes
@@ -40,14 +40,14 @@ archive <- function(data_folder = choose_directory(), update_type = "major", Own
   }
 
   #Extract existing file information.
-  #Find the subfolder corresponding to the population...
+  #Find the subfolder corresponding to the site...
   all_subfolder <- list.dirs(data_folder, recursive = FALSE)
-  pop_subfolder <- all_subfolder[stringr::str_detect(all_subfolder, pattern = paste0(OwnerID, "_"))]
+  site_subfolder <- all_subfolder[stringr::str_detect(all_subfolder, pattern = paste0(institutionID, "_"))]
 
-  #Check that OwnerID matches one of the subfolders in the data
-  if (length(pop_subfolder) == 0) {
+  #Check that institutionID matches one of the subfolders in the data
+  if (length(site_subfolder) == 0) {
 
-    stop("No subfolder exists for this owner. Do you have the correct OwnerID?")
+    stop("No subfolder exists for this owner. Do you have the correct institutionID?")
 
   }
 
@@ -57,14 +57,14 @@ archive <- function(data_folder = choose_directory(), update_type = "major", Own
     #Create the metadata file
     #Move working directory to population subfolder so that we can carry out bash script
     resetwd <- getwd()
-    setwd(pop_subfolder)
+    setwd(site_subfolder)
 
     #Create first meta-data file
-    new_metadata <- paste0("Name: ", pop_codes$OwnerName[pop_codes$Owner == OwnerID][1],
-                           "\nOwner: ", OwnerID,
+    new_metadata <- paste0("Owner: ", site_codes$institutionCode[site_codes$institutionID == institutionID][1],
+                           "\ninstitutionID: ", institutionID,
                            "\nVersion: ", paste0(lubridate::year(new_data_date), ".00"),
                            "\nLastUpdate: ", new_data_date, "\n")
-    write(new_metadata, file = paste0(OwnerID, "_ArchiveMetaData.txt"))
+    write(new_metadata, file = paste0(institutionID, "_ArchiveMetaData.txt"))
 
     #Create archive folder...
     system("mkdir archive")
@@ -75,7 +75,7 @@ archive <- function(data_folder = choose_directory(), update_type = "major", Own
 
     #Copy all primary data and metadata.txt to the new folder
     #It is now stored in both places
-    current_data_path <- list.files(pop_subfolder, pattern = "_PrimaryData|MetaData.txt", full.names = TRUE)
+    current_data_path <- list.files(site_subfolder, pattern = "_PrimaryData|MetaData.txt", full.names = TRUE)
     purrr::walk(.x = current_data_path,
                 .f = ~{
 
@@ -104,7 +104,7 @@ archive <- function(data_folder = choose_directory(), update_type = "major", Own
     }
 
     #Find all file paths inside the folder that are considered primary data or metadata.txt
-    current_data_path <- list.files(pop_subfolder, pattern = "_PrimaryData|MetaData.txt", full.names = TRUE)
+    current_data_path <- list.files(site_subfolder, pattern = "_PrimaryData|MetaData.txt", full.names = TRUE)
 
     #Separate filename from paths
     #Need this to check that names match (regardless of the file location)
@@ -135,17 +135,17 @@ archive <- function(data_folder = choose_directory(), update_type = "major", Own
 
                                     })
 
-    #Check 1: Check new data fits our naming convention (i.e. OwnerID_PrimaryData)
+    #Check 1: Check new data fits our naming convention (i.e. institutionID_PrimaryData)
     file_correct_format <- purrr::map_lgl(.x = new_data_name,
                                           .f = function(file, expected_string){
 
                                             return(stringr::str_detect(file, paste0("^", expected_string)))
 
-                                          }, expected_string = paste(OwnerID, "PrimaryData", sep = "_"))
+                                          }, expected_string = paste(institutionID, "PrimaryData", sep = "_"))
 
     if (!all(file_correct_format)) {
 
-      stop(paste0("Files should be in the format ", OwnerID, "_PrimaryData"))
+      stop(paste0("Files should be in the format ", institutionID, "_PrimaryData"))
 
     }
 
@@ -188,9 +188,9 @@ archive <- function(data_folder = choose_directory(), update_type = "major", Own
 
     }
 
-    #Move working directory to population subfolder so that we can carry out bash script
+    #Move working directory to site subfolder so that we can carry out bash script
     resetwd <- getwd()
-    setwd(pop_subfolder)
+    setwd(site_subfolder)
 
     #Delete existing data and meta-data. This data is already in an archive folder
     purrr::walk(.x = current_data_path,
@@ -221,18 +221,18 @@ archive <- function(data_folder = choose_directory(), update_type = "major", Own
 
     }
 
-    new_metadata <- paste0("Name: ", current_name,
-                           "\nOwner: ", OwnerID,
+    new_metadata <- paste0("Owner: ", current_name,
+                           "\ninstitutionID: ", institutionID,
                            "\nVersion: ", new_version,
                            "\nLastUpdate: ", new_data_date, "\n")
-    write(new_metadata, file = paste0(OwnerID, "_ArchiveMetaData.txt"))
+    write(new_metadata, file = paste0(institutionID, "_ArchiveMetaData.txt"))
 
     #Create new archiving folder
     date_folder_name <- format(new_data_date, format = "%Y_%m_%d")
     system(paste0("mkdir ./archive/", date_folder_name))
 
     #Find all file paths inside the folder that are considered primary data or metadata.txt
-    current_data_path <- list.files(pop_subfolder, pattern = "_PrimaryData|MetaData.txt", full.names = TRUE)
+    current_data_path <- list.files(site_subfolder, pattern = "_PrimaryData|MetaData.txt", full.names = TRUE)
 
     #Copy all current data and metadata into the new archive folder
     purrr::walk(.x = current_data_path,

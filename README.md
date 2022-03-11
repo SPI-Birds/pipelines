@@ -329,7 +329,7 @@ Below we describe the workflow that any developer should follow when building a 
 
 - Every function should be documented using `roxygen2`. The 'Details' section of the documentation should be used to record any decisions that were made during the pipeline construction that may be relevant for the data owner, users, or other developers.
 
-- Once a pipeline is finished, add information about the pipeline to `pop_codes.csv` and `pop_species_combos.csv` in the /inst/extdata folder.
+- Once a pipeline is finished, add information about the pipeline to `site_codes.csv` and `site_species_combos.csv` in the /inst/extdata folder.
 
 - If your pipeline works with a new species, also include this species in `species_codes.csv` in the /inst/extdata folder.
     

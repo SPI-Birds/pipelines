@@ -1,19 +1,10 @@
 #' Run multiple data pipelines
 #'
-#' Run multiple data pipelines. Currently, this produces separate .csv files but
-#' will eventually produce combined .csv files for all populations.
+#' Run multiple data pipelines. Currently, this produces separate .csv files but will eventually produce combined .csv files for all sites.
 #'
-#' @param path File path. Location of all folders for data owners. Note, the
-#'   folders for each data owner must include the unique code of the data owner
-#'   as seen in pop_codes.
-#' @param PopID The three-letter code of populations to format as listed in the
-#'   \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{standard
-#'    protocol}.
-#' @param Species The six-letter code of species to include as listed in the
-#'   \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{standard
-#'    protocol}. Note, this argument takes precedence over argument PopID (i.e.
-#'   if a population doesn't have the requested species it will not be
-#'   formatted.)
+#' @param path File path. Location of all folders for data owners. Note, the folders for each data owner must include the unique code of the data owner as seen in `site_codes`.
+#' @param site The three-letter code of sites to format as listed in `site_codes`.
+#' @param species The six-letter code of species to include as listed in `species_codes`. Note, this argument takes precedence over argument siteID (i.e., if a site doesn't have the requested species it will not be formatted.)
 #' @param output_type Should the pipeline generate .csv files ('csv') or R objects ('R'). Default: R.
 #' @param save TRUE/FALSE. Should the output be saved locally? This is only relevant where
 #' `output_type` is 'R'. If output_type is 'csv'
@@ -21,8 +12,8 @@
 #' and `save` is TRUE, an .RDS file will be created in the save path.
 #' @param save_path Path where files will be saved if `save` is TRUE. By default, the save
 #' path will be path/standard_format.
-#' @param filename The filename of the saved file. No file extension is
-#' needed, as this will differ depending on `output_type`. By default, filename is
+#' @param filename The file name of the saved file. No file extension is
+#' needed, as this will differ depending on `output_type`. By default, file name is
 #' "standard_format".
 #'
 #' @return Generate .csv files or return an R list object with 4 items
@@ -32,13 +23,13 @@
 #' \dontrun{
 #'
 #' #Create an R list of Harjavalta data
-#' HAR_data <- run_pipelines(PopID = "HAR", Species = "PARMAJ", output_type = "R")
+#' HAR_data <- run_pipelines(site = "HAR", species = "PARMAJ", output_type = "R")
 #'
 #' }
 
 run_pipelines <- function(path = choose_directory(),
-                          PopID = NULL,
-                          Species = NULL,
+                          site = NULL,
+                          species = NULL,
                           output_type = "R",
                           save = FALSE,
                           save_path = NULL,
@@ -59,93 +50,97 @@ run_pipelines <- function(path = choose_directory(),
 
   }
 
-  #If PopID is NULL use all populations
-  if(is.null(PopID)){
+  #If site is NULL use all sites
+  if(is.null(site)){
 
-    PopID <- pop_codes$PopID
+    site <- site_codes$siteID
 
   }
 
   #Determine operating system
   OS <- tolower(utils::sessionInfo()$running)
 
-  #Drop populations from Access-based primary data if running on Mac
-  PopID_Access <- c("HOG", "OOS", "VLI", "BUU", "LIE", "WAR", "WES", "AMM")
+  #Drop sites from Access-based primary data if running on Mac
+  Access_sites <- c("HOG", "OOS", "VLI", "BUU", "LIE", "WAR", "WES", "AMM")
 
   if(grepl(pattern = 'mac', x = OS)){
 
-    if(length(PopID[which(PopID%in%PopID_Access)] > 0)){
-      warning(paste0('Pipelines not run for the following populations due to OS incompatibility: ',
-                    toString(PopID[which(PopID%in%PopID_Access)]),
-                    ". To obtain standard format data for these populations, please run on a Windows OS.")
+    if(length(site[which(site %in% Access_sites)] > 0)){
+      warning(paste0('Pipelines not run for the following sites due to OS incompatibility: ',
+                    toString(site[which(site %in% Access_sites)]),
+                    ". To obtain standard format data for these sites, please run on a Windows OS.")
               )
     }
 
-    PopID <- PopID[which(!(PopID%in%PopID_Access))]
+    site <- site[which(!(site %in% Access_sites))]
 
-  }else if(!grepl(pattern = 'mac|windows', x = OS)){
+  } else if(!grepl(pattern = 'mac|windows', x = OS)){
+
     stop(paste0('Operating system ', OS, ' not supported'))
+
   }
 
-  if(length(PopID) == 0){
+  if(length(site) == 0){
+
     stop(paste0('None of the selected pipeline(s) could not be run due to OS incompatibility. Please run on a Windows OS.'))
+
   }
 
   #Assign species for filtering
-  if(is.null(Species)){
+  if(is.null(species)){
 
-    Species <- species_codes$speciesID
+    species <- species_codes$speciesID
 
-  } else if(all(!Species %in% species_codes$speciesID)){
+  } else if(all(!species %in% species_codes$speciesID)){
 
     stop("Species provided are not included in the pipelines. Please select from species listed in species_codes")
 
   }
 
-  #Firstly, check if there are any cases where a requested population does not have any info on a given species
-  missing_species <- pop_species_combos %>%
-    dplyr::filter(PopCode %in% PopID) %>%
-    dplyr::group_by(PopCode) %>%
-    dplyr::summarise(total_sp = sum(SpeciesCode %in% Species))
+  #Firstly, check if there are any cases where a requested site does not have any info on a given species
+  missing_species <- site_species_combos %>%
+    dplyr::filter(.data$siteID %in% {{site}}) %>%
+    dplyr::group_by(.data$siteID) %>%
+    dplyr::summarise(total_species = sum(.data$speciesID %in% {{species}}))
 
   #If there are any with missing data, give a warning message
-  if(any(missing_species$total_sp == 0)){
+  if(any(missing_species$total_species == 0)){
 
     missing_species %>%
-      dplyr::filter(total_sp == 0) %>%
-      purrr::pwalk(.l = list(.$PopCode),
+      dplyr::filter(total_species == 0) %>%
+      purrr::pwalk(.l = list(.data$siteID),
                    .f = ~{
 
-                     message(paste0('Population ', ..1, ' has no information on the focal species and has been excluded.'))
+                     message(paste0('Dite ', ..1, ' has no information on the focal species and has been excluded.'))
 
                    })
 
   }
 
-  #Now just work with those populations where the population and species are present
-  pop_species_subset <- pop_species_combos %>%
-    dplyr::filter(PopCode %in% PopID & SpeciesCode %in% Species) %>%
-    dplyr::left_join(dplyr::select(pop_codes, PopID, Owner), by = c("PopCode" = "PopID")) %>%
-    dplyr::group_by(Owner) %>%
-    dplyr::summarise(Species = list(c(unique(SpeciesCode))),
-                     Pops = list(c(unique(PopCode))))
+  #Now just work with those sites where the site and species are present
+  site_species_subset <- site_species_combos %>%
+    dplyr::filter(.data$siteID %in% {{site}} & .data$speciesID %in% {{species}}) %>%
+    dplyr::left_join(dplyr::select(site_codes, siteID, institutionID), by = "siteID") %>%
+    dplyr::group_by(.data$institutionID) %>%
+    dplyr::summarise(Species = list(c(unique(speciesID))),
+                     Sites = list(c(unique(siteID))))
 
   #Find the file path for each of the data owners of interest
   all_dirs <- list.dirs(path = path, full.names = TRUE, recursive = FALSE)
-  all_dirs <- all_dirs[grepl(pattern = paste(pop_species_subset$Owner, collapse = "|"), all_dirs)]
+  all_dirs <- all_dirs[grepl(pattern = paste(site_species_subset$institutionID, collapse = "|"), all_dirs)]
   all_dirs <- gsub(pattern = "\\", replacement = "/", x = all_dirs, fixed = TRUE)
 
-  #For each data owner, run the pipeline using the populations requested
+  #For each data owner, run the pipeline using the sites requested
   #Return R lists rather than generating .csv files
   R_objects <- purrr::pmap(.l = list(dirs = all_dirs,
-                                     owner = pop_species_subset$Owner,
-                                     pops = pop_species_subset$Pops,
-                                     species = pop_species_subset$Species),
-                           .f = function(dirs, owner, pops, species){
+                                     owner = site_species_subset$institutionID,
+                                     sites = site_species_subset$Sites,
+                                     species = site_species_subset$Species),
+                           .f = function(dirs, owner, sites, species){
 
                              message(paste0('Running ', owner, ' pipeline'))
 
-                           eval(parse(text = paste0('format_', owner, '(db = dirs, pop = pops, species = species, output_type = "R")')))
+                           eval(parse(text = paste0('format_', owner, '(db = dirs, pop = sites, species = species, output_type = "R")')))
 
                              })
 
@@ -222,8 +217,5 @@ run_pipelines <- function(path = choose_directory(),
     invisible(NULL)
 
   }
-
-  # Satisfy RCMD checks
-  PopCode <- SpeciesCode <- Owner <- NULL
 
 }

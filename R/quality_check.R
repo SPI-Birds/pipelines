@@ -29,7 +29,7 @@
 #' @examples
 #' \dontrun{
 #'
-#' CHO <- run_pipelines(PopID = "CHO", output_type = "R")
+#' CHO <- run_pipelines(site = "CHO", output_type = "R")
 #' CHO_checked <- quality_check(R_data = CHO)
 #'
 #' }
@@ -171,6 +171,7 @@ quality_check <- function(R_data,
   # Unique PopIDs and Species for report title
   pop <- unique(Brood_data[!is.na(Brood_data$PopID), ]$PopID)
   if(length(pop) == 0) pop <- NA
+
   species <- unique(Brood_data[!is.na(Brood_data$Species), ]$Species)
 
   # Produce report with potential errors
@@ -200,7 +201,7 @@ quality_check <- function(R_data,
     '',
     'Species: `r species_codes[species_codes$speciesID %in% species,]$vernacularName`',
     '',
-    'Populations: `r pop_codes[pop_codes$PopID %in% pop,]$PopName`',
+    'Sites: `r site_codes[site_codes$siteID %in% pop,]$siteName`',
     '',
     'All checks performed in `r round(time, 2)` seconds.',
     '',
@@ -371,7 +372,7 @@ quality_check <- function(R_data,
               '',
               'Species: `r species_codes[species_codes$speciesID %in% species,]$vernacularName`',
               '',
-              'Populations: `r pop_codes[pop_codes$PopID %in% pop,]$PopName`',
+              'Sites: `r site_codes[site_codes$siteID %in% pop,]$siteName`',
               '',
               'All checks performed in `r round(time, 2)` seconds.',
               '',

@@ -211,7 +211,7 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
                              ggplot2::theme(axis.text = ggplot2::element_text(color = "black"),
                                             axis.title = ggplot2::element_text(size = 12),
                                             panel.border = ggplot2::element_rect(color = "black", fill = NA)) +
-                             ggplot2::labs(title = paste0(pop_codes[pop_codes$PopID == .x, ]$PopName, " (", .x, ")"),
+                             ggplot2::labs(title = paste0(site_codes[site_codes$siteID == .x, ]$sitepName, " (", .x, ")"),
                                            subtitle = paste0("Centre point (*): ",
                                                              round(locations[locations$PopID == .x,]$Centre_lon[1], 3), ", ",
                                                              round(locations[locations$PopID == .x,]$Centre_lat[1], 3)),

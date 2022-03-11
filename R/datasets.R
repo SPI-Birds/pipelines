@@ -26,7 +26,7 @@ species_codes <- utils::read.csv(system.file("extdata", "species_codes.csv", pac
 #'  \item{siteName}{Name of the site.}
 #'  \item{country}{Name of the country in which the site is located.}
 #'  \item{countryCode}{Standard code for the country, using ISO 3166-1 alpha-2: \url{https://www.iso.org/iso-3166-country-codes.html}}
-#'  \item{institutionID}{Three- or four-letter identifier for data owner/institution. Note, multiple populations can have
+#'  \item{institutionID}{Three- or four-letter identifier for data owner/institution. Note, multiple sites can have
 #'  the same data owner.}
 #'  \item{institutionCode}{Name of owner/institution.}
 #'  }
@@ -41,17 +41,17 @@ site_codes <- utils::read.csv(system.file("extdata", "site_codes.csv", package =
 #'@name GT_dist_gg
 NULL
 
-#'Combination of all PopID and Species from all pipelines.
+#'Combination of all siteID and speciesID from all pipelines.
 #'
-#'A data frame with each row containing a unique population
-#'and species combination.
+#'A data frame with each row containing a unique site and species combination.
+#'
 #'@format A data frame with 97 rows and 2 variables.
 #'\describe{
-#'    \item{PopCode}{Three letter population ID.}
-#'    \item{SpeciesCode}{Six letter species ID.}
+#'    \item{siteID}{Three-letter site ID.}
+#'    \item{speciesID}{Six-letter species ID.}
 #'}
-#'@name pop_species_combos
-pop_species_combos <- utils::read.csv(system.file("extdata", "pop_species_combos.csv", package = "pipelines", mustWork = TRUE), colClasses = "character") %>%
+#'@name site_species_combos
+site_species_combos <- utils::read.csv(system.file("extdata", "site_species_combos.csv", package = "pipelines", mustWork = TRUE), colClasses = "character") %>%
   tibble::as_tibble()
 
 #' Quality check dummy data

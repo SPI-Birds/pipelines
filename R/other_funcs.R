@@ -16,7 +16,7 @@ check_species <- function(Species) {
 
   if (any(!Species %in% species_codes$speciesID)) {
 
-    stop(paste("\n Species code is incorrect:",
+    stop(paste("\n speciesID is incorrect:",
                crayon::yellow(Species[!Species %in% species_codes$speciesID])))
 
   }
@@ -25,29 +25,29 @@ check_species <- function(Species) {
 
 }
 
-#' Check that a species entry is correct
+#' Check that a site entry is correct
 #'
-#' @param PopID Vector of 6-letter species codes as recorded in `species_codes`.
+#' @param Site Vector of 3-letter site codes as recorded in `site_codes`.
 #'
-#' @return Vector of 3-letter population codes.
+#' @return Vector of 3-letter site codes.
 #' @export
 #'
 #' @examples
 #' #Codes are correct and are returned
-#' check_pop("AMM")
+#' check_site("AMM")
 #'
 #' #Codes are incorrect and throws error
-#' #check_pop("WRONG")
+#' #check_site("WRONG")
 
-check_pop <- function(PopID) {
+check_site <- function(Site) {
 
-  if (any(!PopID %in% pop_codes$PopID)) {
+  if (any(!Site %in% site_codes$siteID)) {
 
-    stop(paste("\n PopID is incorrect:",
-               crayon::yellow(PopID[!PopID %in% pop_codes$PopID])))
+    stop(paste("\n siteID is incorrect:",
+               crayon::yellow(Site[!Site %in% site_codes$siteID])))
 
   }
 
-  return(PopID)
+  return(Site)
 
 }

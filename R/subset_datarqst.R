@@ -3,25 +3,25 @@
 #' Create a subset of data stored in the standard format.
 #'
 #' The SPI-Birds team should use the function `run_pipelines`
-#' to create a copy of all populations in the standard format,
+#' to create a copy of all sites in the standard format,
 #' which can be stored locally on the SPI-Birds computer.
 #'
 #' When a request is made, `subset_datarqst` can be used
 #' to take a subset of this larger file to cover the specific
-#' populations/species requested by a user. The request can be specified
-#' either through the \code{PopID} and \code{Species} arguments, or through
-#' the \code{PopSpec} argument.
+#' sites/species requested by a user. The request can be specified
+#' either through the \code{site} and \code{species} arguments, or through
+#' the \code{site_spec} argument.
 #'
 #' @param file The location of the file in the standard format (.RDS file). This file is created using `run_pipelines`.
-#' @param PopID Character vector of three letter population codes. Include all populations that are requested.
-#' @param Species Character vector of six letter species codes. Include all species that are requested.
-#' @param PopSpec Character vector of unique population species combinations (in the format PopID_Species).
-#' Include all unique population species combinations requested. Can be used instead of `PopID` and `Species` arguments.
+#' @param site Character vector of three letter site codes. Include all sites that are requested.
+#' @param species Character vector of six letter species codes. Include all species that are requested.
+#' @param site_spec Character vector of unique site species combinations (in the format siteID_speciesID).
+#' Include all unique site species combinations requested. Can be used instead of `site` and `species` arguments.
 #' @param include_conflicting = TRUE, individuals with conflicting species information
 #' are included in the subset of data. If include_conflicting = FALSE (default), these individuals are removed.
 #' Note that this applies only to conflicted species individuals that were identified at least once as any
-#' of the species specified in `Species` or `PopSpec`. Data on conflicted species individuals that were never
-#' identified as any of the species specified in `Species` or `PopSpec` is never returned.
+#' of the species specified in `species` or `site_spec`. Data on conflicted species individuals that were never
+#' identified as any of the species specified in `species` or `site_spec` is never returned.
 #' @param output_type is 'R' and can be set to 'csv'. If output_type is 'csv' 4 .csv files will be created in the save path.
 #' If output_type is 'R' an .RDS file will be created in the save path, and an R object in the
 #' running R session if return_R = TRUE.
@@ -33,21 +33,21 @@
 #' @examples
 #' \dontrun{
 #'
-#' #Subset data on all species from two populations
-#' subset_datarqst(PopID = c("HOG", "CHO"))
+#' #Subset data on all species from two sites
+#' subset_datarqst(site = c("HOG", "CHO"))
 #'
-#' #Subset data on all population where two species occurs
-#' subset_datarqst(Species = c("PARMAJ", "FICALB"))
+#' #Subset data on all sites where two species occurs
+#' subset_datarqst(species = c("PARMAJ", "FICALB"))
 #'
-#' #Create a specific subset of species and population combinations
-#' subset_datarqst(PopSpec = c("HOG_PARMAJ", "VEL_FICALB", "VLI_PARMAJ"))
+#' #Create a specific subset of species and site combinations
+#' subset_datarqst(site_spec = c("HOG_PARMAJ", "VEL_FICALB", "VLI_PARMAJ"))
 #'
 #' }
 
 subset_datarqst <- function(file = file.choose(),
-                            PopID = unique(pop_codes$PopID),
-                            Species = unique(species_codes$speciesID),
-                            PopSpec = NULL,
+                            site = unique(site_codes$siteID),
+                            species = unique(species_codes$speciesID),
+                            site_spec = NULL,
                             include_conflicting = FALSE,
                             output_type = "R",
                             save = TRUE){
@@ -70,88 +70,92 @@ subset_datarqst <- function(file = file.choose(),
 
   }
 
-  if(!is.null(PopSpec)){
+  if(!is.null(site_spec)){
 
-    message(crayon::green("Filtering data using 'PopSpec'."))
+    message(crayon::green("Filtering data using 'site_spec'."))
 
-    #Check that Species and PopID that make up PopSpec are all correct
-    split <- stringr::str_split(string = PopSpec, pattern = "_", simplify = TRUE)
-    check_pop(split[, 1])
+    #Check that 'species' and 'site' that make up 'site_spec' are all correct
+    split <- stringr::str_split(string = site_spec, pattern = "_", simplify = TRUE)
+    check_site(split[, 1])
     check_species(split[, 2])
 
-    PopSpec_original <- PopSpec
+    site_spec_original <- site_spec
 
-    unique_pops <- unique(split[,1])
+    unique_sites <- unique(split[,1])
 
     if(include_conflicting){
-      #PopSpec <- c(PopSpec, paste0(unique_pops, '_CCCCCC')) # Use after pipelines updated to standard format 1.1
-      PopSpec <- c(PopSpec, paste0(unique_pops, '_CCCCCC'), paste0(unique_pops, '_CONFLICTED'))
+
+      #site_spec <- c(site_spec, paste0(unique_sites, '_CCCCCC')) # Use after pipelines updated to standard format 1.1
+      site_spec <- c(site_spec, paste0(unique_sites, '_CCCCCC'), paste0(unique_sites, '_CONFLICTED'))
+
     }
 
     output_brood <- standard_data$Brood_data %>%
-      dplyr::mutate(PopID_Species = paste(.data$PopID, .data$Species, sep = "_")) %>%
-      dplyr::filter(.data$PopID_Species %in% {{PopSpec}}) %>%
-      dplyr::select(-.data$PopID_Species)
+      dplyr::mutate(siteID_speciesID = paste(.data$PopID, .data$Species, sep = "_")) %>%
+      dplyr::filter(.data$siteID_speciesID %in% {{site_spec}}) %>%
+      dplyr::select(-.data$siteID_speciesID)
 
     output_individual <- standard_data$Individual_data %>%
-      dplyr::mutate(PopID_Species = paste(.data$PopID, .data$Species, sep = "_"),
-                    PopID_IndvID = paste(.data$PopID, .data$IndvID, sep = "_")) %>%
-      dplyr::filter(.data$PopID_Species %in% {{PopSpec}}) %>%
-      dplyr::select(-.data$PopID_Species)
+      dplyr::mutate(siteID_speciesID = paste(.data$PopID, .data$Species, sep = "_"),
+                    siteID_individualID = paste(.data$PopID, .data$IndvID, sep = "_")) %>%
+      dplyr::filter(.data$siteID_speciesID %in% {{site_spec}}) %>%
+      dplyr::select(-.data$siteID_speciesID)
 
     output_capture <- standard_data$Capture_data %>%
-      dplyr::mutate(PopID_Species = paste(.data$CapturePopID, .data$Species, sep = "_"),
-                    PopID_IndvID = paste(.data$CapturePopID, .data$IndvID, sep = "_")) %>%
-      dplyr::filter(.data$PopID_IndvID %in% output_individual$PopID_IndvID) %>%
-      dplyr::select(-.data$PopID_Species, -.data$PopID_IndvID)
+      dplyr::mutate(siteID_speciesID = paste(.data$CapturePopID, .data$Species, sep = "_"),
+                    siteID_individualID = paste(.data$CapturePopID, .data$IndvID, sep = "_")) %>%
+      dplyr::filter(.data$siteID_individualID %in% output_individual$siteID_individualID) %>%
+      dplyr::select(-.data$siteID_speciesID, -.data$siteID_individualID)
 
     output_location <- standard_data$Location_data %>%
-      dplyr::filter(.data$PopID %in% {{unique_pops}})
+      dplyr::filter(.data$PopID %in% {{unique_sites}})
 
   } else {
 
-    message(crayon::green("Filtering data using 'PopID' and 'Species'."))
+    message(crayon::green("Filtering data using 'site' and 'species'."))
 
-    #Check that Species and PopID are correct
-    Species_original <- check_species(Species)
-    PopID            <- check_pop(PopID)
+    #Check that 'species' and 'site' are correct
+    species_original <- check_species(species)
+    site            <- check_site(site)
 
     if(include_conflicting){
-      #Species <- c(Species, 'CCCCCC') # Use after pipelines updated to standard format 1.1
-      Species <- c(Species, 'CCCCCC', 'CONFLICTED')
+
+      #species <- c(species, 'CCCCCC') # Use after pipelines updated to standard format 1.1
+      species <- c(species, 'CCCCCC', 'CONFLICTED')
+
     }
 
     output_brood <- standard_data$Brood_data %>%
-      dplyr::filter(.data$PopID %in% {{PopID}} & .data$Species %in% {{Species}})
+      dplyr::filter(.data$PopID %in% {{site}} & .data$Species %in% {{species}})
 
     output_individual <- standard_data$Individual_data %>%
-      dplyr::mutate(PopID_IndvID = paste(.data$PopID, .data$IndvID, sep = "_")) %>%
-      dplyr::filter(.data$PopID %in% {{PopID}} & .data$Species %in% {{Species}})
+      dplyr::mutate(siteID_individualID = paste(.data$PopID, .data$IndvID, sep = "_")) %>%
+      dplyr::filter(.data$PopID %in% {{site}} & .data$Species %in% {{species}})
 
     output_capture <- standard_data$Capture_data %>%
-      dplyr::filter(.data$CapturePopID %in% {{PopID}}) %>%
-      dplyr::mutate(PopID_IndvID = paste(.data$CapturePopID, .data$IndvID, sep = "_")) %>%
-      dplyr::filter(.data$PopID_IndvID %in% output_individual$PopID_IndvID) %>%
-      dplyr::select(-.data$PopID_IndvID)
+      dplyr::filter(.data$CapturePopID %in% {{site}}) %>%
+      dplyr::mutate(siteID_individualID = paste(.data$CapturePopID, .data$IndvID, sep = "_")) %>%
+      dplyr::filter(.data$siteID_individualID %in% output_individual$siteID_individualID) %>%
+      dplyr::select(-.data$siteID_individualID)
 
 
-    if(!all(unique(species_codes$speciesID) %in% Species) & all(unique(pop_codes$PopID) %in% PopID)){
+    if(!all(unique(species_codes$speciesID) %in% species) & all(unique(site_codes$siteID) %in% site)){
 
-      PopID <- pop_species_combos %>%
-        dplyr::filter(.data$species %in% {{Species}}) %>%
-        dplyr::pull(.data$pop) %>%
+      site <- site_species_combos %>%
+        dplyr::filter(.data$speciesID %in% {{species}}) %>%
+        dplyr::pull(.data$siteID) %>%
         unique()
 
     }
 
     output_location <- standard_data$Location_data %>%
-      dplyr::filter(.data$PopID %in% {{PopID}})
+      dplyr::filter(.data$PopID %in% {{site}})
 
   }
 
   #Drop auxiliary columns
   output_individual <- output_individual %>%
-    dplyr::select(-.data$PopID_IndvID)
+    dplyr::select(-.data$siteID_individualID)
 
   #If keeping conflicted species: identify conflicted species individuals that were
   # never identified as one of the species of interest and remove them from output
@@ -160,10 +164,14 @@ subset_datarqst <- function(file = file.choose(),
     message("Identifying relevant conflicting-species individuals...")
 
     #Set species of interest
-    if(!is.null(PopSpec)){
-      SpeciesInt <- unique(stringr::str_split(string = PopSpec_original, pattern = "_", simplify = TRUE)[,2])
-    }else{
-      SpeciesInt <- Species_original
+    if(!is.null(site_spec)){
+
+      SpeciesInt <- unique(stringr::str_split(string = site_spec_original, pattern = "_", simplify = TRUE)[,2])
+
+    } else{
+
+      SpeciesInt <- species_original
+
     }
 
     #Make a list of all individuals with conflicting species
@@ -213,7 +221,8 @@ subset_datarqst <- function(file = file.choose(),
 
   output_capture <- output_capture %>%
     dplyr::ungroup() %>%
-    dplyr::arrange(.data$CapturePopID, .data$Species, .data$IndvID, .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
+    dplyr::arrange(.data$CapturePopID, .data$Species, .data$IndvID,
+                   .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
     dplyr::mutate(Row = seq(1, n()))
 
   output_individual <- output_individual %>%
@@ -250,7 +259,7 @@ subset_datarqst <- function(file = file.choose(),
 
       message(crayon::cyan(crayon::bold("Data subset saved as R data file (.RDS).")))
 
-}else if(output_type == "csv"){
+    } else if(output_type == "csv"){
 
       utils::write.csv(x = output_brood, file = paste0(save_path, "/Brood_data_", as.character(Sys.Date()), ".csv"), row.names = F)
 
@@ -269,6 +278,7 @@ subset_datarqst <- function(file = file.choose(),
 
   #Return R object
   message(crayon::green("Data subset returned as R object."))
+
   return(output_data)
 
 }
