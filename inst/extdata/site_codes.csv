@@ -1,0 +1,86 @@
+siteID,siteName,country,countryCode,institutionID,institutionCode
+AMM,Ammersee,Germany,DE,AMM,Ammersee
+BAN,Bandon Valley,Ireland,IE,BAN,Bandon Valley
+CHO,Choupal,Portugal,PT,CHO,Choupal
+HAR,Harjavalta,Finland,FI,HAR,Harjavalta
+HOC,Hochstadt,Germany,DE,HOC,Hochstadt
+KEV,Kevo,Finland,FI,KEV,Kevo
+MIS,Miscellaneous populations,France,FR,MON,Montpellier
+MON,Montpellier city,France,FR,MON,Montpellier
+MTV,Mont Ventoux,France,FR,MON,Montpellier
+MUR,Muro,France,FR,MON,Montpellier
+PIR,Pirio,France,FR,MON,Montpellier
+ROU,Rouviere,France,FR,MON,Montpellier
+BUU,Buunderkamp,Netherlands,NL,NIOO,NIOO
+HOG,Hoge Veluwe,Netherlands,NL,NIOO,NIOO
+LIE,Liesbos,Netherlands,NL,NIOO,NIOO
+OOS,Oosterhout,Netherlands,NL,NIOO,NIOO
+VLI,Vlieland,Netherlands,NL,NIOO,NIOO
+WAR,Warnsborn,Netherlands,NL,NIOO,NIOO
+WES,Westerheide,Netherlands,NL,NIOO,NIOO
+EDM,East Dartmoor,United Kingdom,GB,PFN,PiedFlyNet
+PIL,Pilis-Visegrad Mountains,Hungary,HU,PIL,Pilis-Visegrad Mountains
+SSQ,Santo Stefano Quisquina,Italy,IT,SSQ,Santo Stefano Quisquina
+BOS,Boshoek,Belgium,BE,UAN,University of Antwerp
+PEE,Peerdsbos,Belgium,BE,UAN,University of Antwerp
+VEL,Velky Kosir,Czechia,CZ,VEL,Velky Kosir
+WYT,Wytham Woods,United Kingdom,GB,WYT,Wytham Woods
+ASK,Askainen,Finland,FI,ASK,Askainen
+BER,Berkenheuvel,Netherlands,NL,RUG,Rijksuniversiteit Groningen
+BRG,Bergen,Norway,NO,BRG,Bergen
+CAN,Cañada de los pájaros,Spain,ES,CAN,Cañada de los pájaros
+CAC,Can Catà,Spain,ES,CAC,Can Catà
+DAE,Daeli,Norway,NO,DAE,Daeli
+DAL,Dalmeny,United Kingdom,GB,DAL,Dalmeny
+DAZ,Dazinj,Croatia,HR,DAZ,Dazinj
+DLO,Dlouhá Lou?ka,Czechia,CZ,DLO,Dlouhá Lou?ka
+DON,Doñana,Spain,ES,DON,Doñana
+DUN,Dunedin,New Zealand,NZ,DUN,Dunedin
+FOR,Forstenrieder Park,Germany,DE,FOR,Forstenrieder Park
+GAR,Garscube campus,United Kingdom,GB,GLA,Glasgow
+CAS,Cashel farm forest,United Kingdom,GB,GLA,Glasgow
+SAL,Sallochy,United Kingdom,GB,GLA,Glasgow
+KEL,Kelvingrove park,United Kingdom,GB,GLA,Glasgow
+SCE,SCENE,United Kingdom,GB,GLA,Glasgow
+GLI,Glimmen,Netherlands,NL,GLI,Glimmen
+GRO,Grobla - Niepo?omice Forest,Poland,PL,GRO,Grobla - Niepo?omice Forest
+LAH,La Hiruela,Spain,ES,LAH,La Hiruela
+KIL,Kilingi-Nõmme,Estonia,EE,KIL,Kilingi-Nõmme
+KUU,Kuusamo,Finland,FI,KUU,Kuusamo
+LAK,Lakselvdalen Troms,Norway,NO,LAK,Lakselvdalen Troms
+LAN,Lancaster,United Kingdom,GB,LAN,Lancaster
+LAS,Lasy Szwalewskie,Poland,PL,LAS,Lasy Szwalewskie
+LUN,Lundy Island,United Kingdom,GB,LUN,Lundy Island
+MAL,Malmo,Sweden,SE,MAL,Malmo
+MAR,Mariola,Spain,ES,MAR,Mariola
+MAY,Mayachino,Russia,RU,MAY,Mayachino
+MET,Metu,Turkey,TR,MET,Metu
+MIE,Mierzeja Wi?lana,Poland,PL,MIE,Mierzeja Wi?lana
+MOU,Moulis,France,FR,MOU,Moulis
+MTA,MTA-PE Evolutionary Ecology Group,Hungary,HU,MTA,MTA-PE Evolutionary Ecology Group
+MRC,Murcia,Spain,ES,MRC,Murcia
+OUL,Oulu,Finland,FI,OUL,Oulu
+PET,Petrozevodsk,Russia,RU,PET,Petrozevodsk
+PEW,Peerdsbos West,Belgium,BE,PEW,Peerdsbos West
+RAD,Radofzell,Germany,DE,RAD,Radofzell
+REV,Revinge,Sweden,SE,REV,Revinge
+SAG,Sagunto,Spain,ES,SAG,Sagunto
+SFL,Schopfl,Austria,AT,SFL,Schopfl
+SKG,Schiermonnikoog,Netherlands,NL,SKG,Schiermonnikoog
+SIL,Silwood,United Kingdom,GB,SIL,Silwood
+STR,Strasbourg,France,FR,STR,Strasbourg
+TOM,Tomakomai,Japan,JP,TOM,Tomakomai
+VAL,Valsein,Spain,ES,VAL,Valsein
+VOM,Vomb Fure,Sweden,SE,VOM,Vomb Fure
+VOS,Vosbergen,Netherlands,NL,VOS,Vosbergen
+WRS,Warsaw,Poland,PL,WRS,Warshav
+WHV,Wilhelmshaven,Germany,DE,WHV,Wilhelmshaven
+WHZ,Westerholtz,Germany,DE,WHZ,Westerholtz
+WIL,Wilrijk,Belgium,BE,WIL,Wilrijk
+ZVE,Zvenigorod,Russia,RU,ZVE,Zvenigorod
+GOT,Gotland,Sweden,SE,GOT,Gotland
+DIN,Dinas,United Kingdom,GB,PFN,PiedFlyNet
+KAT,Loch Katrine,United Kingdom,GB,PFN,PiedFlyNet
+NAG,Forest of Dean,United Kingdom,GB,PFN,PiedFlyNet
+OKE,Okehampton,United Kingdom,GB,PFN,PiedFlyNet
+TEI,Teign Valley,United Kingdom,GB,PFN,PiedFlyNet

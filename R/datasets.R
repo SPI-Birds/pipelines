@@ -14,21 +14,25 @@
 #'   \item{vernacularName}{Common English name.}
 #'   }
 #'@name species_codes
-species_codes <- utils::read.csv(system.file("extdata", "species_codes.csv", package = "pipelines", mustWork = TRUE))
+species_codes <- utils::read.csv(system.file("extdata", "species_codes.csv", package = "pipelines", mustWork = TRUE), colClasses = "character", na.strings = "") %>%
+  tibble::as_tibble()
 
-#'Population names and locations
+#'Study site names and locations
 #'
-#'Information and identifying codes for all populations and data owners.
-#'@format A data frame with 26 rows and 4 variables
+#'Information and identifying codes for all study sites and data owners.
+#'@format A data frame with 85 rows and 6 variables
 #'\describe{
-#'  \item{PopID}{Three-letter population code.}
-#'  \item{PopName}{Name of population.}
-#'  \item{Country}{Name of country where population is situated.}
-#'  \item{Owner}{Letter code for data owner. Note, multiple populations can have
+#'  \item{siteID}{Three-letter identifier for the site.}
+#'  \item{siteName}{Name of the site.}
+#'  \item{country}{Name of the country in which the site is located.}
+#'  \item{countryCode}{Standard code for the country, using ISO 3166-1 alpha-2: \url{https://www.iso.org/iso-3166-country-codes.html}}
+#'  \item{institutionID}{Three- or four-letter identifier for data owner/institution. Note, multiple populations can have
 #'  the same data owner.}
-#'  \item{OwnerName}{Name of owner.}}
-#'@name pop_codes
-pop_codes <- utils::read.csv(system.file("extdata", "pop_codes.csv", package = "pipelines", mustWork = TRUE))
+#'  \item{institutionCode}{Name of owner/institution.}
+#'  }
+#'@name site_codes
+site_codes <- utils::read.csv(system.file("extdata", "site_codes.csv", package = "pipelines", mustWork = TRUE), colClasses = "character") %>%
+  tibble::as_tibble()
 
 #'Spatial data polygon of great tit distribution.
 #'
@@ -47,7 +51,8 @@ NULL
 #'    \item{SpeciesCode}{Six letter species ID.}
 #'}
 #'@name pop_species_combos
-pop_species_combos <- utils::read.csv(system.file("extdata", "pop_species_combos.csv", package = "pipelines", mustWork = TRUE))
+pop_species_combos <- utils::read.csv(system.file("extdata", "pop_species_combos.csv", package = "pipelines", mustWork = TRUE), colClasses = "character") %>%
+  tibble::as_tibble()
 
 #' Quality check dummy data
 #'
