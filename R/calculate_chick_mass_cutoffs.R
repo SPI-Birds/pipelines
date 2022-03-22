@@ -35,7 +35,7 @@ calculate_chick_mass_cutoffs <- function(Capture_data, plot = FALSE) {
 
   # Filter data
   data <- Capture_data %>%
-    dplyr::filter(!is.na(.data$ChickAge), !is.na(.data$Mass))
+    dplyr::filter(!is.na(.data$ChickAge), .data$ChickAge > 0, !is.na(.data$Mass))
 
   # Check that there are non-NA records left to fit a logistic model on
   if(nrow(data) == 0) {
@@ -54,7 +54,7 @@ calculate_chick_mass_cutoffs <- function(Capture_data, plot = FALSE) {
                         start = initial_values, trace = TRUE)
 
   # Predict and calculate 1st and 99th quantiles
-  newdata <- data.frame(ChickAge = seq(0, max(data$ChickAge), by = 1))
+  newdata <- data.frame(ChickAge = seq(1, max(data$ChickAge), by = 1))
 
   logistic_pred <- tibble::tibble(fit = stats::predict(logistic_model, newdata = newdata),
                                   x = newdata$ChickAge) %>%
@@ -88,8 +88,9 @@ calculate_chick_mass_cutoffs <- function(Capture_data, plot = FALSE) {
                                PopID = rep(unique(data$CapturePopID), length(logistic_pred$x)),
                                Stage = as.character(logistic_pred$x),
                                Error_min = 0,
-                               Error_max = 4 * logistic_pred$upper,
+                               Error_max = 2 * logistic_pred$upper,
                                n =   {data %>%
+                                   dplyr::filter(.data$ChickAge > 1) %>%
                                    dplyr::group_by(.data$ChickAge) %>%
                                    dplyr::summarise(N = dplyr::n()) %>%
                                    tidyr::complete(ChickAge = logistic_pred$x) %>%
