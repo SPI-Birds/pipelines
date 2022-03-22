@@ -882,9 +882,9 @@ check_values_brood <- function(Brood_data, var, approved_list, output, skip) {
 
                                          })
 
-    }
+      warning_output <- c(not_recorded_output, warning_output)
 
-    warning_output <- c(not_recorded_output, warning_output)
+    }
 
   }
 
