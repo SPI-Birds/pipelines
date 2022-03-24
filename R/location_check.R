@@ -118,16 +118,16 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
     if(any(records_w_longlat$n_unique_lon < 2 | records_w_longlat$n_unique_lat < 2)) {
 
       few_coords <- records_w_longlat %>%
-        dplyr::filter(.data$n_unique_lon < 2 | records_w_longlat$n_unique_lat < 2) %>%
+        dplyr::filter(.data$n_unique_lon < 2 | .data$n_unique_lat < 2) %>%
         dplyr::select(.data$PopID)
 
       purrr::walk(.x = list(few_coords$PopID),
-                   .f = ~{
+                  .f = ~{
 
-                     message(paste0("Number of records for ", .x,
-                                    " is too low to calculate centre point."))
+                    message(paste0("Number of records for ", .x,
+                                   " is too low to calculate centre point.\n"))
 
-                   })
+                  })
 
     }
 
@@ -215,8 +215,12 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
 
     suppressMessages({
 
+      location_IDs <- records_w_longlat %>%
+        dplyr::filter(.data$n_unique_lon >= 2 | .data$n_unique_lat >= 2) %>%
+        dplyr::pull(.data$PopID)
+
       # Create map per PopID
-      maps <- purrr::map(.x = unique(locations$PopID),
+      maps <- purrr::map(.x = location_IDs,
                          .f = ~{
 
                            ggmap::qmplot(data = locations[locations$PopID == .x,], x = Longitude,y = Latitude,
@@ -237,7 +241,7 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
 
 
                          }) #%>%
-        #setNames(unique(map_data$PopID))
+      #setNames(unique(map_data$PopID))
 
     })
 
