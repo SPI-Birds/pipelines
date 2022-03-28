@@ -125,7 +125,7 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
                   .f = ~{
 
                     message(paste0("Number of records for ", .x,
-                                   " is too low to calculate centre point.\n"))
+                                   " is too low to calculate centre point."))
 
                   })
 
