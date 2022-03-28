@@ -196,21 +196,36 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data, a
 
   if(output %in% c("both", "errors") & skip_check == FALSE) {
 
-    # Select first captures and link to the information of their locations
+    # Retrieve nest locations
+    # Duplicate location rows according to the number of years they were used for easy joining with chick data
+    annual_locations <- Location_data %>%
+      dplyr::filter(.data$LocationType == "NB") %>%
+      dplyr::mutate(EndSeason = dplyr::case_when(is.na(.data$EndSeason) ~ as.integer(lubridate::year(Sys.Date())),
+                                                 !is.na(.data$EndSeason) ~ .data$EndSeason),
+                    StartSeason = dplyr::case_when(is.na(.data$StartSeason) ~ min(.data$StartSeason, na.rm = TRUE),
+                                                   !is.na(.data$StartSeason) ~ .data$StartSeason)) %>%
+      tidyr::uncount(weights = .data$EndSeason - .data$StartSeason + 1) %>%
+      dplyr::group_by(.data$Row) %>%
+      dplyr::mutate(BreedingSeason = .data$StartSeason + row_number() - 1) %>%
+      dplyr::ungroup() %>%
+      dplyr::select(-.data$Row)
+
+    # Select first captures of chicks and link to the information of their locations
     first_captures <- Capture_data %>%
+      dplyr::filter(.data$Age_observed == 1) %>%
       dplyr::group_by(.data$CapturePopID, .data$IndvID) %>%
       dplyr::filter(.data$CaptureDate == dplyr::first(.data$CaptureDate)) %>%
+      dplyr::slice(1) %>% # Select first row if multiple captures have been made on the first day
       dplyr::ungroup() %>%
-      #dplyr::select(IndvID, Species, CapturePopID, LocationID) %>%
-      dplyr::left_join(Location_data, by = c("CapturePopID" = "PopID", "LocationID"))
+      dplyr::left_join(annual_locations, by = c("CapturePopID" = "PopID", "LocationID", "BreedingSeason"))
 
     # Join with individual data
     ind_cap_loc_data <- Individual_data %>%
       dplyr::left_join(first_captures, by = c("IndvID", "Species", "PopID" = "CapturePopID"))
 
-    # Select records of individuals caught as a nestling which are not associated with a BroodID
+    # Select chick records which are not associated with a BroodID
     no_BroodID_nest <- ind_cap_loc_data %>%
-      dplyr::filter(.data$Age_observed == 1 & (is.na(.data$BroodIDLaid) | is.na(.data$BroodIDFledged)) & .data$LocationType == "NB")
+      dplyr::filter(is.na(.data$BroodIDLaid) | is.na(.data$BroodIDFledged))
 
     # If potential errors, add to report
     if(nrow(no_BroodID_nest) > 0) {
