@@ -217,15 +217,16 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data, a
       dplyr::filter(.data$CaptureDate == dplyr::first(.data$CaptureDate)) %>%
       dplyr::slice(1) %>% # Select first row if multiple captures have been made on the first day
       dplyr::ungroup() %>%
-      dplyr::left_join(annual_locations, by = c("CapturePopID" = "PopID", "LocationID", "BreedingSeason"))
+      dplyr::right_join(annual_locations, by = c("CapturePopID" = "PopID", "LocationID", "BreedingSeason")) %>%
+      dplyr::select(-.data$Row)
 
     # Join with individual data
     ind_cap_loc_data <- Individual_data %>%
-      dplyr::left_join(first_captures, by = c("IndvID", "Species", "PopID" = "CapturePopID"))
+      dplyr::right_join(first_captures, by = c("IndvID", "Species", "PopID" = "CapturePopID"))
 
     # Select chick records which are not associated with a BroodID
     no_BroodID_nest <- ind_cap_loc_data %>%
-      dplyr::filter(is.na(.data$BroodIDLaid) | is.na(.data$BroodIDFledged))
+      dplyr::filter(.data$RingAge == "chick", is.na(.data$BroodIDLaid) | is.na(.data$BroodIDFledged))
 
     # If potential errors, add to report
     if(nrow(no_BroodID_nest) > 0) {
