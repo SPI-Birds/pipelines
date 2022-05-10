@@ -57,7 +57,11 @@ MAY,Mayachino,Russia,RU,MAY,Mayachino
 MET,Metu,Turkey,TR,MET,Metu
 MIE,Mierzeja Wi?lana,Poland,PL,MIE,Mierzeja Wi?lana
 MOU,Moulis,France,FR,MOU,Moulis
-MTA,MTA-PE Evolutionary Ecology Group,Hungary,HU,MTA,MTA-PE Evolutionary Ecology Group
+BAL,Balatonfüred,Hungary,HU,MTA,MTA-PE Evolutionary Ecology Group
+GUL,Gulya-domb,Hungary,HU,MTA,MTA-PE Evolutionary Ecology Group
+SZE,Szentgál,Hungary,HU,MTA,MTA-PE Evolutionary Ecology Group
+VES,Veszprém,Hungary,HU,MTA,MTA-PE Evolutionary Ecology Group
+VIL,Vilma-puszta,Hungary,HU,MTA,MTA-PE Evolutionary Ecology Group
 MRC,Murcia,Spain,ES,MRC,Murcia
 OUL,Oulu,Finland,FI,OUL,Oulu
 PET,Petrozevodsk,Russia,RU,PET,Petrozevodsk
@@ -69,8 +73,10 @@ SFL,Schopfl,Austria,AT,SFL,Schopfl
 SKG,Schiermonnikoog,Netherlands,NL,SKG,Schiermonnikoog
 SIL,Silwood,United Kingdom,GB,SIL,Silwood
 STR,Strasbourg,France,FR,STR,Strasbourg
+ROB,Robertsau,France,FR,STR,Strasbourg
+WAN,Wantzenau,France,FR,STR,Strasbourg
 TOM,Tomakomai,Japan,JP,TOM,Tomakomai
-VAL,Valsein,Spain,ES,VAL,Valsein
+VAL,Valsaín,Spain,ES,VAL,Valsaín
 VOM,Vomb Fure,Sweden,SE,VOM,Vomb Fure
 VOS,Vosbergen,Netherlands,NL,VOS,Vosbergen
 WRS,Warsaw,Poland,PL,WRS,Warshav
@@ -84,3 +90,14 @@ KAT,Loch Katrine,United Kingdom,GB,PFN,PiedFlyNet
 NAG,Forest of Dean,United Kingdom,GB,PFN,PiedFlyNet
 OKE,Okehampton,United Kingdom,GB,PFN,PiedFlyNet
 TEI,Teign Valley,United Kingdom,GB,PFN,PiedFlyNet
+STO,Stogi,Poland,PL,GDA,Gdánsk
+SOB,Sobieszweo,Poland,PL,GDA,Gdánsk
+BIR,Bird Island,United States of America,US,NIS,Ian Nisbet
+RAM,Ram Island,United States of America,US,NIS,Ian Nisbet
+NMI,North Monomoy Island,United States of America,US,NIS,Ian Nisbet
+GOU,Gough Island,United Kingdom,GB,GOU,Gough Island
+ARV,Arvidsjaur,Sweden,SE,ARV,Arvidsjaur
+MIR,Miraflores,Spain,ES,MIR,Miraflores
+KEN,Kent Island,Canada,CA,KEN,Kent Island
+SEK,Sekocin Forest,Poland,PL,SEK,Sekocin Forest
+CAN,Cañada de los Pájaros,Spain,ES,CAN,Cañada de los Pájaros
