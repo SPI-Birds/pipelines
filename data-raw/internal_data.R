@@ -197,33 +197,33 @@ v1.2 <- tibble::lst(
 
   ## Individual data
   Individual_data = tibble::tibble(
+    row = NA_integer_,
     individualID = NA_character_,
     speciesID = NA_character_,
     siteID = NA_character_,
     broodIDLaid = NA_character_,
     broodIDFledged = NA_character_,
     ringYear = NA_integer_,
+    ringMonth = NA_integer_,
+    ringDay = NA_integer_,
     ringStage = NA_character_,
     ringSiteID = NA_character_,
-    sexCalculated = NA_character_,
-    sexGenetic = NA_character_,
-    individualRecordID = NA_integer_,
-    individualRecordWarning = NA,
-    individualRecordError = NA
+    geneticSex = NA_character_,
+    rowWarning = NA,
+    rowError = NA,
   ),
 
   ## Brood data
   Brood_data = tibble::tibble(
+    row = NA_integer_,
     broodID = NA_character_,
     siteID = NA_character_,
-    breedingSeason = NA_integer_,
     speciesID = NA_character_,
     plotID = NA_character_,
     locationID = NA_character_,
     femaleID = NA_character_,
     maleID = NA_character_,
     observedClutchType = NA_character_,
-    nestAttemptNumber = NA_integer_,
     observedLayYear = NA_integer_,
     observedLayMonth = NA_integer_,
     observedLayDay = NA_integer_,
@@ -261,45 +261,42 @@ v1.2 <- tibble::lst(
     minimumNumberFledged = NA_integer_,
     maximumNumberFledged = NA_integer_,
     treatmentID = NA_character_,
-    recordedBy = NA_character_,
-    broodRecordID = NA_integer_,
-    broodRecordWarning = NA,
-    broodRecordError = NA
+    rowWarning = NA,
+    rowError = NA
   ),
 
   ## Capture data
   Capture_data = tibble::tibble(
+    row = NA_integer_,
     captureID = NA_character_,
     individualID = NA_character_,
     captureRingNumber = NA_character_,
     releaseRingNumber = NA_character_,
     speciesID = NA_character_,
-    sexObserved = NA_character_,
+    observedSex = NA_character_,
     breedingSeason = NA_integer_,
     captureYear = NA_integer_,
     captureMonth = NA_integer_,
     captureDay = NA_integer_,
     captureTime = NA_character_,
-    captureType = NA_character_,
     recordedBy = NA_character_,
     locationID = NA_character_,
+    capturePhysical = NA,
     captureAlive = NA,
     releaseAlive = NA,
     captureSiteID = NA_character_,
     capturePlotID = NA_character_,
     releaseSiteID = NA_character_,
     releasePlotID = NA_character_,
-    minimumAge = NA_integer_,
-    exactAge = NA_integer_,
     chickAge = NA_real_,
     treatmentID = NA_character_,
-    captureRecordID = NA_integer_,
-    captureRecordWarning = NA,
-    captureRecordError = NA
+    rowWarning = NA,
+    rowError = NA
   ),
 
   ## Location data
   Location_data = tibble::tibble(
+    row = NA_integer_,
     locationID = NA_character_,
     locationType = NA_character_,
     siteID = NA_character_,
@@ -307,17 +304,18 @@ v1.2 <- tibble::lst(
     decimalLongitude = NA_real_,
     startYear = NA_real_,
     endYear = NA_real_,
-    habitatType = NA_character_,
-    locationRecordID = NA_integer_,
-    locationRecordWarning = NA,
-    locationRecordError = NA
+    habitatID = NA_character_,
+    rowWarning = NA,
+    rowError = NA
   ),
 
   ## Measurement data
   Measurement_data = tibble::tibble(
+    row = NA_integer_,
     measurementID = NA_character_,
     recordID = NA_character_,
     siteID = NA_character_,
+    measurementSubject = NA_character_,
     measurementType = NA_character_,
     measurementValue = NA_real_,
     measurementAccuacy = NA_real_,
@@ -325,25 +323,33 @@ v1.2 <- tibble::lst(
     measurementDeterminedYear = NA_integer_,
     measurementDeterminedMonth = NA_integer_,
     measurementDeterminedDay = NA_integer_,
-    measurementDeterminedBy = NA_character_,
+    recordedBy = NA_character_,
     measurementMethod = NA_character_,
-    measurementRecordID = NA_integer_,
-    measurementRecordWarning = NA,
-    measurementRecordError = NA
+    rowWarning = NA,
+    rowError = NA
   ),
 
   ## Experiment data
   Experiment_data = tibble::tibble(
-    experimentID = NA_character_,
+    row = NA_integer_,
     treatmentID = NA_character_,
-    treamentType = NA_character_,
-    treatmentStage = NA_character_,
+    experimentID = NA_character_,
+    siteID = NA_character_,
+    experimentType = NA_character_,
+    experimentStartYear = NA_integer_,
+    experimentStartMonth = NA_integer_,
+    experimentStartDay = NA_integer_,
+    experimentStartTime = NA_character_,
+    experimentEndYear = NA_integer_,
+    experimentEndMonth = NA_integer_,
+    experimentEndDay = NA_integer_,
+    experimentEndTime = NA_character_,
+    experimentStage = NA_character_,
     treatmentDetails = NA_character_,
-    treatmentConductedBy = NA_character_,
+    recordedBy = NA_character_,
     reference = NA_character_,
-    experimentRecordID = NA_integer_,
-    experimentRecordWarning = NA,
-    experimentRecordError = NA
+    rowWarning = NA,
+    rowError = NA
   )
 
 )
@@ -360,28 +366,32 @@ key_variables <- tibble::lst(
 
   # Individual data
   Individual_data = c("IndvID", "Species", "PopID", "RingSeason", # v1.0 & v1.1 variables
-                      "individualID", "speciesID", "siteID", "ringYear", "ringSiteID"),  # v1.2 variables
+                      "row", "individualID", "speciesID", "siteID", "ringYear", # v1.2 variables
+                      "ringMonth", "ringDay", "ringSiteID", "rowWarning", "rowError"),
 
   # Brood data
   Brood_data = c("BroodID", "PopID", "BreedingSeason", "Species", # v1.0 & v1.1 variables
-                 "broodID", "siteID", "speciesID"), # v1.2 variables
+                 "row", "broodID", "siteID", "speciesID", "rowWarning", "rowError"), # v1.2 variables
 
   # Capture data
   Capture_data = c("IndvID", "Species", "BreedingSeason", "CaptureDate", "CapturePopID", # v1.0 variables
                    "CaptureID", "CaptureAlive", "ReleaseAlive", # v1.1 variables
-                   "captureID", "individualID", "releaseRingNumber", "speciesID", "captureYear", "captureMonth", "captureDay", # v1.2 variables
-                   "captureSiteID"),
+                   "row", "captureID", "individualID", "releaseRingNumber", "speciesID", # v1.2 variables
+                   "captureYear", "captureMonth", "captureDay", "capturePhysical", "captureAlive", "releaseAlive",
+                   "captureSiteID", "rowWarning", "rowError"),
 
   # Location data
   Location_data = c("LocationID", "LocationType", "PopID", # v1.0 & v1.1 variables
-                    "locationID", "locationType", "siteID"), # v1.2 variables
+                    "row", "locationID", "locationType", "siteID", "rowWarning", "rowError"), # v1.2 variables
 
   # Measurement data
-  Measurement_data = c("measurementID", "measurementOnID", "siteID", "measurementType", "measurementValue", # v1.2 variables
-                       "measurementUnit", "measurementDeterminedYear"),
+  Measurement_data = c("row", "measurementID", "recordID", "siteID", "measurementSubject", # v1.2 variables
+                       "measurementType", "measurementValue", "measurementUnit", "measurementDeterminedYear",
+                       "measurementDeterminedMonth", "measurementDeterminedDay", "rowWarning", "rowError"),
 
   # Experiment data
-  Experiment_data = c("experimentID", "treatmentID", "treatmentType", "treatmentStage", "treatmentDetails") # v1.2 variables
+  Experiment_data = c("experimentID", "treatmentID", "experimentID", "siteID", "experimentType", # v1.2 variables
+                      "experimentStartYear", "experimentEndYear", "treatmentDetails", "rowWarning", "rowError")
 
 )
 
@@ -391,63 +401,68 @@ categorical_variables <- tibble::lst(
   # Individual data
   Individual_data = tibble::lst(
     Species = species_codes$speciesID, # v1.0 & v1.1
-    PopID = pop_codes$PopID, # v1.0 & v1.1
+    PopID = site_codes$siteID, # v1.0 & v1.1
     RingAge = c("chick", "adult", NA), # v1.0 & v1.1
     Sex = c("F", "M", "C", NA), # v1.0
     Sex_calculated = c("F", "M", "C", NA), # v1.1
     Sex_genetic = c("F", "M", "C", NA), # v1.1
     speciesID = species_codes$speciesID, # v1.2
-    siteID = pop_codes$PopID, # v1.2
-    ringStage = .data$RingAge, # v1.2
-    sexGenetic = c("F", "M", "C", NA) # v1.2
+    siteID = site_codes$siteID, # v1.2
+    ringStage = c("chick", "subadult", "adult", NA), # v1.2
+    ringSiteID = site_codes$siteID, # v1.2
+    geneticSex = c("F", "M", "C", NA) # v1.2
   ),
 
   # Brood data
   Brood_data = tibble::lst(
     Species = species_codes$speciesID, # v1.0 & v1.1
-    PopID = pop_codes$PopID, # v1.0 & v1.1
+    PopID = site_codes$siteID, # v1.0 & v1.1
     ClutchType_observed = c("first", "second", "replacement", NA), # v1.0 & v1.1
     ClutchType_calculated = c("first", "second", "replacement", NA), # v1.0 & v1.1
     OriginalTarsusMethod = c("Alternative", "Standard", "Oxford", NA), # v1.0 & v1.1
     ExperimentID = c("PHENOLOGY", "COHORT", "PARENTAGE", "SURVIVAL", "OTHER", "SURVIVAL; OTHER", NA), # v1.0 & v1.1
-    speciesID = unique(species_codes$speciesID), # v1.2
-    siteID = pop_codes$PopID, # v1.2
+    speciesID = species_codes$speciesID, # v1.2
+    siteID = site_codes$siteID, # v1.2
     observedClutchType = c("first", "second", "replacement", NA) # v1.2
   ),
 
   # Capture data
   Capture_data = tibble::lst(
     Species = species_codes$speciesID, # v1.0 & v1.1
-    CapturePopID = pop_codes$PopID, # v1.0 & v1.1
-    ReleasePopID = c(pop_codes$PopID, NA), # v1.0 & v1.1
+    CapturePopID = site_codes$siteID, # v1.0 & v1.1
+    ReleasePopID = c(site_codes$siteID, NA), # v1.0 & v1.1
     OriginalTarsusMethod = c("Alternative", "Standard", "Oxford", NA), # v1.0 & v1.1
     ExperimentID = c("PHENOLOGY", "COHORT", "PARENTAGE", "SURVIVAL", "OTHER", "SURVIVAL; OTHER", NA), # v1.1
+    Sex_observed = c("F", "M", NA), # v1.1
     speciesID = species_codes$speciesID, # v1.2
-    captureSiteID = pop_codes$PopID, # v1.2
-    releaseSiteID = c(pop_codes$PopID, NA) # v1.2
+    observedSex = c("F", "M", NA), # v1.2
+    captureSiteID = site_codes$siteID, # v1.2
+    releaseSiteID = c(site_codes$siteID, NA) # v1.2
   ),
 
   # Location data
   Location_data = tibble::lst(
     LocationType = c("NB", "MN"), # v1.0 & v1.1
+    PopID = site_codes$siteID, # v1.0 & v1.1
     Habitat = c("deciduous", "evergreen", "mixed", NA), # v1.0
     HabitatType = c("deciduous", "evergreen", "mixed", "urban", NA), # v1.1
-    # FIXME: add location type categories when v1.2 is finalised
-    #locationType = c(),
-    habitatType = c("deciduous", "evergreen", "mixed", "urban", NA), # v1.2
-  )
+    locationType = c("nest", "capture", "observation"), # v1.2
+    siteID = site_codes$siteID, # v1.2
+    habitatID = habitat_codes$habitatID # v1.2
+  ),
 
   # Measurement data
-  # FIXME: add measurement type categories when v1.2 is finalised
-  # Measurement_data = tibble::lst( # v1.2
-  #   measurementType = c()
-  # )
+  Measurement_data = tibble::lst( # v1.2
+    siteID = site_codes$siteID,
+    measurementSubject = c("capture", "location")
+    ##FIXME: Maybe add measurementType?
+  ),
 
   # Experiment data
-  # FIXME: add treatment type categories when v1.2 is finalised
-  # Experiment_data = tibble::lst( # v1.2
-  #   treatmentType = c()
-  # )
+  Experiment_data = tibble::lst( # v1.2
+    siteID = site_codes$siteID
+    ##FIXME: Maybe add experimentType?
+  )
 
 )
 
