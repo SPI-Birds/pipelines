@@ -1,0 +1,126 @@
+habitatID,habitatType,habitatDetails
+1,Forest,"Forests consist of a continuous stand of trees and includes both forested areas (generally with closed canopy) and wooded areas (canopy more open, but see 2)."
+1.1,Forest – Boreal,"Distributed across the high latitudes of the northern hemisphere (occurring between 50 and 60° N) in a broad belt across Eurasia and North America. Trees are predominantly coniferous (pine, fir, and spruce), though a few deciduous genera are nearly ubiquitous in their distribution are locally common (see 1.4)."
+1.2,Forest – Subarctic,Included for completeness sake - probably little forest occurs at these high latitudes.
+1.3,Forest – Subantarctic,Stunted forests on subantarctic islands.
+1.4,Forest – Temperate,"Distributed in the temperate regions (under the influence of moist continental climates) of North and South America (primarily Chile), Europe, Asia (China/Korea/Japan) and Australia/New Zealand. Includes forest types described as coniferous, broadleaved evergreen, broadleaved deciduous, and mixed; also riverine and alluvial. The deciduous trees shed their leaves in the winter season. In the northern hemisphere, the coniferous (or needleleaf evergreen) component increases towards the north where the mixed forest transitions to boreal forest (see 1.1)."
+1.5,Forest – Subtropical/tropical dry,"Distributed in the subtropical/tropical regions of the Neotropics, Africa and Indo-Malesia. Typically forests that experience a dry season of several months."
+1.6,Forest – Subtropical/tropical moist lowland,"Distributed in the subtropical/tropical regions of the Neotropics, Africa and Indo-Malesia, generally below c. 1,200 m (but varying with geography and topography)."
+1.7,Forest – Subtropical/tropical mangrove vegetation above high tide level,"Distributed in the subtropics and tropics, growing in sheltered estuaries and along coastlines in brackish or salt water"
+1.8,Forest – Subtropical/tropical swamp,Distributed in the subtropics and tropics. Typically flooded for at least part of the year and dependent on this flooding for its existence.
+1.9,Forest – Subtropical/tropical moist montane,"Distributed in the subtropical/tropical regions of the Neotropics, Africa and Indo-Malesia, generally above c. 1,200 m (but varying with geography and topography)."
+2,Savanna,"Savannas are transitional between grasslands and forests. They are ecosystems dominated by a grass ground cover with an overstorey of widely spaced trees and shrubs. May be referred to as savanna woodlands, savanna parklands, savanna grasslands, low tree/shrub savannas, thicket/shrub savannas. Distributed largely in Africa, Australia (mostly northern), Asia (India, SE Asia) and South America."
+2.1,Savanna – Dry,"Includes savanna types described as Eucalyptus and Acacia woodland, mopane/miombo/Brachystegia woodlands (Africa), caerrado/campos/caatinga (Brazil, Guyana), chaco seco (Argentina, Uruguay), mulga (Australia), oak woodlands (mid-western USA)."
+2.2,Savanna – Moist,"Includes savanna types described as pantanal (Brazil, Bolivia, Paraguay), chaco or chaco húmedo (Paraguay, Bolivia, Argentina), and llanos (Venezuela, Colombia)."
+3,Shrubland,"Also referred to as scrub, bushland and thicket."
+3.1,Shrubland – Subarctic,
+3.2,Shrubland – Subantarctic,
+3.3,Shrubland – Boreal,
+3.4,Shrubland – Temperate,"Includes semi-deserts dominated by shrubs, coastal beach shrublands"
+3.5,Shrubland – Subtropical/tropical dry,"Includes (arid/semi-desert/dry) shrubland types described as succulent, thorn or thorn scrub, karoo, strandveld (South Africa), Kalahari (Botswana, Namibia, South Africa), restingas (coastal scrub in Brazil), coastal strand, xerophyllous scrub, chapparal (Mexico and southwestern USA), enclave, matorral sammofilo, matorral seco (Argentina, Paraguay, Uruguay)."
+3.6,Shrubland – Subtropical/tropical moist,Humid/semi-humid shrubland types describes as evergreen and found mainly on the lowlands.
+3.7,Shrubland – Subtropical/tropical high altitude,Alpine/subalpine shrubland types around and above the tree-line in mountainous regions.
+3.8,Shrubland – Mediterranean-type shrubby vegetation,"Distributed in Mediterranean ecosystems of Australia, Chile, Europe/North Africa, North America (primarily California) and South Africa. Evergreen shrubs and sclerophyllous trees (low in stature with a relatively open canopy) are the dominant plant forms, and frequent fires have historically played an important role in regulating community composition and structure. The areas are characterized by warm dry summers."
+4,Grassland,"Grasslands occur in regions with warm growing seasons and moderate water shortages. Native grasslands are comprised of grasses and broadleaved herbaceous plants, and are either without woody plants, or the latter are very sparsely distributed (see also 2)."
+4.1,Grassland – Tundra,Grasslands whichhave developed over permafrost. Confined to the northern hemisphere where it encircles the north pole and extends south to the boreal forests. The area is characterized by its extremely cold desert-like conditions.
+4.2,Grassland – Subarctic,
+4.3,Grassland – Subantarctic,Tussock grassland on subantarctic islands.
+4.4,Grassland – Temperate,"Includes grassland types described as prairies (North America), stepe (Eurasia), calcareous, siliceous, edaphic, pampa or pampas (South America), pastizal patagónico, patagonia, pastizal pampeano (Argentina)."
+4.5,Grassland – Subtropical/tropical dry,"Includes (arid/dry) grassland types described as hummock/tussock (Australia), estepa (Argentina, Paraguay, Uruguay)."
+4.6,Grassland – Subtropical/tropical seasonally wet/flooded,
+4.7,Grassland – Subtropical/tropical high altitude,"Sometimes also referred to as alpine tundra. The night time temperatures are usually below freezing, but the soils are well-drained."
+5,Wetlands (inland),
+5.1,Wetlands (inland) – Permanent rivers/streams/creeks (includes waterfalls),
+5.2,Wetlands (inland) – Seasonal/intermittent/irregular rivers/streams/creeks,
+5.3,Wetlands (inland) – Shrub dominated wetlands,"Shrub swamps, shrub-dominated freshwater marshes, shrub carr, alder thicket on inorganic soils."
+5.4,"Wetlands (inland) – Bogs, marshes, swamps, fens, peatlands",Generally over 8 ha. Also includes mires.
+5.5,Wetlands (inland) – Permanent freshwater lakes (over 8 ha),Includes large oxbow lakes.
+5.6,Wetlands (inland) – Seasonal/intermittent freshwater lakes (over 8 ha),Incudes floodplain lakes.
+5.7,Wetlands (inland) – Permanent freshwater marshes/pools (under 8 ha),"Ponds, marshes and swamps on inorganic soils; with emergent vegetation water-logged for at least most of the growing season."
+5.8,Wetlands (inland) – Seasonal/intermittent freshwater marshes/pools (under 8 ha),"On inorganic soils; includes sloughs, potholes, seasonally flooded meadows, sedge marshes."
+5.9,Wetlands (inland) – Freshwater springs and oases,
+5.10,Wetlands (inland) – Tundra wetlands (inc. pools and temporary waters from snowmelt),Includes tundra pools and temporary waters from snowmelt.
+5.11,Wetlands (inland) – Alpine wetlands (inc. temporary waters from snowmelt),"Includes alpine meadows, seepages, temporary waters from snowmelt."
+5.12,Wetlands (inland) – Geothermal wetlands,Wetlands influenced by heated geothermal water or chemistry derived from current or former geothermal activity. Often found in volcanically active areas.
+5.13,Wetlands (inland) – Permanent inland deltas,Created by a river dividing into multiple branches that usually rejoin and continue to sea. They often occur on former lake beds. In some cases a river flowing into a flat arid area splists into channels which then evaporate as it progresses into the desert.
+5.14,"Wetlands (inland) – Permanent saline, brackish or alkaline lakes",
+5.15,"Wetlands (inland) – Seasonal/intermittent saline, brackish or alkaline lakes and flats",
+5.16,"Wetlands (inland) – Permanent saline, brackish or alkaline marshes/pools",
+5.17,"Wetlands (inland) – Seasonal/intermittent saline, brackish or alkaline marshes/pools",
+5.18,Wetlands (inland) – Karst and other subterranean hydrological systems (inland),
+6,"Rocky Areas (e.g., inland cliffs, mountain peaks)",
+7,Caves and Subterranean Habitats (non-aquatic),
+7.1,Caves and Subterranean Habitats (non-aquatic) – Caves,"Underground spaces produced naturally by the weathering of rock. Can extend deep underground, or can be much smaller rock."
+7.2,Caves and Subterranean Habitats (non-aquatic) – Other subterranean habitats,
+8,Desert,"Desert consist of arid landscapes with a sparse plant cover, except in depressions where water accumulates. The sandy, stony or rocky substrate constitutes more to the appearance of the landscape than does the vegetation."
+8.1,Desert – Hot,
+8.2,Desert – Temperate,
+8.3,Desert – Cold,
+9,Marine Neritic,"Submergent (below extreme low tide), nearshore, on or over the continental shelf or oceanic island shelf. "
+9.1,Marine Neritic – Pelagic,"The division of the marine environment composed of all the ocean's water; living in the water column, away from the bottom."
+9.2,Marine Neritic – Subtidal rock and rocky reefs,"Bottom habitat consisting predominantly of boulders (any loose rock larger than 256 mm in diameter) or consolidated rock (includes submerged coastal karst systems, but see 12.1)."
+9.3,Marine Neritic – Subtidal loose rock/pebble/gravel,Bottom habitat consisting predominantly of unconsolidated cobbles (sediment size 64 to 256 mm diameter) and pebbles (sediment size 2 to 64 mm diameter).
+9.4,Marine Neritic – Subtidal sandy,Bottom habitat consisting of loose particles of rock or mineral sediments (predominantly ranges from 0.0625 to 2 mm in diameter).
+9.5,Marine Neritic – Subtidal sandy-mud,Bottom habitat consisting predominantly of a mixture of sandy (see 9.4) and muddy (see 9.6) sediment types.
+9.6,Marine Neritic – Subtidal muddy,Bottom habitat consisting of wet clay (any particular smaller than 0.002 mm in diameter) and silt-rich sediment (silt consists of loose particles of rock or mineral that ranges in size from 0.002 to 0.0625 mm in diameter).
+9.7,Marine Neritic – Macroalgal/kelp,"Bottom habitat consisting predominantly of large algae, typically brown algae, which often forms dense macroalgal beds or forests."
+9.8,Marine Neritic – Coral Reef,"Massive limestone structure built up through the cementing and depositional activities of colonial stony corals, predominantly of the order Scleractinia, and other calcareous invertebrate and algal species."
+9.8.1,Outer reef channel,Coral reef habitat on the foreslope (see 9.8.3) within or around the surge channels (spur and groove formations).
+9.8.2,Back slope,"Th area opposite of the foreslope (see 9.8.3), also referring to the reef flat or inner part of a barrier reef or atoll."
+9.8.3,Foreslope (outer reef slope),"The outer, seaward margin of a coral reef, also referrng to the seaward side of a barrier reef or atoll."
+9.8.4,Lagoon,"A shallow (less than a depth of 200 m), sheltered body of water separated from the open sea by coral reefs; also refers to the area between the shore and a fringing reef, between the coast and a barrier reef, or the portion of an atoll surrounded by the reef."
+9.8.5,Inter-reef soft substrate,"Area between reefs typically consisting of sandy substrate (see 9.4), but sometimes also with clay or silt sediments (see 9.5 and 9.6)."
+9.8.6,Inter-reef rubble substrate,Area between reefs consisting predominantly of coral or calcareous fragments.
+9.9,Marine Neritic – Seagrass (submerged),"Bottom habitat consting predominantly of grass-like marine flowering plants that grow and reproduce while submerged in seawater, such as eelgrass and turtle grass."
+9.10,Marine Neritic – Estuaries,A semi-enclosed coastal embayment where fresh water and seawater meet and mix.
+10,Marine Oceanic,The pelagic habitat deeper than and beyond the continental or island shelf (see 9 and 9.1).
+10.1,Marine Oceanic – Epipelagic (0-200 m),The oceanic pelagic environment from the surface to a depth of 200 m; also refers to the lighted or photic pelagic zone.
+10.2,"Marine Oceanic – Mesopelagic (200-1,000 m)","Uppermost oceanic pelagic aphotic zone from a depth of 200 to 1,000 m."
+10.3,"Marine Oceanic – Bathypelagic (1,000-4,000 m)","Pelagic aphotic zone lying between the mesopelagic and abyssalpelagic zones, between 1,000 and 4,000 m."
+10.4,"Marine Oceanic – Abyssopelagic (4,000-6,000 m)","Pelagic aphotic zone from a depth of 4,000 to 6,000 m."
+11,Marine Deep Ocean Floor (Benthic and Demersal),The bottom habitats in the marine deep ocean floor zone are used by both benthic (living on or in the substrate at the bottom) and demersal (typically free-swimming near the bottom) organisms.
+11.1,"Marine Deep Ocean Floor (Benthic and Demersal) – Continental slope/bathyl zone (200-4,000 m)","The bottom habitat on the steeper, seaward section of the continental or island margin."
+11.1.1,Hard substrate,"Bottom type consisting of a loose or consolidated rock, including deep karst systems (see 9.2 and 9.3)."
+11.1.2,Soft substrate,"Bottom type consisting of mud or sand or a mixture of mud and sand; most typically consisting of mud (see 9.4, 9.5, 9.6)."
+11.2,"Marine Deep Ocean Floor (Benthic and Demersal) – Abyssal plain (4,000-6,000 m)","The nearly flat area of the deep ocean floor lying between 4,000 and 6,000 m."
+11.3,"Marine Deep Ocean Floor (Benthic and Demersal) – Abyssal mountain/hills (4,000-6,000 m)","The hilly or mountainous area of the deep ocean floor lying between 4,000 and 6,000 m."
+11.4,"Marine Deep Ocean Floor (Benthic and Demersal) – Hadal/deep sea trench (>6,000 m)","The bottom below 6,000 m."
+11.5,Marine Deep Ocean Floor (Benthic and Demersal) – Seamount,Extinct volcano or steep-sided formation tha trises abruptly from the deep sea floor but does not reach the surface.
+11.6,Marine Deep Ocean Floor (Benthic and Demersal) – Deep sea vents (rifts/seeps),"An environment with ambient temperatures above normal, on the deep sea floor that depends on geothermal energy as the basis for biological productivity."
+12,Marine Intertidal,Area of the shore between the extremes of high and low tides.
+12.1,Marine Intertidal – Rocky shoreline,Intertidal shore composed predominantly of consolidated rock or boulders (see 9.2).
+12.2,"Marine Intertidal – Sandy shoreline and/or beaches, sand bars, spits, etc.",Intertidal shore composed predominantly of sandy sediments (see 9.4 for sediment size characteristics).
+12.3,Marine Intertidal – Shingle and/or pebble shoreline and/or beaches,Intertidal shore composed of pebble and cobble sediments (see 9.4 for sediment size characteristics).
+12.4,Marine Intertidal – Mud shoreline and intertidal mud flats,Intertidal shore or bottom composed predominantly of mud or sandy-mud sediments (see 9.4 and 9.5 for sediment size characteristics
+12.5,Marine Intertidal – Salt marshes (emergent grasses),A grassy area that extends along the shores of estuaries and sheltered coasts in temperated and subpolar regions with emergent vegetation rooted in soils alternately inundated and drained by tidal action.
+12.6,Marine Intertidal – Tidepools,An intertidal depression in rocks or in sandy beaches that continues to hold water during low tide (also called Tidal Pools)
+12.7,Marine Intertidal – Mangrove submerged roots,Intertidal zone in mangrove forests.
+13,Marine Coastal/Supratidal,Coastal habitats above the high tide mark.
+13.1,Marine Coastal/Supratidal – Sea cliffs and rocky offshore islands,
+13.2,Marine Coastal/Supratidal – Coastal caves/karst,"Karsts, sea caves and other subterranean hydrological systems along the coast (see 9.2 and 12.1)."
+13.3,Marine Coastal/Supratidal – Coastal sand dunes,Dune systems (including humid dune slacks).
+13.4,Marine Coastal/Supratidal – Coastal brackish/saline lagoons/marine lakes,Brackish to saline lagoons and lakes with at least one relatively narrow connection to the sea. Often formed from sea inlets by silting and cut off from the sea by sand or mud banks.
+13.5,Marine Coastal/Supratidal – Coastal freshwater lakes,Includes freswater delta lagoons (see 5.5 and 5.6).
+14,Artificial - Terrestrial,
+14.1,Artificial - Terrestrial – Arable land,"Includes cereal fields, rice paddies, perennial crops, orchards, and groves (but see 14.3 and 14.4)."
+14.2,Artificial - Terrestrial – Pastureland,"Includes fertilized or re-seeded permanent grasslands, sometimes treated with selective herbicides, with very impoverished flora and fauna. Also includes secondary grasslands and wooded farmland."
+14.3,Artificial - Terrestrial – Plantations,"A plantation is an intentional planting of a crop, on a larger scale, usually for usess other than cereal production or pasture. The term is currently most often used for plantings of trees and shrubs. The term tends also to be used for plantings maintained on economic bases other than that of subsistence farming. Plantations are typically (but not exclusively) found in tropical or semitropical countries and usually require resident labourers."
+14.4,Artificial - Terrestrial – Rural gardens,"Rural gardens are located in a rural setting, serving families whose main income comes from wage labour (rural or urban). Rural gardens differ from arable land production by the following features which are usually, but by no means in all cases, found simultaneously: (1) cropping plants for personal consumption that cannot be collected nor supllied by arable farming, (2) small plots, (3) proximity to the house, (4) fencing, (5) mixed or dense planting of a great number of annual, semi-permanent, and perennial crops, (6) a high intensity of land use, and (9) cultivation with hand implements. These gardens also provide space and/or fodder for the raising of small anivels (usually poultry, rodents and small ruminents). In extreme cases, the rural garden may be the only source of livelihood and income for the rural poor If enough space is available, small cash crops may be produced and exchanged or sold for purchased food."
+14.5,Artificial - Terrestrial – Urban areas,"Occurs throughout the world. Usually metropolitan and commercial areas dominated by aphalt, concrete and roof. Includes buildings, lawns and parks."
+14.6,Artificial - Terrestrial – Subtropical/tropical heavy degraded former forest,Former subtropical or tropical forests that has been extensively cleared or impacted by human activities. Often these is some degree of regeneration or there are small fragments of forest remaining.
+15,Artificial - Aquatic,Human-made wetland habitats.
+15.1,Artificial - Aquatic – Water storage areas (over 8 ha),"Includes reservoirs, barages, dams, and impoundments."
+15.2,Artificial - Aquatic – Ponds (below 8 ha),"Includes farm ponds, stock ponds, small tanks."
+15.3,Artificial - Aquatic – Aquaculture ponds,"For example, fish or shirmp ponds."
+15.4,Artificial - Aquatic – Salt exploitation sites,"Salt pans, salines, etc."
+15.5,Artificial - Aquatic – Excavations (open),"Gravel, brick, clay pits, borrow pits and mining pools."
+15.6,Artificial - Aquatic – Wastewater treatment areas,"Sewage farms, settling ponds, oxidation basins, etc."
+15.7,Artificial - Aquatic – Irrigated land (includes irrigation channels),Includes irrigation channels and paddy (rice) fields.
+15.8,Artificial - Aquatic – Seasonally flooded agricultural land,Including intensively managed or grazed wet meadow or pasture.
+15.9,"Artificial - Aquatic – Canals and drainage channels, ditches","Linear excavations (varying enormously in size) made specifically to improve drainage of a farmland, for controlling river courses, for controlling flow of water, for allowing ship movement, etc."
+15.10,Artificial - Aquatic – Karst and other subterranean hydrological systems (human-made),Human-made subterranean systems
+15.11,Artificial - Aquatic – Marine anthropogenic structures,"Artificial reefs, docks, seawalls, rip rap, etc."
+15.12,Artificial - Aquatic – Mariculture cages,"Cages (mades out of net or mesh) located in an open environment which includes both the sea and inland brackish water areas, for the culture of organisms, both plants and animals."
+15.13,Artificial - Aquatic – Mari/brackish-culture ponds,"Human-made saltwater or brackish ponds for the cultivation of organisms, both plants and animals."
+16,Introduced Vegetation,Includes only non-cultivated species or those that have escaped from cultivation.
+17,Other,A habitat type not covered by any of the other categories in the system.

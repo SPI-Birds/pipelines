@@ -1,10 +1,14 @@
 #' Species taxonomic ranks and codes
 #'
 #' Species information, including various taxonomic ranks, internal and external codes.
-#' @format A data frame with 20 rows and 9 variables
+#' @format A data frame with 27 rows and 13 variables
 #' \describe{
+#'   \item{speciesCode}{SPI-Birds' internal persistent identifier for a species.}
+#'   \item{speciesID}{SPI-Birds' 6-letter species identifier. First three letters indicate the generic name, last three letters indicate the specific epithet. Note that this identifier might change if a species' genus or species indicator change.}
 #'   \item{speciesEURINGCode}{Species code used in EURING. NA for non-European species.}
-#'   \item{speciesID}{SPI-Birds' 6-letter species code. First three letters indicate the generic name, last three letters indicate the specific epithet.}
+#'   \item{kingdom}{Scientific name of the kingdom in which the species is identified.}
+#'   \item{phylum}{Scientific name of the phylum in which the species is identified.}
+#'   \item{class}{Scientific name of the class in which the species is identified.}
 #'   \item{order}{Scientific name of the order in which the species is identified.}
 #'   \item{family}{Scientific name of the family in which the species is identified.}
 #'   \item{genus}{Scientific name of the genus in which the species is identified.}
@@ -20,18 +24,33 @@ species_codes <- utils::read.csv(system.file("extdata", "species_codes.csv", pac
 #'Study site names and locations
 #'
 #'Information and identifying codes for all study sites and data owners.
-#'@format A data frame with 85 rows and 6 variables
+#'@format A data frame with 102 rows and 6 variables
 #'\describe{
-#'  \item{siteID}{Three-letter identifier for the site.}
-#'  \item{siteName}{Name of the site.}
-#'  \item{country}{Name of the country in which the site is located.}
+#'  \item{siteID}{Three-letter identifier for the study site.}
+#'  \item{siteName}{Name of the study site.}
+#'  \item{country}{Name of the country in which the study site is located.}
 #'  \item{countryCode}{Standard code for the country, using ISO 3166-1 alpha-2: \url{https://www.iso.org/iso-3166-country-codes.html}}
-#'  \item{institutionID}{Three- or four-letter identifier for data owner/institution. Note, multiple sites can have
+#'  \item{institutionID}{Three- or four-letter identifier for data owner/institution. Note, multiple study sites can have
 #'  the same data owner.}
 #'  \item{institutionCode}{Name of owner/institution.}
 #'  }
 #'@name site_codes
-site_codes <- utils::read.csv(system.file("extdata", "site_codes.csv", package = "pipelines", mustWork = TRUE), colClasses = "character") %>%
+site_codes <- utils::read.csv(system.file("extdata", "site_codes.csv", package = "pipelines", mustWork = TRUE),
+                              colClasses = "character") %>%
+  tibble::as_tibble()
+
+#'Habitat types and descriptions
+#'
+#'Habitat descriptions according to IUCN Red List's Habitats Classification Scheme (version 3.1).
+#'@format A data frame with 125 rows and 3 variables
+#'\describe{
+#'  \item{habitatID}{Identifier for the habitat as provided by IUCN.}
+#'  \item{habitatType}{Name or short description for the habitat as proved by IUCN.}
+#'  \item{habitatDetails}{Detailed description or definition for the habitat as provided by IUCN.}
+#'  }
+#'@name habitat_codes
+habitat_codes <- utils::read.csv(system.file("extdata", "habitat_codes.csv", package = "pipelines", mustWork = TRUE),
+                                 colClasses = "character") %>%
   tibble::as_tibble()
 
 #'Spatial data polygon of great tit distribution.
@@ -45,7 +64,7 @@ NULL
 #'
 #'A data frame with each row containing a unique site and species combination.
 #'
-#'@format A data frame with 97 rows and 2 variables.
+#'@format A data frame with 143 rows and 2 variables.
 #'\describe{
 #'    \item{siteID}{Three-letter site ID.}
 #'    \item{speciesID}{Six-letter species ID.}

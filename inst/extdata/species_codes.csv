@@ -1,28 +1,28 @@
-speciesCode,speciesEURINGCode,speciesID,kingdom,phylum,class,order,family,genus,specificEpithet,infraspecificEpithet,scientificNameAuthorship,vernacularName
-10001,14640,PARMAJ,Animalia,Chordata,Aves,Passeriformes,Paridae,Parus,major,,"Linnaeus, 1758",Great tit
-10002,14620,CYACAE,Animalia,Chordata,Aves,Passeriformes,Paridae,Cyanistes,caeruleus,,"Linnaeus, 1758",Blue tit
-10003,13490,FICHYP,Animalia,Chordata,Aves,Passeriformes,Muscicapidae,Ficedula,hypoleuca,,"Pallas, 1764",Pied flycatcher
-10004,14790,SITEUR,Animalia,Chordata,Aves,Passeriformes,Sittidae,Sitta,europaea,,"Linnaeus, 1758",Eurasian nuthatch
-10005,14610,PERATE,Animalia,Chordata,Aves,Passeriformes,Paridae,Periparus,ater,,"Linnaeus, 1758",Coal tit
-10006,15980,PASMON,Animalia,Chordata,Aves,Passeriformes,Passeridae,Passer,montanus,,"Linnaeus, 1758",Eurasian tree sparrow
-10007,13480,FICALB,Animalia,Chordata,Aves,Passeriformes,Muscicapidae,Ficedula,albicolis,,"Temminck, 1815",Collared flycatcher
-10008,14400,POEPAL,Animalia,Chordata,Aves,Passeriformes,Paridae,Poecile,palustris,,"Linnaeus, 1758",Marsh tit
-10009,14480,POECIN,Animalia,Chordata,Aves,Passeriformes,Paridae,Poecile,cinctus,,"Boddaert, 1783",Siberian tit
-10010,11220,PHOPHO,Animalia,Chordata,Aves,Passeriformes,Muscicapidae,Phoenicurus,phoenicurus,,"Linnaeus, 1758",Common redstart
-10011,08480,JYNTOR,Animalia,Chordata,Aves,Piciformes,Picidae,Jynx,torquilla,,"Linnaeus, 1758",Eurasian wryneck
-10012,14540,LOPCRI,Animalia,Chordata,Aves,Passeriformes,Paridae,Lophophanes,cristatus,,"Linnaeus, 1758",European crested tit
-10013,18810,EMBMEL,Animalia,Chordata,Aves,Passeriformes,Emberizidae,Emberiza,melanocephala,,"Scopoli, 1769",Black-headed bunting
-10014,10840,PRUMOD,Animalia,Chordata,Aves,Passeriformes,Prunellidae,Prunella,modularis,,"Linnaeus, 1758",Dunnock
-10015,15600,CORMON,Animalia,Chordata,Aves,Passeriformes,Corvidae,Corvus,monedula,,"Linnaeus, 1758",Western jackdaw
-10016,14860,CERFAM,Animalia,Chordata,Aves,Passeriformes,Certhiidae,Certhia,familiaris,,"Linnaeus, 1758",Eurasian treecreeper
-10017,07610,STRALU,Animalia,Chordata,Aves,Strigiformes,Strigidae,Strix,aluco,,"Linnaeus, 1758",Tawny owl
-10018,,SITVAR,Animalia,Chordata,Aves,Passeriformes,Paridae,Sittiparus ,varius,,"Temminck & Schlegel, 1845",Varied tit
-10019,,PARMIN,Animalia,Chordata,Aves,Passeriformes,Paridae,Parus,minor,,"Temminck & Schlegel, 1848",Japanese tit
-10020,06150,STEHIR,Animalia,Chordata,Aves,Charadriiformes,Laridae,Sterna,hirundo,,"Linnaeus, 1758",Common tern
-10021,,THACHL,Animalia,Chordata,Aves,Procellariiformes,Diomedeidae,Thalassarche,chlororhynchos,,"Gmelin, 1789",Atlantic yellow-nosed albatross
-10022,,PHOFUS,Animalia,Chordata,Aves,Procellariiformes,Diomedeidae,Phoebetria,fusca,,"Hilsenberg, 1822",Sooty albatross
-10023,00210,MACGIG,Animalia,Chordata,Aves,Procellariiformes,Procellariidae,Macronectes,giganteus,,"Gmelin, 1789",Southern giant petrel
-10024,,DIODAB,Animalia,Chordata,Aves,Procellariiformes,Diomedeidae,Diomedea,dabbenena,,"Mathews, 1929",Tristan albatross
-10025,00550,HYDLEU,Animalia,Chordata,Aves,Procellariiformes,Hydrobatidae,Hydrobates,leucorhous,,"Vieillot, 1818",Leach's storm-petrel
-10026,04970,CALALB,Animalia,Chordata,Aves,Charadriiformes,Scolopacidae,Calidris,alba,,"Pallas, 1764",Sanderling
-10027,,PERINF,Animalia,Chordata,Aves,Passeriformes,Corvidae,Perisoreus,infaustus,,"Linnaeus, 1758",Siberian jay
+speciesCode,speciesID,speciesEURINGCode,kingdom,phylum,class,order,family,genus,specificEpithet,infraspecificEpithet,scientificNameAuthorship,vernacularName
+10001,PARMAJ,14640,Animalia,Chordata,Aves,Passeriformes,Paridae,Parus,major,,"Linnaeus, 1758",Great tit
+10002,CYACAE,14620,Animalia,Chordata,Aves,Passeriformes,Paridae,Cyanistes,caeruleus,,"Linnaeus, 1758",Blue tit
+10003,FICHYP,13490,Animalia,Chordata,Aves,Passeriformes,Muscicapidae,Ficedula,hypoleuca,,"Pallas, 1764",Pied flycatcher
+10004,SITEUR,14790,Animalia,Chordata,Aves,Passeriformes,Sittidae,Sitta,europaea,,"Linnaeus, 1758",Eurasian nuthatch
+10005,PERATE,14610,Animalia,Chordata,Aves,Passeriformes,Paridae,Periparus,ater,,"Linnaeus, 1758",Coal tit
+10006,PASMON,15980,Animalia,Chordata,Aves,Passeriformes,Passeridae,Passer,montanus,,"Linnaeus, 1758",Eurasian tree sparrow
+10007,FICALB,13480,Animalia,Chordata,Aves,Passeriformes,Muscicapidae,Ficedula,albicolis,,"Temminck, 1815",Collared flycatcher
+10008,POEPAL,14400,Animalia,Chordata,Aves,Passeriformes,Paridae,Poecile,palustris,,"Linnaeus, 1758",Marsh tit
+10009,POECIN,14480,Animalia,Chordata,Aves,Passeriformes,Paridae,Poecile,cinctus,,"Boddaert, 1783",Siberian tit
+10010,PHOPHO,11220,Animalia,Chordata,Aves,Passeriformes,Muscicapidae,Phoenicurus,phoenicurus,,"Linnaeus, 1758",Common redstart
+10011,JYNTOR,08480,Animalia,Chordata,Aves,Piciformes,Picidae,Jynx,torquilla,,"Linnaeus, 1758",Eurasian wryneck
+10012,LOPCRI,14540,Animalia,Chordata,Aves,Passeriformes,Paridae,Lophophanes,cristatus,,"Linnaeus, 1758",European crested tit
+10013,EMBMEL,18810,Animalia,Chordata,Aves,Passeriformes,Emberizidae,Emberiza,melanocephala,,"Scopoli, 1769",Black-headed bunting
+10014,PRUMOD,10840,Animalia,Chordata,Aves,Passeriformes,Prunellidae,Prunella,modularis,,"Linnaeus, 1758",Dunnock
+10015,CORMON,15600,Animalia,Chordata,Aves,Passeriformes,Corvidae,Corvus,monedula,,"Linnaeus, 1758",Western jackdaw
+10016,CERFAM,14860,Animalia,Chordata,Aves,Passeriformes,Certhiidae,Certhia,familiaris,,"Linnaeus, 1758",Eurasian treecreeper
+10017,STRALU,07610,Animalia,Chordata,Aves,Strigiformes,Strigidae,Strix,aluco,,"Linnaeus, 1758",Tawny owl
+10018,SITVAR,,Animalia,Chordata,Aves,Passeriformes,Paridae,Sittiparus ,varius,,"Temminck & Schlegel, 1845",Varied tit
+10019,PARMIN,,Animalia,Chordata,Aves,Passeriformes,Paridae,Parus,minor,,"Temminck & Schlegel, 1848",Japanese tit
+10020,STEHIR,06150,Animalia,Chordata,Aves,Charadriiformes,Laridae,Sterna,hirundo,,"Linnaeus, 1758",Common tern
+10021,THACHL,,Animalia,Chordata,Aves,Procellariiformes,Diomedeidae,Thalassarche,chlororhynchos,,"Gmelin, 1789",Atlantic yellow-nosed albatross
+10022,PHOFUS,,Animalia,Chordata,Aves,Procellariiformes,Diomedeidae,Phoebetria,fusca,,"Hilsenberg, 1822",Sooty albatross
+10023,MACGIG,00210,Animalia,Chordata,Aves,Procellariiformes,Procellariidae,Macronectes,giganteus,,"Gmelin, 1789",Southern giant petrel
+10024,DIODAB,,Animalia,Chordata,Aves,Procellariiformes,Diomedeidae,Diomedea,dabbenena,,"Mathews, 1929",Tristan albatross
+10025,HYDLEU,00550,Animalia,Chordata,Aves,Procellariiformes,Hydrobatidae,Hydrobates,leucorhous,,"Vieillot, 1818",Leach's storm-petrel
+10026,CALALB,04970,Animalia,Chordata,Aves,Charadriiformes,Scolopacidae,Calidris,alba,,"Pallas, 1764",Sanderling
+10027,PERINF,,Animalia,Chordata,Aves,Passeriformes,Corvidae,Perisoreus,infaustus,,"Linnaeus, 1758",Siberian jay
