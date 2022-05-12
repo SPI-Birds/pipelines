@@ -193,6 +193,7 @@ v1.1 <- tibble::lst(
 
 
 # Data template for standard format version 1.2
+# Source: https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.2.0.pdf
 v1.2 <- tibble::lst(
 
   ## Individual data
@@ -360,38 +361,41 @@ data_templates <- tibble::lst(v1.0, v1.1, v1.2)
 
 # 2. Variable lists for standard format testing ####
 # Create a list of variables that are key and cannot have missing values (i.e., NA), and a list of variables that can only contain a limited number of categories (e.g., "M", "F" or "C" in Sex_observed). These lists are intended to be used in pipeline tests (see R/test_general_format.R) that ensure pipeline robustness and consistency.
+# Note that row, rowWarning and rowError cannot have missing values but are not part of the key variables list because these columns are filled during the standard quality check procedure, which is done after the pipeline is tested.
+
+## FIXME: Optional variables that cannot contain missing values (e.g. breeding season)
 
 # Create list of key variables
 key_variables <- tibble::lst(
 
   # Individual data
   Individual_data = c("IndvID", "Species", "PopID", "RingSeason", # v1.0 & v1.1 variables
-                      "row", "individualID", "speciesID", "siteID", "ringYear", # v1.2 variables
-                      "ringMonth", "ringDay", "ringSiteID", "rowWarning", "rowError"),
+                      "individualID", "speciesID", "siteID", "ringYear", # v1.2 variables
+                      "ringMonth", "ringDay", "ringSiteID"),
 
   # Brood data
   Brood_data = c("BroodID", "PopID", "BreedingSeason", "Species", # v1.0 & v1.1 variables
-                 "row", "broodID", "siteID", "speciesID", "rowWarning", "rowError"), # v1.2 variables
+                 "broodID", "siteID", "speciesID"), # v1.2 variables
 
   # Capture data
   Capture_data = c("IndvID", "Species", "BreedingSeason", "CaptureDate", "CapturePopID", # v1.0 variables
                    "CaptureID", "CaptureAlive", "ReleaseAlive", # v1.1 variables
-                   "row", "captureID", "individualID", "releaseRingNumber", "speciesID", # v1.2 variables
+                   "captureID", "individualID", "releaseRingNumber", "speciesID", # v1.2 variables
                    "captureYear", "captureMonth", "captureDay", "capturePhysical", "captureAlive", "releaseAlive",
-                   "captureSiteID", "rowWarning", "rowError"),
+                   "captureSiteID"),
 
   # Location data
   Location_data = c("LocationID", "LocationType", "PopID", # v1.0 & v1.1 variables
-                    "row", "locationID", "locationType", "siteID", "rowWarning", "rowError"), # v1.2 variables
+                    "locationID", "locationType", "siteID"), # v1.2 variables
 
   # Measurement data
-  Measurement_data = c("row", "measurementID", "recordID", "siteID", "measurementSubject", # v1.2 variables
+  Measurement_data = c("measurementID", "recordID", "siteID", "measurementSubject", # v1.2 variables
                        "measurementType", "measurementValue", "measurementUnit", "measurementDeterminedYear",
-                       "measurementDeterminedMonth", "measurementDeterminedDay", "rowWarning", "rowError"),
+                       "measurementDeterminedMonth", "measurementDeterminedDay"),
 
   # Experiment data
   Experiment_data = c("experimentID", "treatmentID", "experimentID", "siteID", "experimentType", # v1.2 variables
-                      "experimentStartYear", "experimentEndYear", "treatmentDetails", "rowWarning", "rowError")
+                      "experimentStartYear", "experimentEndYear", "treatmentDetails")
 
 )
 
