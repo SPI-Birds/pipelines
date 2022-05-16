@@ -14,7 +14,7 @@
 
 #' Determine the breeding season in which a brood was laid
 #'
-#' Determine the breeding season based on the breeding biology of a species at a study site.
+#' Determine the breeding season based on the data owner's expertise on the breeding biology of the species at the study site.
 #'
 #' The breeding season is determined as follows:
 #' \itemize{
@@ -29,19 +29,42 @@
 #' }
 #'
 #' @param data Data frame with brood information.
+#' @param season Name of the variable in primary data that marks the breeding seasons according to the data owner. This information is necessary if a single breeding season spreads over two calendar years, or if multiple seasons occur in a single calendar year.
 #'
 #' @return A character vector with breeding season.
 #'
 #' @export
 #'
 
-calc_season <- function(data) {
+calc_season <- function(data,
+                        season = NULL) {
 
-  ## FIXME: Use info from data owners?
-  breedingSeason <- data %>%
-    dplyr::mutate(breedingSeason = dplyr::case_when(.data$speciesID %in% {{}} ~ ,
-                                                    TRUE ~ as.character(.data$observedLayYear))) %>%
-    dplyr::select(.data$breedingSeason)
+  # In most cases, there is one breeding season that falls completely within a single calendar year.
+  # Then we use the values stored in observedLayYear to determine the breeding season.
+  if(is.null(season)) {
+
+    breedingSeason <- data %>%
+      dplyr::mutate(breedingSeason = as.character(.data$observedLayYear)) %>%
+      dplyr::pull(.data$breedingSeason)
+
+    # In cases that deviate from the default (1 breeding season in 1 year),
+    # we will use the information from the data owner to mark the different seasons
+  } else {
+
+    breedingSeason <- data %>%
+      # Determine year of breeding per season (as identified by data owner)
+      dplyr::group_by(!!rlang::sym(season)) %>%
+      dplyr::mutate(breedingYear = paste0(dplyr::first(.data$observedLayYear))) %>%
+      # Determine number of seasons per year
+      dplyr::group_by(.data$breedingYear) %>%
+      dplyr::mutate(seasonNumber = as.numeric(as.factor(!!rlang::sym(season)))) %>%
+      dplyr::ungroup() %>%
+      # Determine breeding season. If more than 1 season, use seasonNumber as suffix; otherwise, just use breedingYear
+      dplyr::mutate(breedingSeason = dplyr::case_when(any(.data$seasonNumber > 1) ~ paste(.data$breedingYear, .data$seasonNumber, sep = "_"),
+                                                      TRUE ~ as.character(.data$breedingYear))) %>%
+      dplyr::pull(.data$breedingSeason)
+
+  }
 
   return(breedingSeason)
 
@@ -173,7 +196,7 @@ calc_clutchtype <- function(data,
                                                                 }
 
                                                               })) %>%
-        dplyr::pull(ClutchType_calculated)
+        dplyr::pull(.data$ClutchType_calculated)
 
     } else {
 
@@ -271,7 +294,7 @@ calc_clutchtype <- function(data,
                                                                 }
 
                                                               })) %>%
-        dplyr::pull(ClutchType_calculated)
+        dplyr::pull(.data$ClutchType_calculated)
 
     }
 
@@ -370,7 +393,7 @@ calc_clutchtype <- function(data,
                                                                 }
 
                                                               })) %>%
-        dplyr::pull(ClutchType_calculated)
+        dplyr::pull(.data$ClutchType_calculated)
 
     } else {
 
@@ -468,7 +491,7 @@ calc_clutchtype <- function(data,
                                                                 }
 
                                                               })) %>%
-        dplyr::pull(ClutchType_calculated)
+        dplyr::pull(.data$ClutchType_calculated)
 
     }
 
