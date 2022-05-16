@@ -81,7 +81,10 @@ format_CHO <- function(db = choose_directory(),
     dplyr::filter(speciesID %in% species) %>%
     #BroodIDs are not unique (they are repeated each year)
     #We need to create unique IDs for each year using Year_BroodID
-    dplyr::mutate(broodID = paste(.data$Year, stringr::str_pad(.data$BroodId, width = 3, pad = "0"), sep = "_"),
+    dplyr::mutate(broodID = dplyr::case_when(is.na(.data$BroodId) ~ NA_character_,
+                                             !is.na(.data$BroodId) ~ paste(.data$Year, stringr::str_pad(.data$BroodId,
+                                                                                                        width = 3, pad = "0"),
+                                                                           sep = "_")),
                   # If individualID differs from expected format, set to NA
                   individualID = dplyr::case_when(stringr::str_detect(.data$Ring, "^[C][:digit:]{6}$") ~ .data$Ring,
                                                   TRUE ~ NA_character_),
@@ -349,12 +352,17 @@ create_capture_CHO <- function(data){
     # Arrange chronologically for each individual
     dplyr::arrange(.data$individualID, .data$captureDate, .data$captureTime) %>%
     dplyr::group_by(.data$individualID) %>%
-    dplyr::mutate(YoungestCatch = dplyr::first(.data$Age),
-                  FirstYr = dplyr::first(.data$Year)) %>%
+    dplyr::mutate(youngestCatch = dplyr::first(.data$Age),
+                  firstYr = dplyr::first(.data$Year),
+                  # First captures are assumed to be ringing events, and thus captureRingNumber = NA.
+                  captureRingNumber = dplyr::case_when(dplyr::row_number() == 1 ~ NA_character_,
+                                                       TRUE ~ stringr::str_sub(.data$individualID, 5, nchar(.data$individualID))),
+                  # All releases are assumed to be alive (also see releaseAlive), so no NAs in releaseRingNumber
+                  releaseRingNumber = stringr::str_sub(.data$individualID, 5, nchar(.data$individualID))) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(Age_observed = dplyr::case_when(is.na(.data$Age) ~ NA_integer_,
                                                   .data$Age == "C" ~ 1L,
-                                                  .data$YoungestCatch == "C" & .data$Year == .data$FirstYr ~ 3L,
+                                                  .data$youngestCatch == "C" & .data$Year == .data$firstYr ~ 3L,
                                                   .data$Age == "first year" ~ 5L,
                                                   .data$Age == "adult" ~ 4L)) %>%
     # NB: Age calculation moved to standard utility function (v1.2)
@@ -377,6 +385,8 @@ create_capture_CHO <- function(data){
     # Select columns that are in the standard format
     # + measurement columns (needed for input of create_measurement_CHO())
     dplyr::select(.data$individualID,
+                  .data$captureRingNumber,
+                  .data$releaseRingNumber,
                   .data$speciesID,
                   .data$observedSex,
                   .data$captureYear,
