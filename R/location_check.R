@@ -223,25 +223,29 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
       maps <- purrr::map(.x = location_IDs,
                          .f = ~{
 
-                           ggmap::qmplot(data = locations[locations$PopID == .x,], x = Longitude,y = Latitude,
-                                         source = "stamen", maptype = "terrain", extent = "panel",
-                                         color = I("#881f70"), alpha = I(0.4), size = I(2)) +
-                             ggplot2::geom_point(data = locations[locations$PopID == .x, ][1, ],
-                                                 ggplot2::aes(x = Centre_lon, y = Centre_lat),
-                                                 color = "black", shape = "*", size = 8) + # Centre point
-                             ggplot2::theme_classic() +
-                             ggplot2::theme(axis.text = ggplot2::element_text(color = "black"),
-                                            axis.title = ggplot2::element_text(size = 12),
-                                            panel.border = ggplot2::element_rect(color = "black", fill = NA)) +
-                             ggplot2::labs(title = paste0(pop_codes[pop_codes$PopID == .x, ]$PopName, " (", .x, ")"),
-                                           subtitle = paste0("Centre point (*): ",
-                                                             round(locations[locations$PopID == .x,]$Centre_lon[1], 3), ", ",
-                                                             round(locations[locations$PopID == .x,]$Centre_lat[1], 3)),
-                                           caption = "Source: Map tiles by Stamen Design, under CC BY 3.0. \nMap data by OpenStreetMap, under ODbL.")
+                           leaflet::leaflet() %>%
+                             leaflet::fitBounds(lng1 = min(locations[locations$PopID == .x, ]$Longitude),
+                                                lng2 = max(locations[locations$PopID == .x, ]$Longitude),
+                                                lat1 = min(locations[locations$PopID == .x, ]$Latitude),
+                                                lat2 = max(locations[locations$PopID == .x, ]$Latitude)) %>%
+                             leaflet::addProviderTiles(leaflet::providers$CartoDB.Voyager) %>%
+                             leaflet::addCircleMarkers(lng = locations[locations$PopID == .x, ]$Longitude,
+                                                       lat = locations[locations$PopID == .x, ]$Latitude,
+                                                       fillColor = "#881f70", stroke = FALSE,
+                                                       radius  = 5, fillOpacity = 0.2) %>%
+                             leaflet::addLabelOnlyMarkers(lng = locations[locations$PopID == .x, ][1, ]$Centre_lon,
+                                                          lat = locations[locations$PopID == .x, ][1, ]$Centre_lat,
+                                                          label = "*",
+                                                          labelOptions = leaflet::labelOptions(
+                                                            noHide = TRUE,
+                                                            textOnly = TRUE,
+                                                            style = list("color" = "black",
+                                                                         "font-size" = "32px"))) %>%
+                             leaflet::addLegend(title = paste0(pop_codes[pop_codes$PopID == .x, ]$PopName, " (", .x, ")"),
+                                                colors = "white", labels = "Centre point (*)")
 
-
-                         }) #%>%
-      #setNames(unique(map_data$PopID))
+                         }) %>%
+      setNames(location_IDs)
 
     })
 
