@@ -3,8 +3,8 @@
 #' Run multiple data pipelines. Currently, this produces separate .csv files but will eventually produce combined .csv files for all sites.
 #'
 #' @param path File path. Location of all folders for data owners. Note, the folders for each data owner must include the unique code of the data owner as seen in `site_codes`.
-#' @param site The three-letter code of sites to format as listed in `site_codes`.
-#' @param species The six-letter code of species to include as listed in `species_codes`. Note, this argument takes precedence over argument siteID (i.e., if a site doesn't have the requested species it will not be formatted.)
+#' @param siteID The three-letter code of sites to format as listed in `site_codes`.
+#' @param speciesID The six-letter code of species to include as listed in `species_codes`. Note, this argument takes precedence over argument siteID (i.e., if a site doesn't have the requested species it will not be formatted.)
 #' @param output_type Should the pipeline generate .csv files ('csv') or R objects ('R'). Default: R.
 #' @param save TRUE/FALSE. Should the output be saved locally? This is only relevant where
 #' `output_type` is 'R'. If output_type is 'csv'
@@ -16,20 +16,20 @@
 #' needed, as this will differ depending on `output_type`. By default, file name is
 #' "standard_format".
 #'
-#' @return Generate .csv files or return an R list object with 4 items
+#' @return Generate .csv files or return an R list object with 4 items (version <=1.1) or 6 (version >=1.2) items.
 #' @export
 #'
 #' @examples
 #' \dontrun{
 #'
 #' #Create an R list of Harjavalta data
-#' HAR_data <- run_pipelines(site = "HAR", species = "PARMAJ", output_type = "R")
+#' HAR_data <- run_pipelines(siteID = "HAR", speciesID = "PARMAJ", output_type = "R")
 #'
 #' }
 
 run_pipelines <- function(path = choose_directory(),
-                          site = NULL,
-                          species = NULL,
+                          siteID = NULL,
+                          speciesID = NULL,
                           output_type = "R",
                           save = FALSE,
                           save_path = NULL,
@@ -51,9 +51,9 @@ run_pipelines <- function(path = choose_directory(),
   }
 
   #If site is NULL use all sites
-  if(is.null(site)){
+  if(is.null(siteID)){
 
-    site <- site_codes$siteID
+    siteID <- site_codes$siteID
 
   }
 
@@ -65,14 +65,14 @@ run_pipelines <- function(path = choose_directory(),
 
   if(grepl(pattern = 'mac', x = OS)){
 
-    if(length(site[which(site %in% Access_sites)] > 0)){
+    if(length(siteID[which(siteID %in% Access_sites)] > 0)){
       warning(paste0('Pipelines not run for the following sites due to OS incompatibility: ',
-                    toString(site[which(site %in% Access_sites)]),
+                    toString(siteID[which(siteID %in% Access_sites)]),
                     ". To obtain standard format data for these sites, please run on a Windows OS.")
               )
     }
 
-    site <- site[which(!(site %in% Access_sites))]
+    siteID <- siteID[which(!(siteID %in% Access_sites))]
 
   } else if(!grepl(pattern = 'mac|windows', x = OS)){
 
@@ -80,18 +80,18 @@ run_pipelines <- function(path = choose_directory(),
 
   }
 
-  if(length(site) == 0){
+  if(length(siteID) == 0){
 
     stop(paste0('None of the selected pipeline(s) could not be run due to OS incompatibility. Please run on a Windows OS.'))
 
   }
 
   #Assign species for filtering
-  if(is.null(species)){
+  if(is.null(speciesID)){
 
-    species <- species_codes$speciesID
+    speciesID <- species_codes$speciesID
 
-  } else if(all(!species %in% species_codes$speciesID)){
+  } else if(all(!speciesID %in% species_codes$speciesID)){
 
     stop("Species provided are not included in the pipelines. Please select from species listed in species_codes")
 
@@ -99,9 +99,9 @@ run_pipelines <- function(path = choose_directory(),
 
   #Firstly, check if there are any cases where a requested site does not have any info on a given species
   missing_species <- site_species_combos %>%
-    dplyr::filter(.data$siteID %in% {{site}}) %>%
+    dplyr::filter(.data$siteID %in% {{siteID}}) %>%
     dplyr::group_by(.data$siteID) %>%
-    dplyr::summarise(total_species = sum(.data$speciesID %in% {{species}}))
+    dplyr::summarise(total_species = sum(.data$speciesID %in% {{speciesID}}))
 
   #If there are any with missing data, give a warning message
   if(any(missing_species$total_species == 0)){
@@ -119,7 +119,7 @@ run_pipelines <- function(path = choose_directory(),
 
   #Now just work with those sites where the site and species are present
   site_species_subset <- site_species_combos %>%
-    dplyr::filter(.data$siteID %in% {{site}} & .data$speciesID %in% {{species}}) %>%
+    dplyr::filter(.data$siteID %in% {{siteID}} & .data$speciesID %in% {{speciesID}}) %>%
     dplyr::left_join(dplyr::select(site_codes, siteID, institutionID), by = "siteID") %>%
     dplyr::group_by(.data$institutionID) %>%
     dplyr::summarise(Species = list(c(unique(speciesID))),
@@ -147,52 +147,93 @@ run_pipelines <- function(path = choose_directory(),
   #For each of the four tables, go through and combine the outputs
   #Add row numbers for each
   Brood_data <- purrr::map_df(.x = R_objects,
+                              .f = ~{
+
+                                .x$Brood_data
+
+                              }) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(Row = seq(1, dplyr::n())) %>%
+    dplyr::select(Row, dplyr::everything())
+
+  Capture_data <- purrr::map_df(.x = R_objects,
+                                .f = ~{
+
+                                  .x$Capture_data
+
+                                }) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(Row = seq(1, dplyr::n())) %>%
+    dplyr::select(Row, dplyr::everything())
+
+  Individual_data <- purrr::map_df(.x = R_objects,
                                    .f = ~{
 
-                                     .x$Brood_data
+                                     .x$Individual_data
 
                                    }) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(Row = seq(1, dplyr::n())) %>%
     dplyr::select(Row, dplyr::everything())
 
-  Capture_data <- purrr::map_df(.x = R_objects,
+  Location_data <- purrr::map_df(.x = R_objects,
+                                 .f = ~{
+
+                                   .x$Location_data
+
+                                 }) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(Row = seq(1, dplyr::n())) %>%
+    dplyr::select(Row, dplyr::everything())
+
+  if("Measurement_data" %in% names(R_objects)) {
+
+    Measurement_data <- purrr::map_df(.x = R_objects,
+                                      .f = ~{
+
+                                        .x$Measurement_data
+
+                                      }) %>%
+      dplyr::ungroup() %>%
+      dplyr::mutate(row = seq(1, dplyr::n())) %>%
+      dplyr::select(row, dplyr::everything())
+
+  }
+
+  if("Experiment_data" %in% names(R_objects)) {
+
+    Experiment_data <- purrr::map_df(.x = R_objects,
                                      .f = ~{
 
-                                       .x$Capture_data
+                                       .x$Measurement_data
 
                                      }) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(Row = seq(1, dplyr::n())) %>%
-    dplyr::select(Row, dplyr::everything())
+      dplyr::ungroup() %>%
+      dplyr::mutate(row = seq(1, dplyr::n())) %>%
+      dplyr::select(row, dplyr::everything())
 
-  Individual_data <- purrr::map_df(.x = R_objects,
-                                        .f = ~{
+  }
 
-                                          .x$Individual_data
-
-                                        }) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(Row = seq(1, dplyr::n())) %>%
-    dplyr::select(Row, dplyr::everything())
-
-  Location_data   <- purrr::map_df(.x = R_objects,
-                                        .f = ~{
-
-                                          .x$Location_data
-
-                                        }) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(Row = seq(1, dplyr::n())) %>%
-    dplyr::select(Row, dplyr::everything())
-
-  #If we want an R output, return a list with the 4 different data frames
+  #If we want an R output, return a list with the 4 or 6 different data frames
   if(output_type == "R"){
 
-    output_object <- list(Brood_data = Brood_data,
-                          Capture_data = Capture_data,
-                          Individual_data = Individual_data,
-                          Location_data = Location_data)
+
+    if("Measurement_data" %in% names(R_objects) & "Experiment_data" %in% names(R_objects)) { # v1.2
+
+      output_object <- list(Brood_data = Brood_data,
+                            Capture_data = Capture_data,
+                            Individual_data = Individual_data,
+                            Measurement_data = Measurement_data,
+                            Location_data = Location_data,
+                            Experiment_data = Experiment_data)
+    } else { # v1.0 & v1.1
+
+      output_object <- list(Brood_data = Brood_data,
+                            Capture_data = Capture_data,
+                            Individual_data = Individual_data,
+                            Location_data = Location_data)
+
+    }
 
     if(save){
 
@@ -212,7 +253,11 @@ run_pipelines <- function(path = choose_directory(),
 
     utils::write.csv(x = Individual_data, file = paste0(save_path, "/", filename, "_Individual_data.csv"), row.names = F)
 
+    if("Measurement_data" %in% names(R_objects)) {utils::write.csv(x = Measurement_data, file = paste0(save_path, "/", filename, "_Measurement_data.csv"), row.names = F)}
+
     utils::write.csv(x = Location_data, file = paste0(save_path, "/", filename, "_Location_data.csv"), row.names = F)
+
+    if("Experiment_data" %in% names(R_objects)) {utils::write.csv(x = Experiment_data, file = paste0(save_path, "/", filename, "_Experiment_data.csv"), row.names = F)}
 
     invisible(NULL)
 
