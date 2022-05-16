@@ -289,22 +289,36 @@ quality_check <- function(R_data,
 
     if(!is.null(Location_checks$Maps)) { # Print the Maps section only if a map could be made (e.g., when no coordinates were provided, no map can be made)
 
-        body <- c(body,
-                  '\\newpage',
-                  '# Maps',
-                  '',
-                  '```{r, echo = FALSE, fig.cap = "", dpi = 300, results = "asis"}',
-                  #'invisible(lapply(Location_checks$Maps, print))', # To suppress the printing of indices
-                  #'invisible(purrr::map(.x = Location_checks$Maps, .f = ~{.x}))', # To suppress the printing of indices
-                  'invisible(
-                    map(.x = Location_checks$Maps,
-                        .f = ~{
-                          print(.x)
-                          cat("\\\\clearpage")
-                        })
-                  )',
-                  '```',
-                  '')
+      pdf_map <- c('\\newpage',
+                   '# Maps',
+                   '',
+                   '```{r, echo = FALSE, fig.cap = "", results = "asis"}',
+                   'invisible(
+                      iwalk(.x = Location_checks$Maps,
+                            .f = ~{
+                              htmlwidgets::saveWidget(widget = .x, file = paste0("figure/", .y, ".html"))
+                            })
+                    )
+
+                    invisible(
+                      map(.x = names(Location_checks$Maps),
+                          .f = ~{
+                            webshot::webshot(url = paste0("figure/", .x, ".html"),
+                                             file = paste0("figure/", .x, ".png"))
+                          })
+                    )
+
+                    knitr::include_graphics(list.files(path = paste0("figure/"), pattern = "^[A-Z]{3}.png$", full.names = TRUE))',
+                   '```',
+                   '')
+
+      html_map <- c('\\newpage',
+                    '# Maps',
+                    '',
+                    '```{r, echo = FALSE}',
+                    'htmltools::tagList(Location_checks$Maps)',
+                    '```',
+                    '')
 
     }
 
@@ -319,6 +333,7 @@ quality_check <- function(R_data,
                                     'title: "`r title`"',
                                     'date: "`r Sys.Date()`"',
                                     'geometry: margin=0.5in',
+                                    'always_allow_html: yes',
                                     'output:
                                       html_document:
                                         css: ./inst/css/quality_check.css
@@ -333,9 +348,11 @@ quality_check <- function(R_data,
                                       mainfont: Arial',
                                     '---', body)
 
-                     knitr::knit(text = mark_output, output = "quality-check-report_errors.md")
+                     if(!is.null(Location_checks$Maps)) mark_output <- c(mark_output, html_map)
 
-                     rmarkdown::render("quality-check-report_errors.md",
+                     writeLines(mark_output, "quality-check-report_errors.rmd")
+
+                     rmarkdown::render("quality-check-report_errors.rmd",
                                        output_format = "html_document",
                                        output_file = paste0(report_file, "_errors"))
 
@@ -358,9 +375,11 @@ quality_check <- function(R_data,
                                       check_descriptions_pdf,
                                       body)
 
-                     knitr::knit(text = mark_output, output = "quality-check-report_errors.md")
+                     if(!is.null(Location_checks$Maps)) mark_output <- c(mark_output, pdf_map)
 
-                     rmarkdown::render("quality-check-report_errors.md",
+                     writeLines(mark_output, "quality-check-report_errors.rmd")
+
+                     rmarkdown::render("quality-check-report_errors.rmd",
                                        output_format = rmarkdown::pdf_document(latex_engine = latex_engine),
                                        output_file = paste0(report_file, "_errors"))
 
