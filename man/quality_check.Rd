@@ -62,6 +62,4 @@ CHO <- run_pipelines(PopID = "CHO", output_type = "R")
 CHO_checked <- quality_check(R_data = CHO)
 
 }
-invisible(lapply(Location_checks$Maps, print))', # To suppress the printing of indices
-invisible(purrr::map(.x = Location_checks$Maps, .f = ~{.x}))', # To suppress the printing of indices
 }
