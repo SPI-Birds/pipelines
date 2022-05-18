@@ -742,18 +742,18 @@ calc_clutchtype <- function(data,
 #' Calculate cumulative number of fledgings
 #'
 #' For a given nest, determine the cumulative number of fledglings in all nests
-#' before this. This is used to calculate ClutchType_calc. The function also
-#' includes functionality to return whether number of fledglings in previous
-#' nests was measured or not (i.e. were there NAs in any nests before the
-#' current one). This is neccesary in populations where the number of fledglings
-#' is not measured consistently
+#' before this. This is used to calculate calculatedClutchType using \code{\link{calc_clutchtype}}.
+#' The function also includes functionality to return whether number of fledglings in previous
+#' nests was measured or not (i.e., were there NAs in any nests before the
+#' current one). This is necessary in populations where the number of fledglings
+#' is not measured consistently.
 #'
-#' @param x Column NumberFledged in the Brood_data table
+#' @param x Column observedNumberFledged in the Brood_data table
 #' @param na.rm Logical. If TRUE, returns cumulative number of fledglings
 #' where NA is assumed to be 0. If FALSE, returns a vector of logicals
 #' showing whether any nests before the current nest were unmeasured (NA).
 #'
-#' @return A vector of numerics (if na.rm = TRUE) or logicals (na.rm = FALSE).
+#' @return A vector of numeric values (if na.rm = TRUE) or logical values (na.rm = FALSE).
 #'
 #' @export
 #'
@@ -881,7 +881,7 @@ calc_nestattempt <- function(data,
 
 #' Determine sex of an individual
 #'
-#' Conclude the sex of an individual based on sex determinations during captures (observedSex).
+#' Conclude the sex of an individual based on sex scores during captures (observedSex).
 #'
 #' An individual is recorded as having a conflicting sex ('C') when it has been sexed differently during
 #' different captures.
@@ -889,7 +889,7 @@ calc_nestattempt <- function(data,
 #' @param individual_data Data frame with individual information.
 #' @param capture_data Data frame with capture information.
 #'
-#' @return Data frame (individual information) with calculatedSex, which takes either 'F', 'M', 'C', or NA.
+#' @return A data frame (individual information) with calculatedSex, which takes either 'F', 'M', 'C', or NA.
 #'
 #' @export
 #'
@@ -905,10 +905,11 @@ calc_nestattempt <- function(data,
 calc_sex <- function(individual_data,
                      capture_data) {
 
+  # Retrieve an individual's sex information its captures
   sex_calculated <- capture_data %>%
     dplyr::filter(!is.na(.data$observedSex)) %>%
     dplyr::group_by(.data$individualID) %>%
-    # Determine the number of different sex determinations per individualID
+    # Determine the number of different sex scores per individualID
     dplyr::summarise(unique_sex = paste(unique(.data$observedSex), collapse = "-")) %>%
     dplyr::ungroup() %>%
     # Keep one record per individual
