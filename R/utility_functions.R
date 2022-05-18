@@ -112,7 +112,7 @@ calc_season <- function(data,
 #' @param protocol_version Character string. The protocol version of the SPI Birds
 #' standard data being used to process the primary data. Either "1.0" (default), "1.1", or "1.2".
 #'
-#' @return A character vector with either 'first', 'replacement', 'second', or NA (v1.0 or v1.1), or a data frame with calculatedClutchType (v1.2), where calculatedClutchType is either 'first', 'replacement', 'second', or NA.
+#' @return A character vector with either 'first', 'replacement', 'second', or NA (v1.0 or v1.1), or a data frame with calculatedClutchType (v1.2), which takes either 'first', 'replacement', 'second', or NA.
 #'
 #' @export
 #'
@@ -878,6 +878,54 @@ calc_nestattempt <- function(data,
 
 }
 
+
+#' Determine sex of an individual
+#'
+#' Conclude the sex of an individual based on sex determinations during captures (observedSex).
+#'
+#' An individual is recorded as having a conflicting sex ('C') when it has been sexed differently during
+#' different captures.
+#'
+#' @param individual_data Data frame with individual information.
+#' @param capture_data Data frame with capture information.
+#'
+#' @return Data frame (individual information) with calculatedSex, which takes either 'F', 'M', 'C', or NA.
+#'
+#' @export
+#'
+#' @examples
+#' library(dplyr)
+#'
+#' capture_data <- tibble::tibble(individualID = rep(paste0("I", 1:4), each = 2),
+#'                                observedSex = c("F", "F", "M", NA, "F", "M", NA, NA))
+#'
+#' individual_data <- tibble::tibble(individualID = paste0("I", 1:4)) %>%
+#'   calc_sex(., capture_data)
+
+calc_sex <- function(individual_data,
+                     capture_data) {
+
+  sex_calculated <- capture_data %>%
+    dplyr::filter(!is.na(.data$observedSex)) %>%
+    dplyr::group_by(.data$individualID) %>%
+    # Determine the number of different sex determinations per individualID
+    dplyr::summarise(unique_sex = paste(unique(.data$observedSex), collapse = "-")) %>%
+    dplyr::ungroup() %>%
+    # Keep one record per individual
+    dplyr::distinct() %>%
+    # If the individualID has not been consistently assigned the same sex,
+    # calculatedSex is set to 'C'
+    dplyr::mutate(calculatedSex = dplyr::case_when(nchar(.data$unique_sex) > 1 ~ "C",
+                                                   TRUE ~ .data$unique_sex)) %>%
+    dplyr::select(.data$individualID, .data$calculatedSex)
+
+  # Merge calculatedSex information into individual data
+  output <- individual_data %>%
+    dplyr::left_join(sex_calculated, by = "individualID")
+
+  return(output)
+
+}
 
 #' Calculate age based on when an individual was first captured
 #'
