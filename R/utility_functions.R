@@ -33,7 +33,7 @@
 #'   breeding seasons according to the data owner. This information is necessary if a single breeding season spreads over
 #'   two calendar years, or if multiple seasons occur in a single calendar year.
 #'
-#' @return A character vector with breeding season.
+#' @return A data frame with breedingSeason.
 #'
 #' @export
 #'
@@ -72,8 +72,7 @@ calc_season <- function(data,
   if(missing(season)) {
 
     breedingSeason <- data %>%
-      dplyr::mutate(breedingSeason = as.character(.data$observedLayYear)) %>%
-      dplyr::pull(.data$breedingSeason)
+      dplyr::mutate(breedingSeason = as.character(.data$observedLayYear))
 
     # In cases that deviate from the default (1 breeding season in 1 year),
     # we will use the information from the data owner to mark the different seasons
@@ -93,7 +92,7 @@ calc_season <- function(data,
                                                                                           .data$seasonNumber,
                                                                                           sep = "_"),
                                                       TRUE ~ as.character(.data$breedingYear))) %>%
-      dplyr::pull(.data$breedingSeason)
+      dplyr::select(-.data$breedingYear, -.data$seasonNumber)
 
   }
 
@@ -105,7 +104,7 @@ calc_season <- function(data,
 #' Calculate clutch type (when laying date is in date format)
 #'
 #' Use info on laying date and fledge data to determine the clutch type of a
-#' given brood
+#' given brood.
 #'
 #' @param data Data frame with brood information.
 #' @param na.rm Logical. Should NAs be removed and treated as 0s? If TRUE, NAs are treated as 0s. If FALSE, NAs
@@ -113,8 +112,7 @@ calc_season <- function(data,
 #' @param protocol_version Character string. The protocol version of the SPI Birds
 #' standard data being used to process the primary data. Either "1.0" (default), "1.1", or "1.2".
 #'
-#' @return A character vector with either 'first', 'replacement', 'second', or
-#'   NA.
+#' @return A character vector with either 'first', 'replacement', 'second', or NA (v1.0 or v1.1), or a data frame with calculatedClutchType (v1.2), where calculatedClutchType is either 'first', 'replacement', 'second', or NA.
 #'
 #' @export
 #'
@@ -626,7 +624,8 @@ calc_clutchtype <- function(data,
                                                                }
 
                                                              })) %>%
-        dplyr::pull(.data$calculatedClutchType)
+        dplyr::select(-.data$observedLayDate, -.data$cutoff,
+                      -.data$total_fledge, -.data$rowNumber)
 
     } else {
 
@@ -724,7 +723,8 @@ calc_clutchtype <- function(data,
                                                                }
 
                                                              })) %>%
-        dplyr::pull(.data$calculatedClutchType)
+        dplyr::select(-.data$observedLayDate, -.data$cutoff,
+                      -.data$total_fledge, -.data$total_fledge_na, -.data$rowNumber)
 
     }
 
@@ -753,7 +753,7 @@ calc_clutchtype <- function(data,
 #' where NA is assumed to be 0. If FALSE, returns a vector of logicals
 #' showing whether any nests before the current nest were unmeasured (NA).
 #'
-#' @return A vector of numerics (if na.rm = TRUE) or logicals (na.rm = FALSE)
+#' @return A vector of numerics (if na.rm = TRUE) or logicals (na.rm = FALSE).
 #'
 #' @export
 #'
@@ -804,14 +804,14 @@ calc_cumfledge <- function(x, na.rm = TRUE){
 #' Arrange data by breeding pairs (femaleID & maleID) and laying date to
 #' calculate the sequence of nest attempts in a single season
 #'
-#' If either female or male could not be identified, the nest is assumed to be the first attempt.
+#' If either female or male was not identified, the nest is assumed to be the pair's first attempt.
 #'
 #' @param data Data frame with brood information.
 #' @param season Unquoted expression (i.e. character without quotation marks). Name of the variable in primary data that marks the
 #'   breeding seasons according to the data owner. This information is necessary if a single breeding season spreads over
 #'   two calendar years, or if multiple seasons occur in a single calendar year.
 #'
-#' @return A data frame with calculated nest attempt number
+#' @return A data frame with nestAttemptNumber.
 #'
 #' @export
 #'
@@ -925,7 +925,7 @@ calc_nestattempt <- function(data,
 #'   standard data being used to process the primary data. Either "1.0" (default), "1.1", or "1.2".
 #' @param showpb Logical. Should a progress bar be shown?
 #'
-#' @return A data frame with calculated age.
+#' @return A data frame with calculatedAge (v1.0, v1.1) or exactAge and minimumAge (v1.2).
 #'
 #' @export
 #'
