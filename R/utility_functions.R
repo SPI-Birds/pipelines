@@ -30,8 +30,8 @@
 #'
 #' @param data Data frame with brood information.
 #' @param season Unquoted expression (i.e. character without quotation marks). Name of the variable in primary data that marks the
-#'   breeding seasons according to the data owner. This information is necessary if a single breeding season spreads over two calendar years,
-#'   or if multiple seasons occur in a single calendar year.
+#'   breeding seasons according to the data owner. This information is necessary if a single breeding season spreads over
+#'   two calendar years, or if multiple seasons occur in a single calendar year.
 #'
 #' @return A character vector with breeding season.
 #'
@@ -797,6 +797,87 @@ calc_cumfledge <- function(x, na.rm = TRUE){
   }
 
 }
+
+
+#' Calculate sequence of nest attempts by a breeding pair in a season
+#'
+#' Arrange data by breeding pairs (femaleID & maleID) and laying date to
+#' calculate the sequence of nest attempts in a single season
+#'
+#' If either female or male could not be identified, the nest is assumed to be the first attempt.
+#'
+#' @param data Data frame with brood information.
+#' @param season Unquoted expression (i.e. character without quotation marks). Name of the variable in primary data that marks the
+#'   breeding seasons according to the data owner. This information is necessary if a single breeding season spreads over
+#'   two calendar years, or if multiple seasons occur in a single calendar year.
+#'
+#' @return A data frame with calculated nest attempt number
+#'
+#' @export
+#'
+#' @examples
+#' library(dplyr)
+#'
+#' # Single season in a single calendar year (no season information needed)
+#' bird_data <- tibble::tibble(broodID = 1:7,
+#'                             femaleID = c("F1", "F1", "F2", "F2", "F3", "F3", NA),
+#'                             maleID = c("M1", "M1", "M2", "M2", "M3", NA, "M3"),
+#'                             observedLayYear = c(2020, 2020, 2020, 2021, 2022, 2022, 2022),
+#'                             observedLayMonth = rep(5, 7),
+#'                             observedLayDay = rep(1, 7)) %>%
+#'   calc_nestattempt()
+#'
+#' # Single season over two calendar years (season information needed)
+#' bird_data <- tibble::tibble(broodID = 1:7,
+#'                             femaleID = c("F1", "F1", "F2", "F2", "F3", "F3", NA),
+#'                             maleID = c("M1", "M1", "M2", "M2", "M3", NA, "M3"),
+#'                             season = c(1, 1, 1, 2, 3, 3, 3),
+#'                             observedLayYear = c(2020, 2021, 2020, 2021, 2022, 2022, 2022),
+#'                             observedLayMonth = c(12, 1, rep(12, 5)),
+#'                             observedLayDay = rep(1, 7)) %>%
+#'   calc_nestattempt(season = season)
+
+calc_nestattempt <- function(data,
+                             season) {
+
+  # In most cases, there is one breeding season that falls completely within a single calendar year.
+  # Then we use the values stored in observedLayYear as an indication of breeding season.
+  if(missing(season)) {
+
+    output <- data %>%
+      # Determine breeding pair: concatenate femaleID & maleID
+      dplyr::mutate(breedingPair = paste(.data$femaleID, .data$maleID, sep = "-")) %>%
+      dplyr::group_by(.data$observedLayYear, .data$breedingPair) %>%
+      # Arrange by laying date
+      dplyr::arrange(.data$observedLayYear, .data$observedLayMonth, .data$observedLayDay) %>%
+      # If either female or male could not be identified, the nest is assumed to be the first attempt
+      dplyr::mutate(nestAttemptNumber = dplyr::case_when(stringr::str_detect(.data$breedingPair, "NA") ~ 1L,
+                                                         TRUE ~ as.integer(dplyr::row_number()))) %>%
+      dplyr::ungroup() %>%
+      dplyr::select(-.data$breedingPair)
+
+    # In cases that deviate from the default (1 breeding season in 1 year),
+    # we need to use information from the data owner to mark the different seasons
+  } else {
+
+    output <- data %>%
+      # Determine breeding pair: concatenate femaleID & maleID
+      dplyr::mutate(breedingPair = paste(.data$femaleID, .data$maleID, sep = "-")) %>%
+      dplyr::group_by({{season}}, .data$breedingPair) %>%
+      # Arrange by season & laying date
+      dplyr::arrange({{season}}, .data$observedLayYear, .data$observedLayMonth, .data$observedLayDay) %>%
+      # If either female or male could not be identified, the nest is assumed to be the first attempt
+      dplyr::mutate(nestAttemptNumber = dplyr::case_when(stringr::str_detect(.data$breedingPair, "NA") ~ 1L,
+                                                         TRUE ~ as.integer(dplyr::row_number()))) %>%
+      dplyr::ungroup() %>%
+      dplyr::select(-.data$breedingPair)
+
+  }
+
+  return(output)
+
+}
+
 
 #' Calculate age based on when an individual was first captured
 #'
