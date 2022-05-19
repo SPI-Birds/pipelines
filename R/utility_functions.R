@@ -545,6 +545,7 @@ calc_clutchtype <- function(data,
     if(na.rm == TRUE){
 
       clutchtype_calculated <- cutoff_dat %>%
+        dplyr::arrange(.data$breedingSeason, .data$femaleID, .data$observedLayDate) %>%
         dplyr::mutate(total_fledge = calc_cumfledge(x = .data$observedNumberFledged, na.rm = TRUE),
                       rowNumber = 1:dplyr::n()) %>%
         dplyr::ungroup() %>%
@@ -630,16 +631,17 @@ calc_clutchtype <- function(data,
     } else {
 
       clutchtype_calculated <- cutoff_dat %>%
+        dplyr::arrange(.data$breedingSeason, .data$femaleID, .data$observedLayDate) %>%
         dplyr::mutate(total_fledge = calc_cumfledge(x = .data$observedNumberFledged, na.rm = TRUE),
                       total_fledge_na = calc_cumfledge(x = .data$observedNumberFledged, na.rm = FALSE),
                       rowNumber = 1:dplyr::n()) %>%
         dplyr::ungroup() %>%
-        dplyr::mutate(calculatedClutchType = purrr::pmap_chr(.l = list(rows = .$rowrowNumber,
-                                                                       femID = .$FemaleID,
+        dplyr::mutate(calculatedClutchType = purrr::pmap_chr(.l = list(rows = .$rowNumber,
+                                                                       femID = .$femaleID,
                                                                        cutoff_date = .$cutoff,
                                                                        nr_fledge_before = .$total_fledge,
                                                                        na_fledge_before = .$total_fledge_na,
-                                                                       LD = .$LayDate_observed),
+                                                                       LD = .$observedLayDate),
                                                              .f = function(rows, femID, cutoff_date,
                                                                            nr_fledge_before, na_fledge_before,
                                                                            LD){
