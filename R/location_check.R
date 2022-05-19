@@ -232,7 +232,7 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
                              leaflet::addCircleMarkers(lng = locations[locations$PopID == .x, ]$Longitude,
                                                        lat = locations[locations$PopID == .x, ]$Latitude,
                                                        fillColor = "#881f70", stroke = FALSE,
-                                                       radius  = 5, fillOpacity = 0.2) %>%
+                                                       radius  = 5, fillOpacity = 0.5) %>%
                              leaflet::addLabelOnlyMarkers(lng = locations[locations$PopID == .x, ][1, ]$Centre_lon,
                                                           lat = locations[locations$PopID == .x, ][1, ]$Centre_lat,
                                                           label = "*",

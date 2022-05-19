@@ -202,7 +202,7 @@ quality_check <- function(R_data,
   if(output %in% c("errors", "both") & report == TRUE) {
 
     # Title
-    title <- paste0("Quality check report: potential errors")
+    title <- paste0("SPI-Birds Standard Data Quality Checks")
 
     # Create body of the Rmd file
     # This is the same for both html and pdf
@@ -329,9 +329,14 @@ quality_check <- function(R_data,
 
                    if("html" %in% report_format){
 
+                      title <- paste0(title, ": Potential Errors")
+                      authors <- "SPI-Birds Team (Stefan J.G. Vriend, Liam D. Bailey, Chris Tyson, Antica Culina, & Marcel E. Visser)"
+                      date_format <- "%B %d, %Y"
+
                       mark_output <- c('---',
                                     'title: "`r title`"',
-                                    'date: "`r Sys.Date()`"',
+                                    'author: "`r authors`"',
+                                    'date: "`r format(Sys.time(), date_format)`"',
                                     'geometry: margin=0.5in',
                                     'always_allow_html: yes',
                                     'output:
@@ -346,7 +351,10 @@ quality_check <- function(R_data,
                                           collapsed: false
                                           smooth_scroll: true
                                       mainfont: Arial',
-                                    '---', body)
+                                    '---',
+                                    descriptions_errors_html,
+                                    check_descriptions_html,
+                                    body)
 
                      if(!is.null(Location_checks$Maps)) mark_output <- c(mark_output, html_map)
 
@@ -392,7 +400,7 @@ quality_check <- function(R_data,
   if(output %in% c("warnings", "both") & report == TRUE) {
 
     # Title
-    title <- paste0("Quality check report: warnings and verified records")
+    title <- paste0("SPI-Birds Standard Data Quality Checks")
 
     # Create body of the Rmd file
     # This is the same for both html and pdf
@@ -534,9 +542,14 @@ quality_check <- function(R_data,
 
                    if("html" %in% report_format){
 
+                     title <- paste0(title, ": Warnings & Verified Records")
+                     authors <- "SPI-Birds Team (Stefan J.G. Vriend, Liam D. Bailey, Chris Tyson, Antica Culina, & Marcel E. Visser)"
+                     date_format <- "%B %d, %Y"
+
                      mark_output <- c('---',
                                       'title: "`r title`"',
-                                      'date: "`r Sys.Date()`"',
+                                      'author: "`r authors`"',
+                                      'date: "`r format(Sys.time(), date_format)`"',
                                       'geometry: margin=0.5in',
                                       'output:
                                       html_document:
@@ -550,7 +563,10 @@ quality_check <- function(R_data,
                                           collapsed: false
                                           smooth_scroll: true
                                       mainfont: Arial',
-                                      '---', body)
+                                      '---',
+                                      descriptions_warnings_html,
+                                      check_descriptions_html,
+                                      body)
 
                      knitr::knit(text = mark_output, output = "quality-check-report_warnings.md")
 
