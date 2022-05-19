@@ -50,37 +50,41 @@
 format_CHO <- function(db = choose_directory(),
                        species = NULL,
                        site = NULL,
+                       optional_variables = NULL,
                        path = ".",
                        output_type = "R"){
 
-  #Force choose_directory() if used
+  # Force choose_directory() if used
   force(db)
 
-  #Assign species for filtering
+  # Assign species for filtering
   if(is.null(species)){
 
     species <- species_codes$speciesID
 
   }
 
-  #Record start time to provide processing time to the user.
+  # If all optional variables are requested, retrieve all names
+  if(optional_variables == "all") optional_variables <- unlist(unname(utility_variables))
+
+  # Record start time to provide processing time to the user.
   start_time <- Sys.time()
 
-  #Read in data with readxl
+  # Read in data with readxl
   all_data <- readxl::read_excel(paste(db, "CHO_PrimaryData.xlsx", sep = "/")) %>%
-    #Clean all names with janitor into snake_case
+    # Clean all names with janitor into snake_case
     janitor::clean_names(case = "upper_camel") %T>%
-    #There is one column with "º" that doesn't convert to ASCII with janitor
-    #This appears the be a deeper issue than janitor (potentially in unicode translation)
-    #Therefore, we will do the translation manually
+    # There is one column with "º" that doesn't convert to ASCII with janitor
+    # This appears the be a deeper issue than janitor (potentially in unicode translation)
+    # Therefore, we will do the translation manually
     {colnames(.) <- iconv(colnames(.), "", "ASCII", sub = "")} %>%
-    #Change species to "PARMAJ" because it's only PARMAJ in Choupal
+    # Change species to "PARMAJ" because it's only PARMAJ in Choupal
     dplyr::mutate(speciesID = "PARMAJ",
                   siteID = "CHO",
                   plotID = NA_character_) %>%
     dplyr::filter(speciesID %in% species) %>%
-    #BroodIDs are not unique (they are repeated each year)
-    #We need to create unique IDs for each year using Year_BroodID
+    # broodIDs are not unique (they are repeated each year)
+    # We need to create unique IDs for each year using year_broodID
     dplyr::mutate(broodID = dplyr::case_when(is.na(.data$BroodId) ~ NA_character_,
                                              !is.na(.data$BroodId) ~ paste(.data$Year, stringr::str_pad(.data$BroodId,
                                                                                                         width = 3, pad = "0"),
@@ -97,8 +101,8 @@ format_CHO <- function(db = choose_directory(),
                   captureDay = as.integer(lubridate::day(.data$captureDate)),
                   captureTime = format.POSIXct(.data$Time, format = "%H:%M:%S"),
                   chickAge = as.integer(dplyr::na_if(.data$ChickAge, "na")),
-                  #If an individual was caught in a mist net give a generic LocationID (MN1)
-                  #Otherwise, give the box number.
+                  # If an individual was caught in a mist net give a generic LocationID (MN1)
+                  # Otherwise, give the box number.
                   locationID = purrr::pmap_chr(.l = list(.data$TrapingMethod, as.character(.data$Box)),
                                                .f = ~{
 
@@ -119,19 +123,23 @@ format_CHO <- function(db = choose_directory(),
 
   message("Compiling capture information...")
 
-  Capture_data <- create_capture_CHO(all_data)
+  Capture_data <- create_capture_CHO(data = all_data,
+                                     optional_variables = optional_variables)
 
   # BROOD DATA
 
   message("Compiling brood information...")
 
-  Brood_data <- create_brood_CHO(all_data)
+  Brood_data <- create_brood_CHO(data = all_data,
+                                 optional_variables = optional_variables)
 
   # INDIVIDUAL DATA
 
   message("Compiling individual information...")
 
-  Individual_data <- create_individual_CHO(all_data, Capture_data = Capture_data)
+  Individual_data <- create_individual_CHO(data = all_data,
+                                           Capture_data = Capture_data,
+                                           optional_variables = optional_variables)
 
   # MEASUREMENT DATA
 
@@ -143,13 +151,13 @@ format_CHO <- function(db = choose_directory(),
 
   message("Compiling location information...")
 
-  Location_data <- create_location_CHO(all_data)
+  Location_data <- create_location_CHO(data = all_data)
 
   # EXPERIMENT DATA
 
   message("Compiling experiment information...")
 
-  # There is no experiment information so we create an empty data table
+  # NB: There is no experiment information so we create an empty data table
   Experiment_data <- data_templates$v1.2$Experiment_data[0,]
 
   time <- difftime(Sys.time(), start_time, units = "sec")
@@ -159,12 +167,22 @@ format_CHO <- function(db = choose_directory(),
   # WRANGLE DATA FOR EXPORT
 
   Capture_data <- Capture_data %>%
-    # Keep only columns that are in the standard format
-    dplyr::select(dplyr::contains(names(data_templates$v1.2$Capture_data))) %>%
     # Add missing columns
     dplyr::bind_cols(data_templates$v1.2$Capture_data[1, !(names(data_templates$v1.2$Capture_data) %in% names(.))]) %>%
-    # Reorder columns
-    dplyr::select(names(data_templates$v1.2$Capture_data))
+    # Keep only columns that are in the standard format or in the list of optional variables
+    dplyr::select(names(data_templates$v1.2$Capture_data), dplyr::contains(utility_variables$Capture_data))
+
+  Brood_data <- Brood_data %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates$v1.2$Brood_data[1, !(names(data_templates$v1.2$Brood_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format or in the list of optional variables
+    dplyr::select(names(data_templates$v1.2$Brood_data), dplyr::contains(utility_variables$Brood_data))
+
+  Individual_data <- Individual_data %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates$v1.2$Individual_data[1, !(names(data_templates$v1.2$Individual_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format or in the list of optional variables
+    dplyr::select(names(data_templates$v1.2$Individual_data), dplyr::contains(utility_variables$Individual_data))
 
   # EXPORT DATA
 
@@ -209,10 +227,12 @@ format_CHO <- function(db = choose_directory(),
 #' Portugal.
 #'
 #' @param data Data frame. Primary data from Choupal.
+#' @param optional_variables A character vector of names of optional variables (generated by standard utility functions) to be included in the pipeline output.
 #'
 #' @return A data frame.
 
-create_brood_CHO <- function(data){
+create_brood_CHO <- function(data,
+                             optional_variables = NULL){
 
   # The data is currently stored as capture data (i.e., each row is a capture)
   # This means there are multiple records for each brood, which we don't want.
@@ -319,15 +339,15 @@ create_brood_CHO <- function(data){
     # In cases where LayingDateJulian is unknown but Year is known, we set observedLayYear = Year
     dplyr::mutate(observedLayYear = dplyr::case_when(is.na(.data$observedLayYear) & !is.na(.data$Year) ~ as.integer(.data$Year),
                                                      is.na(.data$observedLayYear) & is.na(.data$Year) ~ NA_integer_,
-                                                     TRUE ~ .data$observedLayYear)) %>%
-    # Keep only columns that are in the standard format
-    dplyr::select(dplyr::contains(names(data_templates$v1.2$Brood_data))) %>%
-    # Add missing columns
-    dplyr::bind_cols(data_templates$v1.2$Brood_data[1, !(names(data_templates$v1.2$Brood_data) %in% names(.))]) %>%
-    # Reorder columns
-    dplyr::select(names(data_templates$v1.2$Brood_data))
+                                                     TRUE ~ .data$observedLayYear))
 
-  return(Brood_data)
+  # Add optional variables
+  output <- Brood_data %>%
+    {if("breedingSeason" %in% optional_variables) calc_season(data = ., season = .data$Year) else .} %>%
+    {if("calculatedClutchType" %in% optional_variables) calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.2") else .} %>%
+    {if("nestAttemptNumber" %in% optional_variables) calc_nestattempt(data = ., season = .data$breedingSeason) else .}
+
+  return(output)
 
 }
 
@@ -337,10 +357,12 @@ create_brood_CHO <- function(data){
 #' Portugal.
 #'
 #' @param data Data frame. Primary data from Choupal.
+#' @param optional_variables A character vector of names of optional variables (generated by standard utility functions) to be included in the pipeline output.
 #'
 #' @return A data frame.
 
-create_capture_CHO <- function(data){
+create_capture_CHO <- function(data,
+                               optional_variables = NULL){
 
   # Take all data and add population/study site info
   # There is only one population/study site
@@ -349,6 +371,8 @@ create_capture_CHO <- function(data){
                   releaseSiteID = .data$siteID,
                   capturePlotID = .data$plotID,
                   releasePlotID = .data$plotID) %>%
+    # Filter out individuals without individualID
+    dplyr::filter(!is.na(.data$individualID)) %>%
     # Arrange chronologically for each individual
     dplyr::arrange(.data$individualID, .data$captureDate, .data$captureTime) %>%
     dplyr::group_by(.data$individualID) %>%
@@ -416,7 +440,11 @@ create_capture_CHO <- function(data){
     dplyr::ungroup() %>%
     dplyr::select(.data$captureID, everything())
 
-  return(Capture_data)
+  # Add optional variables
+  output <- Capture_data %>%
+    {if("exactAge" %in% optional_variables | "minimumAge" %in% optional_variables) calc_age(data = ., protocol_version = "1.2") %>% dplyr::select(dplyr::contains(c(names(Capture_data), optional_variables))) else .}
+
+  return(output)
 
 }
 
@@ -427,23 +455,13 @@ create_capture_CHO <- function(data){
 #'
 #' @param data Data frame. Primary data from Choupal.
 #' @param Capture_data Data frame. Output from \code{\link{create_capture_CHO}}.
+#' @param optional_variables A character vector of names of optional variables (generated by standard utility functions) to be included in the pipeline output.
 #'
 #' @return A data frame.
 
-create_individual_CHO <- function(data, Capture_data){
-
-  # NB: Sex calculation moved to standard utility function (v1.2)
-  # Calculate sex from observed sex in Capture data
-  # Sex_calc <- Capture_data %>%
-  #   dplyr::filter(!is.na(.data$observedSex)) %>%
-  #   dplyr::group_by(.data$IndvID) %>%
-  #   dplyr::summarise(length_sex = length(unique(.data$Sex_observed)),
-  #                    unique_sex = list(unique(.data$Sex_observed))) %>%
-  #   dplyr::rowwise() %>%
-  #   dplyr::mutate(Sex_calculated = dplyr::case_when(.data$length_sex > 1 ~ "C",
-  #                                                   TRUE ~ .data$unique_sex[[1]])) %>%
-  #   dplyr::ungroup() %>%
-  #   dplyr::select(.data$IndvID, .data$Sex_calculated)
+create_individual_CHO <- function(data,
+                                  Capture_data,
+                                  optional_variables = NULL){
 
   Individual_data <- data %>%
     # Arrange data for each individual chronologically
@@ -475,15 +493,11 @@ create_individual_CHO <- function(data, Capture_data){
     dplyr::ungroup() %>%
     dplyr::mutate(row = 1:n(),
                   rowWarning = NA,
-                  rowError = NA) %>%
-    # Keep only columns that are in the standard format
-    dplyr::select(dplyr::contains(names(data_templates$v1.2$Individual_data))) %>%
-    # Add missing columns
-    dplyr::bind_cols(data_templates$v1.2$Individual_data[1, !(names(data_templates$v1.2$Individual_data) %in% names(.))]) %>%
-    # Reorder columns
-    dplyr::select(names(data_templates$v1.2$Individual_data))
+                  rowError = NA)
 
-  return(Individual_data)
+  # Add optional variables
+  output <- Individual_data %>%
+    {if("calculatedSex" %in% optional_variables) calc_sex(individual_data = ., capture_data = Capture_data) else .}
 
 }
 
@@ -511,11 +525,9 @@ create_location_CHO <- function(data){
                   row = 1:n(),
                   rowWarning = NA,
                   rowError = NA) %>%
-    # Keep only columns that are in the standard format
-    dplyr::select(dplyr::contains(names(data_templates$v1.2$Location_data))) %>%
     # Add missing columns
     dplyr::bind_cols(data_templates$v1.2$Location_data[1, !(names(data_templates$v1.2$Location_data) %in% names(.))]) %>%
-    # Reorder columns
+    # Keep only columns that are in the standard format
     dplyr::select(names(data_templates$v1.2$Location_data))
 
   return(Location_data)
@@ -563,11 +575,9 @@ create_measurement_CHO <- function(Capture_data){
                   row = 1:n(),
                   rowWarning = NA,
                   rowError = NA) %>%
-    # Keep only columns that are in the standard format
-    dplyr::select(dplyr::contains(names(data_templates$v1.2$Measurement_data))) %>%
     # Add missing columns
     dplyr::bind_cols(data_templates$v1.2$Measurement_data[1, !(names(data_templates$v1.2$Measurement_data) %in% names(.))]) %>%
-    # Reorder column
+    # Keep only columns that are in the standard format
     dplyr::select(names(data_templates$v1.2$Measurement_data))
 
   return(Measurement_data)
