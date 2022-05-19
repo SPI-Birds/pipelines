@@ -5,10 +5,14 @@
 \alias{species_codes}
 \title{Species taxonomic ranks and codes}
 \format{
-A data frame with 20 rows and 9 variables
+A data frame with 27 rows and 13 variables
 \describe{
+  \item{speciesCode}{SPI-Birds' internal persistent identifier for a species.}
+  \item{speciesID}{SPI-Birds' 6-letter species identifier. First three letters indicate the generic name, last three letters indicate the specific epithet. Note that this identifier might change if a species' genus or species indicator change.}
   \item{speciesEURINGCode}{Species code used in EURING. NA for non-European species.}
-  \item{speciesID}{SPI-Birds' 6-letter species code. First three letters indicate the generic name, last three letters indicate the specific epithet.}
+  \item{kingdom}{Scientific name of the kingdom in which the species is identified.}
+  \item{phylum}{Scientific name of the phylum in which the species is identified.}
+  \item{class}{Scientific name of the class in which the species is identified.}
   \item{order}{Scientific name of the order in which the species is identified.}
   \item{family}{Scientific name of the family in which the species is identified.}
   \item{genus}{Scientific name of the genus in which the species is identified.}

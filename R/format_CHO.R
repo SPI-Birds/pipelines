@@ -65,7 +65,7 @@ format_CHO <- function(db = choose_directory(),
   }
 
   # If all optional variables are requested, retrieve all names
-  if(optional_variables == "all") optional_variables <- unlist(unname(utility_variables))
+  if(!is.null(optional_variables) & "all" %in% optional_variables) optional_variables <- unlist(unname(utility_variables))
 
   # Record start time to provide processing time to the user.
   start_time <- Sys.time()
@@ -560,9 +560,11 @@ create_measurement_CHO <- function(Capture_data){
                   .data$originalTarsusMethod) %>%
     # Measurements in Capture data are stored as columns, but we want each individual measurement as a row
     # Therefore, we pivot each separate measurement (i.e., mass, tarsus, and wing length) of an individual to a row
+    # NAs are removed
     tidyr::pivot_longer(cols = c("mass", "tarsus", "wingLength"),
                         names_to = "measurementType",
-                        values_to = "measurementValue") %>%
+                        values_to = "measurementValue",
+                        values_drop_na = TRUE) %>%
     dplyr::arrange(.data$measurementDeterminedYear, .data$measurementDeterminedMonth, .data$measurementDeterminedDay) %>%
     dplyr::mutate(measurementID = 1:n(),
                   measurementSubject = "capture",

@@ -5,7 +5,7 @@
 \alias{site_species_combos}
 \title{Combination of all siteID and speciesID from all pipelines.}
 \format{
-A data frame with 97 rows and 2 variables.
+A data frame with 143 rows and 2 variables.
 \describe{
    \item{siteID}{Three-letter site ID.}
    \item{speciesID}{Six-letter species ID.}

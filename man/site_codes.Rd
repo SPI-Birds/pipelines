@@ -5,13 +5,13 @@
 \alias{site_codes}
 \title{Study site names and locations}
 \format{
-A data frame with 85 rows and 6 variables
+A data frame with 102 rows and 6 variables
 \describe{
- \item{siteID}{Three-letter identifier for the site.}
- \item{siteName}{Name of the site.}
- \item{country}{Name of the country in which the site is located.}
+ \item{siteID}{Three-letter identifier for the study site.}
+ \item{siteName}{Name of the study site.}
+ \item{country}{Name of the country in which the study site is located.}
  \item{countryCode}{Standard code for the country, using ISO 3166-1 alpha-2: \url{https://www.iso.org/iso-3166-country-codes.html}}
- \item{institutionID}{Three- or four-letter identifier for data owner/institution. Note, multiple sites can have
+ \item{institutionID}{Three- or four-letter identifier for data owner/institution. Note, multiple study sites can have
  the same data owner.}
  \item{institutionCode}{Name of owner/institution.}
  }
