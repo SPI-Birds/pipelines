@@ -85,10 +85,10 @@ format_CHO <- function(db = choose_directory(),
     dplyr::filter(speciesID %in% species) %>%
     # broodIDs are not unique (they are repeated each year)
     # We need to create unique IDs for each year using year_broodID
-    dplyr::mutate(broodID = dplyr::case_when(is.na(.data$BroodId) ~ NA_character_,
-                                             !is.na(.data$BroodId) ~ paste(.data$Year, stringr::str_pad(.data$BroodId,
-                                                                                                        width = 3, pad = "0"),
-                                                                           sep = "_")),
+    dplyr::mutate(broodID = dplyr::case_when(.data$TrapingMethod == "mist net" ~ NA_character_,
+                                             TRUE ~ paste(.data$Year, stringr::str_pad(.data$BroodId,
+                                                                                       width = 3, pad = "0"),
+                                                          sep = "_")),
                   # If individualID differs from expected format, set to NA
                   individualID = dplyr::case_when(stringr::str_detect(.data$Ring, "^[C][:digit:]{6}$") ~ .data$Ring,
                                                   TRUE ~ NA_character_),
