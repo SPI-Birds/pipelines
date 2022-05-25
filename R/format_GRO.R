@@ -59,11 +59,11 @@ format_GRO <- function(db = choose_directory(),
 
   ## Read in the three separate primary data tables
   bt_data <- nest_data <- readxl::read_excel(path = paste0(db, "/GRO_PrimaryData_BT.xls"), guess_max = 5000, range = readxl::cell_cols("A:L")) %>%
-    dplyr::mutate(Species = rep(species_codes[species_codes$speciesEURINGCode == 14620,]$speciesID, nrow(.)))
+    dplyr::mutate(Species = rep(species_codes[species_codes$speciesCode == 10002,]$speciesID, nrow(.)))
   cf_data <- nest_data <- readxl::read_excel(path = paste0(db, "/GRO_PrimaryData_CF.xls"), guess_max = 5000, range = readxl::cell_cols("A:L")) %>%
-    dplyr::mutate(Species = rep(species_codes[species_codes$speciesEURINGCode == 13480,]$speciesID, nrow(.)))
+    dplyr::mutate(Species = rep(species_codes[species_codes$speciesCode == 10007,]$speciesID, nrow(.)))
   gt_data <- nest_data <- readxl::read_excel(path = paste0(db, "/GRO_PrimaryData_GT.xls"), guess_max = 5000, range = readxl::cell_cols("A:L")) %>%
-    dplyr::mutate(Species = rep(species_codes[species_codes$speciesEURINGCode == 14640,]$speciesID, nrow(.)))
+    dplyr::mutate(Species = rep(species_codes[species_codes$speciesCode == 10001,]$speciesID, nrow(.)))
 
   ## Rbind data
   gro_data <- rbind(bt_data, cf_data, gt_data) %>%

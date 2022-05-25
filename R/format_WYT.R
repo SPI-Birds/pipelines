@@ -197,11 +197,11 @@ create_brood_WYT <- function(db, species_filter){
                   LocationID = toupper(.data$nestbox),
                   PopID = "WYT",
                   Plot = toupper(.data$section),
-                  Species = dplyr::case_when(.data$species == "b" ~ species_codes[species_codes$speciesEURINGCode == 14620, ]$speciesID,
-                                             .data$species == "g" ~ species_codes[species_codes$speciesEURINGCode == 14640, ]$speciesID,
-                                             .data$species == "c" ~ species_codes[species_codes$speciesEURINGCode == 14610, ]$speciesID,
-                                             .data$species == "n" ~ species_codes[species_codes$speciesEURINGCode == 14790, ]$speciesID,
-                                             .data$species == "m" ~ species_codes[species_codes$speciesEURINGCode == 14400, ]$speciesID)) %>%
+                  Species = dplyr::case_when(.data$species == "b" ~ species_codes[species_codes$speciesCode == 10002, ]$speciesID,
+                                             .data$species == "g" ~ species_codes[species_codes$speciesCode == 10001, ]$speciesID,
+                                             .data$species == "c" ~ species_codes[species_codes$speciesCode == 10005, ]$speciesID,
+                                             .data$species == "n" ~ species_codes[species_codes$speciesCode == 10004, ]$speciesID,
+                                             .data$species == "m" ~ species_codes[species_codes$speciesCode == 10008, ]$speciesID)) %>%
     dplyr::filter(Species %in% species_filter) %>%
     dplyr::mutate(LayDate_observed = as.Date(.data$lay_date, format = "%d/%m/%Y"),
                   # Uncertainty in LayDate_observed (stored in lay_date_uncertainty) is currently not used
@@ -258,10 +258,10 @@ create_capture_WYT <- function(db, Brood_data, species_filter){
     janitor::clean_names()
 
   Chick_captures_old <- Chick_captures_old %>%
-    dplyr::mutate(Species = dplyr::case_when(toupper(.data$species_code) == "GRETI" ~ species_codes[species_codes$speciesEURINGCode == 14640, ]$speciesID,
-                                             toupper(.data$species_code) == "BLUTI" ~ species_codes[species_codes$speciesEURINGCode == 14620, ]$speciesID,
-                                             toupper(.data$species_code) == "COATI" ~ species_codes[species_codes$speciesEURINGCode == 14610, ]$speciesID,
-                                             toupper(.data$species_code) == "MARTI" ~ species_codes[species_codes$speciesEURINGCode == 14400, ]$speciesID)) %>%
+    dplyr::mutate(Species = dplyr::case_when(toupper(.data$species_code) == "GRETI" ~ species_codes[species_codes$speciesCode == 10001, ]$speciesID,
+                                             toupper(.data$species_code) == "BLUTI" ~ species_codes[species_codes$speciesCode == 10002, ]$speciesID,
+                                             toupper(.data$species_code) == "COATI" ~ species_codes[species_codes$speciesCode == 10005, ]$speciesID,
+                                             toupper(.data$species_code) == "MARTI" ~ species_codes[species_codes$speciesCode == 10008, ]$speciesID)) %>%
     dplyr::filter(Species %in% species_filter) %>%
     dplyr::mutate(CaptureDate = janitor::excel_numeric_to_date(as.numeric(.data$date_time)),
                   CaptureTime = NA_character_,
@@ -317,11 +317,11 @@ create_capture_WYT <- function(db, Brood_data, species_filter){
     janitor::clean_names()
 
   Chick_captures_new <- Chick_captures_new %>%
-    dplyr::mutate(Species = dplyr::case_when(toupper(.data$bto_species_code) == "GRETI" ~ species_codes[species_codes$speciesEURINGCode == 14640, ]$speciesID,
-                                             toupper(.data$bto_species_code) == "BLUTI" ~ species_codes[species_codes$speciesEURINGCode == 14620, ]$speciesID,
-                                             toupper(.data$bto_species_code) == "COATI" ~ species_codes[species_codes$speciesEURINGCode == 14610, ]$speciesID,
-                                             toupper(.data$bto_species_code) == "MARTI" ~ species_codes[species_codes$speciesEURINGCode == 14400, ]$speciesID,
-                                             toupper(.data$bto_species_code) == "NUTHA" ~ species_codes[species_codes$speciesEURINGCode == 14790, ]$speciesID),
+    dplyr::mutate(Species = dplyr::case_when(toupper(.data$bto_species_code) == "GRETI" ~ species_codes[species_codes$speciesCode == 10001, ]$speciesID,
+                                             toupper(.data$bto_species_code) == "BLUTI" ~ species_codes[species_codes$speciesCode == 10002, ]$speciesID,
+                                             toupper(.data$bto_species_code) == "COATI" ~ species_codes[species_codes$speciesCode == 10005, ]$speciesID,
+                                             toupper(.data$bto_species_code) == "MARTI" ~ species_codes[species_codes$speciesCode == 10008, ]$speciesID,
+                                             toupper(.data$bto_species_code) == "NUTHA" ~ species_codes[species_codes$speciesCode == 10004, ]$speciesID),
                   CaptureDate = janitor::excel_numeric_to_date(as.numeric(.data$date_time) %/% 1),
                   CaptureTime = paste(stringr::str_pad(string = ((as.numeric(.data$date_time) %% 1) * 24) %/% 1,
                                                        width = 2, pad = "0"),

@@ -173,7 +173,7 @@ create_brood_HOC <- function(db){
     janitor::clean_names() %>%
     dplyr::mutate(BroodID = unique_nest_id,
                   PopID = "HOC",
-                  Species = "PARMAJ",
+                  Species = species_codes[which(species_codes$speciesCode == 10001), ]$speciesID,
                   Plot = NA_character_,
                   LocationID = paste0("H", nestbox_no),
                   ClutchType_observed = clutch_no,
@@ -211,9 +211,12 @@ create_capture_HOC <- function(db){
   Capture_data <- readxl::read_excel(paste0(db, "/HOC_PrimaryData.xlsx"), sheet = "Capture ID", na = c("", "na"),
                                      col_types = "text") %>%
     janitor::clean_names() %>%
-    dplyr::mutate(IndvID = bird_id, BroodID = nest_id,
-                  Species = "PARMAJ", ObserverID = measures_taken_by,
-                  CapturePopID = "HOC", ReleasePopID = "HOC",
+    dplyr::mutate(IndvID = bird_id,
+                  BroodID = nest_id,
+                  Species = species_codes[which(species_codes$speciesCode == 10001), ]$speciesID,
+                  ObserverID = measures_taken_by,
+                  CapturePopID = "HOC",
+                  ReleasePopID = "HOC",
                   CapturePlot = NA_character_, ReleasePlot = NA_character_,
                   CaptureDate = janitor::excel_numeric_to_date(as.numeric(date)),
                   CaptureTime = paste0(stringr::str_pad(string = (as.numeric(time_capture) * (24*60)) %/% 60, width = 2, pad = "0"),
@@ -277,7 +280,8 @@ create_capture_HOC <- function(db){
     #Find cases where that individual was not recorded captured on that date
     dplyr::left_join(x = ., y = (Capture_data %>% dplyr::mutate(in_capt = TRUE) %>% dplyr::select(CaptureDate, IndvID, .data$in_capt)), by = c("CaptureDate", "IndvID")) %>%
     dplyr::filter(is.na(.data$in_capt)) %>%
-    dplyr::mutate(Species = "PARMAJ", BreedingSeason = lubridate::year(CaptureDate),
+    dplyr::mutate(Species = species_codes[which(species_codes$speciesCode == 10001), ]$speciesID,
+                  BreedingSeason = lubridate::year(CaptureDate),
                   CaptureTime = NA_character_, ObserverID = NA_character_,
                   LocationID = NA_character_, CapturePopID = "HOC",
                   CapturePlot = NA_character_, ReleasePopID = "HOC",
@@ -313,7 +317,8 @@ create_individual_HOC <- function(db){
   Individual_data <- readxl::read_excel(paste0(db, "/HOC_PrimaryData.xlsx"), sheet = "Bird_ID", na = c("", "na"),
                                      col_types = "text") %>%
     janitor::clean_names() %>%
-    dplyr::mutate(IndvID = ring_number, Species = "PARMAJ",
+    dplyr::mutate(IndvID = ring_number,
+                  Species = species_codes[which(species_codes$speciesCode == 10001), ]$speciesID,
                   Sex = dplyr::case_when(sex == "female" ~ "F",
                                          sex == "male" ~ "M"),
                   PopID = "HOC", RingSeason = lubridate::year(janitor::excel_numeric_to_date(as.numeric(date_ringed))),

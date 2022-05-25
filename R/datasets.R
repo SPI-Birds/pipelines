@@ -18,7 +18,8 @@
 #'   \item{vernacularName}{Common English name.}
 #'   }
 #'@name species_codes
-species_codes <- utils::read.csv(system.file("extdata", "species_codes.csv", package = "pipelines", mustWork = TRUE), colClasses = "character", na.strings = "") %>%
+species_codes <- utils::read.csv(system.file("extdata", "species_codes.csv", package = "pipelines", mustWork = TRUE),
+                                 colClasses = c("integer", rep("character", 12)), na.strings = "") %>%
   tibble::as_tibble()
 
 #'Study site names and locations

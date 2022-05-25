@@ -79,7 +79,7 @@ format_CHO <- function(db = choose_directory(),
     # Therefore, we will do the translation manually
     {colnames(.) <- iconv(colnames(.), "", "ASCII", sub = "")} %>%
     # Change species to "PARMAJ" because it's only PARMAJ in Choupal
-    dplyr::mutate(speciesID = "PARMAJ",
+    dplyr::mutate(speciesID = species_codes[which(species_codes$speciesCode == 10001), ]$speciesID,
                   siteID = "CHO",
                   plotID = NA_character_) %>%
     dplyr::filter(speciesID %in% species) %>%
@@ -476,7 +476,7 @@ create_individual_CHO <- function(data,
                      ringMonth = as.integer(lubridate::month(.data$ringDate)),
                      ringDay = as.integer(lubridate::day(.data$ringDate)),
                      firstAge = dplyr::first(.data$Age),
-                     speciesID = "PARMAJ",
+                     speciesID = species_codes[which(species_codes$speciesCode == 10001), ]$speciesID,
                      ringSiteID = dplyr::first(.data$siteID)) %>%
     # Only assign a brood ID if they were first caught as a chick
     # Otherwise, the broodID will be their first clutch as a parent
@@ -586,5 +586,5 @@ create_measurement_CHO <- function(Capture_data){
 
 }
 
-#----------------------
+#----------------------#
 #FIXME Check habitatID with data owner

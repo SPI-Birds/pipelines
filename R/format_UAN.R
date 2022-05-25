@@ -332,8 +332,8 @@ create_brood_UAN <- function(data, CAPTURE_info, species_filter, pop_filter){
     # Convert columns to expected values
     dplyr::mutate(PopID = dplyr::case_when(.data$PopID == "FR" ~ "BOS",
                                            .data$PopID == "PB" ~ "PEE"),
-                  Species = dplyr::case_when(.data$Species == "pm" ~ species_codes[which(species_codes$speciesEURINGCode == 14640), ]$speciesID,
-                                             .data$Species == "pc" ~ species_codes[which(species_codes$speciesEURINGCode == 14620), ]$speciesID),
+                  Species = dplyr::case_when(.data$Species == "pm" ~ species_codes[which(species_codes$speciesCode == 10001), ]$speciesID,
+                                             .data$Species == "pc" ~ species_codes[which(species_codes$speciesCode == 10002), ]$speciesID),
                   ClutchType_observed = dplyr::case_when(.data$ClutchType_observed %in% c(1, 9) ~ "first",
                                                          .data$ClutchType_observed %in% c(2, 6, 7) ~ "second",
                                                          .data$ClutchType_observed %in% c(3, 4, 5, 8) ~ "replacement"),
@@ -382,8 +382,8 @@ create_capture_UAN <- function(data, species_filter, pop_filter){
     # Adjust species and PopID
     dplyr::mutate(CapturePopID = dplyr::case_when(.data$CapturePopID == "FR" ~ "BOS",
                                                   .data$CapturePopID == "PB" ~ "PEE"),
-                  Species = dplyr::case_when(.data$Species == "pm" ~ species_codes[which(species_codes$speciesEURINGCode == 14640), ]$speciesID,
-                                             .data$Species == "pc" ~ species_codes[which(species_codes$speciesEURINGCode == 14620), ]$speciesID)) %>%
+                  Species = dplyr::case_when(.data$Species == "pm" ~ species_codes[which(species_codes$speciesCode == 10001), ]$speciesID,
+                                             .data$Species == "pc" ~ species_codes[which(species_codes$speciesCode == 10002), ]$speciesID)) %>%
     # Keep filtered species
     dplyr::filter(Species %in% species_filter) %>%
     # Make tarsus length into standard method (Svensson Alt)
