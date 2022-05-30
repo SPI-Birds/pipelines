@@ -30,10 +30,10 @@
 #'of clutch, brood, and fledgling numbers that are recorded explicitly in the
 #'data. This means that there are some nests where chicks have capture records,
 #'but the \emph{Brood data} table will not give any value of observedNumberFledged
-#'(e.g., see BroodID 2004_NA). These capture records should be included, but we
+#'(e.g., see broodID 2004_NA). These capture records should be included, but we
 #'need to determine the amount of potential uncertainty around these records.
 #'
-#'\strong{individualID}: Individuals marked as "no ring", "not ringed" or "branco" are removed from Capture & Individual data. Check with data owner on how to handle these.
+#'\strong{individualID}: Individuals marked as "no ring", "not ringed" or "branco" are removed from Capture_data and Individual_data. Check with data owner on how to handle these.
 #'
 #'\strong{captureAlive, releaseAlive}: Assume all individuals were alive when captured and released.
 #'
