@@ -303,8 +303,8 @@ v1.2 <- tibble::lst(
     siteID = NA_character_,
     decimalLatitude = NA_real_,
     decimalLongitude = NA_real_,
-    startYear = NA_real_,
-    endYear = NA_real_,
+    startYear = NA_integer_,
+    endYear = NA_integer_,
     habitatID = NA_character_,
     rowWarning = NA,
     rowError = NA
