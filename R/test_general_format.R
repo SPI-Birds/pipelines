@@ -7,26 +7,32 @@
 #'
 #'
 #' @param pipeline_output A list of the 4 data frames returned from format_X
-#' (where X is the three letter population code).
+#' (where X is the three letter study site code).
 #' @param data_template Character string. Which data template should be tested? One of:
 #' "Brood", "Individual", "Capture", or "Location"
+#' @param protocol_version The protocol version of the SPI-Birds
+#' standard data being used to process the primary data. Either "1.0", "1.1", or "1.2" (default).
 #'
 #' @return Logical (TRUE/FALSE) for whether all of the column classes are expected.
 #' @export
 #'
 test_col_present <- function(pipeline_output,
-                             data_template) {
+                             data_template,
+                             protocol_version = "1.2") {
 
   # Select data table
   data_table <- pipeline_output[[paste0(data_template, "_data")]]
 
   # Select template
-  template <- data_templates$v1.1[[paste0(data_template, "_data")]]
+  template <- data_templates[[paste0("v", protocol_version)]][[paste0(data_template, "_data")]]
+
+  # Select optional variables
+  opt_vars <- utility_variables[[paste0(data_template, "_data")]]
 
   # Test
   eval(bquote(testthat::expect_true(
 
-    setequal(names(template), names(data_table))
+    setequal(c(names(template), names(opt_vars)), names(data_table))
 
   )))
 
@@ -34,7 +40,7 @@ test_col_present <- function(pipeline_output,
 
 #' Test column classes
 #'
-#' Test whether column classes for pipeline outputs match the expected column classes as specified in the standard format (version 1.1.0).
+#' Test whether column classes for pipeline outputs match the expected column classes as specified in the standard format.
 #'
 #' This function is intended to be used
 #' in the test for every pipeline in order to ensure consistency between pipelines.
@@ -42,55 +48,83 @@ test_col_present <- function(pipeline_output,
 #'
 #' @param pipeline_output A list of the 4 data frames returned from format_X
 #' (where X is the three letter population code).
-#' @param data_template Character string. Which data template should be tested? One of:
+#' @param table Character string. Which data table should be verified with their template? One of:
 #' "Brood", "Individual", "Capture", or "Location"
+#' @param protocol_version The protocol version of the SPI Birds
+#' standard data being used to process the primary data. Either "1.0", "1.1", or "1.2" (default).
 #'
 #' @return Logical (TRUE/FALSE) for whether all of the column classes are expected.
 #' @export
 #'
 test_col_classes <- function(pipeline_output,
-                             data_template) {
+                             table,
+                             protocol_version = "1.2") {
 
   # Select data table
-  data_table <- pipeline_output[[paste0(data_template, "_data")]]
+  data_table <- pipeline_output[[paste0(table, "_data")]]
 
   # Select template
-  template <- data_templates$v1.1[[paste0(data_template, "_data")]]
+  template <- data_templates[[paste0("v", protocol_version)]][[paste0(table, "_data")]]
 
-  # Match columns in data table and template
-  selected_cols_data <- data_table %>%
-    dplyr::select(tidyselect::any_of(names(template)))
+  # Select optional variables
+  opt_vars <- utility_variables[[paste0(table, "_data")]]
 
-  selected_cols_template <- template %>%
-    dplyr::select(tidyselect::any_of(names(data_table)))
+  # Retrieve classes of columns in data
+  data_col_classes <- purrr::imap_dfr(.x = data_table,
+                                      .f = ~{
 
-  # Test
-  eval(bquote(testthat::expect_true(
+                                        tibble::tibble(var = .y,
+                                                       data_class = class(.x))
 
-    all(purrr::map_df(selected_cols_template, class) == purrr::map_df(selected_cols_data, class))
+                                      })
 
-  )))
+  # Retrieve classes of columns in template
+  template_col_classes <- purrr::imap_dfr(.x = template,
+                                          .f = ~{
+
+                                            tibble::tibble(var = .y,
+                                                           template_class = class(.x))
+
+                                          })
+
+  # Retrieve classes of columns in optional variables
+  optvars_col_classes <- purrr::imap_dfr(.x = opt_vars,
+                                         .f = ~{
+
+                                           tibble::tibble(var = .y,
+                                                          template_class = class(.x))
+
+                                         })
+
+  # Left join column classes in data with those in template & opt vars
+  mismatched_classes <- data_col_classes %>%
+    dplyr::left_join(dplyr::bind_rows(template_col_classes, optvars_col_classes), by = "var") %>%
+    dplyr::filter(.data$data_class != .data$template_class)
+
+  # Test that there are 0 mismatched classes
+  eval(bquote(testthat::expect_equal(nrow(mismatched_classes), 0)))
 
 }
 
 #' Test ID format
 #'
-#' Test that ID formats for each column are expected. There are 4 ID columns. "IndvID" in the Capture and
-#' Individual data, and "FemaleID" and "MaleID" in the Brood data. This function will take the regular expression that matches
+#' Test that ID formats for each column are expected. There are 4 ID columns. "individualID" in the Capture and
+#' Individual data, and "femaleID" and "maleID" in the Brood data. This function will take the regular expression that matches
 #' the expected ID format for the pipeline and will make sure that the ID column does not have entries that do not match the expected format.
 #'
 #' This function is intended to be used in the test for every pipeline in order to ensure consistency between pipelines.
 #'
 #' @param pipeline_output A list of the 4 data frames returned from format_X
-#' (where X is the three letter population code).
-#' @param ID_col Character string. Which ID column should be tested? ("FemaleID", "MaleID", "C-IndvID", "I-IndvID").
-#' The C and I in the final two options stand for Capture and Individual data, respectively. So, to test IndvID in the Capture
-#' data, ID_col should be set to "C-IndvID".
+#' (where X is the three letter study site code).
+#' @param ID_col Character string. Which ID column should be tested? ("femaleID", "maleID", "C-individualID", "I-individualID").
+#' The C and I in the final two options stand for Capture and Individual data, respectively. So, to test individualID in the Capture
+#' data, ID_col should be set to "C-individualID".
 #' @param ID_format Character string. Regular expression corresponding to the proper ID format.
 #'
 #' @return Logical (TRUE/FALSE) for whether all of IDs are formatted as expected.
 #' @export
 #'
+##FIXME: Add measurementID, locationID, treatmentID?
 test_ID_format <- function(pipeline_output,
                            ID_col,
                            ID_format) {
@@ -98,35 +132,71 @@ test_ID_format <- function(pipeline_output,
   ## Test
   eval(bquote(testthat::expect_true(
 
-    ## FemaleID
-    if (ID_col == "FemaleID") {
+    ## femaleID
+    if (ID_col == "femaleID") {
 
-      all(stringr::str_detect(pipeline_output[[1]]$FemaleID,
-                              ID_format), na.rm = T)
+      if("femaleID" %in% names(pipeline_output$Brood_data)) {
 
-    }
+        all(stringr::str_detect(pipeline_output$Brood_data$femaleID,
+                                ID_format), na.rm = TRUE)
 
-    ## MaleID
-    else if (ID_col == "MaleID") {
+      } else {
 
-      all(stringr::str_detect(pipeline_output[[1]]$MaleID,
-                              ID_format), na.rm = T)
+        all(stringr::str_detect(pipeline_output$Brood_data$FemaleID,
+                                ID_format), na.rm = TRUE)
 
-    }
-
-    ## IndvID in Capture data
-    else if (ID_col == "C-IndvID") {
-
-      all(stringr::str_detect(pipeline_output[[2]]$IndvID,
-                              ID_format), na.rm = T)
+      }
 
     }
 
-    ## IndvID in Individual data
-    else if (ID_col == "I-IndvID") {
+    ## maleID
+    else if (ID_col == "maleID") {
 
-      all(stringr::str_detect(pipeline_output[[3]]$IndvID,
-                              ID_format), na.rm = T)
+      if("maleID" %in% names(pipeline_output$Brood_data)) {
+
+        all(stringr::str_detect(pipeline_output$Brood_data$maleID,
+                                ID_format), na.rm = TRUE)
+
+      } else {
+
+        all(stringr::str_detect(pipeline_output$Brood_data$MaleID,
+                                ID_format), na.rm = TRUE)
+
+      }
+
+    }
+
+    ## individualID in Capture data
+    else if (ID_col == "C-individualID") {
+
+      if("individualID" %in% names(pipeline_output$Capture_data)) {
+
+        all(stringr::str_detect(pipeline_output$Capture_data$individualID,
+                                ID_format), na.rm = TRUE)
+
+      } else {
+
+        all(stringr::str_detect(pipeline_output$Capture_data$IndvID,
+                                ID_format), na.rm = TRUE)
+
+      }
+
+    }
+
+    ## individualID in Individual data
+    else if (ID_col == "I-individualID") {
+
+      if("individualID" %in% names(pipeline_output$Individual_data)) {
+
+        all(stringr::str_detect(pipeline_output$Individual_data$individualID,
+                                ID_format), na.rm = TRUE)
+
+      } else {
+
+        all(stringr::str_detect(pipeline_output$Individual_data$IndvID,
+                                ID_format), na.rm = TRUE)
+
+      }
 
     }
 
@@ -136,15 +206,15 @@ test_ID_format <- function(pipeline_output,
 
 #' Test unique values in key columns
 #'
-#' Some columns are not allowed to have duplicated values. Namely, BroodID (Brood data), CaptureID (Capture data),
-#' and the concatenation of PopID and IndvID (Individual data).
+#' Some columns are not allowed to have duplicated values. Namely, broodID (Brood data), captureID (Capture data), individualID (Individual data), measurementID (Measurement data), locationID (Location data; NB: only in >v1.2), treatmentID (Experiment data)
+#'
 #' This function takes a column name and returns a logical value corresponding to whether all values in the column are unique (TRUE) or not (FALSE).
 #'
 #' This function is intended to be used in the test for every pipeline in order to ensure consistency between pipelines.
 #'
 #' @param pipeline_output A list of the 4 data frames returned from format_X
-#' (where X is the three letter population code).
-#' @param column Character string. Which column should be checked for duplicates? One of: "BroodID", "CaptureID", or "PopID-IndvID"
+#' (where X is the three letter study site code).
+#' @param column Character string. Which column should be checked for duplicates? One of: "broodID", "captureID", "individualID", "measurementID", "locationID", "treatmentID". Note that for "individualID" we use <siteID>_<individualID to check for duplicates within sites.
 #'
 #' @return Logical (TRUE/FALSE) for whether all values in the column are unique
 #' @export
@@ -154,24 +224,69 @@ test_unique_values <- function(pipeline_output,
 
   eval(bquote(testthat::expect_true(
 
-    ## BroodID
-    if (column == "BroodID") {
+    ## broodID
+    if (column == "broodID") {
 
-      !any(duplicated(pipeline_output[[1]]$BroodID))
+      if("broodID" %in% names(pipeline_output$Brood_data)) {
+
+        !any(duplicated(pipeline_output$Brood_data$broodID))
+
+      } else {
+
+        !any(duplicated(pipeline_output$Brood_data$BroodID))
+
+      }
 
     }
 
-    ## CaptureID
-    else if (column == "CaptureID") {
+    ## captureID
+    else if (column == "captureID") {
 
-      !any(duplicated(pipeline_output[[2]]$CaptureID))
+      if("captureID" %in% names(pipeline_output$Capture_data)) {
+
+        !any(duplicated(pipeline_output$Capture_data$captureID))
+
+      } else {
+
+        !any(duplicated(pipeline_output$Capture_data$CaptureID))
+
+      }
 
     }
 
-    ## IndvID
-    else if (column == "PopID-IndvID") {
+    ## individualID
+    else if (column == "individualID") {
 
-      !any(duplicated(paste(pipeline_output[[3]]$PopID, pipeline_output[[3]]$IndvID, sep = "-")))
+      if("individualID" %in% names(pipeline_output$Individual_data)) {
+
+        !any(duplicated(pipeline_output$Individual_data$individualID))
+
+      } else {
+
+        !any(duplicated(paste(pipeline_output[[3]]$PopID, pipeline_output[[3]]$IndvID, sep = "-")))
+
+      }
+
+    }
+
+    ## measurementID
+    else if (column == "measurementID") {
+
+      !any(duplicated(pipeline_output$Measurement_data$measurementID))
+
+    }
+
+    ## locationID
+    else if (column == "locationID") {
+
+      !any(duplicated(pipeline_output$Location_data$locationID))
+
+    }
+
+    ## treatmentID
+    else if (column == "treatmentID") {
+
+      !any(duplicated(pipeline_output$Experiment_data$treatmentID))
 
     }
 
@@ -181,15 +296,13 @@ test_unique_values <- function(pipeline_output,
 
 #' Test for NAs in key columns
 #'
-#'Some key columns are not allowed to have NAs. The data templates for each table have dummy values entered when the column cannot contain any NAs.
-#'This function takes a table name and returns a logical value corresponding to whether there are any NAs in the key columns in each data table.
-#'In the case of NAs, the test fails.
+#'Some key columns are not allowed to have NAs. This function takes a table name and returns a logical value corresponding to whether there are any NAs in the key columns in each data table. In the case of NAs, the test fails.
 #'
 #'This function is intended to be used in the test for every pipeline in order to ensure consistency between pipelines.
 #'
 #' @param pipeline_output A list of the 4 data frames returned from format_X
-#' (where X is the three letter population code).
-#' @param table Which data table should be checked for NAs in the key columns? One of: "Brood", "Capture", "Individual", or "Location"
+#' (where X is the three letter study site code).
+#' @param table Which data table should be checked for NAs in the key columns? One of: "Brood", "Capture", "Individual", "Measurement, "Location", or "Experiment".
 #'
 #' @return Logical (TRUE/FALSE) for whether there are any NAs in the key columns for the specified table.
 #' @export
@@ -203,20 +316,18 @@ test_NA_columns <- function(pipeline_output,
   # List of key variables in the selected data table that should not have missing values
   key_vars <- key_variables[[paste0(table, "_data")]]
 
-  # Remove absent key variables from categories
-  # NB: Key variable may be absent because key_variables list has all key variables from all versions of the standard format
-  key_vars <- key_vars[key_vars %in% names(data_table)]
-
   # Test for NAs
   eval(bquote(
-    expect_equal(
+    testthat::expect_equal(
 
       data_table %>%
-        dplyr::select(tidyselect::all_of(key_vars)) %>% # Select key columns
+        dplyr::select(tidyselect::contains(key_vars, ignore.case = FALSE)) %>% # Select key columns
         dplyr::select(where(~ any(is.na(.)))) %>% # Select any key column that has NAs
         ncol(),
       0 # If number of columns is larger than 0, test fails
+
     )
+
   ))
 
 }
@@ -224,11 +335,11 @@ test_NA_columns <- function(pipeline_output,
 #' Test category columns
 #'
 #' Some columns should only include particular categorical values.
-#' For example, 'ExperimentID' should only include some combination of "PHENOLOGY","COHORT", "PARENTAGE", "SURVIVAL", or "OTHER".
+#' For example, 'observedClutchType' should only include any of "first", "second", "replacement" or NA.
 #' This test makes sure that there are no unexpected values in these different category columns.
 #'
 #' @param pipeline_output A list of the 4 data frames returned from format_X
-#' (where X is the three letter population code).
+#' (where X is the three letter study site code).
 #' @param table Which table should be checked? One of: "Brood", "Capture", "Individual", or "Location"
 #'
 #' @return Logical (TRUE/FALSE) for whether there are non-standard categories in the data frame.
@@ -258,7 +369,7 @@ test_category_columns <- function(pipeline_output,
                              unique %>%
                              strsplit(split = "; ") %>% # Split if multiple categories are concatenated
                              unlist() %>%
-                             as.character
+                             as.character()
 
                            all(column_vals %in% .x)
 
