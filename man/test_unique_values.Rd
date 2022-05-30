@@ -8,18 +8,18 @@ test_unique_values(pipeline_output, column)
 }
 \arguments{
 \item{pipeline_output}{A list of the 4 data frames returned from format_X
-(where X is the three letter population code).}
+(where X is the three letter study site code).}
 
-\item{column}{Character string. Which column should be checked for duplicates? One of: "BroodID", "CaptureID", or "PopID-IndvID"}
+\item{column}{Character string. Which column should be checked for duplicates? One of: "broodID", "captureID", "individualID", "measurementID", "locationID", "treatmentID". Note that for "individualID" we use <siteID>_<individualID to check for duplicates within sites.}
 }
 \value{
 Logical (TRUE/FALSE) for whether all values in the column are unique
 }
 \description{
-Some columns are not allowed to have duplicated values. Namely, BroodID (Brood data), CaptureID (Capture data),
-and the concatenation of PopID and IndvID (Individual data).
-This function takes a column name and returns a logical value corresponding to whether all values in the column are unique (TRUE) or not (FALSE).
+Some columns are not allowed to have duplicated values. Namely, broodID (Brood data), captureID (Capture data), individualID (Individual data), measurementID (Measurement data), locationID (Location data; NB: only in >v1.2), treatmentID (Experiment data)
 }
 \details{
+This function takes a column name and returns a logical value corresponding to whether all values in the column are unique (TRUE) or not (FALSE).
+
 This function is intended to be used in the test for every pipeline in order to ensure consistency between pipelines.
 }

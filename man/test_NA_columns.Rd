@@ -8,17 +8,15 @@ test_NA_columns(pipeline_output, table)
 }
 \arguments{
 \item{pipeline_output}{A list of the 4 data frames returned from format_X
-(where X is the three letter population code).}
+(where X is the three letter study site code).}
 
-\item{table}{Which data table should be checked for NAs in the key columns? One of: "Brood", "Capture", "Individual", or "Location"}
+\item{table}{Which data table should be checked for NAs in the key columns? One of: "Brood", "Capture", "Individual", "Measurement, "Location", or "Experiment".}
 }
 \value{
 Logical (TRUE/FALSE) for whether there are any NAs in the key columns for the specified table.
 }
 \description{
-Some key columns are not allowed to have NAs. The data templates for each table have dummy values entered when the column cannot contain any NAs.
-This function takes a table name and returns a logical value corresponding to whether there are any NAs in the key columns in each data table.
-In the case of NAs, the test fails.
+Some key columns are not allowed to have NAs. This function takes a table name and returns a logical value corresponding to whether there are any NAs in the key columns in each data table. In the case of NAs, the test fails.
 }
 \details{
 This function is intended to be used in the test for every pipeline in order to ensure consistency between pipelines.

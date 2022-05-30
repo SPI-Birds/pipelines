@@ -8,7 +8,7 @@ test_category_columns(pipeline_output, table)
 }
 \arguments{
 \item{pipeline_output}{A list of the 4 data frames returned from format_X
-(where X is the three letter population code).}
+(where X is the three letter study site code).}
 
 \item{table}{Which table should be checked? One of: "Brood", "Capture", "Individual", or "Location"}
 }
@@ -17,6 +17,6 @@ Logical (TRUE/FALSE) for whether there are non-standard categories in the data f
 }
 \description{
 Some columns should only include particular categorical values.
-For example, 'ExperimentID' should only include some combination of "PHENOLOGY","COHORT", "PARENTAGE", "SURVIVAL", or "OTHER".
+For example, 'observedClutchType' should only include any of "first", "second", "replacement" or NA.
 This test makes sure that there are no unexpected values in these different category columns.
 }

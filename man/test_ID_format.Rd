@@ -8,11 +8,11 @@ test_ID_format(pipeline_output, ID_col, ID_format)
 }
 \arguments{
 \item{pipeline_output}{A list of the 4 data frames returned from format_X
-(where X is the three letter population code).}
+(where X is the three letter study site code).}
 
-\item{ID_col}{Character string. Which ID column should be tested? ("FemaleID", "MaleID", "C-IndvID", "I-IndvID").
-The C and I in the final two options stand for Capture and Individual data, respectively. So, to test IndvID in the Capture
-data, ID_col should be set to "C-IndvID".}
+\item{ID_col}{Character string. Which ID column should be tested? ("femaleID", "maleID", "C-individualID", "I-individualID").
+The C and I in the final two options stand for Capture and Individual data, respectively. So, to test individualID in the Capture
+data, ID_col should be set to "C-individualID".}
 
 \item{ID_format}{Character string. Regular expression corresponding to the proper ID format.}
 }
@@ -20,8 +20,8 @@ data, ID_col should be set to "C-IndvID".}
 Logical (TRUE/FALSE) for whether all of IDs are formatted as expected.
 }
 \description{
-Test that ID formats for each column are expected. There are 4 ID columns. "IndvID" in the Capture and
-Individual data, and "FemaleID" and "MaleID" in the Brood data. This function will take the regular expression that matches
+Test that ID formats for each column are expected. There are 4 ID columns. "individualID" in the Capture and
+Individual data, and "femaleID" and "maleID" in the Brood data. This function will take the regular expression that matches
 the expected ID format for the pipeline and will make sure that the ID column does not have entries that do not match the expected format.
 }
 \details{

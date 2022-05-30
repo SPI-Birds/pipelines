@@ -46,7 +46,7 @@
 #'
 #'@inheritParams pipeline_params
 #'
-#'@return Generates either 4 .csv files or 4 data frames in the standard format.
+#'@return Generates either 6 .csv files or 6 data frames in the standard format.
 #'@export
 
 format_CHO <- function(db = choose_directory(),

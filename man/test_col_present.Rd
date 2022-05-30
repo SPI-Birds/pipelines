@@ -4,14 +4,17 @@
 \alias{test_col_present}
 \title{Test column presence}
 \usage{
-test_col_present(pipeline_output, data_template)
+test_col_present(pipeline_output, data_template, protocol_version = "1.2")
 }
 \arguments{
 \item{pipeline_output}{A list of the 4 data frames returned from format_X
-(where X is the three letter population code).}
+(where X is the three letter study site code).}
 
 \item{data_template}{Character string. Which data template should be tested? One of:
 "Brood", "Individual", "Capture", or "Location"}
+
+\item{protocol_version}{The protocol version of the SPI-Birds
+standard data being used to process the primary data. Either "1.0", "1.1", or "1.2" (default).}
 }
 \value{
 Logical (TRUE/FALSE) for whether all of the column classes are expected.

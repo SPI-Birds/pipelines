@@ -34,7 +34,7 @@ this argument can be ignored.}
 \item{output_type}{Should the pipeline generate .csv files ('csv') or R objects ('R').}
 }
 \value{
-Generates either 4 .csv files or 4 data frames in the standard format.
+Generates either 6 .csv files or 6 data frames in the standard format.
 }
 \description{
 A pipeline to produce the standard format for the great tit population in
@@ -68,8 +68,10 @@ give a more appropriate estimate of clutch type for this data.
 of clutch, brood, and fledgling numbers that are recorded explicitly in the
 data. This means that there are some nests where chicks have capture records,
 but the \emph{Brood data} table will not give any value of observedNumberFledged
-(e.g., see BroodID 2004_NA). These capture records should be included, but we
+(e.g., see broodID 2004_NA). These capture records should be included, but we
 need to determine the amount of potential uncertainty around these records.
+
+\strong{individualID}: Individuals marked as "no ring", "not ringed" or "branco" are removed from Capture_data and Individual_data. Check with data owner on how to handle these.
 
 \strong{captureAlive, releaseAlive}: Assume all individuals were alive when captured and released.
 
