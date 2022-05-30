@@ -33,6 +33,8 @@
 #'(e.g., see BroodID 2004_NA). These capture records should be included, but we
 #'need to determine the amount of potential uncertainty around these records.
 #'
+#'\strong{individualID}: Individuals marked as "no ring", "not ringed" or "branco" are removed from Capture & Individual data. Check with data owner on how to handle these.
+#'
 #'\strong{captureAlive, releaseAlive}: Assume all individuals were alive when captured and released.
 #'
 #'\strong{locationID}: For individuals captured in mist nets (specified by
@@ -65,7 +67,7 @@ format_CHO <- function(db = choose_directory(),
   }
 
   # If all optional variables are requested, retrieve all names
-  if(!is.null(optional_variables) & "all" %in% optional_variables) optional_variables <- unlist(unname(utility_variables))
+  if(!is.null(optional_variables) & "all" %in% optional_variables) optional_variables <- names(unlist(unname(utility_variables)))
 
   # Record start time to provide processing time to the user.
   start_time <- Sys.time()
@@ -170,19 +172,22 @@ format_CHO <- function(db = choose_directory(),
     # Add missing columns
     dplyr::bind_cols(data_templates$v1.2$Capture_data[1, !(names(data_templates$v1.2$Capture_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
-    dplyr::select(names(data_templates$v1.2$Capture_data), dplyr::contains(utility_variables$Capture_data))
+    dplyr::select(names(data_templates$v1.2$Capture_data), dplyr::contains(names(utility_variables$Capture_data),
+                                                                           ignore.case = FALSE))
 
   Brood_data <- Brood_data %>%
     # Add missing columns
     dplyr::bind_cols(data_templates$v1.2$Brood_data[1, !(names(data_templates$v1.2$Brood_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
-    dplyr::select(names(data_templates$v1.2$Brood_data), dplyr::contains(utility_variables$Brood_data))
+    dplyr::select(names(data_templates$v1.2$Brood_data), dplyr::contains(names(utility_variables$Brood_data),
+                                                                         ignore.case = FALSE))
 
   Individual_data <- Individual_data %>%
     # Add missing columns
     dplyr::bind_cols(data_templates$v1.2$Individual_data[1, !(names(data_templates$v1.2$Individual_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
-    dplyr::select(names(data_templates$v1.2$Individual_data), dplyr::contains(utility_variables$Individual_data))
+    dplyr::select(names(data_templates$v1.2$Individual_data), dplyr::contains(names(utility_variables$Individual_data),
+                                                                              ignore.case = FALSE))
 
   # EXPORT DATA
 
@@ -464,6 +469,8 @@ create_individual_CHO <- function(data,
                                   optional_variables = NULL){
 
   Individual_data <- data %>%
+    # Filter out individuals without individualID
+    dplyr::filter(!is.na(.data$individualID)) %>%
     # Arrange data for each individual chronologically
     dplyr::arrange(.data$individualID, .data$captureDate, .data$captureYear,
                    .data$captureMonth, .data$captureDay, .data$captureTime) %>%
@@ -472,7 +479,7 @@ create_individual_CHO <- function(data,
     # Determine first age, brood, ring year, month, day, and ring site of each individual
     dplyr::summarise(firstBrood = dplyr::first(.data$broodID),
                      ringDate = dplyr::first(.data$captureDate),
-                     ringYear = dplyr::first(.data$Year),
+                     ringYear = as.integer(dplyr::first(.data$Year)),
                      ringMonth = as.integer(lubridate::month(.data$ringDate)),
                      ringDay = as.integer(lubridate::day(.data$ringDate)),
                      firstAge = dplyr::first(.data$Age),
@@ -587,4 +594,5 @@ create_measurement_CHO <- function(Capture_data){
 }
 
 #----------------------#
-#FIXME Check habitatID with data owner
+#TODO Check with data owner how to handle "no ring", "not ringed", or "branco" individuals
+#TODO Check habitatID with data owner

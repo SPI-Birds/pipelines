@@ -257,3 +257,127 @@ test_that("Location_data returns an expected outcome...", {
   expect_equal(subset(CHO_data, locationID == "MN1")$locationType, "capture")
 
 })
+
+
+## General tests
+
+test_that("Expected columns are present", {
+
+  ## Will fail if not all the expected columns are present
+
+  ## Brood data: Test that all columns are present
+  test_col_present(pipeline_output, "Brood")
+
+  ## Capture data: Test that all columns are present
+  test_col_present(pipeline_output, "Capture")
+
+  ## Individual data: Test that all columns are present
+  test_col_present(pipeline_output, "Individual")
+
+  ## Measurement data: Test that all columns are present
+  test_col_present(pipeline_output, "Measurement")
+
+  ## Location data: Test that all columns are present
+  test_col_present(pipeline_output, "Location")
+
+  ## Experiment data: Test that all columns are present
+  test_col_present(pipeline_output, "Experiment")
+
+})
+
+test_that("Column classes are as expected", {
+
+  ## Will fail if columns that are shared by the output and the templates have different classes.
+
+  ## Brood data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Brood")
+
+  ## Capture data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Capture")
+
+  ## Individual data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Individual")
+
+  ## Measurement data: Test that all column classes are expected
+  test_col_present(pipeline_output, "Measurement")
+
+  ## Location data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Location")
+
+  ## Experiment data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Experiment")
+
+})
+
+test_that("ID columns match the expected format for the pipeline", {
+
+  ## femaleID format is as expected
+  test_ID_format(pipeline_output, ID_col = "femaleID", ID_format = "^CHO_C[:digit:]{6}$")
+
+  ## maleID format is as expected
+  test_ID_format(pipeline_output, ID_col = "maleID", ID_format = "^CHO_C[:digit:]{6}$")
+
+  ## individualID format in Capture data  is as expected
+  test_ID_format(pipeline_output, ID_col = "C-individualID", ID_format = "^CHO_C[:digit:]{6}$")
+
+  ## individualID format in Individual data is as expected
+  test_ID_format(pipeline_output, ID_col = "I-individualID", ID_format = "^CHO_C[:digit:]{6}$")
+
+})
+
+test_that("Key columns only contain unique values", {
+
+  ## broodID has only unique values
+  test_unique_values(pipeline_output, "broodID") ## TODO: one broodID is duplicated, contact data owner
+
+  ## captureID has only unique values
+  test_unique_values(pipeline_output, "captureID")
+
+  ## individualID has only unique values
+  test_unique_values(pipeline_output, "individualID")
+
+  ## measurementID has only unique values
+  test_unique_values(pipeline_output, "measurementID")
+
+  ## locationID has only unique values
+  test_unique_values(pipeline_output, "locationID")
+
+})
+
+test_that("Key columns in each table do not have NAs", {
+
+  ## Brood
+  test_NA_columns(pipeline_output, "Brood")
+
+  ## Capture
+  test_NA_columns(pipeline_output, "Capture")
+
+  ## Individual
+  test_NA_columns(pipeline_output, "Individual")
+
+  ## Measurement
+  test_NA_columns(pipeline_output, "Measurement")
+
+  ## Location
+  test_NA_columns(pipeline_output, "Location")
+
+})
+
+test_that("Categorical columns do not have unexpected values", {
+
+  ## Brood
+  test_category_columns(pipeline_output, "Brood")
+
+  ## Capture
+  test_category_columns(pipeline_output, "Capture")
+
+  ## Individual
+  test_category_columns(pipeline_output, "Individual")
+
+  ## Measurement
+  test_category_columns(pipeline_output, "Measurement")
+
+  ## Location
+  test_category_columns(pipeline_output, "Location")
+
+})
