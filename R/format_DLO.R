@@ -47,8 +47,8 @@ format_DLO <- function(db = choose_directory(),
   start_time <- Sys.time()
 
   # Load data
-  # We read data in as text to prevent coercion issues
-  all_data <- readxl::read_excel(paste0(db, "/DLO_PrimaryData.xlsx"), col_types = "text", na = "NA") %>%
+  all_data <- readxl::read_excel(paste0(db, "/DLO_PrimaryData.xlsx"),
+                                 guess_max = 4000, na = "NA") %>%
     # Convert all cols to snake_case
     janitor::clean_names() %>%
     # Create IDs
@@ -83,23 +83,22 @@ format_DLO <- function(db = choose_directory(),
                                          .data$date_of_predation_event, .data$date_f, .data$date_m),
                      .funs = ~{
 
-                       if(is.na(..1)){
-
-                         as.Date(NA)
-
-                       } else {
-
-                         janitor::excel_numeric_to_date(as.numeric(..1))
-
-                       }
+                       as.Date(..1)
 
                      }) %>%
     dplyr::mutate_at(.vars = dplyr::vars(.data$time_f, .data$time),
                      .funs = ~{
 
-                       format(as.POSIXct(Sys.Date() + as.numeric(..1)), "%H:%M:%S", tz = "UTC")
+                       format(..1, "%H:%M", tz = "UTC")
 
-                     })
+                     }) %>%
+    # Fix format issues
+    # - Remove spaces in m_weight and set to numeric
+    dplyr::mutate(m_weight = as.numeric(stringr::str_replace_all(.data$m_weight, " ", "")),
+                  # - Replace , in m_weight by . and set to numeric
+                  f_tarsus = as.numeric(stringr::str_replace_all(.data$f_tarsus, ",", ".")),
+                  # - Replace / in m_weight by . and set to numeric
+                  m_tarsus = as.numeric(stringr::str_replace_all(.data$m_tarsus, "/", ".")))
 
   # BROOD DATA
 
@@ -116,6 +115,10 @@ format_DLO <- function(db = choose_directory(),
   # WRANGLE DATA FOR EXPORT
 
   Capture_data <- Capture_data %>%
+    # Reset chickAge
+    dplyr::mutate(chickAge = NA_integer_,
+                  # Add row ID
+                  row = 1:n()) %>%
     # Add missing columns
     dplyr::bind_cols(data_templates$v1.2$Capture_data[1, !(names(data_templates$v1.2$Capture_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
@@ -123,6 +126,8 @@ format_DLO <- function(db = choose_directory(),
                                                                            ignore.case = FALSE))
 
   Brood_data <- Brood_data %>%
+    # Add row ID
+    dplyr::mutate(row = 1:n()) %>%
     # Add missing columns
     dplyr::bind_cols(data_templates$v1.2$Brood_data[1, !(names(data_templates$v1.2$Brood_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
@@ -130,6 +135,8 @@ format_DLO <- function(db = choose_directory(),
                                                                          ignore.case = FALSE))
 
   Individual_data <- Individual_data %>%
+    # Add row ID
+    dplyr::mutate(row = 1:n()) %>%
     # Add missing columns
     dplyr::bind_cols(data_templates$v1.2$Individual_data[1, !(names(data_templates$v1.2$Individual_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
@@ -225,14 +232,13 @@ create_brood_DLO <- function(data,
                   observedFledgeMonth = as.integer(lubridate::month(.data$fledging_date)),
                   observedFledgeDay = as.integer(lubridate::day(.data$fledging_date)),
                   # NB: ? in number fledged is set to NA
-                  observedNumberFledged = as.integer(dplyr::na_if(.data$no_fledged, "?")),
-                  row = 1:n()) %>%
+                  observedNumberFledged = as.integer(dplyr::na_if(.data$no_fledged, "?"))) %>%
     # Filter species
     dplyr::filter(.data$speciesID %in% {{species_filter}})
 
   # Add optional variables
   output <- Brood_data %>%
-    {if("breedingSeason" %in% optional_variables) calc_season(data = ., season = .data$Year) else .} %>%
+    {if("breedingSeason" %in% optional_variables) calc_season(data = ., season = .data$year) else .} %>%
     {if("calculatedClutchType" %in% optional_variables) calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.2") else .} %>%
     {if("nestAttemptNumber" %in% optional_variables) calc_nestattempt(data = ., season = .data$breedingSeason) else .}
 
@@ -260,21 +266,20 @@ create_capture_DLO <- function(data,
 
   # Retrieve capture information of parents
   parents <- data %>%
-    # Unify ring formats; both lower-case and upper-case letters are used for the same individual
-    dplyr::mutate(femaleID = paste0("DLO_", toupper(.data$f_ring)),
-                  maleID = paste0("DLO_", toupper(.data$m_ring))) %>%
     # Pivot information on females and males into rows
-    tidyr::pivot_longer(cols = c(.data$femaleID, .data$maleID),
+    tidyr::pivot_longer(cols = c(.data$f_ring, .data$m_ring),
                         names_to = "sex",
                         values_to = "individualID") %>%
     # Remove unknown individualIDs
-    dplyr::filter(!is.na("individualID")) %>%
-    dplyr::mutate(observedSex = dplyr::case_when(grepl(pattern = "female", x = .data$sex) ~ "F",
-                                                 grepl(pattern = "male", x = .data$sex) ~ "M"),
+    dplyr::filter(!is.na(.data$individualID)) %>%
+    # Unify ring formats; both lower-case and upper-case letters are used for the same individual
+    dplyr::mutate(individualID = paste0("DLO_", toupper(.data$individualID)),
+                  observedSex = dplyr::case_when(grepl(pattern = "f", x = .data$sex) ~ "F",
+                                                 grepl(pattern = "m", x = .data$sex) ~ "M"),
                   speciesID = dplyr::case_when(.data$observedSex == "F" ~ .data$species,
                                                .data$observedSex == "M" ~ .data$m_sp),
-                  captureDate = dplyr::case_when(.data$observedSex == "F" ~ as.Date(as.character(.data$date_f)),
-                                                 .data$observedSex == "M" ~ as.Date(as.character(.data$date_m))),
+                  captureDate = dplyr::case_when(.data$observedSex == "F" ~ .data$date_f,
+                                                 .data$observedSex == "M" ~ .data$date_m),
                   captureYear = dplyr::case_when(is.na(.data$captureDate) ~ as.integer(.data$year),
                                                  TRUE ~ as.integer(lubridate::year(.data$captureDate))),
                   captureMonth = as.integer(lubridate::month(.data$captureDate)),
@@ -283,6 +288,8 @@ create_capture_DLO <- function(data,
                                                  .data$observedSex == "M" ~ .data$time),
                   age = dplyr::case_when(.data$observedSex == "F" ~ .data$f_age,
                                          .data$observedSex == "M" ~ .data$m_age),
+                  age = dplyr::case_when(.data$age %in% c("j", "J", "j?", "J?") ~ "J",
+                                         .data$age %in% c("ad", "1K+") ~ "A"),
                   wingLength = dplyr::case_when(.data$observedSex == "F" ~ .data$f_wing,
                                                 .data$observedSex == "M" ~ .data$m_wing),
                   mass = dplyr::case_when(.data$observedSex == "F" ~ .data$f_weight,
@@ -292,8 +299,11 @@ create_capture_DLO <- function(data,
                   recordedBy = dplyr::case_when(.data$observedSex == "F" ~ .data$measured_f,
                                                 .data$observedSex == "M" ~ .data$measured_m),
                   recordedBy = dplyr::case_when(.data$recordedBy == "Fernando" ~ .data$recordedBy,
-                                                TRUE ~ toupper(stringr::str_replace(.data$recordedBy, "/", " | ")))) %>%
-    dplyr::select(.data$individualID,
+                                                TRUE ~ toupper(stringr::str_replace(.data$recordedBy, "/", " | "))),
+                  chickAge = NA_integer_) %>%
+    dplyr::select(.data$siteID,
+                  .data$plotID,
+                  .data$individualID,
                   .data$speciesID,
                   .data$observedSex,
                   .data$captureYear,
@@ -301,13 +311,18 @@ create_capture_DLO <- function(data,
                   .data$captureDay,
                   .data$captureTime,
                   .data$recordedBy,
-                  .data$locationID)
+                  .data$locationID,
+                  .data$age,
+                  .data$chickAge,
+                  .data$wingLength,
+                  .data$mass,
+                  .data$tarsus)
 
   # Retrieve capture information of chicks
   chicks <- data %>%
     # Remove columns that do not contain relevant chick info
     dplyr::select(-.data$killed_female:-.data$protected, -.data$source:-.data$notes_57) %>%
-    # Pivot information on nestlings into rows
+    # Pivot information on chicks into rows
     tidyr::pivot_longer(cols = .data$x1nestling:.data$x12n,
                         names_to = NULL,
                         values_to = "individualID") %>%
@@ -327,8 +342,18 @@ create_capture_DLO <- function(data,
                   captureYear = as.integer(.data$year),
                   captureMonth = NA_integer_,
                   captureDay = NA_integer_,
-                  captureTime = NA_character_) %>%
-    dplyr::select(.data$individualID,
+                  captureTime = NA_character_,
+                  age = NA_character_,
+                  wingLength = NA_real_,
+                  mass = NA_real_,
+                  tarsus = NA_real_,
+                  # TODO: Check chick age with data owner
+                  # for now: set to an arbitrary (non-NA value) to be able to calculate exactAge/minimumAge
+                  # NB: reset in format_DLO()
+                  chickAge = 15L) %>%
+    dplyr::select(.data$siteID,
+                  .data$plotID,
+                  .data$individualID,
                   .data$speciesID,
                   .data$observedSex,
                   .data$captureYear,
@@ -336,7 +361,12 @@ create_capture_DLO <- function(data,
                   .data$captureDay,
                   .data$captureTime,
                   .data$recordedBy,
-                  .data$locationID)
+                  .data$locationID,
+                  .data$age,
+                  .data$chickAge,
+                  .data$wingLength,
+                  .data$mass,
+                  .data$tarsus)
 
   # Combine parents & chicks info
   captures <- dplyr::bind_rows(parents, chicks) %>%
@@ -348,9 +378,7 @@ create_capture_DLO <- function(data,
                   # TODO: Individuals are assumed to be captured alive, without replacing rings
                   captureAlive = TRUE,
                   captureRelease = TRUE,
-                  capturePhysical = TRUE,
-                  # TODO: Check chick age with data owner
-                  chickAge = NA_integer_) %>%
+                  capturePhysical = TRUE) %>%
     # Arrange chronologically for each individual
     dplyr::arrange(.data$individualID, .data$captureYear, .data$captureMonth, .data$captureDay, .data$captureTime) %>%
     dplyr::group_by(.data$individualID) %>%
@@ -361,10 +389,73 @@ create_capture_DLO <- function(data,
                   releaseRingNumber = stringr::str_sub(.data$individualID, 5, nchar(.data$individualID))) %>%
     dplyr::ungroup() %>%
     # Filter species
-    dplyr::filter(speciesID %in% {{species_filter}})
+    dplyr::filter(speciesID %in% {{species_filter}}) %>%
+    # Create captureID
+    dplyr::group_by(.data$individualID) %>%
+    dplyr::mutate(captureID = paste(.data$individualID, 1:n(), sep = "_")) %>%
+    dplyr::ungroup() %>%
+    dplyr::select(.data$captureID, everything())
+
+  # Add optional variables
+  output <- captures %>%
+    {if("exactAge" %in% optional_variables | "minimumAge" %in% optional_variables) calc_age(data = .,
+                                                                                            Year = .data$captureYear,
+                                                                                            protocol_version = "1.2") %>%
+        dplyr::select(dplyr::contains(c(names(captures), optional_variables))) else .}
+
+  return(output)
+
+}
 
 
+#' Create individual data table for Dlouhá Loučka, Czechia.
+#'
+#' Create individual data table in standard format for data from Dlouhá Loučka, Czechia.
+#'
+#' @param capture_data Data frame. Output from \code{\link{create_capture_DLO}}.
+#' @param species_filter Species of interest. The 6 letter codes of all the species of
+#'  interest as listed in the
+#'  \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.2.0.pdf}{standard
+#'  protocol}.
+#' @param optional_variables A character vector of names of optional variables (generated by standard utility functions) to be included in the pipeline output.
+#'
+#' @return A data frame.
+#'
 
+create_individual_DLO <- function(capture_data,
+                                  species_filter,
+                                  optional_variables = NULL) {
+
+  # Create a list of individuals from capture data
+  individuals <- capture_data %>%
+    # Arrange data for each individual chronologically
+    dplyr::arrange(.data$individualID, .data$captureDate, .data$captureYear,
+                   .data$captureMonth, .data$captureDay, .data$captureTime) %>%
+    # For every individual ...
+    dplyr::group_by(.data$siteID, .data$individualID) %>%
+    # Determine first age, brood, ring year, month, day, and ring site of each individual
+    dplyr::summarise(firstBrood = dplyr::first(.data$broodID),
+                     ringDate = dplyr::first(.data$captureDate),
+                     ringYear = as.integer(lubridate::year(.data$ringDate)),
+                     ringMonth = as.integer(lubridate::month(.data$ringDate)),
+                     ringDay = as.integer(lubridate::day(.data$ringDate)),
+                     #firstAge = dplyr::first(.data$age),
+                     firstChickAge = dplyr::first(.data$chickAge),
+                     ringSiteID = dplyr::first(.data$siteID)) %>%
+    # Only assign a brood ID if they were first caught as a chick
+    # Otherwise, the broodID will be their first clutch as a parent
+    dplyr::mutate(broodIDLaid = dplyr::case_when(is.na(firstChickAge) ~ NA_character_,
+                                                 TRUE ~ .data$firstBrood),
+                  # We have no information on cross-fostering, so we assume the brood laid and ringed are the same
+                  broodIDFledged = .data$broodIDLaid,
+                  # Determine stage at ringing as either chick or adult
+                  ringStage = dplyr::case_when(is.na(.data$firstChickAge) ~ "adult",
+                                               TRUE ~ "chick")) %>%
+    dplyr::ungroup()
+
+  # Add optional variables
+  output <- individuals %>%
+    {if("calculatedSex" %in% optional_variables) calc_sex(individual_data = ., capture_data = capture_data) else .}
 
 }
 
