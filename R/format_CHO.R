@@ -37,6 +37,8 @@
 #'
 #'\strong{captureAlive, releaseAlive}: Assume all individuals were alive when captured and released.
 #'
+#'\strong{captureRingNumber}: First captures of all individuals are assumed to be ringing events, and thus captureRingNumber is set to NA.
+#'
 #'\strong{locationID}: For individuals captured in mist nets (specified by
 #'trapping method column), a single locationID "MN1" is used.
 #'
@@ -369,8 +371,8 @@ create_brood_CHO <- function(data,
 create_capture_CHO <- function(data,
                                optional_variables = NULL){
 
-  # Take all data and add population/study site info
-  # There is only one population/study site
+  # Take all data and add study site/plot info
+  # There is only one study site/plot
   Capture_data <- data %>%
     dplyr::mutate(captureSiteID = .data$siteID,
                   releaseSiteID = .data$siteID,
