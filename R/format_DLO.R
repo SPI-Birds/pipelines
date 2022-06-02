@@ -55,8 +55,8 @@ format_DLO <- function(db = choose_directory(),
   start_time <- Sys.time()
 
   # Load data
-  all_data <- readxl::read_excel(paste0(db, "/DLO_PrimaryData.xlsx"),
-                                 guess_max = 4000, na = "NA") %>%
+  all_data <- suppressMessages(readxl::read_excel(paste0(db, "/DLO_PrimaryData.xlsx"),
+                                                  guess_max = 4000, na = "NA") %>%
     # Convert all cols to snake_case
     janitor::clean_names() %>%
     # Create IDs
@@ -70,34 +70,33 @@ format_DLO <- function(db = choose_directory(),
                   broodID = paste(.data$year, .data$site, .data$nestbox, .data$x1_egg_date, sep = "_")) %>%
     # TODO: Uncertainty in species identification (e.g., PA?) is ignored; check with data owner
     dplyr::mutate(dplyr::across(.cols = c(.data$species, .data$m_sp),
-                                .funs = ~{
+                                .fns = ~{
 
-                                  dplyr::case_when(. == "CC" ~ species_codes$speciesID[species_codes$speciesCode == "10002"],
-                                                   . == "PM" ~ species_codes$speciesID[species_codes$speciesCode == "10001"],
-                                                   grepl(pattern = "PA", x = .) ~ species_codes$speciesID[species_codes$speciesCode == "10005"],
-                                                   grepl(pattern = "FA", x = .) ~ species_codes$speciesID[species_codes$speciesCode == "10007"],
-                                                   . == "PP" ~ species_codes$speciesID[species_codes$speciesCode == "10008"],
-                                                   . == "SE" ~ species_codes$speciesID[species_codes$speciesCode == "10004"],
-                                                   . == "FH" ~ species_codes$speciesID[species_codes$speciesCode == "10003"],
-                                                   . == "PasMo" ~ species_codes$speciesID[species_codes$speciesCode == "10006"],
+                                  dplyr::case_when(.x == "CC" ~ species_codes$speciesID[species_codes$speciesCode == "10002"],
+                                                   .x == "PM" ~ species_codes$speciesID[species_codes$speciesCode == "10001"],
+                                                   grepl(pattern = "PA", x = .x) ~ species_codes$speciesID[species_codes$speciesCode == "10005"],
+                                                   grepl(pattern = "FA", x = .x) ~ species_codes$speciesID[species_codes$speciesCode == "10007"],
+                                                   .x == "PP" ~ species_codes$speciesID[species_codes$speciesCode == "10008"],
+                                                   .x == "SE" ~ species_codes$speciesID[species_codes$speciesCode == "10004"],
+                                                   .x == "FH" ~ species_codes$speciesID[species_codes$speciesCode == "10003"],
+                                                   .x == "PasMo" ~ species_codes$speciesID[species_codes$speciesCode == "10006"],
                                                    # TODO: Some species IDs are excluded--too few observations or unknown species; check with data owner
-                                                   . %in% c("CerBra", "FX", "fx", "Parus", "PhPh") ~ NA_character_,
-                                                   is.na(.) ~ NA_character_)
+                                                   .x %in% c("CerBra", "FX", "fx", "Parus", "PhPh") ~ NA_character_,
+                                                   is.na(.x) ~ NA_character_)
 
                                 })) %>%
     # Convert dates & times
-    dplyr::rowwise() %>%
     dplyr::mutate(dplyr::across(.cols = c(.data$nest_building, .data$x1_egg_date, .data$hatching_date, .data$fledging_date,
                                           .data$date_of_predation_event, .data$date_f, .data$date_m),
-                                .funs = ~{
+                                .fns = ~{
 
-                                  as.Date(..1)
+                                  as.Date(.x)
 
                                 }),
                   dplyr::across(.cols = c(.data$time_f, .data$time),
-                                .funs = ~{
+                                .fns = ~{
 
-                                  format(..1, "%H:%M", tz = "UTC")
+                                  format(.x, "%H:%M", tz = "UTC")
 
                                 }),
                   # Fix format issues
@@ -106,13 +105,13 @@ format_DLO <- function(db = choose_directory(),
                   # - Replace , in m_weight by . and set to numeric
                   f_tarsus = as.numeric(stringr::str_replace_all(.data$f_tarsus, ",", ".")),
                   # - Replace / in m_weight by . and set to numeric
-                  m_tarsus = as.numeric(stringr::str_replace_all(.data$m_tarsus, "/", ".")))
+                  m_tarsus = as.numeric(stringr::str_replace_all(.data$m_tarsus, "/", "."))))
 
   # BROOD DATA
 
   message("Compiling brood data....")
 
-  Brood_data <- create_brood_CHO(data = all_data,
+  Brood_data <- create_brood_DLO(data = all_data,
                                  species_filter = species,
                                  optional_variables = optional_variables)
 
@@ -120,7 +119,7 @@ format_DLO <- function(db = choose_directory(),
 
   message("Compiling capture data....")
 
-  Capture_data <- create_capture_CHO(data = all_data,
+  Capture_data <- create_capture_DLO(data = all_data,
                                      species_filter = species,
                                      optional_variables = optional_variables)
 
@@ -128,7 +127,7 @@ format_DLO <- function(db = choose_directory(),
 
   message("Compiling individual data....")
 
-  Individual_data <- create_individual_CHO(capture_data = Capture_data,
+  Individual_data <- create_individual_DLO(capture_data = Capture_data,
                                            species_filter = species,
                                            optional_variables = optional_variables)
 
@@ -136,13 +135,13 @@ format_DLO <- function(db = choose_directory(),
 
   message("Compiling location data....")
 
-  Location_data <- create_location_CHO(data = all_data)
+  Location_data <- create_location_DLO(data = all_data)
 
   # MEASUREMENT DATA
 
   message("Compiling measurement data....")
 
-  Measurement_data <- create_measurement_CHO(capture_data = Capture_data)
+  Measurement_data <- create_measurement_DLO(capture_data = Capture_data)
 
   # EXPERIMENT DATA
 
@@ -638,4 +637,5 @@ create_measurement_DLO <- function(capture_data,
 #TODO: Check individualID variation in length of digits
 #TODO: Check habitat type with data owner
 #TODO: Check with data owner on how to interpret other measurements (e.g., tail, 3P-8P, patch1, patch2)
+#TODO: Check units of measurements
 #TODO: Check tarsus method
