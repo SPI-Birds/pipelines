@@ -940,13 +940,14 @@ calc_sex <- function(individual_data,
 #' This prevents any cases where an individual might be wrongly aged at first capture.
 #'
 #' When there is no observed age at first capture we assume it couldn't be a
-#' chick or this would've been recorded.
+#' chick because this would've been recorded.
 #'
 #' \strong{Version 1.2}
 #'
 #' From version 1.2 onwards, age is stored in two columns, exactAge and minimumAge.
 #' For individuals first captured as chicks, exactAge & minimumAge can be determined;
-#' for individuals first captured as adults, only minimumAge can be determined.
+#' for individuals first captured as adults, only minimumAge can be determined. In both cases,
+#' capture dates are required to calculate age.
 #'
 #' Age is determined as number of seasons since birth (exactAge) or ringing (minimumAge).
 #' The number of seasons equal the number of years for birds that have a single breeding
