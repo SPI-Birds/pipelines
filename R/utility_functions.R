@@ -940,14 +940,13 @@ calc_sex <- function(individual_data,
 #' This prevents any cases where an individual might be wrongly aged at first capture.
 #'
 #' When there is no observed age at first capture we assume it couldn't be a
-#' chick because this would've been recorded.
+#' chick or this would've been recorded.
 #'
 #' \strong{Version 1.2}
 #'
 #' From version 1.2 onwards, age is stored in two columns, exactAge and minimumAge.
 #' For individuals first captured as chicks, exactAge & minimumAge can be determined;
-#' for individuals first captured as adults, only minimumAge can be determined. In both cases,
-#' capture dates are required to calculate age.
+#' for individuals first captured as adults, only minimumAge can be determined.
 #'
 #' Age is determined as number of seasons since birth (exactAge) or ringing (minimumAge).
 #' The number of seasons equal the number of years for birds that have a single breeding
@@ -963,15 +962,16 @@ calc_sex <- function(individual_data,
 #'
 #' @param data Data frame. Data frame with capture information.
 #' @param ID Unquoted expression (i.e. character without quotation marks). Name
-#'   of column with individual identity.
+#'   of column with individual identity. NB: Not used for v1.2.
 #' @param Age Unquoted expression (i.e. character without quotation marks). Name
 #'   of column with observed age of individual in each capture. Must be in
-#'   EURING codes.
+#'   EURING codes. NB: Can be used for v1.2 to indicate which individuals are chicks,
+#'   if chickAge is unknown.
 #' @param Date Unquoted expression (i.e. character without quotation marks).
-#'   Name of column with CaptureDate information. Must be in format dd/mm/yyyy.
+#'   Name of column with captureDate information. Must be in format dd/mm/yyyy. NB: Not used for v1.2.
 #' @param Year Unquoted expression (i.e. character without quotation marks).
-#'   Name of column with year information. N.B. This could be different to
-#'   CaptureDate if we are dealing with species that breed over two year (e.g.
+#'   Name of column with year information. NB: This could be different to
+#'   captureDate if we are dealing with species that breed over two year (e.g.
 #'   Southern Hemisphere species).
 #' @param protocol_version Character string. The protocol version of the SPI Birds
 #'   standard data being used to process the primary data. Either "1.0" (default), "1.1", or "1.2".
@@ -1077,6 +1077,7 @@ calc_age <- function(data, ID, Age, Date, Year, protocol_version = "1.0", showpb
         # For each individual, determine whether their first catch was as a chick or not
         dplyr::group_by(.data$individualID) %>%
         dplyr::mutate(ringedAs = dplyr::case_when(!is.na(dplyr::first(.data$chickAge)) ~ "chick",
+                                                  dplyr::first({{Age}}) == "chick" ~ "chick",
                                                   TRUE ~ "adult"),
                       firstDate = dplyr::first(.data$captureDate)) %>%
         dplyr::ungroup() %>%
@@ -1096,6 +1097,7 @@ calc_age <- function(data, ID, Age, Date, Year, protocol_version = "1.0", showpb
         # For each individual, determine whether their first catch was as a chick or not
         dplyr::group_by(.data$individualID) %>%
         dplyr::mutate(ringedAs = dplyr::case_when(!is.na(dplyr::first(.data$chickAge)) ~ "chick",
+                                                  dplyr::first({{Age}}) == "chick" ~ "chick",
                                                   TRUE ~ "adult"),
                       firstSeason = as.integer(dplyr::first({{Year}}))) %>%
         dplyr::ungroup() %>%
