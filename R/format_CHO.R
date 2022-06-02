@@ -37,6 +37,8 @@
 #'
 #'\strong{captureAlive, releaseAlive}: Assume all individuals were alive when captured and released.
 #'
+#'\strong{captureRingNumber}: First captures of all individuals are assumed to be ringing events, and thus captureRingNumber is set to NA.
+#'
 #'\strong{locationID}: For individuals captured in mist nets (specified by
 #'trapping method column), a single locationID "MN1" is used.
 #'
@@ -369,8 +371,8 @@ create_brood_CHO <- function(data,
 create_capture_CHO <- function(data,
                                optional_variables = NULL){
 
-  # Take all data and add population/study site info
-  # There is only one population/study site
+  # Take all data and add study site/plot info
+  # There is only one study site/plot
   Capture_data <- data %>%
     dplyr::mutate(captureSiteID = .data$siteID,
                   releaseSiteID = .data$siteID,
@@ -389,13 +391,6 @@ create_capture_CHO <- function(data,
                   # All releases are assumed to be alive (also see releaseAlive), so no NAs in releaseRingNumber
                   releaseRingNumber = stringr::str_sub(.data$individualID, 5, nchar(.data$individualID))) %>%
     dplyr::ungroup() %>%
-    dplyr::mutate(Age_observed = dplyr::case_when(is.na(.data$Age) ~ NA_integer_,
-                                                  .data$Age == "C" ~ 1L,
-                                                  .data$youngestCatch == "C" & .data$Year == .data$firstYr ~ 3L,
-                                                  .data$Age == "first year" ~ 5L,
-                                                  .data$Age == "adult" ~ 4L)) %>%
-    # NB: Age calculation moved to standard utility function (v1.2)
-    # calc_age(ID = .data$IndvID, Age = .data$Age_observed, Date = .data$CaptureDate, Year = .data$BreedingSeason) %>%
     # Arrange data for each individual chronologically
     dplyr::arrange(.data$individualID, .data$captureDate, .data$captureTime) %>%
     # Replace 'na' with NA in Sex
@@ -491,10 +486,11 @@ create_individual_CHO <- function(data,
                                                  TRUE ~ .data$firstBrood),
                   # We have no information on cross-fostering, so we assume the brood laid and ringed are the same
                   broodIDFledged = .data$broodIDLaid,
-                  # Determine stage at ringing as either chick or adult.
+                  # Determine stage at ringing as either chick, subadult, or adult.
                   ringStage = dplyr::case_when(.data$firstAge == "C" ~ "chick",
-                                               is.na(.data$firstAge) ~ "adult",
-                                               .data$firstAge != "C" ~ "adult")) %>%
+                                               .data$firstAge == "first year" ~ "subadult",
+                                               .data$firstAge == "adult" ~ "adult",
+                                               is.na(.data$firstAge) ~ "adult")) %>%
     # NB: Sex calculation moved to standard utility function (v1.2)
     #dplyr::left_join(Sex_calc, by = "IndvID") %>%
     dplyr::ungroup() %>%
