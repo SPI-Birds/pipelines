@@ -275,7 +275,6 @@ v1.2 <- tibble::lst(
     releaseRingNumber = NA_character_,
     speciesID = NA_character_,
     observedSex = NA_character_,
-    breedingSeason = NA_integer_,
     captureYear = NA_integer_,
     captureMonth = NA_integer_,
     captureDay = NA_integer_,
@@ -425,9 +424,9 @@ categorical_variables <- tibble::lst(
     Sex = c("F", "M", "C", NA), # v1.0
     Sex_calculated = c("F", "M", "C", NA), # v1.1
     Sex_genetic = c("F", "M", "C", NA), # v1.1
-    speciesID = species_codes$speciesID, # v1.2
+    speciesID = c(species_codes$speciesID, "FICHIB"), # v1.2
     siteID = site_codes$siteID, # v1.2
-    ringStage = c("chick", "adult", NA), # v1.2
+    ringStage = c("chick", "subadult", "adult", NA), # v1.2
     ringSiteID = site_codes$siteID, # v1.2
     geneticSex = c("F", "M", "C", NA) # v1.2
   ),
@@ -440,7 +439,7 @@ categorical_variables <- tibble::lst(
     ClutchType_calculated = c("first", "second", "replacement", NA), # v1.0 & v1.1
     OriginalTarsusMethod = c("Alternative", "Standard", "Oxford", NA), # v1.0 & v1.1
     ExperimentID = c("PHENOLOGY", "COHORT", "PARENTAGE", "SURVIVAL", "OTHER", "SURVIVAL; OTHER", NA), # v1.0 & v1.1
-    speciesID = species_codes$speciesID, # v1.2
+    speciesID = c(species_codes$speciesID, "FICHIB"), # v1.2
     siteID = site_codes$siteID, # v1.2
     observedClutchType = c("first", "second", "replacement", NA) # v1.2
   ),
@@ -453,7 +452,7 @@ categorical_variables <- tibble::lst(
     OriginalTarsusMethod = c("Alternative", "Standard", "Oxford", NA), # v1.0 & v1.1
     ExperimentID = c("PHENOLOGY", "COHORT", "PARENTAGE", "SURVIVAL", "OTHER", "SURVIVAL; OTHER", NA), # v1.1
     Sex_observed = c("F", "M", NA), # v1.1
-    speciesID = species_codes$speciesID, # v1.2
+    speciesID = c(species_codes$speciesID, "FICHIB"), # v1.2
     observedSex = c("F", "M", NA), # v1.2
     captureSiteID = site_codes$siteID, # v1.2
     releaseSiteID = c(site_codes$siteID, NA) # v1.2
