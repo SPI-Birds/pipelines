@@ -170,4 +170,219 @@ test_that("Capture_data returns an expected outcome...", {
   # Test that minimumAge is correct on 5th capture (4, because it's an adult caught 3 years after its first capture)
   expect_equal(dplyr::last(subset(DLO_data, individualID == paste0("DLO_", "F119613"))$minimumAge), 4)
 
+  # Test 2: Male caught as adult
+  # Test the male has the correct number of capture records (3)
+  expect_equal(nrow(subset(DLO_data, individualID == paste0("DLO_", "F119732"))), 3)
+  # Test that the 1st capture of the male is as expected (2014-05-30)
+  expect_equal(dplyr::first(subset(DLO_data, individualID == paste0("DLO_", "F119732"))$captureYear), 2014)
+  expect_equal(dplyr::first(subset(DLO_data, individualID == paste0("DLO_", "F119732"))$captureMonth), 5)
+  expect_equal(dplyr::first(subset(DLO_data, individualID == paste0("DLO_", "F119732"))$captureDay), 30)
+  expect_equal(dplyr::first(subset(DLO_data, individualID == paste0("DLO_", "F119732"))$captureRingNumber), NA_character_)
+  expect_equal(dplyr::first(subset(DLO_data, individualID == paste0("DLO_", "F119732"))$releaseRingNumber), "F119732")
+  # Test that the 3rd capture of the male is as expected (2017-06-01)
+  expect_equal(dplyr::last(subset(DLO_data, individualID == paste0("DLO_", "F119732"))$captureYear), 2017)
+  expect_equal(dplyr::last(subset(DLO_data, individualID == paste0("DLO_", "F119732"))$captureMonth), 6)
+  expect_equal(dplyr::last(subset(DLO_data, individualID == paste0("DLO_", "F119732"))$captureDay), 1)
+  expect_equal(dplyr::last(subset(DLO_data, individualID == paste0("DLO_", "F119732"))$captureRingNumber), "F119732")
+  expect_equal(dplyr::last(subset(DLO_data, individualID == paste0("DLO_", "F119732"))$releaseRingNumber), "F119732")
+  # Test that exactAge is as expected (NA, because it's caught as an adult)
+  expect_equal(dplyr::first(subset(DLO_data, individualID == paste0("DLO_", "F119732"))$exactAge), NA_integer_)
+  # Test that minimumAge is correct on first capture (1, because it's an adult of unknown age because it wasn't caught as a chick)
+  expect_equal(dplyr::first(subset(DLO_data, individualID == paste0("DLO_", "F119732"))$minimumAge), 1)
+  # Test that minimumAge is correct on 3rd capture (4, because it's an adult caught 3 years after its first capture)
+  expect_equal(dplyr::last(subset(DLO_data, individualID == paste0("DLO_", "F119732"))$minimumAge), 4)
+
+  # Test 3: Caught as chick
+  # Test the chick has the correct number of capture records (4)
+  expect_equal(nrow(subset(DLO_data, individualID == paste0("DLO_", "S695547"))), 4)
+  # Test that the 1st capture of the chick is as expected (2015)
+  expect_equal(dplyr::first(subset(DLO_data, individualID == paste0("DLO_", "S695547"))$captureYear), 2015)
+  expect_equal(dplyr::first(subset(DLO_data, individualID == paste0("DLO_", "S695547"))$captureMonth), NA_integer_)
+  expect_equal(dplyr::first(subset(DLO_data, individualID == paste0("DLO_", "S695547"))$captureDay), NA_integer_)
+  expect_equal(dplyr::first(subset(DLO_data, individualID == paste0("DLO_", "S695547"))$captureRingNumber), NA_character_)
+  expect_equal(dplyr::first(subset(DLO_data, individualID == paste0("DLO_", "S695547"))$releaseRingNumber), "S695547")
+  # Test that the 4th capture of the chick is as expected (2019-05-30)
+  expect_equal(dplyr::last(subset(DLO_data, individualID == paste0("DLO_", "S695547"))$captureYear), 2019)
+  expect_equal(dplyr::last(subset(DLO_data, individualID == paste0("DLO_", "S695547"))$captureMonth), 5)
+  expect_equal(dplyr::last(subset(DLO_data, individualID == paste0("DLO_", "S695547"))$captureDay), 30)
+  expect_equal(dplyr::last(subset(DLO_data, individualID == paste0("DLO_", "S695547"))$captureRingNumber), "S695547")
+  expect_equal(dplyr::last(subset(DLO_data, individualID == paste0("DLO_", "S695547"))$releaseRingNumber), "S695547")
+  # Test that exactAge is correct on first capture (0, because it's caught as a chick)
+  expect_equal(dplyr::first(subset(DLO_data, individualID == paste0("DLO_", "S695547"))$exactAge), 0)
+  # Test that exactAge is correct on 4th capture (0, because it's caught as a chick 4 years later)
+  expect_equal(dplyr::last(subset(DLO_data, individualID == paste0("DLO_", "S695547"))$exactAge), 4)
+  # Test that minimumAge is as expected
+  expect_equal(dplyr::first(subset(DLO_data, individualID == paste0("DLO_", "S695547"))$minimumAge), 0)
+  expect_equal(dplyr::last(subset(DLO_data, individualID == paste0("DLO_", "S695547"))$minimumAge), 4)
+
+})
+
+test_that("Measurement_data returns an expected outcome...", {
+
+  # We want to run tests for individuals that had all all measurements taken, and individuals with some measurements missing
+
+  # Take a subset of DLO - Measurement_data
+  DLO_data <- dplyr::filter(pipeline_output$Measurement_data, siteID == "DLO")
+
+  # Test 1: all three measurements
+  # Test that individual TB63242 had been taken three measurements of in its first capture
+  expect_equal(nrow(subset(DLO_data, recordID == paste0("DLO_", "TB63242", "_1"))), 3)
+  # Test that its measurements are as expected (mass: 16.5, wing length: 72, tarsus: 19.3)
+  expect_equal(subset(DLO_data, recordID == paste0("DLO_", "TB63242", "_1") & measurementType == "mass")$measurementValue, 18.25)
+  expect_equal(subset(DLO_data, recordID == paste0("DLO_", "TB63242", "_1") & measurementType == "wing length")$measurementValue, 74)
+  expect_equal(subset(DLO_data, recordID == paste0("DLO_", "TB63242", "_1") & measurementType == "tarsus")$measurementValue, 22.78)
+  # Test that the measurements were taken in the correct year (2005)
+  expect_equal(subset(DLO_data, recordID == paste0("DLO_", "TB63242", "_1"))$measurementDeterminedYear, rep(2005, 3))
+
+  # Test 2: missing measurements
+  # Test that individual F119732 had been taken two measurements of in its second capture
+  expect_equal(nrow(subset(DLO_data, recordID == paste0("DLO_", "F119732", "_2"))), 2)
+  # Test that its measurements are as expected (mass: 16.5, wing length: 72)
+  expect_equal(subset(DLO_data, recordID == paste0("DLO_", "F119732", "_2") & measurementType == "mass")$measurementValue, 13.3)
+  expect_equal(subset(DLO_data, recordID == paste0("DLO_", "F119732", "_2") & measurementType == "wing length")$measurementValue, 86)
+  # Test that there is no tarsus measurement
+  expect_equal(nrow(subset(DLO_data, recordID == paste0("DLO_", "F119732", "_2") & measurementType == "tarsus")), 0)
+  # Test that the measurements were taken on the correct date (2016-06-02)
+  expect_equal(subset(DLO_data, recordID == paste0("DLO_", "F119732", "_2"))$measurementDeterminedYear, rep(2016, 2))
+  expect_equal(subset(DLO_data, recordID == paste0("DLO_", "F119732", "_2"))$measurementDeterminedMonth, rep(6, 2))
+  expect_equal(subset(DLO_data, recordID == paste0("DLO_", "F119732", "_2"))$measurementDeterminedDay, rep(2, 2))
+
+
+})
+
+test_that("Location_data returns an expected outcome...", {
+
+  # We want to run tests for nesting locations
+
+  # Take a subset of DLO - Location_data
+  DLO_data <- dplyr::filter(pipeline_output$Location_data, siteID == "DLO")
+
+  # Test 1: Nest box check
+  # Nestbox 14 in polesi should be type "nest", and put up in 2005
+  expect_equal(subset(DLO_data, locationID == "polesi_14")$locationType, "nest")
+  expect_equal(subset(DLO_data, locationID == "polesi_14")$startYear, 2005L)
+
+})
+
+## General tests
+
+test_that("Expected columns are present", {
+
+  ## Will fail if not all the expected columns are present
+
+  ## Brood data: Test that all columns are present
+  test_col_present(pipeline_output, "Brood")
+
+  ## Capture data: Test that all columns are present
+  test_col_present(pipeline_output, "Capture")
+
+  ## Individual data: Test that all columns are present
+  test_col_present(pipeline_output, "Individual")
+
+  ## Measurement data: Test that all columns are present
+  test_col_present(pipeline_output, "Measurement")
+
+  ## Location data: Test that all columns are present
+  test_col_present(pipeline_output, "Location")
+
+  ## Experiment data: Test that all columns are present
+  test_col_present(pipeline_output, "Experiment")
+
+})
+
+test_that("Column classes are as expected", {
+
+  ## Will fail if columns that are shared by the output and the templates have different classes.
+
+  ## Brood data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Brood")
+
+  ## Capture data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Capture")
+
+  ## Individual data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Individual")
+
+  ## Measurement data: Test that all column classes are expected
+  test_col_present(pipeline_output, "Measurement")
+
+  ## Location data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Location")
+
+  ## Experiment data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Experiment")
+
+})
+
+test_that("ID columns match the expected format for the pipeline", {
+
+  ## femaleID format is as expected
+  test_ID_format(pipeline_output, ID_col = "femaleID", ID_format = "^DLO_[:upper:]{1,2}[:digit:]{4,6}$")
+
+  ## maleID format is as expected
+  test_ID_format(pipeline_output, ID_col = "maleID", ID_format = "^DLO_[:upper:]{1,2}[:digit:]{4,6}$")
+
+  ## individualID format in Capture data  is as expected
+  test_ID_format(pipeline_output, ID_col = "C-individualID", ID_format = "^DLO_[:upper:]{1,2}[:digit:]{4,8}$")
+
+  ## individualID format in Individual data is as expected
+  test_ID_format(pipeline_output, ID_col = "I-individualID", ID_format = "^DLO_[:upper:]{1,2}[:digit:]{4,8}$")
+
+})
+
+test_that("Key columns only contain unique values", {
+
+  ## broodID has only unique values
+  test_unique_values(pipeline_output, "broodID") # TODO: 2 broodIDs are duplicated, contact data owner
+
+  ## captureID has only unique values
+  test_unique_values(pipeline_output, "captureID")
+
+  ## individualID has only unique values
+  test_unique_values(pipeline_output, "individualID")
+
+  ## measurementID has only unique values
+  test_unique_values(pipeline_output, "measurementID")
+
+  ## locationID has only unique values
+  test_unique_values(pipeline_output, "locationID")
+
+})
+
+test_that("Key columns in each table do not have NAs", {
+
+  ## Brood
+  test_NA_columns(pipeline_output, "Brood")
+
+  ## Capture
+  test_NA_columns(pipeline_output, "Capture") # TODO: check with data owner for captureMonth & captureDay
+
+  ## Individual
+  test_NA_columns(pipeline_output, "Individual") # TODO: check with data owner for ringMonth & ringDay
+
+  ## Measurement
+  test_NA_columns(pipeline_output, "Measurement") # TODO: check with data owner for measurementDeterminedMonth & measurementDeterminedDay
+
+  ## Location
+  test_NA_columns(pipeline_output, "Location")
+
+})
+
+test_that("Categorical columns do not have unexpected values", {
+
+  ## Brood
+  test_category_columns(pipeline_output, "Brood")
+
+  ## Capture
+  test_category_columns(pipeline_output, "Capture")
+
+  ## Individual
+  test_category_columns(pipeline_output, "Individual")
+
+  ## Measurement
+  test_category_columns(pipeline_output, "Measurement")
+
+  ## Location
+  test_category_columns(pipeline_output, "Location")
+
 })
