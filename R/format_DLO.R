@@ -65,9 +65,10 @@ format_DLO <- function(db = choose_directory(),
                   plotID = paste0("DLO_", tolower(.data$site)),
                   # Ensure unique locationIDs; requires plot & nestbox
                   locationID = paste(.data$site, .data$nestbox, sep = "_"),
-                  # Ensure unique broodIDs; requires year, plot, nestbox, laying_date
+                  # Ensure unique broodIDs; requires laying date, plot, nestbox
                   # This accounts for multiple clutches in a single nestbox, in a single year
-                  broodID = paste(.data$year, .data$site, .data$nestbox, .data$x1_egg_date, sep = "_")) %>%
+                  broodID = paste(.data$year, lubridate::month(.data$x1_egg_date),
+                                  lubridate::day(.data$x1_egg_date), .data$site, .data$nestbox, sep = "_")) %>%
     # TODO: Uncertainty in species identification (e.g., PA?) is ignored; check with data owner
     dplyr::mutate(dplyr::across(.cols = c(.data$species, .data$m_sp),
                                 .fns = ~{
