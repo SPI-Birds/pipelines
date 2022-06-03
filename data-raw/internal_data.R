@@ -275,7 +275,6 @@ v1.2 <- tibble::lst(
     releaseRingNumber = NA_character_,
     speciesID = NA_character_,
     observedSex = NA_character_,
-    breedingSeason = NA_integer_,
     captureYear = NA_integer_,
     captureMonth = NA_integer_,
     captureDay = NA_integer_,
