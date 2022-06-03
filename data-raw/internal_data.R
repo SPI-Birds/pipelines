@@ -439,7 +439,7 @@ categorical_variables <- tibble::lst(
     ClutchType_calculated = c("first", "second", "replacement", NA), # v1.0 & v1.1
     OriginalTarsusMethod = c("Alternative", "Standard", "Oxford", NA), # v1.0 & v1.1
     ExperimentID = c("PHENOLOGY", "COHORT", "PARENTAGE", "SURVIVAL", "OTHER", "SURVIVAL; OTHER", NA), # v1.0 & v1.1
-    speciesID = species_codes$speciesID, # v1.2
+    speciesID = c(species_codes$speciesID, "FICHIB"), # v1.2
     siteID = site_codes$siteID, # v1.2
     observedClutchType = c("first", "second", "replacement", NA) # v1.2
   ),
@@ -452,7 +452,7 @@ categorical_variables <- tibble::lst(
     OriginalTarsusMethod = c("Alternative", "Standard", "Oxford", NA), # v1.0 & v1.1
     ExperimentID = c("PHENOLOGY", "COHORT", "PARENTAGE", "SURVIVAL", "OTHER", "SURVIVAL; OTHER", NA), # v1.1
     Sex_observed = c("F", "M", NA), # v1.1
-    speciesID = species_codes$speciesID, # v1.2
+    speciesID = c(species_codes$speciesID, "FICHIB"), # v1.2
     observedSex = c("F", "M", NA), # v1.2
     captureSiteID = site_codes$siteID, # v1.2
     releaseSiteID = c(site_codes$siteID, NA) # v1.2
