@@ -274,8 +274,8 @@ create_brood_DLO <- function(data,
                   # Assign speciesID; identify mixed broods
                   speciesID = dplyr::case_when(.data$species == .data$m_sp ~ .data$species,
                                                is.na(.data$m_sp) ~ .data$species,
-                                               .data$species == "FICALB" & .data$species == "FICHYP" ~ "FICHIB",
-                                               .data$species == "FICHYP" & .data$species == "FICALB" ~ "FICHIB",
+                                               .data$species == "FICALB" & .data$m_sp == "FICHYP" ~ "FICHIB",
+                                               .data$species == "FICHYP" & .data$m_sp == "FICALB" ~ "FICHIB",
                                                TRUE ~ NA_character_),
                   observedLayYear = dplyr::case_when(is.na(.data$x1_egg_date) ~ as.integer(.data$year),
                                                      TRUE ~ as.integer(lubridate::year(.data$x1_egg_date))),
@@ -302,7 +302,7 @@ create_brood_DLO <- function(data,
                   # NB: ? in number fledged is set to NA
                   observedNumberFledged = as.integer(dplyr::na_if(.data$no_fledged, "?"))) %>%
     # Filter species
-    dplyr::filter(.data$speciesID %in% {{species_filter}})
+    dplyr::filter(.data$speciesID %in% {species_filter})
 
   # Add optional variables
   output <- Brood_data %>%
@@ -414,8 +414,8 @@ create_capture_DLO <- function(data,
     # Assign speciesID; identify mixed broods
     dplyr::mutate(speciesID = dplyr::case_when(.data$species == .data$m_sp ~ .data$species,
                                                is.na(.data$m_sp) ~ .data$species,
-                                               .data$species == "FICALB" & .data$species == "FICHYP" ~ "FICHIB",
-                                               .data$species == "FICHYP" & .data$species == "FICALB" ~ "FICHIB",
+                                               .data$species == "FICALB" & .data$m_sp == "FICHYP" ~ "FICHIB",
+                                               .data$species == "FICHYP" & .data$m_sp == "FICALB" ~ "FICHIB",
                                                TRUE ~ NA_character_),
                   observedSex = NA_character_,
                   recordedBy = NA_character_,
@@ -470,7 +470,7 @@ create_capture_DLO <- function(data,
                   releaseRingNumber = stringr::str_sub(.data$individualID, 5, nchar(.data$individualID))) %>%
     dplyr::ungroup() %>%
     # Filter species
-    dplyr::filter(speciesID %in% {{species_filter}}) %>%
+    dplyr::filter(speciesID %in% {species_filter}) %>%
     # Create captureID
     dplyr::group_by(.data$individualID) %>%
     dplyr::mutate(captureID = paste(.data$individualID, 1:n(), sep = "_")) %>%
@@ -541,7 +541,7 @@ create_individual_DLO <- function(capture_data,
     dplyr::ungroup() %>%
     dplyr::mutate(siteID = "DLO") %>%
     # Filter species
-    dplyr::filter(speciesID %in% {{species_filter}})
+    dplyr::filter(speciesID %in% {species_filter})
 
   # Add optional variables
   output <- individuals %>%
@@ -563,12 +563,13 @@ create_location_DLO <- function(data) {
 
   # There are no coordinates or box type information
   locations <- data %>%
-    dplyr::select(.data$siteID, .data$plotID, .data$locationID, .data$year) %>%
+    dplyr::select(.data$siteID, .data$plotID, .data$locationID) %>%
     tidyr::drop_na() %>%
+    dplyr::distinct() %>%
     dplyr::mutate(locationType = "nest",
                   decimalLatitude = NA_real_,
                   decimalLongitude = NA_real_,
-                  startYear = as.integer(min(.data$year)),
+                  startYear = as.integer(min(data$year)),
                   endYear = NA_integer_,
                   # TODO: habitat is set to 1.4 Forest -- Temperate; check with data owner
                   habitatID = "1.4")
@@ -582,16 +583,11 @@ create_location_DLO <- function(data) {
 #' Create measurement data table in standard format for data from Dlouhá Loučka, Czechia.
 #'
 #' @param capture_data Data frame. Output from \code{\link{create_capture_DLO}}.
-#' @param species_filter Species of interest. The 6 letter codes of all the species of
-#'  interest as listed in the
-#'  \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.2.0.pdf}{standard
-#'  protocol}.
 #'
 #' @return A data frame.
 #'
 
-create_measurement_DLO <- function(capture_data,
-                                   species_filter) {
+create_measurement_DLO <- function(capture_data) {
 
   # Measurements are only taken of individuals (during captures), not of locations,
   # so we use capture_data as input
