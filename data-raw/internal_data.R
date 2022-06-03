@@ -424,7 +424,7 @@ categorical_variables <- tibble::lst(
     Sex = c("F", "M", "C", NA), # v1.0
     Sex_calculated = c("F", "M", "C", NA), # v1.1
     Sex_genetic = c("F", "M", "C", NA), # v1.1
-    speciesID = species_codes$speciesID, # v1.2
+    speciesID = c(species_codes$speciesID, "FICHIB"), # v1.2
     siteID = site_codes$siteID, # v1.2
     ringStage = c("chick", "adult", NA), # v1.2
     ringSiteID = site_codes$siteID, # v1.2
