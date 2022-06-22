@@ -13,7 +13,7 @@ speciesCode,speciesID,speciesEURINGCode,kingdom,phylum,class,order,family,genus,
 10012,LOPCRI,14540,Animalia,Chordata,Aves,Passeriformes,Paridae,Lophophanes,cristatus,,"Linnaeus, 1758",European crested tit
 10013,EMBMEL,18810,Animalia,Chordata,Aves,Passeriformes,Emberizidae,Emberiza,melanocephala,,"Scopoli, 1769",Black-headed bunting
 10014,PRUMOD,10840,Animalia,Chordata,Aves,Passeriformes,Prunellidae,Prunella,modularis,,"Linnaeus, 1758",Dunnock
-10015,CORMON,15600,Animalia,Chordata,Aves,Passeriformes,Corvidae,Corvus,monedula,,"Linnaeus, 1758",Western jackdaw
+10015,CORMON,15600,Animalia,Chordata,Aves,Passeriformes,Corvidae,Corvus,monedula,,"Linnaeus, 1758",Eurasian jackdaw
 10016,CERFAM,14860,Animalia,Chordata,Aves,Passeriformes,Certhiidae,Certhia,familiaris,,"Linnaeus, 1758",Eurasian treecreeper
 10017,STRALU,07610,Animalia,Chordata,Aves,Strigiformes,Strigidae,Strix,aluco,,"Linnaeus, 1758",Tawny owl
 10018,SITVAR,,Animalia,Chordata,Aves,Passeriformes,Paridae,Sittiparus ,varius,,"Temminck & Schlegel, 1845",Varied tit
@@ -23,10 +23,11 @@ speciesCode,speciesID,speciesEURINGCode,kingdom,phylum,class,order,family,genus,
 10022,PHOFUS,,Animalia,Chordata,Aves,Procellariiformes,Diomedeidae,Phoebetria,fusca,,"Hilsenberg, 1822",Sooty albatross
 10023,MACGIG,00210,Animalia,Chordata,Aves,Procellariiformes,Procellariidae,Macronectes,giganteus,,"Gmelin, 1789",Southern giant petrel
 10024,DIODAB,,Animalia,Chordata,Aves,Procellariiformes,Diomedeidae,Diomedea,dabbenena,,"Mathews, 1929",Tristan albatross
-10025,HYDLEU,00550,Animalia,Chordata,Aves,Procellariiformes,Hydrobatidae,Hydrobates,leucorhous,,"Vieillot, 1818",Leach's storm-petrel
+10025,HYDLEU,00550,Animalia,Chordata,Aves,Procellariiformes,Hydrobatidae,Hydrobates,leucorhous,,"Vieillot, 1818",Leach's storm petrel
 10026,CALALB,04970,Animalia,Chordata,Aves,Charadriiformes,Scolopacidae,Calidris,alba,,"Pallas, 1764",Sanderling
 10027,PERINF,,Animalia,Chordata,Aves,Passeriformes,Corvidae,Perisoreus,infaustus,,"Linnaeus, 1758",Siberian jay
 10028,POEMON,14420,Animalia,Chordata,Aves,Passeriformes,Paridae,Poecile,montanus,,"Conrad von Baldenstein, 1827",Willow tit
 10029,TACBIC,,Animalia,Chordata,Aves,Passeriformes,Hirundinidae,Tachycineta,bicolor,,"Vieillot, 1808",Tree swallow
 10030,PASSAN,,Animalia,Chordata,Aves,Passeriformes,Passerellidae,Passerculus,sandwichensis,,"Gmelin, 1789",Savannah sparrow
 10031,HAEOST,04500,Animalia,Chordata,Aves,Charadriiformes,Haematopodidae,Haematopus,ostralegus,,"Linnaeus, 1758",Eurasian oystercatcher
+10032,PASDOM,15910,Animalia,Chordata,Aves,Passeriformes,Passeridae,Passer,domesticus,,"Linnaeus, 1758",House sparrow
