@@ -39,13 +39,13 @@ DWZ,Dwingelderzand,Netherlands,NL,RUG,Rijksuniversiteit Groningen,52.815278,6.36
 ANS,Anserdennen,Netherlands,NL,RUG,Rijksuniversiteit Groningen,52.79,6.352778,data owner,TRUE,FALSE
 MIA,Maria,Netherlands,NL,RUG,Rijksuniversiteit Groningen,52.819722,6.387778,data owner,TRUE,FALSE
 BRG,Bergen's Arboretum,Norway,NO,BRG,Bergen,60.2575,5.27,data owner,TRUE,FALSE
-CAN,Cañada de los pájaros,Spain,ES,CAN,Cañada de los pájaros,37.2387,-6.1315,data owner,FALSE,
-CAC,Can Catà,Spain,ES,CAC,Can Catà,41.45,2.133333,data owner,TRUE,FALSE
+CAN,Canada de los Pajaros,Spain,ES,CAN,Canada de los Pajaros,37.2387,-6.1315,data owner,FALSE,
+CAC,Can Cata,Spain,ES,CAC,Can Cata,41.45,2.133333,data owner,TRUE,FALSE
 DAE,Daeli,Norway,NO,DAE,Daeli,59.933333,10.55,data owner,TRUE,FALSE
 DAL,Dalmeny,United Kingdom,GB,DAL,Dalmeny,55.973339,-3.355746,data owner,FALSE,
 DAZ,Dazlina-Ivinj,Croatia,HR,DAZ,Dazlina-Ivinj,43.833333,15.733333,data owner,TRUE,FALSE
-DLO,Dlouhá Lou?ka,Czechia,CZ,DLO,Dlouhá Lou?ka,49.82,17.21,data owner,TRUE,FALSE
-DON,Doñana,Spain,ES,DON,Doñana,36.933333,-6.35,data owner,TRUE,FALSE
+DLO,Dlouha Loucka,Czechia,CZ,DLO,Dlouha Loucka,49.82,17.21,data owner,TRUE,FALSE
+DON,Donana,Spain,ES,DON,Donana,36.933333,-6.35,data owner,TRUE,FALSE
 DUN,Dunedin Botanic Garden,New Zealand,NZ,DUN,Dunedin,-45.86,170.52,data owner,TRUE,FALSE
 FOR,Forstenrieder Park,Germany,DE,FOR,Forstenrieder Park,48.066667,11.45,data owner,TRUE,FALSE
 GAR,Garscube campus,United Kingdom,GB,GLA,Glasgow,55.9048,-4.3199,data owner,TRUE,TRUE
@@ -54,12 +54,12 @@ SAL,Sallochy,United Kingdom,GB,GLA,Glasgow,56.1232,-4.5993,data owner,TRUE,TRUE
 KEL,Kelvingrove park,United Kingdom,GB,GLA,Glasgow,55.8692216,-4.2818993,data owner,TRUE,TRUE
 SCE,Scene,United Kingdom,GB,GLA,Glasgow,56.1291,-4.61478,data owner,TRUE,TRUE
 GLI,Glimmen,Netherlands,NL,GLI,Glimmen,53.133333,6.633333,data owner,TRUE,FALSE
-GRO,Grobla - Niepo?omice Forest,Poland,PL,GRO,Grobla - Niepo?omice Forest,50.1,20.41666667,data owner,TRUE,TRUE
+GRO,Grobla-Niepolomice Forest,Poland,PL,GRO,Grobla-Niepolomice Forest,50.1,20.41666667,data owner,TRUE,TRUE
 LAH,La Hiruela,Spain,ES,LAH,La Hiruela,41.06667,-3.45,data owner,TRUE,FALSE
 MSC,Montesclaros,Spain,ES,LAH,La Hiruela,41.083333,-3.433333,data owner,TRUE,FALSE
-KIL,Kilingi-Nõmme,Estonia,EE,KIL,Kilingi-Nõmme,58.116667,25.083333,data owner,TRUE,TRUE
+KIL,Kilingi-Nomme,Estonia,EE,KIL,Kilingi-Nomme,58.116667,25.083333,data owner,TRUE,TRUE
 KUU,Kuusamo,Finland,FI,KUU,Kuusamo,66.033333,29.05,data owner,FALSE,
-LAK,Lakselvdalen Troms,Norway,NO,LAK,Lakselvdalen Troms,69.333333,19.566667,data owner,TRUE,FALSE
+LAK,Lakselvdalen,Norway,NO,LAK,Lakselvdalen,69.333333,19.566667,data owner,TRUE,FALSE
 LAN,Lancaster,United Kingdom,GB,LAN,Lancaster,54,-2.783333,data owner,TRUE,FALSE
 LAS,Lasy Szwalewskie,Poland,PL,LAS,Lasy Szwalewskie,53.716667,19.533333,data owner,FALSE,
 LUN,Lundy Island,United Kingdom,GB,LUN,Lundy Island,51.173222,-4.667861,data owner,FALSE,
@@ -67,11 +67,11 @@ MAL,Malmo,Sweden,SE,MAL,Malmo,55.6,13.033333,data owner,TRUE,FALSE
 MAR,Mariola,Spain,ES,MAR,Mariola,38.733333,-0.55,data owner,TRUE,FALSE
 MAY,Mayachino,Russia,RU,MAY,Mayachino,60.766667,32.816667,data owner,TRUE,FALSE
 MET,Metu,Turkey,TR,MET,Metu,39.9,32.8,data owner,TRUE,FALSE
-MIE,Mierzeja Wi?lana,Poland,PL,MIE,Mierzeja Wi?lana,54.366667,19.35,data owner,FALSE,
+MIE,Mierzeja Wislana,Poland,PL,MIE,Mierzeja Wislana,54.366667,19.35,data owner,FALSE,
 MOU,Moulis,France,FR,MOU,Moulis,42.967722,1.091306,data owner,TRUE,FALSE
-BAL,Balatonfüred,Hungary,HU,MTA,MTA-PE Evolutionary Ecology Group,47.958561,17.892908,data owner,TRUE,FALSE
+BAL,Balatonfured,Hungary,HU,MTA,MTA-PE Evolutionary Ecology Group,47.958561,17.892908,data owner,TRUE,FALSE
 GUL,Gulya-domb,Hungary,HU,MTA,MTA-PE Evolutionary Ecology Group,47.091056,17.883222,data owner,TRUE,FALSE
-SZE,Szentgál,Hungary,HU,MTA,MTA-PE Evolutionary Ecology Group,47.111042,17.688317,data owner,TRUE,FALSE
+SZE,Szentgal,Hungary,HU,MTA,MTA-PE Evolutionary Ecology Group,47.111042,17.688317,data owner,TRUE,FALSE
 VES,Veszprém,Hungary,HU,MTA,MTA-PE Evolutionary Ecology Group,47.088136,17.908239,data owner,TRUE,FALSE
 VIL,Vilma-puszta,Hungary,HU,MTA,MTA-PE Evolutionary Ecology Group,47.085194,17.864278,data owner,TRUE,FALSE
 MRC,Murcia,Spain,ES,MRC,Murcia,37.75,-0.95,data owner,FALSE,
@@ -88,7 +88,7 @@ STR,Strasbourg,France,FR,STR,Strasbourg,48.579081,7.765491,data owner,TRUE,FALSE
 ROB,Robertsau,France,FR,STR,Strasbourg,48.610522,7.802476,data owner,TRUE,FALSE
 WAN,Wantzenau,France,FR,STR,Strasbourg,48.647904,7.833611,data owner,TRUE,FALSE
 TOM,Tomakomai,Japan,JP,TOM,Tomakomai,42.666667,141.6,data owner,TRUE,FALSE
-VAL,Valsaín,Spain,ES,VAL,Valsaín,40.886,-4.031,data owner,TRUE,FALSE
+VAL,Valsain,Spain,ES,VAL,Valsain,40.886,-4.031,data owner,TRUE,FALSE
 VOM,Vomb Fure,Sweden,SE,VOM,Vomb Fure,55.67,13.55,data owner,TRUE,FALSE
 VOS,Vosbergen,Netherlands,NL,VOS,Vosbergen,53.133333,6.583333,data owner,TRUE,FALSE
 WRS,Warsaw,Poland,PL,WRS,Warsaw,52.229694,21.012194,data owner,TRUE,FALSE
