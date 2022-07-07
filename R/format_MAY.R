@@ -4,7 +4,7 @@
 #' Mayachino, Russia, administered by the Institute of Biology at the Karelian Research Centre.
 #'
 #' This section provides details on data management choices that are unique to
-#' this data. For a general description of the standard format please see
+#' these data. For a general description of the standard format please see
 #' \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.2.0.pdf}{here}.
 #'
 #' \strong{plotID}: The "line of nest boxes" are interpreted as distinctive plots. Check with data owner.
@@ -140,12 +140,19 @@ format_MAY <- function(db = choose_directory(),
   Location_data <- create_location_MAY(gt_data = gt_data,
                                        pf_data = pf_data)
 
+  # MEASUREMENT DATA
+
+  message("Compiling measurement data....")
+
+  Measurement_data <- create_measurement_MAY(capture_data = Capture_data)
+
+
   # WRANGLE DATA FOR EXPORT
 
   # - Brood data
   Brood_data <- Brood_data %>%
     # Add row ID
-    dplyr::mutate(row = 1:n(),
+    dplyr::mutate(row = 1:dplyr::n(),
                   # Ensure that individuals are unique: add institutionID as prefix to femaleID & maleID
                   dplyr::across(.cols = c(.data$femaleID, .data$maleID),
                                 .fns = ~{
@@ -161,7 +168,7 @@ format_MAY <- function(db = choose_directory(),
   # - Capture data
   Capture_data <- Capture_data %>%
     # Add row ID
-    dplyr::mutate(row = 1:n(),
+    dplyr::mutate(row = 1:dplyr::n(),
                   # Ensure that individuals are unique: add institutionID as prefix to individualID and captureID
                   dplyr::across(.cols = c(.data$individualID, .data$captureID),
                                 .fns = ~{
@@ -176,7 +183,7 @@ format_MAY <- function(db = choose_directory(),
   # - Individual data
   Individual_data <- Individual_data %>%
     # Add row ID
-    dplyr::mutate(row = 1:n(),
+    dplyr::mutate(row = 1:dplyr::n(),
                   # Ensure that individuals are unique: add institutionID as prefix to individualID and captureID
                   individualID = paste0("MAY_", .data$individualID)) %>%
     # Add missing columns
@@ -188,11 +195,20 @@ format_MAY <- function(db = choose_directory(),
   # - Location data
   Location_data <- Location_data %>%
     # Add row ID
-    dplyr::mutate(row = 1:n()) %>%
+    dplyr::mutate(row = 1:dplyr::n()) %>%
     # Add missing columns
     dplyr::bind_cols(data_templates$v1.2$Location_data[1, !(names(data_templates$v1.2$Location_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format
     dplyr::select(names(data_templates$v1.2$Location_data))
+
+  # - Measurement data
+  Measurement_data <- Measurement_data %>%
+    # Add row ID
+    dplyr::mutate(row = 1:dplyr::n()) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates$v1.2$Measurement_data[1, !(names(data_templates$v1.2$Measurement_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format
+    dplyr::select(names(data_templates$v1.2$Measurement_data))
 
 
   # TIME
@@ -814,7 +830,7 @@ create_capture_MAY <- function(gt_data,
     dplyr::filter(speciesID %in% {species_filter}) %>%
     # Create captureID
     dplyr::group_by(.data$individualID) %>%
-    dplyr::mutate(captureID = paste(.data$individualID, 1:n(), sep = "_")) %>%
+    dplyr::mutate(captureID = paste(.data$individualID, 1:dplyr::n(), sep = "_")) %>%
     dplyr::ungroup() %>%
     dplyr::select(.data$captureID, everything())
 
@@ -931,6 +947,64 @@ create_location_MAY <- function(gt_data,
 
 }
 
+
+#' Create measurement data table for Mayachino, Russia.
+#'
+#' Create measurement data table in standard format for data from Mayachino, Russia.
+#'
+#' @param capture_data Data frame. Output from \code{\link{create_capture_MAY}}.
+#'
+#' @return A data frame.
+#'
+
+create_measurement_MAY <- function(capture_data) {
+
+  # Measurements are only taken of individuals (during captures), not of locations,
+  # so we use capture_data as input
+  measurements <- capture_data %>%
+    dplyr::select(recordID = .data$captureID,
+                  siteID = .data$captureSiteID,
+                  measurementDeterminedYear = .data$captureYear,
+                  measurementDeterminedMonth = .data$captureMonth,
+                  measurementDeterminedDay = .data$captureDay,
+                  .data$tarsus,
+                  .data$wingLength,
+                  .data$molt,
+                  .data$moltDate,
+                  plumageColour = .data$drost) %>%
+    # Measurements in Capture data are stored as columns, but we want each individual measurement as a row
+    # Therefore, we pivot each separate measurement of an individual to a row
+    # NAs are removed
+    tidyr::pivot_longer(cols = c("tarsus", "wingLength", "molt", "plumageColour"),
+                        names_to = "measurementType",
+                        values_to = "measurementValue",
+                        values_drop_na = TRUE) %>%
+    dplyr::mutate(measurementID = 1:dplyr::n(),
+                  measurementSubject = "capture",
+                  measurementUnit = dplyr::case_when(.data$measurementType == "plumageColour" ~ NA_character_,
+                                                     .data$measurementType == "molt" ~ "number of shedding primary feathers",
+                                                     TRUE ~ "mm"),
+                  # TODO: Check with data owner how tarsi are measured
+                  measurementMethod = dplyr::case_when(.data$measurementType == "tarsus" ~ "alternative",
+                                                       .data$measurementType == "plumageColour" ~ "drost score",
+                                                       TRUE ~ NA_character_),
+                  # Convert measurementType from camel case to lower case & space-separated
+                  # (e.g., wingLength -> wing length)
+                  measurementType = tolower(gsub("([[:upper:]])", " \\1", .data$measurementType)),
+                  # Use different date column for measurement date for molt scores
+                  measurementDeterminedYear = dplyr::case_when(.data$measurementType == "molt" ~ as.integer(lubridate::year(.data$moltDate)),
+                                                               TRUE ~ .data$measurementDeterminedYear),
+                  measurementDeterminedMonth = dplyr::case_when(.data$measurementType == "molt" ~ as.integer(lubridate::month(.data$moltDate)),
+                                                                TRUE ~ .data$measurementDeterminedMonth),
+                  measurementDeterminedDay = dplyr::case_when(.data$measurementType == "molt" ~ as.integer(lubridate::day(.data$moltDate)),
+                                                              TRUE ~ .data$measurementDeterminedDay)) %>%
+    dplyr::arrange(.data$measurementDeterminedYear,
+                   .data$measurementDeterminedMonth,
+                   .data$measurementDeterminedDay)
+
+  return(measurements)
+
+}
 
 #' Retrieve chick IDs in MAY pipeline
 #'
@@ -1097,3 +1171,5 @@ retrieve_chickIDs_MAY <- function(chickID) {
 # TODO: Check whether individuals were only caught/released alive & physically
 # TODO: Check individuals that are recorded as great tit and pied flycatcher
 # TODO: Check location info: location type, start year of boxes, coordinates, habitat type
+# TODO: Check units of measurements
+# TODO: Check tarsus method
