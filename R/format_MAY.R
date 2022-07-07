@@ -19,6 +19,10 @@
 #'
 #'\strong{captureRingNumber}: First captures of all individuals are assumed to be ringing events, and thus captureRingNumber is set to NA.
 #'
+#'\strong{startYear}: Assume all boxes were placed in the first year of the study.
+#'
+#'\strong{habitatID}: Assume that habitat type is 1.1: Forest - Boreal Check with data owner.
+#'
 #' @inheritParams pipeline_params
 #'
 #' @return Generates either 6 .csv files or 6 data frames in the standard format.
@@ -129,8 +133,16 @@ format_MAY <- function(db = choose_directory(),
                                            species_filter = species,
                                            optional_variables = optional_variables)
 
+  # LOCATION DATA
+
+  message("Compiling location data....")
+
+  Location_data <- create_location_MAY(gt_data = gt_data,
+                                       pf_data = pf_data)
+
   # WRANGLE DATA FOR EXPORT
 
+  # - Brood data
   Brood_data <- Brood_data %>%
     # Add row ID
     dplyr::mutate(row = 1:n(),
@@ -146,6 +158,7 @@ format_MAY <- function(db = choose_directory(),
     dplyr::select(names(data_templates$v1.2$Brood_data), dplyr::contains(names(utility_variables$Brood_data),
                                                                          ignore.case = FALSE))
 
+  # - Capture data
   Capture_data <- Capture_data %>%
     # Add row ID
     dplyr::mutate(row = 1:n(),
@@ -160,6 +173,7 @@ format_MAY <- function(db = choose_directory(),
     dplyr::select(names(data_templates$v1.2$Capture_data), dplyr::contains(names(utility_variables$Capture_data),
                                                                            ignore.case = FALSE))
 
+  # - Individual data
   Individual_data <- Individual_data %>%
     # Add row ID
     dplyr::mutate(row = 1:n(),
@@ -170,6 +184,15 @@ format_MAY <- function(db = choose_directory(),
     # Keep only columns that are in the standard format or in the list of optional variables
     dplyr::select(names(data_templates$v1.2$Individual_data), dplyr::contains(names(utility_variables$Individual_data),
                                                                               ignore.case = FALSE))
+
+  # - Location data
+  Location_data <- Location_data %>%
+    # Add row ID
+    dplyr::mutate(row = 1:n()) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates$v1.2$Location_data[1, !(names(data_templates$v1.2$Location_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format
+    dplyr::select(names(data_templates$v1.2$Location_data))
 
 
   # TIME
@@ -807,7 +830,7 @@ create_capture_MAY <- function(gt_data,
 
 }
 
-#' Create individual data table for for Mayachino, Russia.
+#' Create individual data table for Mayachino, Russia.
 #'
 #' Create individual data table in standard format for data from Mayachino, Russia.
 #'
@@ -872,6 +895,42 @@ create_individual_MAY <- function(capture_data,
   return(output)
 
 }
+
+#' Create location data table for Mayachino, Russia.
+#'
+#' Create location data table in standard format for data from Mayachino, Russia.
+#'
+#' @param gt_data Data frame. Great tit data from Mayachino, Russia.
+#' @param pf_data Data frame. Pied flycatcher data from Mayachino, Russia.
+#'
+#' @return A data frame.
+#'
+
+create_location_MAY <- function(gt_data,
+                                pf_data) {
+
+  # Combine great tit and pied flycatcher location columns
+  data <- pf_data %>%
+    dplyr::select(.data$siteID, .data$plotID, .data$locationID, .data$year) %>%
+    dplyr::bind_rows({gt_data %>% dplyr::select(.data$siteID, .data$plotID, .data$locationID, .data$year)})
+
+  # There are no coordinates or box type information
+  locations <- data %>%
+    dplyr::select(.data$siteID, .data$plotID, .data$locationID) %>%
+    tidyr::drop_na() %>%
+    dplyr::distinct() %>%
+    dplyr::mutate(locationType = "nest",
+                  decimalLatitude = NA_real_,
+                  decimalLongitude = NA_real_,
+                  startYear = as.integer(min(data$year)),
+                  endYear = NA_integer_,
+                  # TODO: habitat is set to 1.1 Forest -- Boreal; check with data owner
+                  habitatID = "1.1")
+
+  return(locations)
+
+}
+
 
 #' Retrieve chick IDs in MAY pipeline
 #'
@@ -1037,3 +1096,4 @@ retrieve_chickIDs_MAY <- function(chickID) {
 # TODO: Check chick age
 # TODO: Check whether individuals were only caught/released alive & physically
 # TODO: Check individuals that are recorded as great tit and pied flycatcher
+# TODO: Check location info: location type, start year of boxes, coordinates, habitat type
