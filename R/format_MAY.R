@@ -15,13 +15,13 @@
 #'
 #' \strong{Clutch size, brood size, fledgling number}: Some clutch sizes, brood sizes, and fledgling numbers contain special characters (e.g., ?", "()"), which are ignored. Some clutch sizes, brood sizes, and fledgling numbers are written as an arithmetic expression (e.g., "7+4"), and interpreted as such (i.e., the observed value equals 11 in the example).
 #'
-#'\strong{captureAlive, releaseAlive}: All individuals are assumed to be captured and released alive.
+#' \strong{captureAlive, releaseAlive}: All individuals are assumed to be captured and released alive.
 #'
-#'\strong{captureRingNumber}: First captures of all individuals are assumed to be ringing events, and thus captureRingNumber is set to NA.
+#' \strong{captureRingNumber}: First captures of all individuals are assumed to be ringing events, and thus captureRingNumber is set to NA.
 #'
-#'\strong{startYear}: Assume all boxes were placed in the first year of the study.
+#' \strong{startYear}: Assume all boxes were placed in the first year of the study.
 #'
-#'\strong{habitatID}: Assume that habitat type is 1.1: Forest - Boreal Check with data owner.
+#' \strong{habitatID}: Assume that habitat type is 1.1: Forest - Boreal Check with data owner.
 #'
 #' @inheritParams pipeline_params
 #'
@@ -103,7 +103,7 @@ format_MAY <- function(db = choose_directory(),
                                               # TODO: Check with data owner whether "no string" is consistent
                                               broodID = paste(.data$year, .data$the_line_of_nest_boxes,
                                                               .data$no_nest_box, .data$no_string_1, sep = "_"),
-                                              # TODO: No species identification, so all individuals assumed to be pied flycatcher; check with data owner
+                                              # TODO: No species identification, so all individuals assumed to be great tit; check with data owner
                                               speciesID = species_codes$speciesID[species_codes$speciesCode == "10001"])
   )
 
@@ -182,6 +182,8 @@ format_MAY <- function(db = choose_directory(),
                                   paste0("MAY_", .x)
 
                                 })) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates$v1.2$Capture_data[1, !(names(data_templates$v1.2$Capture_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
     dplyr::select(names(data_templates$v1.2$Capture_data), dplyr::contains(names(utility_variables$Capture_data),
                                                                            ignore.case = FALSE))
