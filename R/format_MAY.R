@@ -146,6 +146,12 @@ format_MAY <- function(db = choose_directory(),
 
   Measurement_data <- create_measurement_MAY(capture_data = Capture_data)
 
+  # EXPERIMENT DATA
+
+  message("Compiling experiment data....")
+
+  Experiment_data <- create_experiment_MAY(brood_data = Brood_data)
+
 
   # WRANGLE DATA FOR EXPORT
 
@@ -209,6 +215,15 @@ format_MAY <- function(db = choose_directory(),
     dplyr::bind_cols(data_templates$v1.2$Measurement_data[1, !(names(data_templates$v1.2$Measurement_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format
     dplyr::select(names(data_templates$v1.2$Measurement_data))
+
+  # - Experiment data
+  Experiment_data <- Experiment_data %>%
+    # Add row ID
+    dplyr::mutate(row = 1:dplyr::n()) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates$v1.2$Experiment_data[1, !(names(data_templates$v1.2$Experiment_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format
+    dplyr::select(names(data_templates$v1.2$Experiment_data))
 
 
   # TIME
@@ -1006,6 +1021,31 @@ create_measurement_MAY <- function(capture_data) {
 
 }
 
+
+#' Create measurement data table for Mayachino, Russia.
+#'
+#' Create measurement data table in standard format for data from Mayachino, Russia.
+#'
+#' @param brood_data Data frame. Output from \code{\link{create_brood_MAY}}.
+#'
+#' @return A data frame.
+#'
+
+create_experiment_MAY <- function(brood_data) {
+
+  # No information on broods marked as "experiment"
+  # TODO: Check with data owner
+  experiments <- brood_data %>%
+    dplyr::filter(!is.na(.data$treatmentID)) %>%
+    dplyr::select(.data$treatmentID,
+                  experimentStartYear = .data$observedLayYear,
+                  .data$siteID)
+
+  return(experiments)
+
+}
+
+
 #' Retrieve chick IDs in MAY pipeline
 #'
 #' In MAY primary data, the chick IDs in a brood are stored as series of partially incomplete character sequences (e.g., "856840,1,55-62", "099362-65"). This function extracts the full sequence of characters for each ID in the series. "-" are interpreted as a range; "," are interpreted as a regular separator. Values in other formats (e.g., "without a rings", "531094.95999999996") and sequences that lead to an excessive number of IDs (e.g. "54522-291") are set to NA.
@@ -1173,3 +1213,4 @@ retrieve_chickIDs_MAY <- function(chickID) {
 # TODO: Check location info: location type, start year of boxes, coordinates, habitat type
 # TODO: Check units of measurements
 # TODO: Check tarsus method
+# TODO: Check experiment info
