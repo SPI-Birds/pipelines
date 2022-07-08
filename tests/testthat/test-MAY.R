@@ -412,21 +412,187 @@ test_that("Capture_data returns an expected outcome...", {
 test_that("Measurement_data returns an expected outcome...", {
 
   # We want to run tests for individuals that had all all measurements taken, and individuals with some measurements missing
-  # It is important to distinguish between pied flycatchers and great tits,
-  # as the primary data is stored in two separate files and formats.
 
   # Take a subset of MAY - Measurement_data
   MAY_data <- dplyr::filter(pipeline_output$Measurement_data, siteID == "MAY")
 
-  # Test 1: all measurements
-  # Test that individual TB63242 had been taken three measurements of in its first capture
+  # Test 1: Pied flycatcher, all measurements
+  # Test that individual XK46551 had been taken four measurements of in its first capture
   expect_equal(nrow(subset(MAY_data, recordID == paste0("MAY_", "XK46551", "_1"))), 4)
-  # Test that its measurements are as expected (mass: 16.5, wing length: 72, tarsus: 19.3)
-  expect_equal(subset(MAY_data, recordID == paste0("MAY_", "TB63242", "_1") & measurementType == "plumage colour")$measurementValue, 18.25)
-  expect_equal(subset(MAY_data, recordID == paste0("MAY_", "TB63242", "_1") & measurementType == "wing length")$measurementValue, 74)
-  expect_equal(subset(MAY_data, recordID == paste0("MAY_", "TB63242", "_1") & measurementType == "tarsus")$measurementValue, 22.78)
-  # Test that the measurements were taken in the correct year (2005)
-  expect_equal(subset(MAY_data, recordID == paste0("MAY_", "TB63242", "_1"))$measurementDeterminedYear, rep(2005, 3))
+  # Test that its measurements are as expected (drost: 3.5, wing length: 81, tarsus: 18.2, molt: 1)
+  expect_equal(subset(MAY_data, recordID == paste0("MAY_", "XK46551", "_1") & measurementType == "plumage colour")$measurementValue, 3.5)
+  expect_equal(subset(MAY_data, recordID == paste0("MAY_", "XK46551", "_1") & measurementType == "wing length")$measurementValue, 81)
+  expect_equal(subset(MAY_data, recordID == paste0("MAY_", "XK46551", "_1") & measurementType == "tarsus")$measurementValue, 18.2)
+  expect_equal(subset(MAY_data, recordID == paste0("MAY_", "XK46551", "_1") & measurementType == "molt")$measurementValue, 1)
+  # Test that the measurements were taken in the correct year (2002)
+  expect_equal(subset(MAY_data, recordID == paste0("MAY_", "XK46551", "_1"))$measurementDeterminedYear, rep(2002, 4))
 
+  # Test 2: Pied flycatcher, some measurements
+  # Test that individual XK46355 had been taken three measurements of in its first capture
+  expect_equal(nrow(subset(MAY_data, recordID == paste0("MAY_", "XK46355", "_1"))), 3)
+  # Test that its measurements are as expected (drost: 5, wing length: 81, molt: 0)
+  expect_equal(subset(MAY_data, recordID == paste0("MAY_", "XK46355", "_1") & measurementType == "plumage colour")$measurementValue, 5)
+  expect_equal(subset(MAY_data, recordID == paste0("MAY_", "XK46355", "_1") & measurementType == "wing length")$measurementValue, 81)
+  expect_equal(subset(MAY_data, recordID == paste0("MAY_", "XK46355", "_1") & measurementType == "molt")$measurementValue, 0)
+  # Test that there is no tarsus measurement
+  expect_equal(nrow(subset(MAY_data, recordID == paste0("MAY_", "XK46355", "_1") & measurementType == "tarsus")), 0)
+  # Test that the measurements were taken in the correct year (2001)
+  expect_equal(subset(MAY_data, recordID == paste0("MAY_", "XK46355", "_1"))$measurementDeterminedYear, rep(2001, 3))
+
+  # NB: no measurements were taken of great tits
+
+})
+
+test_that("Location_data returns an expected outcome...", {
+
+  # We want to run tests for nesting locations
+
+  # Take a subset of MAY - Location_data
+  MAY_data <- dplyr::filter(pipeline_output$Location_data, siteID == "MAY")
+
+  # Test 1: Nest box check
+  # Nestbox 34 in M should be type "nest", and put up in 1979
+  expect_equal(subset(MAY_data, locationID == "M_34")$locationType, "nest")
+  expect_equal(subset(MAY_data, locationID == "M_34")$startYear, 1979)
+
+})
+
+# test_that("Experiment_data returns an expected outcome...", {
+#
+#   # We want to run tests for experiments
+#
+#   # Take a subset of MAY - Location_data
+#   MAY_data <- dplyr::filter(pipeline_output$Experiment_data, siteID == "MAY")
+#
+# })
+
+test_that("Expected columns are present", {
+
+  ## Will fail if not all the expected columns are present
+
+  ## Brood data: Test that all columns are present
+  test_col_present(pipeline_output, "Brood")
+
+  ## Capture data: Test that all columns are present
+  test_col_present(pipeline_output, "Capture")
+
+  ## Individual data: Test that all columns are present
+  test_col_present(pipeline_output, "Individual")
+
+  ## Measurement data: Test that all columns are present
+  test_col_present(pipeline_output, "Measurement")
+
+  ## Location data: Test that all columns are present
+  test_col_present(pipeline_output, "Location")
+
+  ## Experiment data: Test that all columns are present
+  test_col_present(pipeline_output, "Experiment")
+
+})
+
+test_that("Column classes are as expected", {
+
+  ## Will fail if columns that are shared by the output and the templates have different classes.
+
+  ## Brood data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Brood")
+
+  ## Capture data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Capture")
+
+  ## Individual data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Individual")
+
+  ## Measurement data: Test that all column classes are expected
+  test_col_present(pipeline_output, "Measurement")
+
+  ## Location data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Location")
+
+  ## Experiment data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Experiment")
+
+})
+
+test_that("ID columns match the expected format for the pipeline", {
+
+  ## femaleID format is as expected
+  test_ID_format(pipeline_output, ID_col = "femaleID", ID_format = "^MAY_[:upper:]{0,2}[:digit:]{5,6}$")
+
+  ## maleID format is as expected
+  test_ID_format(pipeline_output, ID_col = "maleID", ID_format = "^MAY_[:upper:]{0,2}[:digit:]{5,6}$")
+
+  ## individualID format in Capture data  is as expected
+  test_ID_format(pipeline_output, ID_col = "C-individualID", ID_format = "^MAY_[:upper:]{0,2}[:digit:]{5,6}$")
+
+  ## individualID format in Individual data is as expected
+  test_ID_format(pipeline_output, ID_col = "I-individualID", ID_format = "^MAY_[:upper:]{0,2}[:digit:]{5,6}$")
+
+})
+
+test_that("Key columns only contain unique values", {
+
+  ## broodID has only unique values
+  test_unique_values(pipeline_output, "broodID")
+
+  ## captureID has only unique values
+  test_unique_values(pipeline_output, "captureID")
+
+  ## individualID has only unique values
+  test_unique_values(pipeline_output, "individualID")
+
+  ## measurementID has only unique values
+  test_unique_values(pipeline_output, "measurementID")
+
+  ## locationID has only unique values
+  test_unique_values(pipeline_output, "locationID")
+
+  ## treatmentID has only unique values
+  test_unique_values(pipeline_output, "treatmentID")
+
+})
+
+test_that("Key columns in each table do not have NAs", {
+
+  ## Brood
+  test_NA_columns(pipeline_output, "Brood")
+
+  ## Capture
+  test_NA_columns(pipeline_output, "Capture") # TODO: Check with data owner for captureMonth, captureDay, releaseRingNumber
+
+  ## Individual
+  test_NA_columns(pipeline_output, "Individual") # TODO: Check with data owner for ringMonth, ringDay
+
+  ## Measurement
+  test_NA_columns(pipeline_output, "Measurement") # TODO: Check with data owner for measurementDeterminedYear, measurementDeterminedMonth, measurementDeterminedDay, measurementUnit
+
+  ## Location
+  test_NA_columns(pipeline_output, "Location")
+
+  ## Experiment
+  #test_NA_columns(pipeline_output, "Experiment")
+  # TODO: Check with data owner
+
+})
+
+test_that("Categorical columns do not have unexpected values", {
+
+  ## Brood
+  test_category_columns(pipeline_output, "Brood")
+
+  ## Capture
+  test_category_columns(pipeline_output, "Capture")
+
+  ## Individual
+  test_category_columns(pipeline_output, "Individual")
+
+  ## Measurement
+  test_category_columns(pipeline_output, "Measurement")
+
+  ## Location
+  test_category_columns(pipeline_output, "Location")
+
+  ## Experiment
+  test_category_columns(pipeline_output, "Experiment")
 
 })
