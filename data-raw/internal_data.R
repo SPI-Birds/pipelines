@@ -318,7 +318,7 @@ v1.2 <- tibble::lst(
     measurementSubject = NA_character_,
     measurementType = NA_character_,
     measurementValue = NA_real_,
-    measurementAccuacy = NA_real_,
+    measurementAccuracy = NA_real_,
     measurementUnit = NA_character_,
     measurementDeterminedYear = NA_integer_,
     measurementDeterminedMonth = NA_integer_,
