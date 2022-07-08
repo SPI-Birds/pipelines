@@ -214,7 +214,9 @@ format_MAY <- function(db = choose_directory(),
   # - Measurement data
   Measurement_data <- Measurement_data %>%
     # Add row ID
-    dplyr::mutate(row = 1:dplyr::n()) %>%
+    dplyr::mutate(row = 1:dplyr::n(),
+                  # Add institutionID as prefix to recordID to match captureID
+                  recordID = paste0("MAY_", .data$recordID)) %>%
     # Add missing columns
     dplyr::bind_cols(data_templates$v1.2$Measurement_data[1, !(names(data_templates$v1.2$Measurement_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format
@@ -683,6 +685,10 @@ create_capture_MAY <- function(gt_data,
                                             })) %>%
     # Unnest to long format (i.e., each chick in a row)
     tidyr::unnest(cols = .data$individualID) %>%
+    # Still some errors may persist. Check format used for femaleID/maleID
+    dplyr::mutate(individualID = dplyr::case_when(stringr::str_detect(.data$individualID,
+                                                                      "^[:upper:]{0,2}[:digit:]{5,6}$") ~ .data$individualID,
+                                                  TRUE ~ NA_character_)) %>%
     # Remove unknown individualIDs
     dplyr::filter(!is.na(.data$individualID)) %>%
     # Treat capture date as the laying date + clutch size + average incubation duration + day chicks were ringed
@@ -792,6 +798,10 @@ create_capture_MAY <- function(gt_data,
                                             })) %>%
     # Unnest to long format (i.e., each chick in a row)
     tidyr::unnest(cols = .data$individualID) %>%
+    # Still some errors may persist. Check format used for femaleID/maleID
+    dplyr::mutate(individualID = dplyr::case_when(stringr::str_detect(.data$individualID,
+                                                                      "^[:upper:]{0,2}[:digit:]{5,6}$") ~ .data$individualID,
+                                      TRUE ~ NA_character_)) %>%
     # Remove unknown individualIDs
     dplyr::filter(!is.na(.data$individualID)) %>%
     # Treat capture date as the laying date + clutch size + average incubation duration + day chicks were ringed
@@ -1212,7 +1222,7 @@ retrieve_chickIDs_MAY <- function(chickID) {
 # TODO: PF: Check how to interpret "cause of nest's death", and in particular "experiment" - any info on experiments?
 # TODO: Check capture dates of parents (particularly when laying dates are NA)
 # TODO: Check units of age columns
-# TODO: Check chick rings with data owner
+# TODO: Check chick rings with data owner (missing letters?)
 # TODO: Check capture dates of chicks (average incubation length, chick age at ringing)
 # TODO: Check chick age
 # TODO: Check whether individuals were only caught/released alive & physically
