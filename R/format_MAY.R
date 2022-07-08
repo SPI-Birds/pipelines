@@ -17,7 +17,9 @@
 #'
 #' \strong{captureAlive, releaseAlive}: All individuals are assumed to be captured and released alive.
 #'
-#' \strong{captureRingNumber}: First captures of all individuals are assumed to be ringing events, and thus captureRingNumber is set to NA.
+#' \strong{captureRingNumber, releaseRingNumber}: First captures of all individuals are assumed to be ringing events, and thus captureRingNumber is set to NA.
+#'
+#' Only when individual IDs start with two letters, followed by 5 or 6 digits, the ID is considered a ring number and stored in captureRingNumbber and/or releaseRingNumber. When, for example, the letters are missing, the ring number is considered incomplete and captureRingNumber and releaseRingNumber are set to NA.
 #'
 #' \strong{startYear}: Assume all boxes were placed in the first year of the study.
 #'
@@ -838,10 +840,13 @@ create_capture_MAY <- function(gt_data,
     dplyr::arrange(.data$individualID, .data$captureYear, .data$captureMonth, .data$captureDay) %>%
     dplyr::group_by(.data$individualID) %>%
     # First captures are assumed to be ringing events, and thus captureRingNumber = NA.
+    # NB: Only add ring numbers if full ring number (letters + numbers) are recorded
     dplyr::mutate(captureRingNumber = dplyr::case_when(dplyr::row_number() == 1 ~ NA_character_,
+                                                       stringr::str_detect(.data$individualID,"^[:digit:]") ~ NA_character_,
                                                        TRUE ~ .data$individualID),
                   # All releases are assumed to be alive (also see releaseAlive), so no NAs in releaseRingNumber
-                  releaseRingNumber = .data$individualID) %>%
+                  releaseRingNumber = dplyr::case_when(stringr::str_detect(.data$individualID,"^[:digit:]") ~ NA_character_,
+                                                       TRUE ~ .data$individualID)) %>%
     dplyr::ungroup() %>%
     # Filter species
     dplyr::filter(speciesID %in% {species_filter}) %>%
