@@ -149,7 +149,9 @@ test_that("Individual data returns an expected outcome...", {
 
 test_that("Brood_data returns an expected outcome...", {
 
-  # We want to run tests for all possible outcomes of clutch type
+  # We want to run tests for all possible outcomes of clutch type.
+  # It is important to distinguish between pied flycatchers and great tits,
+  # as the primary data is stored in two separate files and formats.
 
   # Take a subset of MAY - Brood_data
   MAY_data <- dplyr::filter(pipeline_output$Brood_data, siteID == "MAY")
@@ -274,5 +276,157 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(MAY_data, broodID == "2007_W_8_292")$observedClutchSize, 9)
   expect_equal(subset(MAY_data, broodID == "2007_W_8_292")$observedBroodSize, 9)
   expect_equal(subset(MAY_data, broodID == "2007_W_8_292")$observedNumberFledged, 8)
+
+})
+
+test_that("Capture_data returns an expected outcome...", {
+
+  # We want to run tests for captures as both chicks, males, and females.
+  # It is important to distinguish between pied flycatchers and great tits,
+  # as the primary data is stored in two separate files and formats.
+
+  # Take a subset of MAY - Capture_data
+  MAY_data <- dplyr::filter(pipeline_output$Capture_data, captureSiteID == "MAY")
+
+  # Test 1: Pied flycatcher female caught as adult
+  # Test that the female has the correct number of capture records (7)
+  expect_equal(nrow(subset(MAY_data, individualID == paste0("MAY_", "XZ23067"))), 7)
+  # Test that the 1st capture of the female is as expected (2011-05-28: lay date + clutch size)
+  expect_equal(dplyr::first(subset(MAY_data, individualID == paste0("MAY_", "XZ23067"))$captureYear), 2013)
+  expect_equal(dplyr::first(subset(MAY_data, individualID == paste0("MAY_", "XZ23067"))$captureMonth), 5)
+  expect_equal(dplyr::first(subset(MAY_data, individualID == paste0("MAY_", "XZ23067"))$captureDay), 28)
+  expect_equal(dplyr::first(subset(MAY_data, individualID == paste0("MAY_", "XZ23067"))$captureRingNumber), NA_character_)
+  expect_equal(dplyr::first(subset(MAY_data, individualID == paste0("MAY_", "XZ23067"))$releaseRingNumber), "XZ23067")
+  # Test that the 7th capture of the female is as expected (2019-05-30: lay date + clutch size)
+  expect_equal(dplyr::last(subset(MAY_data, individualID == paste0("MAY_", "XZ23067"))$captureYear), 2019)
+  expect_equal(dplyr::last(subset(MAY_data, individualID == paste0("MAY_", "XZ23067"))$captureMonth), 5)
+  expect_equal(dplyr::last(subset(MAY_data, individualID == paste0("MAY_", "XZ23067"))$captureDay), 30)
+  expect_equal(dplyr::last(subset(MAY_data, individualID == paste0("MAY_", "XZ23067"))$captureRingNumber), "XZ23067")
+  expect_equal(dplyr::last(subset(MAY_data, individualID == paste0("MAY_", "XZ23067"))$releaseRingNumber), "XZ23067")
+  # Test that exactAge is as expected (NA, because it's caught as an adult)
+  expect_equal(dplyr::first(subset(MAY_data, individualID == paste0("MAY_", "XZ23067"))$exactAge), NA_integer_)
+  # Test that minimumAge is correct on first capture (1, because it's an adult of unknown age because it wasn't caught as a chick)
+  expect_equal(dplyr::first(subset(MAY_data, individualID == paste0("MAY_", "XZ23067"))$minimumAge), 1)
+  # Test that minimumAge is correct on 7th capture (7, because it's an adult caught 6 years after its first capture)
+  expect_equal(dplyr::last(subset(MAY_data, individualID == paste0("MAY_", "XZ23067"))$minimumAge), 7)
+
+  # Test 2: Pied flycatcher male caught as adult
+  # Test that the male has the correct number of capture records (7)
+  expect_equal(nrow(subset(MAY_data, individualID == paste0("MAY_", "XZ23778"))), 7)
+  # Test that the 1st capture of the female is as expected (2011-06-19: lay date + clutch size)
+  expect_equal(dplyr::first(subset(MAY_data, individualID == paste0("MAY_", "XZ23778"))$captureYear), 2013)
+  expect_equal(dplyr::first(subset(MAY_data, individualID == paste0("MAY_", "XZ23778"))$captureMonth), 6)
+  expect_equal(dplyr::first(subset(MAY_data, individualID == paste0("MAY_", "XZ23778"))$captureDay), 19)
+  expect_equal(dplyr::first(subset(MAY_data, individualID == paste0("MAY_", "XZ23778"))$captureRingNumber), NA_character_)
+  expect_equal(dplyr::first(subset(MAY_data, individualID == paste0("MAY_", "XZ23778"))$releaseRingNumber), "XZ23778")
+  # Test that the 7th capture of the male is as expected (2016-06-06: lay date + clutch size)
+  expect_equal(dplyr::last(subset(MAY_data, individualID == paste0("MAY_", "XZ23778"))$captureYear), 2016)
+  expect_equal(dplyr::last(subset(MAY_data, individualID == paste0("MAY_", "XZ23778"))$captureMonth), 6)
+  expect_equal(dplyr::last(subset(MAY_data, individualID == paste0("MAY_", "XZ23778"))$captureDay), 6)
+  expect_equal(dplyr::last(subset(MAY_data, individualID == paste0("MAY_", "XZ23778"))$captureRingNumber), "XZ23778")
+  expect_equal(dplyr::last(subset(MAY_data, individualID == paste0("MAY_", "XZ23778"))$releaseRingNumber), "XZ23778")
+  # Test that exactAge is as expected (NA, because it's caught as an adult)
+  expect_equal(dplyr::first(subset(MAY_data, individualID == paste0("MAY_", "XZ23778"))$exactAge), NA_integer_)
+  # Test that minimumAge is correct on first capture (1, because it's an adult of unknown age because it wasn't caught as a chick)
+  expect_equal(dplyr::first(subset(MAY_data, individualID == paste0("MAY_", "XZ23778"))$minimumAge), 1)
+  # Test that minimumAge is correct on 7th capture (4, because it's an adult caught 3 years after its first capture)
+  expect_equal(dplyr::last(subset(MAY_data, individualID == paste0("MAY_", "XZ23778"))$minimumAge), 4)
+
+  # Test 3: Pied flycatcher caught as chick
+  # Test that the individual has the correct number of capture records (7)
+  expect_equal(nrow(subset(MAY_data, individualID == paste0("MAY_", "580817"))), 6)
+  # Test that the 1st capture of the female is as expected (1982-06-11: lay date + clutch size + ...)
+  # Ring numbers should be NA, because the ID is an incomplete number (i.e., letters missing)
+  expect_equal(dplyr::first(subset(MAY_data, individualID == paste0("MAY_", "580817"))$captureYear), 1982)
+  expect_equal(dplyr::first(subset(MAY_data, individualID == paste0("MAY_", "580817"))$captureMonth), 6)
+  expect_equal(dplyr::first(subset(MAY_data, individualID == paste0("MAY_", "580817"))$captureDay), 11)
+  expect_equal(dplyr::first(subset(MAY_data, individualID == paste0("MAY_", "580817"))$captureRingNumber), NA_character_)
+  expect_equal(dplyr::first(subset(MAY_data, individualID == paste0("MAY_", "580817"))$releaseRingNumber), NA_character_)
+  # Test that the 7th capture of the individual is as expected (1987-06-15: lay date + clutch size + ...)
+  # Ring numbers should be NA, because the ID is an incomplete number (i.e., letters missing)
+  expect_equal(dplyr::last(subset(MAY_data, individualID == paste0("MAY_", "580817"))$captureYear), 1987)
+  expect_equal(dplyr::last(subset(MAY_data, individualID == paste0("MAY_", "580817"))$captureMonth), 6)
+  expect_equal(dplyr::last(subset(MAY_data, individualID == paste0("MAY_", "580817"))$captureDay), 15)
+  expect_equal(dplyr::last(subset(MAY_data, individualID == paste0("MAY_", "580817"))$captureRingNumber), NA_character_)
+  expect_equal(dplyr::last(subset(MAY_data, individualID == paste0("MAY_", "580817"))$releaseRingNumber), NA_character_)
+  # Test that exactAge is correct on first capture (0, because it's caught as a chick)
+  expect_equal(dplyr::first(subset(MAY_data, individualID == paste0("MAY_", "580817"))$exactAge), 0)
+  # Test that exactAge is correct on 7th capture (5, because it's caught as a chick, and 5 years later)
+  expect_equal(dplyr::last(subset(MAY_data, individualID == paste0("MAY_", "580817"))$exactAge), 5)
+  # Test that minimumAge is correct on first capture (0, because it's caught as a chick)
+  expect_equal(dplyr::first(subset(MAY_data, individualID == paste0("MAY_", "580817"))$minimumAge), 0)
+  # Test that minimumAge is correct on 7th capture (5, because it's caught as a chick, and 5 years later)
+  expect_equal(dplyr::last(subset(MAY_data, individualID == paste0("MAY_", "580817"))$minimumAge), 5)
+
+  # Test 4: Great tit female caught as adult
+  # Test that the female has the correct number of capture records (6)
+  expect_equal(nrow(subset(MAY_data, individualID == paste0("MAY_", "XB580014"))), 6)
+  # Test that the 1st capture of the female is as expected (1982-05-19: lay date + clutch size)
+  expect_equal(dplyr::first(subset(MAY_data, individualID == paste0("MAY_", "XB580014"))$captureYear), 1982)
+  expect_equal(dplyr::first(subset(MAY_data, individualID == paste0("MAY_", "XB580014"))$captureMonth), 5)
+  expect_equal(dplyr::first(subset(MAY_data, individualID == paste0("MAY_", "XB580014"))$captureDay), 19)
+  expect_equal(dplyr::first(subset(MAY_data, individualID == paste0("MAY_", "XB580014"))$captureRingNumber), NA_character_)
+  expect_equal(dplyr::first(subset(MAY_data, individualID == paste0("MAY_", "XB580014"))$releaseRingNumber), "XB580014")
+  # Test that the 6th capture of the female is as expected (1984-07-17: lay date + clutch size)
+  expect_equal(dplyr::last(subset(MAY_data, individualID == paste0("MAY_", "XB580014"))$captureYear), 1984)
+  expect_equal(dplyr::last(subset(MAY_data, individualID == paste0("MAY_", "XB580014"))$captureMonth), 7)
+  expect_equal(dplyr::last(subset(MAY_data, individualID == paste0("MAY_", "XB580014"))$captureDay), 17)
+  expect_equal(dplyr::last(subset(MAY_data, individualID == paste0("MAY_", "XB580014"))$captureRingNumber), "XB580014")
+  expect_equal(dplyr::last(subset(MAY_data, individualID == paste0("MAY_", "XB580014"))$releaseRingNumber), "XB580014")
+  # Test that exactAge is as expected (NA, because it's caught as an adult)
+  expect_equal(dplyr::first(subset(MAY_data, individualID == paste0("MAY_", "XB580014"))$exactAge), NA_integer_)
+  # Test that minimumAge is correct on first capture (1, because it's an adult of unknown age because it wasn't caught as a chick)
+  expect_equal(dplyr::first(subset(MAY_data, individualID == paste0("MAY_", "XB580014"))$minimumAge), 1)
+  # Test that minimumAge is correct on 6th capture (3, because it's an adult caught 2 years after its first capture)
+  expect_equal(dplyr::last(subset(MAY_data, individualID == paste0("MAY_", "XB580014"))$minimumAge), 3)
+
+  # Test 5: Great tit male caught as adult
+  # Test that the male has the correct number of capture records (6)
+  expect_equal(nrow(subset(MAY_data, individualID == paste0("MAY_", "XA712924"))), 6)
+  # Test that the 1st capture of the female is as expected (1980-06-05: lay date + clutch size)
+  expect_equal(dplyr::first(subset(MAY_data, individualID == paste0("MAY_", "XA712924"))$captureYear), 1980)
+  expect_equal(dplyr::first(subset(MAY_data, individualID == paste0("MAY_", "XA712924"))$captureMonth), 6)
+  expect_equal(dplyr::first(subset(MAY_data, individualID == paste0("MAY_", "XA712924"))$captureDay), 5)
+  expect_equal(dplyr::first(subset(MAY_data, individualID == paste0("MAY_", "XA712924"))$captureRingNumber), NA_character_)
+  expect_equal(dplyr::first(subset(MAY_data, individualID == paste0("MAY_", "XA712924"))$releaseRingNumber), "XA712924")
+  # Test that the 6th capture of the male is as expected (1983-06-28: lay date + clutch size)
+  expect_equal(dplyr::last(subset(MAY_data, individualID == paste0("MAY_", "XA712924"))$captureYear), 1983)
+  expect_equal(dplyr::last(subset(MAY_data, individualID == paste0("MAY_", "XA712924"))$captureMonth), 6)
+  expect_equal(dplyr::last(subset(MAY_data, individualID == paste0("MAY_", "XA712924"))$captureDay), 28)
+  expect_equal(dplyr::last(subset(MAY_data, individualID == paste0("MAY_", "XA712924"))$captureRingNumber), "XA712924")
+  expect_equal(dplyr::last(subset(MAY_data, individualID == paste0("MAY_", "XA712924"))$releaseRingNumber), "XA712924")
+  # Test that exactAge is as expected (NA, because it's caught as an adult)
+  expect_equal(dplyr::first(subset(MAY_data, individualID == paste0("MAY_", "XA712924"))$exactAge), NA_integer_)
+  # Test that minimumAge is correct on first capture (1, because it's an adult of unknown age because it wasn't caught as a chick)
+  expect_equal(dplyr::first(subset(MAY_data, individualID == paste0("MAY_", "XA712924"))$minimumAge), 1)
+  # Test that minimumAge is correct on 6th capture (4, because it's an adult caught 3 years after its first capture)
+  expect_equal(dplyr::last(subset(MAY_data, individualID == paste0("MAY_", "XA712924"))$minimumAge), 4)
+
+  # Test 6: Great tit caught as chick
+
+  # NB: Issue with IDs in great tit data. Chicks all start with numbers; parents mostly start with letters.
+  # Verify with data owner, and fill test later.
+
+})
+
+test_that("Measurement_data returns an expected outcome...", {
+
+  # We want to run tests for individuals that had all all measurements taken, and individuals with some measurements missing
+  # It is important to distinguish between pied flycatchers and great tits,
+  # as the primary data is stored in two separate files and formats.
+
+  # Take a subset of MAY - Measurement_data
+  MAY_data <- dplyr::filter(pipeline_output$Measurement_data, siteID == "MAY")
+
+  # Test 1: all measurements
+  # Test that individual TB63242 had been taken three measurements of in its first capture
+  expect_equal(nrow(subset(MAY_data, recordID == paste0("MAY_", "XK46551", "_1"))), 4)
+  # Test that its measurements are as expected (mass: 16.5, wing length: 72, tarsus: 19.3)
+  expect_equal(subset(MAY_data, recordID == paste0("MAY_", "TB63242", "_1") & measurementType == "plumage colour")$measurementValue, 18.25)
+  expect_equal(subset(MAY_data, recordID == paste0("MAY_", "TB63242", "_1") & measurementType == "wing length")$measurementValue, 74)
+  expect_equal(subset(MAY_data, recordID == paste0("MAY_", "TB63242", "_1") & measurementType == "tarsus")$measurementValue, 22.78)
+  # Test that the measurements were taken in the correct year (2005)
+  expect_equal(subset(MAY_data, recordID == paste0("MAY_", "TB63242", "_1"))$measurementDeterminedYear, rep(2005, 3))
+
 
 })
