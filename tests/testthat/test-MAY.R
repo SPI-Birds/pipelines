@@ -146,3 +146,133 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(subset(MAY_data, individualID == paste0("MAY_", "79330"))$ringStage, "chick")
 
 })
+
+test_that("Brood_data returns an expected outcome...", {
+
+  # We want to run tests for all possible outcomes of clutch type
+
+  # Take a subset of MAY - Brood_data
+  MAY_data <- dplyr::filter(pipeline_output$Brood_data, siteID == "MAY")
+
+  # Test 1: Pied flycatcher brood clutch type = first
+  # broodID 1980_L_19_16 should be FICHYP
+  expect_equal(subset(MAY_data, broodID == "1980_L_19_16")$speciesID,
+               species_codes$speciesID[species_codes$speciesCode == "10003"])
+  # broodID 1980_L_19_16 should have clutch type observed NA & calculated 'first'
+  # No clutch types were recorded for pied flycatchers in MAY
+  expect_equal(subset(MAY_data, broodID == "1980_L_19_16")$observedClutchType, NA_character_)
+  expect_equal(subset(MAY_data, broodID == "1980_L_19_16")$calculatedClutchType, "first")
+  expect_equal(subset(MAY_data, broodID == "1980_L_19_16")$nestAttemptNumber, 1)
+  # Laying date should be "1980-06-03"
+  expect_equal(subset(MAY_data, broodID == "1980_L_19_16")$observedLayYear, 1980)
+  expect_equal(subset(MAY_data, broodID == "1980_L_19_16")$observedLayMonth, 6)
+  expect_equal(subset(MAY_data, broodID == "1980_L_19_16")$observedLayDay, 3)
+  # Clutch size should be 6, brood size should be 4, fledgling number should be 4
+  expect_equal(subset(MAY_data, broodID == "1980_L_19_16")$observedClutchSize, 6)
+  expect_equal(subset(MAY_data, broodID == "1980_L_19_16")$observedBroodSize, 4)
+  expect_equal(subset(MAY_data, broodID == "1980_L_19_16")$observedNumberFledged, 4)
+
+  # Test 2: Pied flycatcher brood clutch type = replacement, where replacement is known (i.e. previous clutch was observed/recorded)
+  # broodID 2014_W_4_3506 should be FICHYP
+  expect_equal(subset(MAY_data, broodID == "2014_W_4_3506")$speciesID,
+               species_codes$speciesID[species_codes$speciesCode == "10003"])
+  # broodID 2014_W_4_3506 should have clutch type observed NA & calculated 'replacement'
+  # No clutch types were recorded for pied flycatchers in MAY
+  expect_equal(subset(MAY_data, broodID == "2014_W_4_3506")$observedClutchType, NA_character_)
+  expect_equal(subset(MAY_data, broodID == "2014_W_4_3506")$calculatedClutchType, "replacement")
+  expect_equal(subset(MAY_data, broodID == "2014_W_4_3506")$nestAttemptNumber, 1)
+  # Laying date should be "2014-06-05"
+  expect_equal(subset(MAY_data, broodID == "2014_W_4_3506")$observedLayYear, 2014)
+  expect_equal(subset(MAY_data, broodID == "2014_W_4_3506")$observedLayMonth, 6)
+  expect_equal(subset(MAY_data, broodID == "2014_W_4_3506")$observedLayDay, 5)
+  # Clutch size should be 6, brood size should be 5, fledgling number should be 5
+  expect_equal(subset(MAY_data, broodID == "2014_W_4_3506")$observedClutchSize, 6)
+  expect_equal(subset(MAY_data, broodID == "2014_W_4_3506")$observedBroodSize, 5)
+  expect_equal(subset(MAY_data, broodID == "2014_W_4_3506")$observedNumberFledged, 5)
+
+  # Test 3: Pied flycatcher brood clutch type = replacement, where replacement calculated from 30-day cutoff
+  expect_equal(subset(MAY_data, broodID == "1988_M_34_1042")$speciesID,
+               species_codes$speciesID[species_codes$speciesCode == "10003"])
+  # broodID 1988_M_34_1042 should have clutch type observed NA & calculated 'replacement'
+  # No clutch types were recorded for pied flycatchers in MAY
+  expect_equal(subset(MAY_data, broodID == "1988_M_34_1042")$observedClutchType, NA_character_)
+  expect_equal(subset(MAY_data, broodID == "1988_M_34_1042")$calculatedClutchType, "replacement")
+  expect_equal(subset(MAY_data, broodID == "1988_M_34_1042")$nestAttemptNumber, 1)
+  # Laying date should be "1988-06-26"
+  expect_equal(subset(MAY_data, broodID == "1988_M_34_1042")$observedLayYear, 1988)
+  expect_equal(subset(MAY_data, broodID == "1988_M_34_1042")$observedLayMonth, 6)
+  expect_equal(subset(MAY_data, broodID == "1988_M_34_1042")$observedLayDay, 26)
+  # Clutch size should be 5, brood size should be 5, fledgling number should be 5
+  expect_equal(subset(MAY_data, broodID == "1988_M_34_1042")$observedClutchSize, 5)
+  expect_equal(subset(MAY_data, broodID == "1988_M_34_1042")$observedBroodSize, 5)
+  expect_equal(subset(MAY_data, broodID == "1988_M_34_1042")$observedNumberFledged, 5)
+
+  # Test 4: Great tit brood clutch type = first
+  # broodID 1986_M_54_100 should be PARMAJ
+  expect_equal(subset(MAY_data, broodID == "1986_M_54_100")$speciesID,
+               species_codes$speciesID[species_codes$speciesCode == "10001"])
+  # broodID 1986_M_54_100 should have clutch type observed & calculated 'first'
+  expect_equal(subset(MAY_data, broodID == "1986_M_54_100")$observedClutchType, "first")
+  expect_equal(subset(MAY_data, broodID == "1986_M_54_100")$calculatedClutchType, "first")
+  expect_equal(subset(MAY_data, broodID == "1986_M_54_100")$nestAttemptNumber, 1)
+  # Laying date should be "1986-05-01"
+  expect_equal(subset(MAY_data, broodID == "1986_M_54_100")$observedLayYear, 1986)
+  expect_equal(subset(MAY_data, broodID == "1986_M_54_100")$observedLayMonth, 5)
+  expect_equal(subset(MAY_data, broodID == "1986_M_54_100")$observedLayDay, 1)
+  # Clutch size should be 13, brood size should be 12, fledgling number should be unknown
+  expect_equal(subset(MAY_data, broodID == "1986_M_54_100")$observedClutchSize, 13)
+  expect_equal(subset(MAY_data, broodID == "1986_M_54_100")$observedBroodSize, 12)
+  expect_equal(subset(MAY_data, broodID == "1986_M_54_100")$observedNumberFledged, NA_integer_)
+
+  # Test 5: Great tit brood clutch type = second
+  # broodID 1999_M_6_197 should be PARMAJ
+  expect_equal(subset(MAY_data, broodID == "1999_M_6_197")$speciesID,
+               species_codes$speciesID[species_codes$speciesCode == "10001"])
+  # broodID 1999_M_6_197 should have clutch type observed & calculated 'second'
+  expect_equal(subset(MAY_data, broodID == "1999_M_6_197")$observedClutchType, "second")
+  expect_equal(subset(MAY_data, broodID == "1999_M_6_197")$calculatedClutchType, "second")
+  expect_equal(subset(MAY_data, broodID == "1999_M_6_197")$nestAttemptNumber, 2)
+  # Laying date should be "1999-06-19"
+  expect_equal(subset(MAY_data, broodID == "1999_M_6_197")$observedLayYear, 1999)
+  expect_equal(subset(MAY_data, broodID == "1999_M_6_197")$observedLayMonth, 6)
+  expect_equal(subset(MAY_data, broodID == "1999_M_6_197")$observedLayDay, 19)
+  # Clutch size should be 11, brood size should be 10, fledgling number should be 10
+  expect_equal(subset(MAY_data, broodID == "1999_M_6_197")$observedClutchSize, 11)
+  expect_equal(subset(MAY_data, broodID == "1999_M_6_197")$observedBroodSize, 10)
+  expect_equal(subset(MAY_data, broodID == "1999_M_6_197")$observedNumberFledged, 10)
+
+  # Test 6: Great tit brood clutch type = replacement, where replacement is known (i.e. previous clutch was observed/recorded)
+  # broodID 1994_M_16_171 should be PARMAJ
+  expect_equal(subset(MAY_data, broodID == "1994_M_16_171")$speciesID,
+               species_codes$speciesID[species_codes$speciesCode == "10001"])
+  # broodID 1994_M_16_171 should have clutch type observed & calculated 'replacement'
+  expect_equal(subset(MAY_data, broodID == "1994_M_16_171")$observedClutchType, "replacement")
+  expect_equal(subset(MAY_data, broodID == "1994_M_16_171")$calculatedClutchType, "replacement")
+  expect_equal(subset(MAY_data, broodID == "1994_M_16_171")$nestAttemptNumber, 2)
+  # Laying date should be "1994-06-04"
+  expect_equal(subset(MAY_data, broodID == "1994_M_16_171")$observedLayYear, 1994)
+  expect_equal(subset(MAY_data, broodID == "1994_M_16_171")$observedLayMonth, 6)
+  expect_equal(subset(MAY_data, broodID == "1994_M_16_171")$observedLayDay, 4)
+  # Clutch size should be 11, brood size should be 11, fledgling number should be 0
+  expect_equal(subset(MAY_data, broodID == "1994_M_16_171")$observedClutchSize, 11)
+  expect_equal(subset(MAY_data, broodID == "1994_M_16_171")$observedBroodSize, 11)
+  expect_equal(subset(MAY_data, broodID == "1994_M_16_171")$observedNumberFledged, 0)
+
+  # Test 7: Great tit brood clutch type = replacement, where replacement calculated from 30-day cutoff
+  # broodID 2007_W_8_292 should be PARMAJ
+  expect_equal(subset(MAY_data, broodID == "2007_W_8_292")$speciesID,
+               species_codes$speciesID[species_codes$speciesCode == "10001"])
+  # broodID 2007_W_8_292 should have clutch type observed 'second' & calculated 'replacement'
+  expect_equal(subset(MAY_data, broodID == "2007_W_8_292")$observedClutchType, "second")
+  expect_equal(subset(MAY_data, broodID == "2007_W_8_292")$calculatedClutchType, "replacement")
+  expect_equal(subset(MAY_data, broodID == "2007_W_8_292")$nestAttemptNumber, 1)
+  # Laying date should be "2007-07-03"
+  expect_equal(subset(MAY_data, broodID == "2007_W_8_292")$observedLayYear, 2007)
+  expect_equal(subset(MAY_data, broodID == "2007_W_8_292")$observedLayMonth, 7)
+  expect_equal(subset(MAY_data, broodID == "2007_W_8_292")$observedLayDay, 3)
+  # Clutch size should be 9, brood size should be 9, fledgling number should be 8
+  expect_equal(subset(MAY_data, broodID == "2007_W_8_292")$observedClutchSize, 9)
+  expect_equal(subset(MAY_data, broodID == "2007_W_8_292")$observedBroodSize, 9)
+  expect_equal(subset(MAY_data, broodID == "2007_W_8_292")$observedNumberFledged, 8)
+
+})
