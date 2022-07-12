@@ -5,7 +5,7 @@
 \alias{site_codes}
 \title{Study site names and locations}
 \format{
-A data frame with 102 rows and 6 variables
+A data frame with 114 rows and 11 variables
 \describe{
  \item{siteID}{Three-letter identifier for the study site.}
  \item{siteName}{Name of the study site.}
@@ -14,6 +14,11 @@ A data frame with 102 rows and 6 variables
  \item{institutionID}{Three- or four-letter identifier for data owner/institution. Note, multiple study sites can have
  the same data owner.}
  \item{institutionCode}{Name of owner/institution.}
+ \item{decimalLatitude}{Geographic latitude of the geographic center of the study site in decimal degrees.}
+ \item{decimalLongitude}{Geographic longitude of the geographic center of the study site in decimal degrees.}
+ \item{locationAccordingTo}{Source of location information. Either "data owner" or "data".}
+ \item{data}{Logical. Are the data available through SPI-Birds?}
+ \item{standardFormat}{Logical. If data are available, are they standardized?}
  }
 }
 \usage{
