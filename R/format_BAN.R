@@ -62,10 +62,10 @@ format_BAN <- function(db = choose_directory(),
                        pop = NULL,
                        output_type = 'R'){
 
-  #Force choose_directory() if used
+  # Force choose_directory() if used
   force(db)
 
-  #Add species filter
+  # Add species filter
   if(is.null(species)){
 
     species_filter <- species_codes$speciesID
@@ -76,70 +76,69 @@ format_BAN <- function(db = choose_directory(),
 
   }
 
+  # If all optional variables are requested, retrieve all names
+  if(!is.null(optional_variables) & "all" %in% optional_variables) optional_variables <- names(unlist(unname(utility_variables)))
+
+  # Record start time to provide processing time to the user
   start_time <- Sys.time()
 
   message("Importing primary data...")
 
-  #Warnings arise when we coerce records like 'UNKNOWN' into numeric (making NA by coercion)
-  #We want this behaviour, so we hide the warnings.
+  # Warnings arise when we coerce records like 'UNKNOWN' into numeric (making NA by coercion)
+  # We want this behaviour, so we hide the warnings.
   all_data <- suppressWarnings(readxl::read_excel(paste0(db, "/BAN_PrimaryData.xlsx")) %>%
-                                 #Convert all cols to snake_case
+                                 # Convert all cols to snake_case
                                  janitor::clean_names() %>%
-                                 dplyr::mutate_all(.funs = na_if, y = "NA") %>%
-                                 #Convert column names to match standard format
-                                 dplyr::mutate(BreedingSeason = as.integer(.data$year),
-                                               PopID = "BAN",
-                                               Plot = .data$site,
-                                               #Create a unique LocationID using plot and box number
-                                               LocationID = paste(.data$Plot,
+                                 dplyr::mutate(dplyr::across(.cols = everything(),
+                                                             .fns = ~{
+
+                                                               replace(x = .x,
+                                                                       list = .x %in% c("NA", "na", "unknown"),
+                                                                       values = NA)
+
+                                                             })) %>%
+                                 # Convert column names to match standard format
+                                 dplyr::mutate(siteID = "BAN",
+                                               plotID = paste0("BAN_", .data$site),
+                                               # Create a unique locationID using plot and box number
+                                               locationID = paste(.data$site,
                                                                   stringr::str_pad(string = .data$box_number,
                                                                                    width = 3,
                                                                                    pad = "0"), sep = "_"),
-                                               #Ignore uncertainty in species (e.g. GRETI?)
-                                               #TODO Need to check with data owners
-                                               Species = dplyr::case_when(grepl(pattern = "GRETI", x = .data$species) ~ species_codes[species_codes$speciesCode == 10001, ]$speciesID,
-                                                                          grepl(pattern = "BLUTI", x = .data$species) ~ species_codes[species_codes$speciesCode == 10002, ]$speciesID,
-                                                                          grepl(pattern = "COATI", x = .data$species) ~ species_codes[species_codes$speciesCode == 10005, ]$speciesID),
-                                               #Ignore uncertainty in clutch type (e.g. 2(MAYBE))
-                                               ClutchType_observed = dplyr::case_when(grepl(pattern = 1, x = .data$nest_attempt) ~ "first",
-                                                                                      grepl(pattern = 2, x = .data$nest_attempt) ~ "second"),
-                                               March1Date = as.Date(paste0(.data$BreedingSeason, '-03-01'), format = "%Y-%m-%d"),
-                                               #Ignore uncertainty in laying date (e.g. 97? or 97+)
-                                               #TODO Need to check with data owners
-                                               #Laying date is calculated where LayDate 1 = March 1st
-                                               #We need to do March 1st - 1 + Laying date to get corresponding calendar date
-                                               #(can't use end of Feb + Laying date because of leap years)
-                                               LayDate_observed = .data$March1Date - 1 + as.numeric(gsub(pattern = "\\?|\\+",
-                                                                                                         replacement = "",
-                                                                                                         x = .data$first_egg_lay_date)),
-                                               #Create a unique BroodID from Year_Plot_BoxNumber_LayingDay_LayingMonth
-                                               BroodID = paste(.data$BreedingSeason, .data$LocationID,
-                                                               stringr::str_pad(lubridate::day(.data$LayDate_observed),
-                                                                                width = 2, pad = "0"),
-                                                               stringr::str_pad(lubridate::month(.data$LayDate_observed),
-                                                                                width = 2, pad = "0"), sep = "_"),
-                                               AvgEggMass = as.numeric(.data$egg_weight),
-                                               NumberEggs = as.integer(.data$number_eggs_weighed),
-                                               ClutchSize_observed = as.integer(.data$final_clutch_size),
-                                               #Assume incubation begins immediately after the last egg is laid.
-                                               StartIncubation = .data$LayDate_observed + .data$ClutchSize_observed,
-                                               EggWeighDate = (.data$March1Date - 1 + as.numeric(.data$weigh_date)),
-                                               #Distinguish whether egg was being incubated when weighed.
-                                               EggWasIncubated = (.data$March1Date - 1 + as.numeric(.data$weigh_date)) > (.data$LayDate_observed + .data$ClutchSize_observed),
-                                               #Ignore uncertainty in hatch date (e.g. 97?)
-                                               HatchDate_observed = .data$March1Date - 1 + as.numeric(gsub(pattern = "\\?",
-                                                                                                           replacement = "",
-                                                                                                           x = .data$actual_hatch_date)),
-                                               MaleCaptureDate = .data$March1Date - 1 + as.numeric(.data$actual_male_trapping_date),
-                                               FemaleCaptureDate = .data$March1Date - 1 + as.numeric(.data$actual_female_trapping_date),
-                                               MaleID = .data$male_id, FemaleID = .data$female_id,
-                                               ChickCaptureDate = .data$March1Date - 1 + as.numeric(.data$actual_pullus_ringing_date),
-                                               #Ignore uncertainty in NumberFledged (e.g. 97?)
-                                               NumberFledged_observed = as.integer(gsub(pattern = "\\?",
-                                                                                        replacement = "",
-                                                                                        .data$number_fledged))) %>%
-                                 #Filter only the species of interest
-                                 dplyr::filter(.data$Species %in% species_filter))
+                                               # Ignore uncertainty in species (e.g. GRETI?)
+                                               # TODO: Need to check with data owners
+                                               speciesID = dplyr::case_when(grepl(pattern = "GRETI",
+                                                                                  x = .data$species) ~ species_codes[species_codes$speciesCode == 10001, ]$speciesID,
+                                                                            grepl(pattern = "BLUTI",
+                                                                                  x = .data$species) ~ species_codes[species_codes$speciesCode == 10002, ]$speciesID,
+                                                                            grepl(pattern = "COATI",
+                                                                                  x = .data$species) ~ species_codes[species_codes$speciesCode == 10005, ]$speciesID),
+                                               # Create a unique broodID from year, locationID, lay date (in March days)
+                                               broodID = paste(.data$year,
+                                                               .data$locationID,
+                                                               .data$first_egg_lay_date,
+                                                               sep = "_"),
+                                               # If maleID & femaleID differ from expected format, set to NA
+                                               # Ensure that individuals are unique: add institutionID as prefix
+                                               maleID = .data$male_id,
+                                               femaleID = .data$female_id,
+                                               dplyr::across(.cols = c(.data$maleID, .data$femaleID),
+                                                             .fns = ~{
+
+                                                               dplyr::case_when(stringr::str_detect(.x, "^[:alpha:]{1,3}[:digit:]{4,6}$") ~ paste0("BAN_", .x),
+                                                                                TRUE ~ NA_character_)
+
+                                                             }),
+                                               # Dates are recorded in March days, i.e., 1 = March 1st
+                                               # Create marchDate as baseline for other dates
+                                               # We need to do March 1st - 1 + date to get corresponding calendar date
+                                               # (can't use end of Feb + date because of leap years)
+                                               marchDate = as.Date(paste0(.data$year, '-03-01'), format = "%Y-%m-%d"),
+                                               maleCaptureDate = .data$marchDate - 1 + as.numeric(.data$actual_male_trapping_date),
+                                               femaleCaptureDate = .data$marchDate - 1 + as.numeric(.data$actual_female_trapping_date),
+                                               chickCaptureDate = .data$marchDate - 1 + as.numeric(.data$actual_pullus_ringing_date)) %>%
+                                 # Filter only the species of interest
+                                 dplyr::filter(.data$speciesID %in% species_filter))
 
   # BROOD DATA
 
@@ -206,6 +205,7 @@ format_BAN <- function(db = choose_directory(),
 #'
 #' Create brood data table in standard format for data from Bandon Valley,
 #' Ireland.
+#'
 #' @param data Data frame. Primary data from Bandon Valley.
 #'
 #' @return A data frame.
@@ -213,44 +213,32 @@ format_BAN <- function(db = choose_directory(),
 create_brood_BAN <- function(data) {
 
   Brood_data <- data %>%
-    dplyr::mutate(ClutchType_calculated = calc_clutchtype(., na.rm = FALSE, protocol_version = "1.1"),
-                  LayDate_min = .data$LayDate_observed,
-                  LayDate_max = .data$LayDate_observed,
-                  ClutchSize_min = .data$ClutchSize_observed,
-                  ClutchSize_max = .data$ClutchSize_observed,
-                  HatchDate_min = .data$HatchDate_observed,
-                  HatchDate_max = .data$HatchDate_observed,
-                  BroodSize_observed = NA_integer_,
-                  BroodSize_min = .data$BroodSize_observed,
-                  BroodSize_max = .data$BroodSize_observed,
-                  FledgeDate_observed = as.Date(NA),
-                  FledgeDate_min = .data$FledgeDate_observed,
-                  FledgeDate_max = .data$FledgeDate_observed,
-                  NumberFledged_min = .data$NumberFledged_observed,
-                  NumberFledged_max = .data$NumberFledged_observed,
-                  AvgChickMass = NA_real_, NumberChicksMass = NA_integer_,
-                  AvgTarsus = NA_real_, NumberChicksTarsus = NA_integer_,
-                  OriginalTarsusMethod = NA_character_,
-                  ExperimentID = NA_character_) %>%
-    ## Remove egg weights when the day of weighing is during incubation
-    dplyr::mutate(AvgEggMass = purrr::map2_dbl(.x = .data$AvgEggMass, .y = .data$EggWasIncubated,
-                                               .f = ~{ifelse(..2, NA_real_, as.numeric(..1))})) %>%
-    dplyr::select(.data$BroodID, .data$PopID, .data$BreedingSeason,
-                  .data$Species, .data$Plot, .data$LocationID,
-                  .data$FemaleID, .data$MaleID,
-                  .data$ClutchType_observed,
-                  .data$ClutchType_calculated,
-                  .data$LayDate_observed, .data$LayDate_min, .data$LayDate_max,
-                  .data$ClutchSize_observed, .data$ClutchSize_min, .data$ClutchSize_max,
-                  .data$HatchDate_observed, .data$HatchDate_min, .data$HatchDate_max,
-                  .data$BroodSize_observed, .data$BroodSize_min, .data$BroodSize_max,
-                  .data$FledgeDate_observed, .data$FledgeDate_min, .data$FledgeDate_max,
-                  .data$NumberFledged_observed, .data$NumberFledged_min, .data$NumberFledged_max,
-                  .data$AvgEggMass, .data$NumberEggs,
-                  .data$AvgChickMass, .data$NumberChicksMass,
-                  .data$AvgTarsus, .data$NumberChicksTarsus,
-                  .data$OriginalTarsusMethod,
-                  .data$ExperimentID)
+    dplyr::mutate(
+                  # Ignore uncertainty in clutch type (e.g., 2(MAYBE))
+                  observedClutchType = dplyr::case_when(grepl(pattern = 1, x = .data$nest_attempt) ~ "first",
+                                                        grepl(pattern = 2, x = .data$nest_attempt) ~ "second"),
+                  # Ignore uncertainty in lay date (e.g., 97? or 97+)
+                  # TODO: Need to check with data owners
+                  observedLayDate = .data$marchDate - 1 + as.numeric(gsub(pattern = "\\?|\\+",
+                                                                          replacement = "",
+                                                                          x = .data$first_egg_lay_date)),
+                  observedLayYear = lubridate::year(.data$observedLayDate),
+                  observedLayMonth = lubridate::month(.data$observedLayDate),
+                  observedLayDay = lubridate::day(.data$observedLayDate),
+                  observedClutchSize = dplyr::case_when(stringr::str_detect(.data$final_clutch_size, "[:digit:]+") ~ as.integer(stringr::extract(.data$final_clutch_size, "[:digit:]+")),
+                                                        TRUE ~ NA_integer_),
+                  #maximumClutchSize =
+                  # Ignore uncertainty in hatch date (e.g., ?)
+                  observedHatchDate = .data$marchDate - 1 + as.numeric(gsub(pattern = "\\?",
+                                                                            replacement = "",
+                                                                            x = .data$actual_hatch_date)),
+                  observedHatchYear = lubridate::year(.data$observedHatchDate),
+                  observedHatchMonth = lubridate::month(.data$observedHatchDate),
+                  observedHatchDay = lubridate::day(.data$observedHatchDate),
+                  # Ignore uncertainty in number fledged (e.g., 0?)
+                  observedNumberFledged = as.integer(gsub(pattern = "\\?",
+                                                          replacement = "",
+                                                          x = .data$number_fledged)))
 
   return(Brood_data)
 
