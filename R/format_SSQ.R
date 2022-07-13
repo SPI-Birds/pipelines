@@ -34,67 +34,71 @@
 #'
 #' @inheritParams pipeline_params
 #'
-#' @return Generates either 4 .csv files or 4 data frames in the standard format.
+#' @return Generates either 6 .csv files or 6 data frames in the standard format.
 #' @export
 
 format_SSQ <- function(db = choose_directory(),
-                       species = NULL,
-                       pop = NULL,
                        path = ".",
+                       species = NULL,
+                       site = NULL,
+                       optional_variables = NULL,
                        output_type = "R"){
 
-  #Force user to select directory
+  # Force choose_directory() if used
   force(db)
 
-  SSQ_data <- paste0(db, "/SSQ_PrimaryData.xlsx")
-
+  # Assign species for filtering
   if(is.null(species)){
 
     species <- species_codes$speciesID
 
   }
 
-  #Record start time to provide processing time to the user.
+  # If all optional variables are requested, retrieve all names
+  if(!is.null(optional_variables) & "all" %in% optional_variables) optional_variables <- names(unlist(unname(utility_variables)))
+
+  # Record start time to provide processing time to the user
   start_time <- Sys.time()
 
-  #Read in data with readxl
-  all_data <- readxl::read_excel(SSQ_data) %>%
-    #Clean all names with janitor to snake_case
-    janitor::clean_names(case = "upper_camel") %>%
-    #Remove the column 'Row'. This is just the row number, we have this already.
-    dplyr::select(-.data$Row) %>%
+  # Read in data with readxl
+  all_data <- readxl::read_excel(path = paste0(db, "/SSQ_PrimaryData.xlsx")) %>%
+    # Clean all names with janitor to snake_case
+    janitor::clean_names() %>%
+    # Remove the column 'row'. This is just the row number, we have this already.
+    dplyr::select(-.data$row) %>%
     janitor::remove_empty(which = "rows") %>%
-    #Change column names to match consistent naming
+    # Change column names to match consistent naming
     ## TODO: Add uncertainty if needed.
-    dplyr::mutate(BreedingSeason = as.integer(.data$Year), LayDate_observed = .data$Ld,
-                  ClutchSize_observed = as.integer(.data$Cs), HatchDate_observed = .data$Hd,
-                  BroodSize_observed = as.integer(.data$Hs), NumberFledged_observed = as.integer(.data$Fs),
-                  FemaleID = .data$FId, MaleID = .data$MId, LocationID = .data$NestId,
-                  Plot = .data$HabitatOfRinging,
-                  Latitude = .data$YCoord, Longitude = .data$XCoord) %>%
-    #Add species codes
-    dplyr::mutate(Species = dplyr::case_when(.$Species == "Parus major" ~ species_codes[which(species_codes$speciesCode == 10001), ]$speciesID,
-                                             .$Species == "Cyanistes caeruleus" ~ species_codes[which(species_codes$speciesCode == 10002), ]$speciesID)) %>%
-    #Filter species
-    dplyr::filter(.data$Species %in% species) %>%
-    #Add other missing data:
-    #- PopID
-    #- BroodID (Year_LocationID_LayDate)
-    #- ClutchType_observed
-    #- FledgeDate_observed
-    #Pad LocationID so they are all the same length
-    dplyr::mutate(PopID = "SSQ",
-                  LocationID = stringr::str_pad(.data$LocationID, width = 3, pad = "0"),
-                  BroodID = paste(.data$BreedingSeason, .data$LocationID, stringr::str_pad(.data$LayDate_observed, width = 3, pad = "0"), sep = "_"),
-                  ClutchType_observed = dplyr::case_when(.$Class == 1 ~ "first",
-                                                         .$Class == 3 ~ "second",
-                                                         .$Class == 2 ~ "replacement"),
-                  FledgeDate_observed = as.Date(NA), AvgEggMass = NA_real_,
-                  NumberEggs = NA_integer_, AvgChickMass = NA_real_,
-                  NumberChicksMass = NA_integer_, AvgTarsus = NA_real_,
-                  NumberChicksTarsus = NA_integer_, ExperimentID = NA_character_,
-                  LayDate_observed = as.Date(paste(.data$BreedingSeason, "03-01", sep = "-"), format = "%Y-%m-%d") + .data$LayDate_observed - 1,
-                  HatchDate_observed = as.Date(paste(.data$BreedingSeason, "03-01", sep = "-"), format = "%Y-%m-%d") + .data$HatchDate_observed - 1)
+    dplyr::mutate(year = as.integer(.data$year),
+                  observedLayDate = .data$ld,
+                  observedClutchSize = as.integer(.data$cs),
+                  observedHatchDate = .data$hd,
+                  observedBroodSize = as.integer(.data$hs),
+                  observedNumberFledged = as.integer(.data$fs),
+                  femaleID = .data$f_id,
+                  maleID = .data$m_id,
+                  locationID = .data$nest_id,
+                  plotID = dplyr::case_when(is.na(.data$habitat_of_ringing) ~ NA_character_,
+                                          TRUE ~ paste0("SSQ_", .data$habitat_of_ringing)),
+                  decimalLatitude = .data$y_coord,
+                  decimalLongitude = .data$x_coord) %>%
+    # Add species codes
+    dplyr::mutate(speciesID = dplyr::case_when(.data$species == "Parus major" ~ species_codes[species_codes$speciesCode == 10001, ]$speciesID,
+                                               .data$species == "Cyanistes caeruleus" ~ species_codes[species_codes$speciesCode == 10002, ]$speciesID)) %>%
+    # Filter species
+    dplyr::filter(.data$speciesID %in% {{species}}) %>%
+    # Add other missing data:
+    # - siteID
+    # - broodID (year_locationID_layDate)
+    # - observedClutchType
+    # Pad locationID so they are all the same length
+    dplyr::mutate(siteID = "SSQ",
+                  locationID = stringr::str_pad(.data$locationID, width = 3, pad = "0"),
+                  broodID = paste(.data$year, .data$locationID,
+                                  stringr::str_pad(.data$observedLayDate, width = 3, pad = "0"), sep = "_"),
+                  observedClutchType = dplyr::case_when(.data$class == 1 ~ "first",
+                                                        .data$class == 3 ~ "second",
+                                                        .data$class == 2 ~ "replacement"))
 
   # BROOD DATA
 
