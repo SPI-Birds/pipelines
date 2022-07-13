@@ -404,37 +404,6 @@ create_capture_CHO <- function(data,
                   rowWarning = NA,
                   rowError = NA,
                   originalTarsusMethod = "Alternative") %>%
-    # Select columns that are in the standard format
-    # + measurement columns (needed for input of create_measurement_CHO())
-    dplyr::select(.data$individualID,
-                  .data$captureRingNumber,
-                  .data$releaseRingNumber,
-                  .data$speciesID,
-                  .data$observedSex,
-                  .data$Year,
-                  .data$captureYear,
-                  .data$captureMonth,
-                  .data$captureDay,
-                  .data$captureTime,
-                  .data$recordedBy,
-                  .data$locationID,
-                  .data$capturePhysical,
-                  .data$captureAlive,
-                  .data$releaseAlive,
-                  .data$captureSiteID,
-                  .data$capturePlotID,
-                  .data$releaseSiteID,
-                  .data$releasePlotID,
-                  .data$Age,
-                  .data$chickAge,
-                  .data$treatmentID,
-                  .data$row,
-                  .data$rowWarning,
-                  .data$rowError,
-                  mass = .data$Weight,
-                  tarsus = .data$Tarsus,
-                  .data$originalTarsusMethod,
-                  wingLength = .data$Wing) %>%
     dplyr::group_by(.data$individualID) %>%
     dplyr::mutate(captureID = paste(.data$individualID, 1:dplyr::n(), sep = "_")) %>%
     dplyr::ungroup() %>%
