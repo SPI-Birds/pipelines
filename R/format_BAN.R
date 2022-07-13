@@ -5,55 +5,57 @@
 #'
 #'This section provides details on data management choices that are unique to
 #'this data. For a general description of the standard format please see
-#'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
+#'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.2.0.pdf}{here}.
 #'
-#'\strong{Species}: There are records where species is uncertain (e.g. listed as
+#'\strong{speciesID}: There are records where species is uncertain (e.g. listed as
 #''GRETI?'). This uncertainty is ignored. We assume that the suggested species
 #'is correct. We include blue tit, great tit, and coal tit. No other species are
 #'recorded.
 #'
-#'\strong{ClutchType_observed}: Clutch type is only listed as 'first' and
+#'\strong{observedClutchType}: Clutch type is only listed as 'first' and
 #''second'. There is no distinction between 'second' and 'replacement'. We
 #'categorise all these as 'second'. Possible distinction between 'second' and
-#''replacement' can be made with \strong{ClutchType_calculated}. There are a
+#''replacement' can be made with \strong{calculatedClutchType}. There are a
 #'small number of cases where nest attempt number is uncertain (e.g.
 #'`2(MAYBE)`). This uncertainty is ignored.
 #'
-#'\strong{LayDate_observed, HatchDate_observed, NumberFledged_observed}: There are some cases where
+#'\strong{Lay date, hatch date, number fledged}: There are some cases where
 #'values are given with uncertainty (e.g. 97+, 95?). We don't know how much
 #'uncertainty is involved here, it is currently ignored, but we need to
 #'discuss this with data owner.
 #'
-#'\strong{ClutchSize_observed}: Cases where clutch size is uncertain (e.g. nests were
+#'\strong{Clutch size}: Cases where clutch size is uncertain (e.g. nests were
 #'predated before completion) are treated as NA because clutch size is unknown.
+#'Cases where clutch size is of the form "4 or more" or "at least 5", observedClutchSize
+#'is set to the observed value (i.e., 4 or 5, respectively) and maximumClutchSize
+#'is set to Inf because the final clutch size has not been observed.
 #'
-#'\strong{LocationID}: Box numbers are not unique, they are repeated between
-#'plots. To generate LocationID, we therefore use Plot_BoxNumber.
+#'\strong{plotID}: The institutionID (i.e., "BAN") is added to the plot names to ensure
+#'unique plotIDs across pipelines.
 #'
-#'\strong{BroodID}: Unique BroodID is currently made with
-#'Year_Plot_BoxNumber_Day_Month.
+#'\strong{locationID}: Box numbers are not unique, they are repeated between
+#'plots. To generate locationID, we therefore use plotID_nestboxNumber
 #'
-#'\strong{BroodIDLaid/Fledged}: Currently, we have no information about the
-#'brood where each individual was laid. Therefore, these are currently kept
-#'blank.
+#'\strong{broodID}: Unique BroodID is currently made with
+#'plotID_nestboxNumber_layDate, where layDate is in March days (i.e., 1 = March 1st)
 #'
-#'\strong{Age_observed}: There is no recorded capture age. This is left as NA.
+#'\strong{broodIDLaid, broodIDFledged}: Currently, we have no information about the
+#'brood where each individual was laid. Therefore, these are currently left as NA.
 #'
-#'\strong{AvgEggMass}: Currently we only include records where the day of egg
-#'weighing is <= LayDate_observed + ClutchSize_observed. This should be an estimate of the date
-#'that incubation began. Once incubation starts, egg weight is not easily
-#'comparable because it changes with embryonic development.
+#'\strong{captureAlive, releaseAlive}: Assume all individuals were alive when captured and released.
 #'
-#'\strong{AvgChickMass/AvgTarsus}: Individual capture data is not included in
-#'the data currently provided. These values are therefore left blank.
+#'\strong{capturePhysical}: Assume all individuals were physically captured.
 #'
-#'\strong{StartSeason}: Assume all boxes were placed in the first year of the study.
+#'\strong{captureRingNumber}: First captures of all individuals are assumed to be ringing events, and thus captureRingNumber is set to NA.
 #'
-#'\strong{CaptureAlive, ReleaseAlive}: Assume all individuals were alive when captured and released.
+#'\strong{startYear}: Assume all boxes were placed in the first year of the study.
+#'
+#'\strong{habitatID}: Assume that habitat type is 1.4: Forest - Temperate. Check with data owner.
 #'
 #'@inheritParams pipeline_params
 #'
-#'@return Generates either 4 .csv files or 4 data frames in the standard format.
+#'@return Generates either 6 .csv files or 6 data frames in the standard format.
+#'
 #'@export
 
 format_BAN <- function(db = choose_directory(),
@@ -146,11 +148,13 @@ format_BAN <- function(db = choose_directory(),
 
   Brood_data <- create_brood_BAN(all_data)
 
+
   # CAPTURE DATA
 
   message("Compiling capture information...")
 
   Capture_data <- create_capture_BAN(all_data)
+
 
   # INDIVIDUAL DATA
 
@@ -158,13 +162,50 @@ format_BAN <- function(db = choose_directory(),
 
   Individual_data <- create_individual_BAN(Capture_data)
 
+
   # LOCATION DATA
 
   message("Compiling location information...")
 
   Location_data <- create_location_BAN(all_data)
 
+
+  # MEASUREMENT DATA
+
+  message("Compiling measurement information...")
+
+  # NB: There is no measurement information so we create an empty data table
+  Measurement_data <- data_templates$v1.2$Measurement_data[0,]
+
+
+  # EXPERIMENT DATA
+
+  message("Compiling experiment information...")
+
+  # NB: There is no experiment information so we create an empty data table
+  Experiment_data <- data_templates$v1.2$Experiment_data[0,]
+
+
   # WRANGLE DATA FOR EXPORT
+
+  Brood_data <- Brood_data %>%
+    # Add row ID
+    dplyr::mutate(row = 1:dplyr::n()) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates$v1.2$Brood_data[1, !(names(data_templates$v1.2$Brood_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format or in the list of optional variables
+    dplyr::select(names(data_templates$v1.2$Brood_data), dplyr::contains(names(utility_variables$Brood_data),
+                                                                         ignore.case = FALSE))
+
+  Capture_data <- Capture_data %>%
+    # Add row ID
+    dplyr::mutate(row = 1:dplyr::n()) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates$v1.2$Capture_data[1, !(names(data_templates$v1.2$Capture_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format or in the list of optional variables
+    dplyr::select(names(data_templates$v1.2$Capture_data), dplyr::contains(names(utility_variables$Capture_data),
+                                                                           ignore.case = FALSE))
+
 
   # EXPORT DATA
 
@@ -178,11 +219,15 @@ format_BAN <- function(db = choose_directory(),
 
     utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_BAN.csv"), row.names = F)
 
-    utils::write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_BAN.csv"), row.names = F)
-
     utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_BAN.csv"), row.names = F)
 
+    utils::write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_BAN.csv"), row.names = F)
+
+    utils::write.csv(x = Measurement_data, file = paste0(path, "\\Measurement_data_BAN.csv"), row.names = F)
+
     utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_BAN.csv"), row.names = F)
+
+    utils::write.csv(x = Experiment_data, file = paste0(path, "\\Experiment_data_BAN.csv"), row.names = F)
 
     invisible(NULL)
 
@@ -195,7 +240,9 @@ format_BAN <- function(db = choose_directory(),
     return(list(Brood_data = Brood_data,
                 Capture_data = Capture_data,
                 Individual_data = Individual_data,
-                Location_data = Location_data))
+                Measurement_data = Measurement_data,
+                Location_data = Location_data,
+                Experiment_data = Experiment_data))
 
   }
 
@@ -207,31 +254,32 @@ format_BAN <- function(db = choose_directory(),
 #' Ireland.
 #'
 #' @param data Data frame. Primary data from Bandon Valley.
+#' @param optional_variables A character vector of names of optional variables (generated by standard utility functions) to be included in the pipeline output.
 #'
 #' @return A data frame.
 
-create_brood_BAN <- function(data) {
+create_brood_BAN <- function(data,
+                             optional_variables = NULL) {
 
   Brood_data <- data %>%
-    dplyr::mutate(
-                  # Ignore uncertainty in clutch type (e.g., 2(MAYBE))
-                  observedClutchType = dplyr::case_when(grepl(pattern = 1, x = .data$nest_attempt) ~ "first",
+    # Ignore uncertainty in clutch type (e.g., 2(MAYBE))
+    dplyr::mutate(observedClutchType = dplyr::case_when(grepl(pattern = 1, x = .data$nest_attempt) ~ "first",
                                                         grepl(pattern = 2, x = .data$nest_attempt) ~ "second"),
                   # Ignore uncertainty in lay date (e.g., 97? or 97+)
                   # TODO: Need to check with data owners
-                  observedLayDate = .data$marchDate - 1 + as.numeric(gsub(pattern = "\\?|\\+",
-                                                                          replacement = "",
-                                                                          x = .data$first_egg_lay_date)),
+                  observedLayDate = dplyr::case_when(is.na(.data$first_egg_lay_date) ~ as.Date(NA),
+                                                     stringr::str_detect(.data$first_egg_lay_date, "^\\?") ~ as.Date(NA),
+                                                     TRUE ~ .data$marchDate - 1 + as.numeric(stringr::str_remove(.data$first_egg_lay_date, "\\?|\\+"))),
                   observedLayYear = lubridate::year(.data$observedLayDate),
                   observedLayMonth = lubridate::month(.data$observedLayDate),
                   observedLayDay = lubridate::day(.data$observedLayDate),
-                  observedClutchSize = dplyr::case_when(stringr::str_detect(.data$final_clutch_size, "[:digit:]+") ~ as.integer(stringr::extract(.data$final_clutch_size, "[:digit:]+")),
+                  observedClutchSize = dplyr::case_when(stringr::str_detect(.data$final_clutch_size, "[:digit:]+") ~ as.integer(stringr::str_extract(.data$final_clutch_size, "[:digit:]+")),
                                                         TRUE ~ NA_integer_),
-                  #maximumClutchSize =
-                  # Ignore uncertainty in hatch date (e.g., ?)
-                  observedHatchDate = .data$marchDate - 1 + as.numeric(gsub(pattern = "\\?",
-                                                                            replacement = "",
-                                                                            x = .data$actual_hatch_date)),
+                  # Clutch sizes of the form "4 or more" or "at least 5" have Inf as maximum clutch size
+                  maximumClutchSize = dplyr::case_when(stringr::str_detect(.data$final_clutch_size, "more|least") & !is.na(.data$final_clutch_size) ~ Inf,
+                                                       TRUE ~ NA_real_),
+                  observedHatchDate = dplyr::case_when(is.na(.data$actual_hatch_date) ~ as.Date(NA),
+                                                       TRUE ~ .data$marchDate - 1 + as.numeric(stringr::str_remove(all_data$actual_hatch_date, "nA"))),
                   observedHatchYear = lubridate::year(.data$observedHatchDate),
                   observedHatchMonth = lubridate::month(.data$observedHatchDate),
                   observedHatchDay = lubridate::day(.data$observedHatchDate),
@@ -240,7 +288,16 @@ create_brood_BAN <- function(data) {
                                                           replacement = "",
                                                           x = .data$number_fledged)))
 
-  return(Brood_data)
+  # Add optional variables
+  output <- Brood_data %>%
+    {if("breedingSeason" %in% optional_variables) calc_season(data = .,
+                                                              season = .data$year) else .} %>%
+    {if("calculatedClutchType" %in% optional_variables) calc_clutchtype(data = ., na.rm = FALSE,
+                                                                        protocol_version = "1.2") else .} %>%
+    {if("nestAttemptNumber" %in% optional_variables) calc_nestattempt(data = .,
+                                                                      season = .data$breedingSeason) else .}
+
+  return(output)
 
 }
 
@@ -248,65 +305,61 @@ create_brood_BAN <- function(data) {
 #'
 #' Create capture data table in standard format for data from Bandon Valley,
 #' Ireland.
+#'
 #' @param data Data frame. Primary data from Bandon Valley.
+#' @param optional_variables A character vector of names of optional variables (generated by standard utility functions) to be included in the pipeline output.
 #'
 #' @return A data frame.
 
-create_capture_BAN <- function(data) {
+create_capture_BAN <- function(data,
+                               optional_variables = NULL) {
 
   Capture_data <- data %>%
-    dplyr::select(.data$Species, .data$BreedingSeason, .data$LocationID, .data$Plot,
-                  .data$FemaleCaptureDate, .data$MaleCaptureDate,
-                  .data$FemaleID, .data$MaleID) %>%
-    tidyr::pivot_longer(cols = c(.data$FemaleID, .data$MaleID), names_to = "Sex", values_to = "IndvID") %>%
-    dplyr::arrange(.data$Sex) %>%
-    dplyr::filter(!is.na(.data$IndvID) & !.data$IndvID %in% c("UNKNOWN", "NA")) %>%
-    dplyr::mutate(Sex_observed = dplyr::case_when(grepl(pattern = "Female", .data$Sex) ~ "F",
-                                                  grepl(pattern = "Male", .data$Sex) ~ "M"),
-                  CaptureDate = as.Date(purrr::pmap_chr(.l = list(.data$Sex_observed, .data$MaleCaptureDate,
-                                                                  .data$FemaleCaptureDate),
-                                                        .f = ~{
-
-                                                          if(..1 == "F"){
-
-                                                            return(as.character(..3))
-
-                                                          } else {
-
-                                                            return(as.character(..2))
-
-                                                          }
-
-                                                        })),
-                  Age_observed = NA_integer_,
-                  CaptureTime = NA_character_,
-                  Mass = NA_real_,
-                  Tarsus = NA_real_,
-                  WingLength = NA_real_, ChickAge = NA_integer_,
-                  CaptureAlive = TRUE,
-                  ReleaseAlive = TRUE,
-                  CapturePopID = "BAN",
-                  ReleasePopID = "BAN", ObserverID = NA_character_,
-                  OriginalTarsusMethod = NA_character_,
-                  CapturePlot = .data$Plot, ReleasePlot = .data$Plot,
-                  ExperimentID = NA_character_) %>%
-    calc_age(ID = .data$IndvID, Age = .data$Age_observed,
-             Date = .data$CaptureDate, Year = .data$BreedingSeason) %>%
-    dplyr::select(.data$IndvID, .data$Species, .data$Sex_observed,
-                  .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime,
-                  .data$ObserverID, .data$LocationID,
-                  .data$CaptureAlive, .data$ReleaseAlive,
-                  .data$CapturePopID, .data$CapturePlot,
-                  .data$ReleasePopID, .data$ReleasePlot,
-                  .data$Mass, .data$Tarsus, .data$OriginalTarsusMethod,
-                  .data$WingLength, .data$Age_observed, .data$Age_calculated,
-                  .data$ChickAge, .data$ExperimentID) %>%
-    dplyr::group_by(.data$IndvID) %>%
-    dplyr::mutate(CaptureID = paste(.data$IndvID, 1:n(), sep = "_")) %>%
+    dplyr::select(.data$speciesID, .data$year, .data$locationID, .data$plotID,
+                  .data$femaleCaptureDate, .data$maleCaptureDate,
+                  .data$femaleID, .data$maleID) %>%
+    tidyr::pivot_longer(cols = c(.data$femaleID, .data$maleID),
+                        names_to = "sex",
+                        values_to = "individualID") %>%
+    dplyr::arrange(.data$sex) %>%
+    dplyr::filter(!is.na(.data$individualID)) %>%
+    dplyr::mutate(observedSex = dplyr::case_when(grepl(pattern = "female", .data$sex) ~ "F",
+                                                 grepl(pattern = "male", .data$sex) ~ "M"),
+                  captureDate = dplyr::case_when(.data$observedSex == "F" ~ .data$femaleCaptureDate,
+                                                 .data$observedSex == "M" ~ .data$maleCaptureDate),
+                  captureYear = dplyr::case_when(is.na(.data$captureDate) ~ as.integer(.data$year),
+                                                 TRUE ~ as.integer(lubridate::year(.data$captureDate))),
+                  captureMonth = as.integer(lubridate::month(.data$captureDate)),
+                  captureDay = as.integer(lubridate::day(.data$captureDate)),
+                  captureAlive = TRUE,
+                  releaseAlive = TRUE,
+                  capturePhysical = TRUE,
+                  captureSiteID = "BAN",
+                  releaseSiteID = "BAN",
+                  capturePlotID = .data$plotID,
+                  releasePlotID = .data$plotID,
+                  chickAge = NA_integer_,
+                  age = NA_character_) %>%
+    # Arrange chronologically for each individual
+    dplyr::arrange(.data$individualID, .data$captureDate) %>%
+    dplyr::group_by(.data$individualID) %>%
+    dplyr::mutate(# First captures are assumed to be ringing events, and thus captureRingNumber = NA.
+                  captureRingNumber = dplyr::case_when(dplyr::row_number() == 1 ~ NA_character_,
+                                                       TRUE ~ stringr::str_sub(.data$individualID, 5, nchar(.data$individualID))),
+                  # All releases are assumed to be alive (also see releaseAlive), so no NAs in releaseRingNumber
+                  releaseRingNumber = stringr::str_sub(.data$individualID, 5, nchar(.data$individualID)),
+                  captureID = paste(.data$individualID, 1:dplyr::n(), sep = "_")) %>%
     dplyr::ungroup() %>%
-    dplyr::select(.data$CaptureID, everything())
+    dplyr::select(.data$captureID, everything())
 
-  return(Capture_data)
+  # Add optional variables
+  output <- Capture_data %>%
+    {if("exactAge" %in% optional_variables | "minimumAge" %in% optional_variables) calc_age(data = .,
+                                                                                            Age = .data$age,
+                                                                                            Year = .data$year,
+                                                                                            protocol_version = "1.2") %>% dplyr::select(dplyr::contains(c(names(Capture_data), optional_variables))) else .}
+
+  return(output)
 
 }
 
@@ -316,42 +369,24 @@ create_capture_BAN <- function(data) {
 #' Ireland.
 #'
 #' @param Capture_data Data frame. Output from \code{\link{create_capture_BAN}}.
+#' @param optional_variables A character vector of names of optional variables (generated by standard utility functions) to be included in the pipeline output.
 #'
 #' @return A data frame.
 
-create_individual_BAN <- function(Capture_data) {
+create_individual_BAN <- function(Capture_data,
+                                  optional_variables = NULL) {
 
   Individual_data <- Capture_data %>%
-    dplyr::group_by(.data$IndvID) %>%
-    dplyr::summarise(Species = unique(stats::na.omit(.data$Species)),
-                     PopID = "BAN",
-                     BroodIDLaid = NA_character_,
-                     BroodIDFledged = NA_character_,
-                     RingSeason = dplyr::first(.data$BreedingSeason),
-                     RingAge = dplyr::first(.data$Age_observed),
-                     Sex_calculated = purrr::map_chr(.x = list(unique(.data$Sex_observed)),
-                                                     .f = ~{
-
-                                                       if(all(c("F", "M") %in% ..1)){
-
-                                                         return("C")
-
-                                                       } else if("F" %in% ..1){
-
-                                                         return("F")
-
-                                                       } else if("M" %in% ..1){
-
-                                                         return("M")
-
-                                                       } else if(is.na(..1)){
-
-                                                         return(NA_character_)
-
-                                                       }
-
-                                                     }),
-                     Sex_genetic = NA_character_) %>%
+    dplyr::group_by(.data$individualID) %>%
+    dplyr::summarise(speciesID = unique(stats::na.omit(.data$speciesID)),
+                     siteID = "BAN",
+                     broodIDLaid = NA_character_,
+                     broodIDFledged = NA_character_,
+                     ringDate = dplyr::first(.data$captureDate),
+                     ringYear = as.integer(dplyr::first(.data$year)),
+                     ringMonth = as.integer(lubridate::month(.data$ringDate)),
+                     ringDay = as.integer(lubridate::day(.data$ringDate)),
+                     ringSiteID = dplyr::first(.data$siteID)) %>%
     #Change RingAge to chick/adult
     dplyr::mutate(RingAge = dplyr::case_when(is.na(.data$RingAge) ~ "adult",
                                              .data$RingAge > 3 ~ "adult",

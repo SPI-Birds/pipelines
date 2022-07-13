@@ -442,7 +442,7 @@ create_individual_CHO <- function(data,
     dplyr::arrange(.data$individualID, .data$captureDate, .data$captureYear,
                    .data$captureMonth, .data$captureDay, .data$captureTime) %>%
     # For every individual
-    dplyr::group_by(.data$siteID, .data$individualID) %>%
+    dplyr::group_by(data$individualID) %>%
     # Determine first age, brood, ring year, month, day, and ring site of each individual
     dplyr::summarise(firstBrood = dplyr::first(.data$broodID),
                      ringDate = dplyr::first(.data$captureDate),
