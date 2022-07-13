@@ -13,14 +13,6 @@
 #'\emph{calculatedClutchType} as we use the estimate of fledgling numbers to
 #'distinguish second/replacement clutches.
 #'
-#'\strong{Age_observed}: Translation of age records: \itemize{ \item Any
-#'individual caught as a chick was assumed to have a EURING code of 1: 'Pullus:
-#'nestling or chick, unable to fly freely, still able to be caught by hand.'
-#'\item Any individual listed as 'first year' was given a EURING code of 5: a
-#'bird hatched last calendar year and now in its second calendar year. \item Any
-#'individual listed as 'adult' was given a EURING code of 6: full-grown bird
-#'hatched before last calendar year; year of hatching otherwise unknown.}
-#'
 #'\strong{observedClutchType}: In the raw data, there is no distinction between
 #''second' and 'replacement' clutches. Any clutch recorded as '2nd' is assumed
 #'to be a 'second' clutch under our definitions. 'calculatedClutchType' may
@@ -36,6 +28,8 @@
 #'\strong{individualID}: Individuals marked as "no ring", "not ringed" or "branco" are removed from Capture_data and Individual_data. Check with data owner on how to handle these.
 #'
 #'\strong{captureAlive, releaseAlive}: Assume all individuals were alive when captured and released.
+#'
+#'\strong{capturePhysical}: Assume all individuals were physically captured.
 #'
 #'\strong{captureRingNumber}: First captures of all individuals are assumed to be ringing events, and thus captureRingNumber is set to NA.
 #'
@@ -61,10 +55,14 @@ format_CHO <- function(db = choose_directory(),
   # Force choose_directory() if used
   force(db)
 
-  # Assign species for filtering
+  # Add species filter
   if(is.null(species)){
 
-    species <- species_codes$speciesID
+    species_filter <- species_codes$speciesID
+
+  } else {
+
+    species_filter <- species
 
   }
 
@@ -86,7 +84,7 @@ format_CHO <- function(db = choose_directory(),
     dplyr::mutate(speciesID = species_codes[which(species_codes$speciesCode == 10001), ]$speciesID,
                   siteID = "CHO",
                   plotID = NA_character_) %>%
-    dplyr::filter(speciesID %in% species) %>%
+    dplyr::filter(speciesID %in% species_filter) %>%
     # broodIDs are not unique (they are repeated each year)
     # We need to create unique IDs for each year using year_broodID
     dplyr::mutate(broodID = dplyr::case_when(.data$TrapingMethod == "mist net" ~ NA_character_,
@@ -340,7 +338,7 @@ create_brood_CHO <- function(data,
                   observedNumberFledged = as.integer(.data$NoChicksOlder14D),
                   minimumNumberFledged = NA_integer_,
                   maximumNumberFledged = NA_integer_,
-                  row = 1:n(),
+                  row = 1:dplyr::n(),
                   rowWarning = NA,
                   rowError = NA) %>%
     # In cases where LayingDateJulian is unknown but Year is known, we set observedLayYear = Year
@@ -397,12 +395,12 @@ create_capture_CHO <- function(data,
     dplyr::mutate(observedSex = dplyr::na_if(x = .data$Sex, y = "na"),
                   recordedBy = NA_character_,
                   # We have no information on status of captures/releases, so we assume all individuals were captured/released alive
-                  # We also assume that all captures were physical captures
-                  capturePhysical = TRUE,
                   captureAlive = TRUE,
                   releaseAlive = TRUE,
+                  # We also assume that all captures were physical captures
+                  capturePhysical = TRUE,
                   treatmentID = NA_character_,
-                  row = 1:n(),
+                  row = 1:dplyr::n(),
                   rowWarning = NA,
                   rowError = NA,
                   originalTarsusMethod = "Alternative") %>%
@@ -413,6 +411,7 @@ create_capture_CHO <- function(data,
                   .data$releaseRingNumber,
                   .data$speciesID,
                   .data$observedSex,
+                  .data$Year,
                   .data$captureYear,
                   .data$captureMonth,
                   .data$captureDay,
@@ -426,6 +425,7 @@ create_capture_CHO <- function(data,
                   .data$capturePlotID,
                   .data$releaseSiteID,
                   .data$releasePlotID,
+                  .data$Age,
                   .data$chickAge,
                   .data$treatmentID,
                   .data$row,
@@ -436,13 +436,16 @@ create_capture_CHO <- function(data,
                   .data$originalTarsusMethod,
                   wingLength = .data$Wing) %>%
     dplyr::group_by(.data$individualID) %>%
-    dplyr::mutate(captureID = paste(.data$individualID, 1:n(), sep = "_")) %>%
+    dplyr::mutate(captureID = paste(.data$individualID, 1:dplyr::n(), sep = "_")) %>%
     dplyr::ungroup() %>%
     dplyr::select(.data$captureID, everything())
 
   # Add optional variables
   output <- Capture_data %>%
-    {if("exactAge" %in% optional_variables | "minimumAge" %in% optional_variables) calc_age(data = ., protocol_version = "1.2") %>% dplyr::select(dplyr::contains(c(names(Capture_data), optional_variables))) else .}
+    {if("exactAge" %in% optional_variables | "minimumAge" %in% optional_variables) calc_age(data = .,
+                                                                                            Age = .data$Age,
+                                                                                            Year = .data$Year,
+                                                                                            protocol_version = "1.2") %>% dplyr::select(dplyr::contains(c(names(Capture_data), optional_variables))) else .}
 
   return(output)
 
@@ -494,7 +497,7 @@ create_individual_CHO <- function(data,
     # NB: Sex calculation moved to standard utility function (v1.2)
     #dplyr::left_join(Sex_calc, by = "IndvID") %>%
     dplyr::ungroup() %>%
-    dplyr::mutate(row = 1:n(),
+    dplyr::mutate(row = 1:dplyr::n(),
                   rowWarning = NA,
                   rowError = NA)
 
@@ -525,7 +528,7 @@ create_location_CHO <- function(data){
                   startYear = 2003L,
                   endYear = NA_integer_,
                   habitatID = "1.4", # Formerly: HabitatType: Deciduous
-                  row = 1:n(),
+                  row = 1:dplyr::n(),
                   rowWarning = NA,
                   rowError = NA) %>%
     # Add missing columns
@@ -569,7 +572,7 @@ create_measurement_CHO <- function(Capture_data){
                         values_to = "measurementValue",
                         values_drop_na = TRUE) %>%
     dplyr::arrange(.data$measurementDeterminedYear, .data$measurementDeterminedMonth, .data$measurementDeterminedDay) %>%
-    dplyr::mutate(measurementID = 1:n(),
+    dplyr::mutate(measurementID = 1:dplyr::n(),
                   measurementSubject = "capture",
                   measurementUnit = dplyr::case_when(.data$measurementType == "mass" ~ "g",
                                                      TRUE ~ "mm"),
@@ -577,7 +580,7 @@ create_measurement_CHO <- function(Capture_data){
                                                        TRUE ~ NA_character_),
                   # Convert measurementType from camel case to lower case & space-separated
                   measurementType = stringr::str_to_lower(gsub("([[:upper:]])", " \\1", .data$measurementType)),
-                  row = 1:n(),
+                  row = 1:dplyr::n(),
                   rowWarning = NA,
                   rowError = NA) %>%
     # Add missing columns
