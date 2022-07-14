@@ -474,6 +474,8 @@ create_individual_CHO <- function(data,
   output <- Individual_data %>%
     {if("calculatedSex" %in% optional_variables) calc_sex(individual_data = ., capture_data = Capture_data) else .}
 
+  return(output)
+
 }
 
 #' Create location data table for Choupal, Portugal.
