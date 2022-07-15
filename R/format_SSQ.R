@@ -341,7 +341,18 @@ create_capture_SSQ <- function(data,
                   capturePlotID = .data$plotID,
                   releaseSiteID = .data$captureSiteID,
                   releasePlotID = .data$capturePlotID,
-                  chickAge = NA_integer_)
+                  chickAge = NA_integer_) %>%
+    dplyr::group_by(.data$individualID) %>%
+    # First captures are assumed to be ringing events, and thus captureRingNumber = NA
+    dplyr::mutate(captureRingNumber = dplyr::case_when(dplyr::row_number() == 1 ~ NA_character_,
+                                                       TRUE ~ stringr::str_sub(.data$individualID, 5,
+                                                                               nchar(.data$individualID))),
+                  # All releases are assumed to be alive (also see releaseAlive), so no NAs in releaseRingNumber
+                  releaseRingNumber = stringr::str_sub(.data$individualID, 5, nchar(.data$individualID)),
+                  # Create captureID
+                  captureID = paste(.data$individualID, 1:n(), sep = "_")) %>%
+    dplyr::ungroup()
+
 
   # Add optional variables
   output <- Capture_data %>%
@@ -374,9 +385,9 @@ create_individual_SSQ <- function(Capture_data,
     dplyr::summarise(speciesID = dplyr::case_when(length(unique(.data$speciesID)) == 2 ~ "CCCCCC",
                                                   TRUE ~ dplyr::first(.data$speciesID)),
                      ringDate = dplyr::first(.data$captureDate),
-                     ringYear = as.integer(lubridate::year(.data$captureDate)),
-                     ringMonth = as.integer(lubridate::month(.data$captureDate)),
-                     ringDay = as.integer(lubridate::day(.data$captureDate)),
+                     ringYear = as.integer(lubridate::year(.data$ringDate)),
+                     ringMonth = as.integer(lubridate::month(.data$ringDate)),
+                     ringDay = as.integer(lubridate::day(.data$ringDate)),
                      ringStage = dplyr::case_when(is.na(dplyr::first(.data$age)) ~ "adult",
                                                   TRUE ~ dplyr::first(.data$age)),
                      ringSiteID = dplyr::first(.data$siteID),
