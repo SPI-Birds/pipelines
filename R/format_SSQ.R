@@ -25,6 +25,10 @@
 #' incubation + 12 days. This is because chicks were ringed at 12 days old at
 #' the latest.
 #'
+#' \strong{captureAlive, releaseAlive}: Assume all individuals were alive when captured and released.
+#'
+#' \strong{capturePhysical}: Assume all individuals were physically captured.
+#'
 #' \strong{Individual_data}: There are cases where chicks from different nests are
 #' given the same ring number. Unsure if this is the rings being reused or a
 #' typo. Currently, I leave it as is and assume this is a typo that needs to be
@@ -77,7 +81,16 @@ format_SSQ <- function(db = choose_directory(),
     # Create IDs
     dplyr::mutate(year = as.integer(.data$year),
                   femaleID = .data$f_id,
-                  maleID = .data$m_id,
+                  maleID = as.character(.data$m_id),
+                  # If maleID & femaleID differ from expected format, set to NA
+                  # Ensure that individuals are unique: add institutionID as prefix
+                  dplyr::across(.cols = c(.data$femaleID, .data$maleID),
+                                .fns = ~{
+
+                                  dplyr::case_when(stringr::str_detect(.x, "^[:alnum:]{7}$") ~ paste0("SSQ_", .x),
+                                                                  TRUE ~ NA_character_)
+
+                                }),
                   # Pad nest ID so they are all the same length
                   locationID = stringr::str_pad(.data$nest_id,
                                                 width = 3,
@@ -287,13 +300,6 @@ create_capture_SSQ <- function(data,
     tidyr::pivot_longer(cols = c(.data$femaleID, .data$maleID),
                         values_to = "individualID",
                         names_to = "sex") %>%
-    # If individualID differs from expected format, set to NA
-    dplyr::mutate(individualID = dplyr::case_when(stringr::str_detect(.data$individualID,
-                                                                      "^[:alnum:]{7}$") ~ .data$individualID,
-                                                  TRUE ~ NA_character_),
-                  # Ensure that individuals are unique: add institutionID as prefix to individualID
-                  individualID = dplyr::case_when(is.na(.data$individualID) ~ NA_character_,
-                                                  TRUE ~ paste0("SSQ_", .data$individualID))) %>%
     # Remove unknown individuals
     dplyr::filter(!is.na(.data$individualID)) %>%
     dplyr::mutate(observedSex = dplyr::case_when(.data$sex == "femaleID" ~ "F",
@@ -316,12 +322,10 @@ create_capture_SSQ <- function(data,
                         names_to = "chickNumber",
                         values_to = "individualID") %>%
     # If individualID differs from expected format, set to NA
+    # Ensure that individuals are unique: add institutionID as prefix to individualID
     dplyr::mutate(individualID = dplyr::case_when(stringr::str_detect(.data$individualID,
-                                                                      "^[:alnum:]{7}$") ~ .data$individualID,
-                                                  TRUE ~ NA_character_),
-                  # Ensure that individuals are unique: add institutionID as prefix to individualID
-                  individualID = dplyr::case_when(is.na(.data$individualID) ~ NA_character_,
-                                                  TRUE ~ paste0("SSQ_", .data$individualID))) %>%
+                                                                      "^[:alnum:]{7}$") ~ paste0("SSQ_", .data$individualID),
+                                                  TRUE ~ NA_character_)) %>%
     # Remove unknown individuals
     dplyr::filter(!is.na(.data$individualID)) %>%
     dplyr::mutate(age = "chick",
@@ -341,6 +345,10 @@ create_capture_SSQ <- function(data,
                   capturePlotID = .data$plotID,
                   releaseSiteID = .data$captureSiteID,
                   releasePlotID = .data$capturePlotID,
+                  # TODO: Individuals are assumed to be captured alive, and physically captured
+                  captureAlive = TRUE,
+                  releaseAlive = TRUE,
+                  capturePhysical = TRUE,
                   chickAge = NA_integer_) %>%
     dplyr::group_by(.data$individualID) %>%
     # First captures are assumed to be ringing events, and thus captureRingNumber = NA
@@ -423,7 +431,7 @@ create_location_SSQ <- function(data){
 
   Location_data <- data %>%
     dplyr::group_by(.data$locationID) %>%
-    dplyr::summarise(startYear = min(data$year),
+    dplyr::summarise(startYear = as.integer(min(data$year, na.rm = TRUE)),
                      # Some nest boxes were replaced over the course of study,
                      # such that a single locationID has varying coordinates
                      # TODO: Check with data owner
@@ -444,3 +452,5 @@ create_location_SSQ <- function(data){
 #----------------------#
 #TODO: Check multiple different latitude & longitude records for single nest boxes. See e.g. nest_id: 11
 #TODO: Verify habitatID
+#TODO: Check duplicated broodIDs
+#TODO: Verify that all captures were alive and physical
