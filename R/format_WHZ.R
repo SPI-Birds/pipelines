@@ -52,6 +52,15 @@ format_WHZ <- function(db = choose_directory(),
   purrr::walk(.x = queries,
               .f = ~ DBI::dbExecute(connection, statement = .x))
 
+  # BROOD DATA
+
+  message("Compiling brood information...")
+
+  Brood_data <- create_brood_WHZ(connection,
+                                 optional_variables)
+
+
+
 
 }
 
@@ -85,23 +94,12 @@ create_brood_WHZ <- function(connection,
                                 }),
                   # Create IDs
                   siteID = "WHZ",
-                  speciesID = species_codes[species_codes$speciesCode == "10002",]$speciesID,
                   # BroodID: year_nest box number_primary key
                   broodID = paste(.data$year, .data$box, .data$b_pk, sep = "_"),
                   # LocationID: institutionID_nest box number
                   locationID = paste0("WHZ_", .data$box),
                   # TODO: Check with data owner how to interpret experiment IDs
-                  treatmentID = .data$experimental,
-                  # If femaleID & maleID differ from expected format, set to NA
-                  # Ensure that individuals are unique:
-                  # add institutionID as prefix to femaleID & maleID
-                  dplyr::across(.cols = c(.data$femaleID, .data$maleID),
-                                .fns = ~{
-
-                                  dplyr::case_when(stringr::str_detect(.x, "^[:upper:]{1}[:digit:]{1}[:upper:]{1}[:digit:]{4}$") ~ paste0("WHZ_", .x),
-                                                              TRUE ~ NA_character_)
-
-                                })) %>%
+                  treatmentID = .data$experimental) %>%
     # TODO: Check on how to interpret second clutches (secondClutch == 1) when first clutches
     # are not recorded
     dplyr::mutate(observedClutchType = dplyr::case_when(.data$secondClutch == 0 ~ "first",
@@ -114,10 +112,25 @@ create_brood_WHZ <- function(connection,
                   observedHatchDay = as.integer(lubridate::day(.data$hatchDate)),
                   observedFledgeYear = as.integer(lubridate::year(.data$fledgeDate)),
                   observedFledgeMonth = as.integer(lubridate::month(.data$fledgeDate)),
-                  observedFledgeDay = as.integer(lubridate::day(.data$fledgeDate)))
+                  observedFledgeDay = as.integer(lubridate::day(.data$fledgeDate))) %>%
+    # Above code is interpreted as SQL (for quicker run-time)
+    # Force computation of the database query to run the remaining code
+    dplyr::collect()
 
-  # Add optional variables
   output <- Brood_data %>%
+    # If femaleID & maleID differ from expected format, set to NA
+    # Ensure that individuals are unique:
+    # add institutionID as prefix to femaleID & maleID
+    dplyr::mutate(dplyr::across(.cols = c(.data$femaleID, .data$maleID),
+                                .fns = ~{
+
+                                  dplyr::case_when(stringr::str_detect(.x, "^[:upper:]{1}[:digit:]{1}[:upper:]{1}[:digit:]{4}$") ~ paste0("WHZ_", .x),
+                                                   TRUE ~ NA_character_)
+
+                                }),
+                  # Set speciesID
+                  speciesID = species_codes$speciesID[species_codes$speciesCode == "10002"]) %>%
+    # Add optional variables
     {if("breedingSeason" %in% optional_variables) calc_season(data = ., season = .data$year) else .} %>%
     {if("calculatedClutchType" %in% optional_variables) calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.2") else .} %>%
     {if("nestAttemptNumber" %in% optional_variables) calc_nestattempt(data = ., season = .data$breedingSeason) else .}
