@@ -1039,9 +1039,9 @@ create_measurement_MAY <- function(capture_data) {
 }
 
 
-#' Create measurement data table for Mayachino, Russia.
+#' Create experiment data table for Mayachino, Russia.
 #'
-#' Create measurement data table in standard format for data from Mayachino, Russia.
+#' Create experiment data table in standard format for data from Mayachino, Russia.
 #'
 #' @param brood_data Data frame. Output from \code{\link{create_brood_MAY}}.
 #'
@@ -1053,6 +1053,7 @@ create_experiment_MAY <- function(brood_data) {
   # No information on broods marked as "experiment"
   # TODO: Check with data owner
   experiments <- brood_data %>%
+    # Drop broods without treatmentID
     dplyr::filter(!is.na(.data$treatmentID)) %>%
     dplyr::select(.data$treatmentID,
                   experimentStartYear = .data$observedLayYear,
