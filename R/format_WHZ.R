@@ -98,6 +98,12 @@ format_WHZ <- function(db = choose_directory(),
 
   Measurement_data <- create_measurement_WHZ(Capture_data)
 
+  # EXPERIMENT DATA
+
+  message("Compiling experiment information...")
+
+  Experiment_data <- create_experiment_WHZ(Brood_data,
+                                           Capture_data)
 
   # Disconnect from database
   DBI::dbDisconnect(connection)
@@ -142,6 +148,24 @@ format_WHZ <- function(db = choose_directory(),
     dplyr::bind_cols(data_templates$v1.2$Location_data[1, !(names(data_templates$v1.2$Location_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format
     dplyr::select(names(data_templates$v1.2$Location_data))
+
+  # - Measurement data
+  Measurement_data <- Measurement_data %>%
+    # Add row ID
+    dplyr::mutate(row = 1:dplyr::n()) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates$v1.2$Measurement_data[1, !(names(data_templates$v1.2$Measurement_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format
+    dplyr::select(names(data_templates$v1.2$Measurement_data))
+
+  # - Experiment data
+  Experiment_data <- Experiment_data %>%
+    # Add row ID
+    dplyr::mutate(row = 1:dplyr::n()) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates$v1.2$Experiment_data[1, !(names(data_templates$v1.2$Experiment_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format
+    dplyr::select(names(data_templates$v1.2$Experiment_data))
 
 
   # TIME
@@ -612,6 +636,47 @@ create_measurement_WHZ <- function(capture_data) {
   return(measurements)
 
 }
+
+
+#' Create experiment data table for Westerholz, Germany.
+#'
+#' Create experiment data table in standard format for data from Westerholz, Germany.
+#'
+#' @param brood_data Data frame. Output from \code{\link{create_brood_WHZ}}.
+#' @param capture_data Data frame. Output from \code{\link{create_capture_WHZ}}.
+#'
+#' @return A data frame.
+#'
+
+create_experiment_WHZ <- function(brood_data,
+                                  capture_data) {
+
+  # TODO: Retrieve more experiment information from data owner
+  experiments <- brood_data %>%
+    dplyr::select(.data$treatmentID,
+                  experimentStartYear = .data$year,
+                  .data$siteID,
+                  experimentID = .data$experimental) %>%
+    # Add experiment info from capture data
+    dplyr::bind_rows(capture_data %>% dplyr::select(.data$treatmentID,
+                                                    experimentStartYear = .data$captureYear,
+                                                    siteID = .data$captureSiteID)) %>%
+    # Drop broods without treatmentID
+    dplyr::filter(!is.na(.data$treatmentID)) %>%
+    # Remove duplicates
+    dplyr::distinct(.data$treatmentID,
+                    .keep_all = TRUE) %>%
+    # Some broods have two experimentIDs, split into multiple rows
+    dplyr::mutate(experimentID = stringr::str_split(.data$experimentID, ",")) %>%
+    tidyr::unnest(cols = .data$experimentID) %>%
+    # When experimentID is either 0 or 1 (i.e., no actual ID) set to NA
+    dplyr::mutate(experimentID = dplyr::case_when(.data$experimentID %in% c("0", "1") ~ NA_character_,
+                                                  TRUE ~ .data$experimentID))
+
+  return(experiments)
+
+}
+
 
 #' Clean syntax in SQL files
 #'
