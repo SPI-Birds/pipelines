@@ -50,7 +50,7 @@ format_WHZ <- function(db = choose_directory(),
   message("Importing primary data...")
 
   # Create a temporary in-memory RSQLite database to execute SQL queries on
-  connection <- DBI::dbConnect(RSQLite::SQLite(), dbname = ":memory:")
+  connection <- DBI::dbConnect(drv = RSQLite::SQLite(), dbname = ":memory:")
 
   # Clean SQL files
   queries <- paste0(db, "\\WHZ_PrimaryData_",
@@ -62,51 +62,51 @@ format_WHZ <- function(db = choose_directory(),
 
   # Execute SQL queries on database
   purrr::walk(.x = queries,
-              .f = ~ DBI::dbExecute(connection, statement = .x))
+              .f = ~ DBI::dbExecute(conn = connection, statement = .x))
 
   # BROOD DATA
 
   message("Compiling brood information...")
 
-  Brood_data <- create_brood_WHZ(connection,
-                                 optional_variables)
+  Brood_data <- create_brood_WHZ(connection = connection,
+                                 optional_variables = optional_variables)
 
   # CAPTURE DATA
 
   message("Compiling capture information...")
 
-  Capture_data <- create_capture_WHZ(connection,
-                                     optional_variables)
+  Capture_data <- create_capture_WHZ(connection = connection,
+                                     optional_variables = optional_variables)
 
   # INDIVIDUAL DATA
 
   message("Compiling individual information...")
 
-  Individual_data <- create_individual_WHZ(Capture_data,
-                                           Brood_data,
-                                           optional_variables)
+  Individual_data <- create_individual_WHZ(capture_data = Capture_data,
+                                           brood_data = Brood_data,
+                                           optional_variables = optional_variables)
 
   # LOCATION DATA
 
   message("Compiling location information...")
 
-  Location_data <- create_location_WHZ(connection)
+  Location_data <- create_location_WHZ(connection = connection)
 
   # MEASUREMENT DATA
 
   message("Compiling measurement information...")
 
-  Measurement_data <- create_measurement_WHZ(Capture_data)
+  Measurement_data <- create_measurement_WHZ(capture_data = Capture_data)
 
   # EXPERIMENT DATA
 
   message("Compiling experiment information...")
 
-  Experiment_data <- create_experiment_WHZ(Brood_data,
-                                           Capture_data)
+  Experiment_data <- create_experiment_WHZ(brood_data = Brood_data,
+                                           capture_data = Capture_data)
 
   # Disconnect from database
-  DBI::dbDisconnect(connection)
+  DBI::dbDisconnect(conn = connection)
 
   # WRANGLE DATA FOR EXPORT
 
@@ -475,7 +475,6 @@ create_capture_WHZ <- function(connection,
   output <-  captures %>%
     {if("exactAge" %in% optional_variables | "minimumAge" %in% optional_variables) calc_age(data = .,
                                                                                             Age = .data$age,
-                                                                                            Year = .data$captureYear,
                                                                                             protocol_version = "1.2") %>%
         dplyr::select(dplyr::contains(c(names(captures), optional_variables))) else .}
 
@@ -628,7 +627,7 @@ create_measurement_WHZ <- function(capture_data) {
                   # (e.g., totalWingLength -> total wing length)
                   measurementType = stringr::str_replace_all(string = .data$measurementType,
                                                              pattern = "\\_",
-                                                             replaceent = " ")) %>%
+                                                             replacement = " ")) %>%
     dplyr::arrange(.data$measurementDeterminedYear,
                    .data$measurementDeterminedMonth,
                    .data$measurementDeterminedDay)
@@ -697,44 +696,56 @@ clean_query_WHZ <- function(path){
   # Read lines from SQL file, and clean SQL query
   queries <- readLines(path) %>%
     # Remove metadata, comments
-    stringr::str_remove_all("--.*$") %>%
-    stringr::str_remove_all("/\\*.*?\\*/;") %>%
-    stringr::str_remove_all("\\\\'") %>%
-    stringr::str_remove_all("COMMENT.*(?=\\,)") %>%
-    stringr::str_remove_all("unsigned")
+    stringr::str_remove_all(pattern = "--.*$") %>%
+    stringr::str_remove_all(pattern = "/\\*.*?\\*/;") %>%
+    stringr::str_remove_all(pattern = "\\\\'") %>%
+    stringr::str_remove_all(pattern = "COMMENT.*(?=\\,)") %>%
+    stringr::str_remove_all(pattern = "unsigned")
 
   clean_queries <- purrr::map(.x = queries,
                               .f = ~{
 
                                 # Set primary key
-                                dplyr::case_when(stringr::str_detect(.x, "NOT NULL AUTO_INCREMENT") ~ paste0("`", stringr::str_extract(.x, pattern = "(?<=[`]).*(?=[`])"), "`"," INTEGER PRIMARY KEY AUTOINCREMENT,"),
-                                                 stringr::str_detect(.x, "NOT NULL DEFAULT 0") ~ paste0("`", stringr::str_extract(.x, pattern = "(?<=[`]).*(?=[`])"), "`", " INTEGER PRIMARY KEY,"),
-                                                 stringr::str_detect(.x, "PRIMARY KEY") ~ "",
+                                dplyr::case_when(stringr::str_detect(string = .x,
+                                                                     pattern = "NOT NULL AUTO_INCREMENT") ~ paste0("`", stringr::str_extract(.x, pattern = "(?<=[`]).*(?=[`])"), "`"," INTEGER PRIMARY KEY AUTOINCREMENT,"),
+                                                 stringr::str_detect(string = .x,
+                                                                     pattern = "NOT NULL DEFAULT 0") ~ paste0("`", stringr::str_extract(.x, pattern = "(?<=[`]).*(?=[`])"), "`", " INTEGER PRIMARY KEY,"),
+                                                 stringr::str_detect(string = .x,
+                                                                     pattern = "PRIMARY KEY") ~ "",
                                                  # Remove additional keys
-                                                 stringr::str_detect(.x, "KEY") ~ "",
+                                                 stringr::str_detect(string = .x,
+                                                                     pattern = "KEY") ~ "",
                                                  # Remove table lock statements
-                                                 stringr::str_detect(.x, "LOCK") ~ "",
-                                                 stringr::str_detect(.x, "^\\)") ~ ");",
-                                                 stringr::str_detect(.x, "--[^\r\n]*") ~ "",
-                                                 stringr::str_detect(.x, "/\\*.*?\\*/") ~ "",
+                                                 stringr::str_detect(string = .x,
+                                                                     pattern = "LOCK") ~ "",
+                                                 stringr::str_detect(string = .x,
+                                                                     pattern = "^\\)") ~ ");",
+                                                 stringr::str_detect(string = .x,
+                                                                     pattern = "--[^\r\n]*") ~ "",
+                                                 stringr::str_detect(string = .x,
+                                                                     pattern = "/\\*.*?\\*/") ~ "",
                                                  TRUE ~ .x)
 
                               }) %>%
     purrr::discard(~ .x == "")
 
   # Split by statement
-  output <- purrr::map(.x = split(clean_queries, cumsum(stringr::str_detect(clean_queries,
-                                                                            "^[:upper:]+"))),
+  output <- purrr::map(.x = split(x = clean_queries,
+                                  f = cumsum(stringr::str_detect(string = clean_queries,
+                                                                 pattern = "^[:upper:]+"))),
                        .f = ~{
 
                          unlist(.x) %>%
                            stringr::str_c(collapse = " ") %>%
                            # Remove line breaks, tabs, etc.
-                           stringr::str_replace_all("[\r\n\t\f\v]", " ") %>%
+                           stringr::str_replace_all(pattern = "[\r\n\t\f\v]",
+                                                    replacement = " ") %>%
                            # Remove redundant white space
-                           stringr::str_replace_all(" +", " ") %>%
+                           stringr::str_replace_all(pattern = " +",
+                                                    replacement = " ") %>%
                            # Remove redundant commas
-                           stringr::str_replace_all(", +(?=\\))", " ")
+                           stringr::str_replace_all(pattern = ", +(?=\\))",
+                                                    replacement = " ")
 
                        })
 
@@ -743,7 +754,7 @@ clean_query_WHZ <- function(path){
 }
 
 #----------------------#
-# TODO: How to deal with experimental IDs? Is there missing experimental data?
+# TODO: How to deal with experimental IDs? Is there additional experimental data?
 # TODO: Check how to interpret clutch type (secondClutch). What if no first clutch is recorded prior to second clutch in same box?
 # TODO: How to interpret captureTime 00:00:00?
 # TODO: ChickIDs, what to do with IDs starting with X?
