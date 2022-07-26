@@ -92,6 +92,12 @@ format_WHZ <- function(db = choose_directory(),
 
   Location_data <- create_location_WHZ(connection)
 
+  # MEASUREMENT DATA
+
+  message("Compiling measurement information...")
+
+  Measurement_data <- create_measurement_WHZ(Capture_data)
+
 
   # Disconnect from database
   DBI::dbDisconnect(connection)
@@ -272,7 +278,7 @@ create_capture_WHZ <- function(connection,
                   captureDate = .data$capture_date_time,
                   observedSex = .data$sex,
                   recordedBy = .data$author,
-                  totalWingLength = .data$wing,
+                  total_wing_length = .data$wing,
                   mass = .data$weight) %>%
     # Convert dates from character to datetime
     dplyr::mutate(captureYear = as.integer(lubridate::year(.data$captureDate)),
@@ -326,7 +332,7 @@ create_capture_WHZ <- function(connection,
                   .data$age,
                   .data$tarsus,
                   .data$mass,
-                  .data$totalWingLength,
+                  .data$total_wing_length,
                   .data$P3)
 
   # Chicks
@@ -384,7 +390,7 @@ create_capture_WHZ <- function(connection,
 
                                 }),
                   age = "chick",
-                  totalWingLength = NA_real_,
+                  total_wing_length = NA_real_,
                   P3 = NA_real_,
                   observedSex = NA_character_) %>%
     dplyr::select(.data$individualID,
@@ -401,7 +407,7 @@ create_capture_WHZ <- function(connection,
                   .data$age,
                   .data$tarsus,
                   .data$mass,
-                  .data$totalWingLength,
+                  .data$total_wing_length,
                   .data$P3)
 
   # Bind adults and chicks
@@ -525,11 +531,11 @@ create_individual_WHZ <- function(capture_data,
 create_location_WHZ <- function(connection) {
 
   # Convert location data to sf
-  # Assign coordinate reference system, according to data owner
   coordinates <- dplyr::tbl(connection, "BOX_geoCoordinates") %>%
     # Force computation of the database query to run the remaining code
     dplyr::collect() %>%
     sf::st_as_sf(coords = c("x", "y"),
+                 # Assign coordinate reference system according to data owner
                  crs = sf::st_crs("+proj=tmerc +lat_0=0 +lon_0=12 +k=1 +x_0=4500000 +y_0=0 +datum=potsdam +units=m +no_defs")) %>%
     # Transform conference reference system to longitudes/latitudes
     sf::st_transform(sf::st_crs("+proj=longlat"))
@@ -553,6 +559,57 @@ create_location_WHZ <- function(connection) {
                   habitatID = "1.4")
 
   return(locations)
+
+}
+
+
+#' Create individual data table for Westerholz, Germany.
+#'
+#' Create individual data table in standard format for data from Westerholz, Germany.
+#'
+#' @param capture_data Data frame. Output from \code{\link{create_capture_WHZ}}.
+#'
+#' @return A data frame.
+#'
+
+create_measurement_WHZ <- function(capture_data) {
+
+  # Measurements are only taken of individuals (during captures), not of locations,
+  # so we use capture_data as input
+  measurements <- capture_data %>%
+    dplyr::select(recordID = .data$captureID,
+                  siteID = .data$captureSiteID,
+                  measurementDeterminedYear = .data$captureYear,
+                  measurementDeterminedMonth = .data$captureMonth,
+                  measurementDeterminedDay = .data$captureDay,
+                  .data$tarsus,
+                  .data$mass,
+                  .data$total_wing_length,
+                  .data$P3) %>%
+    # Measurements in Capture data are stored as columns, but we want each individual measurement as a row
+    # Therefore, we pivot each separate measurement of an individual to a row
+    # NAs are removed
+    tidyr::pivot_longer(cols = c(.data$tarsus, .data$mass, .data$total_wing_length, .data$P3),
+                        names_to = "measurementType",
+                        values_to = "measurementValue",
+                        values_drop_na = TRUE) %>%
+    dplyr::mutate(measurementID = 1:dplyr::n(),
+                  measurementSubject = "capture",
+                  measurementUnit = dplyr::case_when(.data$measurementType == "mass" ~ "g",
+                                                     TRUE ~ "mm"),
+                  # TODO: Check with data owner how tarsi are measured
+                  measurementMethod = dplyr::case_when(.data$measurementType == "tarsus" ~ "alternative",
+                                                       TRUE ~ NA_character_),
+                  # Convert measurementType from camel case to lower case & space-separated
+                  # (e.g., totalWingLength -> total wing length)
+                  measurementType = stringr::str_replace_all(string = .data$measurementType,
+                                                             pattern = "\\_",
+                                                             replaceent = " ")) %>%
+    dplyr::arrange(.data$measurementDeterminedYear,
+                   .data$measurementDeterminedMonth,
+                   .data$measurementDeterminedDay)
+
+  return(measurements)
 
 }
 
@@ -629,3 +686,4 @@ clean_query_WHZ <- function(path){
 # TODO: Verify start year of locations
 # TODO: Verify habitatID
 # TODO: Verify locations of captures, especially when outside breeding season
+# TODO: Check measurement units, tarsus method, other measures?
