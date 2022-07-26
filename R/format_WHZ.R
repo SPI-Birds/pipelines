@@ -9,7 +9,13 @@
 #'
 #' \strong{individualID}: Individual IDs are mostly 7 characters long, where the first and third are capital letters, and the remaining are digits. Other IDs (e.g., starting with X) are used too, but they seem to indicate IDs for individuals that died prematurely. Verify with data owner.
 #'
+#' \strong{captureRingNumber, releaseRingNumber}: First captures of all individuals are assumed to be ringing events, and thus captureRingNumber is set to NA. Only when individual IDs follow the expected format (see \strong{individualID}), the ID is considered to be a ring number and stored in captureRingNumber and/or releaseRingNumber. When, for example, the ID is longer than 7 characters, the ID is considered to be a place holder rather than a ring number, and captureRingNumber and releaseRingNumber are set to NA.
+#'
 #' \strong{treatmentID}: Some broods, adult captures, and chick captures are recorded as experimental. Treatment IDs are of the form <year_nest box number>. It seems that there is more info on experiments. Ask data owner.
+#'
+#' \strong{startYear}: Assume all boxes were placed in the first year of study.
+#'
+#' \strong{habitatID}: Assume that habitat type is 1.4: Forest - Temperate. Check with data owner.
 #'
 #' @inheritParams pipeline_params
 #'
@@ -80,9 +86,96 @@ format_WHZ <- function(db = choose_directory(),
                                            Brood_data,
                                            optional_variables)
 
+  # LOCATION DATA
+
+  message("Compiling location information...")
+
+  Location_data <- create_location_WHZ(connection)
+
 
   # Disconnect from database
   DBI::dbDisconnect(connection)
+
+  # WRANGLE DATA FOR EXPORT
+
+  # - Brood data
+  Brood_data <- Brood_data %>%
+    # Add row ID
+    dplyr::mutate(row = 1:dplyr::n()) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates$v1.2$Brood_data[1, !(names(data_templates$v1.2$Brood_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format or in the list of optional variables
+    dplyr::select(names(data_templates$v1.2$Brood_data), dplyr::contains(names(utility_variables$Brood_data),
+                                                                         ignore.case = FALSE))
+
+  # - Capture data
+  Capture_data <- Capture_data %>%
+    # Add row ID
+    dplyr::mutate(row = 1:dplyr::n()) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates$v1.2$Capture_data[1, !(names(data_templates$v1.2$Capture_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format or in the list of optional variables
+    dplyr::select(names(data_templates$v1.2$Capture_data), dplyr::contains(names(utility_variables$Capture_data),
+                                                                           ignore.case = FALSE))
+
+  # - Individual data
+  Individual_data <- Individual_data %>%
+    # Add row ID
+    dplyr::mutate(row = 1:dplyr::n()) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates$v1.2$Individual_data[1, !(names(data_templates$v1.2$Individual_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format or in the list of optional variables
+    dplyr::select(names(data_templates$v1.2$Individual_data), dplyr::contains(names(utility_variables$Individual_data),
+                                                                              ignore.case = FALSE))
+
+  # - Location data
+  Location_data <- Location_data %>%
+    # Add row ID
+    dplyr::mutate(row = 1:dplyr::n()) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates$v1.2$Location_data[1, !(names(data_templates$v1.2$Location_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format
+    dplyr::select(names(data_templates$v1.2$Location_data))
+
+
+  # TIME
+
+  time <- difftime(Sys.time(), start_time, units = "sec")
+
+  message(paste0("All tables generated in ", round(time, 2), " seconds"))
+
+  if(output_type == "csv"){
+
+    message("Saving .csv files...")
+
+    utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_WHZ.csv"), row.names = FALSE)
+
+    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_WHZ.csv"), row.names = FALSE)
+
+    utils::write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_WHZ.csv"), row.names = FALSE)
+
+    utils::write.csv(x = Measurement_data, file = paste0(path, "\\Measurement_data_WHZ.csv"), row.names = FALSE)
+
+    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_WHZ.csv"), row.names = FALSE)
+
+    utils::write.csv(x = Experiment_data, file = paste0(path, "\\Experiment_data_WHZ.csv"), row.names = FALSE)
+
+    invisible(NULL)
+
+  }
+
+  if(output_type == "R"){
+
+    message("Returning R objects...")
+
+    return(list(Brood_data = Brood_data,
+                Capture_data = Capture_data,
+                Individual_data = Individual_data,
+                Measurement_data = Measurement_data,
+                Location_data = Location_data,
+                Experiment_data = Experiment_data))
+
+  }
 
 }
 
@@ -170,7 +263,7 @@ create_brood_WHZ <- function(connection,
 #'
 
 create_capture_WHZ <- function(connection,
-                             optional_variables) {
+                               optional_variables) {
 
   # Adults
   adults <- dplyr::tbl(connection, "ADULTS") %>%
@@ -419,6 +512,50 @@ create_individual_WHZ <- function(capture_data,
 
 }
 
+
+#' Create location data table for Westerholz, Germany.
+#'
+#' Create location data table in standard format for data from Westerholz, Germany.
+#'
+#' @param connection Connection the SQL database.
+#'
+#' @return A data frame.
+#'
+
+create_location_WHZ <- function(connection) {
+
+  # Convert location data to sf
+  # Assign coordinate reference system, according to data owner
+  coordinates <- dplyr::tbl(connection, "BOX_geoCoordinates") %>%
+    # Force computation of the database query to run the remaining code
+    dplyr::collect() %>%
+    sf::st_as_sf(coords = c("x", "y"),
+                 crs = sf::st_crs("+proj=tmerc +lat_0=0 +lon_0=12 +k=1 +x_0=4500000 +y_0=0 +datum=potsdam +units=m +no_defs")) %>%
+    # Transform conference reference system to longitudes/latitudes
+    sf::st_transform(sf::st_crs("+proj=longlat"))
+
+  # Create list of nest/capture locations
+  locations <- dplyr::tbl(connection, "BOX_geoCoordinates") %>%
+    # Force computation of the database query to run the remaining code
+    dplyr::collect() %>%
+    # LocationID: institutionID_nest box number
+    dplyr::mutate(locationID = paste0("WHZ_", .data$box),
+                  siteID = "WHZ",
+                  # Add converted coordinates
+                  decimalLongitude = sf::st_coordinates(coordinates)[,1],
+                  decimalLatitude = sf::st_coordinates(coordinates)[,2],
+                  # Are captures outside the breeding season also captured on the nest?
+                  # TODO: check with data owner
+                  locationType = "nest",
+                  startYear = 2007L,
+                  endYear = NA_integer_,
+                  # TODO: habitat is set to 1.4 Forest - Temperate; check with data owner
+                  habitatID = "1.4")
+
+  return(locations)
+
+}
+
 #' Clean syntax in SQL files
 #'
 #' WHZ primary data are stored in a series of SQL files, which contain redundant lines and syntax that is not correctly interpreted when reading into R. To execute the SQL statements, we first clean the SQL syntax.
@@ -489,3 +626,6 @@ clean_query_WHZ <- function(path){
 # TODO: How to interpret captureTime 00:00:00?
 # TODO: ChickIDs, what to do with IDs starting with X?
 # TODO: How to link chicks to the broods they're born in?
+# TODO: Verify start year of locations
+# TODO: Verify habitatID
+# TODO: Verify locations of captures, especially when outside breeding season
