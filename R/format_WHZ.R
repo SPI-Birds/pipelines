@@ -467,6 +467,7 @@ create_capture_WHZ <- function(connection,
     # First captures are assumed to be ringing events, and thus captureRingNumber = NA.
     # captureRingNumber and releaseRingNumber are only filled if individualID follows the expected format,
     # otherwise (e.g., when ID starts with X), they are set to NA.
+    # TODO: Check with data owner
     dplyr::mutate(captureRingNumber = dplyr::case_when(dplyr::row_number() == 1 ~ NA_character_,
                                                        dplyr::row_number() != 1 & stringr::str_detect(.data$individualID, "^WHZ_[:upper:]{1}[:digit:]{1}[:upper:]{1}[:digit:]{4}$", negate = TRUE) ~ NA_character_,
                                                        dplyr::row_number() != 1 & stringr::str_detect(.data$individualID, "^WHZ_[:upper:]{1}[:digit:]{1}[:upper:]{1}[:digit:]{4}$") ~ stringr::str_sub(.data$individualID, 5, nchar(.data$individualID))),
@@ -759,6 +760,7 @@ clean_query_WHZ <- function(path){
 # TODO: Check how to interpret clutch type (secondClutch). What if no first clutch is recorded prior to second clutch in same box?
 # TODO: How to interpret captureTime 00:00:00?
 # TODO: ChickIDs, what to do with IDs starting with X?
+# TODO: Add what age are chicks ringed/measured? What are the chickAges?
 # TODO: How to deal with egg samples?
 # TODO: How to link chicks to the broods they're born in?
 # TODO: Verify start year of locations
