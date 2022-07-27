@@ -366,7 +366,9 @@ create_capture_WHZ <- function(connection,
                   recordedBy = .data$author,
                   mass = .data$weight) %>%
     # Remove egg samples and unknown individualIDs
-    dplyr::filter(is.na(.data$dead_egg),  !is.na(.data$individualID)) %>%
+    # TODO: Check with data owner
+    dplyr::filter(is.na(.data$dead_egg), is.na(.data$broken_egg), !is.na(.data$individualID),
+                  dplyr::sql("(`sample` NOT LIKE '%egg%')"), dplyr::sql("(`sample` NOT LIKE '%tissue%')")) %>%
     # There are two date columns:
     # - date-time: Date and time of chick/egg measures
     # - collect-date: Date and time of dead chick/egg collection
@@ -404,8 +406,10 @@ create_capture_WHZ <- function(connection,
     dplyr::collect()
 
   chicks <- chicks %>%
+    # If individualID differs from expected format, set to NA
     # Ensure that individuals are unique: add institutionID as prefix to individualID
-    dplyr::mutate(individualID = paste0("WHZ_", .data$individualID),
+    dplyr::mutate(individualID = dplyr::case_when(stringr::str_detect(.data$individualID, "^[:upper:]{1}[:digit:]{1}[:upper:]{1}[:digit:]{4}$|^X[:digit:]{8}$|^X[:digit:]{2}_[:digit:]{3}[:upper:]{0,1}_[:digit:]{4}$") ~ paste0("WHZ_", .data$individualID),
+                                                  TRUE ~ NA_character_),
                   # SQLite does not have data type 'logical', so set 1 to TRUE and 0 to FALSE
                   dplyr::across(.cols = c(.data$captureAlive, .data$releaseAlive),
                                 .fns = ~ {
@@ -436,6 +440,8 @@ create_capture_WHZ <- function(connection,
 
   # Bind adults and chicks
   captures <- dplyr::bind_rows(adults, chicks) %>%
+    # Remove unknown individuals
+    dplyr::filter(!is.na(.data$individualID)) %>%
     # Set speciesID
     dplyr::mutate(speciesID = species_codes$speciesID[species_codes$speciesCode == "10002"],
                   # Set locationID: institutionID_nest box number
@@ -462,11 +468,9 @@ create_capture_WHZ <- function(connection,
     # captureRingNumber and releaseRingNumber are only filled if individualID follows the expected format,
     # otherwise (e.g., when ID starts with X), they are set to NA.
     dplyr::mutate(captureRingNumber = dplyr::case_when(dplyr::row_number() == 1 ~ NA_character_,
-                                                       dplyr::row_number() != 1 & stringr::str_detect(.data$individualID, "^[:upper:]{1}[:digit:]{1}[:upper:]{1}[:digit:]{4}$", negate = TRUE) ~ NA_character_,
-                                                       TRUE ~ stringr::str_sub(.data$individualID, 5, nchar(.data$individualID))),
-                  # releaseRingNumber = NA if releaseAlive was FALSE
-                  releaseRingNumber = dplyr::case_when(releaseAlive == FALSE ~ NA_character_,
-                                                       stringr::str_detect(.data$individualID, "^[:upper:]{1}[:digit:]{1}[:upper:]{1}[:digit:]{4}$", negate = TRUE) ~ NA_character_,
+                                                       dplyr::row_number() != 1 & stringr::str_detect(.data$individualID, "^WHZ_[:upper:]{1}[:digit:]{1}[:upper:]{1}[:digit:]{4}$", negate = TRUE) ~ NA_character_,
+                                                       dplyr::row_number() != 1 & stringr::str_detect(.data$individualID, "^WHZ_[:upper:]{1}[:digit:]{1}[:upper:]{1}[:digit:]{4}$") ~ stringr::str_sub(.data$individualID, 5, nchar(.data$individualID))),
+                  releaseRingNumber = dplyr::case_when(stringr::str_detect(.data$individualID, "^WHZ_[:upper:]{1}[:digit:]{1}[:upper:]{1}[:digit:]{4}$", negate = TRUE) ~ NA_character_,
                                                        TRUE ~ stringr::str_sub(.data$individualID, 5, nchar(.data$individualID))),
                   # set captureID
                   captureID = paste(.data$individualID, 1:dplyr::n(), sep = "_"))
@@ -528,8 +532,7 @@ create_individual_WHZ <- function(capture_data,
                   # There is no information on cross-fostering, so we assume that the brood laid and fledged are the same
                   broodIDFledged =.data$broodIDLaid) %>%
     dplyr::ungroup() %>%
-    dplyr::mutate(captureSiteID = "WHZ",
-                  releaseSiteID = "WHZ",
+    dplyr::mutate(ringSiteID = "WHZ",
                   siteID = "WHZ")
 
   # Add optional variables
@@ -660,14 +663,12 @@ create_experiment_WHZ <- function(brood_data,
     dplyr::bind_rows(capture_data %>% dplyr::select(.data$treatmentID,
                                                     experimentStartYear = .data$captureYear,
                                                     siteID = .data$captureSiteID)) %>%
-    # Drop broods without treatmentID
+    # Remove unknown treatmentID
     dplyr::filter(!is.na(.data$treatmentID)) %>%
     # Remove duplicates
     dplyr::distinct(.data$treatmentID,
                     .keep_all = TRUE) %>%
-    # Some broods have two experimentIDs, split into multiple rows
-    dplyr::mutate(experimentID = stringr::str_split(.data$experimentID, ",")) %>%
-    tidyr::unnest(cols = .data$experimentID) %>%
+    # TODO: Some broods have two experimentIDs (comma-separated), check with data owner
     # When experimentID is either 0 or 1 (i.e., no actual ID) set to NA
     dplyr::mutate(experimentID = dplyr::case_when(.data$experimentID %in% c("0", "1") ~ NA_character_,
                                                   TRUE ~ .data$experimentID))
@@ -754,10 +755,11 @@ clean_query_WHZ <- function(path){
 }
 
 #----------------------#
-# TODO: How to deal with experimental IDs? Is there additional experimental data?
+# TODO: How to deal with experimental IDs? Is there additional experimental data? What to do with two experiment IDs per brood?
 # TODO: Check how to interpret clutch type (secondClutch). What if no first clutch is recorded prior to second clutch in same box?
 # TODO: How to interpret captureTime 00:00:00?
 # TODO: ChickIDs, what to do with IDs starting with X?
+# TODO: How to deal with egg samples?
 # TODO: How to link chicks to the broods they're born in?
 # TODO: Verify start year of locations
 # TODO: Verify habitatID
