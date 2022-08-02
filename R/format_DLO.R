@@ -347,8 +347,8 @@ create_capture_DLO <- function(data,
                                               TRUE ~ paste0("DLO_", .data$individualID))) %>%
     # Remove unknown individualIDs
     dplyr::filter(!is.na(.data$individualID)) %>%
-    dplyr::mutate(observedSex = dplyr::case_when(grepl(pattern = "f", x = .data$sex) ~ "F",
-                                                 grepl(pattern = "m", x = .data$sex) ~ "M"),
+    dplyr::mutate(observedSex = dplyr::case_when(grepl(pattern = "^f", x = .data$sex) ~ "F",
+                                                 grepl(pattern = "^m", x = .data$sex) ~ "M"),
                   speciesID = dplyr::case_when(.data$observedSex == "F" ~ .data$species,
                                                .data$observedSex == "M" ~ .data$m_sp),
                   captureDate = dplyr::case_when(.data$observedSex == "F" ~ .data$date_f,
