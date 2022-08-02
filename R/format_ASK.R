@@ -6,6 +6,10 @@
 #'
 #'@inheritParams pipeline_params
 #'
+#'\strong{Species:} We only include records for species with at least 50 broods throughout the study period: great tit, pied flycatcher, blue tit, coal tit, Eurasian wryneck, common redstart. The few records for common starling, European crested tit, and imprecise species (e.g., PARXXX) are excluded.
+#'
+#'\strong{Minimum & maximum lay & hatch dates}: Accuracy of lay and hatch date are given as categories: 1 = 0-1, 2 = 1-2, 3 = 2-3, 4 = inaccurate. Where error is a range, the more conservative error is used (i.e., 0-1 is recorded as 1). Cases listed as 'inaccurate' have an error of at least a week. Dates in these cases are highly inaccurate and shouldn't be considered for any phenology analysis.
+#'
 #'@return Generates either 6 .csv files or 6 data frames in the standard format.
 #'@export
 #'
@@ -67,13 +71,16 @@ create_brood_ASK <- function(db,
 
   message("Extracting brood data from paradox database...")
 
+  # Pesat.DB contains the basic breeding parameters for each nest.
   broods <- extract_paradox_db(path = db, file_name = "ASK_PrimaryData_Pesat.DB") %>%
     # Rename columns to English (based on description provided by data owner)
-    # TODO: What are "Anro" and "Ltar"?
-    dplyr::rename(broodID = .data$Diario,
+    # -- Anro: Nest number in same box (1 = first nest in box, 2 = second nest in same box)
+    # -- Ltar: unknown variables
+    dplyr::rename(nestID = .data$Diario,
                   year = .data$Vuos,
                   locationID = .data$Nuro,
                   speciesID = .data$Laji,
+                  nestAttemptBox = .data$Anro,
                   observedClutchType = .data$Pesa,
                   femaleID = .data$Naaras,
                   maleID = .data$Koiras,
@@ -90,18 +97,17 @@ create_brood_ASK <- function(db,
                   reasonFailed = .data$Tsyy,
                   comments = .data$Lisatieto) %>%
     # Create IDs
-    # Unique brood IDs: year_locationID_broodID
-    dplyr::mutate(broodID = paste(.data$year, .data$locationID, .data$broodID, sep = "_"),
+    # Unique brood IDs: year_locationID_nestAttemptBox
+    dplyr::mutate(broodID = paste(.data$year, .data$locationID, .data$nestAttemptBox, sep = "_"),
                   # Set species codes
                   # Note, rare species/codes are ignored and set to NA
-                  # e.g., STUVUL, PARSPP, PARXXX
+                  # e.g., PARCRI, STUVUL, PARSPP, PARXXX
                   speciesID = dplyr::case_when(.data$speciesID == "FICHYP" ~ species_codes$speciesID[species_codes$speciesCode == "10003"],
                                                .data$speciesID == "PARMAJ" ~ species_codes$speciesID[species_codes$speciesCode == "10001"],
                                                .data$speciesID == "PARCAE" ~ species_codes$speciesID[species_codes$speciesCode == "10002"],
                                                .data$speciesID == "PARATE" ~ species_codes$speciesID[species_codes$speciesCode == "10005"],
                                                .data$speciesID == "PHOPHO" ~ species_codes$speciesID[species_codes$speciesCode == "10010"],
                                                .data$speciesID == "JYNTOR" ~ species_codes$speciesID[species_codes$speciesCode == "10011"],
-                                               .data$speciesID == "PARCRI" ~ species_codes$speciesID[species_codes$speciesCode == "10012"],
                                                TRUE ~ NA_character_),
                   # If femaleID & maleID differ from expected format, set to NA
                   # Ensure that individuals are unique: add institutionID as prefix to femaleID & maleID
@@ -118,11 +124,20 @@ create_brood_ASK <- function(db,
     # an error of, e.g., 2 results in a minimum lay date 2 days earlier than observed,
     # and a maximum lay date of 2 days later than observed.
     # Errors marked as NA, result in no known minimum/maximum lay & hatch dates.
-    dplyr::mutate(observedLayYear = .data$year,
+    # Errors in category 4 (inaccurate) are interpreted as 1 week, resulting in a
+    # minimum lay date 7 days earlier than observed, and a maximum lay date of
+    # 7 days later than observed.
+    dplyr::mutate(dplyr::across(.cols = c(.data$errorLayDay, .data$errorHatchDay),
+                                .fns = ~ {
+
+                                  dplyr::case_when(.x == 4 ~ 7L,
+                                                   TRUE ~ .x)
+
+                                }),
+                  observedLayYear = .data$year,
                   observedLayDate = lubridate::make_date(year = .data$observedLayYear,
                                                          month = .data$observedLayMonth,
                                                          day = .data$observedLayDay),
-
                   minimumLayDate = dplyr::case_when(is.na(.data$errorLayDay) ~ as.Date(NA),
                                                    TRUE ~ .data$observedLayDate - .data$errorLayDay),
                   maximumLayDate = dplyr::case_when(is.na(.data$errorLayDay) ~ as.Date(NA),
@@ -167,9 +182,156 @@ create_brood_ASK <- function(db,
                                                                         season = .data$breedingSeason) else .}
 
     return(output)
+
+}
+
+
+
+#' Create capture data table for Askainen, Finland.
+#'
+#' Create capture data table in standard format for data from Askainen, Finland.
+#'
+#' @param db Location of primary data from Askainen.
+#' @param brood_data Data frame. Output from \code{\link{create_brood_ASK}}.
+#' @param species_filter Species of interest. The 6 letter codes of all the species of
+#'  interest as listed in the
+#'  \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.2.0.pdf}{standard
+#'  protocol}.
+#' @param optional_variables A character vector of names of optional variables (generated by standard utility functions) to be included in the pipeline output.
+#'
+#' @return A data frame.
+#'
+
+create_capture_ASK <- function(db,
+                               brood_data,
+                               species_filter,
+                               optional_variables) {
+
+  # Nest visits: contain info on nest stage & timing of ringing
+  nest_visits <- extract_paradox_db(path = db, file_name = "ASK_PrimaryData_Visitit.DB") %>%
+    # Rename columns to English (based on description provided by data owner)
+    dplyr::select(nestID = .data$Diario,
+                  year = .data$Vuos,
+                  month = .data$Kk,
+                  day = .data$Pv,
+                  time = .data$Klo,
+                  recordedBy = .data$Havno,
+                  breedingPhase = .data$Tila)
+
+  # Brood data: contain info on broodID & timing of laying/hatching
+  broods <- brood_data %>%
+    dplyr::mutate(observedLayDate = lubridate::make_date(year = .data$observedLayYear,
+                                                         month = .data$observedLayMonth,
+                                                         day = .data$observedLayDay)) %>%
+    dplyr::select(.data$nestID,
+                  .data$broodID,
+                  .data$speciesID,
+                  .data$locationID,
+                  .data$observedLayDate,
+                  .data$observedHatchDate)
+
+  # Retrieve chick ringing info per nest
+  # breedingPhase P5 indicates a nest visit during which nestlings were ringed
+  chick_visits <- nest_visits %>%
+    dplyr::filter(breedingPhase == "P5")
+
+  # Chicks
+  chicks <- extract_paradox_db(path = db, file_name = "ASK_PrimaryData_Pulreng.DB") %>%
+    # Rename columns to English (based on description provided by data owner)
+    dplyr::rename(nestID = .data$Diario,
+                  ringSeries = .data$Rs,
+                  firstRingNumber = .data$Mista,
+                  lastRingNumber = .data$Mihin,
+                  unknownRinged = .data$Einum, # Number of nestlings ringed but ring numbers unknown
+                  comments = .data$Lisatieto) %>%
+    # Join in brood information using nestID
+    dplyr::left_join(broods, by = "nestID") %>%
+    # Join in chick ringing information using nestID
+    dplyr::left_join(chick_visits, by = "nestID") %>%
+    # Determine series of chick rings per nestID
+    dplyr::mutate(individualID = purrr::map2(.x = .data$firstRingNumber,
+                                             .y = .data$lastRingNumber,
+                                             .f = ~ {
+
+                                               # If first & last ring number are not NA,
+                                               # determine ring series
+                                               if(!is.na(.y)) {
+
+                                                 ring_string <- paste0(.x, ":", .y)
+
+
+                                               } else {
+
+                                                 # If only first ring number is present,
+                                                 # that ring number is the ring series
+                                                 if(!is.na(.x)) {
+
+                                                   ring_string <- .x
+
+                                                   # If both first & last ring number are NA,
+                                                   # set ring series to NA
+                                                 } else {
+
+                                                   ring_string <- NA_character_
+
+                                                 }
+
+                                               }
+
+                                               # Parse text
+                                               ring_series <- eval(parse(text = ring_string))
+
+                                               # Pad zero if chick IDs started with 0
+                                               output <-  stringr::str_pad(as.character(ring_series),
+                                                                           width = nchar(.x),
+                                                                           side = "left",
+                                                                           pad = 0)
+
+                                               # Set chick IDs to NA if the number of IDs is unlikely large
+                                               # TODO: Check with data owner.
+                                               # Three cases seem to have typos. NestIDs:
+                                               # - 180348
+                                               # - 181006
+                                               # - 180985
+                                               if(length(output) > 14) {
+
+                                                 output <- NA_character_
+
+                                               }
+
+                                               return(output)
+
+                                             })) %>%
+    tidyr::unnest(cols = .data$individualID) %>%
+    # Add ring series letter, if present
+    dplyr::mutate(individualID = dplyr::case_when(!is.na(.data$ringSeries) ~ paste0(.data$ringSeries,
+                                                                                    .data$individualID),
+                                                  TRUE ~ .data$individualID),
+                  # If individualID differs from expected format, set to NA
+                  # Ensure that individuals are unique: add institutionID as prefix to individualID
+                  individualID = dplyr::case_when(stringr::str_detect(string = .data$individualID,
+                                                                      pattern = "^[:upper:]{1}[:digit:]{6}$") ~ paste0("ASK_",
+                                                                                                                       .data$individualID),
+                                                  TRUE ~ NA_character_)) %>%
+    # Remove unknown individualIDs
+    dplyr::filter(!is.na(.data$individualID)) %>%
+    dplyr::rename(captureDay = .data$day,
+                  captureMonth = .data$month,
+                  captureYear = .data$year) %>%
+    dplyr::mutate(captureTime = dplyr::na_if(paste0(stringr::str_pad(.data$time,
+                                                                     width = 2,
+                                                                     pad = "0",
+                                                                     side = "left"),
+                                                    ":00"),
+                                             "NA:00"),
+                  observedSex = NA_character_,
+                  # Calculate chick age
+                  chickAge = as.integer(lubridate::make_date(year = .data$captureYear,
+                                                             month = .data$captureMonth,
+                                                             day = .data$captureDay) - .data$observedHatchDate))
+
 }
 
 #----------------------#
-# TODO: Check column translations
-# --- Brood: "Anro", "Ltar"
 # TODO: Check clutch type ("Pesa") codes; what does 0 mean?
+# TODO: Check chick ring series. Three nests must contain typos, because the resulting number of chicks is > 100.
