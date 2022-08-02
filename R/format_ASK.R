@@ -208,7 +208,7 @@ create_capture_ASK <- function(db,
                                optional_variables) {
 
   # Nest visits: contain info on nest stage & timing of ringing
-  nest_visits <- extract_paradox_db(path = db, file_name = "ASK_PrimaryData_Visitit.DB") %>%
+  chick_visits <- extract_paradox_db(path = db, file_name = "ASK_PrimaryData_Visitit.DB") %>%
     # Rename columns to English (based on description provided by data owner)
     dplyr::select(nestID = .data$Diario,
                   year = .data$Vuos,
@@ -216,7 +216,10 @@ create_capture_ASK <- function(db,
                   day = .data$Pv,
                   time = .data$Klo,
                   recordedBy = .data$Havno,
-                  breedingPhase = .data$Tila)
+                  breedingPhase = .data$Tila) %>%
+    # Retrieve chick ringing info per nest
+    # breedingPhase P5 indicates a nest visit during which nestlings were ringed
+    dplyr::filter(breedingPhase == "P5")
 
   # Brood data: contain info on broodID & timing of laying/hatching
   broods <- brood_data %>%
@@ -230,20 +233,13 @@ create_capture_ASK <- function(db,
                   .data$observedLayDate,
                   .data$observedHatchDate)
 
-  # Retrieve chick ringing info per nest
-  # breedingPhase P5 indicates a nest visit during which nestlings were ringed
-  chick_visits <- nest_visits %>%
-    dplyr::filter(breedingPhase == "P5")
-
   # Chicks
   chicks <- extract_paradox_db(path = db, file_name = "ASK_PrimaryData_Pulreng.DB") %>%
     # Rename columns to English (based on description provided by data owner)
-    dplyr::rename(nestID = .data$Diario,
+    dplyr::select(nestID = .data$Diario,
                   ringSeries = .data$Rs,
                   firstRingNumber = .data$Mista,
-                  lastRingNumber = .data$Mihin,
-                  unknownRinged = .data$Einum, # Number of nestlings ringed but ring numbers unknown
-                  comments = .data$Lisatieto) %>%
+                  lastRingNumber = .data$Mihin) %>%
     # Join in brood information using nestID
     dplyr::left_join(broods, by = "nestID") %>%
     # Join in chick ringing information using nestID
@@ -328,7 +324,38 @@ create_capture_ASK <- function(db,
                   # Calculate chick age
                   chickAge = as.integer(lubridate::make_date(year = .data$captureYear,
                                                              month = .data$captureMonth,
-                                                             day = .data$captureDay) - .data$observedHatchDate))
+                                                             day = .data$captureDay) - .data$observedHatchDate)) %>%
+    dplyr::select(.data$nestID,
+                  .data$broodID,
+                  .data$speciesID,
+                  .data$individualID,
+                  .data$observedSex,
+                  .data$captureYear,
+                  .data$captureMonth,
+                  .data$captureDay,
+                  .data$captureTime,
+                  .data$recordedBy,
+                  .data$locationID,
+                  .data$chickAge)
+
+
+  # Parents
+  # Captures of parents only available through brood data
+  parents <- brood_data %>%
+    dplyr::mutate(observedLayDate = lubridate::make_date(year = .data$observedLayYear,
+                                                         month = .data$observedLayMonth,
+                                                         day = .data$observedLayDay)) %>%
+    # Pivot information on females and males into rows
+    tidyr::pivot_longer(cols = c(.data$femaleID, .data$maleID),
+                        names_to = "sex",
+                        values_to = "individualID") %>%
+    # Remove unknown individualIDs
+    dplyr::filter(!is.na(.data$individualID)) %>%
+    dplyr::mutate(observedSex = dplyr::case_when(stringr::str_detect(string = .data$sex,
+                                                                     pattern = "^f") ~ "F",
+                                                 stringr::str_detect(string = .data$sex,
+                                                                     pattern = "^m") ~ "M"))
+
 
 }
 
