@@ -637,8 +637,8 @@ create_capture_MAY <- function(gt_data,
                         values_to = "individualID") %>%
     # Remove unknown individualIDs
     dplyr::filter(!is.na(.data$individualID)) %>%
-    dplyr::mutate(observedSex = dplyr::case_when(grepl(pattern = "f", x = .data$sex) ~ "F",
-                                                 grepl(pattern = "m", x = .data$sex) ~ "M"),
+    dplyr::mutate(observedSex = dplyr::case_when(grepl(pattern = "^f", x = .data$sex) ~ "F",
+                                                 grepl(pattern = "^m", x = .data$sex) ~ "M"),
                   # TODO: Check with data owner how to interpret ages (units?)
                   age = dplyr::case_when(.data$observedSex == "F" ~ .data$females_age,
                                          .data$observedSex == "M" ~ .data$males_age),
