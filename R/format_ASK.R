@@ -10,6 +10,14 @@
 #'
 #'\strong{Minimum & maximum lay & hatch dates}: Accuracy of lay and hatch date are given as categories: 1 = 0-1, 2 = 1-2, 3 = 2-3, 4 = inaccurate. Where error is a range, the more conservative error is used (i.e., 0-1 is recorded as 1). Cases listed as 'inaccurate' have an error of at least a week. Dates in these cases are highly inaccurate and shouldn't be considered for any phenology analysis.
 #'
+#'\strong{captureDate}:  No exact capture date is given. For adults we use the start of incubation (laying date + clutch size) as a proxy for capture date, or the laying date if clutch size is unknown.
+#'
+#'\strong{captureAlive, releaseAlive}: All individuals are assumed to be captured and released alive.
+#'
+#'\strong{captureRingNumber}: First captures of all individuals are assumed to be ringing events, and thus captureRingNumber is set to NA.
+#'
+#'\strong{ringStage}: Individuals that are not caught as a chick on the nest are assumed to be ringed as "subadult". This way, calculation of their minimum age is the most conservative.
+#'
 #'@return Generates either 6 .csv files or 6 data frames in the standard format.
 #'@export
 #'
@@ -47,6 +55,14 @@ format_ASK <- function(db = choose_directory(),
                                  species_filter = species,
                                  optional_variables = optional_variables)
 
+  # CAPTURE DATA
+
+  message("Compiling capture information...")
+
+  Capture_data <- create_capture_ASK(db = db,
+                                     brood_data = Brood_data,
+                                     species_filter = species,
+                                     optional_variables = optional_variables)
 
 }
 
@@ -207,19 +223,18 @@ create_capture_ASK <- function(db,
                                species_filter,
                                optional_variables) {
 
+  message("Extracting nest visit data from paradox database...")
+
   # Nest visits: contain info on nest stage & timing of ringing
-  chick_visits <- extract_paradox_db(path = db, file_name = "ASK_PrimaryData_Visitit.DB") %>%
+  nest_visits <- extract_paradox_db(path = db, file_name = "ASK_PrimaryData_Visitit.DB") %>%
     # Rename columns to English (based on description provided by data owner)
     dplyr::select(nestID = .data$Diario,
                   year = .data$Vuos,
                   month = .data$Kk,
                   day = .data$Pv,
                   time = .data$Klo,
-                  recordedBy = .data$Havno,
                   breedingPhase = .data$Tila) %>%
-    # Retrieve chick ringing info per nest
-    # breedingPhase P5 indicates a nest visit during which nestlings were ringed
-    dplyr::filter(breedingPhase == "P5")
+    dplyr::mutate(recordedBy = "LH") # See "Havno" column in Visitit.db
 
   # Brood data: contain info on broodID & timing of laying/hatching
   broods <- brood_data %>%
@@ -234,6 +249,13 @@ create_capture_ASK <- function(db,
                   .data$observedHatchDate)
 
   # Chicks
+  chick_visits <- nest_visits %>%
+    # Retrieve chick ringing info per nest
+    # breedingPhase P5 indicates a nest visit during which nestlings were ringed
+    dplyr::filter(breedingPhase == "P5")
+
+  message("Extracting chick ring numbers from paradox database...")
+
   chicks <- extract_paradox_db(path = db, file_name = "ASK_PrimaryData_Pulreng.DB") %>%
     # Rename columns to English (based on description provided by data owner)
     dplyr::select(nestID = .data$Diario,
@@ -322,6 +344,7 @@ create_capture_ASK <- function(db,
                                              "NA:00"),
                   observedSex = NA_character_,
                   # Calculate chick age
+                  age = "chick",
                   chickAge = as.integer(lubridate::make_date(year = .data$captureYear,
                                                              month = .data$captureMonth,
                                                              day = .data$captureDay) - .data$observedHatchDate)) %>%
@@ -336,29 +359,90 @@ create_capture_ASK <- function(db,
                   .data$captureTime,
                   .data$recordedBy,
                   .data$locationID,
+                  .data$age,
                   .data$chickAge)
 
 
   # Parents
   # Captures of parents only available through brood data
   parents <- brood_data %>%
+    # Treat capture date of parents as the start of incubation (i.e., laying date + clutch size)
+    # or at the start of laying when clutch size is unknown
+    # TODO: Verify with data owner
     dplyr::mutate(observedLayDate = lubridate::make_date(year = .data$observedLayYear,
                                                          month = .data$observedLayMonth,
-                                                         day = .data$observedLayDay)) %>%
+                                                         day = .data$observedLayDay),
+                  captureDate = dplyr::case_when(!is.na(.data$observedClutchSize) ~ .data$observedLayDate + .data$observedClutchSize,
+                                                 TRUE ~ .data$observedLayDate),
+                  captureYear = .data$year,
+                  captureMonth = as.integer(lubridate::month(.data$captureDate)),
+                  captureDay = as.integer(lubridate::day(.data$captureDate)),
+                  captureTime = NA_character_) %>%
     # Pivot information on females and males into rows
     tidyr::pivot_longer(cols = c(.data$femaleID, .data$maleID),
                         names_to = "sex",
                         values_to = "individualID") %>%
     # Remove unknown individualIDs
     dplyr::filter(!is.na(.data$individualID)) %>%
-    dplyr::mutate(observedSex = dplyr::case_when(stringr::str_detect(string = .data$sex,
-                                                                     pattern = "^f") ~ "F",
-                                                 stringr::str_detect(string = .data$sex,
-                                                                     pattern = "^m") ~ "M"))
+    dplyr::mutate(observedSex = dplyr::case_when(.data$sex == "femaleID" ~ "F",
+                                                 .data$sex == "maleID" ~ "M"),
+                  # TODO: parents assumed to be ringed as "subadult" - check with data owner
+                  age = "subadult",
+                  chickAge = NA_integer_,
+                  recordedBy = "LH") %>%
+    dplyr::select(.data$nestID,
+                  .data$broodID,
+                  .data$speciesID,
+                  .data$individualID,
+                  .data$observedSex,
+                  .data$captureYear,
+                  .data$captureMonth,
+                  .data$captureDay,
+                  .data$captureTime,
+                  .data$recordedBy,
+                  .data$locationID,
+                  .data$age,
+                  .data$chickAge)
 
+
+  # Combine capture tables
+  captures <- dplyr::bind_rows(parents, chicks) %>%
+    dplyr::mutate(captureSiteID = "ASK",
+                  releaseSiteID = .data$captureSiteID,
+                  # TODO: Individuals are assumed to be captured alive, without replacing rings - verify
+                  captureAlive = TRUE,
+                  releaseAlive = TRUE,
+                  capturePhysical = TRUE) %>%
+    # Arrange chronologically for each individual
+    dplyr::arrange(.data$individualID, .data$captureYear, .data$captureMonth, .data$captureDay) %>%
+    dplyr::group_by(.data$individualID) %>%
+
+    dplyr::mutate(captureRingNumber = dplyr::case_when(dplyr::row_number() == 1 ~ NA_character_,
+                                                       TRUE ~ .data$individualID),
+                  # All releases are assumed to be alive (also see releaseAlive), so no NAs in releaseRingNumber
+                  releaseRingNumber = .data$individualID,
+                  # Create captureID
+                  captureID = paste(.data$individualID, 1:dplyr::n(), sep = "_")) %>%
+    dplyr::ungroup() %>%
+    # Filter species
+    dplyr::filter(speciesID %in% {{species_filter}})
+
+  # Add optional variables
+  output <- captures %>%
+    {if("exactAge" %in% optional_variables | "minimumAge" %in% optional_variables) calc_age(data = .,
+                                                                                            Age = .data$age,
+                                                                                            Year = .data$captureYear,
+                                                                                            protocol_version = "1.2") %>%
+        dplyr::select(dplyr::contains(c(names(captures), optional_variables))) else .}
+
+
+  return(output)
 
 }
+
 
 #----------------------#
 # TODO: Check clutch type ("Pesa") codes; what does 0 mean?
 # TODO: Check chick ring series. Three nests must contain typos, because the resulting number of chicks is > 100.
+# TODO: Check parent age
+# TODO: Check whether individuals were only caught/released alive & physically
