@@ -2,7 +2,7 @@
 % Please edit documentation in R/format_MAY.R
 \name{create_experiment_MAY}
 \alias{create_experiment_MAY}
-\title{Create measurement data table for Mayachino, Russia.}
+\title{Create experiment data table for Mayachino, Russia.}
 \usage{
 create_experiment_MAY(brood_data)
 }
@@ -13,5 +13,5 @@ create_experiment_MAY(brood_data)
 A data frame.
 }
 \description{
-Create measurement data table in standard format for data from Mayachino, Russia.
+Create experiment data table in standard format for data from Mayachino, Russia.
 }

@@ -238,6 +238,8 @@ format_MAY <- function(db = choose_directory(),
 
   message(paste0("All tables generated in ", round(time, 2), " seconds"))
 
+  # OUTPUT
+
   if(output_type == "csv"){
 
     message("Saving .csv files...")
