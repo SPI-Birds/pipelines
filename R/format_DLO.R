@@ -25,6 +25,8 @@
 #'
 #'\strong{habitatID}: Assume that habitat type is 1.4: Forest - Temperate. Check with data owner.
 #'
+#'\strong{Experiment data}: No experiments were conducted, resulting in an empty Experiment data table.
+#'
 #'@inheritParams pipeline_params
 #'
 #'@return Generates either 6 .csv files or 6 data frames in the standard format.
@@ -108,6 +110,7 @@ format_DLO <- function(db = choose_directory(),
                   # - Replace / in m_weight by . and set to numeric
                   m_tarsus = as.numeric(stringr::str_replace_all(.data$m_tarsus, "/", "."))))
 
+
   # BROOD DATA
 
   message("Compiling brood data....")
@@ -115,6 +118,7 @@ format_DLO <- function(db = choose_directory(),
   Brood_data <- create_brood_DLO(data = all_data,
                                  species_filter = species,
                                  optional_variables = optional_variables)
+
 
   # CAPTURE DATA
 
@@ -124,6 +128,7 @@ format_DLO <- function(db = choose_directory(),
                                      species_filter = species,
                                      optional_variables = optional_variables)
 
+
   # INDIVIDUAL DATA
 
   message("Compiling individual data....")
@@ -132,11 +137,13 @@ format_DLO <- function(db = choose_directory(),
                                            species_filter = species,
                                            optional_variables = optional_variables)
 
+
   # LOCATION DATA
 
   message("Compiling location data....")
 
   Location_data <- create_location_DLO(data = all_data)
+
 
   # MEASUREMENT DATA
 
@@ -144,12 +151,12 @@ format_DLO <- function(db = choose_directory(),
 
   Measurement_data <- create_measurement_DLO(capture_data = Capture_data)
 
-  # EXPERIMENT DATA
 
-  message("Compiling experiment information...")
+  # EXPERIMENT DATA
 
   # NB: There is no experiment information so we create an empty data table
   Experiment_data <- data_templates$v1.2$Experiment_data[0,]
+
 
   # WRANGLE DATA FOR EXPORT
 
@@ -196,12 +203,15 @@ format_DLO <- function(db = choose_directory(),
     # Keep only columns that are in the standard format
     dplyr::select(names(data_templates$v1.2$Measurement_data))
 
+
   # TIME
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
   message(paste0("All tables generated in ", round(time, 2), " seconds"))
 
+
+  # OUTPUT
 
   if(output_type == "csv"){
 
