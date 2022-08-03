@@ -18,6 +18,12 @@
 #'
 #'\strong{ringStage}: Individuals that are not caught as a chick on the nest are assumed to be ringed as "subadult". This way, calculation of their minimum age is the most conservative.
 #'
+#'\strong{startYear, endYear}: Assume all boxes were placed in the first year of study and stopped being used in the last year of study.
+#'
+#'\strong{habitatID}: Assume that habitat type is 1.1: Forest - Boreal. Check with data owner.
+#'
+#'\strong{Measurement data, Experiment data}: No measurements were taken of individuals or locations, nor any experiments conducted, resulting in empty Measurement data and Experiment data tables.
+#'
 #'@return Generates either 6 .csv files or 6 data frames in the standard format.
 #'@export
 #'
@@ -63,6 +69,113 @@ format_ASK <- function(db = choose_directory(),
                                      brood_data = Brood_data,
                                      species_filter = species,
                                      optional_variables = optional_variables)
+
+  # INDIVIDUAL DATA
+
+  message("Compiling individual information...")
+
+  Individual_data <- create_individual_ASK(capture_data = Capture_data,
+                                           species_filter = species,
+                                           optional_variables = optional_variables)
+
+  # LOCATION DATA
+
+  message("Compiling location information...")
+
+  Location_data <- create_location_ASK(db = db)
+
+
+  # MEASUREMENT DATA
+
+  # NB: There is no measurement information so we create an empty data table
+  Measurement_data <- data_templates$v1.2$Measurement_data[0,]
+
+
+  # EXPERIMENT DATA
+
+  # NB: There is no experiment information so we create an empty data table
+  Experiment_data <- data_templates$v1.2$Experiment_data[0,]
+
+
+  # WRANGLE DATA FOR EXPORT
+
+  Brood_data <- Brood_data %>%
+    # Add row ID
+    dplyr::mutate(row = 1:n()) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates$v1.2$Brood_data[1, !(names(data_templates$v1.2$Brood_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format or in the list of optional variables
+    dplyr::select(names(data_templates$v1.2$Brood_data), dplyr::contains(names(utility_variables$Brood_data),
+                                                                         ignore.case = FALSE))
+
+  Capture_data <- Capture_data %>%
+    # Add row ID
+    dplyr::mutate(row = 1:n()) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates$v1.2$Capture_data[1, !(names(data_templates$v1.2$Capture_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format or in the list of optional variables
+    dplyr::select(names(data_templates$v1.2$Capture_data), dplyr::contains(names(utility_variables$Capture_data),
+                                                                           ignore.case = FALSE))
+
+  Individual_data <- Individual_data %>%
+    # Add row ID
+    dplyr::mutate(row = 1:n()) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates$v1.2$Individual_data[1, !(names(data_templates$v1.2$Individual_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format or in the list of optional variables
+    dplyr::select(names(data_templates$v1.2$Individual_data), dplyr::contains(names(utility_variables$Individual_data),
+                                                                              ignore.case = FALSE))
+
+  Location_data <- Location_data %>%
+    # Add row ID
+    dplyr::mutate(row = 1:n()) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates$v1.2$Location_data[1, !(names(data_templates$v1.2$Location_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format
+    dplyr::select(names(data_templates$v1.2$Location_data))
+
+
+  # TIME
+
+  time <- difftime(Sys.time(), start_time, units = "sec")
+
+  message(paste0("All tables generated in ", round(time, 2), " seconds"))
+
+
+  # OUTPUT
+
+  if(output_type == "csv"){
+
+    message("Saving .csv files...")
+
+    utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_DLO.csv"), row.names = FALSE)
+
+    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_DLO.csv"), row.names = FALSE)
+
+    utils::write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_DLO.csv"), row.names = FALSE)
+
+    utils::write.csv(x = Measurement_data, file = paste0(path, "\\Measurement_data_DLO.csv"), row.names = FALSE)
+
+    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_DLO.csv"), row.names = FALSE)
+
+    utils::write.csv(x = Experiment_data, file = paste0(path, "\\Experiment_data_DLO.csv"), row.names = FALSE)
+
+    invisible(NULL)
+
+  }
+
+  if(output_type == "R"){
+
+    message("Returning R objects...")
+
+    return(list(Brood_data = Brood_data,
+                Capture_data = Capture_data,
+                Individual_data = Individual_data,
+                Measurement_data = Measurement_data,
+                Location_data = Location_data,
+                Experiment_data = Experiment_data))
+
+  }
 
 }
 
@@ -147,6 +260,14 @@ create_brood_ASK <- function(db,
                                 .fns = ~ {
 
                                   dplyr::case_when(.x == 4 ~ 7L,
+                                                   TRUE ~ .x)
+
+                                }),
+                  # Set 0s in lay day & lay month to NA
+                  dplyr::across(.cols = c(.data$observedLayDay, .data$observedLayMonth),
+                                .fns = ~ {
+
+                                  dplyr::case_when(.x == 0 ~ NA_integer_,
                                                    TRUE ~ .x)
 
                                 }),
@@ -336,12 +457,12 @@ create_capture_ASK <- function(db,
     dplyr::rename(captureDay = .data$day,
                   captureMonth = .data$month,
                   captureYear = .data$year) %>%
-    dplyr::mutate(captureTime = dplyr::na_if(paste0(stringr::str_pad(.data$time,
-                                                                     width = 2,
-                                                                     pad = "0",
-                                                                     side = "left"),
-                                                    ":00"),
-                                             "NA:00"),
+    dplyr::mutate(captureTime = dplyr::na_if(x = paste0(stringr::str_pad(string = .data$time,
+                                                                         width = 2,
+                                                                         pad = "0",
+                                                                         side = "left"),
+                                                        ":00"),
+                                             y = "NA:00"),
                   observedSex = NA_character_,
                   # Calculate chick age
                   age = "chick",
@@ -441,8 +562,115 @@ create_capture_ASK <- function(db,
 }
 
 
+#' Create individual data table for Askainen, Finland.
+#'
+#' Create individual data table in standard format for data from Askainen, Finland.
+#'
+#' @param capture_data Data frame. Output from \code{\link{create_capture_ASK}}.
+#' @param species_filter Species of interest. The 6 letter codes of all the species of
+#'  interest as listed in the
+#'  \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.2.0.pdf}{standard
+#'  protocol}.
+#' @param optional_variables A character vector of names of optional variables (generated by standard utility functions) to be included in the pipeline output.
+#'
+#' @return A data frame.
+#'
+
+create_individual_ASK <- function(capture_data,
+                                  species_filter,
+                                  optional_variables) {
+
+  # Create a list of individuals from capture data
+  individuals <- capture_data %>%
+    dplyr::mutate(captureDate = lubridate::make_date(year = .data$captureYear,
+                                                     month = .data$captureMonth,
+                                                     day = .data$captureDay)) %>%
+    # Arrange data for each individual chronologically
+    dplyr::arrange(.data$individualID, .data$captureDate) %>%
+    # For every individual...
+    dplyr::group_by(.data$individualID) %>%
+    # ... determine first stage, brood, ring date of each individual
+    dplyr::summarise(ringStage = dplyr::first(.data$age),
+                     ringDate = dplyr::first(.data$captureDate),
+                     firstYear = dplyr::first(.data$year),
+                     firstBrood = dplyr::first(.data$broodID),
+                     speciesID = dplyr::first(.data$speciesID)) %>%
+    # If capture date is NA, use year column from primary data for ringYear instead
+    dplyr::mutate(ringYear = dplyr::case_when(is.na(.data$ringDate) ~ as.integer(.data$firstYear),
+                                              TRUE ~ as.integer(lubridate::year(.data$ringDate))),
+                  ringMonth = as.integer(lubridate::month(.data$ringDate)),
+                  ringDay = as.integer(lubridate::day(.data$ringDate)),
+                  # Only assign brood ID if individual was caught as a chick
+                  broodIDLaid = dplyr::case_when(.data$ringStage != "chick" ~ NA_character_,
+                                                 TRUE ~ .data$firstBrood),
+                  # There is no information on cross-fostering, so we assume that the brood laid and fledged are the same
+                  broodIDFledged =.data$broodIDLaid) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(ringSiteID = "ASK",
+                  siteID = "ASK") %>%
+    dplyr::filter(speciesID %in% {{species_filter}})
+
+  # Add optional variables
+  output <- individuals %>%
+    {if("calculatedSex" %in% optional_variables) calc_sex(individual_data = .,
+                                                          capture_data = capture_data) else .}
+
+  return(output)
+
+}
+
+#' Create location data table for Askainen, Finland.
+#'
+#' Create location data table in standard format for data from Askainen, Finland.
+#'
+#' @param db Location of primary data from Askainen.
+#'
+#' @return A data frame.
+#'
+
+create_location_ASK <- function(db) {
+
+  message("Extracting location data from paradox database...")
+
+  locations <- extract_paradox_db(path = db, file_name = "ASK_PrimaryData_Pontot.DB") %>%
+    # Rename columns to English (based on description provided by data owner)
+    dplyr::select(locationID = .data$Nuro,
+                  latitude = .data$Leve,
+                  longitude = .data$Pitu,
+                  geoPrecision = .data$KT)
+
+  # Convert location data to sf
+  coordinates <- locations %>%
+    sf::st_as_sf(coords = c("longitude", "latitude"),
+                 # Assign coordinate reference system according to data owner
+                 crs = 2393) %>%
+    # Transform conference reference system to longitudes/latitudes
+    sf::st_transform(crs = 4326)
+
+  # Create list of locations
+  output <- locations %>%
+    # Add converted coordinates, set to NA if precision is very low (i.e., 3)
+    dplyr::mutate(decimalLongitude = dplyr::case_when(.data$geoPrecision == 3, NA_real_,
+                                                      sf::st_coordinates(coordinates)[,1]),
+                  decimalLatitude = dplyr::case_when(.data$geoPrecision == 3, NA_real_,
+                                                     sf::st_coordinates(coordinates)[,2]),
+                  locationType = "nest",
+                  # TODO: habitat is set to 1.4 Forest - Boreal; check with data owner
+                  habitatID = "1.1",
+                  # Assumed that all boxes were placed at the start of the study, and removed at the end of the study
+                  # TODO: Check with data owner
+                  startYear = 1941L,
+                  endYear = 1994L,
+                  siteID = "ASK")
+
+  return(output)
+
+}
+
 #----------------------#
 # TODO: Check clutch type ("Pesa") codes; what does 0 mean?
 # TODO: Check chick ring series. Three nests must contain typos, because the resulting number of chicks is > 100.
 # TODO: Check parent age
 # TODO: Check whether individuals were only caught/released alive & physically
+# TODO: Verify habitatID
+# TODO: Verify start & end year of boxes
