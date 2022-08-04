@@ -226,8 +226,9 @@ create_brood_ASK <- function(db,
                   reasonFailed = .data$Tsyy,
                   comments = .data$Lisatieto) %>%
     # Create IDs
-    # Unique brood IDs: year_locationID_nestAttemptBox
-    dplyr::mutate(broodID = paste(.data$year, .data$locationID, .data$nestAttemptBox, sep = "_"),
+    # Unique brood IDs: year_locationID_nestID
+    # TODO: Check with data owner: Nuro (locationID) + Anro (nest attempt per box) is not unique
+    dplyr::mutate(broodID = paste(.data$year, .data$locationID, .data$nestID, sep = "_"),
                   # Set species codes
                   # Note, rare species/codes are ignored and set to NA
                   # e.g., PARCRI, STUVUL, PARSPP, PARXXX
@@ -539,9 +540,9 @@ create_capture_ASK <- function(db,
     dplyr::group_by(.data$individualID) %>%
 
     dplyr::mutate(captureRingNumber = dplyr::case_when(dplyr::row_number() == 1 ~ NA_character_,
-                                                       TRUE ~ .data$individualID),
+                                                       TRUE ~ stringr::str_sub(.data$individualID, 5, nchar(.data$individualID))),
                   # All releases are assumed to be alive (also see releaseAlive), so no NAs in releaseRingNumber
-                  releaseRingNumber = .data$individualID,
+                  releaseRingNumber = stringr::str_sub(.data$individualID, 5, nchar(.data$individualID)),
                   # Create captureID
                   captureID = paste(.data$individualID, 1:dplyr::n(), sep = "_")) %>%
     dplyr::ungroup() %>%
@@ -592,7 +593,7 @@ create_individual_ASK <- function(capture_data,
     # ... determine first stage, brood, ring date of each individual
     dplyr::summarise(ringStage = dplyr::first(.data$age),
                      ringDate = dplyr::first(.data$captureDate),
-                     firstYear = dplyr::first(.data$year),
+                     firstYear = dplyr::first(.data$captureYear),
                      firstBrood = dplyr::first(.data$broodID),
                      speciesID = dplyr::first(.data$speciesID)) %>%
     # If capture date is NA, use year column from primary data for ringYear instead
@@ -650,10 +651,10 @@ create_location_ASK <- function(db) {
   # Create list of locations
   output <- locations %>%
     # Add converted coordinates, set to NA if precision is very low (i.e., 3)
-    dplyr::mutate(decimalLongitude = dplyr::case_when(.data$geoPrecision == 3, NA_real_,
-                                                      sf::st_coordinates(coordinates)[,1]),
-                  decimalLatitude = dplyr::case_when(.data$geoPrecision == 3, NA_real_,
-                                                     sf::st_coordinates(coordinates)[,2]),
+    dplyr::mutate(decimalLongitude = dplyr::case_when(.data$geoPrecision == 3 ~ NA_real_,
+                                                      TRUE ~ sf::st_coordinates(coordinates)[,1]),
+                  decimalLatitude = dplyr::case_when(.data$geoPrecision == 3 ~ NA_real_,
+                                                     TRUE ~ sf::st_coordinates(coordinates)[,2]),
                   locationType = "nest",
                   # TODO: habitat is set to 1.4 Forest - Boreal; check with data owner
                   habitatID = "1.1",
@@ -668,6 +669,7 @@ create_location_ASK <- function(db) {
 }
 
 #----------------------#
+# TODO: Vuos (year) + Nuro (nestbox) + Anro (nest attempt) as broodID is not unique; verify
 # TODO: Check clutch type ("Pesa") codes; what does 0 mean?
 # TODO: Check chick ring series. Three nests must contain typos, because the resulting number of chicks is > 100.
 # TODO: Check parent age
