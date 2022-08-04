@@ -456,9 +456,11 @@ create_capture_ASK <- function(db,
     # Remove unknown individualIDs
     dplyr::filter(!is.na(.data$individualID)) %>%
     dplyr::rename(captureDay = .data$day,
-                  captureMonth = .data$month,
-                  captureYear = .data$year) %>%
-    dplyr::mutate(captureTime = dplyr::na_if(x = paste0(stringr::str_pad(string = .data$time,
+                  captureMonth = .data$month) %>%
+    # If chicks ringing is not recored in chick_visits, obtain year from brood data
+    dplyr::mutate(captureYear = dplyr::case_when(is.na(.data$year) ~ as.integer(lubridate::year(observedLayDate)),
+                                                 TRUE ~ .data$year),
+                  captureTime = dplyr::na_if(x = paste0(stringr::str_pad(string = .data$time,
                                                                          width = 2,
                                                                          pad = "0",
                                                                          side = "left"),
