@@ -7,10 +7,7 @@
 #'this data. For a general description of the standard protocl please see
 #'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
 #'
-#'\strong{Species}: Data from Harjavalta contains information on 23 different
-#'hole nesting species; however, only 4 of these (great tit, blue tit, coal tit,
-#'pied flycatcher) have >100 nest records. Only data from these 4 species is
-#'considered.
+#'\strong{Species}: Data from Harjavalta contains information on 23 different species. We only include records for species with at least 50 broods throughout the study period: pied flycatcher, great tit, blue tit, coal tit, European crested tit, and common redstart. The few records for other species (e.g., Eurasian wryneck, common starling, house sparrow) are excluded.
 #'
 #'\strong{Age}: Chick age is listed as: PP (nestling), PM (fledgling), FL(unknown),
 #'1, +1, 2, +2. Translation from field notebook would translate PP/PM into
@@ -21,13 +18,11 @@
 #'FL is unknown. We can't even attribute it to chick or adult.
 #'For this we use EURING 2 (able to fly freely but otherwise unknown).
 #'
-#'\strong{LayDateError & HatchDateError}: Accuracy of laying and hatch date
-#'are given as categories: 0-1; 1-2; 2-3; 'inaccurate'. Where error is a range,
-#'the more conservative error is used (i.e. 0-1 is recorded as 1).
-#'Cases listed as 'inaccurate' have an error of at least a week.
-#'Therefore, these ones are given Lay/HatchDateError of 7. Dates in these
-#'cases are highly inaccurate and shouldn't be considered for any phenology
-#'analysis.
+#'\strong{Minimum & maximum lay & hatch dates}: Accuracy of laying and hatch date
+#'are given as categories: 1 = 0-1, 2 = 1-2, 3 = 2-3; 4 = inaccurate. Where error is a range,
+#'the more conservative error is used (i.e., 0-1 is recorded as 1).
+#'Cases listed as 'inaccurate' have an error of at least a week. Dates in these cases are highly inaccurate
+#'and shouldn't be considered for any phenology analysis.
 #'
 #'\strong{Capture data:} Linking nestling and adult capture
 #'data can be difficult. There are eight different scenarios we need to
@@ -112,43 +107,52 @@
 #'@param return_errors Logical (TRUE/FALSE). If true, return all records of
 #'nestling with no corresponding ringing data.
 #'
-#'@return Generates either 4 .csv files or 4 data frames in the standard format.
+#'@return Generates either 6 .csv files or 6 data frames in the standard format.
 #'@export
 
 format_HAR <- function(db = choose_directory(),
                        species = NULL,
-                       pop = NULL,
+                       site = NULL,
+                       optional_variables = NULL,
                        path = ".",
                        output_type = "R",
                        return_errors = FALSE){
 
-  #Force user to select directory
+  # Force user to select directory
   force(db)
 
-  #Determine species codes for filtering
+  # Assign species for filtering
   if(is.null(species)){
 
     species <- species_codes$speciesID
 
   }
 
+  # If all optional variables are requested, retrieve all names
+  if(!is.null(optional_variables) & "all" %in% optional_variables) optional_variables <- names(unlist(unname(utility_variables)))
 
-  #Record start time to estimate processing time.
+  # Record start time to provide processing time to the user
   start_time <- Sys.time()
 
+  message("Importing primary data...")
+
   # BROOD DATA
-  #Extract Harjavalta brood data
 
   message("Compiling brood data....")
 
-  Brood_data <- create_brood_HAR(db = db, species_filter = species)
+  Brood_data <- create_brood_HAR(db = db,
+                                 species_filter = species,
+                                 optional_variables = optional_variables)
 
   # CAPTURE DATA
 
   message("Compiling capture data....")
 
-  Capture_data <- create_capture_HAR(db = db, Brood_data = Brood_data,
-                                     species_filter = species, return_errors = return_errors)
+  Capture_data <- create_capture_HAR(db = db,
+                                     brood_data = Brood_data,
+                                     species_filter = species,
+                                     optional_variables = optional_variables,
+                                     return_errors = return_errors)
 
   if(return_errors){
 
@@ -160,7 +164,9 @@ format_HAR <- function(db = choose_directory(),
 
   message("Compiling individual data...")
 
-  Individual_data <- create_individual_HAR(Capture_data = Capture_data)
+  Individual_data <- create_individual_HAR(capture_data = Capture_data,
+                                           species_filter = species,
+                                           optional_variables = optional_variables)
 
   # LOCATION DATA
 
@@ -238,91 +244,145 @@ format_HAR <- function(db = choose_directory(),
 #' @param db Location of primary data from Harjavalta.
 #' @param species_filter Species of interest. The 6 letter codes of all the species of
 #'  interest as listed in the
-#'  \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{standard
+#'  \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.2.0.pdf}{standard
 #'  protocol}.
+#'  @param optional_variables A character vector of names of optional variables (generated by standard utility functions) to be included in the pipeline output.
 #'
 #' @return A data frame.
 
-create_brood_HAR <- function(db, species_filter){
+create_brood_HAR <- function(db,
+                             species_filter,
+                             optional_variables){
 
   message("Extracting brood data from paradox database")
 
   # Extract table "Pesat.db" which contains brood data
-  #Rename columns to English (based on description provided by Tapio Eeva)
-  #Many of these are subsequently removed, but it makes it easier for non-Finnish speakers to
-  #see what is being removed.
-  Brood_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Pesat.DB") %>%
-    dplyr::rename(BreedingSeason = Vuos, LocationID = Nuro,
-                  BroodID = Anro, Species = Laji,
-                  ClutchType_observed = Pesa, FemaleID = Naaras, MaleID = Koiras,
-                  LayDate_day = Mpv, LayDate_month = Mkk, LayDateError = Mtar,
-                  HatchDate_day = Kpv, HatchDate_month = Kkk, HatchDateError = Ktar,
-                  Incubation = Halku, ClutchSize = Mulu, BroodSize = Kuor,
-                  NumberFledged = Lent, ReasonFailed = Tsyy,
-                  NestlingInjuries = Jalat, MalePresent = Koir,
-                  ExperimentID = Koe, ExpData1 = Olent,
-                  ExpData2 = Vlent, DeadParent = Delfh,
-                  EggShells = Mkuor, TempCode1 = Tark,
-                  TempCode2 = Tark2) %>%
-    #Remove unwanted columns
-    dplyr::select(-ReasonFailed:-MalePresent, -ExpData1:-TempCode2) %>%
-    #Create unique BroodID with year_locationID_BroodID
-    dplyr::mutate(BroodID = paste(BreedingSeason, LocationID, BroodID, sep = "_")) %>%
-    #Convert species codes to letter codes
-    dplyr::mutate(Species = dplyr::case_when(Species == "FICHYP" ~ species_codes$speciesID[which(species_codes$speciesCode == 10003)],
-                                      Species == "PARCAE" ~ species_codes$speciesID[which(species_codes$speciesCode == 10002)],
-                                      Species == "PARMAJ" ~ species_codes$speciesID[which(species_codes$speciesCode == 10001)],
-                                      Species == "PARATE" ~ species_codes$speciesID[which(species_codes$speciesCode == 10005)])) %>%
-    dplyr::filter(!is.na(Species) & Species %in% species_filter) %>%
-    #Add pop and plot id
-    dplyr::mutate(PopID = "HAR", Plot = NA) %>%
-    #Adjust clutch type observed to meet our wording
-    dplyr::mutate(ClutchType_observed = dplyr::case_when(ClutchType_observed == 1 ~ "first",
-                                                  ClutchType_observed %in% c(2, 3, 6) ~ "replacement",
-                                                  ClutchType_observed == 5 ~ "second")) %>%
-    #Create calendar date for laying date and hatch date
-    dplyr::mutate(LayDate = as.Date(paste(LayDate_day, LayDate_month, BreedingSeason, sep = "/"), format = "%d/%m/%Y"),
-           HatchDate  = as.Date(paste(HatchDate_day, HatchDate_month, BreedingSeason, sep = "/"), format = "%d/%m/%Y")) %>%
-    dplyr::arrange(BreedingSeason, Species, FemaleID, LayDate) %>%
-    #Calculate clutchtype
-    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
-    dplyr::mutate(LayDateError = dplyr::case_when(LayDateError == "1" ~ 1L,
-                                                  LayDateError == "2" ~ 2L,
-                                                  LayDateError == "3" ~ 3L,
-                                                  LayDateError == "4" ~ 7L),
-                  HatchDateError = dplyr::case_when(HatchDateError == "1" ~ 1L,
-                                                    HatchDateError == "2" ~ 2L,
-                                                    HatchDateError == "3" ~ 3L,
-                                                    HatchDateError == "4" ~ 7L),
-                  FledgeDate = as.Date(NA), ClutchSizeError = NA_real_, BroodSizeError = NA_real_,
-                  FledgeDateError = NA_real_, NumberFledgedError = NA_real_,
-                  BroodSize = as.integer(BroodSize)) %>%
-    #Arrange columns correctly
-    dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot, LocationID, FemaleID, MaleID,
-           ClutchType_observed, ClutchType_calculated, LayDate, LayDateError,
-           ClutchSize, ClutchSizeError, HatchDate, HatchDateError,
-           BroodSize, BroodSizeError, FledgeDate, FledgeDateError, NumberFledged, NumberFledgedError,
-           ExperimentID)
+  # Rename columns to English (based on description provided by data owner)
+  # Many of these are subsequently removed, but it makes it easier for non-Finnish speakers to
+  # see what is being removed.
+  broods <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Pesat.DB") %>%
+    dplyr::rename(year = .data$Vuos,
+                  locationID = .data$Nuro,
+                  nestAttemptNumber = .data$Anro,
+                  speciesID = .data$Laji,
+                  observedClutchType = .data$Pesa,
+                  femaleID = .data$Naaras,
+                  maleID = .data$Koiras,
+                  observedLayDay = .data$Mpv,
+                  observedLayMonth = .data$Mkk,
+                  errorLayDay = .data$Mtar,
+                  observedHatchDay = .data$Kpv,
+                  observedHatchMonth = .data$Kkk,
+                  errorHatchDay = .data$Ktar,
+                  incubation = .data$Halku,
+                  observedClutchSize = .data$Mulu,
+                  observedBroodSize = .data$Kuor,
+                  observedNumberFledged = .data$Lent,
+                  reasonFailed = .data$Tsyy,
+                  nestlingInjuries = .data$Jalat,
+                  malePresent = .data$Koir,
+                  experimentID = .data$Koe,
+                  expData1 = .data$Olent,
+                  expData2 = .data$Vlent,
+                  deadParent = .data$Delfh,
+                  eggShells = .data$Mkuor,
+                  tempCode1 = .data$Tark,
+                  tempCode2 = .data$Tark2) %>%
+    # Remove unwanted columns
+    dplyr::select(-.data$reasonFailed:-.data$malePresent,
+                  -.data$expData1:-.data$tempCode2) %>%
+    # Create IDs
+    # Create unique BroodID with year_locationID_nestAttemptNumber
+    dplyr::mutate(broodID = paste(.data$year,
+                                  .data$locationID,
+                                  .data$nestAttemptNumber,
+                                  sep = "_"),
+                  # Set species codes
+                  # Note, rare species/codes are ignored and set to NA
+                  # e.g., JYNTOR, CERFAM, MOTALB, PARMON
+                  speciesID = dplyr::case_when(.data$speciesID == "FICHYP" ~ species_codes$speciesID[species_codes$speciesCode == "10003"],
+                                               .data$speciesID == "PARCAE" ~ species_codes$speciesID[species_codes$speciesCode == "10002"],
+                                               .data$speciesID == "PARMAJ" ~ species_codes$speciesID[species_codes$speciesCode == "10001"],
+                                               .data$speciesID == "PARATE" ~ species_codes$speciesID[species_codes$speciesCode == "10005"],
+                                               .data$speciesID == "PHOPHO" ~ species_codes$speciesID[species_codes$speciesCode == "10010"],
+                                               .data$speciesID == "PARCRI" ~ species_codes$speciesID[species_codes$speciesCode == "10012"],
+                                               TRUE ~ NA_character_),
+                  # If femaleID & maleID differ from expected format, set to NA
+                  # Ensure that individuals are unique: add institutionID as prefix to femaleID & maleID
+                  # Remove punctuation
+                  dplyr::across(.cols = c(.data$femaleID, .data$maleID),
+                                .fns = ~ {
 
-  ## Set non-conforming IDs to NA
-  Brood_data <- Brood_data %>%
-    dplyr::mutate(dplyr::across(c(.data$FemaleID, .data$MaleID),
-                                ~ dplyr::case_when(stringr::str_detect(., "^[:alpha:]{1,2}[-][:digit:]{5,6}$") ~ .,
-                                                   TRUE ~ NA_character_)))
+                                  dplyr::case_when(stringr::str_detect(string = .x,
+                                                                       pattern = "^[:alpha:]{1,2}[-][:digit:]{5,6}$") ~ paste0("HAR_", stringr::str_remove_all(.x, "[:punct:]")),
+                                                   TRUE ~ NA_character_)
 
-  return(Brood_data)
+                                }),
+                  siteID = "HAR") %>%
+    # Adjust clutch type observed to meet our wording
+    dplyr::mutate(observedClutchType = dplyr::case_when(.data$observedClutchType == 1 ~ "first",
+                                                        .data$observedClutchType %in% c(2, 3, 6) ~ "replacement",
+                                                        .data$observedClutchType == 5 ~ "second"),
+                  # Errors in lay date and hatch date are interpreted as symmetrical, so that
+                  # an error of, e.g., 2 results in a minimum lay date 2 days earlier than observed,
+                  # and a maximum lay date of 2 days later than observed.
+                  # Errors marked as NA, result in no known minimum/maximum lay & hatch dates.
+                  # Errors in category 4 (inaccurate) are interpreted as 1 week, resulting in a
+                  # minimum lay date 7 days earlier than observed, and a maximum lay date of
+                  # 7 days later than observed.
+                  dplyr::across(.cols = c(.data$errorLayDay, .data$errorHatchDay),
+                                .fns = ~ {
 
-  #Satisfy RCMD Check
-  `.` <- AvgEggMass <- BroodID <- NULL
-  PopID <- BreedingSeason <- Species <- Plot <- LocationID <- NULL
-  FemaleID <- MaleID <- ClutchType_observed <- ClutchType_calculated <- NULL
-  LayDate <- LayDateError <- ClutchSize <- ClutchSizeError <- NULL
-  HatchDate <- HatchDateError <- BroodSize <- BroodSizeError <- NULL
-  FledgeDate <- FledgeDateError <- NumberFledged <- NumberFledgedError <- NULL
-  NumberEggs <- AvgChickMass <- AvgTarsus <- NumberChicksTarsus <- NULL
-  OriginalTarsusMethod <- ExperimentID <- NULL
-  ReasonFailed <- MalePresent <- ExpData1 <- TempCode2 <- NULL
-  LayDate_day <- LayDate_month <- HatchDate_day <- HatchDate_month <- NULL
+                                  dplyr::case_when(.x == 4 ~ 7L,
+                                                   TRUE ~ .x)
+
+                                }),
+                  # Create calendar date for laying date and hatch date
+                  observedLayYear = .data$year,
+                  observedLayDate = lubridate::make_date(year = .data$observedLayYear,
+                                                         month = .data$observedLayMonth,
+                                                         day = .data$observedLayDay),
+                  observedHatchYear = .data$year,
+                  observedHatchDate  = lubridate::make_date(year = .data$observedHatchYear,
+                                                            month = .data$observedHatchMonth,
+                                                            day = .data$observedHatchDay),
+                  # Subtract error in lay/hatch date from observed to create minimum lay/hatch date
+                  minimumLayDate = dplyr:case_when(is.na(.data$errorLayDay) ~ as.Date(NA),
+                                                   TRUE ~ .data$observedLayDate - .data$errorLayDay),
+                  minimumHatchDate = dplyr:case_when(is.na(.data$errorHatchDay) ~ as.Date(NA),
+                                                     TRUE ~ .data$observedHatchDate - .data$errorHatchDay),
+                  # Add error in lay/hatch date from observed to create maximum lay/hatch date
+                  maximumLayDate = dplyr:case_when(is.na(.data$errorLayDay) ~ as.Date(NA),
+                                                   TRUE ~ .data$observedLayDate + .data$errorLayDay),
+                  maximumHatchDate = dplyr:case_when(is.na(.data$errorHatchDay) ~ as.Date(NA),
+                                                   TRUE ~ .data$observedHatchDate + .data$errorHatchDay),
+                  # Split minimum/maximum date columns in year, month, day
+                  minimumLayYear = as.integer(lubridate::year(.data$minimumLayDate)),
+                  minimumLayMonth = as.integer(lubridate::month(.data$minimumLayDate)),
+                  minimumLayDay = as.integer(lubridate::day(.data$minimumLayDate)),
+                  maximumLayYear = as.integer(lubridate::year(.data$maximumLayDate)),
+                  maximumLayMonth = as.integer(lubridate::month(.data$maximumLayDate)),
+                  maximumLayDay = as.integer(lubridate::day(.data$maximumLayDate)),
+                  minimumHatchYear = as.integer(lubridate::year(.data$minimumHatchDate)),
+                  minimumHatchMonth = as.integer(lubridate::month(.data$minimumHatchDate)),
+                  minimumHatchDay = as.integer(lubridate::day(.data$minimumHatchDate)),
+                  maximumHatchYear = as.integer(lubridate::year(.data$maximumHatchDate)),
+                  maximumHatchMonth = as.integer(lubridate::month(.data$maximumHatchDate)),
+                  maximumHatchDay = as.integer(lubridate::day(.data$maximumHatchDate)))
+
+  output <- broods %>%
+    # Filter species and remove unknown species
+    dplyr::filter(!is.na(speciesID) & speciesID %in% {{species_filter}}) %>%
+    # Add optional variables
+    {if("breedingSeason" %in% optional_variables) calc_season(data = .,
+                                                              season = .data$year) else .} %>%
+    {if("calculatedClutchType" %in% optional_variables) calc_clutchtype(data = .,
+                                                                        na.rm = FALSE,
+                                                                        protocol_version = "1.2") else .} %>%
+    {if("nestAttemptNumber" %in% optional_variables) calc_nestattempt(data = .,
+                                                                      season = .data$breedingSeason) else .}
+
+  return(output)
 
 }
 
@@ -331,46 +391,69 @@ create_brood_HAR <- function(db, species_filter){
 #' Create nestling data capture table for data from Harjavalta, Finland. This is
 #' used inside \code{\link{create_capture_HAR}}.
 #'
-#' @param Brood_data Output of \code{\link{create_brood_HAR}}.
 #' @param db Location of primary data from Harjavalta, Finland.
+#' @param brood_data Data frame. Output of \code{\link{create_brood_HAR}}.
 #'
 #' @return A data frame.
 
-create_nestling_HAR <- function(db, Brood_data){
+create_nestling_HAR <- function(db,
+                                brood_data){
 
   message("Extracting nestling ringing data from paradox database")
 
   # Extract table "Pullit.db" which contains nestling data
-  Nestling_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Pullit.DB") %>%
-    dplyr::rename(BreedingSeason = Vuos, LocationID = Nuro, BroodID = Anro,
-                  Month = Kk, Day = Pv, Time = Klo,
-                  NrNestlings = Poik, Last2DigitsRingNr = Reng,
-                  Dead = Dead, WingLength = Siipi,
-                  Mass = Paino, LeftLegAbnormal = Vjalka,
-                  RightLegAbnormal = Ojalka, Left3Primary = Vkas,
-                  Right3Primary = Okas, LeftRectrix = Vpys,
-                  RightRectrix = Opys, LeftTarsusLength = Vnil,
-                  RightTarsusLength = Onil, LeftTarsusWidth = Vpak,
-                  RightTarsusWidth = Opak, GTBreastYellow = Vari,
-                  Lutein = Lkoe, BloodSample = Wb,
-                  ColLengthBlood = Tot, LengthBlood = Pun,
-                  BreastFeatherLutein = FetLut,
-                  NailClipping = Varpaat, Sex = Sp,
-                  HeadLength = Head)
+  nestling_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Pullit.DB") %>%
+    # Rename columns to English (based on description provided by data owner)
+    dplyr::rename(captureYear = .data$Vuos,
+                  locationID = .data$Nuro,
+                  nestAttemptNumber = .data$Anro,
+                  captuerMonth = .data$Kk,
+                  captureDay = .data$Pv,
+                  captureTime = .data$Klo,
+                  nestlingNumber = .data$Poik,
+                  last2DigitsRingNumber = .data$Reng,
+                  dead = .data$Dead,
+                  totalWingLength = .data$Siipi,
+                  mass = .data$Paino,
+                  leftLegAbnormalities = .data$Vjalka,
+                  rightLegAbnormalities = .data$Ojalka,
+                  leftP3 = .data$Vkas,
+                  rightP3 = .data$Okas,
+                  leftRectrix = .data$Vpys,
+                  rightRectrix = .data$Opys,
+                  leftTarsusLength = .data$Vnil,
+                  rightTarsusLength = .data$Onil,
+                  leftTarsusWidth = .data$Vpak,
+                  rightTarsusWidth = .data$Opak,
+                  greatTitBreastYellow = .data$Vari,
+                  luteinSupplementation = .data$Lkoe,
+                  bloodSample = .data$Wb,
+                  columnLengthBlood = .data$Tot,
+                  lengthBlood = .data$Pun,
+                  breastFeatherLutein = .data$FetLut,
+                  nailClipping = .data$Varpaat,
+                  geneticSex = .data$Sp,
+                  headLength = .data$Head,
+                  faecalSample1 = .data$Feces1,
+                  faecalSample2 = .data$Feces2,
+                  tempCode = .data$Tark) %>%
+    # Create unique broodID (year_locationID_nestAttemptNumber)
+    dplyr::mutate(broodID = paste(.data$year,
+                                  .data$locationID,
+                                  .data$nestAttemptNumber,
+                                  sep = "_"),
+                  captureDate = lubridate::make_date(year = .data$captureYear,
+                                                     month = .data$captureMonth,
+                                                     day = .data$captureDay),
+                  captureTime = dplyr::na_if(x = paste0(.data$captureTime, ":00"),
+                                             y = "NA:00")) %>%
+    # Join hatch date data from brood data table
+    dplyr::left_join(brood_data %>%  dplyr::select(.data$broodID, .data$observedHatchDate),
+                     by = "broodID") %>%
+    # Determine age at capture
+    dplyr::mutate(chickAge = as.integer(captureDate - observedHatchDate))
 
-  #Remove unwanted columns
-  Nestling_data <- Nestling_data %>%
-    dplyr::select(BreedingSeason:Mass, LeftTarsusLength, Sex) %>%
-    #Create unique broodID (BreedingSeason_LocationID_BroodID)
-    dplyr::mutate(BroodID = paste(BreedingSeason, LocationID, BroodID, sep = "_"),
-                  CaptureDate = as.Date(paste(Day, Month, BreedingSeason, sep = "/"), format = "%d/%m/%Y"),
-                  CaptureTime = dplyr::na_if(paste0(Time, ":00"), "NA:00")) %>%
-    #Join hatch date data from brood data table
-    dplyr::left_join(select(Brood_data, BroodID, HatchDate), by = "BroodID") %>%
-    #Determine age at capture
-    dplyr::mutate(ChickAge = as.integer(CaptureDate - HatchDate))
-
-  return(Nestling_data)
+  return(nestling_data)
 
 }
 
@@ -378,19 +461,26 @@ create_nestling_HAR <- function(db, Brood_data){
 #'
 #' Create full capture data table in standard format for data from Harjavalta, Finland.
 #'
-#' @param Brood_data Output of \code{\link{create_brood_HAR}}.
 #' @param db Location of primary data from Harjavalta.
+#' @param brood_data Data frame. Output of \code{\link{create_brood_HAR}}.
 #' @param species_filter Species of interest. The 6 letter codes of all the species of
 #'  interest as listed in the
-#'  \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{standard
+#'  \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.2.0.pdf}{standard
 #'  protocol}.
+#' @param optional_variables A character vector of names of optional variables (generated by standard utility functions) to be included in the pipeline output.
 #' @param return_errors Logical. Return those records with errors in the ring sequence.
 #'
 #' @return A data frame.
 
-create_capture_HAR    <- function(db, Brood_data, species_filter, return_errors){
+create_capture_HAR    <- function(db,
+                                  brood_data,
+                                  species_filter,
+                                  optional_variables,
+                                  return_errors){
 
-  Nestling_data <- create_nestling_HAR(db = db, Brood_data = Brood_data)
+  # Extract nestling data
+  nestling_data <- create_nestling_HAR(db = db,
+                                       brood_data = brood_data)
 
   message("Extracting capture data from paradox database")
 
@@ -398,64 +488,102 @@ create_capture_HAR    <- function(db, Brood_data, species_filter, return_errors)
   # N.B. LastRingNumber_Brood = the end of the ringing series when ringing chicks
   # e.g. a record with RingNumber = 662470 and LastRingNumber_Brood = 662473 had three ringed chicks:
   # 662470, 662471, 662472, 662473
-  # The number of nestlings ringed is stored in NrNestlings.
-  Capture_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Rengas.DB") %>%
-    dplyr::rename(RingSeries = Sarja, RingNumber = Mista,
-                  CaptureType = Tunnus, BreedingSeason = Vuos,
-                  Month = Kk, Day = Pv, Time = Klo,
-                  LocationID = Nuro, BroodID = Anro,
-                  ObserverID = Havno, LastRingNumber = Mihin,
-                  Species = Laji, Sex = Suku,
-                  Sex_method = Sp, Age = Ika,
-                  Age_method = Ip, RingType = Rtapa,
-                  Condition = Kunto, BirdStatus = Tila,
-                  CaptureMethod = Ptapa, NrNestlings = Poik,
-                  WingLength = Siipi, Mass = Paino, Moult = Sulsat,
-                  FatScore = Rasik, ExtraInfo = Lisa,
-                  Plumage = Vari, TailFeather = Psulka,
-                  ColLengthBlood = Tot,
-                  LengthBlood = Pun, BreastMuscle = Lihas,
-                  HeadLength = Head)
+  # The number of nestlings ringed is stored in nestlingNumber (Poik).
+  capture_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Rengas.DB") %>%
+    # Rename columns to English (based on description provided by data owner)
+    dplyr::rename(ringSeries = .data$Sarja,
+                  ringNumber = .data$Mista,
+                  captureType = .data$Tunnus,
+                  captureYear = .data$Vuos,
+                  captureMonth = .data$Kk,
+                  captureDay = .data$Pv,
+                  captureTime = .data$Klo,
+                  locationID = .data$Nuro,
+                  nestAttemptNumber = .data$Anro,
+                  recordedBy = .data$Havno,
+                  lastRingNumber = .data$Mihin,
+                  speciesID = .data$Laji,
+                  observedSex = .data$Suku,
+                  sexMethod = .data$Sp,
+                  age = .data$Ika,
+                  ageMethod = .data$Ip,
+                  ringType = .data$Rtapa,
+                  condition = .data$Kunto,
+                  birdStatus = .data$Tila,
+                  captureMethod = .data$Ptapa,
+                  nestlingNumber = .data$Poik,
+                  totalWingLength = .data$Siipi,
+                  mass = .data$Paino,
+                  moult = .data$Sulsat,
+                  fatScore = .data$Rasik,
+                  extraInfo = .data$Lisa,
+                  plumage = .data$Vari,
+                  tailFeather = .data$Psulka,
+                  columnLengthBlood = .data$Tot,
+                  lengthBlood = .data$Pun,
+                  tarsusLength = .data$Tarsus,
+                  breastMuscle = .data$Lihas,
+                  headLength = .data$Head,
+                  ticks = .data$Ticks,
+                  tempCode = .data$Tark)
 
-  Capture_data <- Capture_data %>%
-    #Create unique broodID
-    dplyr::mutate(BroodID = paste(BreedingSeason, LocationID, BroodID, sep = "_"),
-                  CaptureDate = as.Date(paste(Day, Month, BreedingSeason, sep = "/"), format = "%d/%m/%Y"),
-                  CaptureTime = dplyr::na_if(paste0(Time, ":00"), "NA:00")) %>%
-    #Convert species codes to EUring codes and then remove only the major species
-    dplyr::mutate(Species = dplyr::case_when(Species == "FICHYP" ~ species_codes$speciesID[which(species_codes$speciesCode == 10003)],
-                                      Species == "PARCAE" ~ species_codes$speciesID[which(species_codes$speciesCode == 10002)],
-                                      Species == "PARMAJ" ~ species_codes$speciesID[which(species_codes$speciesCode == 10001)],
-                                      Species == "PARATE" ~ species_codes$speciesID[which(species_codes$speciesCode == 10005)]),
-                  ) %>%
-    dplyr::filter(!is.na(Species) & Species %in% species_filter) %>%
-    dplyr::mutate(Sex = dplyr::case_when(Sex %in% c("N", "O") ~ "F",
-                                  Sex %in% c("K", "L") ~ "M"),
-                  Mass = dplyr::na_if(Mass, 0),
-                  WingLength = dplyr::na_if(WingLength, 0))
+  capture_data <- capture_data %>%
+    # Create unique broodID (year_locationID_nestAttemptNumber)
+    dplyr::mutate(broodID = paste(.data$year,
+                                  .data$locationID,
+                                  .data$nestAttemptNumber,
+                                  sep = "_"),
+                  captureDate = lubridate::make_date(year = .data$captureYear,
+                                                     month = .data$captureMonth,
+                                                     day = .data$captureDay),
+                  captureTime = dplyr::na_if(x = paste0(.data$captureTime, ":00"),
+                                             y = "NA:00")) %>%
+    # Set species codes
+    # Note, rare species/codes are ignored and set to NA
+    # e.g., JYNTOR, CERFAM, MOTALB, PARMON
+    dplyr::mutate(speciesID = dplyr::case_when(.data$speciesID == "FICHYP" ~ species_codes$speciesID[species_codes$speciesCode == "10003"],
+                                               .data$speciesID == "PARCAE" ~ species_codes$speciesID[species_codes$speciesCode == "10002"],
+                                               .data$speciesID == "PARMAJ" ~ species_codes$speciesID[species_codes$speciesCode == "10001"],
+                                               .data$speciesID == "PARATE" ~ species_codes$speciesID[species_codes$speciesCode == "10005"],
+                                               .data$speciesID == "PHOPHO" ~ species_codes$speciesID[species_codes$speciesCode == "10010"],
+                                               .data$speciesID == "PARCRI" ~ species_codes$speciesID[species_codes$speciesCode == "10012"],
+                                               TRUE ~ NA_character_)) %>%
+    # Filter species and remove unknown species
+    dplyr::filter(!is.na(.data$speciesID) & .data$speciesID %in% {{species_filter}}) %>%
+    dplyr::mutate(observedSex = dplyr::case_when(.data$observedSex %in% c("N", "O") ~ "F",
+                                                 .data$observedSex %in% c("K", "L") ~ "M"),
+                  mass = dplyr::na_if(.data$Mass, 0),
+                  totalWingLength = dplyr::na_if(.data$totalWingLength, 0))
 
-  #We have eight scenarios we need to deal with in the capture data.
-  #See an explanation in the help documentation:
+  # We have eight scenarios we need to deal with in the capture data.
+  # See an explanation in the help documentation:
 
   ####
 
-  #1. Individual adult captures
-  Adult_capture    <- Capture_data %>%
-    dplyr::filter(!Age %in% c("PP", "PM") | is.na(Age)) %>%
-    dplyr::mutate(Capture_type = "Adult", Last2DigitsRingNr = NA, ChickAge = NA) %>%
-    dplyr::mutate(IndvID = paste(RingSeries, RingNumber, sep = "-")) %>%
-    dplyr::select(IndvID, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, BroodID, Species, Sex, Age, WingLength, Mass, CaptureType, BirdStatus, Last2DigitsRingNr, ChickAge)
+  # 1. Individual adult captures
+  adult_capture <- capture_data %>%
+    dplyr::filter(!.data$age %in% c("PP", "PM") | is.na(.data$age)) %>%
+    dplyr::mutate(captureType = "Adult",
+                  last2DigitsRingNumber = NA,
+                  chickAge = NA) %>%
+    dplyr::mutate(individualID = paste0("HAR_",
+                                        .data$ringSeries,
+                                        .data$ringNumber)) #%>%
+    # dplyr::select(individualID, captureYear, captureDate, captureTime, recordedBy,
+    #               locationID, broodID, speciesID, observedSex, age, totalWingLength, mass, captureType,
+    #               birdStatus, last2DigitsRingNumber, chickAge)
 
   ####
 
   message("Determining chick ring numbers...")
 
-  #Isolate only chick captures
-  chick_data <- filter(Capture_data, Age %in% c("PP", "PM"))
+  # Isolate only chick captures
+  chick_data <- capture_data %>%
+    dplyr::filter(.data$age %in% c("PP", "PM"))
 
-  #2-4. Individual chick captures
+  # 2-4. Individual chick captures
   indv_chick_capture <- chick_data %>%
-    dplyr::filter(is.na(LastRingNumber))
+    dplyr::filter(is.na(.data$lastRingNumber))
 
   #2. No information in Nestling data
   #In this case, it doesn't matter whether mass/wing length is NA, they are still legit capture records
@@ -713,11 +841,18 @@ create_capture_HAR    <- function(db, Brood_data, species_filter, return_errors)
 #'
 #' Create full individual data table in standard format for data from Harjavalta, Finland.
 #'
-#' @param Capture_data Output of \code{\link{create_capture_HAR}}.
+#' @param capture_data Data frame. Output of \code{\link{create_capture_HAR}}.
+#' @param species_filter Species of interest. The 6 letter codes of all the species of
+#'  interest as listed in the
+#'  \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.2.0.pdf}{standard
+#'  protocol}.
+#' @param optional_variables A character vector of names of optional variables (generated by standard utility functions) to be included in the pipeline output.
 #'
 #' @return A data frame.
 
-create_individual_HAR <- function(Capture_data){
+create_individual_HAR <- function(capture_data,
+                                  species_filter,
+                                  optional_variables){
 
   #Take capture data and determine summary data for each individual
   Indv_data <- Capture_data %>%
