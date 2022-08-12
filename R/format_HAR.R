@@ -250,7 +250,7 @@ create_brood_HAR <- function(db,
   # Rename columns to English (based on description provided by data owner)
   # Many of these are subsequently removed, but it makes it easier for non-Finnish speakers to
   # see what is being removed.
-  broods <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Pesat.DB") %>%
+  broods <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Nests.DB") %>%
     dplyr::rename(year = .data$Vuos,
                   locationID = .data$Nuro,
                   nestAttemptNumber = .data$Anro,
@@ -294,8 +294,8 @@ create_brood_HAR <- function(db,
                                                .data$speciesID == "PARCAE" ~ species_codes$speciesID[species_codes$speciesCode == "10002"],
                                                .data$speciesID == "PARMAJ" ~ species_codes$speciesID[species_codes$speciesCode == "10001"],
                                                .data$speciesID == "PARATE" ~ species_codes$speciesID[species_codes$speciesCode == "10005"],
-                                               .data$speciesID == "PHOPHO" ~ species_codes$speciesID[species_codes$speciesCode == "10010"],
-                                               .data$speciesID == "PARCRI" ~ species_codes$speciesID[species_codes$speciesCode == "10012"],
+                                               # .data$speciesID == "PHOPHO" ~ species_codes$speciesID[species_codes$speciesCode == "10010"],
+                                               # .data$speciesID == "PARCRI" ~ species_codes$speciesID[species_codes$speciesCode == "10012"],
                                                TRUE ~ NA_character_),
                   # If femaleID & maleID differ from expected format, set to NA
                   # Ensure that individuals are unique: add institutionID as prefix to femaleID & maleID
@@ -392,7 +392,7 @@ create_nestling_HAR <- function(db,
   message("Extracting nestling ringing data from paradox database")
 
   # Extract table "Pullit.db" which contains nestling data
-  nestling_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Pullit.DB") %>%
+  nestling_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Nestlings.DB") %>%
     # Rename columns to English (based on description provided by data owner)
     dplyr::rename(captureYear = .data$Vuos,
                   locationID = .data$Nuro,
@@ -405,7 +405,7 @@ create_nestling_HAR <- function(db,
                   dead = .data$Dead,
                   totalWingLength = .data$Siipi,
                   mass = .data$Paino,
-                  breastMuscle = .data$Lihas,
+                  #breastMuscle = .data$Lihas,
                   leftLegAbnormalities = .data$Vjalka,
                   rightLegAbnormalities = .data$Ojalka,
                   leftP3 = .data$Vkas,
@@ -426,8 +426,8 @@ create_nestling_HAR <- function(db,
                   geneticSex = .data$Sp,
                   headLength = .data$Head,
                   faecalSample1 = .data$Feces1,
-                  faecalSample2 = .data$Feces2,
-                  tempCode = .data$Tark) %>%
+                  faecalSample2 = .data$Feces2) %>% #,
+                  #tempCode = .data$Tark) %>%
     # Create unique broodID (year_locationID_nestAttemptNumber)
     dplyr::mutate(broodID = paste(.data$captureYear,
                                   .data$locationID,
@@ -482,7 +482,7 @@ create_capture_HAR <- function(db,
   # e.g. a record with ringNumber = 662470 and lastRingNumber_Brood = 662473 had three ringed chicks:
   # 662470, 662471, 662472, 662473
   # The number of nestlings ringed is stored in nestlingNumber (Poik).
-  capture_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Rengas.DB") %>%
+  capture_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Ringings.DB") %>%
     # Rename columns to English (based on description provided by data owner)
     dplyr::rename(ringSeries = .data$Sarja,
                   ringNumber = .data$Mista,
@@ -515,10 +515,10 @@ create_capture_HAR <- function(db,
                   columnLengthBlood = .data$Tot,
                   lengthBlood = .data$Pun,
                   tarsusLength = .data$Tarsus,
-                  breastMuscle = .data$Lihas,
+                  #breastMuscle = .data$Lihas,
                   headLength = .data$Head,
-                  ticks = .data$Ticks,
-                  tempCode = .data$Tark)
+                  ticks = .data$Ticks)#,
+                  #tempCode = .data$Tark)
 
   capture_data <- capture_data %>%
     # Create unique broodID (year_locationID_nestAttemptNumber)
@@ -546,7 +546,9 @@ create_capture_HAR <- function(db,
                   mass = dplyr::na_if(.data$mass, 0),
                   tarsusLength = dplyr::na_if(.data$tarsusLength, 0),
                   headLength = dplyr::na_if(.data$headLength, 0),
-                  totalWingLength = dplyr::na_if(.data$totalWingLength, 0))
+                  totalWingLength = dplyr::na_if(.data$totalWingLength, 0)) %>%
+    # Filter species and remove unknown species
+    dplyr::filter(!is.na(.data$speciesID) & .data$speciesID %in% {{species_filter}})
 
   # We have eight scenarios we need to deal with in the capture data.
   # See an explanation in the help documentation:
@@ -693,6 +695,19 @@ create_capture_HAR <- function(db,
                                                                          side = "left",
                                                                          pad = 0)
 
+                                             # Set chick IDs to NA if the list of numbers is unlikely large
+                                             # TODO: Check with data owner.
+                                             # Three cases seem to have typos. ringNumber:
+                                             # - 403881
+                                             # - 564023
+                                             # - 956423
+                                             # - 418760
+                                             if(length(output) > 14) {
+
+                                               output <- NA_character_
+
+                                             }
+
                                              return(output)
 
                                            })) %>%
@@ -815,8 +830,6 @@ create_capture_HAR <- function(db,
                                                   TRUE ~ NA_character_)) %>%
     # Remove duplicates that can arise from cases when captureDate is the same in Capture and Nestling data
     dplyr::distinct() %>%
-    # Filter species and remove unknown species
-    dplyr::filter(!is.na(.data$speciesID) & .data$speciesID %in% {{species_filter}}) %>%
     # Arrange chronologically for each individual
     dplyr::arrange(.data$individualID, .data$captureYear, .data$captureMonth, .data$captureDay) %>%
     dplyr::group_by(.data$individualID) %>%
@@ -981,3 +994,4 @@ create_location_HAR <- function(db){
 # TODO: Capture method == 'M'. Are these sightings rather than physical captures?
 # TODO: Ring numbers 000000. Should this be NA?
 # TODO: Are nestlings' right tarsus length measures in 10*mm?
+# TODO: Check chick ring series. Four nests must contain typos, because the resulting number of chicks is > 100.
