@@ -90,8 +90,7 @@
 #'\strong{observedSex}: Bird classified as 'likely male' or 'likely female' are simply
 #'given code 'M' and 'F' respectively (i.e., this uncertainty is ignored).
 #'
-#'\strong{broodID}: Unique broodID values are generated using
-#'year_locationID_nestAttemptNumber
+#'\strong{broodID}: Unique broodID values are generated using year_locationPlotID_nestAttemptNumber, where locationPlotID is a concatenation of plotID (without the institutionID prefix) and locationID, and nestAttemptNumber, the nesting attempt in a nest box (locationID) per season.
 #'
 #'@inheritParams pipeline_params
 #'@param return_errors Logical (TRUE/FALSE). If true, return all records of
@@ -251,7 +250,7 @@ create_brood_HAR <- function(db,
   # see what is being removed.
   broods <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Pesat.DB") %>%
     dplyr::rename(year = .data$Vuos,
-                  locationID = .data$Nuro,
+                  locationPlotID = .data$Nuro,
                   nestAttemptNumber = .data$Anro,
                   speciesID = .data$Laji,
                   observedClutchType = .data$Pesa,
@@ -281,9 +280,19 @@ create_brood_HAR <- function(db,
     dplyr::select(-.data$reasonFailed:-.data$malePresent,
                   -.data$expData1:-.data$tempCode2) %>%
     # Create IDs
-    # Create unique BroodID with year_locationID_nestAttemptNumber
-    dplyr::mutate(broodID = paste(.data$year,
-                                  .data$locationID,
+    # locationPlotID (Nuro) is a concatenation of nestbox number (first two symbols)
+    # and plot number (last two symbols); split, and make plotID unique
+    # TODO: Check with data owner, in some cases it seems that the first two are plot, and the last two are nestbox
+    dplyr::mutate(locationID = stringr::str_sub(string = .data$locationPlotID,
+                                                start = 1,
+                                                end = 2),
+                  plotID = paste0("HAR_",
+                                  stringr::str_sub(string = .data$locationPlotID,
+                                                   start = 3,
+                                                   end = 4)),
+                  # Create unique BroodID with year_locationPlotID_nestAttemptNumber
+                  broodID = paste(.data$year,
+                                  .data$locationPlotID,
                                   .data$nestAttemptNumber,
                                   sep = "_"),
                   # Set species codes
@@ -394,7 +403,7 @@ create_nestling_HAR <- function(db,
   nestling_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Pullit.DB") %>%
     # Rename columns to English (based on description provided by data owner)
     dplyr::rename(captureYear = .data$Vuos,
-                  locationID = .data$Nuro,
+                  locationPlotID = .data$Nuro,
                   nestAttemptNumber = .data$Anro,
                   captureMonth = .data$Kk,
                   captureDay = .data$Pv,
@@ -427,9 +436,9 @@ create_nestling_HAR <- function(db,
                   faecalSample1 = .data$Feces1,
                   faecalSample2 = .data$Feces2,
                   tempCode = .data$Tark) %>%
-    # Create unique broodID (year_locationID_nestAttemptNumber)
+    # Create unique broodID (year_locationPlotID_nestAttemptNumber)
     dplyr::mutate(broodID = paste(.data$captureYear,
-                                  .data$locationID,
+                                  .data$locationPlotID,
                                   .data$nestAttemptNumber,
                                   sep = "_"),
                   captureDate = lubridate::make_date(year = .data$captureYear,
@@ -490,7 +499,7 @@ create_capture_HAR <- function(db,
                   captureMonth = .data$Kk,
                   captureDay = .data$Pv,
                   captureTime = .data$Klo,
-                  locationID = .data$Nuro,
+                  locationPlotID = .data$Nuro,
                   nestAttemptNumber = .data$Anro,
                   recordedBy = .data$Havno,
                   lastRingNumber = .data$Mihin,
@@ -520,9 +529,9 @@ create_capture_HAR <- function(db,
                   tempCode = .data$Tark)
 
   capture_data <- capture_data %>%
-    # Create unique broodID (year_locationID_nestAttemptNumber)
+    # Create unique broodID (year_locationPlotID_nestAttemptNumber)
     dplyr::mutate(broodID = paste(.data$captureYear,
-                                  .data$locationID,
+                                  .data$locationPlotID,
                                   .data$nestAttemptNumber,
                                   sep = "_"),
                   captureDate = lubridate::make_date(year = .data$captureYear,
@@ -712,7 +721,7 @@ create_capture_HAR <- function(db,
                                            })) %>%
     tidyr::unnest(cols = .data$ringNumber) %>%
     dplyr::select(.data$broodID,
-                  .data$locationID,
+                  .data$locationPlotID,
                   .data$ringSeries,
                   .data$ringNumber,
                   .data$captureYear,
@@ -819,6 +828,14 @@ create_capture_HAR <- function(db,
                   rightTarsusLength = .data$rightTarsusLength/10,
                   captureSiteID = "HAR",
                   releaseSiteID = "HAR",
+                  locationID = stringr::str_sub(string = .data$locationPlotID,
+                                                start = 1,
+                                                end = 2),
+                  capturePlotID = paste0("HAR_",
+                                  stringr::str_sub(string = .data$locationPlotID,
+                                                   start = 3,
+                                                   end = 4)),
+                  releasePlotID = .data$capturePlotID,
                   # Assume that individuals with condition 'D' (dead) are recovered,
                   # rather than died during handling
                   # TODO: check with data owner
@@ -932,52 +949,76 @@ create_location_HAR <- function(db){
   message("Extracting location data from paradox database")
 
   # Extract table "Paikat.db" which contains location data
-  Location_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Paikat.DB") %>%
-    #Remove last 2 cols that have no info
-    dplyr::select(-Aukko, -Malli) %>%
-    dplyr::rename(BreedingSeason = Vuos, LocationID = Nuro,
-                  ForestType = Mety, PinusSylvestris = Manty,
-                  PiceaAbies = Kuusi, Betulasp = Koivu,
-                  PopulusTremula = Haapa,
-                  SorbusAcuparia = Pihlaja,
-                  Salixsp = Pajut, JuniperusCommunis = Kataja,
-                  Alnussp = Leppa, PrunusPadas = Tuomi,
-                  TreeHeight = Kork, BasalArea = Totrel,
-                  PineHeight = Makor, SpruceHeight = Kukor,
-                  BirchHeight = Kokor, PineBasalArea = Marel,
-                  SpruceBasalArea = Kurel, BirchBasalArea = Korel,
-                  Latitude = Leve, Longitude = Pitu, Municipality = Kunta,
-                  LocationName = Paikka)
+  location_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Paikat.DB") %>%
+    # Remove last 2 columns that have no info
+    dplyr::select(-.data$Aukko, -.data$Malli) %>%
+    # Rename columns to English (based on description provided by data owner)
+    dplyr::rename(year = .data$Vuos,
+                  locationPlotID = .data$Nuro,
+                  forestType = .data$Mety,
+                  pinusSylvestris = .data$Manty,
+                  piceaAbies = .data$Kuusi,
+                  betulaSpp = .data$Koivu,
+                  populusTremula = .data$Haapa,
+                  sorbusAcuparia = .data$Pihlaja,
+                  salixSpp = .data$Pajut,
+                  juniperusCommunis = .data$Kataja,
+                  alnusSpp = .data$Leppa,
+                  prunusPadas = .data$Tuomi,
+                  treeHeight = .data$Kork,
+                  basalArea = .data$Totrel,
+                  pineHeight = .data$Makor,
+                  spruceHeight = .data$Kukor,
+                  birchHeight = .data$Kokor,
+                  pineBasalArea = .data$Marel,
+                  spruceBasalArea = .data$Kurel,
+                  birchBasalArea = .data$Korel,
+                  latitude = .data$Leve,
+                  longitude = .data$Pitu,
+                  municipality = .data$Kunta,
+                  locationName = .data$Paikka) %>%
+    # Split locationID and plotID
+    dplyr::mutate(locationID = stringr::str_sub(string = .data$locationPlotID,
+                                                start = 1,
+                                                end = 2),
+                  plotID = paste0("HAR_",
+                                  stringr::str_sub(string = .data$locationPlotID,
+                                                   start = 3,
+                                                   end = 4)))
 
-  #Separate locations with and without coordinates
-  Location_nocoord <- Location_data %>%
-    dplyr::filter(is.na(Longitude))
+  # Separate locations with and without coordinates
+  location_nocoord <- location_data %>%
+    dplyr::filter(is.na(.data$longitude))
 
-  Location_wcoord  <- Location_data %>%
-    dplyr::filter(!is.na(Longitude))
+  location_wcoord  <- location_data %>%
+    dplyr::filter(!is.na(.data$longitude))
 
-  #Read location data with coordinates as sf object in Finnish Coordinate system
-  #Coordinates are in Finland Uniform Coordinate System (EPSG 2393)
-
-  Location_data_sf <- sf::st_as_sf(Location_wcoord,
-                                         coords = c("Longitude", "Latitude"),
-                                         crs = 2393) %>%
+  # Read location data with coordinates as sf object in Finnish Coordinate system
+  # Coordinates are in Finland Uniform Coordinate System (EPSG 2393)
+  location_data_sf <- sf::st_as_sf(location_wcoord,
+                                   coords = c("longitude", "latitude"),
+                                   crs = 2393) %>%
     sf::st_transform(crs = 4326)
 
-  Location_full <- dplyr::bind_rows(dplyr::bind_cols(dplyr::select(Location_wcoord, -Longitude, -Latitude),
-                                    tibble(Longitude = sf::st_coordinates(Location_data_sf)[, 1]),
-                                    tibble(Latitude = sf::st_coordinates(Location_data_sf)[, 2])),
-                                    Location_nocoord)
+  location_full <- location_wcoord %>%
+    dplyr::mutate(longitude = sf::st_coordinates(location_data_sf)[, 1],
+                  latitude = sf::st_coordinates(location_data_sf)[, 2]) %>%
+    dplyr::bind_rows(location_nocoord)
 
-  #The records of each Location should show the start/end season
-  Location_data <- Location_full %>%
-    dplyr::group_by(LocationID) %>%
-    dplyr::arrange(BreedingSeason, .by_group = TRUE) %>%
-    dplyr::summarise(NestboxID = unique(LocationID), PopID = "HAR", Latitude = as.numeric(first(Latitude)), Longitude = as.numeric(first(Longitude)),
-                     LocationType = "NB", StartSeason = min(BreedingSeason), EndSeason = max(BreedingSeason), Habitat = "Evergreen") %>%
-    dplyr::select(LocationID, NestboxID, LocationType, PopID, Latitude, Longitude, StartSeason, EndSeason, Habitat)
+  # The records of each location should show the start/end season
+  output <- location_full %>%
+    dplyr::group_by(.data$plotID, .data$locationID) %>%
+    dplyr::arrange(.data$year, .by_group = TRUE) %>%
+    dplyr::summarise(siteID = "HAR",
+                     decimalLatitude = as.numeric(dplyr::first(latitude)),
+                     decimalLongitude = as.numeric(dplyr::first(longitude)),
+                     locationType = "nest",
+                     startYear = min(.data$year),
+                     endYear = max(.data$year),
+                     # TODO: habitat is set to 1.4 Forest - Boreal; check with data owner
+                     habitatID = "1.1")
 
-  return(Location_data)
+  return(output)
 
 }
 
@@ -987,3 +1028,5 @@ create_location_HAR <- function(db){
 # TODO: Ring numbers 000000. Should this be NA?
 # TODO: Are nestlings' right tarsus length measures in 10*mm?
 # TODO: Check chick ring series. Four nests must contain typos, because the resulting number of chicks is > 100.
+# TODO: Verify habitatID
+# TODO: Check plotID-locationID concatenation
