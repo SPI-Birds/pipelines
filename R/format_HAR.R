@@ -541,8 +541,6 @@ create_capture_HAR <- function(db,
                                                .data$speciesID == "PHOPHO" ~ species_codes$speciesID[species_codes$speciesCode == "10010"],
                                                .data$speciesID == "PARCRI" ~ species_codes$speciesID[species_codes$speciesCode == "10012"],
                                                TRUE ~ NA_character_)) %>%
-    # Filter species and remove unknown species
-    dplyr::filter(!is.na(.data$speciesID) & .data$speciesID %in% {{species_filter}}) %>%
     dplyr::mutate(observedSex = dplyr::case_when(.data$observedSex %in% c("N", "O") ~ "F",
                                                  .data$observedSex %in% c("K", "L") ~ "M"),
                   mass = dplyr::na_if(.data$mass, 0),
@@ -816,7 +814,18 @@ create_capture_HAR <- function(db,
                                                                       "^[:alpha:]{1,2}[:digit:]{5,6}$") ~ .data$individualID,
                                                   TRUE ~ NA_character_)) %>%
     # Remove duplicates that can arise from cases when captureDate is the same in Capture and Nestling data
-    dplyr::distinct()
+    dplyr::distinct() %>%
+    # Filter species and remove unknown species
+    dplyr::filter(!is.na(.data$speciesID) & .data$speciesID %in% {{species_filter}}) %>%
+    # Arrange chronologically for each individual
+    dplyr::arrange(.data$individualID, .data$captureYear, .data$captureMonth, .data$captureDay) %>%
+    dplyr::group_by(.data$individualID) %>%
+    dplyr::mutate(captureRingNumber = dplyr::case_when(dplyr::row_number() == 1 ~ NA_character_,
+                                                       TRUE ~ stringr::str_sub(.data$individualID, 5, nchar(.data$individualID))),
+                  releaseRingNumber = stringr::str_sub(.data$individualID, 5, nchar(.data$individualID)),
+                  # Create captureID
+                  captureID = paste(.data$individualID, 1:dplyr::n(), sep = "_")) %>%
+    dplyr::ungroup()
 
 
   # Add optional variables
