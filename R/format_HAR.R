@@ -250,7 +250,7 @@ create_brood_HAR <- function(db,
   # Rename columns to English (based on description provided by data owner)
   # Many of these are subsequently removed, but it makes it easier for non-Finnish speakers to
   # see what is being removed.
-  broods <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Nests.DB") %>%
+  broods <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Pesat.DB") %>%
     dplyr::rename(year = .data$Vuos,
                   locationID = .data$Nuro,
                   nestAttemptNumber = .data$Anro,
@@ -294,8 +294,8 @@ create_brood_HAR <- function(db,
                                                .data$speciesID == "PARCAE" ~ species_codes$speciesID[species_codes$speciesCode == "10002"],
                                                .data$speciesID == "PARMAJ" ~ species_codes$speciesID[species_codes$speciesCode == "10001"],
                                                .data$speciesID == "PARATE" ~ species_codes$speciesID[species_codes$speciesCode == "10005"],
-                                               # .data$speciesID == "PHOPHO" ~ species_codes$speciesID[species_codes$speciesCode == "10010"],
-                                               # .data$speciesID == "PARCRI" ~ species_codes$speciesID[species_codes$speciesCode == "10012"],
+                                               .data$speciesID == "PHOPHO" ~ species_codes$speciesID[species_codes$speciesCode == "10010"],
+                                               .data$speciesID == "PARCRI" ~ species_codes$speciesID[species_codes$speciesCode == "10012"],
                                                TRUE ~ NA_character_),
                   # If femaleID & maleID differ from expected format, set to NA
                   # Ensure that individuals are unique: add institutionID as prefix to femaleID & maleID
@@ -392,7 +392,7 @@ create_nestling_HAR <- function(db,
   message("Extracting nestling ringing data from paradox database")
 
   # Extract table "Pullit.db" which contains nestling data
-  nestling_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Nestlings.DB") %>%
+  nestling_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Pullit.DB") %>%
     # Rename columns to English (based on description provided by data owner)
     dplyr::rename(captureYear = .data$Vuos,
                   locationID = .data$Nuro,
@@ -405,7 +405,7 @@ create_nestling_HAR <- function(db,
                   dead = .data$Dead,
                   totalWingLength = .data$Siipi,
                   mass = .data$Paino,
-                  #breastMuscle = .data$Lihas,
+                  breastMuscle = .data$Lihas,
                   leftLegAbnormalities = .data$Vjalka,
                   rightLegAbnormalities = .data$Ojalka,
                   leftP3 = .data$Vkas,
@@ -426,8 +426,8 @@ create_nestling_HAR <- function(db,
                   geneticSex = .data$Sp,
                   headLength = .data$Head,
                   faecalSample1 = .data$Feces1,
-                  faecalSample2 = .data$Feces2) %>% #,
-                  #tempCode = .data$Tark) %>%
+                  faecalSample2 = .data$Feces2,
+                  tempCode = .data$Tark) %>%
     # Create unique broodID (year_locationID_nestAttemptNumber)
     dplyr::mutate(broodID = paste(.data$captureYear,
                                   .data$locationID,
@@ -482,7 +482,7 @@ create_capture_HAR <- function(db,
   # e.g. a record with ringNumber = 662470 and lastRingNumber_Brood = 662473 had three ringed chicks:
   # 662470, 662471, 662472, 662473
   # The number of nestlings ringed is stored in nestlingNumber (Poik).
-  capture_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Ringings.DB") %>%
+  capture_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Rengas.DB") %>%
     # Rename columns to English (based on description provided by data owner)
     dplyr::rename(ringSeries = .data$Sarja,
                   ringNumber = .data$Mista,
@@ -515,10 +515,10 @@ create_capture_HAR <- function(db,
                   columnLengthBlood = .data$Tot,
                   lengthBlood = .data$Pun,
                   tarsusLength = .data$Tarsus,
-                  #breastMuscle = .data$Lihas,
+                  breastMuscle = .data$Lihas,
                   headLength = .data$Head,
-                  ticks = .data$Ticks)#,
-                  #tempCode = .data$Tark)
+                  ticks = .data$Ticks),
+                  tempCode = .data$Tark)
 
   capture_data <- capture_data %>%
     # Create unique broodID (year_locationID_nestAttemptNumber)
@@ -695,9 +695,9 @@ create_capture_HAR <- function(db,
                                                                          side = "left",
                                                                          pad = 0)
 
-                                             # Set chick IDs to NA if the list of numbers is unlikely large
+                                             # Set chick IDs to NA if the list of ring numbers is unlikely large
                                              # TODO: Check with data owner.
-                                             # Three cases seem to have typos. ringNumber:
+                                             # Four cases seem to have typos. ringNumber:
                                              # - 403881
                                              # - 564023
                                              # - 956423
@@ -763,7 +763,17 @@ create_capture_HAR <- function(db,
                                           sep = "_")) %>%
     dplyr::filter(!broodRingNumber %in% c(single_capture_records, multi_capture_records))
 
-  # 6a. Filter unringed individuals. These are just given records associated with a brood where the individual ID is unknown.
+  # 6a. Filter unringed individuals. These are just given records associated with a brood where
+  # the individual ID is unknown.
+
+  # TODO: Check with other developers how to deal with "unknown" individuals.
+  # In more recently developed pipelines, unknown individualIDs are removed. Should we do the same here?
+  # Or should we rethink the way we deal with this? For instance, use data owner-defined IDs for
+  # captureRingNumber & releaseRingNumber (given that they ARE ring numbers), and create our own
+  # individualID? This way, "unringed" or "unknown" individuals do not have to be removed, but
+  # users are able to distinguish them from ringed individuals and decide what to do with them
+  # in their analyses.
+
   unringed_chicks <- nocapture_nestlings %>%
     dplyr::filter(toupper(.data$last2DigitsRingNumber) %in% LETTERS) %>%
     dplyr::mutate(individualID = NA_character_,
@@ -801,8 +811,6 @@ create_capture_HAR <- function(db,
   capture_data_expanded <- dplyr::bind_rows(adult_capture, indv_chick_capture_only, indv_chick_multirecord,
                                             indv_chick_record_conflict, multirecord_captures, unringed_chicks,
                                             ringed_chicks_nocapture)
-
-  ####
 
   captures <- capture_data_expanded %>%
     dplyr::mutate(mass = .data$mass/10,
