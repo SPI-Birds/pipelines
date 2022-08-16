@@ -167,28 +167,7 @@ format_HAR <- function(db = choose_directory(),
 
   # WRANGLE DATA FOR EXPORT
 
-  ## Add average chick mass and tarsus to brood data
 
-  Chick_avg <- Capture_data %>%
-    dplyr::filter(dplyr::between(ChickAge, 14, 16)) %>%
-    #Remove cases where tarsus or weight are 0 (make them NA)
-    dplyr::mutate(Mass = dplyr::na_if(Mass, 0),
-                  Tarsus = dplyr::na_if(Tarsus, 0)) %>%
-    dplyr::group_by(BroodID) %>%
-    dplyr::summarise(AvgEggMass = NA, NumberEggs = NA,
-                     AvgChickMass = mean(Mass, na.rm = TRUE),
-                     NumberChicksMass = n(),
-                     AvgTarsus = mean(Tarsus, na.rm = TRUE),
-                     NumberChicksTarsus = n(),
-                     OriginalTarsusMethod = "Alternative")
-
-  #Join these into Brood_data
-  #Only existing broods will be used.
-  Brood_data <- left_join(Brood_data, Chick_avg, by = "BroodID") %>%
-    dplyr::select(BroodID:NumberFledgedError, AvgEggMass:OriginalTarsusMethod, ExperimentID)
-
-  Capture_data <- Capture_data %>%
-    dplyr::select(-Sex, -BroodID)
 
   # EXPORT DATA
 
@@ -447,7 +426,8 @@ create_nestling_HAR <- function(db,
                   captureTime = dplyr::na_if(x = paste0(.data$captureTime, ":00"),
                                              y = "NA:00"),
                   leftTarsusLength = dplyr::na_if(.data$leftTarsusLength, 0),
-                  totalWingLength = dplyr::na_if(.data$totalWingLength, 0)) %>%
+                  totalWingLength = dplyr::na_if(.data$totalWingLength, 0),
+                  headLength = dplyr::na_if(.data$headLength, 0)) %>%
     # Join hatch date data from brood data table
     dplyr::left_join(brood_data %>%  dplyr::select(.data$broodID, .data$observedHatchDate),
                      by = "broodID") %>%
@@ -846,12 +826,12 @@ create_capture_HAR <- function(db,
                   # Assume that individuals with captureMethod 'M' (other) are not physically captured
                   # TODO: check with data owner
                   capturePhysical = dplyr::case_when(.data$captureMethod == "M" ~ FALSE,
-                                                     TRUE ~ TRUE)) %>%
-    # Set non-conforming IDs to NA
-    dplyr::mutate(individualID = dplyr::case_when(stringr::str_detect(stringr::str_sub(.data$individualID, 5,
-                                                                                       nchar(.data$individualID)),
-                                                                      "^[:alpha:]{1,2}[:digit:]{5,6}$") ~ .data$individualID,
-                                                  TRUE ~ NA_character_)) %>%
+                                                     TRUE ~ TRUE),
+                  # Pad captureTime to be HH:SS
+                  captureTime = stringr::str_pad(string = .data$captureTime,
+                                                 width = 5,
+                                                 side = "left",
+                                                 pad = "0")) %>%
     # Remove duplicates that can arise from cases when captureDate is the same in Capture and Nestling data
     dplyr::distinct() %>%
     # Arrange chronologically for each individual
@@ -862,7 +842,12 @@ create_capture_HAR <- function(db,
                   releaseRingNumber = stringr::str_sub(.data$individualID, 5, nchar(.data$individualID)),
                   # Create captureID
                   captureID = paste(.data$individualID, 1:dplyr::n(), sep = "_")) %>%
-    dplyr::ungroup()
+    dplyr::ungroup() %>%
+    # Set non-conforming IDs to NA
+    dplyr::mutate(individualID = dplyr::case_when(stringr::str_detect(stringr::str_sub(.data$individualID, 5,
+                                                                                       nchar(.data$individualID)),
+                                                                      "^[:alpha:]{1,2}[:digit:]{5,6}$") ~ .data$individualID,
+                                                  TRUE ~ NA_character_))
 
 
   # Add optional variables
@@ -1019,6 +1004,70 @@ create_location_HAR <- function(db){
                      habitatID = "1.1")
 
   return(output)
+
+}
+
+#' Create measurement table for Harjavalta, Finland.
+#'
+#' Create measurement data table in standard format for data from Harjavalta, Finland.
+#'
+#' @param capture_data Data frame. Output of \code{\link{create_capture_HAR}}.
+#'
+#' @return A data frame.
+#'
+
+create_measurement_HAR <- function(capture_data) {
+
+  # Measurements are only taken of individuals (during captures), not of locations,
+  # so we use capture_data as input
+  measurements <- capture_data %>%
+    dplyr::select(recordID = .data$captureID,
+                  siteID = .data$captureSiteID,
+                  measurementDeterminedYear = .data$captureYear,
+                  measurementDeterminedMonth = .data$captureMonth,
+                  measurementDeterminedDay = .data$captureDay,
+                  measurementDeterminedTime = .data$captureTime,
+                  .data$recordedBy,
+                  .data$totalWingLength,
+                  .data$tarsusLength,
+                  .data$leftTarsusLength,
+                  .data$rightTarsusLength,
+                  .data$mass,
+                  .data$leftP3,
+                  .data$rightP3,
+                  .data$headLength,
+                  .data$leftRectrix,
+                  .data$rightRectrix) %>%
+    # Measurements in Capture data are stored as columns, but we want each individual measurement as a row
+    # Therefore, we pivot each separate measurement of an individual to a row
+    # NAs are removed
+    tidyr::pivot_longer(cols = .data$totalWingLength:.data$rightRectrix,
+                        names_to = "measurementType",
+                        values_to = "measurementValue",
+                        values_drop_na = TRUE) %>%
+    dplyr::mutate(measurementMethod = dplyr::case_when(.data$measurementType == "tarsusLength" ~ "alternative",
+                                                       .data$measurementType == "leftTarsusLength" ~ "left; alternative",
+                                                       .data$measurementType == "rightTarsusLength" ~ "right; alternative",
+                                                       .data$measurementType == "leftRectrix" ~ "left outermost rectrix",
+                                                       .data$measurementType == "rightRectrix" ~ "right outermost rectrix",
+                                                       .data$measurementType == "leftP3" ~ "left",
+                                                       .data$measurementType == "rightP3" ~ "right"),
+                  measurementType = dplyr::case_when(stringr::str_detect(.data$measurementType, "[t|T]arsusLength") ~ "tarsus",
+                                                     stringr::str_detect(.data$measurementType, "Rectrix") ~ "tail length",
+                                                     stringr::str_detect(.data$measurementType, "P3") ~ "p3",
+                                                     .data$measurementType == "totalWingLength" ~ "total wing length",
+                                                     .data$measurementType == "headLength" ~ "total head length",
+                                                     TRUE ~ .data$measurementType),
+                  measurementUnit = dplyr::case_when(.data$measurementType == "mass" ~ "g",
+                                                     TRUE ~ "mm"),
+                  measurementID = 1:dplyr::n(),
+                  measurementSubject = "capture") %>%
+    dplyr::arrange(.data$measurementDeterminedYear,
+                   .data$measurementDeterminedMonth,
+                   .data$measurementDeterminedDay,
+                   .data$measurementDeterminedTime)
+
+  return(measurements)
 
 }
 
