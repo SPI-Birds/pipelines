@@ -2,7 +2,7 @@
 % Please edit documentation in R/format_WHZ.R
 \name{create_measurement_WHZ}
 \alias{create_measurement_WHZ}
-\title{Create individual data table for Westerholz, Germany.}
+\title{Create measurement data table for Westerholz, Germany.}
 \usage{
 create_measurement_WHZ(capture_data)
 }
@@ -13,5 +13,5 @@ create_measurement_WHZ(capture_data)
 A data frame.
 }
 \description{
-Create individual data table in standard format for data from Westerholz, Germany.
+Create measurement data table in standard format for data from Westerholz, Germany.
 }

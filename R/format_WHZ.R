@@ -590,9 +590,9 @@ create_location_WHZ <- function(connection) {
 }
 
 
-#' Create individual data table for Westerholz, Germany.
+#' Create measurement data table for Westerholz, Germany.
 #'
-#' Create individual data table in standard format for data from Westerholz, Germany.
+#' Create measurement data table in standard format for data from Westerholz, Germany.
 #'
 #' @param capture_data Data frame. Output from \code{\link{create_capture_WHZ}}.
 #'
