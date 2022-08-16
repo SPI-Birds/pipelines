@@ -609,6 +609,7 @@ create_measurement_WHZ <- function(capture_data) {
                   measurementDeterminedYear = .data$captureYear,
                   measurementDeterminedMonth = .data$captureMonth,
                   measurementDeterminedDay = .data$captureDay,
+                  measurementDeterminedTime = .data$captureTime,
                   .data$tarsus,
                   .data$mass,
                   .data$total_wing_length,
