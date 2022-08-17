@@ -84,13 +84,15 @@
 #'to grams to match other populations.
 #'
 #'\strong{tarsus}: Tarsus length is measured for both left and right leg.
-#'Generally, only left leg is reported and so is used here. Tarsus measurement
+#'If both are measured, both are reported in Measurement_data. Tarsus measurement
 #'in adults can be either left or right leg.
 #'
 #'\strong{observedSex}: Bird classified as 'likely male' or 'likely female' are simply
 #'given code 'M' and 'F' respectively (i.e., this uncertainty is ignored).
 #'
 #'\strong{broodID}: Unique broodID values are generated using year_locationPlotID_nestAttemptNumber, where locationPlotID is a concatenation of plotID (without the institutionID prefix) and locationID, and nestAttemptNumber, the nesting attempt in a nest box (locationID) per season.
+#'
+#'\strong{Experiment start and end}: Start of experimental manipulations are set to the first laying date of the affected broods, so that `experimentStartYear = min(observedLayYear)`, `experimentStartMonth = min(observedLayMonth)`, and `experimentStartDay = min(observedLayDay)`. Experiments are assumed to start and end within the same year, so that experimentEndYear = experimentStartYear. experimentEndMonth and experimentEndDay are, however, set to NA. Discuss with data owner.
 #'
 #'@inheritParams pipeline_params
 #'@param return_errors Logical (TRUE/FALSE). If true, return all records of
@@ -907,7 +909,8 @@ create_individual_HAR <- function(capture_data,
                   # Only assign brood ID if individual was caught as a chick
                   broodIDLaid = dplyr::case_when(.data$ringStage != "chick" ~ NA_character_,
                                                  TRUE ~ .data$firstBrood),
-                  # There is no information on cross-fostering, so we assume that the brood laid and fledged are the same
+                  # Cross-fostering has been done, but there is no info on which chicks were swapped and two where
+                  # TODO: Check with data owner
                   broodIDFledged =.data$broodIDLaid,
                   siteID = .data$ringSiteID)
 
@@ -1071,6 +1074,156 @@ create_measurement_HAR <- function(capture_data) {
 
 }
 
+#' Create experiment table for Harjavalta, Finland.
+#'
+#' Create experiment data table in standard format for data from Harjavalta, Finland.
+#'
+#' @param db Location of primary data from Harjavalta.
+#' @param brood_data Data frame. Output of \code{\link{create_brood_HAR}}.
+#'
+#' @return A data frame.
+#'
+
+create_experiment_HAR <- function(db,
+                                  brood_data) {
+
+  experiments <- brood_data %>%
+    dplyr::select(year = .data$observedLayYear,
+                  month = .data$observedLayMonth,
+                  day = .data$observedLayDay,
+                  experimentCode = .data$experimentID) %>%
+    # Remove non-experimental broods
+    dplyr::filter(!is.na(.data$experimentCode)) %>%
+    # Group by experiment code: year_experimentID
+    dplyr::mutate(experimentCode = as.integer(.data$experimentCode)) %>%
+    # Using information provided by the data owner, distinguish treatments from experiments
+    # E.g., 1994_1, 1994_2, 1994_3 are three treatments of the experiment carried out in 1994
+    # whilst 2004_1 and 2004_2 seem to be two different experiments carried out in 2004.
+    dplyr::mutate(experimentType = dplyr::case_when(.data$year == 1994 ~ "calcium experiment, brood size manipulation",
+                                                    .data$year %in% 1995:1997 ~ NA_character_,
+                                                    .data$year == 1998 & .data$experimentCode %in% 1:3 ~ "carotene experiment, clutch size manipulation",
+                                                    .data$year == 1998 & .data$experimentCode %in% 4:5 ~ NA_character_,
+                                                    .data$year == 1998 & .data$experimentCode %in% 6:7 ~ "incubation cost experiment, clutch size manipulation",
+                                                    .data$year == 1998 & .data$experimentCode %in% 8:9 ~ "cost of immunization experiment",
+                                                    .data$year == 1999 & .data$experimentCode %in% 1:4 ~ "food supplementation",
+                                                    .data$year == 1999 & .data$experimentCode == 5 ~ NA_character_,
+                                                    .data$year == 1999 & .data$experimentCode %in% 6:7 ~ "immunization experiment, brood size manipulation",
+                                                    .data$year %in% 2000:2003 ~ NA_character_,
+                                                    .data$year == 2004 & .data$experimentCode == 1 ~ "water and lutein supplementation",
+                                                    .data$year == 2004 & .data$experimentCode == 2 ~ "clutch size manipulation",
+                                                    .data$year == 2005 & .data$experimentCode %in% 1:4 ~ "food supplementation, clutch size manipulation",
+                                                    .data$year == 2005 & .data$experimentCode == 5 ~ "clutch size manipulation",
+                                                    .data$year %in% 2006:2010 ~ NA_character_,
+                                                    .data$year == 2011 & .data$experimentCode %in% 1:5 ~ "iron exposure experiment, brood size manipulation",
+                                                    .data$year == 2011 & .data$experimentCode == 6 ~ NA_character_,
+                                                    .data$year %in% 2012:2013 ~ NA_character_,
+                                                    .data$year == 2014 ~ "calcium experiment",
+                                                    .data$year == 2015 & .data$experimentCode %in% 0:4 ~ "arsenic experiment",
+                                                    .data$year == 2015 & .data$experimentCode %in% 5:6 ~ NA_character_,
+                                                    .data$year == 2016 ~ NA_character_,
+                                                    .data$year == 2017 & .data$experimentCode == 1 ~ NA_character_,
+                                                    .data$year == 2017 & .data$experimentCode == 2 ~ "brood size manipulation",
+                                                    .data$year == 2018 ~ NA_character_),
+                  treatmentDetails = dplyr::case_when(.data$year == 1994 & .data$experimentCode == 1 ~ "control",
+                                                      .data$year == 1994 & .data$experimentCode == 2 ~ "calcium",
+                                                      .data$year == 1994 & .data$experimentCode == 3 ~ "nestling donor",
+                                                      .data$year == 1998 & .data$experimentCode == 1 ~ "control, water, eggs swapped",
+                                                      .data$year == 1998 & .data$experimentCode == 2 ~ "lutein, eggs swapped",
+                                                      .data$year == 1998 & .data$experimentCode == 3 ~ "egg donor",
+                                                      .data$year == 1998 & .data$experimentCode == 6 ~  "control, eggs swapped",
+                                                      .data$year == 1998 & .data$experimentCode == 7 ~ "+/- 2 eggs",
+                                                      .data$year == 1998 & .data$experimentCode == 8 ~ "saline control",
+                                                      .data$year == 1998 & .data$experimentCode == 9 ~ "diphteria-tetanus vaccination",
+                                                      .data$year == 1999 & .data$experimentCode == 1 ~ "control, polluted area",
+                                                      .data$year == 1999 & .data$experimentCode == 2 ~ "control unpolluted area",
+                                                      .data$year == 1999 & .data$experimentCode == 3 ~ "mealworms and fat, polluted area",
+                                                      .data$year == 1999 & .data$experimentCode == 4 ~ "mealworms and fat, unpolluted area",
+                                                      .data$year == 1999 & .data$experimentCode == 6 ~ "+/- 2 nestlings",
+                                                      .data$year == 1999 & .data$experimentCode == 7 ~ "control",
+                                                      .data$year == 2004 & .data$experimentCode == 1 ~ "water and lutein",
+                                                      .data$year == 2004 & .data$experimentCode == 2 ~ "-1 egg",
+                                                      .data$year == 2005 & .data$experimentCode == 1 ~ "caterpillars, mealworms, water; -1 egg",
+                                                      .data$year == 2005 & .data$experimentCode == 2 ~ "mealworms, water; -1 egg",
+                                                      .data$year == 2005 & .data$experimentCode == 3 ~ "mealworms, lutein, -1 egg",
+                                                      .data$year == 2005 & .data$experimentCode == 4 ~ "control, water; -1 egg",
+                                                      .data$year == 2005 & .data$experimentCode == 5 ~ "-1 egg",
+                                                      .data$year == 2011 & .data$experimentCode == 1 ~ "-1 nestling",
+                                                      .data$year == 2011 & .data$experimentCode == 2 ~ "-2 nestlings",
+                                                      .data$year == 2011 & .data$experimentCode == 3 ~ "-3 nestlings",
+                                                      .data$year == 2011 & .data$experimentCode == 4 ~ "control",
+                                                      .data$year == 2011 & .data$experimentCode == 5 ~ "trial",
+                                                      .data$year == 2014 & .data$experimentCode == 1 ~ "calcium added, -1 egg",
+                                                      .data$year == 2014 & .data$experimentCode == 2 ~ "control, -1 egg",
+                                                      .data$year == 2014 & .data$experimentCode == 3 ~ "control",
+                                                      .data$year == 2015 & .data$experimentCode == 0 ~ "trial",
+                                                      .data$year == 2015 & .data$experimentCode == 1 ~ "water, control",
+                                                      .data$year == 2015 & .data$experimentCode == 2 ~ "low",
+                                                      .data$year == 2015 & .data$experimentCode == 3 ~ "high",
+                                                      .data$year == 2015 & .data$experimentCode == 4 ~ "water, polluted",
+                                                      .data$year == 2017 & .data$experimentCode == 7 ~ "nestlings swapped")) %>%
+    # Remove non-experimental codings
+    dplyr::filter(!is.na(.data$experimentType)) %>%
+    # Create experiment IDs: year_index
+    dplyr::arrange(.data$year, .data$experimentCode) %>%
+    dplyr::group_by(.data$year) %>%
+    dplyr::mutate(experimentID = paste(.data$year, as.integer(forcats::as_factor(.data$experimentType)),
+                                       sep = "_")) %>%
+    # Create treatment IDs (within experiment IDs): experimentID_index
+    dplyr::group_by(.data$experimentID, .add = FALSE) %>%
+    dplyr::mutate(treatmentID = paste(.data$experimentID, as.integer(forcats::as_factor(.data$experimentCode)),
+                                      sep = "_"),
+                  # Determine the stage during which the experiment was conducted
+                  # - if it involves eggs: incubation
+                  # - if it involves nestlings: nestling period
+                  # TODO: Check with data owner
+                  experimentStage = dplyr::case_when(stringr::str_detect(string = .data$experimentType,
+                                                                         pattern = "brood size") ~ "nestling",
+                                                     any(stringr::str_detect(string = .data$treatmentDetails,
+                                                                         pattern = "egg")) ~ "incubation")) %>%
+    dplyr::group_by(.data$treatmentID, .data$experimentType, .data$treatmentDetails,
+                    .data$experimentStage, .add = TRUE) %>%
+    # Start of experiment is set to the laying date of the first brood each year
+    # Experiments are assumed to be within a year, so that experimentEndYear = experimentStartYear,
+    # but experimentEndMonth and experimentEndDay are unknown
+    # TODO: Check with data owner
+    dplyr::mutate(experimentStartDate = lubridate::make_date(year = .data$year,
+                                                             month = .data$month,
+                                                             day = .data$day)) %>%
+
+    dplyr::summarise(experimentStartYear = as.integer(lubridate::year(dplyr::first(.data$experimentStartDate))),
+                     experimentStartMonth = as.integer(lubridate::month(dplyr::first(.data$experimentStartDate))),
+                     experimentStartDay = as.integer(lubridate::day(dplyr::first(.data$experimentStartDate))),
+                     experimentEndYear = .data$experimentStartYear,
+                     siteID = "HAR",
+                     .groups = "drop")
+
+  # Information on persons who conducted the experiments can be found in Visitit.DB
+  message("Extracting data on nest visits from paradox database")
+
+  nest_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Visitit.DB") %>%
+    # Rename columns to English (based on description provided by data owner)
+    dplyr::rename(year = .data$Vuos,
+                  locationPlotID = .data$Nuro,
+                  nestAttemptNumber = .data$Anro,
+                  month = .data$Kk,
+                  day = .data$Pv,
+                  time = .data$Klo,
+                  recordedBy = .data$Havno,
+                  eggNumber = .data$Mun,
+                  chickNumber = .data$Poik,
+                  comments = .data$Komm,
+                  breedingStage = .data$Tila,
+                  ticks = .data$Ticks) %>%
+    # Create unique BroodID with year_locationPlotID_nestAttemptNumber
+    dplyr::mutate(broodID = paste(.data$year,
+                                  .data$locationPlotID,
+                                  .data$nestAttemptNumber,
+                                  sep = "_")) %>%
+    dplyr::group_by(.data$broodID) %>%
+    dplyr::summarise()
+
+}
+
 #----------------------#
 # TODO: Condition == 'D'. Are these captures dead recoveries or did the birds die while handling?
 # TODO: Capture method == 'M'. Are these sightings rather than physical captures?
@@ -1079,3 +1232,6 @@ create_measurement_HAR <- function(capture_data) {
 # TODO: Check chick ring series. Four nests must contain typos, because the resulting number of chicks is > 100.
 # TODO: Verify habitatID
 # TODO: Check plotID-locationID concatenation
+# TODO: Check timing (start & end) of experiments, as well as the experimentStage
+# TODO: How to treat sampling for DNA/biomarker analysis in Experiment_data table? And "egg" or "nestling" taken?
+# TODO: Is there more cross-fostering info on individual chicks? To fill in broodIDLaid vs. broodIDFledged
