@@ -94,6 +94,8 @@
 #'
 #'\strong{Experiment start and end}: Start of experimental manipulations are set to the first laying date of the affected broods, so that `experimentStartYear = min(observedLayYear)`, `experimentStartMonth = min(observedLayMonth)`, and `experimentStartDay = min(observedLayDay)`. Experiments are assumed to start and end within the same year, so that experimentEndYear = experimentStartYear. experimentEndMonth and experimentEndDay are, however, set to NA. Discuss with data owner.
 #'
+#'\strong{recordedBy}: Persons who visited the nests/broods that were used in experiments are assumed to have conducted the experiment as well.
+#'
 #'@inheritParams pipeline_params
 #'@param return_errors Logical (TRUE/FALSE). If true, return all records of
 #'nestling with no corresponding ringing data.
@@ -1091,12 +1093,13 @@ create_experiment_HAR <- function(db,
     dplyr::select(year = .data$observedLayYear,
                   month = .data$observedLayMonth,
                   day = .data$observedLayDay,
-                  experimentCode = .data$experimentID) %>%
+                  experimentCode = .data$experimentID,
+                  .data$broodID) %>%
     # Remove non-experimental broods
     dplyr::filter(!is.na(.data$experimentCode)) %>%
     # Group by experiment code: year_experimentID
     dplyr::mutate(experimentCode = as.integer(.data$experimentCode)) %>%
-    # Using information provided by the data owner, distinguish treatments from experiments
+    # Using information provided by the data owner (in meta data file), distinguish treatments from experiments
     # E.g., 1994_1, 1994_2, 1994_3 are three treatments of the experiment carried out in 1994
     # whilst 2004_1 and 2004_2 seem to be two different experiments carried out in 2004.
     dplyr::mutate(experimentType = dplyr::case_when(.data$year == 1994 ~ "calcium experiment, brood size manipulation",
@@ -1162,7 +1165,41 @@ create_experiment_HAR <- function(db,
                                                       .data$year == 2015 & .data$experimentCode == 4 ~ "water, polluted",
                                                       .data$year == 2017 & .data$experimentCode == 7 ~ "nestlings swapped")) %>%
     # Remove non-experimental codings
-    dplyr::filter(!is.na(.data$experimentType)) %>%
+    dplyr::filter(!is.na(.data$experimentType))
+
+  # Information on persons who visited the nests can be found in Visitit.DB
+  # These are likely the persons who conducted the experiments
+  message("Extracting data on nest visits from paradox database")
+
+  observers <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Visitit.DB") %>%
+    # Rename columns to English (based on description provided by data owner)
+    dplyr::rename(year = .data$Vuos,
+                  locationPlotID = .data$Nuro,
+                  nestAttemptNumber = .data$Anro,
+                  month = .data$Kk,
+                  day = .data$Pv,
+                  time = .data$Klo,
+                  recordedBy = .data$Havno,
+                  eggNumber = .data$Mun,
+                  chickNumber = .data$Poik,
+                  comments = .data$Komm,
+                  breedingStage = .data$Tila,
+                  ticks = .data$Ticks) %>%
+    # Create unique BroodID with year_locationPlotID_nestAttemptNumber
+    dplyr::mutate(broodID = paste(.data$year,
+                                  .data$locationPlotID,
+                                  .data$nestAttemptNumber,
+                                  sep = "_")) %>%
+    dplyr::group_by(.data$broodID) %>%
+    # Alphabetize recorder IDs to ensure the same order of IDs across broods
+    dplyr::arrange(.data$recordedBy, .by_group = TRUE) %>%
+    # Concatenate unique observer IDs into a single string
+    dplyr::summarise(recordedBy = paste(unique(.data$recordedBy), collapse = " | "),
+                     .groups = "drop")
+
+  # Add observer IDs to experiment data
+  output <- experiments %>%
+    dplyr::left_join(observers, by = "broodID") %>%
     # Create experiment IDs: year_index
     dplyr::arrange(.data$year, .data$experimentCode) %>%
     dplyr::group_by(.data$year) %>%
@@ -1194,33 +1231,15 @@ create_experiment_HAR <- function(db,
                      experimentStartMonth = as.integer(lubridate::month(dplyr::first(.data$experimentStartDate))),
                      experimentStartDay = as.integer(lubridate::day(dplyr::first(.data$experimentStartDate))),
                      experimentEndYear = .data$experimentStartYear,
+                     # Create unique and sorted list of observer IDs, e.g., when different broods/nests in the same
+                     # treatment group have been visited by different (but overlapping) groups of observers
+                     recordedBy = paste(sort(unique(unlist(stringr::str_split(string = .data$recordedBy,
+                                                                         pattern = "\\s\\|\\s")))),
+                                        collapse = " | "),
                      siteID = "HAR",
                      .groups = "drop")
 
-  # Information on persons who conducted the experiments can be found in Visitit.DB
-  message("Extracting data on nest visits from paradox database")
-
-  nest_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Visitit.DB") %>%
-    # Rename columns to English (based on description provided by data owner)
-    dplyr::rename(year = .data$Vuos,
-                  locationPlotID = .data$Nuro,
-                  nestAttemptNumber = .data$Anro,
-                  month = .data$Kk,
-                  day = .data$Pv,
-                  time = .data$Klo,
-                  recordedBy = .data$Havno,
-                  eggNumber = .data$Mun,
-                  chickNumber = .data$Poik,
-                  comments = .data$Komm,
-                  breedingStage = .data$Tila,
-                  ticks = .data$Ticks) %>%
-    # Create unique BroodID with year_locationPlotID_nestAttemptNumber
-    dplyr::mutate(broodID = paste(.data$year,
-                                  .data$locationPlotID,
-                                  .data$nestAttemptNumber,
-                                  sep = "_")) %>%
-    dplyr::group_by(.data$broodID) %>%
-    dplyr::summarise()
+  return(output)
 
 }
 
