@@ -96,6 +96,8 @@
 #'
 #'\strong{recordedBy}: Persons who visited the nests/broods that were used in experiments are assumed to have conducted the experiment as well.
 #'
+#'\strong{locationID}: In the primary data, single nest boxes may change coordinates throughout the study period. When they do, new locationIDs are assigned. Note that locationIDs (i.e., nest box numbers) may be non-unique across plots (plotIDs). Unique identifiers for nest boxes can be retrieved using both plotID and locationID.
+#'
 #'@inheritParams pipeline_params
 #'
 #'@param return_errors Logical (TRUE/FALSE). If true, return all records of
@@ -173,9 +175,6 @@ format_HAR <- function(db = choose_directory(),
 
   Location_data <- create_location_HAR(db = db)
 
-  #CURRENTLY ASSUMING THAT EACH LOCATION AND NEST BOX ARE IDENTICAL
-  #GO THROUGH AND CHECK MORE THOROUGHLY
-
   # EXPERIMENT DATA
 
   message("Compiling experiment data...")
@@ -192,6 +191,11 @@ format_HAR <- function(db = choose_directory(),
     dplyr::mutate(experimentCode = paste(.data$year, .data$experimentID, sep = "_")) %>%
     dplyr::left_join(Experiment_data %>% dplyr::select(.data$treatmentID, .data$experimentCode),
                      by = "experimentCode") %>%
+    # Add locationID from Location data
+    # Store old locationID as locationCode
+    dplyr::rename(locationCode = .data$locationID) %>%
+    dplyr::left_join(Location_data %>% dplyr::select(.data$locationPlotID, .data$locationID, .data$year),
+                     by = c("locationPlotID", "observedLayYear" = "year")) %>%
     # Add row ID
     dplyr::mutate(row = 1:dplyr::n()) %>%
     # Add missing columns
@@ -202,6 +206,12 @@ format_HAR <- function(db = choose_directory(),
 
   # - Capture data
   Capture_data <- Capture_data %>%
+    # Add locationID from Location data
+    # Store old locationID as locationCode
+    dplyr::rename(locationCode = .data$locationID) %>%
+    # TODO: Some locationIDs in Capture_data are missing from Location data. Check with data owner.
+    dplyr::left_join(Location_data %>% dplyr::select(.data$locationPlotID, .data$locationID, .data$year),
+                     by = c("locationPlotID", "captureYear" = "year")) %>%
     # Add row ID
     dplyr::mutate(row = 1:dplyr::n()) %>%
     # Add missing columns
@@ -230,7 +240,20 @@ format_HAR <- function(db = choose_directory(),
     dplyr::select(names(data_templates$v1.2$Measurement_data))
 
   # - Location data
+  # create_location_HAR() returns annual location records, so that these can be easily added to
+  # Brood data and Capture data
+  # In the final output, however, each locationID should occur only once in the Location_data table
   Location_data <- Location_data %>%
+    dplyr::group_by(.data$plotID, .data$locationID) %>%
+    dplyr::arrange(.data$year, .by_group = TRUE) %>%
+    dplyr::summarise(decimalLatitude = as.numeric(dplyr::first(latitude)),
+                     decimalLongitude = as.numeric(dplyr::first(longitude)),
+                     startYear = min(.data$year),
+                     endYear = max(.data$year),
+                     siteID = dplyr::first(.data$siteID),
+                     habitatID = dplyr::first(.data$habitatID),
+                     locationType = dplyr::first(.data$locationType),
+                     .groups = "drop") %>%
     # Add row ID
     dplyr::mutate(row = 1:dplyr::n()) %>%
     # Add missing columns
@@ -347,12 +370,12 @@ create_brood_HAR <- function(db,
     # and plot number (last two symbols); split, and make plotID unique
     # TODO: Check with data owner, in some cases it seems that the first two are plot, and the last two are nestbox
     dplyr::mutate(locationID = stringr::str_sub(string = .data$locationPlotID,
-                                                start = 1,
-                                                end = 2),
+                                                start = 3,
+                                                end = 4),
                   plotID = paste0("HAR_",
                                   stringr::str_sub(string = .data$locationPlotID,
-                                                   start = 3,
-                                                   end = 4)),
+                                                   start = 1,
+                                                   end = 2)),
                   # Create unique BroodID with year_locationPlotID_nestAttemptNumber
                   broodID = paste(.data$year,
                                   .data$locationPlotID,
@@ -892,13 +915,17 @@ create_capture_HAR <- function(db,
                   rightTarsusLength = .data$rightTarsusLength/10,
                   captureSiteID = "HAR",
                   releaseSiteID = "HAR",
+                  # Set locationPlotIDs containing ? to NA
+                  locationPlotID = dplyr::case_when(stringr::str_detect(string = .data$locationPlotID,
+                                                                        pattern = "\\?") ~ NA_character_,
+                                                    TRUE ~ .data$locationPlotID),
                   locationID = stringr::str_sub(string = .data$locationPlotID,
-                                                start = 1,
-                                                end = 2),
+                                                start = 3,
+                                                end = 4),
                   capturePlotID = paste0("HAR_",
                                   stringr::str_sub(string = .data$locationPlotID,
-                                                   start = 3,
-                                                   end = 4)),
+                                                   start = 1,
+                                                   end = 2)),
                   releasePlotID = .data$capturePlotID,
                   # Assume that individuals with condition 'D' (dead) are recovered,
                   # rather than died during handling
@@ -1049,12 +1076,27 @@ create_location_HAR <- function(db){
                   locationName = .data$Paikka) %>%
     # Split locationID and plotID
     dplyr::mutate(locationID = stringr::str_sub(string = .data$locationPlotID,
-                                                start = 1,
-                                                end = 2),
+                                                start = 3,
+                                                end = 4),
                   plotID = paste0("HAR_",
                                   stringr::str_sub(string = .data$locationPlotID,
-                                                   start = 3,
-                                                   end = 4)))
+                                                   start = 1,
+                                                   end = 2)))
+
+  # Many nest boxes change location over the years
+  # Assign new locationID when they do
+  location_data <- location_data %>%
+    # Store old locationID as locationCode
+    dplyr::mutate(locationCode = .data$locationID) %>%
+    dplyr::group_by(.data$locationPlotID) %>%
+    # Concatenate latitude and longitude, set to factor to create unique indexes every time
+    # the coordinates of a single locationID change
+    # If the coordinates of a single locationID do not change, the index is not added to the new ID
+    dplyr::mutate(location = paste(.data$latitude, .data$longitude, sep = ";"),
+                  locationNumber = as.integer(forcats::as_factor(.data$location)),
+                  locationID = dplyr::case_when(length(unique(.data$location)) > 1 ~ paste(.data$locationCode, .data$locationNumber, sep = "_"),
+                                                TRUE ~ .data$locationCode)) %>%
+    dplyr::ungroup()
 
   # Separate locations with and without coordinates
   location_nocoord <- location_data %>%
@@ -1073,22 +1115,13 @@ create_location_HAR <- function(db){
   location_full <- location_wcoord %>%
     dplyr::mutate(longitude = sf::st_coordinates(location_data_sf)[, 1],
                   latitude = sf::st_coordinates(location_data_sf)[, 2]) %>%
-    dplyr::bind_rows(location_nocoord)
+    dplyr::bind_rows(location_nocoord) %>%
+    dplyr::mutate(locationType = "nest",
+                  siteID = "HAR",
+                  # TODO: habitat is set to 1.4 Forest - Boreal; check with data owner
+                  habitatID = "1.1")
 
-  # The records of each location should show the start/end season
-  output <- location_full %>%
-    dplyr::group_by(.data$plotID, .data$locationID) %>%
-    dplyr::arrange(.data$year, .by_group = TRUE) %>%
-    dplyr::summarise(siteID = "HAR",
-                     decimalLatitude = as.numeric(dplyr::first(latitude)),
-                     decimalLongitude = as.numeric(dplyr::first(longitude)),
-                     locationType = "nest",
-                     startYear = min(.data$year),
-                     endYear = max(.data$year),
-                     # TODO: habitat is set to 1.4 Forest - Boreal; check with data owner
-                     habitatID = "1.1")
-
-  return(output)
+  return(location_full)
 
 }
 
@@ -1333,6 +1366,7 @@ create_experiment_HAR <- function(db,
 # TODO: Check chick ring series. Four nests must contain typos, because the resulting number of chicks is > 100.
 # TODO: Verify habitatID
 # TODO: Check plotID-locationID concatenation
+# TODO: Check plotID-locationIDs in Capture data missing from Location data
 # TODO: Check timing (start & end) of experiments, as well as the experimentStage
 # TODO: How to treat sampling for DNA/biomarker analysis in Experiment_data table? And "egg" or "nestling" taken?
 # TODO: Is there more cross-fostering info on individual chicks? To fill in broodIDLaid vs. broodIDFledged
