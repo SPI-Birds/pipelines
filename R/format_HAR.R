@@ -97,6 +97,7 @@
 #'\strong{recordedBy}: Persons who visited the nests/broods that were used in experiments are assumed to have conducted the experiment as well.
 #'
 #'@inheritParams pipeline_params
+#'
 #'@param return_errors Logical (TRUE/FALSE). If true, return all records of
 #'nestling with no corresponding ringing data.
 #'
@@ -160,6 +161,12 @@ format_HAR <- function(db = choose_directory(),
   Individual_data <- create_individual_HAR(capture_data = Capture_data,
                                            optional_variables = optional_variables)
 
+  # MEASUREMENT DATA
+
+  message("Compiling measurement data...")
+
+  Measurement_data <- create_measurement_HAR(capture_data = Capture_data)
+
   # LOCATION DATA
 
   message("Compiling location data...")
@@ -169,9 +176,76 @@ format_HAR <- function(db = choose_directory(),
   #CURRENTLY ASSUMING THAT EACH LOCATION AND NEST BOX ARE IDENTICAL
   #GO THROUGH AND CHECK MORE THOROUGHLY
 
+  # EXPERIMENT DATA
+
+  message("Compiling experiment data...")
+
+  Experiment_data <- create_experiment_HAR(db = db,
+                                           brood_data = Brood_data)
+
   # WRANGLE DATA FOR EXPORT
 
+  # - Brood data
+  Brood_data <- Brood_data %>%
+    # Add treatmentID from Experiment data
+    # First create experimentCode variable used to join by
+    dplyr::mutate(experimentCode = paste(.data$year, .data$experimentID, sep = "_")) %>%
+    dplyr::left_join(Experiment_data %>% dplyr::select(.data$treatmentID, .data$experimentCode),
+                     by = "experimentCode") %>%
+    # Add row ID
+    dplyr::mutate(row = 1:dplyr::n()) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates$v1.2$Brood_data[1, !(names(data_templates$v1.2$Brood_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format or in the list of optional variables
+    dplyr::select(names(data_templates$v1.2$Brood_data), dplyr::contains(names(utility_variables$Brood_data),
+                                                                         ignore.case = FALSE))
 
+  # - Capture data
+  Capture_data <- Capture_data %>%
+    # Add row ID
+    dplyr::mutate(row = 1:dplyr::n()) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates$v1.2$Capture_data[1, !(names(data_templates$v1.2$Capture_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format or in the list of optional variables
+    dplyr::select(names(data_templates$v1.2$Capture_data), dplyr::contains(names(utility_variables$Capture_data),
+                                                                           ignore.case = FALSE))
+
+  # - Individual data
+  Individual_data <- Individual_data %>%
+    # Add row ID
+    dplyr::mutate(row = 1:dplyr::n()) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates$v1.2$Individual_data[1, !(names(data_templates$v1.2$Individual_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format or in the list of optional variables
+    dplyr::select(names(data_templates$v1.2$Individual_data), dplyr::contains(names(utility_variables$Individual_data),
+                                                                              ignore.case = FALSE))
+
+  # - Measurement data
+  Measurement_data <- Measurement_data %>%
+    # Add row ID
+    dplyr::mutate(row = 1:dplyr::n()) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates$v1.2$Measurement_data[1, !(names(data_templates$v1.2$Measurement_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format
+    dplyr::select(names(data_templates$v1.2$Measurement_data))
+
+  # - Location data
+  Location_data <- Location_data %>%
+    # Add row ID
+    dplyr::mutate(row = 1:dplyr::n()) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates$v1.2$Location_data[1, !(names(data_templates$v1.2$Location_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format
+    dplyr::select(names(data_templates$v1.2$Location_data))
+
+  # - Experiment data
+  Experiment_data <- Experiment_data %>%
+    # Add row ID
+    dplyr::mutate(row = 1:dplyr::n()) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates$v1.2$Experiment_data[1, !(names(data_templates$v1.2$Experiment_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format
+    dplyr::select(names(data_templates$v1.2$Experiment_data))
 
   # EXPORT DATA
 
@@ -187,9 +261,13 @@ format_HAR <- function(db = choose_directory(),
 
     utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_HAR.csv"), row.names = F)
 
-    utils::write.csv(x = Capture_data %>% select(-Sex, -BroodID), file = paste0(path, "\\Capture_data_HAR.csv"), row.names = F)
+    utils::write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_HAR.csv"), row.names = F)
+
+    utils::write.csv(x = Measurement_data, file = paste0(path, "\\Measurement_data_HAR.csv"), row.names = F)
 
     utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_HAR.csv"), row.names = F)
+
+    utils::write.csv(x = Experiment_data, file = paste0(path, "\\Experiment_data_HAR.csv"), row.names = F)
 
     invisible(NULL)
 
@@ -202,7 +280,9 @@ format_HAR <- function(db = choose_directory(),
     return(list(Brood_data = Brood_data,
                 Capture_data = Capture_data,
                 Individual_data = Individual_data,
-                Location_data = Location_data))
+                Measurement_data = Measurement_data,
+                Location_data = Location_data,
+                Experiment_data = Experiment_data))
 
   }
 
@@ -1093,79 +1173,81 @@ create_experiment_HAR <- function(db,
     dplyr::select(year = .data$observedLayYear,
                   month = .data$observedLayMonth,
                   day = .data$observedLayDay,
-                  experimentCode = .data$experimentID,
+                  treatmentCode = .data$experimentID,
                   .data$broodID) %>%
     # Remove non-experimental broods
-    dplyr::filter(!is.na(.data$experimentCode)) %>%
+    dplyr::filter(!is.na(.data$treatmentCode)) %>%
     # Group by experiment code: year_experimentID
-    dplyr::mutate(experimentCode = as.integer(.data$experimentCode)) %>%
+    dplyr::mutate(treatmentCode = as.integer(.data$treatmentCode)) %>%
     # Using information provided by the data owner (in meta data file), distinguish treatments from experiments
     # E.g., 1994_1, 1994_2, 1994_3 are three treatments of the experiment carried out in 1994
     # whilst 2004_1 and 2004_2 seem to be two different experiments carried out in 2004.
     dplyr::mutate(experimentType = dplyr::case_when(.data$year == 1994 ~ "calcium experiment, brood size manipulation",
                                                     .data$year %in% 1995:1997 ~ NA_character_,
-                                                    .data$year == 1998 & .data$experimentCode %in% 1:3 ~ "carotene experiment, clutch size manipulation",
-                                                    .data$year == 1998 & .data$experimentCode %in% 4:5 ~ NA_character_,
-                                                    .data$year == 1998 & .data$experimentCode %in% 6:7 ~ "incubation cost experiment, clutch size manipulation",
-                                                    .data$year == 1998 & .data$experimentCode %in% 8:9 ~ "cost of immunization experiment",
-                                                    .data$year == 1999 & .data$experimentCode %in% 1:4 ~ "food supplementation",
-                                                    .data$year == 1999 & .data$experimentCode == 5 ~ NA_character_,
-                                                    .data$year == 1999 & .data$experimentCode %in% 6:7 ~ "immunization experiment, brood size manipulation",
+                                                    .data$year == 1998 & .data$treatmentCode %in% 1:3 ~ "carotene experiment, clutch size manipulation",
+                                                    .data$year == 1998 & .data$treatmentCode %in% 4:5 ~ NA_character_,
+                                                    .data$year == 1998 & .data$treatmentCode %in% 6:7 ~ "incubation cost experiment, clutch size manipulation",
+                                                    .data$year == 1998 & .data$treatmentCode %in% 8:9 ~ "cost of immunization experiment",
+                                                    .data$year == 1999 & .data$treatmentCode %in% 1:4 ~ "food supplementation",
+                                                    .data$year == 1999 & .data$treatmentCode == 5 ~ NA_character_,
+                                                    .data$year == 1999 & .data$treatmentCode %in% 6:7 ~ "immunization experiment, brood size manipulation",
                                                     .data$year %in% 2000:2003 ~ NA_character_,
-                                                    .data$year == 2004 & .data$experimentCode == 1 ~ "water and lutein supplementation",
-                                                    .data$year == 2004 & .data$experimentCode == 2 ~ "clutch size manipulation",
-                                                    .data$year == 2005 & .data$experimentCode %in% 1:4 ~ "food supplementation, clutch size manipulation",
-                                                    .data$year == 2005 & .data$experimentCode == 5 ~ "clutch size manipulation",
+                                                    .data$year == 2004 & .data$treatmentCode == 1 ~ "water and lutein supplementation",
+                                                    .data$year == 2004 & .data$treatmentCode == 2 ~ "clutch size manipulation",
+                                                    .data$year == 2005 & .data$treatmentCode %in% 1:4 ~ "food supplementation, clutch size manipulation",
+                                                    .data$year == 2005 & .data$treatmentCode == 5 ~ "clutch size manipulation",
                                                     .data$year %in% 2006:2010 ~ NA_character_,
-                                                    .data$year == 2011 & .data$experimentCode %in% 1:5 ~ "iron exposure experiment, brood size manipulation",
-                                                    .data$year == 2011 & .data$experimentCode == 6 ~ NA_character_,
+                                                    .data$year == 2011 & .data$treatmentCode %in% 1:5 ~ "iron exposure experiment, brood size manipulation",
+                                                    .data$year == 2011 & .data$treatmentCode == 6 ~ NA_character_,
                                                     .data$year %in% 2012:2013 ~ NA_character_,
                                                     .data$year == 2014 ~ "calcium experiment",
-                                                    .data$year == 2015 & .data$experimentCode %in% 0:4 ~ "arsenic experiment",
-                                                    .data$year == 2015 & .data$experimentCode %in% 5:6 ~ NA_character_,
+                                                    .data$year == 2015 & .data$treatmentCode %in% 0:4 ~ "arsenic experiment",
+                                                    .data$year == 2015 & .data$treatmentCode %in% 5:6 ~ NA_character_,
                                                     .data$year == 2016 ~ NA_character_,
-                                                    .data$year == 2017 & .data$experimentCode == 1 ~ NA_character_,
-                                                    .data$year == 2017 & .data$experimentCode == 2 ~ "brood size manipulation",
+                                                    .data$year == 2017 & .data$treatmentCode == 1 ~ NA_character_,
+                                                    .data$year == 2017 & .data$treatmentCode == 2 ~ "brood size manipulation",
                                                     .data$year == 2018 ~ NA_character_),
-                  treatmentDetails = dplyr::case_when(.data$year == 1994 & .data$experimentCode == 1 ~ "control",
-                                                      .data$year == 1994 & .data$experimentCode == 2 ~ "calcium",
-                                                      .data$year == 1994 & .data$experimentCode == 3 ~ "nestling donor",
-                                                      .data$year == 1998 & .data$experimentCode == 1 ~ "control, water, eggs swapped",
-                                                      .data$year == 1998 & .data$experimentCode == 2 ~ "lutein, eggs swapped",
-                                                      .data$year == 1998 & .data$experimentCode == 3 ~ "egg donor",
-                                                      .data$year == 1998 & .data$experimentCode == 6 ~  "control, eggs swapped",
-                                                      .data$year == 1998 & .data$experimentCode == 7 ~ "+/- 2 eggs",
-                                                      .data$year == 1998 & .data$experimentCode == 8 ~ "saline control",
-                                                      .data$year == 1998 & .data$experimentCode == 9 ~ "diphteria-tetanus vaccination",
-                                                      .data$year == 1999 & .data$experimentCode == 1 ~ "control, polluted area",
-                                                      .data$year == 1999 & .data$experimentCode == 2 ~ "control unpolluted area",
-                                                      .data$year == 1999 & .data$experimentCode == 3 ~ "mealworms and fat, polluted area",
-                                                      .data$year == 1999 & .data$experimentCode == 4 ~ "mealworms and fat, unpolluted area",
-                                                      .data$year == 1999 & .data$experimentCode == 6 ~ "+/- 2 nestlings",
-                                                      .data$year == 1999 & .data$experimentCode == 7 ~ "control",
-                                                      .data$year == 2004 & .data$experimentCode == 1 ~ "water and lutein",
-                                                      .data$year == 2004 & .data$experimentCode == 2 ~ "-1 egg",
-                                                      .data$year == 2005 & .data$experimentCode == 1 ~ "caterpillars, mealworms, water; -1 egg",
-                                                      .data$year == 2005 & .data$experimentCode == 2 ~ "mealworms, water; -1 egg",
-                                                      .data$year == 2005 & .data$experimentCode == 3 ~ "mealworms, lutein, -1 egg",
-                                                      .data$year == 2005 & .data$experimentCode == 4 ~ "control, water; -1 egg",
-                                                      .data$year == 2005 & .data$experimentCode == 5 ~ "-1 egg",
-                                                      .data$year == 2011 & .data$experimentCode == 1 ~ "-1 nestling",
-                                                      .data$year == 2011 & .data$experimentCode == 2 ~ "-2 nestlings",
-                                                      .data$year == 2011 & .data$experimentCode == 3 ~ "-3 nestlings",
-                                                      .data$year == 2011 & .data$experimentCode == 4 ~ "control",
-                                                      .data$year == 2011 & .data$experimentCode == 5 ~ "trial",
-                                                      .data$year == 2014 & .data$experimentCode == 1 ~ "calcium added, -1 egg",
-                                                      .data$year == 2014 & .data$experimentCode == 2 ~ "control, -1 egg",
-                                                      .data$year == 2014 & .data$experimentCode == 3 ~ "control",
-                                                      .data$year == 2015 & .data$experimentCode == 0 ~ "trial",
-                                                      .data$year == 2015 & .data$experimentCode == 1 ~ "water, control",
-                                                      .data$year == 2015 & .data$experimentCode == 2 ~ "low",
-                                                      .data$year == 2015 & .data$experimentCode == 3 ~ "high",
-                                                      .data$year == 2015 & .data$experimentCode == 4 ~ "water, polluted",
-                                                      .data$year == 2017 & .data$experimentCode == 7 ~ "nestlings swapped")) %>%
+                  treatmentDetails = dplyr::case_when(.data$year == 1994 & .data$treatmentCode == 1 ~ "control",
+                                                      .data$year == 1994 & .data$treatmentCode == 2 ~ "calcium",
+                                                      .data$year == 1994 & .data$treatmentCode == 3 ~ "nestling donor",
+                                                      .data$year == 1998 & .data$treatmentCode == 1 ~ "control, water, eggs swapped",
+                                                      .data$year == 1998 & .data$treatmentCode == 2 ~ "lutein, eggs swapped",
+                                                      .data$year == 1998 & .data$treatmentCode == 3 ~ "egg donor",
+                                                      .data$year == 1998 & .data$treatmentCode == 6 ~  "control, eggs swapped",
+                                                      .data$year == 1998 & .data$treatmentCode == 7 ~ "+/- 2 eggs",
+                                                      .data$year == 1998 & .data$treatmentCode == 8 ~ "saline control",
+                                                      .data$year == 1998 & .data$treatmentCode == 9 ~ "diphteria-tetanus vaccination",
+                                                      .data$year == 1999 & .data$treatmentCode == 1 ~ "control, polluted area",
+                                                      .data$year == 1999 & .data$treatmentCode == 2 ~ "control unpolluted area",
+                                                      .data$year == 1999 & .data$treatmentCode == 3 ~ "mealworms and fat, polluted area",
+                                                      .data$year == 1999 & .data$treatmentCode == 4 ~ "mealworms and fat, unpolluted area",
+                                                      .data$year == 1999 & .data$treatmentCode == 6 ~ "+/- 2 nestlings",
+                                                      .data$year == 1999 & .data$treatmentCode == 7 ~ "control",
+                                                      .data$year == 2004 & .data$treatmentCode == 1 ~ "water and lutein",
+                                                      .data$year == 2004 & .data$treatmentCode == 2 ~ "-1 egg",
+                                                      .data$year == 2005 & .data$treatmentCode == 1 ~ "caterpillars, mealworms, water; -1 egg",
+                                                      .data$year == 2005 & .data$treatmentCode == 2 ~ "mealworms, water; -1 egg",
+                                                      .data$year == 2005 & .data$treatmentCode == 3 ~ "mealworms, lutein, -1 egg",
+                                                      .data$year == 2005 & .data$treatmentCode == 4 ~ "control, water; -1 egg",
+                                                      .data$year == 2005 & .data$treatmentCode == 5 ~ "-1 egg",
+                                                      .data$year == 2011 & .data$treatmentCode == 1 ~ "-1 nestling",
+                                                      .data$year == 2011 & .data$treatmentCode == 2 ~ "-2 nestlings",
+                                                      .data$year == 2011 & .data$treatmentCode == 3 ~ "-3 nestlings",
+                                                      .data$year == 2011 & .data$treatmentCode == 4 ~ "control",
+                                                      .data$year == 2011 & .data$treatmentCode == 5 ~ "trial",
+                                                      .data$year == 2014 & .data$treatmentCode == 1 ~ "calcium added, -1 egg",
+                                                      .data$year == 2014 & .data$treatmentCode == 2 ~ "control, -1 egg",
+                                                      .data$year == 2014 & .data$treatmentCode == 3 ~ "control",
+                                                      .data$year == 2015 & .data$treatmentCode == 0 ~ "trial",
+                                                      .data$year == 2015 & .data$treatmentCode == 1 ~ "water, control",
+                                                      .data$year == 2015 & .data$treatmentCode == 2 ~ "low",
+                                                      .data$year == 2015 & .data$treatmentCode == 3 ~ "high",
+                                                      .data$year == 2015 & .data$treatmentCode == 4 ~ "water, polluted",
+                                                      .data$year == 2017 & .data$treatmentCode == 7 ~ "nestlings swapped")) %>%
     # Remove non-experimental codings
-    dplyr::filter(!is.na(.data$experimentType))
+    dplyr::filter(!is.na(.data$experimentType)) %>%
+    # Create experimentCode (year_treatmentCode), used to join experiment data into brood data
+    dplyr::mutate(experimentCode = paste(.data$year, .data$treatmentCode, sep = "_"))
 
   # Information on persons who visited the nests can be found in Visitit.DB
   # These are likely the persons who conducted the experiments
@@ -1201,13 +1283,13 @@ create_experiment_HAR <- function(db,
   output <- experiments %>%
     dplyr::left_join(observers, by = "broodID") %>%
     # Create experiment IDs: year_index
-    dplyr::arrange(.data$year, .data$experimentCode) %>%
+    dplyr::arrange(.data$year, .data$treatmentCode) %>%
     dplyr::group_by(.data$year) %>%
     dplyr::mutate(experimentID = paste(.data$year, as.integer(forcats::as_factor(.data$experimentType)),
                                        sep = "_")) %>%
     # Create treatment IDs (within experiment IDs): experimentID_index
     dplyr::group_by(.data$experimentID, .add = FALSE) %>%
-    dplyr::mutate(treatmentID = paste(.data$experimentID, as.integer(forcats::as_factor(.data$experimentCode)),
+    dplyr::mutate(treatmentID = paste(.data$experimentID, as.integer(forcats::as_factor(.data$treatmentCode)),
                                       sep = "_"),
                   # Determine the stage during which the experiment was conducted
                   # - if it involves eggs: incubation
@@ -1218,7 +1300,7 @@ create_experiment_HAR <- function(db,
                                                      any(stringr::str_detect(string = .data$treatmentDetails,
                                                                          pattern = "egg")) ~ "incubation")) %>%
     dplyr::group_by(.data$treatmentID, .data$experimentType, .data$treatmentDetails,
-                    .data$experimentStage, .add = TRUE) %>%
+                    .data$experimentStage, .data$experimentCode, .add = TRUE) %>%
     # Start of experiment is set to the laying date of the first brood each year
     # Experiments are assumed to be within a year, so that experimentEndYear = experimentStartYear,
     # but experimentEndMonth and experimentEndDay are unknown
