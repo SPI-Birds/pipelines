@@ -402,7 +402,7 @@ create_brood_HAR <- function(db,
                                 .fns = ~ {
 
                                   dplyr::case_when(stringr::str_detect(string = .x,
-                                                                       pattern = "^[:alpha:]{1,2}[-][:digit:]{5,6}$") ~ paste0("HAR_", stringr::str_remove_all(.x, "[:punct:]")),
+                                                                       pattern = "^[:alpha:]{1,2}[:digit:]{5,6}$") ~ paste0("HAR_", stringr::str_remove_all(.x, "[:punct:]")),
                                                    TRUE ~ NA_character_)
 
                                 }),
