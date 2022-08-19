@@ -366,16 +366,20 @@ create_brood_HAR <- function(db,
     dplyr::select(-.data$reasonFailed:-.data$malePresent,
                   -.data$expData1:-.data$tempCode2) %>%
     # Create IDs
-    # locationPlotID (Nuro) is a concatenation of nestbox number (first two symbols)
-    # and plot number (last two symbols); split, and make plotID unique
-    # TODO: Check with data owner, in some cases it seems that the first two are plot, and the last two are nestbox
-    dplyr::mutate(locationID = stringr::str_sub(string = .data$locationPlotID,
-                                                start = 3,
-                                                end = 4),
-                  plotID = paste0("HAR_",
-                                  stringr::str_sub(string = .data$locationPlotID,
-                                                   start = 1,
-                                                   end = 2)),
+    # locationPlotID (Nuro) is a concatenation of plot ID (first two symbols)
+    # and nestbox number (last two symbols); split, and make both unique
+    # TODO: Check with data owner, it seems that the first two are plot, and the last two are nestbox,
+    # whereas the meta data file states the other way around
+    dplyr::mutate(plotID = paste("HAR",
+                                 stringr::str_sub(string = .data$locationPlotID,
+                                                  start = 1,
+                                                  end = 2),
+                                 sep = "_"),
+                  locationID = paste(.data$plotID,
+                                     stringr::str_sub(string = .data$locationPlotID,
+                                                      start = 3,
+                                                      end = 4),
+                                     sep = "_"),
                   # Create unique BroodID with year_locationPlotID_nestAttemptNumber
                   broodID = paste(.data$year,
                                   .data$locationPlotID,
@@ -750,8 +754,11 @@ create_capture_HAR <- function(db,
     dplyr::left_join(nestling_data %>%
                        dplyr::select(.data$broodID, .data$last2DigitsRingNumber, captureDateNestling = .data$captureDate,
                                      captureTimeNestling = .data$captureTime, massNestling = .data$mass,
-                                     totalWingLengthNestling = .data$totalWingLength, headLengthNestling = .data$headLength,
-                                     .data$leftTarsusLength, .data$rightTarsusLength, .data$leftP3, .data$rightP3,
+                                     totalWingLengthNestling = .data$totalWingLength,
+                                     headLengthNestling = .data$headLength,
+                                     .data$leftTarsusLength, .data$rightTarsusLength,
+                                     .data$leftP3, .data$rightP3,
+                                     .data$leftRectrix, .data$rightRectrix,
                                      .data$observedHatchDate, .data$chickAge),
                      by = c("broodID", "last2DigitsRingNumber")) %>%
     # Filter those cases that are individual captures (i.e., no last ring number)
@@ -831,12 +838,14 @@ create_capture_HAR <- function(db,
     dplyr::left_join(nestling_data %>% dplyr::select(.data$broodID, .data$captureDate, .data$captureTime,
                                                      .data$last2DigitsRingNumber, .data$mass, .data$totalWingLength,
                                                      .data$headLength, .data$leftTarsusLength, .data$rightTarsusLength,
+                                                     .data$leftRectrix, .data$rightRectrix,
                                                      .data$leftP3, .data$rightP3, .data$chickAge),
                      by = c("broodID", "last2DigitsRingNumber")) %>%
     dplyr::mutate(individualID = paste0("HAR_",
                                         .data$ringSeries,
                                         .data$ringNumber),
-                  captureYear = as.integer(lubridate::year(.data$captureDate)),
+                  captureYear = dplyr::case_when(is.na(.data$captureDate) ~ .data$captureYear,
+                                                 TRUE ~ as.integer(lubridate::year(.data$captureDate))),
                   captureMonth = as.integer(lubridate::month(.data$captureDate)),
                   captureDay = as.integer(lubridate::day(.data$captureDate)))
 
@@ -924,13 +933,19 @@ create_capture_HAR <- function(db,
                   locationPlotID = dplyr::case_when(stringr::str_detect(string = .data$locationPlotID,
                                                                         pattern = "\\?") ~ NA_character_,
                                                     TRUE ~ .data$locationPlotID),
-                  locationID = stringr::str_sub(string = .data$locationPlotID,
-                                                start = 3,
-                                                end = 4),
-                  capturePlotID = paste0("HAR_",
-                                  stringr::str_sub(string = .data$locationPlotID,
-                                                   start = 1,
-                                                   end = 2)),
+                  # Set plotID & locationID
+                  # plotID = first two digits
+                  # locationID = plotID_nestbox number, where nestbox number is last two digits
+                  capturePlotID = paste("HAR",
+                                        stringr::str_sub(string = .data$locationPlotID,
+                                                         start = 1,
+                                                         end = 2),
+                                        sep = "_"),
+                  locationID = paste(.data$capturePlotID,
+                                     stringr::str_sub(string = .data$locationPlotID,
+                                                      start = 3,
+                                                      end = 4),
+                                     sep = "_"),
                   releasePlotID = .data$capturePlotID,
                   # Assume that individuals with condition 'D' (dead) are recovered,
                   # rather than died during handling
@@ -1079,14 +1094,19 @@ create_location_HAR <- function(db){
                   longitude = .data$Pitu,
                   municipality = .data$Kunta,
                   locationName = .data$Paikka) %>%
-    # Split locationID and plotID
-    dplyr::mutate(locationID = stringr::str_sub(string = .data$locationPlotID,
-                                                start = 3,
-                                                end = 4),
-                  plotID = paste0("HAR_",
-                                  stringr::str_sub(string = .data$locationPlotID,
-                                                   start = 1,
-                                                   end = 2)))
+    # Create locationID and plotID
+    # plotID = first two digits
+    # locationID = plotID_nestbox number, where nestbox number is last two digits
+    dplyr::mutate(plotID = paste("HAR",
+                                 stringr::str_sub(string = .data$locationPlotID,
+                                                  start = 1,
+                                                  end = 2),
+                                 sep = "_"),
+                  locationID = paste(.data$plotID,
+                                     stringr::str_sub(string = .data$locationPlotID,
+                                                      start = 3,
+                                                      end = 4),
+                                     sep = "_"))
 
   # Many nest boxes change location over the years
   # Assign new locationID when they do
