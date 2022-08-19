@@ -1305,7 +1305,7 @@ create_experiment_HAR <- function(db,
                                                       .data$year == 2015 & .data$treatmentCode == 2 ~ "low",
                                                       .data$year == 2015 & .data$treatmentCode == 3 ~ "high",
                                                       .data$year == 2015 & .data$treatmentCode == 4 ~ "water, polluted",
-                                                      .data$year == 2017 & .data$treatmentCode == 7 ~ "nestlings swapped")) %>%
+                                                      .data$year == 2017 & .data$treatmentCode == 2 ~ "nestlings swapped")) %>%
     # Remove non-experimental codings
     dplyr::filter(!is.na(.data$experimentType)) %>%
     # Create experimentCode (year_treatmentCode), used to join experiment data into brood data
@@ -1392,6 +1392,7 @@ create_experiment_HAR <- function(db,
                   .data$treatmentID,
                   .data$experimentCode,
                   .data$siteID,
+                  .data$experimentType,
                   .data$experimentStage,
                   .data$treatmentDetails) %>%
     dplyr::distinct() %>%
@@ -1413,3 +1414,4 @@ create_experiment_HAR <- function(db,
 # TODO: Check timing (start & end) of experiments, as well as the experimentStage
 # TODO: How to treat sampling for DNA/biomarker analysis in Experiment_data table? And "egg" or "nestling" taken?
 # TODO: Is there more cross-fostering info on individual chicks? To fill in broodIDLaid vs. broodIDFledged
+# TODO: Some experiment/treatment codes are not in metadata. Check. E.g. 2014-4.
