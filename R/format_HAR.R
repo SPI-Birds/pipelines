@@ -812,6 +812,8 @@ create_capture_HAR <- function(db,
                   .data$ringSeries,
                   .data$ringNumber,
                   .data$captureYear,
+                  .data$captureMonth,
+                  .data$captureDay,
                   .data$speciesID,
                   .data$observedSex,
                   .data$age,
@@ -833,7 +835,10 @@ create_capture_HAR <- function(db,
                      by = c("broodID", "last2DigitsRingNumber")) %>%
     dplyr::mutate(individualID = paste0("HAR_",
                                         .data$ringSeries,
-                                        .data$ringNumber))
+                                        .data$ringNumber),
+                  captureYear = as.integer(lubridate::year(.data$captureDate)),
+                  captureMonth = as.integer(lubridate::month(.data$captureDate)),
+                  captureDay = as.integer(lubridate::day(.data$captureDate)))
 
   ####
 
