@@ -543,7 +543,15 @@ create_nestling_HAR <- function(db,
     dplyr::left_join(brood_data %>%  dplyr::select(.data$broodID, .data$observedHatchDate),
                      by = "broodID") %>%
     # Determine age at capture
-    dplyr::mutate(chickAge = as.integer(.data$captureDate - .data$observedHatchDate))
+    dplyr::mutate(chickAge = as.integer(.data$captureDate - .data$observedHatchDate),
+                  # Nestling tarsus measures seem to have different units depending on which leg was measured.
+                  # Left in mm, right in 10*mm.
+                  # TODO: check with data owner
+                  rightTarsusLength = .data$rightTarsusLength / 10,
+                  leftP3 = .data$leftP3 / 10,
+                  rightP3 = .data$rightP3 / 10,
+                  leftRectrix = .data$leftRectrix / 10,
+                  rightRectrix = .data$rightRectrix / 10)
 
   return(nestling_data)
 
@@ -922,11 +930,7 @@ create_capture_HAR <- function(db,
                                             ringed_chicks_nocapture)
 
   captures <- capture_data_expanded %>%
-    dplyr::mutate(mass = .data$mass/10,
-                  # Nestling tarsus measures seem to have different units depending on which leg was measured.
-                  # Left in mm, right in 10*mm.
-                  # TODO: check with data owner
-                  rightTarsusLength = .data$rightTarsusLength/10,
+    dplyr::mutate(mass = .data$mass / 10,
                   captureSiteID = "HAR",
                   releaseSiteID = "HAR",
                   # Set locationPlotIDs containing ? to NA
@@ -1338,7 +1342,7 @@ create_experiment_HAR <- function(db,
                      .groups = "drop")
 
   # Add observer IDs to experiment data
-  output <- experiments %>%
+  experiments <- experiments %>%
     dplyr::left_join(observers, by = "broodID") %>%
     # Create experiment IDs: year_index
     dplyr::arrange(.data$year, .data$treatmentCode) %>%
@@ -1356,9 +1360,13 @@ create_experiment_HAR <- function(db,
                   experimentStage = dplyr::case_when(stringr::str_detect(string = .data$experimentType,
                                                                          pattern = "brood size") ~ "nestling",
                                                      any(stringr::str_detect(string = .data$treatmentDetails,
-                                                                         pattern = "egg")) ~ "incubation")) %>%
-    dplyr::group_by(.data$treatmentID, .data$experimentType, .data$treatmentDetails,
-                    .data$experimentStage, .data$experimentCode, .add = TRUE) %>%
+                                                                         pattern = "egg")) ~ "incubation"),
+                  siteID = "HAR") %>%
+    dplyr::ungroup()
+
+  # Get start and end dates of experiments
+  experiment_times <- experiments %>%
+    dplyr::group_by(.data$experimentID) %>%
     # Start of experiment is set to the laying date of the first brood each year
     # Experiments are assumed to be within a year, so that experimentEndYear = experimentStartYear,
     # but experimentEndMonth and experimentEndDay are unknown
@@ -1374,10 +1382,20 @@ create_experiment_HAR <- function(db,
                      # Create unique and sorted list of observer IDs, e.g., when different broods/nests in the same
                      # treatment group have been visited by different (but overlapping) groups of observers
                      recordedBy = paste(sort(unique(unlist(stringr::str_split(string = .data$recordedBy,
-                                                                         pattern = "\\s\\|\\s")))),
+                                                                              pattern = "\\s\\|\\s")))),
                                         collapse = " | "),
-                     siteID = "HAR",
                      .groups = "drop")
+
+  # Add experiment times to experiment data table
+  output <- experiments %>%
+    dplyr::select(.data$experimentID,
+                  .data$treatmentID,
+                  .data$experimentCode,
+                  .data$siteID,
+                  .data$experimentStage,
+                  .data$treatmentDetails) %>%
+    dplyr::distinct() %>%
+    dplyr::left_join(experiment_times, by = "experimentID")
 
   return(output)
 
