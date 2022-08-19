@@ -259,7 +259,7 @@ test_that("Measurement_data returns an expected outcome...", {
 
   # We want to run tests for individuals measured as adults, and individuals measured as chicks
 
-  # Take a subset of MAY - Measurement_data
+  # Take a subset of WHZ - Measurement_data
   WHZ_data <- dplyr::filter(pipeline_output$Measurement_data, siteID == "WHZ")
 
   # Test 1: Adult with 3 measurements
