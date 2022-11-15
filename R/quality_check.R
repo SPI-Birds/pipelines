@@ -292,7 +292,7 @@ quality_check <- function(R_data,
       pdf_map <- c('\\newpage',
                    '# Maps',
                    '',
-                   '```{r, echo = FALSE, fig.cap = "", results = "asis"}',
+                   '```{r, echo = FALSE, fig.cap = "", results = "asis", out.width="100%"}',
                    'invisible(
                       iwalk(.x = Location_checks$Maps,
                             .f = ~{
@@ -395,6 +395,9 @@ quality_check <- function(R_data,
 
                    })
   }
+
+  # Empty figure directory with map data
+  unlink("figure/*", recursive = T)
 
   # Produce warnings and verified records
   if(output %in% c("warnings", "both") & report == TRUE) {
