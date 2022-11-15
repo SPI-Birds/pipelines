@@ -131,6 +131,11 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
 
     }
 
+    # Select PopIDs with at least 2 locations with known and unique coordinates
+    pops_w_longlat <- records_w_longlat %>%
+      dplyr::filter(.data$n_unique_lon >= 2 | .data$n_unique_lat >= 2) %>%
+      dplyr::pull(.data$PopID)
+
     # Determine centre point per PopID
     centre_points <- Location_data %>%
       # Filter out capture locations without coordinates
@@ -141,12 +146,12 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
       tidyr::drop_na(dplyr::any_of(c("Longitude", "Latitude"))) %>%
       # Filter location records that appear in Brood_data and/or Capture_data only
       # And keep populations with at least 2 records with known coordinates
-      dplyr::filter(.data$LocationID %in% unique(Brood_data$LocationID) | .data$LocationID %in% unique(Capture_data$LocationID) &
-                      .data$PopID %in% {records_w_longlat %>% dplyr::filter(.data$n_unique_lon >= 2 & .data$n_unique_lat >= 2) %>% dplyr::pull(.data$PopID)}) %>%
+      dplyr::filter((.data$LocationID %in% unique(Brood_data$LocationID) | .data$LocationID %in% unique(Capture_data$LocationID)) &
+                      .data$PopID %in% pops_w_longlat) %>%
       dplyr::group_by(.data$PopID) %>%
       # Centre points are determined by calculating the maximum kernel density for Longitude and Latitude
-      dplyr::summarise(Centre_lon = mean(stats::density(Longitude)$x[which(stats::density(Longitude)$y == max(stats::density(Longitude)$y))]),
-                       Centre_lat = mean(stats::density(Latitude)$x[which(stats::density(Latitude)$y == max(stats::density(Latitude)$y))]),
+      dplyr::summarise(Centre_lon = mean(stats::density(.data$Longitude)$x[which(stats::density(.data$Longitude)$y == max(stats::density(.data$Longitude)$y))]),
+                       Centre_lat = mean(stats::density(.data$Latitude)$x[which(stats::density(.data$Latitude)$y == max(stats::density(.data$Latitude)$y))]),
                        .groups = "drop")
 
     # Add centre points to original data frame
@@ -215,12 +220,8 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
 
     suppressMessages({
 
-      location_IDs <- records_w_longlat %>%
-        dplyr::filter(.data$n_unique_lon >= 2 | .data$n_unique_lat >= 2) %>%
-        dplyr::pull(.data$PopID)
-
       # Create map per PopID
-      maps <- purrr::map(.x = location_IDs,
+      maps <- purrr::map(.x = pops_w_longlat,
                          .f = ~{
 
                            leaflet::leaflet() %>%
@@ -245,7 +246,7 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
                                                 colors = "white", labels = "Centre point (*)")
 
                          }) %>%
-      setNames(location_IDs)
+      setNames(pops_w_longlat)
 
     })
 
