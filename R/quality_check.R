@@ -15,6 +15,7 @@
 #' dummy data will be used instead.
 #' @param map Logical. If  \code{TRUE}, a map of locations is added in the report. See \code{\link{check_coordinates}}.
 #'
+#' @export
 #' @return
 #' A list of:
 #' \item{CheckList}{A summary dataframe of check warnings and potential errors.}
@@ -33,7 +34,6 @@
 #' CHO_checked <- quality_check(R_data = CHO)
 #'
 #' }
-#' @export
 
 quality_check <- function(R_data,
                           output = "both",
