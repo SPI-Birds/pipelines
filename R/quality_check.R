@@ -16,6 +16,7 @@
 #' @param map Logical. If  \code{TRUE}, a map of locations is added in the report. See \code{\link{check_coordinates}}.
 #' @param skip Character. Identifiers of the individual quality checks (CheckID) that should be skipped.
 #'
+#' @export
 #' @return
 #' A list of:
 #' \item{CheckList}{A summary dataframe of check warnings and potential errors.}
