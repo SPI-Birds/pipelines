@@ -180,8 +180,8 @@ The following notes detail how to set up the python environment on MacOS, includ
 
 * Check that both libraries are now available:
 ```
-py_module_available("pandas")
-py_module_available("pypxlib")
+reticulate::py_module_available("pandas")
+reticulate::py_module_available("pypxlib")
 ```
 (Both commands should return TRUE)
 
