@@ -60,18 +60,22 @@ create_dummy_data <- function() {
   B1_rows <- Brood_data %>%
     dplyr::mutate( # Probable, non-manipulated brood
       ClutchSize_observed = as.integer(8),
-      BroodSize_observed = as.integer(7)) %>%
+      BroodSize_observed = as.integer(7)
+    ) %>%
     dplyr::add_row( # Impossible, non-manipulated brood (error)
       ClutchSize_observed = as.integer(7),
-      BroodSize_observed = as.integer(8)) %>%
+      BroodSize_observed = as.integer(8)
+    ) %>%
     dplyr::add_row( # Probable, manipulated brood
       ClutchSize_observed = as.integer(8),
       BroodSize_observed = as.integer(7),
-      ExperimentID = "COHORT") %>%
+      ExperimentID = "COHORT"
+    ) %>%
     dplyr::add_row( # Improbable, manipulated brood (warning)
       ClutchSize_observed = as.integer(7),
       BroodSize_observed = as.integer(8),
-      ExperimentID = "COHORT") %>%
+      ExperimentID = "COHORT"
+    ) %>%
     dplyr::mutate(
       PopID = "AAA",
       BreedingSeason = as.integer(2020),
@@ -85,18 +89,22 @@ create_dummy_data <- function() {
   B2_rows <- Brood_data %>%
     dplyr::mutate( # Probable, non-manipulated brood
       BroodSize_observed = as.integer(6),
-      NumberFledged_observed = as.integer(5)) %>%
+      NumberFledged_observed = as.integer(5)
+    ) %>%
     dplyr::add_row( # Impossible, non-manipulated brood (error)
       BroodSize_observed = as.integer(5),
-      NumberFledged_observed = as.integer(6)) %>%
+      NumberFledged_observed = as.integer(6)
+    ) %>%
     dplyr::add_row( # Probable, manipulated brood
       BroodSize_observed = as.integer(6),
       NumberFledged_observed = as.integer(5),
-      ExperimentID = "COHORT") %>%
+      ExperimentID = "COHORT"
+    ) %>%
     dplyr::add_row( # Improbable, manipulated brood (warning)
       BroodSize_observed = as.integer(5),
       NumberFledged_observed = as.integer(6),
-      ExperimentID = "COHORT") %>%
+      ExperimentID = "COHORT"
+    ) %>%
     dplyr::mutate(
       PopID = "AAA",
       BreedingSeason = as.integer(2020),
@@ -147,15 +155,17 @@ create_dummy_data <- function() {
   # B5a: Checking clutch size values against reference values ####
   B5a_rows <- Brood_data %>%
     dplyr::mutate( # Probable
-      ClutchSize_observed = 10) %>%
+      ClutchSize_observed = 10
+    ) %>%
     dplyr::add_row( # Add 150 rows so that reference values can be calculated
-      ClutchSize_observed = round(stats::rnorm(150, 9, 2))) %>%
-    dplyr::add_row( # Improbable (warning)
-      ClutchSize_observed = 30) %>%
+      ClutchSize_observed = round(stats::rnorm(150, 9, 2))
+    ) %>%
     dplyr::add_row( # Impossible (error)
-      ClutchSize_observed = -10) %>%
+      ClutchSize_observed = -10
+    ) %>%
     dplyr::add_row( # Impossible (error)
-      ClutchSize_observed = 100) %>%
+      ClutchSize_observed = 100
+    ) %>%
     dplyr::mutate(
       PopID = "AAA",
       BreedingSeason = as.integer(2020),
@@ -168,15 +178,17 @@ create_dummy_data <- function() {
   # B5b: Checking brood size values against reference values ####
   B5b_rows <- Brood_data %>%
     dplyr::mutate( # Probable
-      BroodSize_observed = 9) %>%
+      BroodSize_observed = 9
+    ) %>%
     dplyr::add_row( # Add 150 rows so that reference values can be calculated
-      BroodSize_observed = round(stats::rnorm(150, 8, 2))) %>%
-    dplyr::add_row( # Improbable (warning)
-      BroodSize_observed = 30) %>%
+      BroodSize_observed = round(stats::rnorm(150, 8, 2))
+    ) %>%
     dplyr::add_row( # Impossible (error)
-      BroodSize_observed = -10) %>%
+      BroodSize_observed = -10
+    ) %>%
     dplyr::add_row( # Impossible (error)
-      BroodSize_observed = 100) %>%
+      BroodSize_observed = 100
+    ) %>%
     dplyr::mutate(
       PopID = "AAA",
       BreedingSeason = as.integer(2020),
@@ -189,15 +201,17 @@ create_dummy_data <- function() {
   # B5c: Checking fledgling number values against reference values ####
   B5c_rows <- Brood_data %>%
     dplyr::mutate( # Probable
-      NumberFledged_observed = 9) %>%
+      NumberFledged_observed = 9
+    ) %>%
     dplyr::add_row( # Add 150 rows so that reference values can be calculated
-      NumberFledged_observed = round(stats::rnorm(150, 8, 2))) %>%
-    dplyr::add_row( # Improbable (warning)
-      NumberFledged_observed = 30) %>%
+      NumberFledged_observed = round(stats::rnorm(150, 8, 2))
+    ) %>%
     dplyr::add_row( # Impossible (error)
-      NumberFledged_observed = -10) %>%
+      NumberFledged_observed = -10
+    ) %>%
     dplyr::add_row( # Impossible (error)
-      NumberFledged_observed = 100) %>%
+      NumberFledged_observed = 100
+    ) %>%
     dplyr::mutate(
       PopID = "AAA",
       BreedingSeason = as.integer(2020),
@@ -210,17 +224,17 @@ create_dummy_data <- function() {
   # B5d: Checking laying date values against reference values ####
   B5d_rows <- Brood_data %>%
     dplyr::mutate( # Probable
-      LayDate_observed = as.Date("2020-05-01")) %>%
+      LayDate_observed = as.Date("2020-05-01")
+    ) %>%
     dplyr::add_row( # Add 150 rows so that reference values can be calculated
-      LayDate_observed = sample(seq(as.Date("2020-04-01"), as.Date("2020-05-31"), by = "day"), 150, replace = TRUE)) %>%
-    dplyr::add_row( # Improbable, too early (warning)
-      LayDate_observed = as.Date("2020-03-01")) %>%
-    dplyr::add_row( # Improbable, too late (warning)
-      LayDate_observed = as.Date("2020-08-01")) %>%
+      LayDate_observed = sample(seq(as.Date("2020-04-01"), as.Date("2020-05-31"), by = "day"), 150, replace = TRUE)
+    ) %>%
     dplyr::add_row( # Impossible, year earlier (error)
-      LayDate_observed = as.Date("2019-05-01")) %>%
+      LayDate_observed = as.Date("2019-05-01")
+    ) %>%
     dplyr::add_row( # Impossible, year later (error)
-      LayDate_observed = as.Date("2021-05-01")) %>%
+      LayDate_observed = as.Date("2021-05-01")
+    ) %>%
     dplyr::mutate(
       PopID = "AAA",
       BreedingSeason = as.integer(2020),
@@ -228,6 +242,52 @@ create_dummy_data <- function() {
       Row = seq(max(B5c_rows$Row) + 1, length.out = dplyr::n()),
       BroodID = paste(.data$PopID, .data$BreedingSeason, .data$Row, sep = "-"),
       CheckID = "B5d"
+    )
+
+  # B5e: Checking hatch date values against reference values ####
+  B5e_rows <- Brood_data %>%
+    dplyr::mutate( # Probable
+      HatchDate_observed = as.Date("2020-06-01")
+    ) %>%
+    dplyr::add_row( # Add 150 rows so that reference values can be calculated
+      HatchDate_observed = sample(seq(as.Date("2020-05-01"), as.Date("2020-06-30"), by = "day"), 150, replace = TRUE)
+    ) %>%
+    dplyr::add_row( # Impossible, year earlier (error)
+      HatchDate_observed = as.Date("2019-06-01")
+    ) %>%
+    dplyr::add_row( # Impossible, year later (error)
+      HatchDate_observed = as.Date("2021-06-01")
+    ) %>%
+    dplyr::mutate(
+      PopID = "AAA",
+      BreedingSeason = as.integer(2020),
+      Species = "PARMAJ",
+      Row = seq(max(B5d_rows$Row) + 1, length.out = dplyr::n()),
+      BroodID = paste(.data$PopID, .data$BreedingSeason, .data$Row, sep = "-"),
+      CheckID = "B5e"
+    )
+
+  # B5f: Checking hatch date values against reference values ####
+  B5f_rows <- Brood_data %>%
+    dplyr::mutate( # Probable
+      FledgeDate_observed = as.Date("2020-07-01")
+    ) %>%
+    dplyr::add_row( # Add 150 rows so that reference values can be calculated
+      FledgeDate_observed = sample(seq(as.Date("2020-06-01"), as.Date("2020-07-31"), by = "day"), 150, replace = TRUE)
+    ) %>%
+    dplyr::add_row( # Impossible, year earlier (error)
+      FledgeDate_observed = as.Date("2019-07-01")
+    ) %>%
+    dplyr::add_row( # Impossible, year later (error)
+      FledgeDate_observed = as.Date("2021-07-01")
+    ) %>%
+    dplyr::mutate(
+      PopID = "AAA",
+      BreedingSeason = as.integer(2020),
+      Species = "PARMAJ",
+      Row = seq(max(B5e_rows$Row) + 1, length.out = dplyr::n()),
+      BroodID = paste(.data$PopID, .data$BreedingSeason, .data$Row, sep = "-"),
+      CheckID = "B5f"
     )
 
   # B6: Comparing brood size and number of chicks in Individual_data ####
@@ -245,7 +305,7 @@ create_dummy_data <- function() {
       PopID = "AAA",
       BreedingSeason = as.integer(2020),
       Species = "PARMAJ",
-      Row = seq(max(B5d_rows$Row) + 1, length.out = dplyr::n()),
+      Row = seq(max(B5f_rows$Row) + 1, length.out = dplyr::n()),
       BroodID = paste(.data$PopID, .data$BreedingSeason, .data$Row, sep = "-"),
       CheckID = "B6"
     )
@@ -673,10 +733,10 @@ create_dummy_data <- function() {
   I1_indv_rows <- Individual_data %>%
     dplyr::mutate( # Probable
       PopID = "AAA",
-      ) %>%
+    ) %>%
     dplyr::add_row( # Impossible (error)
       PopID = as.character(c("AAA", "AAA")),
-      ) %>%
+    ) %>%
     dplyr::mutate(
       RingSeason = as.integer(2020),
       Species = "PARMAJ",
@@ -714,7 +774,7 @@ create_dummy_data <- function() {
     ) %>%
     dplyr::add_row( # Impossible (error)
       Row = max(I1_indv_rows$Row) + 2
-      ) %>%
+    ) %>%
     dplyr::mutate(
       IndvID = paste0("I2_", .data$Row),
       PopID = "AAA",
@@ -870,7 +930,7 @@ create_dummy_data <- function() {
     dplyr::mutate(
       Age_calculated = 5,
       Sex_observed = "F",
-      Row = seq(max(I5_capture_rows$Row) + 1, length.out = dplyr::n()),
+      Row = seq(max(I5_capture_rows$Row) + 2, length.out = dplyr::n()), # +2 because I5's second dummy record should be missing
       IndvID = paste0("I", .data$Row),
       CapturePopID = "AAA",
       BreedingSeason = as.integer(2020),
@@ -1546,7 +1606,7 @@ create_dummy_data <- function() {
 
   # Combine single check rows per dataframe
   Brood_data <- dplyr::bind_rows(al_rows, B1_rows, B2_rows, B3_rows, B4_rows, B5a_rows, B5b_rows,
-                                 B5c_rows, B5d_rows, B6_brood_rows, B7_rows, B8_rows, B9_brood_rows,
+                                 B5c_rows, B5d_rows, B5e_rows, B5f_rows, B6_brood_rows, B7_rows, B8_rows, B9_brood_rows,
                                  C3_brood_rows, B10_brood_rows, B11_brood_rows, B12_brood_rows, B13_brood_rows,
                                  B14_brood_rows, B15_brood_rows) %>%
     dplyr::arrange(.data$Row)

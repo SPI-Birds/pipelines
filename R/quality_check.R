@@ -7,26 +7,29 @@
 #' @param R_data Output of pipeline as an R object. Generated using
 #' \code{output_type = R} in \code{\link{run_pipelines}}.
 #' @param output Character. Run checks on and produce report of: potential errors ("errors"), warnings and verified records ("warnings"), or both in separate files ("both"; default).
-#' @param report \code{TRUE} or \code{FALSE}. If \code{TRUE}, a report is produced. Default: \code{TRUE}.
+#' @param report Logical. If \code{TRUE}, a report is produced. Default: \code{TRUE}.
 #' @param report_format Character. Format of output report: "html", "pdf", or "both" (default).
 #' @param report_file Character. Name of the output reports. Default: "quality-check-report". Note that to the file name of the report on potential errors the suffix "_errors" is added (i.e. "quality-check-report_errors"), and to the report on warnings and verified records "_warnings" (i.e., "quality-check-report_warnings").
 #' @param latex_engine Character. LaTeX engine for producing PDF output. Options are "pdflatex", "xelatex", and "lualatex" (default). NB: pdfLaTeX and XeLaTeX have memory limit restrictions, which can be problematic when generating large pdfs. LuaLaTeX has dynamic memory management which may help for generating large pdfs.
-#' @param test Logical. Is `quality_check` being used inside package tests? If  \code{TRUE}, `R_data` is ignored and
+#' @param test Logical. Is \code{quality_check} being used inside package tests? If  \code{TRUE}, \code{R_data} is ignored and
 #' dummy data will be used instead.
 #' @param map Logical. If  \code{TRUE}, a map of locations is added in the report. See \code{\link{check_coordinates}}.
+#' @param skip Character. Identifiers of the individual quality checks (CheckID) that should be skipped.
 #'
 #' @export
 #' @return
 #' A list of:
 #' \item{CheckList}{A summary dataframe of check warnings and potential errors.}
 #' \item{NumberChecks}{Number of checks performed.}
-#' \item{NumberWarnings}{Number of checks resulted in warnings.}
-#' \item{NumberErrors}{Number of checks resulted in potential errors.}
+#' \item{SkippedChecks}{Number of checks manually skipped.}
+#' \item{WarningChecks}{Number of checks resulted in warnings.}
+#' \item{ErrorChecks}{Number of checks resulted in potential errors.}
 #' \item{ElapsedTime}{Elapsed time in seconds.}
 #' \item{R_data}{Pipeline output (a list of 4 dataframes) with Warning & Error columns marking the rows with warnings and errors.}
 #'
 #' and reports (pdf, html or both) of potential errors and/or warnings if \code{report = TRUE}.
 #'
+#' @export
 #' @examples
 #' \dontrun{
 #'
@@ -35,6 +38,7 @@
 #'
 #' }
 
+
 quality_check <- function(R_data,
                           output = "both",
                           report = TRUE,
@@ -42,7 +46,8 @@ quality_check <- function(R_data,
                           report_file = "quality-check-report",
                           latex_engine = "lualatex",
                           test = FALSE,
-                          map = TRUE){
+                          map = TRUE,
+                          skip = NULL){
 
   start_time <- Sys.time()
 
@@ -103,10 +108,10 @@ quality_check <- function(R_data,
   # FIXME remove after CaptureID column has been added to ALL pipelines
 
   # Run checks
-  Brood_checks <- brood_check(Brood_data, Individual_data, Capture_data, Location_data, approved_list, output)
-  Capture_checks <- capture_check(Capture_data, Location_data, Brood_data, Individual_data, approved_list, output)
-  Individual_checks <- individual_check(Individual_data, Capture_data, Location_data, approved_list, output)
-  Location_checks <- location_check(Location_data, Brood_data, Capture_data, approved_list, output, map)
+  Brood_checks <- brood_check(Brood_data, Individual_data, Capture_data, Location_data, approved_list, output, skip)
+  Capture_checks <- capture_check(Capture_data, Location_data, Brood_data, Individual_data, approved_list, output, skip)
+  Individual_checks <- individual_check(Individual_data, Capture_data, Location_data, approved_list, output, skip)
+  Location_checks <- location_check(Location_data, Brood_data, Capture_data, approved_list, output, skip, map)
 
   # Add warning and error columns to each data frame
   # FIXME remove after Warning & Error columns have been added to ALL pipelines
@@ -157,15 +162,36 @@ quality_check <- function(R_data,
   # Check messages
   time <- difftime(Sys.time(), start_time, units = "sec")
 
-  cat(paste0("\nAll checks performed in ", round(time, 2), " seconds"))
+  cat(paste0("\nData quality check procedure took ", round(time, 2), " seconds"))
 
-  checks_warnings <- sum(check_list$Warning == TRUE, na.rm=TRUE)
+  checks_warnings <- sum(check_list$Warning == TRUE, na.rm = TRUE) # Number of checks resulting in warnings
 
-  checks_errors <- sum(check_list$Error == TRUE, na.rm=TRUE)
+  checks_errors <- sum(check_list$Error == TRUE, na.rm = TRUE) # Number of checks resulting in errors
 
-  cat(crayon::yellow(paste0("\n", checks_warnings, " out of ", nrow(check_list), " checks resulted in warnings.")),
-      crayon::red(paste0("\n", checks_errors, " out of ", nrow(check_list), " checks resulted in errors.\n\n")))
+  checks_skipped <- sum(check_list$Skipped == TRUE, na.rm = TRUE) # Total number of checks skipped
 
+  skipped_errors <- check_list %>% dplyr::filter(!is.na(.data$Error), .data$Skipped == TRUE) %>% nrow() # Number of potential error checks skipped
+
+  skipped_warnings <- check_list %>% dplyr::filter(!is.na(.data$Warning), .data$Skipped == TRUE) %>% nrow() # Number of warning checks skipped
+
+  if(output %in% c("warnings", "both")) {
+
+    cat(crayon::yellow(paste0("\nOut of ", sum(!is.na(check_list$Warning)), " checks that check for warnings, ", skipped_warnings,
+                              " were manually skipped, and ", checks_warnings, " flagged one or more warnings.")))
+
+  }
+
+  if(output %in% c("errors", "both")) {
+
+    cat(crayon::red(paste0("\nOut of ", sum(!is.na(check_list$Error)), " checks that check for potential errors, ", skipped_errors,
+                           " were manually skipped, and ", checks_errors, " flagged one or more potential errors.")))
+
+  }
+
+  # Number of checks performed
+  number_checks <- dplyr::case_when(output == "both" ~ check_list %>% dplyr::filter(.data$Skipped == FALSE) %>% nrow(),
+                                    output == "errors" ~ check_list %>% dplyr::filter(.data$Skipped == FALSE & !is.na(.data$Error)) %>% nrow(),
+                                    output == "warnings" ~ check_list %>% dplyr::filter(.data$Skipped == FALSE & !is.na(.data$Warning)) %>% nrow())
 
   # Create output file
   # Unique PopIDs and Species for report title
@@ -177,7 +203,7 @@ quality_check <- function(R_data,
   if(output %in% c("errors", "both") & report == TRUE) {
 
     # Title
-    title <- paste0("Quality check report: potential errors")
+    title <- paste0("SPI-Birds Standard Data Quality Checks")
 
     # Create body of the Rmd file
     # This is the same for both html and pdf
@@ -198,13 +224,13 @@ quality_check <- function(R_data,
     '',
     '# Summary',
     '',
-    'Species: `r species_codes[species_codes$Species %in% species,]$CommonName`',
+    '- Species: `r species_codes[species_codes$Species %in% species,]$CommonName`',
     '',
-    'Populations: `r pop_codes[pop_codes$PopID %in% pop,]$PopName`',
+    '- Populations: `r pop_codes[pop_codes$PopID %in% pop,]$PopName`',
     '',
-    'All checks performed in `r round(time, 2)` seconds.',
+    '- Data quality check for potential errors performed in `r round(time, 2)` seconds.',
     '',
-    '`r checks_errors` out of `r nrow(check_list)` checks resulted in errors.',
+    '- Out of `r sum(!is.na(check_list$Error))` individual checks that check for potential errors, `r skipped_errors` were manually skipped, and `r checks_errors` flagged one or more potential errors.',
     '',
     '# Potential Errors',
     '',
@@ -264,22 +290,36 @@ quality_check <- function(R_data,
 
     if(!is.null(Location_checks$Maps)) { # Print the Maps section only if a map could be made (e.g., when no coordinates were provided, no map can be made)
 
-        body <- c(body,
-                  '\\newpage',
-                  '# Maps',
-                  '',
-                  '```{r, echo = FALSE, fig.cap = "", dpi = 300, results = "asis"}',
-                  #'invisible(lapply(Location_checks$Maps, print))', # To suppress the printing of indices
-                  #'invisible(purrr::map(.x = Location_checks$Maps, .f = ~{.x}))', # To suppress the printing of indices
-                  'invisible(
-                    map(.x = Location_checks$Maps,
-                        .f = ~{
-                          print(.x)
-                          cat("\\\\clearpage")
-                        })
-                  )',
-                  '```',
-                  '')
+      pdf_map <- c('\\newpage',
+                   '# Maps',
+                   '',
+                   '```{r, echo = FALSE, fig.cap = "", results = "asis", out.width="100%"}',
+                   'invisible(
+                      iwalk(.x = Location_checks$Maps,
+                            .f = ~{
+                              htmlwidgets::saveWidget(widget = .x, file = paste0("figure/", .y, ".html"))
+                            })
+                    )
+
+                    invisible(
+                      map(.x = names(Location_checks$Maps),
+                          .f = ~{
+                            webshot::webshot(url = paste0("figure/", .x, ".html"),
+                                             file = paste0("figure/", .x, ".png"))
+                          })
+                    )
+
+                    knitr::include_graphics(list.files(path = paste0("figure/"), pattern = "^[A-Z]{3}.png$", full.names = TRUE))',
+                   '```',
+                   '')
+
+      html_map <- c('\\newpage',
+                    '# Maps',
+                    '',
+                    '```{r, echo = FALSE}',
+                    'htmltools::tagList(Location_checks$Maps)',
+                    '```',
+                    '')
 
     }
 
@@ -290,10 +330,16 @@ quality_check <- function(R_data,
 
                    if("html" %in% report_format){
 
+                      title <- paste0(title, ": Potential Errors")
+                      authors <- "SPI-Birds Team (Stefan J.G. Vriend, Liam D. Bailey, Chris Tyson, Antica Culina, & Marcel E. Visser)"
+                      date_format <- "%B %d, %Y"
+
                       mark_output <- c('---',
                                     'title: "`r title`"',
-                                    'date: "`r Sys.Date()`"',
+                                    'author: "`r authors`"',
+                                    'date: "`r format(Sys.time(), date_format)`"',
                                     'geometry: margin=0.5in',
+                                    'always_allow_html: yes',
                                     'output:
                                       html_document:
                                         css: ./inst/css/quality_check.css
@@ -306,11 +352,16 @@ quality_check <- function(R_data,
                                           collapsed: false
                                           smooth_scroll: true
                                       mainfont: Arial',
-                                    '---', body)
+                                    '---',
+                                    descriptions_errors_html,
+                                    check_descriptions_html,
+                                    body)
 
-                     knitr::knit(text = mark_output, output = "quality-check-report_errors.md")
+                     if(!is.null(Location_checks$Maps)) mark_output <- c(mark_output, html_map)
 
-                     rmarkdown::render("quality-check-report_errors.md",
+                     writeLines(mark_output, "quality-check-report_errors.rmd")
+
+                     rmarkdown::render("quality-check-report_errors.rmd",
                                        output_format = "html_document",
                                        output_file = paste0(report_file, "_errors"))
 
@@ -333,9 +384,11 @@ quality_check <- function(R_data,
                                       check_descriptions_pdf,
                                       body)
 
-                     knitr::knit(text = mark_output, output = "quality-check-report_errors.md")
+                     if(!is.null(Location_checks$Maps)) mark_output <- c(mark_output, pdf_map)
 
-                     rmarkdown::render("quality-check-report_errors.md",
+                     writeLines(mark_output, "quality-check-report_errors.rmd")
+
+                     rmarkdown::render("quality-check-report_errors.rmd",
                                        output_format = rmarkdown::pdf_document(latex_engine = latex_engine),
                                        output_file = paste0(report_file, "_errors"))
 
@@ -344,11 +397,14 @@ quality_check <- function(R_data,
                    })
   }
 
+  # Empty figure directory with map data
+  unlink("figure/*", recursive = T)
+
   # Produce warnings and verified records
   if(output %in% c("warnings", "both") & report == TRUE) {
 
     # Title
-    title <- paste0("Quality check report: warnings and verified records")
+    title <- paste0("SPI-Birds Standard Data Quality Checks")
 
     # Create body of the Rmd file
     # This is the same for both html and pdf
@@ -369,13 +425,13 @@ quality_check <- function(R_data,
               '',
               '# Summary',
               '',
-              'Species: `r species_codes[species_codes$Species %in% species,]$CommonName`',
+              '- Species: `r species_codes[species_codes$Species %in% species,]$CommonName`',
               '',
-              'Populations: `r pop_codes[pop_codes$PopID %in% pop,]$PopName`',
+              '- Populations: `r pop_codes[pop_codes$PopID %in% pop,]$PopName`',
               '',
-              'All checks performed in `r round(time, 2)` seconds.',
+              '- Data quality check for warnings performed in `r round(time, 2)` seconds.',
               '',
-              '`r checks_warnings` out of `r nrow(check_list)` checks resulted in warnings.',
+              '- Out of `r sum(!is.na(check_list$Warning))` individual checks that check for warnings, `r skipped_warnings` were manually skipped, and `r checks_warnings` flagged one or more warnings.',
               '',
               '# Warnings',
               '',
@@ -490,9 +546,14 @@ quality_check <- function(R_data,
 
                    if("html" %in% report_format){
 
+                     title <- paste0(title, ": Warnings & Verified Records")
+                     authors <- "SPI-Birds Team (Stefan J.G. Vriend, Liam D. Bailey, Chris Tyson, Antica Culina, & Marcel E. Visser)"
+                     date_format <- "%B %d, %Y"
+
                      mark_output <- c('---',
                                       'title: "`r title`"',
-                                      'date: "`r Sys.Date()`"',
+                                      'author: "`r authors`"',
+                                      'date: "`r format(Sys.time(), date_format)`"',
                                       'geometry: margin=0.5in',
                                       'output:
                                       html_document:
@@ -506,7 +567,10 @@ quality_check <- function(R_data,
                                           collapsed: false
                                           smooth_scroll: true
                                       mainfont: Arial',
-                                      '---', body)
+                                      '---',
+                                      descriptions_warnings_html,
+                                      check_descriptions_html,
+                                      body)
 
                      knitr::knit(text = mark_output, output = "quality-check-report_warnings.md")
 
@@ -545,9 +609,10 @@ quality_check <- function(R_data,
   }
 
   return(list(CheckList = check_list,
-              NumberChecks = nrow(check_list),
-              NumberWarnings = checks_warnings,
-              NumberErrors = checks_errors,
+              NumberChecks = number_checks,
+              SkippedChecks = checks_skipped,
+              WarningChecks = checks_warnings,
+              ErrorChecks = checks_errors,
               ElapsedTime = round(time, 2),
               R_data = list(Brood_data = Brood_data,
                             Capture_data = Capture_data,

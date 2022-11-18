@@ -12,7 +12,8 @@ quality_check(
   report_file = "quality-check-report",
   latex_engine = "lualatex",
   test = FALSE,
-  map = TRUE
+  map = TRUE,
+  skip = NULL
 )
 }
 \arguments{
@@ -21,7 +22,7 @@ quality_check(
 
 \item{output}{Character. Run checks on and produce report of: potential errors ("errors"), warnings and verified records ("warnings"), or both in separate files ("both"; default).}
 
-\item{report}{\code{TRUE} or \code{FALSE}. If \code{TRUE}, a report is produced. Default: \code{TRUE}.}
+\item{report}{Logical. If \code{TRUE}, a report is produced. Default: \code{TRUE}.}
 
 \item{report_format}{Character. Format of output report: "html", "pdf", or "both" (default).}
 
@@ -29,17 +30,20 @@ quality_check(
 
 \item{latex_engine}{Character. LaTeX engine for producing PDF output. Options are "pdflatex", "xelatex", and "lualatex" (default). NB: pdfLaTeX and XeLaTeX have memory limit restrictions, which can be problematic when generating large pdfs. LuaLaTeX has dynamic memory management which may help for generating large pdfs.}
 
-\item{test}{Logical. Is `quality_check` being used inside package tests? If  \code{TRUE}, `R_data` is ignored and
+\item{test}{Logical. Is \code{quality_check} being used inside package tests? If  \code{TRUE}, \code{R_data} is ignored and
 dummy data will be used instead.}
 
 \item{map}{Logical. If  \code{TRUE}, a map of locations is added in the report. See \code{\link{check_coordinates}}.}
+
+\item{skip}{Character. Identifiers of the individual quality checks (CheckID) that should be skipped.}
 }
 \value{
 A list of:
 \item{CheckList}{A summary dataframe of check warnings and potential errors.}
 \item{NumberChecks}{Number of checks performed.}
-\item{NumberWarnings}{Number of checks resulted in warnings.}
-\item{NumberErrors}{Number of checks resulted in potential errors.}
+\item{SkippedChecks}{Number of checks manually skipped.}
+\item{WarningChecks}{Number of checks resulted in warnings.}
+\item{ErrorChecks}{Number of checks resulted in potential errors.}
 \item{ElapsedTime}{Elapsed time in seconds.}
 \item{R_data}{Pipeline output (a list of 4 dataframes) with Warning & Error columns marking the rows with warnings and errors.}
 

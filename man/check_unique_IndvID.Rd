@@ -4,7 +4,7 @@
 \alias{check_unique_IndvID}
 \title{Check unique individual identifiers}
 \usage{
-check_unique_IndvID(Individual_data, approved_list, output)
+check_unique_IndvID(Individual_data, approved_list, output, skip)
 }
 \arguments{
 \item{Individual_data}{Data frame. Individual data output from pipeline.}
@@ -13,6 +13,8 @@ check_unique_IndvID(Individual_data, approved_list, output)
 capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv.}
 
 \item{output}{Character. Run checks on potential errors ("errors"), warnings ("warnings"), or both ("both"; default).}
+
+\item{skip}{Character. Identifiers of the individual quality checks (CheckID) that should be skipped.}
 }
 \value{
 A list of:

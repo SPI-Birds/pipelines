@@ -16,36 +16,39 @@
 #'
 #' @export
 
-location_check <- function(Location_data, Brood_data, Capture_data, approved_list, output, map){
+location_check <- function(Location_data, Brood_data, Capture_data, approved_list, output, skip, map){
+
+  # Perform location checks
+  message("Checking location data...")
+
+  # Run checks and create list of check outputs
+  check_outputs <- tibble::lst(L1 = check_coordinates(Location_data, Brood_data, Capture_data,
+                                                      approved_list, output, skip, map) # L1: Check location coordinates
+
+  )
 
   # Create check list with a summary of warnings and errors per check
   check_list <- tibble::tibble(CheckID = paste0("L", 1),
                                CheckDescription = c("Check location coordinates"),
                                Warning = NA,
-                               Error = NA)
+                               Error = NA,
+                               Skipped = NA)
 
-  # Checks
-  message("Checking location data...")
+  check_list[,3:5] <- purrr::map_dfr(.x = check_outputs, .f = 1) # Combine check lists of single checks
 
-  # - Check location coordinates
-  message("L1: Checking location coordinates...")
+  # Create list of 'warning' messages
+  warning_list <- purrr::map(.x = check_outputs, .f = 4)
 
-  check_coordinates_output <- check_coordinates(Location_data, Brood_data, Capture_data, approved_list, output, map)
-
-  check_list[1, 3:4] <- check_coordinates_output$CheckList
-
-  # Warning list
-  warning_list <- list(Check1 = check_coordinates_output$WarningOutput)
-
-  # Error list
-  error_list <- list(Check1 = check_coordinates_output$ErrorOutput)
+  # Create list of 'potential error' messages
+  error_list <- purrr::map(.x = check_outputs, .f = 5)
 
   return(list(CheckList = check_list,
-              WarningRows = unique(c(check_coordinates_output$WarningRows)),
-              ErrorRows = unique(c(check_coordinates_output$ErrorRows)),
+              WarningRows = purrr::map(.x = check_outputs, .f = 2) %>% unlist(use.names = FALSE) %>% unique(),
+              ErrorRows = purrr::map(.x = check_outputs, .f = 3) %>% unlist(use.names = FALSE) %>% unique(),
               Warnings = warning_list,
               Errors = error_list,
-              Maps = check_coordinates_output$Maps))
+              Maps = check_outputs$L1$Maps))
+
 }
 
 #' Check coordinates of locations
@@ -68,11 +71,26 @@ location_check <- function(Location_data, Brood_data, Capture_data, approved_lis
 #' \item{Errors}{A list of row-by-row errors.}
 #' \item{Maps}{A list of maps with capture locations.}
 #'
-#' @import ggmap
+#' @import leaflet
 #'
 #' @export
 
-check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_list, output, map){
+check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_list, output, skip, map){
+
+  # Check whether this check should be skipped
+  skip_check <- dplyr::case_when("L1" %in% skip ~ TRUE,
+                                 TRUE ~ FALSE)
+
+  # Print check message
+  if(skip_check == FALSE) {
+
+    message("L1: Checking location coordinates...")
+
+  } else {
+
+    message("<< L1 is skipped >>")
+
+  }
 
   # Check for potential errors
   err <- FALSE
@@ -80,7 +98,7 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
   error_output <- NULL
 
   # Skip if coordinates were not recorded, or if only warnings are flagged
-  if(!any(!is.na(Location_data$Longitude) & !is.na(Location_data$Latitude)) | !(output %in% c("both", "errors"))) {
+  if(!any(!is.na(Location_data$Longitude) & !is.na(Location_data$Latitude)) | !(output %in% c("both", "errors")) | skip_check == TRUE) {
 
     remote_locations <- tibble::tibble(Row = integer())
 
@@ -100,18 +118,23 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
     if(any(records_w_longlat$n_unique_lon < 2 | records_w_longlat$n_unique_lat < 2)) {
 
       few_coords <- records_w_longlat %>%
-        dplyr::filter(.data$n_unique_lon < 2 | records_w_longlat$n_unique_lat < 2) %>%
+        dplyr::filter(.data$n_unique_lon < 2 | .data$n_unique_lat < 2) %>%
         dplyr::select(.data$PopID)
 
       purrr::walk(.x = list(few_coords$PopID),
-                   .f = ~{
+                  .f = ~{
 
-                     message(paste0("Number of records for ", .x,
-                                    " is too low to calculate centre point."))
+                    message(paste0("Number of records for ", .x,
+                                   " is too low to calculate centre point."))
 
-                   })
+                  })
 
     }
+
+    # Select PopIDs with at least 2 locations with known and unique coordinates
+    pops_w_longlat <- records_w_longlat %>%
+      dplyr::filter(.data$n_unique_lon >= 2 | .data$n_unique_lat >= 2) %>%
+      dplyr::pull(.data$PopID)
 
     # Determine centre point per PopID
     centre_points <- Location_data %>%
@@ -123,12 +146,12 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
       tidyr::drop_na(dplyr::any_of(c("Longitude", "Latitude"))) %>%
       # Filter location records that appear in Brood_data and/or Capture_data only
       # And keep populations with at least 2 records with known coordinates
-      dplyr::filter(.data$LocationID %in% unique(Brood_data$LocationID) | .data$LocationID %in% unique(Capture_data$LocationID) &
-                      .data$PopID %in% {records_w_longlat %>% dplyr::filter(.data$n_unique_lon >= 2 & .data$n_unique_lat >= 2) %>% dplyr::pull(.data$PopID)}) %>%
+      dplyr::filter((.data$LocationID %in% unique(Brood_data$LocationID) | .data$LocationID %in% unique(Capture_data$LocationID)) &
+                      .data$PopID %in% pops_w_longlat) %>%
       dplyr::group_by(.data$PopID) %>%
       # Centre points are determined by calculating the maximum kernel density for Longitude and Latitude
-      dplyr::summarise(Centre_lon = mean(stats::density(Longitude)$x[which(stats::density(Longitude)$y == max(stats::density(Longitude)$y))]),
-                       Centre_lat = mean(stats::density(Latitude)$x[which(stats::density(Latitude)$y == max(stats::density(Latitude)$y))]),
+      dplyr::summarise(Centre_lon = mean(stats::density(.data$Longitude)$x[which(stats::density(.data$Longitude)$y == max(stats::density(.data$Longitude)$y))]),
+                       Centre_lat = mean(stats::density(.data$Latitude)$x[which(stats::density(.data$Latitude)$y == max(stats::density(.data$Latitude)$y))]),
                        .groups = "drop")
 
     # Add centre points to original data frame
@@ -173,12 +196,12 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
   }
 
   # No check for warnings
-  war <- FALSE
+  war <- NA
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
   # Add messages about populations with too few records with known coordinates to warning output
-  if(output %in% c("both", "warnings") & exists("few_coords")) {
+  if(output %in% c("both", "warnings") & exists("few_coords") & skip_check == FALSE) {
 
     skipped_output <- purrr::map(.x = few_coords$PopID,
                                  .f = ~{
@@ -193,33 +216,37 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
   }
 
   # Produce map of locations
-  if(map & any(!is.na(Location_data$Longitude) & !is.na(Location_data$Latitude)) & output %in% c("both", "errors")) {
+  if(map & any(!is.na(Location_data$Longitude) & !is.na(Location_data$Latitude)) & output %in% c("both", "errors") & skip_check == FALSE) {
 
     suppressMessages({
 
       # Create map per PopID
-      maps <- purrr::map(.x = unique(locations$PopID),
+      maps <- purrr::map(.x = pops_w_longlat,
                          .f = ~{
 
-                           ggmap::qmplot(data = locations[locations$PopID == .x,], x = Longitude,y = Latitude,
-                                         source = "stamen", maptype = "terrain", extent = "panel",
-                                         color = I("#881f70"), alpha = I(0.4), size = I(2)) +
-                             ggplot2::geom_point(data = locations[locations$PopID == .x, ][1, ],
-                                                 ggplot2::aes(x = Centre_lon, y = Centre_lat),
-                                                 color = "black", shape = "*", size = 8) + # Centre point
-                             ggplot2::theme_classic() +
-                             ggplot2::theme(axis.text = ggplot2::element_text(color = "black"),
-                                            axis.title = ggplot2::element_text(size = 12),
-                                            panel.border = ggplot2::element_rect(color = "black", fill = NA)) +
-                             ggplot2::labs(title = paste0(pop_codes[pop_codes$PopID == .x, ]$PopName, " (", .x, ")"),
-                                           subtitle = paste0("Centre point (*): ",
-                                                             round(locations[locations$PopID == .x,]$Centre_lon[1], 3), ", ",
-                                                             round(locations[locations$PopID == .x,]$Centre_lat[1], 3)),
-                                           caption = "Source: Map tiles by Stamen Design, under CC BY 3.0. \nMap data by OpenStreetMap, under ODbL.")
+                           leaflet::leaflet() %>%
+                             leaflet::fitBounds(lng1 = min(locations[locations$PopID == .x, ]$Longitude),
+                                                lng2 = max(locations[locations$PopID == .x, ]$Longitude),
+                                                lat1 = min(locations[locations$PopID == .x, ]$Latitude),
+                                                lat2 = max(locations[locations$PopID == .x, ]$Latitude)) %>%
+                             leaflet::addProviderTiles(leaflet::providers$CartoDB.Voyager) %>%
+                             leaflet::addCircleMarkers(lng = locations[locations$PopID == .x, ]$Longitude,
+                                                       lat = locations[locations$PopID == .x, ]$Latitude,
+                                                       fillColor = "#881f70", stroke = FALSE,
+                                                       radius  = 5, fillOpacity = 0.5) %>%
+                             leaflet::addLabelOnlyMarkers(lng = locations[locations$PopID == .x, ][1, ]$Centre_lon,
+                                                          lat = locations[locations$PopID == .x, ][1, ]$Centre_lat,
+                                                          label = "*",
+                                                          labelOptions = leaflet::labelOptions(
+                                                            noHide = TRUE,
+                                                            textOnly = TRUE,
+                                                            style = list("color" = "black",
+                                                                         "font-size" = "32px"))) %>%
+                             leaflet::addLegend(title = paste0(pop_codes[pop_codes$PopID == .x, ]$PopName, " (", .x, ")"),
+                                                colors = "white", labels = "Centre point (*)")
 
-
-                         }) #%>%
-        #setNames(unique(map_data$PopID))
+                         }) %>%
+      setNames(pops_w_longlat)
 
     })
 
@@ -230,7 +257,8 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
   }
 
   check_list <- tibble::tibble(Warning = war,
-                               Error = err)
+                               Error = err,
+                               Skipped = skip_check)
 
   return(list(CheckList = check_list,
               WarningRows = NULL,

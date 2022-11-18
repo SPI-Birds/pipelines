@@ -9,5 +9,6 @@ debug_report
 *.html
 *.md
 *.pdf
+*.rmd
 figure/
 Hackathon*

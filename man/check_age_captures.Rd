@@ -4,7 +4,7 @@
 \alias{check_age_captures}
 \title{Check age of subsequent captures}
 \usage{
-check_age_captures(Capture_data, approved_list, output)
+check_age_captures(Capture_data, approved_list, output, skip)
 }
 \arguments{
 \item{Capture_data}{Data frame. Capture data output from pipeline.}
@@ -13,6 +13,8 @@ check_age_captures(Capture_data, approved_list, output)
 capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv.}
 
 \item{output}{Character. Run checks on potential errors ("errors"), warnings ("warnings"), or both ("both"; default).}
+
+\item{skip}{Character. Identifiers of the individual quality checks (CheckID) that should be skipped.}
 }
 \value{
 A list of:

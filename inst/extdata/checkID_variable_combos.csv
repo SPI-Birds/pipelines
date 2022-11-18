@@ -7,5 +7,9 @@ B5c,NumberFledged
 B5c,NumberFledged_observed
 B5d,LayDate
 B5d,LayDate_observed
+B5e,HatchDate
+B5e,HatchDate_observed
+B5f,FledgeDate
+B5f,FledgeDate_observed
 C1a,Mass
 C1b,Tarsus

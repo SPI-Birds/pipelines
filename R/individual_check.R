@@ -19,7 +19,23 @@
 #'
 #' @export
 
-individual_check <- function(Individual_data, Capture_data, Location_data, approved_list, output){
+individual_check <- function(Individual_data, Capture_data, Location_data, approved_list, output, skip){
+
+  # Perform individual checks
+  message("Checking individual data...")
+
+  # Run checks and create list of check outputs
+  check_outputs <- tibble::lst(I1 = check_unique_IndvID(Individual_data, approved_list, output, skip), # I1: Check unique individual IDs
+                               I2 = check_BroodID_chicks(Individual_data, Capture_data, Location_data,
+                                                         approved_list, output, skip), # I2: Check that chicks have BroodIDs
+                               I3 = check_conflicting_sex(Individual_data,
+                                                          approved_list, output, skip), # I3: Check that individuals have no conflicting sex
+                               I4 = check_conflicting_species(Individual_data,
+                                                              approved_list, output, skip), # I4: Check that individuals have no conflicting species
+                               I5 = check_individuals_captures(Individual_data, Capture_data,
+                                                               approved_list, output, skip) # I5: Check that individuals in Individual_data also appear in Capture_data
+
+  )
 
   # Create check list with a summary of warnings and errors per check
   check_list <- tibble::tibble(CheckID = paste0("I", 1:5),
@@ -29,72 +45,20 @@ individual_check <- function(Individual_data, Capture_data, Location_data, appro
                                                     "Check that individuals have no conflicting species",
                                                     "Check that individuals in Individual_data also appear in Capture_data"),
                                Warning = NA,
-                               Error = NA)
+                               Error = NA,
+                               Skipped = NA)
 
-  # Checks
-  message("Checking individual data...")
+  check_list[,3:5] <- purrr::map_dfr(.x = check_outputs, .f = 1) # Combine check lists of single checks
 
-  # - Check unique individual IDs
-  message("I1: Checking that individual IDs are unique...")
+  # Create list of 'warning' messages
+  warning_list <- purrr::map(.x = check_outputs, .f = 4)
 
-  check_unique_IndvID_output <- check_unique_IndvID(Individual_data, approved_list, output)
-
-  check_list[1, 3:4] <- check_unique_IndvID_output$CheckList
-
-  # - Check that chicks have BroodIDs
-  message("I2: Checking that chicks have BroodIDs...")
-
-  check_BroodID_chicks_output <- check_BroodID_chicks(Individual_data, Capture_data, Location_data, approved_list, output)
-
-  check_list[2, 3:4] <- check_BroodID_chicks_output$CheckList
-
-  # - Check that individuals have no conflicting sex
-  message("I3: Checking that individuals have no conflicting sex...")
-
-  check_conflicting_sex_output <- check_conflicting_sex(Individual_data, approved_list, output)
-
-  check_list[3, 3:4] <- check_conflicting_sex_output$CheckList
-
-  # - Check that individuals have no conflicting species
-  message("I4: Checking that individuals have no conflicting species...")
-
-  check_conflicting_species_output <- check_conflicting_species(Individual_data, approved_list, output)
-
-  check_list[4, 3:4] <- check_conflicting_species_output$CheckList
-
-  # - Check that individuals in Individual_data also appear in Capture_data
-  message("I5: Checking that individuals in Individual_data also appear in Capture_data...")
-
-  check_individuals_captures_output <- check_individuals_captures(Individual_data, Capture_data, approved_list, output)
-
-  check_list[5, 3:4] <- check_individuals_captures_output$CheckList
-
-
-  # Warning list
-  warning_list <- list(Check1 = check_unique_IndvID_output$WarningOutput,
-                       Check2 = check_BroodID_chicks_output$WarningOutput,
-                       Check3 = check_conflicting_sex_output$WarningOutput,
-                       Check4 = check_conflicting_species_output$WarningOutput,
-                       Check5 = check_individuals_captures_output$WarningOutput)
-
-  # Error list
-  error_list <- list(Check1 = check_unique_IndvID_output$ErrorOutput,
-                     Check2 = check_BroodID_chicks_output$ErrorOutput,
-                     Check3 = check_conflicting_sex_output$ErrorOutput,
-                     Check4 = check_conflicting_species_output$ErrorOutput,
-                     Check5 = check_individuals_captures_output$ErrorOutput)
+  # Create list of 'potential error' messages
+  error_list <- purrr::map(.x = check_outputs, .f = 5)
 
   return(list(CheckList = check_list,
-              WarningRows = unique(c(check_unique_IndvID_output$WarningRows,
-                                     check_BroodID_chicks_output$WarningRows,
-                                     check_conflicting_sex_output$WarningRows,
-                                     check_conflicting_species_output$WarningRows,
-                                     check_individuals_captures_output$WarningRows)),
-              ErrorRows = unique(c(check_unique_IndvID_output$ErrorRows,
-                                   check_BroodID_chicks_output$ErrorRows,
-                                   check_conflicting_sex_output$ErrorRows,
-                                   check_conflicting_species_output$ErrorRows,
-                                   check_individuals_captures_output$ErrorRows)),
+              WarningRows = purrr::map(.x = check_outputs, .f = 2) %>% unlist(use.names = FALSE) %>% unique(),
+              ErrorRows = purrr::map(.x = check_outputs, .f = 3) %>% unlist(use.names = FALSE) %>% unique(),
               Warnings = warning_list,
               Errors = error_list))
 }
@@ -111,14 +75,29 @@ individual_check <- function(Individual_data, Capture_data, Location_data, appro
 #'
 #' @export
 
-check_unique_IndvID <- function(Individual_data, approved_list, output){
+check_unique_IndvID <- function(Individual_data, approved_list, output, skip){
+
+  # Check whether this check should be skipped
+  skip_check <- dplyr::case_when("I1" %in% skip ~ TRUE,
+                                 TRUE ~ FALSE)
+
+  # Print check message
+  if(skip_check == FALSE) {
+
+    message("I1: Checking that individual IDs are unique...")
+
+  } else {
+
+    message("<< I1 is skipped >>")
+
+  }
 
   # Check for potential errors
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  if(output %in% c("both", "errors")) {
+  if(output %in% c("both", "errors") & skip_check == FALSE) {
 
     # Select records with IndvIDs that are duplicated within populations
     duplicated_within <- Individual_data %>%
@@ -159,12 +138,13 @@ check_unique_IndvID <- function(Individual_data, approved_list, output){
   }
 
   # No check for warnings
-  war <- FALSE
+  war <- NA
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
   check_list <- tibble::tibble(Warning = war,
-                               Error = err)
+                               Error = err,
+                               Skipped = skip_check)
 
   return(list(CheckList = check_list,
               WarningRows = NULL,
@@ -192,30 +172,61 @@ check_unique_IndvID <- function(Individual_data, approved_list, output){
 #'
 #' @export
 
-check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data, approved_list, output) {
+check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data, approved_list, output, skip) {
+
+  # Check whether this check should be skipped
+  skip_check <- dplyr::case_when("I2" %in% skip ~ TRUE,
+                                 TRUE ~ FALSE)
+
+  # Print check message
+  if(skip_check == FALSE) {
+
+    message("I2: Checking that chicks have BroodIDs...")
+
+  } else {
+
+    message("<< I2 is skipped >>")
+
+  }
 
   # Check for potential errors
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  if(output %in% c("both", "errors")) {
+  if(output %in% c("both", "errors") & skip_check == FALSE) {
 
-    # Select first captures and link to the information of their locations
+    # Retrieve nest locations
+    # Duplicate location rows according to the number of years they were used for easy joining with chick data
+    annual_locations <- Location_data %>%
+      dplyr::filter(.data$LocationType == "NB") %>%
+      dplyr::mutate(EndSeason = dplyr::case_when(is.na(.data$EndSeason) ~ as.integer(lubridate::year(Sys.Date())),
+                                                 !is.na(.data$EndSeason) ~ .data$EndSeason),
+                    StartSeason = dplyr::case_when(is.na(.data$StartSeason) ~ min(.data$StartSeason, na.rm = TRUE),
+                                                   !is.na(.data$StartSeason) ~ .data$StartSeason)) %>%
+      tidyr::uncount(weights = .data$EndSeason - .data$StartSeason + 1) %>%
+      dplyr::group_by(.data$Row) %>%
+      dplyr::mutate(BreedingSeason = .data$StartSeason + row_number() - 1) %>%
+      dplyr::ungroup() %>%
+      dplyr::select(-.data$Row)
+
+    # Select first captures of chicks and link to the information of their locations
     first_captures <- Capture_data %>%
+      dplyr::filter(.data$Age_observed == 1) %>%
       dplyr::group_by(.data$CapturePopID, .data$IndvID) %>%
       dplyr::filter(.data$CaptureDate == dplyr::first(.data$CaptureDate)) %>%
+      dplyr::slice(1) %>% # Select first row if multiple captures have been made on the first day
       dplyr::ungroup() %>%
-      #dplyr::select(IndvID, Species, CapturePopID, LocationID) %>%
-      dplyr::left_join(Location_data, by = c("CapturePopID" = "PopID", "LocationID"))
+      dplyr::right_join(annual_locations, by = c("CapturePopID" = "PopID", "LocationID", "BreedingSeason")) %>%
+      dplyr::select(-.data$Row)
 
     # Join with individual data
     ind_cap_loc_data <- Individual_data %>%
-      dplyr::left_join(first_captures, by = c("IndvID", "Species", "PopID" = "CapturePopID"))
+      dplyr::right_join(first_captures, by = c("IndvID", "Species", "PopID" = "CapturePopID"))
 
-    # Select records of individuals caught as a nestling which are not associated with a BroodID
+    # Select chick records which are not associated with a BroodID
     no_BroodID_nest <- ind_cap_loc_data %>%
-      dplyr::filter(.data$Age_observed == 1 & (is.na(.data$BroodIDLaid) | is.na(.data$BroodIDFledged)) & .data$LocationType == "NB")
+      dplyr::filter(.data$RingAge == "chick", is.na(.data$BroodIDLaid) | is.na(.data$BroodIDFledged))
 
     # If potential errors, add to report
     if(nrow(no_BroodID_nest) > 0) {
@@ -241,12 +252,13 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data, a
   }
 
   # No check for warnings
-  war <- FALSE
+  war <- NA
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
   check_list <- tibble::tibble(Warning = war,
-                               Error = err)
+                               Error = err,
+                               Skipped = skip_check)
 
   return(list(CheckList = check_list,
               WarningRows = NULL,
@@ -272,14 +284,29 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data, a
 #'
 #' @export
 
-check_conflicting_sex <- function(Individual_data, approved_list, output) {
+check_conflicting_sex <- function(Individual_data, approved_list, output, skip) {
+
+  # Check whether this check should be skipped
+  skip_check <- dplyr::case_when("I3" %in% skip ~ TRUE,
+                                 TRUE ~ FALSE)
+
+  # Print check message
+  if(skip_check == FALSE) {
+
+    message("I3: Checking that individuals have no conflicting sex...")
+
+  } else {
+
+    message("<< I3 is skipped >>")
+
+  }
 
   # Check for potential errors
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  if(output %in% c("both", "errors")) {
+  if(output %in% c("both", "errors") & skip_check == FALSE) {
 
     # Select records with conflicting sex
     # NB: allows v1.0 & v1.1 variable names of the standard format
@@ -311,12 +338,13 @@ check_conflicting_sex <- function(Individual_data, approved_list, output) {
   }
 
   # No check for warnings
-  war <- FALSE
+  war <- NA
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
   check_list <- tibble::tibble(Warning = war,
-                               Error = err)
+                               Error = err,
+                               Skipped = skip_check)
 
   return(list(CheckList = check_list,
               WarningRows = NULL,
@@ -343,14 +371,29 @@ check_conflicting_sex <- function(Individual_data, approved_list, output) {
 #'
 #' @export
 
-check_conflicting_species <- function(Individual_data, approved_list, output) {
+check_conflicting_species <- function(Individual_data, approved_list, output, skip) {
+
+  # Check whether this check should be skipped
+  skip_check <- dplyr::case_when("I4" %in% skip ~ TRUE,
+                                 TRUE ~ FALSE)
+
+  # Print check message
+  if(skip_check == FALSE) {
+
+    message("I4: Checking that individuals have no conflicting species...")
+
+  } else {
+
+    message("<< I4 is skipped >>")
+
+  }
 
   # Check for potential errors
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  if(output %in% c("both", "errors")) {
+  if(output %in% c("both", "errors") & skip_check == FALSE) {
 
     # Select individuals with conflicting species
     conflicting_species <- Individual_data %>%
@@ -380,12 +423,13 @@ check_conflicting_species <- function(Individual_data, approved_list, output) {
   }
 
   # No check for warnings
-  war <- FALSE
+  war <- NA
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
   check_list <- tibble::tibble(Warning = war,
-                               Error = err)
+                               Error = err,
+                               Skipped = skip_check)
 
   return(list(CheckList = check_list,
               WarningRows = NULL,
@@ -412,14 +456,29 @@ check_conflicting_species <- function(Individual_data, approved_list, output) {
 #'
 #' @export
 
-check_individuals_captures <- function(Individual_data, Capture_data, approved_list, output){
+check_individuals_captures <- function(Individual_data, Capture_data, approved_list, output, skip){
+
+  # Check whether this check should be skipped
+  skip_check <- dplyr::case_when("I5" %in% skip ~ TRUE,
+                                 TRUE ~ FALSE)
+
+  # Print check message
+  if(skip_check == FALSE) {
+
+    message("I5: Checking that individuals in Individual_data also appear in Capture_data...")
+
+  } else {
+
+    message("<< I5 is skipped >>")
+
+  }
 
   # Check for potential errors
   err <- FALSE
   error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  if(output %in% c("both", "errors")) {
+  if(output %in% c("both", "errors") & skip_check == FALSE) {
 
     # Select individuals that are missing from Capture_data
     missing_individuals <- purrr::map(.x = unique(Individual_data$PopID),
@@ -456,12 +515,13 @@ check_individuals_captures <- function(Individual_data, Capture_data, approved_l
   }
 
   # No check for warnings
-  war <- FALSE
+  war <- NA
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
   check_list <- tibble::tibble(Warning = war,
-                               Error = err)
+                               Error = err,
+                               Skipped = skip_check)
 
   return(list(CheckList = check_list,
               WarningRows = NULL,

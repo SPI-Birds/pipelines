@@ -4,7 +4,7 @@
 \alias{check_brood_locations}
 \title{Check that all nest locations in Brood_data appear in Location_data}
 \usage{
-check_brood_locations(Brood_data, Location_data, approved_list, output)
+check_brood_locations(Brood_data, Location_data, approved_list, output, skip)
 }
 \arguments{
 \item{Brood_data}{Data frame. Brood data output from pipeline.}
@@ -15,6 +15,8 @@ check_brood_locations(Brood_data, Location_data, approved_list, output)
 capture_approved_list.csv, individual_approved_list.csv, location_approved_list.csv.}
 
 \item{output}{Character. Run checks on potential errors ("errors"), warnings ("warnings"), or both ("both"; default).}
+
+\item{skip}{Character. Identifiers of the individual quality checks (CheckID) that should be skipped.}
 }
 \value{
 A list of:
