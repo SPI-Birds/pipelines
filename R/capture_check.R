@@ -901,7 +901,7 @@ check_age_captures <- function(Capture_data, approved_list, output, skip){
         .data$Age_observed > .data$Age_observed_next &
           ((.data$Age_observed %in% c(1, 3) & .data$Age_observed_next %in% c(1, 3)) | # chicks
              ((.data$Age_observed == 2 | .data$Age_observed >= 4) & # adults
-                (.data$Age_observed_next == 2 | .data$Age_observed >= 4))
+                (.data$Age_observed_next == 2 | .data$Age_observed_next >= 4))
           )
       ) %>%
       dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$IndvID, .data$CaptureID,
