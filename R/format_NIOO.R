@@ -444,7 +444,7 @@ create_individual_NIOO <- function(database, Capture_data, location_data, specie
 
   #This is a summary of each individual and general lifetime information (e.g. sex, resident/immigrant).
 
-  Individual_data <- dplyr::tbl(database, "dbo_tbl_Individual") %>%
+  individuals <- dplyr::tbl(database, "dbo_tbl_Individual") %>%
     #Filter only required species
     #Remove individual records that are from tissue samples (i.e. ring number is TS)
     dplyr::filter(.data$SpeciesID %in% species_filter & dplyr::sql("RingNumber NOT LIKE 'TS*'")) %>%
@@ -457,15 +457,22 @@ create_individual_NIOO <- function(database, Capture_data, location_data, specie
                   BroodIDLaid = dplyr::sql("IIF(IsNull(GeneticBroodID), BroodID, GeneticBroodID)"),
                   BroodIDFledged = dplyr::sql("IIF(IsNull(BroodID), GeneticBroodID, BroodID)"),
                   IndvID = .data$ID) %>%
-    #Join in the first capture location (after removing eggs)
-    dplyr::left_join(dplyr::tbl(database, "dbo_tbl_Capture") %>%
-                       dplyr::filter(.data$CaptureType == 1L | .data$CaptureType == 2L) %>%
-                       dplyr::group_by(.data$Individual) %>%
-                       dplyr::summarise(FirstCaptureLocation = dplyr::sql("First(CaptureLocation)")) %>%
-                       dplyr::rename(IndvID = .data$Individual), by = "IndvID") %>%
-    dplyr::collect() %>%
-    #Relate the capturelocation to the three letter PopID
-    dplyr::left_join(dplyr::select(location_data, .data$PopID, FirstCaptureLocation = .data$ID), by = "FirstCaptureLocation") %>%
+    dplyr::collect()
+
+  # Determine first captures (after removing eggs)
+  first_captures <- dplyr::tbl(database, "dbo_tbl_Capture") %>%
+    dplyr::filter(.data$CaptureType == 1L | .data$CaptureType == 2L) %>%
+    dplyr::group_by(.data$Individual) %>%
+    dplyr::summarise(FirstCaptureLocation = dplyr::sql("First(CaptureLocation)")) %>%
+    dplyr::rename(IndvID = "Individual") %>%
+    dplyr::collect()
+
+    # Join first capture location into individual data
+  Individual_data <- individuals %>%
+    dplyr::left_join(first_captures, by = "IndvID") %>%
+    # Relate the capturelocation to the three letter PopID
+    dplyr::left_join(dplyr::select(location_data, .data$PopID, FirstCaptureLocation = .data$ID),
+                     by = "FirstCaptureLocation") %>%
     #Filter only chosen pops
     dplyr::filter(.data$PopID %in% pop_filter) %>%
     #Convert numbers to species codes
