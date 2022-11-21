@@ -110,7 +110,7 @@ calc_season <- function(data,
 #' @param na.rm Logical. Should NAs be removed and treated as 0s? If TRUE, NAs are treated as 0s. If FALSE, NAs
 #'   are treated as true unknowns.
 #' @param protocol_version Character string. The protocol version of the SPI Birds
-#' standard data being used to process the primary data. Either "1.0" (default), "1.1", or "1.2".
+#' standard data being used to process the primary data. Either "1.0" (default), "1.1", or "2.0".
 #'
 #' @return A character vector with either 'first', 'replacement', 'second', or NA (v1.0 or v1.1), or a data frame with calculatedClutchType (v1.2), which takes either 'first', 'replacement', 'second', or NA.
 #'
@@ -530,8 +530,8 @@ calc_clutchtype <- function(data,
 
   }
 
-  ## Version 1.2
-  if (protocol_version == "1.2") {
+  ## Version 2.0
+  if (protocol_version == "2.0") {
 
     cutoff_dat <- data %>%
       dplyr::group_by(.data$siteID, .data$breedingSeason, .data$speciesID) %>%
@@ -942,42 +942,35 @@ calc_sex <- function(individual_data,
 #' When there is no observed age at first capture we assume it couldn't be a
 #' chick or this would've been recorded.
 #'
-#' \strong{Version 1.2}
+#' \strong{Version 2.0}
 #'
-#' From version 1.2 onwards, age is stored in two columns, exactAge and minimumAge.
+#' From version 2.0 onwards, age is stored in two columns, exactAge and minimumAge.
 #' For individuals first captured as chicks, exactAge & minimumAge can be determined;
 #' for individuals first captured as adults, only minimumAge can be determined.
 #'
-#' Age is determined as number of seasons since birth (exactAge) or ringing (minimumAge).
-#' The number of seasons equal the number of years for birds that have a single breeding
-#' season per calendar year (i.e., most Northern Hemisphere birds). For other species or
-#' systems (e.g., Southern Hemisphere birds), in which seasons do not follow calendar years,
-#' additional information from data owners is required.
-#'
-#' NB: When age is determined using number of years, an individual's age increases before a
-#' full year (i.e., 365/366 days) has passed. This is done because a bird born on, say,
-#' the 1st of June in year 1 is 3 years old in year 4, whether that is just before or just after
-#' the 1st of June in that year. Instead of a full year, we say that an individual ages after
-#' 10 months, 1 year and 10 months, etc. after its first capture date.
+#' The default behaviour of this function is that age is determined as number of years since birth (exactAge)
+#' or ringing (minimumAge). If individuals the date of ringing is known, age increases each time the ringing
+#' date is passed. For example, an individual born on 02/07/2022 will become 1 at 02/07/2023.
+#' If date of ringing is unknown, we pick an arbitrary 'start of life' date. For Northern Hemisphere birds,
+#' this is 01/07/yyyy (1st of July); for Southern Hemisphere birds, this is 01/01/yyyy (1st of January).
 #'
 #' @param data Data frame. Data frame with capture information.
 #' @param ID Unquoted expression (i.e. character without quotation marks). Name
-#'   of column with individual identity. NB: Not used for v1.2.
+#'   of column with individual identity. NB: Not used for v2.0.
 #' @param Age Unquoted expression (i.e. character without quotation marks). Name
-#'   of column with observed age of individual in each capture. Must be in
-#'   EURING codes. NB: Can be used for v1.2 to indicate which individuals are chicks,
-#'   if chickAge is unknown.
+#'   of column with observed age of individual in each capture. For v1.0 & v1.1, these must be in EURING codes.
+#'   For v2.0: these indicate the life stage of individuals, e.g., chick, subadult, adult.
 #' @param Date Unquoted expression (i.e. character without quotation marks).
-#'   Name of column with captureDate information. Must be in format dd/mm/yyyy. NB: Not used for v1.2.
+#'   Name of column with captureDate information. Must be in format dd/mm/yyyy. NB: Not used for v2.0.
 #' @param Year Unquoted expression (i.e. character without quotation marks).
 #'   Name of column with year information. NB: This could be different to
 #'   captureDate if we are dealing with species that breed over two year (e.g.
 #'   Southern Hemisphere species).
 #' @param protocol_version Character string. The protocol version of the SPI Birds
-#'   standard data being used to process the primary data. Either "1.0" (default), "1.1", or "1.2".
+#'   standard data being used to process the primary data. Either "1.0" (default), "1.1", or "2.0".
 #' @param showpb Logical. Should a progress bar be shown?
 #'
-#' @return A data frame with calculatedAge (v1.0, v1.1) or exactAge and minimumAge (v1.2).
+#' @return A data frame with calculatedAge (v1.0, v1.1) or exactAge and minimumAge (v2.0).
 #'
 #' @export
 #'
@@ -994,40 +987,24 @@ calc_sex <- function(individual_data,
 #'                             Age_obsv = sample(c(1L, 4L), 100, replace = TRUE)) %>%
 #'   calc_age(ID = IndvID, Age = Age_obsv, Date = CaptureDate, Year = SampleYear)
 #'
-#' # Version 1.2
-#' # Ringed as chick, no season information
+#' # Version 2.0
+#' # Ringed as chick
 #' bird_data <- tibble::tibble(captureYear = c(2001, 2002, 2003, 2004),
 #'                             captureMonth = c(5, 5, 4, 1),
 #'                             captureDay = rep(1, 4),
 #'                             individualID = rep("A1", 4),
+#'                             stage = c("chick", "adult", "adult", "adult"),
 #'                             chickAge = c(15, NA, NA, NA)) %>%
-#'   calc_age(protocol_version = "1.2")
+#'   calc_age(Age = .data$stage, protocol_version = "2.0")
 #'
-#' # Ringed as adult, no season information
+#' # Ringed as adult
 #' bird_data <- tibble::tibble(captureYear = c(2001, 2002, 2003, 2004),
 #'                             captureMonth = c(5, 5, 4, 1),
 #'                             captureDay = rep(1, 4),
 #'                             individualID = rep("A1", 4),
+#'                             stage = rep("adult", 4),
 #'                             chickAge = rep(NA, 4)) %>%
-#'   calc_age(protocol_version = "1.2")
-#'
-#' # Ringed as chick, season information
-#' bird_data <- tibble::tibble(captureYear = c(2001, 2002, 2003, 2004),
-#'                             captureMonth = c(7, 7, 4, 2),
-#'                             captureDay = rep(1, 4),
-#'                             individualID = rep("A1", 4),
-#'                             chickAge = c(15, NA, NA, NA),
-#'                             season = c(1, 2, 3, 3)) %>%
-#'   calc_age(Year = season, protocol_version = "1.2")
-#'
-#' # Ringed as adult, season information
-#' bird_data <- tibble::tibble(captureYear = c(2001, 2002, 2003, 2004),
-#'                             captureMonth = c(7, 7, 4, 2),
-#'                             captureDay = rep(1, 4),
-#'                             individualID = rep("A1", 4),
-#'                             chickAge = rep(NA, 4),
-#'                             season = c(1, 2, 3, 3)) %>%
-#'   calc_age(Year = season, protocol_version = "1.2")
+#'   calc_age(Age = .data$stage, protocol_version = "2.0")
 
 calc_age <- function(data, ID, Age, Date, Year, protocol_version = "1.0", showpb = TRUE){
 
@@ -1061,52 +1038,25 @@ calc_age <- function(data, ID, Age, Date, Year, protocol_version = "1.0", showpb
 
   }
 
-  # Version 1.2
-  if(protocol_version == "1.2") {
+  # Version 2.0
+  if(protocol_version == "2.0") {
 
-    # If the data owner has no information on seasons, or if there are multiple seasons per year,
-    # age is calculated based on the number of years since ringing/birth
-    # NB: We do not use a full 365/366 days before an individual's age increases. That is, a bird born on 1st of June in year y is 3 years old
-    # in year y+3, whether that is just before or just after 1st of June in that year.
-    # To circumvent this problem, we say that an individual ages after 10 months, 1 year and 10 months, etc. after its first capture date.
-    if(missing(Year)) {
-
-      output <- data %>%
-        dplyr::mutate(captureDate = lubridate::make_date(.data$captureYear, .data$captureMonth, .data$captureDay)) %>%
-        dplyr::arrange(.data$individualID, .data$captureYear, .data$captureDate) %>%
-        # For each individual, determine whether their first catch was as a chick or not
-        dplyr::group_by(.data$individualID) %>%
-        dplyr::mutate(ringedAs = dplyr::case_when(!is.na(dplyr::first(.data$chickAge)) ~ "chick",
-                                                  dplyr::first({{Age}}) == "chick" ~ "chick",
-                                                  TRUE ~ "adult"),
-                      firstDate = dplyr::first(.data$captureDate)) %>%
-        dplyr::ungroup() %>%
-        # Determine exact age and minimum age for adults & chicks
-        dplyr::mutate(exactAge = dplyr::case_when(.data$ringedAs == "chick" ~ as.integer(floor((.data$captureDate - .data$firstDate) / lubridate::dyears (1)) + ifelse(((.data$captureDate - .data$firstDate) / lubridate::dyears (1)) %% 1 >= 10/12, 1, 0)),
-                                                  .data$ringedAs == "adult" ~ NA_integer_),
-                                                  minimumAge = dplyr::case_when(.data$ringedAs == "adult" ~ as.integer(floor((.data$captureDate - .data$firstDate) / lubridate::dyears (1)) + ifelse(((.data$captureDate - .data$firstDate) / lubridate::dyears (1)) %% 1 >= 10/12, 1, 0) + 1),
-                                                                                .data$ringedAs == "chick" ~ .data$exactAge))
-
-      # If the data owner has information on breeding seasons, and there is 1 season per year,
-      # age is calculated based on the number of seasons since ringing/birth
-    } else {
-
-      output <- data %>%
-        dplyr::mutate(captureDate = lubridate::make_date(.data$captureYear, .data$captureMonth, .data$captureDay)) %>%
-        dplyr::arrange(.data$individualID, {{Year}}, .data$captureDate) %>%
-        # For each individual, determine whether their first catch was as a chick or not
-        dplyr::group_by(.data$individualID) %>%
-        dplyr::mutate(ringedAs = dplyr::case_when(!is.na(dplyr::first(.data$chickAge)) ~ "chick",
-                                                  dplyr::first({{Age}}) == "chick" ~ "chick",
-                                                  TRUE ~ "adult"),
-                      firstSeason = as.integer(dplyr::first({{Year}}))) %>%
-        dplyr::ungroup() %>%
-        # Determine exact age and minimum age for adults & chicks
-        dplyr::mutate(exactAge = dplyr::case_when(.data$ringedAs == "chick" ~ as.integer({{Year}} - .data$firstSeason),
-                                                  .data$ringedAs == "adult" ~ NA_integer_),
-                      minimumAge = dplyr::case_when(.data$ringedAs == "adult" ~ as.integer({{Year}} - .data$firstSeason + 1),
-                                                    .data$ringedAs == "chick" ~ as.integer(.data$exactAge)))
-    }
+    # Age is calculated based on the number of years since ringing/birth
+    output <- data %>%
+      dplyr::mutate(captureDate = lubridate::make_date(.data$captureYear, .data$captureMonth, .data$captureDay)) %>%
+      dplyr::arrange(.data$individualID, .data$captureYear, .data$captureDate) %>%
+      # For each individual, determine whether their first catch was as a chick or not
+      dplyr::group_by(.data$individualID) %>%
+      dplyr::mutate(ringedAs = dplyr::case_when(!is.na(dplyr::first(.data$chickAge)) ~ "chick",
+                                                dplyr::first({{Age}}) == "chick" ~ "chick",
+                                                TRUE ~ "adult"),
+                    firstDate = dplyr::first(.data$captureDate)) %>%
+      dplyr::ungroup() %>%
+      # Determine exact age and minimum age for adults & chicks
+      dplyr::mutate(exactAge = dplyr::case_when(.data$ringedAs == "chick" ~ as.integer(floor(lubridate::interval(.data$firstDate, .data$captureDate) / lubridate::years (1))),
+                                                .data$ringedAs == "adult" ~ NA_integer_),
+                    minimumAge = dplyr::case_when(.data$ringedAs == "adult" ~ as.integer(floor(lubridate::interval(.data$firstDate, .data$captureDate) / lubridate::years (1)) + 1),
+                                                  .data$ringedAs == "chick" ~ .data$exactAge))
 
   }
 
