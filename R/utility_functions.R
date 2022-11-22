@@ -971,27 +971,15 @@ calc_sex <- function(individual_data,
 
 #' Calculate age based on when an individual was first captured
 #'
-#' Arrange data by individual and year (or season) and then determine potential age in each
-#' capture.
+#' We only consider whether an individual was captured as a chick or not. We don't consider the numeric age when an individual was first captured. This prevents any cases where an individual might be wrongly aged at first capture.
 #'
-#' We only consider whether an individual was captured as a chick or not. We
-#' don't consider the numeric age when an individual was first captured.
-#' This prevents any cases where an individual might be wrongly aged at first capture.
-#'
-#' When there is no observed age at first capture we assume it couldn't be a
-#' chick or this would've been recorded.
+#' When there is no observed age at first capture we assume it couldn't be a chick or this would've been recorded.
 #'
 #' \strong{Version 2.0}
 #'
-#' From version 2.0 onwards, age is stored in two columns, exactAge and minimumAge.
-#' For individuals first captured as chicks, exactAge & minimumAge can be determined;
-#' for individuals first captured as adults, only minimumAge can be determined.
+#' From version 2.0 onwards, age is no longer part of the standard format, but optionally available through this utility function. In addition, age is now provided in two variables, exactAge and minimumAge. \emph{exactAge} is the exact age of individuals, which can only be determined for individuals first captured as chicks/fledglings. \emph{minimumAge} is the minimum age of individuals, which can be determined for all individuals. In case of chicks/fledglings, \emph{exactAge} and \emph{minimumAge} are identical.
 #'
-#' The default behaviour of this function is that age is determined as number of years since birth (exactAge)
-#' or ringing (minimumAge). If individuals the date of ringing is known, age increases each time the ringing
-#' date is passed. For example, an individual born on 02/07/2022 will become 1 at 02/07/2023.
-#' If date of ringing is unknown, we pick an arbitrary 'start of life' date. For Northern Hemisphere birds,
-#' this is 01/07/yyyy (1st of July); for Southern Hemisphere birds, this is 01/01/yyyy (1st of January).
+#' The default behaviour of this function is that age is determined as number of years since birth (exactAge) or ringing (minimumAge). Age increases each time the ringing date is passed. For example, an individual born on 01/07/2022 will become 1 at 01/07/2023. If date of ringing is unknown, we pick an arbitrary date of ringing based on lay date, clutch size/hatch date, and average incubation length. This is specified in the documentation of each individual pipeline.
 #'
 #' @param data Data frame. Data frame with capture information.
 #' @param ID Unquoted expression (i.e. character without quotation marks). Name
