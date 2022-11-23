@@ -16,8 +16,8 @@ speciesCode,speciesID,speciesEURINGCode,kingdom,phylum,class,order,family,genus,
 10015,CORMON,15600,Animalia,Chordata,Aves,Passeriformes,Corvidae,Corvus,monedula,,"Linnaeus, 1758",Eurasian jackdaw
 10016,CERFAM,14860,Animalia,Chordata,Aves,Passeriformes,Certhiidae,Certhia,familiaris,,"Linnaeus, 1758",Eurasian treecreeper
 10017,STRALU,07610,Animalia,Chordata,Aves,Strigiformes,Strigidae,Strix,aluco,,"Linnaeus, 1758",Tawny owl
-10018,SITVAR,,Animalia,Chordata,Aves,Passeriformes,Paridae,Sittiparus ,varius,,"Temminck & Schlegel, 1845",Varied tit
-10019,PARMIN,,Animalia,Chordata,Aves,Passeriformes,Paridae,Parus,minor,,"Temminck & Schlegel, 1848",Japanese tit
+10018,SITVAR,,Animalia,Chordata,Aves,Passeriformes,Paridae,Sittiparus,varius,,"Temminck & Schlegel, 1845",Varied tit
+10019,PARMIN,,Animalia,Chordata,Aves,Passeriformes,Paridae,Parus,minor,,"Temminck & Schlegel, 1848",Japanese tit
 10020,STEHIR,06150,Animalia,Chordata,Aves,Charadriiformes,Laridae,Sterna,hirundo,,"Linnaeus, 1758",Common tern
 10021,THACHL,,Animalia,Chordata,Aves,Procellariiformes,Diomedeidae,Thalassarche,chlororhynchos,,"Gmelin, 1789",Atlantic yellow-nosed albatross
 10022,PHOFUS,,Animalia,Chordata,Aves,Procellariiformes,Diomedeidae,Phoebetria,fusca,,"Hilsenberg, 1822",Sooty albatross
