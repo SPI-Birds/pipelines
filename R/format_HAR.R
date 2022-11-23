@@ -5,7 +5,7 @@
 #'
 #'This section provides details on data management choices that are unique to
 #'this data. For a general description of the standard protocl please see
-#'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
+#'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v2.0.0.pdf}{here}.
 #'
 #'\strong{Species}: Data from Harjavalta contains information on 23 different species. We only include records for species with at least 50 broods throughout the study period: pied flycatcher, great tit, blue tit, coal tit, European crested tit, and common redstart. The few records for other species (e.g., Eurasian wryneck, common starling, house sparrow) are excluded.
 #'
@@ -193,31 +193,31 @@ format_HAR <- function(db = choose_directory(),
                      by = "experimentCode") %>%
     # Add locationID from Location data
     # Store old locationID as locationCode
-    dplyr::rename(locationCode = .data$locationID) %>%
-    dplyr::left_join(Location_data %>% dplyr::select(.data$locationPlotID, .data$locationID, .data$year),
+    dplyr::rename(locationCode = "locationID") %>%
+    dplyr::left_join(Location_data %>% dplyr::select("locationPlotID", "locationID", "year"),
                      by = c("locationPlotID", "observedLayYear" = "year")) %>%
     # Add row ID
     dplyr::mutate(row = 1:dplyr::n()) %>%
     # Add missing columns
-    dplyr::bind_cols(data_templates$v1.2$Brood_data[1, !(names(data_templates$v1.2$Brood_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates$v2.0$Brood_data[1, !(names(data_templates$v2.0$Brood_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
-    dplyr::select(names(data_templates$v1.2$Brood_data), dplyr::contains(names(utility_variables$Brood_data),
+    dplyr::select(names(data_templates$v2.0$Brood_data), dplyr::contains(names(utility_variables$Brood_data),
                                                                          ignore.case = FALSE))
 
   # - Capture data
   Capture_data <- Capture_data %>%
     # Add locationID from Location data
     # Store old locationID as locationCode
-    dplyr::rename(locationCode = .data$locationID) %>%
+    dplyr::rename(locationCode = "locationID") %>%
     # TODO: Some locationIDs in Capture_data are missing from Location data. Check with data owner.
-    dplyr::left_join(Location_data %>% dplyr::select(.data$locationPlotID, .data$locationID, .data$year),
+    dplyr::left_join(Location_data %>% dplyr::select("locationPlotID", "locationID", "year"),
                      by = c("locationPlotID", "captureYear" = "year")) %>%
     # Add row ID
     dplyr::mutate(row = 1:dplyr::n()) %>%
     # Add missing columns
-    dplyr::bind_cols(data_templates$v1.2$Capture_data[1, !(names(data_templates$v1.2$Capture_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates$v2.0$Capture_data[1, !(names(data_templates$v2.0$Capture_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
-    dplyr::select(names(data_templates$v1.2$Capture_data), dplyr::contains(names(utility_variables$Capture_data),
+    dplyr::select(names(data_templates$v2.0$Capture_data), dplyr::contains(names(utility_variables$Capture_data),
                                                                            ignore.case = FALSE))
 
   # - Individual data
@@ -225,9 +225,9 @@ format_HAR <- function(db = choose_directory(),
     # Add row ID
     dplyr::mutate(row = 1:dplyr::n()) %>%
     # Add missing columns
-    dplyr::bind_cols(data_templates$v1.2$Individual_data[1, !(names(data_templates$v1.2$Individual_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates$v2.0$Individual_data[1, !(names(data_templates$v2.0$Individual_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
-    dplyr::select(names(data_templates$v1.2$Individual_data), dplyr::contains(names(utility_variables$Individual_data),
+    dplyr::select(names(data_templates$v2.0$Individual_data), dplyr::contains(names(utility_variables$Individual_data),
                                                                               ignore.case = FALSE))
 
   # - Measurement data
@@ -235,9 +235,9 @@ format_HAR <- function(db = choose_directory(),
     # Add row ID
     dplyr::mutate(row = 1:dplyr::n()) %>%
     # Add missing columns
-    dplyr::bind_cols(data_templates$v1.2$Measurement_data[1, !(names(data_templates$v1.2$Measurement_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates$v2.0$Measurement_data[1, !(names(data_templates$v2.0$Measurement_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format
-    dplyr::select(names(data_templates$v1.2$Measurement_data))
+    dplyr::select(names(data_templates$v2.0$Measurement_data))
 
   # - Location data
   # create_location_HAR() returns annual location records, so that these can be easily added to
@@ -257,18 +257,18 @@ format_HAR <- function(db = choose_directory(),
     # Add row ID
     dplyr::mutate(row = 1:dplyr::n()) %>%
     # Add missing columns
-    dplyr::bind_cols(data_templates$v1.2$Location_data[1, !(names(data_templates$v1.2$Location_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates$v2.0$Location_data[1, !(names(data_templates$v2.0$Location_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format
-    dplyr::select(names(data_templates$v1.2$Location_data))
+    dplyr::select(names(data_templates$v2.0$Location_data))
 
   # - Experiment data
   Experiment_data <- Experiment_data %>%
     # Add row ID
     dplyr::mutate(row = 1:dplyr::n()) %>%
     # Add missing columns
-    dplyr::bind_cols(data_templates$v1.2$Experiment_data[1, !(names(data_templates$v1.2$Experiment_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates$v2.0$Experiment_data[1, !(names(data_templates$v2.0$Experiment_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format
-    dplyr::select(names(data_templates$v1.2$Experiment_data))
+    dplyr::select(names(data_templates$v2.0$Experiment_data))
 
   # EXPORT DATA
 
@@ -318,7 +318,7 @@ format_HAR <- function(db = choose_directory(),
 #' @param db Location of primary data from Harjavalta.
 #' @param species_filter Species of interest. The 6 letter codes of all the species of
 #'  interest as listed in the
-#'  \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.2.0.pdf}{standard
+#'  \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v2.0.0.pdf}{standard
 #'  protocol}.
 #'  @param optional_variables A character vector of names of optional variables (generated by standard utility functions) to be included in the pipeline output.
 #'
@@ -335,36 +335,36 @@ create_brood_HAR <- function(db,
   # Many of these are subsequently removed, but it makes it easier for non-Finnish speakers to
   # see what is being removed.
   broods <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Pesat.DB") %>%
-    dplyr::rename(year = .data$Vuos,
-                  locationPlotID = .data$Nuro,
-                  nestAttemptNumber = .data$Anro,
-                  speciesID = .data$Laji,
-                  observedClutchType = .data$Pesa,
-                  femaleID = .data$Naaras,
-                  maleID = .data$Koiras,
-                  observedLayDay = .data$Mpv,
-                  observedLayMonth = .data$Mkk,
-                  errorLayDay = .data$Mtar,
-                  observedHatchDay = .data$Kpv,
-                  observedHatchMonth = .data$Kkk,
-                  errorHatchDay = .data$Ktar,
-                  incubation = .data$Halku,
-                  observedClutchSize = .data$Mulu,
-                  observedBroodSize = .data$Kuor,
-                  observedNumberFledged = .data$Lent,
-                  reasonFailed = .data$Tsyy,
-                  nestlingInjuries = .data$Jalat,
-                  malePresent = .data$Koir,
-                  experimentID = .data$Koe,
-                  expData1 = .data$Olent,
-                  expData2 = .data$Vlent,
-                  deadParent = .data$Delfh,
-                  eggShells = .data$Mkuor,
-                  tempCode1 = .data$Tark,
-                  tempCode2 = .data$Tark2) %>%
+    dplyr::rename(year = "Vuos",
+                  locationPlotID = "Nuro",
+                  nestAttemptNumber = "Anro",
+                  speciesID = "Laji",
+                  observedClutchType = "Pesa",
+                  femaleID = "Naaras",
+                  maleID = "Koiras",
+                  observedLayDay = "Mpv",
+                  observedLayMonth = "Mkk",
+                  errorLayDay = "Mtar",
+                  observedHatchDay = "Kpv",
+                  observedHatchMonth = "Kkk",
+                  errorHatchDay = "Ktar",
+                  incubation = "Halku",
+                  observedClutchSize = "Mulu",
+                  observedBroodSize = "Kuor",
+                  observedNumberFledged = "Lent",
+                  reasonFailed = "Tsyy",
+                  nestlingInjuries = "Jalat",
+                  malePresent = "Koir",
+                  experimentID = "Koe",
+                  expData1 = "Olent",
+                  expData2 = "Vlent",
+                  deadParent = "Delfh",
+                  eggShells = "Mkuor",
+                  tempCode1 = "Tark",
+                  tempCode2 = "Tark2") %>%
     # Remove unwanted columns
-    dplyr::select(-.data$reasonFailed:-.data$malePresent,
-                  -.data$expData1:-.data$tempCode2) %>%
+    dplyr::select(-"reasonFailed":-"malePresent",
+                  -"expData1":-"tempCode2") %>%
     # Create IDs
     # locationPlotID (Nuro) is a concatenation of plot ID (first two symbols)
     # and nestbox number (last two symbols); split, and make both unique
@@ -466,7 +466,7 @@ create_brood_HAR <- function(db,
                                                               season = .data$year) else .} %>%
     {if("calculatedClutchType" %in% optional_variables) calc_clutchtype(data = .,
                                                                         na.rm = FALSE,
-                                                                        protocol_version = "1.2") else .} %>%
+                                                                        protocol_version = "2.0") else .} %>%
     {if("nestAttemptNumber" %in% optional_variables) calc_nestattempt(data = .,
                                                                       season = .data$breedingSeason) else .}
 
@@ -492,40 +492,40 @@ create_nestling_HAR <- function(db,
   # Extract table "Pullit.db" which contains nestling data
   nestling_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Pullit.DB") %>%
     # Rename columns to English (based on description provided by data owner)
-    dplyr::rename(captureYear = .data$Vuos,
-                  locationPlotID = .data$Nuro,
-                  nestAttemptNumber = .data$Anro,
-                  captureMonth = .data$Kk,
-                  captureDay = .data$Pv,
-                  captureTime = .data$Klo,
-                  nestlingNumber = .data$Poik,
-                  last2DigitsRingNumber = .data$Reng,
-                  dead = .data$Dead,
-                  totalWingLength = .data$Siipi,
-                  mass = .data$Paino,
-                  breastMuscle = .data$Lihas,
-                  leftLegAbnormalities = .data$Vjalka,
-                  rightLegAbnormalities = .data$Ojalka,
-                  leftP3 = .data$Vkas,
-                  rightP3 = .data$Okas,
-                  leftRectrix = .data$Vpys,
-                  rightRectrix = .data$Opys,
-                  leftTarsusLength = .data$Vnil,
-                  rightTarsusLength = .data$Onil,
-                  leftTarsusWidth = .data$Vpak,
-                  rightTarsusWidth = .data$Opak,
-                  greatTitBreastYellow = .data$Vari,
-                  luteinSupplementation = .data$Lkoe,
-                  bloodSample = .data$Wb,
-                  columnLengthBlood = .data$Tot,
-                  lengthBlood = .data$Pun,
-                  breastFeatherLutein = .data$FetLut,
-                  nailClipping = .data$Varpaat,
-                  geneticSex = .data$Sp,
-                  headLength = .data$Head,
-                  faecalSample1 = .data$Feces1,
-                  faecalSample2 = .data$Feces2,
-                  tempCode = .data$Tark) %>%
+    dplyr::rename(captureYear = "Vuos",
+                  locationPlotID = "Nuro",
+                  nestAttemptNumber = "Anro",
+                  captureMonth = "Kk",
+                  captureDay = "Pv",
+                  captureTime = "Klo",
+                  nestlingNumber = "Poik",
+                  last2DigitsRingNumber = "Reng",
+                  dead = "Dead",
+                  totalWingLength = "Siipi",
+                  mass = "Paino",
+                  breastMuscle = "Lihas",
+                  leftLegAbnormalities = "Vjalka",
+                  rightLegAbnormalities = "Ojalka",
+                  leftP3 = "Vkas",
+                  rightP3 = "Okas",
+                  leftRectrix = "Vpys",
+                  rightRectrix = "Opys",
+                  leftTarsusLength = "Vnil",
+                  rightTarsusLength = "Onil",
+                  leftTarsusWidth = "Vpak",
+                  rightTarsusWidth = "Opak",
+                  greatTitBreastYellow = "Vari",
+                  luteinSupplementation = "Lkoe",
+                  bloodSample = "Wb",
+                  columnLengthBlood = "Tot",
+                  lengthBlood = "Pun",
+                  breastFeatherLutein = "FetLut",
+                  nailClipping = "Varpaat",
+                  geneticSex = "Sp",
+                  headLength = "Head",
+                  faecalSample1 = "Feces1",
+                  faecalSample2 = "Feces2",
+                  tempCode = "Tark") %>%
     # Create unique broodID (year_locationPlotID_nestAttemptNumber)
     dplyr::mutate(broodID = paste(.data$captureYear,
                                   .data$locationPlotID,
@@ -540,7 +540,7 @@ create_nestling_HAR <- function(db,
                   totalWingLength = dplyr::na_if(.data$totalWingLength, 0),
                   headLength = dplyr::na_if(.data$headLength, 0)) %>%
     # Join hatch date data from brood data table
-    dplyr::left_join(brood_data %>%  dplyr::select(.data$broodID, .data$observedHatchDate),
+    dplyr::left_join(brood_data %>%  dplyr::select("broodID", "observedHatchDate"),
                      by = "broodID") %>%
     # Determine age at capture
     dplyr::mutate(chickAge = as.integer(.data$captureDate - .data$observedHatchDate),
@@ -565,7 +565,7 @@ create_nestling_HAR <- function(db,
 #' @param brood_data Data frame. Output of \code{\link{create_brood_HAR}}.
 #' @param species_filter Species of interest. The 6 letter codes of all the species of
 #'  interest as listed in the
-#'  \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.2.0.pdf}{standard
+#'  \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v2.0.0.pdf}{standard
 #'  protocol}.
 #' @param optional_variables A character vector of names of optional variables (generated by standard utility functions) to be included in the pipeline output.
 #' @param return_errors Logical. Return those records with errors in the ring sequence.
@@ -591,41 +591,41 @@ create_capture_HAR <- function(db,
   # The number of nestlings ringed is stored in nestlingNumber (Poik).
   capture_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Rengas.DB") %>%
     # Rename columns to English (based on description provided by data owner)
-    dplyr::rename(ringSeries = .data$Sarja,
-                  ringNumber = .data$Mista,
-                  captureType = .data$Tunnus,
-                  captureYear = .data$Vuos,
-                  captureMonth = .data$Kk,
-                  captureDay = .data$Pv,
-                  captureTime = .data$Klo,
-                  locationPlotID = .data$Nuro,
-                  nestAttemptNumber = .data$Anro,
-                  recordedBy = .data$Havno,
-                  lastRingNumber = .data$Mihin,
-                  speciesID = .data$Laji,
-                  observedSex = .data$Suku,
-                  sexMethod = .data$Sp,
-                  age = .data$Ika,
-                  ageMethod = .data$Ip,
-                  ringType = .data$Rtapa,
-                  condition = .data$Kunto,
-                  birdStatus = .data$Tila,
-                  captureMethod = .data$Ptapa,
-                  nestlingNumber = .data$Poik,
-                  totalWingLength = .data$Siipi,
-                  mass = .data$Paino,
-                  moult = .data$Sulsat,
-                  fatScore = .data$Rasik,
-                  extraInfo = .data$Lisa,
-                  plumage = .data$Vari,
-                  tailFeather = .data$Psulka,
-                  columnLengthBlood = .data$Tot,
-                  lengthBlood = .data$Pun,
-                  tarsusLength = .data$Tarsus,
-                  breastMuscle = .data$Lihas,
-                  headLength = .data$Head,
-                  ticks = .data$Ticks,
-                  tempCode = .data$Tark)
+    dplyr::rename(ringSeries = "Sarja",
+                  ringNumber = "Mista",
+                  captureType = "Tunnus",
+                  captureYear = "Vuos",
+                  captureMonth = "Kk",
+                  captureDay = "Pv",
+                  captureTime = "Klo",
+                  locationPlotID = "Nuro",
+                  nestAttemptNumber = "Anro",
+                  recordedBy = "Havno",
+                  lastRingNumber = "Mihin",
+                  speciesID = "Laji",
+                  observedSex = "Suku",
+                  sexMethod = "Sp",
+                  age = "Ika",
+                  ageMethod = "Ip",
+                  ringType = "Rtapa",
+                  condition = "Kunto",
+                  birdStatus = "Tila",
+                  captureMethod = "Ptapa",
+                  nestlingNumber = "Poik",
+                  totalWingLength = "Siipi",
+                  mass = "Paino",
+                  moult = "Sulsat",
+                  fatScore = "Rasik",
+                  extraInfo = "Lisa",
+                  plumage = "Vari",
+                  tailFeather = "Psulka",
+                  columnLengthBlood = "Tot",
+                  lengthBlood = "Pun",
+                  tarsusLength = "Tarsus",
+                  breastMuscle = "Lihas",
+                  headLength = "Head",
+                  ticks = "Ticks",
+                  tempCode = "Tark")
 
   capture_data <- capture_data %>%
     # Create unique broodID (year_locationPlotID_nestAttemptNumber)
@@ -688,7 +688,7 @@ create_capture_HAR <- function(db,
     # Filter only those where the broodID_ringNumber combo is not found in Nestling data
     dplyr::filter(!paste(broodID, stringr::str_sub(ringNumber, start = -2), sep = "_") %in% paste(nestling_data$broodID, nestling_data$last2DigitsRingNumber, sep = "_")) %>%
     # Join in brood_data (with observedHatchDate) so we can determine chickAge
-    dplyr::left_join(brood_data %>% dplyr::select(.data$broodID, .data$observedHatchDate),
+    dplyr::left_join(brood_data %>% dplyr::select("broodID", "observedHatchDate"),
                      by = "broodID") %>%
     dplyr::mutate(captureStage = "chick",
                   last2DigitsRingNumber = NA,
@@ -710,7 +710,7 @@ create_capture_HAR <- function(db,
                                         .data$ringSeries,
                                         .data$ringNumber)) %>%
     dplyr::semi_join(nestling_data %>%
-                       dplyr::select(.data$broodID, .data$last2DigitsRingNumber, captureDateNestling = .data$captureDate),
+                       dplyr::select("broodID", "last2DigitsRingNumber", captureDateNestling = "captureDate"),
                      by = c("broodID", "last2DigitsRingNumber")) %>%
     dplyr::pull(.data$individualID)
 
@@ -723,10 +723,10 @@ create_capture_HAR <- function(db,
                                         .data$ringNumber)) %>%
     dplyr::filter(.data$individualID %in% {{non_matching_records}}) %>%
     dplyr::anti_join(nestling_data %>%
-                       dplyr::select(.data$broodID, .data$last2DigitsRingNumber, .data$captureDate),
+                       dplyr::select("broodID", "last2DigitsRingNumber", "captureDate"),
                      by = c("broodID", "last2DigitsRingNumber", "captureDate")) %>%
     dplyr::left_join(brood_data %>%
-                       dplyr::select(.data$broodID, .data$observedHatchDate),
+                       dplyr::select("broodID", "observedHatchDate"),
                      by = "broodID") %>%
     dplyr::mutate(chickAge = as.integer(.data$captureDate - .data$observedHatchDate),
                   captureStage = "chick")
@@ -735,8 +735,8 @@ create_capture_HAR <- function(db,
   unique_individual_nestlings <- nestling_data %>%
     dplyr::left_join(indv_chick_capture %>%
                        dplyr::mutate(last2DigitsRingNumber = stringr::str_sub(ringNumber, start = -2)) %>%
-                       dplyr::select(.data$broodID, .data$last2DigitsRingNumber, .data$ringSeries,
-                                     .data$ringNumber, .data$speciesID),
+                       dplyr::select("broodID", "last2DigitsRingNumber", "ringSeries",
+                                     "ringNumber", "speciesID"),
                      by = c("broodID", "last2DigitsRingNumber")) %>%
     dplyr::mutate(individualID = paste0("HAR_",
                                         .data$ringSeries,
@@ -744,7 +744,7 @@ create_capture_HAR <- function(db,
     dplyr::filter(.data$individualID %in% {{non_matching_records}}) %>%
     dplyr::anti_join(indv_chick_capture %>%
                        dplyr::mutate(last2DigitsRingNumber = stringr::str_sub(.data$ringNumber, start = -2)) %>%
-                       dplyr::select(.data$broodID, .data$last2DigitsRingNumber, .data$captureDate),
+                       dplyr::select("broodID", "last2DigitsRingNumber", "captureDate"),
                      by = c("broodID", "last2DigitsRingNumber", "captureDate")) %>%
     dplyr::mutate(age = "PP",
                   captureStage = "chick",
@@ -760,14 +760,14 @@ create_capture_HAR <- function(db,
                                         .data$ringSeries,
                                         .data$ringNumber)) %>%
     dplyr::left_join(nestling_data %>%
-                       dplyr::select(.data$broodID, .data$last2DigitsRingNumber, captureDateNestling = .data$captureDate,
-                                     captureTimeNestling = .data$captureTime, massNestling = .data$mass,
-                                     totalWingLengthNestling = .data$totalWingLength,
-                                     headLengthNestling = .data$headLength,
-                                     .data$leftTarsusLength, .data$rightTarsusLength,
-                                     .data$leftP3, .data$rightP3,
-                                     .data$leftRectrix, .data$rightRectrix,
-                                     .data$observedHatchDate, .data$chickAge),
+                       dplyr::select("broodID", "last2DigitsRingNumber", captureDateNestling = "captureDate",
+                                     captureTimeNestling = "captureTime", massNestling = "mass",
+                                     totalWingLengthNestling = "totalWingLength",
+                                     headLengthNestling = "headLength",
+                                     "leftTarsusLength", "rightTarsusLength",
+                                     "leftP3", "rightP3",
+                                     "leftRectrix", "rightRectrix",
+                                     "observedHatchDate", "chickAge"),
                      by = c("broodID", "last2DigitsRingNumber")) %>%
     # Filter those cases that are individual captures (i.e., no last ring number)
     # Find cases where there was mass and/or wing length in the nestling data
@@ -822,19 +822,19 @@ create_capture_HAR <- function(db,
 
                                            })) %>%
     tidyr::unnest(cols = .data$ringNumber) %>%
-    dplyr::select(.data$broodID,
-                  .data$locationPlotID,
-                  .data$ringSeries,
-                  .data$ringNumber,
-                  .data$captureYear,
-                  .data$captureMonth,
-                  .data$captureDay,
-                  .data$speciesID,
-                  .data$observedSex,
-                  .data$age,
-                  .data$recordedBy,
-                  .data$captureType,
-                  .data$birdStatus)
+    dplyr::select("broodID",
+                  "locationPlotID",
+                  "ringSeries",
+                  "ringNumber",
+                  "captureYear",
+                  "captureMonth",
+                  "captureDay",
+                  "speciesID",
+                  "observedSex",
+                  "age",
+                  "recordedBy",
+                  "captureType",
+                  "birdStatus")
 
   # Now, for each recorded chick ring number determine the last 2 digits of the ring
   multirecord_captures <- expanded_multi_chick_capture %>%
@@ -843,11 +843,11 @@ create_capture_HAR <- function(db,
     # Join in all nestling data where the broodID and last2DigitsRingNumber is the same
     # N.B. We do left_join with broodID and last2DigitsRingNumber, so we can get multiple
     # records for each chick when they were captured more than once
-    dplyr::left_join(nestling_data %>% dplyr::select(.data$broodID, .data$captureDate, .data$captureTime,
-                                                     .data$last2DigitsRingNumber, .data$mass, .data$totalWingLength,
-                                                     .data$headLength, .data$leftTarsusLength, .data$rightTarsusLength,
-                                                     .data$leftRectrix, .data$rightRectrix,
-                                                     .data$leftP3, .data$rightP3, .data$chickAge),
+    dplyr::left_join(nestling_data %>% dplyr::select("broodID", "captureDate", "captureTime",
+                                                     "last2DigitsRingNumber", "mass", "totalWingLength",
+                                                     "headLength", "leftTarsusLength", "rightTarsusLength",
+                                                     "leftRectrix", "rightRectrix",
+                                                     "leftP3", "rightP3", "chickAge"),
                      by = c("broodID", "last2DigitsRingNumber")) %>%
     dplyr::mutate(individualID = paste0("HAR_",
                                         .data$ringSeries,
@@ -886,7 +886,7 @@ create_capture_HAR <- function(db,
   # TODO: Check with other developers how to deal with "unknown" individuals.
   # In more recently developed pipelines, unknown individualIDs are removed. Should we do the same here?
   # Or should we rethink the way we deal with this? For instance, use data owner-defined IDs for
-  # captureRingNumber & releaseRingNumber (given that they ARE ring numbers), and create our own
+  # captureTagID & releaseTagID (given that they ARE ring numbers), and create our own
   # individualID? This way, "unringed" or "unknown" individuals do not have to be removed, but
   # users are able to distinguish them from ringed individuals and decide what to do with them
   # in their analyses.
@@ -899,7 +899,7 @@ create_capture_HAR <- function(db,
                   age = "PP",
                   captureStage = "chick") %>%
     # Join in species information from brood_data
-    dplyr::left_join(brood_data %>% dplyr::select(.data$broodID, .data$speciesID), by = "broodID")
+    dplyr::left_join(brood_data %>% dplyr::select("broodID", "speciesID"), by = "broodID")
 
   ringed_chicks_nocapture <- nocapture_nestlings %>%
     dplyr::filter(!toupper(.data$last2DigitsRingNumber) %in% LETTERS) %>%
@@ -909,7 +909,7 @@ create_capture_HAR <- function(db,
                   age = "PP",
                   captureStage = "chick") %>%
     # Join in species information from brood_data
-    dplyr::left_join(brood_data %>% dplyr::select(.data$broodID, .data$speciesID), by = "broodID")
+    dplyr::left_join(brood_data %>% dplyr::select("broodID", "speciesID"), by = "broodID")
 
   message(paste0("There are ",
                  nrow(ringed_chicks_nocapture),
@@ -972,9 +972,9 @@ create_capture_HAR <- function(db,
     # Arrange chronologically for each individual
     dplyr::arrange(.data$individualID, .data$captureYear, .data$captureMonth, .data$captureDay) %>%
     dplyr::group_by(.data$individualID) %>%
-    dplyr::mutate(captureRingNumber = dplyr::case_when(dplyr::row_number() == 1 ~ NA_character_,
+    dplyr::mutate(captureTagID = dplyr::case_when(dplyr::row_number() == 1 ~ NA_character_,
                                                        TRUE ~ stringr::str_sub(.data$individualID, 5, nchar(.data$individualID))),
-                  releaseRingNumber = stringr::str_sub(.data$individualID, 5, nchar(.data$individualID)),
+                  releaseTagID = stringr::str_sub(.data$individualID, 5, nchar(.data$individualID)),
                   # Create captureID
                   captureID = paste(.data$individualID, 1:dplyr::n(), sep = "_")) %>%
     dplyr::ungroup() %>%
@@ -989,8 +989,7 @@ create_capture_HAR <- function(db,
   output <- captures %>%
     {if("exactAge" %in% optional_variables | "minimumAge" %in% optional_variables) calc_age(data = .,
                                                                                             Age = .data$captureStage,
-                                                                                            Year = .data$captureYear,
-                                                                                            protocol_version = "1.2") %>%
+                                                                                            protocol_version = "2.0") %>%
         dplyr::select(dplyr::contains(c(names(captures), optional_variables))) else .}
 
   return(output)
@@ -1072,32 +1071,32 @@ create_location_HAR <- function(db){
   # Extract table "Paikat.db" which contains location data
   location_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Paikat.DB") %>%
     # Remove last 2 columns that have no info
-    dplyr::select(-.data$Aukko, -.data$Malli) %>%
+    dplyr::select(-"Aukko", -"Malli") %>%
     # Rename columns to English (based on description provided by data owner)
-    dplyr::rename(year = .data$Vuos,
-                  locationPlotID = .data$Nuro,
-                  forestType = .data$Mety,
-                  pinusSylvestris = .data$Manty,
-                  piceaAbies = .data$Kuusi,
-                  betulaSpp = .data$Koivu,
-                  populusTremula = .data$Haapa,
-                  sorbusAcuparia = .data$Pihlaja,
-                  salixSpp = .data$Pajut,
-                  juniperusCommunis = .data$Kataja,
-                  alnusSpp = .data$Leppa,
-                  prunusPadas = .data$Tuomi,
-                  treeHeight = .data$Kork,
-                  basalArea = .data$Totrel,
-                  pineHeight = .data$Makor,
-                  spruceHeight = .data$Kukor,
-                  birchHeight = .data$Kokor,
-                  pineBasalArea = .data$Marel,
-                  spruceBasalArea = .data$Kurel,
-                  birchBasalArea = .data$Korel,
-                  latitude = .data$Leve,
-                  longitude = .data$Pitu,
-                  municipality = .data$Kunta,
-                  locationName = .data$Paikka) %>%
+    dplyr::rename(year = "Vuos",
+                  locationPlotID = "Nuro",
+                  forestType = "Mety",
+                  pinusSylvestris = "Manty",
+                  piceaAbies = "Kuusi",
+                  betulaSpp = "Koivu",
+                  populusTremula = "Haapa",
+                  sorbusAcuparia = "Pihlaja",
+                  salixSpp = "Pajut",
+                  juniperusCommunis = "Kataja",
+                  alnusSpp = "Leppa",
+                  prunusPadas = "Tuomi",
+                  treeHeight = "Kork",
+                  basalArea = "Totrel",
+                  pineHeight = "Makor",
+                  spruceHeight = "Kukor",
+                  birchHeight = "Kokor",
+                  pineBasalArea = "Marel",
+                  spruceBasalArea = "Kurel",
+                  birchBasalArea = "Korel",
+                  latitude = "Leve",
+                  longitude = "Pitu",
+                  municipality = "Kunta",
+                  locationName = "Paikka") %>%
     # Create locationID and plotID
     # plotID = first two digits
     # locationID = plotID_nestbox number, where nestbox number is last two digits
@@ -1168,27 +1167,27 @@ create_measurement_HAR <- function(capture_data) {
   # Measurements are only taken of individuals (during captures), not of locations,
   # so we use capture_data as input
   measurements <- capture_data %>%
-    dplyr::select(recordID = .data$captureID,
-                  siteID = .data$captureSiteID,
-                  measurementDeterminedYear = .data$captureYear,
-                  measurementDeterminedMonth = .data$captureMonth,
-                  measurementDeterminedDay = .data$captureDay,
-                  measurementDeterminedTime = .data$captureTime,
-                  .data$recordedBy,
-                  .data$totalWingLength,
-                  .data$tarsusLength,
-                  .data$leftTarsusLength,
-                  .data$rightTarsusLength,
-                  .data$mass,
-                  .data$leftP3,
-                  .data$rightP3,
-                  .data$headLength,
-                  .data$leftRectrix,
-                  .data$rightRectrix) %>%
+    dplyr::select(recordID = "captureID",
+                  siteID = "captureSiteID",
+                  measurementDeterminedYear = "captureYear",
+                  measurementDeterminedMonth = "captureMonth",
+                  measurementDeterminedDay = "captureDay",
+                  measurementDeterminedTime = "captureTime",
+                  "recordedBy",
+                  "totalWingLength",
+                  "tarsusLength",
+                  "leftTarsusLength",
+                  "rightTarsusLength",
+                  "mass",
+                  "leftP3",
+                  "rightP3",
+                  "headLength",
+                  "leftRectrix",
+                  "rightRectrix") %>%
     # Measurements in Capture data are stored as columns, but we want each individual measurement as a row
     # Therefore, we pivot each separate measurement of an individual to a row
     # NAs are removed
-    tidyr::pivot_longer(cols = .data$totalWingLength:.data$rightRectrix,
+    tidyr::pivot_longer(cols = "totalWingLength":"rightRectrix",
                         names_to = "measurementType",
                         values_to = "measurementValue",
                         values_drop_na = TRUE) %>%
@@ -1232,11 +1231,11 @@ create_experiment_HAR <- function(db,
                                   brood_data) {
 
   experiments <- brood_data %>%
-    dplyr::select(year = .data$observedLayYear,
-                  month = .data$observedLayMonth,
-                  day = .data$observedLayDay,
-                  treatmentCode = .data$experimentID,
-                  .data$broodID) %>%
+    dplyr::select(year = "observedLayYear",
+                  month = "observedLayMonth",
+                  day = "observedLayDay",
+                  treatmentCode = "experimentID",
+                  "broodID") %>%
     # Remove non-experimental broods
     dplyr::filter(!is.na(.data$treatmentCode)) %>%
     # Group by experiment code: year_experimentID
@@ -1317,18 +1316,18 @@ create_experiment_HAR <- function(db,
 
   observers <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Visitit.DB") %>%
     # Rename columns to English (based on description provided by data owner)
-    dplyr::rename(year = .data$Vuos,
-                  locationPlotID = .data$Nuro,
-                  nestAttemptNumber = .data$Anro,
-                  month = .data$Kk,
-                  day = .data$Pv,
-                  time = .data$Klo,
-                  recordedBy = .data$Havno,
-                  eggNumber = .data$Mun,
-                  chickNumber = .data$Poik,
-                  comments = .data$Komm,
-                  breedingStage = .data$Tila,
-                  ticks = .data$Ticks) %>%
+    dplyr::rename(year = "Vuos",
+                  locationPlotID = "Nuro",
+                  nestAttemptNumber = "Anro",
+                  month = "Kk",
+                  day = "Pv",
+                  time = "Klo",
+                  recordedBy = "Havno",
+                  eggNumber = "Mun",
+                  chickNumber = "Poik",
+                  comments = "Komm",
+                  breedingStage = "Tila",
+                  ticks = "Ticks") %>%
     # Create unique BroodID with year_locationPlotID_nestAttemptNumber
     dplyr::mutate(broodID = paste(.data$year,
                                   .data$locationPlotID,
@@ -1388,13 +1387,13 @@ create_experiment_HAR <- function(db,
 
   # Add experiment times to experiment data table
   output <- experiments %>%
-    dplyr::select(.data$experimentID,
-                  .data$treatmentID,
-                  .data$experimentCode,
-                  .data$siteID,
-                  .data$experimentType,
-                  .data$experimentStage,
-                  .data$treatmentDetails) %>%
+    dplyr::select("experimentID",
+                  "treatmentID",
+                  "experimentCode",
+                  "siteID",
+                  "experimentType",
+                  "experimentStage",
+                  "treatmentDetails") %>%
     dplyr::distinct() %>%
     dplyr::left_join(experiment_times, by = "experimentID")
 

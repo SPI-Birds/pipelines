@@ -987,6 +987,7 @@ calc_sex <- function(individual_data,
 #' @param Age Unquoted expression (i.e. character without quotation marks). Name
 #'   of column with observed age of individual in each capture. For v1.0 & v1.1, these must be in EURING codes.
 #'   For v2.0: these indicate the life stage of individuals, e.g., chick, subadult, adult.
+#'   If NA, individuals are assumed to be adults.
 #' @param Date Unquoted expression (i.e. character without quotation marks).
 #'   Name of column with captureDate information. Must be in format dd/mm/yyyy. NB: Not used for v2.0.
 #' @param Year Unquoted expression (i.e. character without quotation marks).

@@ -5,7 +5,7 @@
 #'
 #'This section provides details on data management choices that are unique to
 #'this data. For a general description of the standard format please see
-#'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.2.0.pdf}{here}.
+#'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v2.0.0.pdf}{here}.
 #'
 #'\strong{speciesID}: There are records where species is uncertain (e.g. listed as
 #''GRETI?'). This uncertainty is ignored. We assume that the suggested species
@@ -47,7 +47,7 @@
 #'
 #'\strong{capturePhysical}: Assume all individuals were physically captured.
 #'
-#'\strong{captureRingNumber}: First captures of all individuals are assumed to be ringing events, and thus captureRingNumber is set to NA.
+#'\strong{captureTagID}: First captures of all individuals are assumed to be ringing events, and thus captureTagID is set to NA.
 #'
 #'\strong{ringStage}: Assume all individuals were ringed as adults.
 #'
@@ -141,7 +141,7 @@ format_BAN <- function(db = choose_directory(),
                                                femaleCaptureDate = .data$marchDate - 1 + as.numeric(.data$actual_female_trapping_date),
                                                chickCaptureDate = .data$marchDate - 1 + as.numeric(.data$actual_pullus_ringing_date)) %>%
                                  # Filter only the species of interest
-                                 dplyr::filter(.data$speciesID %in% species_filter))
+                                 dplyr::filter(.data$speciesID %in% {{species}}))
 
   # BROOD DATA
 
@@ -179,7 +179,7 @@ format_BAN <- function(db = choose_directory(),
   message("Compiling measurement information...")
 
   # NB: There is no measurement information so we create an empty data table
-  Measurement_data <- data_templates$v1.2$Measurement_data[0,]
+  Measurement_data <- data_templates$v2.0$Measurement_data[0,]
 
 
   # EXPERIMENT DATA
@@ -187,7 +187,7 @@ format_BAN <- function(db = choose_directory(),
   message("Compiling experiment information...")
 
   # NB: There is no experiment information so we create an empty data table
-  Experiment_data <- data_templates$v1.2$Experiment_data[0,]
+  Experiment_data <- data_templates$v2.0$Experiment_data[0,]
 
 
   # WRANGLE DATA FOR EXPORT
@@ -196,36 +196,36 @@ format_BAN <- function(db = choose_directory(),
     # Add row ID
     dplyr::mutate(row = 1:dplyr::n()) %>%
     # Add missing columns
-    dplyr::bind_cols(data_templates$v1.2$Brood_data[1, !(names(data_templates$v1.2$Brood_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates$v2.0$Brood_data[1, !(names(data_templates$v2.0$Brood_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
-    dplyr::select(names(data_templates$v1.2$Brood_data), dplyr::contains(names(utility_variables$Brood_data),
+    dplyr::select(names(data_templates$v2.0$Brood_data), dplyr::contains(names(utility_variables$Brood_data),
                                                                          ignore.case = FALSE))
 
   Capture_data <- Capture_data %>%
     # Add row ID
     dplyr::mutate(row = 1:dplyr::n()) %>%
     # Add missing columns
-    dplyr::bind_cols(data_templates$v1.2$Capture_data[1, !(names(data_templates$v1.2$Capture_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates$v2.0$Capture_data[1, !(names(data_templates$v2.0$Capture_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
-    dplyr::select(names(data_templates$v1.2$Capture_data), dplyr::contains(names(utility_variables$Capture_data),
+    dplyr::select(names(data_templates$v2.0$Capture_data), dplyr::contains(names(utility_variables$Capture_data),
                                                                            ignore.case = FALSE))
 
   Individual_data <- Individual_data %>%
     # Add row ID
     dplyr::mutate(row = 1:dplyr::n()) %>%
     # Add missing columns
-    dplyr::bind_cols(data_templates$v1.2$Individual_data[1, !(names(data_templates$v1.2$Individual_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates$v2.0$Individual_data[1, !(names(data_templates$v2.0$Individual_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
-    dplyr::select(names(data_templates$v1.2$Individual_data), dplyr::contains(names(utility_variables$Individual_data),
+    dplyr::select(names(data_templates$v2.0$Individual_data), dplyr::contains(names(utility_variables$Individual_data),
                                                                               ignore.case = FALSE))
 
   Location_data <- Location_data %>%
     # Add row ID
     dplyr::mutate(row = 1:dplyr::n()) %>%
     # Add missing columns
-    dplyr::bind_cols(data_templates$v1.2$Location_data[1, !(names(data_templates$v1.2$Location_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates$v2.0$Location_data[1, !(names(data_templates$v2.0$Location_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format
-    dplyr::select(names(data_templates$v1.2$Location_data))
+    dplyr::select(names(data_templates$v2.0$Location_data))
 
   # EXPORT DATA
 
@@ -314,7 +314,7 @@ create_brood_BAN <- function(data,
     {if("breedingSeason" %in% optional_variables) calc_season(data = .,
                                                               season = .data$year) else .} %>%
     {if("calculatedClutchType" %in% optional_variables) calc_clutchtype(data = ., na.rm = FALSE,
-                                                                        protocol_version = "1.2") else .} %>%
+                                                                        protocol_version = "2.0") else .} %>%
     {if("nestAttemptNumber" %in% optional_variables) calc_nestattempt(data = .,
                                                                       season = .data$breedingSeason) else .}
 
@@ -337,10 +337,10 @@ create_capture_BAN <- function(data,
                                optional_variables = NULL) {
 
   Capture_data <- data %>%
-    dplyr::select(.data$speciesID, .data$year, .data$locationID, .data$plotID,
-                  .data$femaleCaptureDate, .data$maleCaptureDate,
-                  .data$femaleID, .data$maleID) %>%
-    tidyr::pivot_longer(cols = c(.data$femaleID, .data$maleID),
+    dplyr::select("speciesID", "year", "locationID", "plotID",
+                  "femaleCaptureDate", "maleCaptureDate",
+                  "femaleID", "maleID") %>%
+    tidyr::pivot_longer(cols = c("femaleID", "maleID"),
                         names_to = "sex",
                         values_to = "individualID") %>%
     dplyr::arrange(.data$sex) %>%
@@ -365,22 +365,22 @@ create_capture_BAN <- function(data,
     # Arrange chronologically for each individual
     dplyr::arrange(.data$individualID, .data$captureDate) %>%
     dplyr::group_by(.data$individualID) %>%
-    # First captures are assumed to be ringing events, and thus captureRingNumber = NA.
-    dplyr::mutate(captureRingNumber = dplyr::case_when(dplyr::row_number() == 1 ~ NA_character_,
+    # First captures are assumed to be ringing events, and thus captureTagID = NA.
+    dplyr::mutate(captureTagID = dplyr::case_when(dplyr::row_number() == 1 ~ NA_character_,
                                                        TRUE ~ stringr::str_sub(.data$individualID, 5, nchar(.data$individualID))),
-                  # All releases are assumed to be alive (also see releaseAlive), so no NAs in releaseRingNumber
-                  releaseRingNumber = stringr::str_sub(.data$individualID, 5, nchar(.data$individualID)),
+                  # All releases are assumed to be alive (also see releaseAlive), so no NAs in releaseTagID
+                  releaseTagID = stringr::str_sub(.data$individualID, 5, nchar(.data$individualID)),
                   # Create captureID
                   captureID = paste(.data$individualID, 1:dplyr::n(), sep = "_")) %>%
     dplyr::ungroup() %>%
-    dplyr::select(.data$captureID, everything())
+    dplyr::select("captureID", tidyselect::everything())
 
   # Add optional variables
   output <- Capture_data %>%
     {if("exactAge" %in% optional_variables | "minimumAge" %in% optional_variables) calc_age(data = .,
                                                                                             Age = .data$age,
-                                                                                            Year = .data$year,
-                                                                                            protocol_version = "1.2") %>% dplyr::select(dplyr::contains(c(names(Capture_data), optional_variables))) else .}
+                                                                                            protocol_version = "2.0") %>%
+        dplyr::select(dplyr::contains(c(names(Capture_data), optional_variables))) else .}
 
   return(output)
 
