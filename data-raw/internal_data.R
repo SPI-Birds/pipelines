@@ -394,7 +394,7 @@ key_variables <- tibble::lst(
   # Capture data
   Capture_data = c("IndvID", "Species", "BreedingSeason", "CaptureDate", "CapturePopID", # v1.0 variables
                    "CaptureID", "CaptureAlive", "ReleaseAlive", # v1.1 variables
-                   "captureID", "individualID", "releaseRingNumber", "speciesID", # v2.0 variables
+                   "captureID", "individualID", "releaseTagID", "speciesID", # v2.0 variables
                    "captureYear", "captureMonth", "captureDay", "capturePhysical", "captureAlive", "releaseAlive",
                    "captureSiteID"),
 
