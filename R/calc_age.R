@@ -48,7 +48,7 @@ calc_age <- function(data, ID, Age, Date, Year, showpb = TRUE){
                   FirstYear = as.integer(dplyr::first({{Year}})),
                   yr_diff   = as.integer({{Year}}) - .data$FirstYear) %>%
     dplyr::ungroup() %>%
-    ## TODO: Look at using apply functions.
+    ## TODO: Look at using apply function.
     #Then calculate age from these data
     #Rule 1: If individual was not caught as a chick (i.e. age is NA or >3) then first capture is age 4 (after first year, birth year unknown)
     dplyr::mutate(Age_calculated = dplyr::case_when(is.na(.data$FirstAge) | .data$FirstAge > 3 ~ 4L + 2L*.data$yr_diff,
