@@ -1,4 +1,4 @@
-#' Perform quality checks on brood data
+#' Perform quality checks on brood data - TEST
 #'
 #' A wrapper that runs all single checks related to \code{Brood_data}.
 #'
