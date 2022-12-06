@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 #' Calculate age based on when an individual was first captured - TEST LAB
+=======
+#' Calculate age based on when an individual was first captured - TEST with requesting review
+>>>>>>> 53c53bf72bd4da4debe69a3c5c94d19aa63f0338
 #'
 #' Arrange data by individual and year and then determine potential age in each
 #' capture.
