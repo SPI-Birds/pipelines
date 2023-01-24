@@ -1,7 +1,7 @@
 #' Species taxonomic ranks and codes
 #'
 #' Species information, including various taxonomic ranks, internal and external codes.
-#' @format A data frame with 27 rows and 13 variables
+#' @format A data frame with 33 rows and 13 variables
 #' \describe{
 #'   \item{speciesCode}{SPI-Birds' internal persistent identifier for a species.}
 #'   \item{speciesID}{SPI-Birds' 6-letter species identifier. First three letters indicate the generic name, last three letters indicate the specific epithet. Note that this identifier might change if a species' genus or species indicator change.}
@@ -25,12 +25,13 @@ species_codes <- utils::read.csv(system.file("extdata", "species_codes.csv", pac
 #'Study site names and locations
 #'
 #'Information and identifying codes for all study sites and data owners.
+#'
 #'@format A data frame with 114 rows and 11 variables
 #'\describe{
 #'  \item{siteID}{Three-letter identifier for the study site.}
 #'  \item{siteName}{Name of the study site.}
 #'  \item{country}{Name of the country in which the study site is located.}
-#'  \item{countryCode}{Standard code for the country, using ISO 3166-1 alpha-2: \url{https://www.iso.org/iso-3166-country-codes.html}}
+#'  \item{countryCode}{Standard code for the country, using \href{https://www.iso.org/iso-3166-country-codes.html}{ISO 3166-1 alpha-2}.}
 #'  \item{institutionID}{Three- or four-letter identifier for data owner/institution. Note, multiple study sites can have
 #'  the same data owner.}
 #'  \item{institutionCode}{Name of owner/institution.}
@@ -46,12 +47,14 @@ site_codes <- utils::read.csv(system.file("extdata", "site_codes.csv", package =
 
 #'Habitat types and descriptions
 #'
-#'Habitat descriptions according to IUCN Red List's Habitats Classification Scheme (version 3.1).
-#'@format A data frame with 125 rows and 3 variables
+#'Habitat descriptions according to European Nature Information System (EUNIS) \href{https://www.eea.europa.eu/data-and-maps/data/eunis-habitat-classification-1}{Habitats Classification Scheme} (version 2012).
+#'
+#'@format A data frame with 4185 rows and 4 variables
 #'\describe{
-#'  \item{habitatID}{Identifier for the habitat as provided by IUCN.}
-#'  \item{habitatType}{Name or short description for the habitat as proved by IUCN.}
-#'  \item{habitatDetails}{Detailed description or definition for the habitat as provided by IUCN.}
+#'  \item{habitatID}{Identifier for the habitat as provided by EUNIS.}
+#'  \item{habitatLevel}{Hierarchical level for the habitat as provided by EUNIS.}
+#'  \item{habitatType}{Name or short description for the habitat as proved by EUNIS.}
+#'  \item{habitatDetails}{Detailed description or definition for the habitat as provided by EUNIS.}
 #'  }
 #'@name habitat_codes
 habitat_codes <- utils::read.csv(system.file("extdata", "habitat_codes.csv", package = "pipelines", mustWork = TRUE),
