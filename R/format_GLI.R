@@ -115,11 +115,11 @@ create_brood_GLI <- function(data,
                                                    TRUE ~ paste0("GLI_", .x))
 
                                 }),
-                  observedLayYear = dplyr::case_when(is.na(.data$observedLayYear) ~ as.integer(.data$year),
+                  observedLayYear = dplyr::case_when(is.na(.data$observedLayDate) ~ as.integer(.data$year),
                                                      TRUE ~ as.integer(lubridate::year(.data$observedLayDate))),
                   observedLayMonth = as.integer(lubridate::month(.data$observedLayDate)),
                   observedLayDay = as.integer(lubridate::day(.data$observedLayDate)),
-                  observedHatchYear = dplyr::case_when(is.na(.data$observedLayYear) ~ as.integer(.data$year),
+                  observedHatchYear = dplyr::case_when(is.na(.data$observedHatchDate) ~ as.integer(.data$year),
                                                        TRUE ~ as.integer(lubridate::year(.data$observedHatchDate))),
                   observedHatchMonth = as.integer(lubridate::month(.data$observedHatchDate)),
                   observedHatchDay = as.integer(lubridate::day(.data$observedHatchDate)))
