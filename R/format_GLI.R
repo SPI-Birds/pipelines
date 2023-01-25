@@ -115,10 +115,12 @@ create_brood_GLI <- function(data,
                                                    TRUE ~ paste0("GLI_", .x))
 
                                 }),
-                  observedLayYear = as.integer(lubridate::year(.data$observedLayDate)),
+                  observedLayYear = dplyr::case_when(is.na(.data$observedLayYear) ~ as.integer(.data$year),
+                                                     TRUE ~ as.integer(lubridate::year(.data$observedLayDate))),
                   observedLayMonth = as.integer(lubridate::month(.data$observedLayDate)),
                   observedLayDay = as.integer(lubridate::day(.data$observedLayDate)),
-                  observedHatchYear = as.integer(lubridate::year(.data$observedHatchDate)),
+                  observedHatchYear = dplyr::case_when(is.na(.data$observedLayYear) ~ as.integer(.data$year),
+                                                       TRUE ~ as.integer(lubridate::year(.data$observedHatchDate))),
                   observedHatchMonth = as.integer(lubridate::month(.data$observedHatchDate)),
                   observedHatchDay = as.integer(lubridate::day(.data$observedHatchDate)))
 
@@ -126,7 +128,7 @@ create_brood_GLI <- function(data,
   output <- broods %>%
     {if("breedingSeason" %in% optional_variables) calc_season(data = ., season = .data$year) else .} %>%
     # calculatedClutchType cannot be provided as number of fledglings are not recorded
-    #{if("calculatedClutchType" %in% optional_variables) calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.2") else .} %>%
+    #{if("calculatedClutchType" %in% optional_variables) calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "2.0") else .} %>%
     {if("nestAttemptNumber" %in% optional_variables) calc_nestattempt(data = ., season = .data$breedingSeason) else .}
 
   return(output)
