@@ -234,6 +234,7 @@ create_brood_GLI <- function(data,
                                 .fns = ~{
 
                                   dplyr::case_when(.x < 0 ~ NA_character_,
+                                                   is.na(.x) ~ NA_character_,
                                                    TRUE ~ paste0("GLI_", .x))
 
                                 }),
@@ -362,3 +363,4 @@ create_individual_GLI <- function(capture_data,
 #TODO: Verify captureAlive, releaseAlive, capturePhysical
 #TODO: Verify tagStage, tagYear, tagSiteID
 #TODO: Verify conflicted sex individuals (6 cases)
+#TODO: What to do with female IDs -5, -1414, -1097; and male IDs -6, -12, -104, -1513?
