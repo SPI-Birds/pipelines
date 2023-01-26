@@ -34,7 +34,7 @@ test_col_present <- function(pipeline_output,
   # Test
   if(verbose == FALSE) {
 
-    output <- eval(bquote(testthat::expect_true(
+    eval(bquote(testthat::expect_true(
 
       setequal(c(names(template), names(opt_vars)), names(data_table))
 
@@ -42,11 +42,9 @@ test_col_present <- function(pipeline_output,
 
   } else {
 
-    output <- names(data_table)[!(names(data_table) %in% c(names(template), names(opt_vars)))]
+    names(data_table)[!(names(data_table) %in% c(names(template), names(opt_vars)))]
 
   }
-
-  return(output)
 
 }
 
@@ -118,15 +116,13 @@ test_col_classes <- function(pipeline_output,
   # Test that there are 0 mismatched classes
   if(verbose == FALSE) {
 
-    output <- eval(bquote(testthat::expect_equal(nrow(mismatched_classes), 0)))
+    eval(bquote(testthat::expect_equal(nrow(mismatched_classes), 0)))
 
   } else {
 
-    output <- mismatched_classes
+    mismatched_classes
 
   }
-
-  return(output)
 
 }
 
@@ -342,7 +338,7 @@ test_NA_columns <- function(pipeline_output,
   # Test for NAs
   if(verbose == FALSE) {
 
-    output <- eval(bquote(
+    eval(bquote(
       testthat::expect_equal(
 
         data_table %>%
@@ -357,13 +353,11 @@ test_NA_columns <- function(pipeline_output,
 
   } else {
 
-    output <- data_table %>%
+    data_table %>%
       dplyr::select(tidyselect::contains(key_vars, ignore.case = FALSE)) %>% # Select key columns
       dplyr::select(where(~ any(is.na(.))))
 
   }
-
-  return(output)
 
 }
 
@@ -414,7 +408,7 @@ test_category_columns <- function(pipeline_output,
   # Test
   if(verbose == FALSE) {
 
-    output <- eval(bquote(testthat::expect_true(
+    eval(bquote(testthat::expect_true(
 
       all(lgl)
 
@@ -422,10 +416,8 @@ test_category_columns <- function(pipeline_output,
 
   } else {
 
-    output <- lgl
+    names(lgl)[lgl == FALSE]
 
   }
-
-  return(output)
 
 }
