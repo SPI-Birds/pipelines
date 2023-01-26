@@ -245,13 +245,16 @@ create_brood_GLI <- function(data,
                   observedHatchYear = dplyr::case_when(is.na(.data$observedHatchDate) ~ as.integer(.data$year),
                                                        TRUE ~ as.integer(lubridate::year(.data$observedHatchDate))),
                   observedHatchMonth = as.integer(lubridate::month(.data$observedHatchDate)),
-                  observedHatchDay = as.integer(lubridate::day(.data$observedHatchDate)))
+                  observedHatchDay = as.integer(lubridate::day(.data$observedHatchDate)),
+                  # set broodID as character
+                  broodID = as.character(.data$broodID),
+                  observedClutchSize = as.integer(.data$observedClutchSize))
 
   # Add optional variables
   output <- broods %>%
     {if("breedingSeason" %in% optional_variables) calc_season(data = ., season = .data$year) else .} %>%
-    # calculatedClutchType cannot be provided as number of fledglings are not recorded
-    #{if("calculatedClutchType" %in% optional_variables) calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "2.0") else .} %>%
+    # calculatedClutchType cannot be provided as number of fledglings are not recorded, so provide full NA column instead
+    {if("calculatedClutchType" %in% optional_variables) dplyr::mutate(.data = ., calculatedClutchType = NA_character_) else .} %>%
     {if("nestAttemptNumber" %in% optional_variables) calc_nestattempt(data = ., season = .data$breedingSeason) else .}
 
   return(output)
@@ -357,6 +360,7 @@ create_individual_GLI <- function(capture_data,
 #TODO: How to interpret broods with LD and CS == 0?
 #TODO: How to interpret broods with LD == NA and CS == 0
 #TODO: How to interpret broods with CS < 0?
+#TODO: How to interpret multiple broods for a femaleID-maleID pair in a single breeding season? E.g., 377-378 in 2003
 #TODO: Ask for ring numbers
 #TODO: Ask for ring dates
 #TODO: Are chicks ringed?
