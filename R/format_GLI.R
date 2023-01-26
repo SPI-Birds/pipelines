@@ -29,6 +29,8 @@
 #'
 #' \strong{tagSiteID}: All individuals are assumed to be tagged at Glimmen. Check with data owner.
 #'
+#' \strong{Location data}: No location information is available, resulting in an empty Location data table.
+#'
 #' \strong{Measurement data}: No measurements were taken, resulting in an empty Measurement data table.
 #'
 #' \strong{Experiment data}: No experiments were conducted, resulting in an empty Experiment data table.
@@ -85,11 +87,13 @@ format_GLI <- function(db = choose_directory(),
     # Filter species
     dplyr::filter(.data$speciesID %in% {species})
 
+
   # BROOD DATA
   message("Compiling brood data...")
 
   Brood_data <- create_brood_GLI(data = all_data,
                                  optional_variables = optional_variables)
+
 
   # CAPTURE DATA
   message("Compiling capture data...")
@@ -97,12 +101,102 @@ format_GLI <- function(db = choose_directory(),
   Capture_data <- create_capture_GLI(brood_data = Brood_data,
                                      optional_variables = optional_variables)
 
+
   # INDIVIDUAL DATA
   message("Compiling individual data...")
 
   Individual_data <- create_individual_GLI(capture_data = Capture_data,
                                            optional_variables = optional_variables)
 
+
+  # LOCATION DATA
+
+  # NB: There is no location information so we create an empty data table
+  Location_data <- data_templates$v2.0$Location_data[0,]
+
+
+  # MEASUREMENT DATA
+
+  # NB: There is no measurement information so we create an empty data table
+  Measurement_data <- data_templates$v2.0$Measurement_data[0,]
+
+
+  # EXPERIMENT DATA
+
+  # NB: There is no experiment information so we create an empty data table
+  Experiment_data <- data_templates$v2.0$Experiment_data[0,]
+
+
+  # WRANGLE DATA FOR EXPORT
+
+  Brood_data <- Brood_data %>%
+    # Add row ID
+    dplyr::mutate(row = 1:n()) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates$v2.0$Brood_data[1, !(names(data_templates$v2.0$Brood_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format or in the list of optional variables
+    dplyr::select(names(data_templates$v2.0$Brood_data), dplyr::contains(names(utility_variables$Brood_data),
+                                                                         ignore.case = FALSE))
+
+  Capture_data <- Capture_data %>%
+    # Add row ID
+    dplyr::mutate(row = 1:n()) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates$v2.0$Capture_data[1, !(names(data_templates$v2.0$Capture_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format or in the list of optional variables
+    dplyr::select(names(data_templates$v2.0$Capture_data), dplyr::contains(names(utility_variables$Capture_data),
+                                                                           ignore.case = FALSE))
+
+  Individual_data <- Individual_data %>%
+    # Add row ID
+    dplyr::mutate(row = 1:n()) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates$v2.0$Individual_data[1, !(names(data_templates$v2.0$Individual_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format or in the list of optional variables
+    dplyr::select(names(data_templates$v2.0$Individual_data), dplyr::contains(names(utility_variables$Individual_data),
+                                                                              ignore.case = FALSE))
+
+  # TIME
+
+  time <- difftime(Sys.time(), start_time, units = "sec")
+
+  message(paste0("All tables generated in ", round(time, 2), " seconds"))
+
+
+  # OUTPUT
+
+  if(output_type == "csv"){
+
+    message("Saving .csv files...")
+
+    utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_GLI.csv"), row.names = FALSE)
+
+    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_GLI.csv"), row.names = FALSE)
+
+    utils::write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_GLI.csv"), row.names = FALSE)
+
+    utils::write.csv(x = Measurement_data, file = paste0(path, "\\Measurement_data_GLI.csv"), row.names = FALSE)
+
+    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_GLI.csv"), row.names = FALSE)
+
+    utils::write.csv(x = Experiment_data, file = paste0(path, "\\Experiment_data_GLI.csv"), row.names = FALSE)
+
+    invisible(NULL)
+
+  }
+
+  if(output_type == "R"){
+
+    message("Returning R objects...")
+
+    return(list(Brood_data = Brood_data,
+                Capture_data = Capture_data,
+                Individual_data = Individual_data,
+                Measurement_data = Measurement_data,
+                Location_data = Location_data,
+                Experiment_data = Experiment_data))
+
+  }
 
 }
 
@@ -257,6 +351,7 @@ create_individual_GLI <- function(capture_data,
 #----------------------#
 #TODO: Does Colony correspond with plotID?
 #TODO: Is there location information (locationIDs and geographic coordinates)?
+#TODO: Are there any measurements on breeding individuals or chicks?
 #TODO: What does Status  mean?
 #TODO: How to interpret broods with LD and CS == 0?
 #TODO: How to interpret broods with LD == NA and CS == 0
