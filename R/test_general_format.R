@@ -126,7 +126,7 @@ test_col_classes <- function(pipeline_output,
 
   }
 
-  return(mismatched_classes)
+  return(output)
 
 }
 
@@ -425,5 +425,7 @@ test_category_columns <- function(pipeline_output,
     output <- lgl
 
   }
+
+  return(output)
 
 }
