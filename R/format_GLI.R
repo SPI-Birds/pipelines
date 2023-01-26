@@ -288,6 +288,7 @@ create_capture_GLI <- function(brood_data,
                   capturePlotID = "plotID") %>%
     dplyr::mutate(observedSex = dplyr::case_when(grepl(pattern = "^f", x = .data$sex) ~ "F",
                                                  grepl(pattern = "^m", x = .data$sex) ~ "M"),
+                  captureYear = as.integer(.data$captureYear),
                   age = "adult",
                   releaseSiteID = .data$captureSiteID,
                   releasePlotID = .data$capturePlotID,
