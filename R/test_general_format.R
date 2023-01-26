@@ -11,13 +11,16 @@
 #' "Brood", "Individual", "Capture", "Location", "Measurement" or "Experiment".
 #' @param protocol_version The protocol version of the SPI-Birds
 #' standard data being used to process the primary data. Either "1.0", "1.1", or "2.0" (default).
+#' @param verbose Logical (TRUE/FALSE) for whether the function returns the test output (FALSE) or a vector of columns that failed this test.
 #'
-#' @return Logical (TRUE/FALSE) for whether all of the column classes are expected.
+#' @return See `verbose`.
 #' @export
 #'
+
 test_col_present <- function(pipeline_output,
                              data_template,
-                             protocol_version = "2.0") {
+                             protocol_version = "2.0",
+                             verbose = FALSE) {
 
   # Select data table
   data_table <- pipeline_output[[paste0(data_template, "_data")]]
@@ -29,11 +32,21 @@ test_col_present <- function(pipeline_output,
   opt_vars <- utility_variables[[paste0(data_template, "_data")]]
 
   # Test
-  eval(bquote(testthat::expect_true(
+  if(verbose == FALSE) {
 
-    setequal(c(names(template), names(opt_vars)), names(data_table))
+    output <- eval(bquote(testthat::expect_true(
 
-  )))
+      setequal(c(names(template), names(opt_vars)), names(data_table))
+
+    )))
+
+  } else {
+
+    output <- names(data_table)[!(names(data_table) %in% c(names(template), names(opt_vars)))]
+
+  }
+
+  return(output)
 
 }
 
@@ -50,13 +63,16 @@ test_col_present <- function(pipeline_output,
 #' "Brood", "Individual", "Capture", "Location", "Measurement", or "Experiment".
 #' @param protocol_version The protocol version of the SPI Birds
 #' standard data being used to process the primary data. Either "1.0", "1.1", or "2.0" (default).
+#' @param verbose Logical (TRUE/FALSE) for whether the function returns the test output (FALSE) or a data frame of column names that failed this test, their incorrectly assigned classes, and the classes they should have been assigned.
 #'
-#' @return Logical (TRUE/FALSE) for whether all of the column classes are expected.
+#' @return See `verbose`.
 #' @export
 #'
+
 test_col_classes <- function(pipeline_output,
                              table,
-                             protocol_version = "2.0") {
+                             protocol_version = "2.0",
+                             verbose = FALSE) {
 
   # Select data table
   data_table <- pipeline_output[[paste0(table, "_data")]]
@@ -100,7 +116,17 @@ test_col_classes <- function(pipeline_output,
     dplyr::filter(.data$data_class != .data$template_class)
 
   # Test that there are 0 mismatched classes
-  eval(bquote(testthat::expect_equal(nrow(mismatched_classes), 0)))
+  if(verbose == FALSE) {
+
+    output <- eval(bquote(testthat::expect_equal(nrow(mismatched_classes), 0)))
+
+  } else {
+
+    output <- mismatched_classes
+
+  }
+
+  return(mismatched_classes)
 
 }
 
@@ -298,12 +324,14 @@ test_unique_values <- function(pipeline_output,
 #'
 #' @param pipeline_output A list of the 4 data frames returned from format_X, where X is the three- or four-letter study site code).
 #' @param table Which data table should be checked for NAs in the key columns? One of: "Brood", "Capture", "Individual", "Measurement, "Location", or "Experiment".
+#' @param verbose Logical (TRUE/FALSE) for whether the function returns the test output (FALSE) or a data frame of column names that failed this test.
 #'
-#' @return Logical (TRUE/FALSE) for whether there are any NAs in the key columns for the specified table.
+#' @return See `verbose`.
 #' @export
 #'
 test_NA_columns <- function(pipeline_output,
-                            table){
+                            table,
+                            verbose = FALSE){
 
   # Select data table
   data_table <- pipeline_output[[paste0(table, "_data")]]
@@ -312,18 +340,30 @@ test_NA_columns <- function(pipeline_output,
   key_vars <- key_variables[[paste0(table, "_data")]]
 
   # Test for NAs
-  eval(bquote(
-    testthat::expect_equal(
+  if(verbose == FALSE) {
 
-      data_table %>%
-        dplyr::select(tidyselect::contains(key_vars, ignore.case = FALSE)) %>% # Select key columns
-        dplyr::select(where(~ any(is.na(.)))) %>% # Select any key column that has NAs
-        ncol(),
-      0 # If number of columns is larger than 0, test fails
+    output <- eval(bquote(
+      testthat::expect_equal(
 
-    )
+        data_table %>%
+          dplyr::select(tidyselect::contains(key_vars, ignore.case = FALSE)) %>% # Select key columns
+          dplyr::select(where(~ any(is.na(.)))) %>% # Select any key column that has NAs
+          ncol(),
+        0 # If number of columns is larger than 0, test fails
 
-  ))
+      )
+
+    ))
+
+  } else {
+
+    output <- data_table %>%
+      dplyr::select(tidyselect::contains(key_vars, ignore.case = FALSE)) %>% # Select key columns
+      dplyr::select(where(~ any(is.na(.))))
+
+  }
+
+  return(output)
 
 }
 
@@ -335,12 +375,14 @@ test_NA_columns <- function(pipeline_output,
 #'
 #' @param pipeline_output A list of the 4 data frames returned from format_X, where X is the three- or four-letter study site code).
 #' @param table Which table should be checked? One of: "Brood", "Capture", "Individual", "Location", "Measurement", or "Experiment".
+#' @param verbose Logical (TRUE/FALSE) for whether the function returns the test output (FALSE) or a data frame of column names that failed this test.
 #'
-#' @return Logical (TRUE/FALSE) for whether there are non-standard categories in the data frame.
+#' @return See `verbose`.
 #' @export
 #'
 test_category_columns <- function(pipeline_output,
-                                  table){
+                                  table,
+                                  verbose = FALSE){
 
   # Select data table
   data_table <- pipeline_output[[paste0(table, "_data")]]
@@ -370,10 +412,18 @@ test_category_columns <- function(pipeline_output,
                          })
 
   # Test
-  eval(bquote(testthat::expect_true(
+  if(verbose == FALSE) {
 
-    all(lgl)
+    output <- eval(bquote(testthat::expect_true(
 
-  )))
+      all(lgl)
+
+    )))
+
+  } else {
+
+    output <- lgl
+
+  }
 
 }
