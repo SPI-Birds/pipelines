@@ -168,3 +168,108 @@ test_that("Capture data returns an expected outcome...", {
 # No Location tests
 # No Measurement tests
 # No Experiment tests
+
+## General tests
+
+test_that("Expected columns are present", {
+
+  ## Will fail if not all the expected columns are present
+
+  ## Brood data: Test that all columns are present
+  test_col_present(pipeline_output, "Brood")
+
+  ## Capture data: Test that all columns are present
+  test_col_present(pipeline_output, "Capture")
+
+  ## Individual data: Test that all columns are present
+  test_col_present(pipeline_output, "Individual")
+
+  ## Measurement data: Test that all columns are present
+  test_col_present(pipeline_output, "Measurement")
+
+  ## Location data: Test that all columns are present
+  test_col_present(pipeline_output, "Location")
+
+  ## Experiment data: Test that all columns are present
+  test_col_present(pipeline_output, "Experiment")
+
+})
+
+test_that("Column classes are as expected", {
+
+  ## Will fail if columns that are shared by the output and the templates have different classes.
+
+  ## Brood data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Brood")
+
+  ## Capture data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Capture")
+
+  ## Individual data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Individual")
+
+  ## Measurement data: Test that all column classes are expected
+  test_col_present(pipeline_output, "Measurement")
+
+  ## Location data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Location")
+
+  ## Experiment data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Experiment")
+
+})
+
+test_that("ID columns match the expected format for the pipeline", {
+
+  ## femaleID format is as expected
+  test_ID_format(pipeline_output, ID_col = "femaleID", ID_format = "^GLI_[:digit:]{1,}$")
+
+  ## maleID format is as expected
+  test_ID_format(pipeline_output, ID_col = "maleID", ID_format = "^GLI_[:digit:]{1,}$")
+
+  ## individualID format in Capture data  is as expected
+  test_ID_format(pipeline_output, ID_col = "C-individualID", ID_format = "^GLI_[:digit:]{1,}$")
+
+  ## individualID format in Individual data is as expected
+  test_ID_format(pipeline_output, ID_col = "I-individualID", ID_format = "^GLI_[:digit:]{1,}$")
+
+})
+
+test_that("Key columns only contain unique values", {
+
+  ## broodID has only unique values
+  test_unique_values(pipeline_output, "broodID")
+
+  ## captureID has only unique values
+  test_unique_values(pipeline_output, "captureID")
+
+  ## individualID has only unique values
+  test_unique_values(pipeline_output, "individualID")
+
+})
+
+test_that("Key columns in each table do not have NAs", {
+
+  ## Brood
+  test_NA_columns(pipeline_output, "Brood")
+
+  ## Capture
+  test_NA_columns(pipeline_output, "Capture") # TODO: check with data owner for releaseTagID
+
+  ## Individual
+  test_NA_columns(pipeline_output, "Individual")
+
+})
+
+test_that("Categorical columns do not have unexpected values", {
+
+  ## Brood
+  test_category_columns(pipeline_output, "Brood")
+
+  ## Capture
+  test_category_columns(pipeline_output, "Capture")
+
+  ## Individual
+  test_category_columns(pipeline_output, "Individual")
+
+})
