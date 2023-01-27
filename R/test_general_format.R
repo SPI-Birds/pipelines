@@ -6,19 +6,21 @@
 #' to ensure consistency between pipelines.
 #'
 #'
-#' @param pipeline_output A list of the 4 data frames returned from format_X
-#' (where X is the three letter study site code).
+#' @param pipeline_output A list of the 4 data frames returned from format_X, where X is the three- or four-letter study site code).
 #' @param data_template Character string. Which data template should be tested? One of:
-#' "Brood", "Individual", "Capture", or "Location"
+#' "Brood", "Individual", "Capture", "Location", "Measurement" or "Experiment".
 #' @param protocol_version The protocol version of the SPI-Birds
-#' standard data being used to process the primary data. Either "1.0", "1.1", or "1.2" (default).
+#' standard data being used to process the primary data. Either "1.0", "1.1", or "2.0" (default).
+#' @param verbose Logical (TRUE/FALSE) for whether the function returns the test output (FALSE) or a vector of columns that failed this test.
 #'
-#' @return Logical (TRUE/FALSE) for whether all of the column classes are expected.
+#' @return See `verbose`.
 #' @export
 #'
+
 test_col_present <- function(pipeline_output,
                              data_template,
-                             protocol_version = "1.2") {
+                             protocol_version = "2.0",
+                             verbose = FALSE) {
 
   # Select data table
   data_table <- pipeline_output[[paste0(data_template, "_data")]]
@@ -30,11 +32,19 @@ test_col_present <- function(pipeline_output,
   opt_vars <- utility_variables[[paste0(data_template, "_data")]]
 
   # Test
-  eval(bquote(testthat::expect_true(
+  if(verbose == FALSE) {
 
-    setequal(c(names(template), names(opt_vars)), names(data_table))
+    eval(bquote(testthat::expect_true(
 
-  )))
+      setequal(c(names(template), names(opt_vars)), names(data_table))
+
+    )))
+
+  } else {
+
+    names(data_table)[!(names(data_table) %in% c(names(template), names(opt_vars)))]
+
+  }
 
 }
 
@@ -46,19 +56,21 @@ test_col_present <- function(pipeline_output,
 #' in the test for every pipeline in order to ensure consistency between pipelines.
 #'
 #'
-#' @param pipeline_output A list of the 4 data frames returned from format_X
-#' (where X is the three letter population code).
+#' @param pipeline_output A list of the 4 data frames returned from format_X, where X is the three- or four-letter study site code).
 #' @param table Character string. Which data table should be verified with their template? One of:
-#' "Brood", "Individual", "Capture", or "Location"
+#' "Brood", "Individual", "Capture", "Location", "Measurement", or "Experiment".
 #' @param protocol_version The protocol version of the SPI Birds
-#' standard data being used to process the primary data. Either "1.0", "1.1", or "1.2" (default).
+#' standard data being used to process the primary data. Either "1.0", "1.1", or "2.0" (default).
+#' @param verbose Logical (TRUE/FALSE) for whether the function returns the test output (FALSE) or a data frame of column names that failed this test, their incorrectly assigned classes, and the classes they should have been assigned.
 #'
-#' @return Logical (TRUE/FALSE) for whether all of the column classes are expected.
+#' @return See `verbose`.
 #' @export
 #'
+
 test_col_classes <- function(pipeline_output,
                              table,
-                             protocol_version = "1.2") {
+                             protocol_version = "2.0",
+                             verbose = FALSE) {
 
   # Select data table
   data_table <- pipeline_output[[paste0(table, "_data")]]
@@ -102,7 +114,15 @@ test_col_classes <- function(pipeline_output,
     dplyr::filter(.data$data_class != .data$template_class)
 
   # Test that there are 0 mismatched classes
-  eval(bquote(testthat::expect_equal(nrow(mismatched_classes), 0)))
+  if(verbose == FALSE) {
+
+    eval(bquote(testthat::expect_equal(nrow(mismatched_classes), 0)))
+
+  } else {
+
+    mismatched_classes
+
+  }
 
 }
 
@@ -114,8 +134,7 @@ test_col_classes <- function(pipeline_output,
 #'
 #' This function is intended to be used in the test for every pipeline in order to ensure consistency between pipelines.
 #'
-#' @param pipeline_output A list of the 4 data frames returned from format_X
-#' (where X is the three letter study site code).
+#' @param pipeline_output A list of the 4 data frames returned from format_X, where X is the three- or four-letter study site code).
 #' @param ID_col Character string. Which ID column should be tested? ("femaleID", "maleID", "C-individualID", "I-individualID").
 #' The C and I in the final two options stand for Capture and Individual data, respectively. So, to test individualID in the Capture
 #' data, ID_col should be set to "C-individualID".
@@ -212,8 +231,7 @@ test_ID_format <- function(pipeline_output,
 #'
 #' This function is intended to be used in the test for every pipeline in order to ensure consistency between pipelines.
 #'
-#' @param pipeline_output A list of the 4 data frames returned from format_X
-#' (where X is the three letter study site code).
+#' @param pipeline_output A list of the 4 data frames returned from format_X, where X is the three- or four-letter study site code).
 #' @param column Character string. Which column should be checked for duplicates? One of: "broodID", "captureID", "individualID", "measurementID", "locationID", "treatmentID". Note that for "individualID" we use <siteID>_<individualID to check for duplicates within sites.
 #'
 #' @return Logical (TRUE/FALSE) for whether all values in the column are unique
@@ -300,15 +318,16 @@ test_unique_values <- function(pipeline_output,
 #'
 #'This function is intended to be used in the test for every pipeline in order to ensure consistency between pipelines.
 #'
-#' @param pipeline_output A list of the 4 data frames returned from format_X
-#' (where X is the three letter study site code).
+#' @param pipeline_output A list of the 4 data frames returned from format_X, where X is the three- or four-letter study site code).
 #' @param table Which data table should be checked for NAs in the key columns? One of: "Brood", "Capture", "Individual", "Measurement, "Location", or "Experiment".
+#' @param verbose Logical (TRUE/FALSE) for whether the function returns the test output (FALSE) or a vector of columns that failed this test.
 #'
-#' @return Logical (TRUE/FALSE) for whether there are any NAs in the key columns for the specified table.
+#' @return See `verbose`.
 #' @export
 #'
 test_NA_columns <- function(pipeline_output,
-                            table){
+                            table,
+                            verbose = FALSE){
 
   # Select data table
   data_table <- pipeline_output[[paste0(table, "_data")]]
@@ -317,18 +336,29 @@ test_NA_columns <- function(pipeline_output,
   key_vars <- key_variables[[paste0(table, "_data")]]
 
   # Test for NAs
-  eval(bquote(
-    testthat::expect_equal(
+  if(verbose == FALSE) {
 
-      data_table %>%
-        dplyr::select(tidyselect::contains(key_vars, ignore.case = FALSE)) %>% # Select key columns
-        dplyr::select(where(~ any(is.na(.)))) %>% # Select any key column that has NAs
-        ncol(),
-      0 # If number of columns is larger than 0, test fails
+    eval(bquote(
+      testthat::expect_equal(
 
-    )
+        data_table %>%
+          dplyr::select(tidyselect::any_of(key_vars)) %>% # Select key columns
+          dplyr::select(where(~ any(is.na(.)))) %>% # Select any key column that has NAs
+          ncol(),
+        0 # If number of columns is larger than 0, test fails
 
-  ))
+      )
+
+    ))
+
+  } else {
+
+    data_table %>%
+      dplyr::select(tidyselect::any_of(key_vars)) %>% # Select key columns
+      dplyr::select(where(~ any(is.na(.)))) %>%
+      names()
+
+  }
 
 }
 
@@ -338,15 +368,16 @@ test_NA_columns <- function(pipeline_output,
 #' For example, 'observedClutchType' should only include any of "first", "second", "replacement" or NA.
 #' This test makes sure that there are no unexpected values in these different category columns.
 #'
-#' @param pipeline_output A list of the 4 data frames returned from format_X
-#' (where X is the three letter study site code).
-#' @param table Which table should be checked? One of: "Brood", "Capture", "Individual", or "Location"
+#' @param pipeline_output A list of the 4 data frames returned from format_X, where X is the three- or four-letter study site code).
+#' @param table Which table should be checked? One of: "Brood", "Capture", "Individual", "Location", "Measurement", or "Experiment".
+#' @param verbose Logical (TRUE/FALSE) for whether the function returns the test output (FALSE) or a vector of columns that failed this test.
 #'
-#' @return Logical (TRUE/FALSE) for whether there are non-standard categories in the data frame.
+#' @return See `verbose`.
 #' @export
 #'
 test_category_columns <- function(pipeline_output,
-                                  table){
+                                  table,
+                                  verbose = FALSE){
 
   # Select data table
   data_table <- pipeline_output[[paste0(table, "_data")]]
@@ -376,10 +407,18 @@ test_category_columns <- function(pipeline_output,
                          })
 
   # Test
-  eval(bquote(testthat::expect_true(
+  if(verbose == FALSE) {
 
-    all(lgl)
+    eval(bquote(testthat::expect_true(
 
-  )))
+      all(lgl)
+
+    )))
+
+  } else {
+
+    names(lgl)[lgl == FALSE]
+
+  }
 
 }

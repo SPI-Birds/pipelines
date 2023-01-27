@@ -1,7 +1,7 @@
 #--------------------------------------------------------------#
 # Standard utility functions
 #
-# Standard utility functions are functions that generate additional variables that are not part of standard format but can be added to pipeline outputs when requested by the user. Often these variables are not obtained from direct observations in the field but derived from other variables (e.g., an individual's age is derived from its year of ringing/birth and the current year).
+# Standard utility functions are functions that generate additional variables that are not part of standard format but can be added to pipeline outputs when requested by the user. Often these variables are not obtained from direct observations in the field but derived from other variables (e.g., an individual's age is derived from its date of ringing and the current date).
 #
 # Optional variables:
 # - breedingSeason, calc_season()
@@ -92,7 +92,8 @@ calc_season <- function(data,
                                                                                           .data$seasonNumber,
                                                                                           sep = "_"),
                                                       TRUE ~ as.character(.data$breedingYear))) %>%
-      dplyr::select(-.data$breedingYear, -.data$seasonNumber)
+      dplyr::select(-"breedingYear",
+                    -"seasonNumber")
 
   }
 
@@ -110,7 +111,7 @@ calc_season <- function(data,
 #' @param na.rm Logical. Should NAs be removed and treated as 0s? If TRUE, NAs are treated as 0s. If FALSE, NAs
 #'   are treated as true unknowns.
 #' @param protocol_version Character string. The protocol version of the SPI Birds
-#' standard data being used to process the primary data. Either "1.0" (default), "1.1", or "1.2".
+#' standard data being used to process the primary data. Either "1.0" (default), "1.1", or "2.0".
 #'
 #' @return A character vector with either 'first', 'replacement', 'second', or NA (v1.0 or v1.1), or a data frame with calculatedClutchType (v1.2), which takes either 'first', 'replacement', 'second', or NA.
 #'
@@ -140,11 +141,15 @@ calc_clutchtype <- function(data,
   ## Version 1.0
   if (protocol_version == "1.0"){
     cutoff_dat <- data %>%
-      dplyr::group_by(.data$PopID, .data$BreedingSeason, .data$Species) %>%
+      dplyr::group_by(.data$PopID,
+                      .data$BreedingSeason,
+                      .data$Species) %>%
       dplyr::mutate(cutoff = tryCatch(expr = min(.data$LayDate, na.rm = TRUE) + lubridate::days(30),
                                       warning = function(...) return(NA))) %>%
       # Determine brood type for each nest based on female ID
-      dplyr::group_by(.data$BreedingSeason, .data$Species, .data$FemaleID)
+      dplyr::group_by(.data$BreedingSeason,
+                      .data$Species,
+                      .data$FemaleID)
 
     #Depending on whether NAs should be treated as 0s or NAs we have different paths
     if(na.rm == TRUE){
@@ -153,11 +158,11 @@ calc_clutchtype <- function(data,
         dplyr::mutate(total_fledge = calc_cumfledge(x = .data$NumberFledged, na.rm = TRUE),
                       row = 1:dplyr::n()) %>%
         dplyr::ungroup() %>%
-        dplyr::mutate(ClutchType_calculated = purrr::pmap_chr(.l = list(rows = .$row,
-                                                                        femID = .$FemaleID,
-                                                                        cutoff_date = .$cutoff,
-                                                                        nr_fledge_before = .$total_fledge,
-                                                                        LD = .$LayDate),
+        dplyr::mutate(ClutchType_calculated = purrr::pmap_chr(.l = list(rows = .data$row,
+                                                                        femID = .data$FemaleID,
+                                                                        cutoff_date = .data$cutoff,
+                                                                        nr_fledge_before = .data$total_fledge,
+                                                                        LD = .data$LayDate),
                                                               .f = function(rows, femID, cutoff_date,
                                                                             nr_fledge_before,
                                                                             LD){
@@ -229,7 +234,7 @@ calc_clutchtype <- function(data,
                                                                 }
 
                                                               })) %>%
-        dplyr::pull(.data$ClutchType_calculated)
+        dplyr::pull("ClutchType_calculated")
 
     } else {
 
@@ -238,12 +243,12 @@ calc_clutchtype <- function(data,
                       total_fledge_na = calc_cumfledge(x = .data$NumberFledged, na.rm = FALSE),
                       row = 1:dplyr::n()) %>%
         dplyr::ungroup() %>%
-        dplyr::mutate(ClutchType_calculated = purrr::pmap_chr(.l = list(rows = .$row,
-                                                                        femID = .$FemaleID,
-                                                                        cutoff_date = .$cutoff,
-                                                                        nr_fledge_before = .$total_fledge,
-                                                                        na_fledge_before = .$total_fledge_na,
-                                                                        LD = .$LayDate),
+        dplyr::mutate(ClutchType_calculated = purrr::pmap_chr(.l = list(rows = .data$row,
+                                                                        femID = .data$FemaleID,
+                                                                        cutoff_date = .data$cutoff,
+                                                                        nr_fledge_before = .data$total_fledge,
+                                                                        na_fledge_before = .data$total_fledge_na,
+                                                                        LD = .data$LayDate),
                                                               .f = function(rows, femID, cutoff_date,
                                                                             nr_fledge_before, na_fledge_before,
                                                                             LD){
@@ -327,7 +332,7 @@ calc_clutchtype <- function(data,
                                                                 }
 
                                                               })) %>%
-        dplyr::pull(.data$ClutchType_calculated)
+        dplyr::pull("ClutchType_calculated")
 
     }
 
@@ -337,11 +342,15 @@ calc_clutchtype <- function(data,
   if (protocol_version == "1.1"){
 
     cutoff_dat <- data %>%
-      dplyr::group_by(.data$PopID, .data$BreedingSeason, .data$Species) %>%
+      dplyr::group_by(.data$PopID,
+                      .data$BreedingSeason,
+                      .data$Species) %>%
       dplyr::mutate(cutoff = tryCatch(expr = min(.data$LayDate_observed, na.rm = TRUE) + lubridate::days(30),
                                       warning = function(...) return(NA))) %>%
       # Determine brood type for each nest based on female ID
-      dplyr::group_by(.data$BreedingSeason, .data$Species, .data$FemaleID)
+      dplyr::group_by(.data$BreedingSeason,
+                      .data$Species,
+                      .data$FemaleID)
 
     #Depending on whether NAs should be treated as 0s or NAs we have different paths
     if(na.rm == TRUE){
@@ -350,11 +359,11 @@ calc_clutchtype <- function(data,
         dplyr::mutate(total_fledge = calc_cumfledge(x = .data$NumberFledged_observed, na.rm = TRUE),
                       row = 1:dplyr::n()) %>%
         dplyr::ungroup() %>%
-        dplyr::mutate(ClutchType_calculated = purrr::pmap_chr(.l = list(rows = .$row,
-                                                                        femID = .$FemaleID,
-                                                                        cutoff_date = .$cutoff,
-                                                                        nr_fledge_before = .$total_fledge,
-                                                                        LD = .$LayDate_observed),
+        dplyr::mutate(ClutchType_calculated = purrr::pmap_chr(.l = list(rows = .data$row,
+                                                                        femID = .data$FemaleID,
+                                                                        cutoff_date = .data$cutoff,
+                                                                        nr_fledge_before = .data$total_fledge,
+                                                                        LD = .data$LayDate_observed),
                                                               .f = function(rows, femID, cutoff_date,
                                                                             nr_fledge_before,
                                                                             LD){
@@ -426,7 +435,7 @@ calc_clutchtype <- function(data,
                                                                 }
 
                                                               })) %>%
-        dplyr::pull(.data$ClutchType_calculated)
+        dplyr::pull("ClutchType_calculated")
 
     } else {
 
@@ -435,12 +444,12 @@ calc_clutchtype <- function(data,
                       total_fledge_na = calc_cumfledge(x = .data$NumberFledged_observed, na.rm = FALSE),
                       row = 1:dplyr::n()) %>%
         dplyr::ungroup() %>%
-        dplyr::mutate(ClutchType_calculated = purrr::pmap_chr(.l = list(rows = .$row,
-                                                                        femID = .$FemaleID,
-                                                                        cutoff_date = .$cutoff,
-                                                                        nr_fledge_before = .$total_fledge,
-                                                                        na_fledge_before = .$total_fledge_na,
-                                                                        LD = .$LayDate_observed),
+        dplyr::mutate(ClutchType_calculated = purrr::pmap_chr(.l = list(rows = .data$row,
+                                                                        femID = .data$FemaleID,
+                                                                        cutoff_date = .data$cutoff,
+                                                                        nr_fledge_before = .data$total_fledge,
+                                                                        na_fledge_before = .data$total_fledge_na,
+                                                                        LD = .data$LayDate_observed),
                                                               .f = function(rows, femID, cutoff_date,
                                                                             nr_fledge_before, na_fledge_before,
                                                                             LD){
@@ -524,36 +533,44 @@ calc_clutchtype <- function(data,
                                                                 }
 
                                                               })) %>%
-        dplyr::pull(.data$ClutchType_calculated)
+        dplyr::pull("ClutchType_calculated")
 
     }
 
   }
 
-  ## Version 1.2
-  if (protocol_version == "1.2") {
+  ## Version 2.0
+  if (protocol_version == "2.0") {
 
     cutoff_dat <- data %>%
-      dplyr::group_by(.data$siteID, .data$breedingSeason, .data$speciesID) %>%
-      dplyr::mutate(observedLayDate = lubridate::make_date(.data$observedLayYear, .data$observedLayMonth, .data$observedLayDay),
+      dplyr::group_by(.data$siteID,
+                      .data$breedingSeason,
+                      .data$speciesID) %>%
+      dplyr::mutate(observedLayDate = lubridate::make_date(.data$observedLayYear,
+                                                           .data$observedLayMonth,
+                                                           .data$observedLayDay),
                     cutoff = tryCatch(expr = min(.data$observedLayDate, na.rm = TRUE) + lubridate::days(30),
                                       warning = function(...) return(NA))) %>%
       # Determine brood type for each nest based on female ID
-      dplyr::group_by(.data$breedingSeason, .data$speciesID, .data$femaleID)
+      dplyr::group_by(.data$breedingSeason,
+                      .data$speciesID,
+                      .data$femaleID)
 
     #Depending on whether NAs should be treated as 0s or NAs we have different paths
     if(na.rm == TRUE){
 
       clutchtype_calculated <- cutoff_dat %>%
-        dplyr::arrange(.data$breedingSeason, .data$femaleID, .data$observedLayDate) %>%
+        dplyr::arrange(.data$breedingSeason,
+                       .data$femaleID,
+                       .data$observedLayDate) %>%
         dplyr::mutate(total_fledge = calc_cumfledge(x = .data$observedNumberFledged, na.rm = TRUE),
                       rowNumber = 1:dplyr::n()) %>%
         dplyr::ungroup() %>%
-        dplyr::mutate(calculatedClutchType = purrr::pmap_chr(.l = list(rows = .$rowNumber,
-                                                                       femID = .$femaleID,
-                                                                       cutoff_date = .$cutoff,
-                                                                       nr_fledge_before = .$total_fledge,
-                                                                       LD = .$observedLayDate),
+        dplyr::mutate(calculatedClutchType = purrr::pmap_chr(.l = list(rows = .data$rowNumber,
+                                                                       femID = .data$femaleID,
+                                                                       cutoff_date = .data$cutoff,
+                                                                       nr_fledge_before = .data$total_fledge,
+                                                                       LD = .data$observedLayDate),
                                                              .f = function(rows, femID, cutoff_date,
                                                                            nr_fledge_before,
                                                                            LD){
@@ -625,23 +642,27 @@ calc_clutchtype <- function(data,
                                                                }
 
                                                              })) %>%
-        dplyr::select(-.data$observedLayDate, -.data$cutoff,
-                      -.data$total_fledge, -.data$rowNumber)
+        dplyr::select(-"observedLayDate",
+                      -"cutoff",
+                      -"total_fledge",
+                      -"rowNumber")
 
     } else {
 
       clutchtype_calculated <- cutoff_dat %>%
-        dplyr::arrange(.data$breedingSeason, .data$femaleID, .data$observedLayDate) %>%
+        dplyr::arrange(.data$breedingSeason,
+                       .data$femaleID,
+                       .data$observedLayDate) %>%
         dplyr::mutate(total_fledge = calc_cumfledge(x = .data$observedNumberFledged, na.rm = TRUE),
                       total_fledge_na = calc_cumfledge(x = .data$observedNumberFledged, na.rm = FALSE),
                       rowNumber = 1:dplyr::n()) %>%
         dplyr::ungroup() %>%
-        dplyr::mutate(calculatedClutchType = purrr::pmap_chr(.l = list(rows = .$rowNumber,
-                                                                       femID = .$femaleID,
-                                                                       cutoff_date = .$cutoff,
-                                                                       nr_fledge_before = .$total_fledge,
-                                                                       na_fledge_before = .$total_fledge_na,
-                                                                       LD = .$observedLayDate),
+        dplyr::mutate(calculatedClutchType = purrr::pmap_chr(.l = list(rows = .data$rowNumber,
+                                                                       femID = .data$femaleID,
+                                                                       cutoff_date = .data$cutoff,
+                                                                       nr_fledge_before = .data$total_fledge,
+                                                                       na_fledge_before = .data$total_fledge_na,
+                                                                       LD = .data$observedLayDate),
                                                              .f = function(rows, femID, cutoff_date,
                                                                            nr_fledge_before, na_fledge_before,
                                                                            LD){
@@ -725,8 +746,11 @@ calc_clutchtype <- function(data,
                                                                }
 
                                                              })) %>%
-        dplyr::select(-.data$observedLayDate, -.data$cutoff,
-                      -.data$total_fledge, -.data$total_fledge_na, -.data$rowNumber)
+        dplyr::select(-"observedLayDate",
+                      -"cutoff",
+                      -"total_fledge",
+                      -"total_fledge_na",
+                      -"rowNumber")
 
     }
 
@@ -769,7 +793,8 @@ calc_clutchtype <- function(data,
 #' #the current record.
 #' calc_cumfledge(x = c(1, 3, NA, 4), na.rm = FALSE)
 
-calc_cumfledge <- function(x, na.rm = TRUE){
+calc_cumfledge <- function(x,
+                           na.rm = TRUE){
 
   if(na.rm){
 
@@ -848,15 +873,20 @@ calc_nestattempt <- function(data,
 
     output <- data %>%
       # Determine breeding pair: concatenate femaleID & maleID
-      dplyr::mutate(breedingPair = paste(.data$femaleID, .data$maleID, sep = "-")) %>%
-      dplyr::group_by(.data$observedLayYear, .data$breedingPair) %>%
+      dplyr::mutate(breedingPair = paste(.data$femaleID,
+                                         .data$maleID,
+                                         sep = "-")) %>%
+      dplyr::group_by(.data$observedLayYear,
+                      .data$breedingPair) %>%
       # Arrange by laying date
-      dplyr::arrange(.data$observedLayYear, .data$observedLayMonth, .data$observedLayDay) %>%
+      dplyr::arrange(.data$observedLayYear,
+                     .data$observedLayMonth,
+                     .data$observedLayDay) %>%
       # If either female or male could not be identified, the nest is assumed to be the first attempt
       dplyr::mutate(nestAttemptNumber = dplyr::case_when(stringr::str_detect(.data$breedingPair, "NA") ~ 1L,
                                                          TRUE ~ as.integer(dplyr::row_number()))) %>%
       dplyr::ungroup() %>%
-      dplyr::select(-.data$breedingPair)
+      dplyr::select(-"breedingPair")
 
     # In cases that deviate from the default (1 breeding season in 1 year),
     # we need to use information from the data owner to mark the different seasons
@@ -864,15 +894,21 @@ calc_nestattempt <- function(data,
 
     output <- data %>%
       # Determine breeding pair: concatenate femaleID & maleID
-      dplyr::mutate(breedingPair = paste(.data$femaleID, .data$maleID, sep = "-")) %>%
-      dplyr::group_by({{season}}, .data$breedingPair) %>%
+      dplyr::mutate(breedingPair = paste(.data$femaleID,
+                                         .data$maleID,
+                                         sep = "-")) %>%
+      dplyr::group_by({{season}},
+                      .data$breedingPair) %>%
       # Arrange by season & laying date
-      dplyr::arrange({{season}}, .data$observedLayYear, .data$observedLayMonth, .data$observedLayDay) %>%
+      dplyr::arrange({{season}},
+                     .data$observedLayYear,
+                     .data$observedLayMonth,
+                     .data$observedLayDay) %>%
       # If either female or male could not be identified, the nest is assumed to be the first attempt
       dplyr::mutate(nestAttemptNumber = dplyr::case_when(stringr::str_detect(.data$breedingPair, "NA") ~ 1L,
                                                          TRUE ~ as.integer(dplyr::row_number()))) %>%
       dplyr::ungroup() %>%
-      dplyr::select(-.data$breedingPair)
+      dplyr::select(-"breedingPair")
 
   }
 
@@ -912,7 +948,8 @@ calc_sex <- function(individual_data,
     dplyr::filter(!is.na(.data$observedSex)) %>%
     dplyr::group_by(.data$individualID) %>%
     # Determine the number of different sex scores per individualID
-    dplyr::summarise(unique_sex = paste(unique(.data$observedSex), collapse = "-")) %>%
+    dplyr::summarise(unique_sex = paste(unique(.data$observedSex),
+                                        collapse = "-")) %>%
     dplyr::ungroup() %>%
     # Keep one record per individual
     dplyr::distinct() %>%
@@ -920,11 +957,13 @@ calc_sex <- function(individual_data,
     # calculatedSex is set to 'C'
     dplyr::mutate(calculatedSex = dplyr::case_when(nchar(.data$unique_sex) > 1 ~ "C",
                                                    TRUE ~ .data$unique_sex)) %>%
-    dplyr::select(.data$individualID, .data$calculatedSex)
+    dplyr::select("individualID",
+                  "calculatedSex")
 
   # Merge calculatedSex information into individual data
   output <- individual_data %>%
-    dplyr::left_join(sex_calculated, by = "individualID")
+    dplyr::left_join(sex_calculated,
+                     by = "individualID")
 
   return(output)
 
@@ -932,52 +971,33 @@ calc_sex <- function(individual_data,
 
 #' Calculate age based on when an individual was first captured
 #'
-#' Arrange data by individual and year (or season) and then determine potential age in each
-#' capture.
+#' We only consider whether an individual was captured as a chick or not. We don't consider the numeric age when an individual was first captured. This prevents any cases where an individual might be wrongly aged at first capture.
 #'
-#' We only consider whether an individual was captured as a chick or not. We
-#' don't consider the numeric age when an individual was first captured.
-#' This prevents any cases where an individual might be wrongly aged at first capture.
+#' When there is no observed age at first capture we assume it couldn't be a chick or this would've been recorded.
 #'
-#' When there is no observed age at first capture we assume it couldn't be a
-#' chick or this would've been recorded.
+#' \strong{Version 2.0}
 #'
-#' \strong{Version 1.2}
+#' From version 2.0 onwards, age is no longer part of the standard format, but optionally available through this utility function. In addition, age is now provided in two variables, exactAge and minimumAge. \emph{exactAge} is the exact age of individuals, which can only be determined for individuals first captured as chicks/fledglings. \emph{minimumAge} is the minimum age of individuals, which can be determined for all individuals. In case of chicks/fledglings, \emph{exactAge} and \emph{minimumAge} are identical.
 #'
-#' From version 1.2 onwards, age is stored in two columns, exactAge and minimumAge.
-#' For individuals first captured as chicks, exactAge & minimumAge can be determined;
-#' for individuals first captured as adults, only minimumAge can be determined.
-#'
-#' Age is determined as number of seasons since birth (exactAge) or ringing (minimumAge).
-#' The number of seasons equal the number of years for birds that have a single breeding
-#' season per calendar year (i.e., most Northern Hemisphere birds). For other species or
-#' systems (e.g., Southern Hemisphere birds), in which seasons do not follow calendar years,
-#' additional information from data owners is required.
-#'
-#' NB: When age is determined using number of years, an individual's age increases before a
-#' full year (i.e., 365/366 days) has passed. This is done because a bird born on, say,
-#' the 1st of June in year 1 is 3 years old in year 4, whether that is just before or just after
-#' the 1st of June in that year. Instead of a full year, we say that an individual ages after
-#' 10 months, 1 year and 10 months, etc. after its first capture date.
+#' The default behaviour of this function is that age is determined as number of years since birth (exactAge) or ringing (minimumAge). Age increases each time the ringing date is passed. For example, an individual born on 01/07/2022 will become 1 at 01/07/2023. If date of ringing is unknown, we pick an arbitrary date of ringing based on lay date, clutch size/hatch date, and average incubation length. This is specified in the documentation of each individual pipeline.
 #'
 #' @param data Data frame. Data frame with capture information.
 #' @param ID Unquoted expression (i.e. character without quotation marks). Name
-#'   of column with individual identity. NB: Not used for v1.2.
+#'   of column with individual identity. NB: Not used for v2.0.
 #' @param Age Unquoted expression (i.e. character without quotation marks). Name
-#'   of column with observed age of individual in each capture. Must be in
-#'   EURING codes. NB: Can be used for v1.2 to indicate which individuals are chicks,
-#'   if chickAge is unknown.
+#'   of column with observed age of individual in each capture. For v1.0 & v1.1, these must be in EURING codes.
+#'   For v2.0: these indicate the life stage of individuals, e.g., chick, subadult, adult.
 #' @param Date Unquoted expression (i.e. character without quotation marks).
-#'   Name of column with captureDate information. Must be in format dd/mm/yyyy. NB: Not used for v1.2.
+#'   Name of column with captureDate information. Must be in format dd/mm/yyyy. NB: Not used for v2.0.
 #' @param Year Unquoted expression (i.e. character without quotation marks).
 #'   Name of column with year information. NB: This could be different to
 #'   captureDate if we are dealing with species that breed over two year (e.g.
 #'   Southern Hemisphere species).
 #' @param protocol_version Character string. The protocol version of the SPI Birds
-#'   standard data being used to process the primary data. Either "1.0" (default), "1.1", or "1.2".
+#'   standard data being used to process the primary data. Either "1.0" (default), "1.1", or "2.0".
 #' @param showpb Logical. Should a progress bar be shown?
 #'
-#' @return A data frame with calculatedAge (v1.0, v1.1) or exactAge and minimumAge (v1.2).
+#' @return A data frame with calculatedAge (v1.0, v1.1) or exactAge and minimumAge (v2.0).
 #'
 #' @export
 #'
@@ -994,40 +1014,24 @@ calc_sex <- function(individual_data,
 #'                             Age_obsv = sample(c(1L, 4L), 100, replace = TRUE)) %>%
 #'   calc_age(ID = IndvID, Age = Age_obsv, Date = CaptureDate, Year = SampleYear)
 #'
-#' # Version 1.2
-#' # Ringed as chick, no season information
+#' # Version 2.0
+#' # Ringed as chick
 #' bird_data <- tibble::tibble(captureYear = c(2001, 2002, 2003, 2004),
 #'                             captureMonth = c(5, 5, 4, 1),
 #'                             captureDay = rep(1, 4),
 #'                             individualID = rep("A1", 4),
+#'                             stage = c("chick", "adult", "adult", "adult"),
 #'                             chickAge = c(15, NA, NA, NA)) %>%
-#'   calc_age(protocol_version = "1.2")
+#'   calc_age(Age = .data$stage, protocol_version = "2.0")
 #'
-#' # Ringed as adult, no season information
+#' # Ringed as adult
 #' bird_data <- tibble::tibble(captureYear = c(2001, 2002, 2003, 2004),
 #'                             captureMonth = c(5, 5, 4, 1),
 #'                             captureDay = rep(1, 4),
 #'                             individualID = rep("A1", 4),
+#'                             stage = rep("adult", 4),
 #'                             chickAge = rep(NA, 4)) %>%
-#'   calc_age(protocol_version = "1.2")
-#'
-#' # Ringed as chick, season information
-#' bird_data <- tibble::tibble(captureYear = c(2001, 2002, 2003, 2004),
-#'                             captureMonth = c(7, 7, 4, 2),
-#'                             captureDay = rep(1, 4),
-#'                             individualID = rep("A1", 4),
-#'                             chickAge = c(15, NA, NA, NA),
-#'                             season = c(1, 2, 3, 3)) %>%
-#'   calc_age(Year = season, protocol_version = "1.2")
-#'
-#' # Ringed as adult, season information
-#' bird_data <- tibble::tibble(captureYear = c(2001, 2002, 2003, 2004),
-#'                             captureMonth = c(7, 7, 4, 2),
-#'                             captureDay = rep(1, 4),
-#'                             individualID = rep("A1", 4),
-#'                             chickAge = rep(NA, 4),
-#'                             season = c(1, 2, 3, 3)) %>%
-#'   calc_age(Year = season, protocol_version = "1.2")
+#'   calc_age(Age = .data$stage, protocol_version = "2.0")
 
 calc_age <- function(data, ID, Age, Date, Year, protocol_version = "1.0", showpb = TRUE){
 
@@ -1061,52 +1065,25 @@ calc_age <- function(data, ID, Age, Date, Year, protocol_version = "1.0", showpb
 
   }
 
-  # Version 1.2
-  if(protocol_version == "1.2") {
+  # Version 2.0
+  if(protocol_version == "2.0") {
 
-    # If the data owner has no information on seasons, or if there are multiple seasons per year,
-    # age is calculated based on the number of years since ringing/birth
-    # NB: We do not use a full 365/366 days before an individual's age increases. That is, a bird born on 1st of June in year y is 3 years old
-    # in year y+3, whether that is just before or just after 1st of June in that year.
-    # To circumvent this problem, we say that an individual ages after 10 months, 1 year and 10 months, etc. after its first capture date.
-    if(missing(Year)) {
-
-      output <- data %>%
-        dplyr::mutate(captureDate = lubridate::make_date(.data$captureYear, .data$captureMonth, .data$captureDay)) %>%
-        dplyr::arrange(.data$individualID, .data$captureYear, .data$captureDate) %>%
-        # For each individual, determine whether their first catch was as a chick or not
-        dplyr::group_by(.data$individualID) %>%
-        dplyr::mutate(ringedAs = dplyr::case_when(!is.na(dplyr::first(.data$chickAge)) ~ "chick",
-                                                  dplyr::first({{Age}}) == "chick" ~ "chick",
-                                                  TRUE ~ "adult"),
-                      firstDate = dplyr::first(.data$captureDate)) %>%
-        dplyr::ungroup() %>%
-        # Determine exact age and minimum age for adults & chicks
-        dplyr::mutate(exactAge = dplyr::case_when(.data$ringedAs == "chick" ~ as.integer(floor((.data$captureDate - .data$firstDate) / lubridate::dyears (1)) + ifelse(((.data$captureDate - .data$firstDate) / lubridate::dyears (1)) %% 1 >= 10/12, 1, 0)),
-                                                  .data$ringedAs == "adult" ~ NA_integer_),
-                                                  minimumAge = dplyr::case_when(.data$ringedAs == "adult" ~ as.integer(floor((.data$captureDate - .data$firstDate) / lubridate::dyears (1)) + ifelse(((.data$captureDate - .data$firstDate) / lubridate::dyears (1)) %% 1 >= 10/12, 1, 0) + 1),
-                                                                                .data$ringedAs == "chick" ~ .data$exactAge))
-
-      # If the data owner has information on breeding seasons, and there is 1 season per year,
-      # age is calculated based on the number of seasons since ringing/birth
-    } else {
-
-      output <- data %>%
-        dplyr::mutate(captureDate = lubridate::make_date(.data$captureYear, .data$captureMonth, .data$captureDay)) %>%
-        dplyr::arrange(.data$individualID, {{Year}}, .data$captureDate) %>%
-        # For each individual, determine whether their first catch was as a chick or not
-        dplyr::group_by(.data$individualID) %>%
-        dplyr::mutate(ringedAs = dplyr::case_when(!is.na(dplyr::first(.data$chickAge)) ~ "chick",
-                                                  dplyr::first({{Age}}) == "chick" ~ "chick",
-                                                  TRUE ~ "adult"),
-                      firstSeason = as.integer(dplyr::first({{Year}}))) %>%
-        dplyr::ungroup() %>%
-        # Determine exact age and minimum age for adults & chicks
-        dplyr::mutate(exactAge = dplyr::case_when(.data$ringedAs == "chick" ~ as.integer({{Year}} - .data$firstSeason),
-                                                  .data$ringedAs == "adult" ~ NA_integer_),
-                      minimumAge = dplyr::case_when(.data$ringedAs == "adult" ~ as.integer({{Year}} - .data$firstSeason + 1),
-                                                    .data$ringedAs == "chick" ~ as.integer(.data$exactAge)))
-    }
+    # Age is calculated based on the number of years since ringing/birth
+    output <- data %>%
+      dplyr::mutate(captureDate = lubridate::make_date(.data$captureYear, .data$captureMonth, .data$captureDay)) %>%
+      dplyr::arrange(.data$individualID, .data$captureYear, .data$captureDate) %>%
+      # For each individual, determine whether their first catch was as a chick or not
+      dplyr::group_by(.data$individualID) %>%
+      dplyr::mutate(ringedAs = dplyr::case_when(!is.na(dplyr::first(.data$chickAge)) ~ "chick",
+                                                dplyr::first({{Age}}) == "chick" ~ "chick",
+                                                TRUE ~ "adult"),
+                    firstDate = dplyr::first(.data$captureDate)) %>%
+      dplyr::ungroup() %>%
+      # Determine exact age and minimum age for adults & chicks
+      dplyr::mutate(exactAge = dplyr::case_when(.data$ringedAs == "chick" ~ as.integer(floor(lubridate::interval(.data$firstDate, .data$captureDate) / lubridate::years (1))),
+                                                .data$ringedAs == "adult" ~ NA_integer_),
+                    minimumAge = dplyr::case_when(.data$ringedAs == "adult" ~ as.integer(floor(lubridate::interval(.data$firstDate, .data$captureDate) / lubridate::years (1)) + 1),
+                                                  .data$ringedAs == "chick" ~ .data$exactAge))
 
   }
 

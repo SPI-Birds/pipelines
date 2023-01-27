@@ -75,6 +75,8 @@ need to determine the amount of potential uncertainty around these records.
 
 \strong{captureAlive, releaseAlive}: Assume all individuals were alive when captured and released.
 
+\strong{captureRingNumber}: First captures of all individuals are assumed to be ringing events, and thus captureRingNumber is set to NA.
+
 \strong{locationID}: For individuals captured in mist nets (specified by
 trapping method column), a single locationID "MN1" is used.
 

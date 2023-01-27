@@ -5,7 +5,7 @@
 #'
 #'This section provides details on data management choices that are unique to
 #'this data. For a general description of the standard format please see
-#'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.2.0.pdf}{here}.
+#'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v2.0.0.pdf}{here}.
 #'
 #'\strong{observedNumberFledged}: This population has no estimation of actual fledgling
 #'numbers. The last time nests are counted is 14 days post hatching. We use this
@@ -13,13 +13,14 @@
 #'\emph{calculatedClutchType} as we use the estimate of fledgling numbers to
 #'distinguish second/replacement clutches.
 #'
-#'\strong{Age_observed}: Translation of age records: \itemize{ \item Any
-#'individual caught as a chick was assumed to have a EURING code of 1: 'Pullus:
-#'nestling or chick, unable to fly freely, still able to be caught by hand.'
-#'\item Any individual listed as 'first year' was given a EURING code of 5: a
-#'bird hatched last calendar year and now in its second calendar year. \item Any
-#'individual listed as 'adult' was given a EURING code of 6: full-grown bird
-#'hatched before last calendar year; year of hatching otherwise unknown.}
+#'\strong{Age}: Age records are used to inform the life stage at ringing, from which \emph{exactAge} and \emph{minimumAge} can be determined:
+#'\itemize{
+#'\item 'C', individuals ringed as chicks, which equals EURING code 1: 'Pullus: nestling or chick, unable to fly freely, still able to be caught by hand.'
+#'\item 'first year', individuals ringed as subadults, which equals EURING code 5: 'Bird hatched last calendar year and now in its second calendar year.'
+#'\item 'adult' or NA, individuals ringed as adults, which equals EURING code 6: 'Full-grown bird
+#'hatched before last calendar year; year of hatching otherwise unknown.'
+#'
+#'}
 #'
 #'\strong{observedClutchType}: In the raw data, there is no distinction between
 #''second' and 'replacement' clutches. Any clutch recorded as '2nd' is assumed
@@ -37,7 +38,7 @@
 #'
 #'\strong{captureAlive, releaseAlive}: Assume all individuals were alive when captured and released.
 #'
-#'\strong{captureRingNumber}: First captures of all individuals are assumed to be ringing events, and thus captureRingNumber is set to NA.
+#'\strong{captureTagID}: First captures of all individuals are assumed to be ringing events, and thus captureTagID is set to NA.
 #'
 #'\strong{locationID}: For individuals captured in mist nets (specified by
 #'trapping method column), a single locationID "MN1" is used.
@@ -105,6 +106,10 @@ format_CHO <- function(db = choose_directory(),
                   captureDay = as.integer(lubridate::day(.data$captureDate)),
                   captureTime = format.POSIXct(.data$Time, format = "%H:%M:%S"),
                   chickAge = as.integer(dplyr::na_if(.data$ChickAge, "na")),
+                  stage = dplyr::case_when(.data$Age == "C" ~ "chick",
+                                           .data$Age == "first year" ~ "subadult",
+                                           .data$Age == "adult" ~ "adult",
+                                           TRUE ~ "adult"),
                   # If an individual was caught in a mist net give a generic LocationID (MN1)
                   # Otherwise, give the box number.
                   locationID = purrr::pmap_chr(.l = list(.data$TrapingMethod, as.character(.data$Box)),
@@ -162,7 +167,7 @@ format_CHO <- function(db = choose_directory(),
   message("Compiling experiment information...")
 
   # NB: There is no experiment information so we create an empty data table
-  Experiment_data <- data_templates$v1.2$Experiment_data[0,]
+  Experiment_data <- data_templates$v2.0$Experiment_data[0,]
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
@@ -172,23 +177,23 @@ format_CHO <- function(db = choose_directory(),
 
   Capture_data <- Capture_data %>%
     # Add missing columns
-    dplyr::bind_cols(data_templates$v1.2$Capture_data[1, !(names(data_templates$v1.2$Capture_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates$v2.0$Capture_data[1, !(names(data_templates$v2.0$Capture_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
-    dplyr::select(names(data_templates$v1.2$Capture_data), dplyr::contains(names(utility_variables$Capture_data),
+    dplyr::select(names(data_templates$v2.0$Capture_data), dplyr::contains(names(utility_variables$Capture_data),
                                                                            ignore.case = FALSE))
 
   Brood_data <- Brood_data %>%
     # Add missing columns
-    dplyr::bind_cols(data_templates$v1.2$Brood_data[1, !(names(data_templates$v1.2$Brood_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates$v2.0$Brood_data[1, !(names(data_templates$v2.0$Brood_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
-    dplyr::select(names(data_templates$v1.2$Brood_data), dplyr::contains(names(utility_variables$Brood_data),
+    dplyr::select(names(data_templates$v2.0$Brood_data), dplyr::contains(names(utility_variables$Brood_data),
                                                                          ignore.case = FALSE))
 
   Individual_data <- Individual_data %>%
     # Add missing columns
-    dplyr::bind_cols(data_templates$v1.2$Individual_data[1, !(names(data_templates$v1.2$Individual_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates$v2.0$Individual_data[1, !(names(data_templates$v2.0$Individual_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
-    dplyr::select(names(data_templates$v1.2$Individual_data), dplyr::contains(names(utility_variables$Individual_data),
+    dplyr::select(names(data_templates$v2.0$Individual_data), dplyr::contains(names(utility_variables$Individual_data),
                                                                               ignore.case = FALSE))
 
   # EXPORT DATA
@@ -252,15 +257,19 @@ create_brood_CHO <- function(data,
   # Reshape data so that maleID and femaleID are separate columns for each brood
   Parents <- data %>%
     # Remove all records with chicks
-    dplyr::filter(.data$Age != "C") %>%
+    dplyr::filter(.data$stage != "chick") %>%
     # Select only the Brood, Individual Id and their sex
-    dplyr::select(.data$broodID, .data$individualID, .data$Sex) %>%
+    dplyr::select("broodID",
+                  "individualID",
+                  "Sex") %>%
     # Reshape data so that we have a maleID and femaleID column
     # Rather than an individual row for each parent capture
-    tidyr::pivot_longer(cols = c(.data$individualID)) %>%
-    tidyr::pivot_wider(names_from = .data$Sex, values_from = .data$value) %>%
-    dplyr::rename(femaleID = `F`, maleID = `M`) %>%
-    dplyr::select(-.data$name) %>%
+    tidyr::pivot_longer(cols = "individualID") %>%
+    tidyr::pivot_wider(names_from = "Sex",
+                       values_from = "value") %>%
+    dplyr::rename(femaleID = "F",
+                  maleID = "M") %>%
+    dplyr::select(-"name") %>%
     dplyr::arrange(.data$broodID)
 
   # Determine whether clutches are 2nd clutch
@@ -271,7 +280,7 @@ create_brood_CHO <- function(data,
     dplyr::group_by(.data$broodID) %>%
     dplyr::summarise(observedClutchType = ifelse("2nd" %in% .data$SecondClutch, "second", "first"))
 
-  # NB: Deprecated (v1.2)
+  # NB: Deprecated (v2.0)
   # Finally, we add in average mass and tarsus measured for all chicks at 14 - 16d
   # Subset only those chicks that were 14 - 16 days when captured.
   # avg_measure <- data %>%
@@ -290,8 +299,11 @@ create_brood_CHO <- function(data,
     dplyr::left_join(Brood_info, by = "broodID") %>%
     # Now we can melt and reshape our data
     # Remove columns that do not contain relevant brood info
-    dplyr::select(-.data$CodeLine:-.data$Ring, -.data$JulianDate:-.data$StanderdisedTime, -.data$TrapingMethod,
-                  -.data$BroodId:-.data$Smear, -.data$TotalEggWeight, -.data$individualID) %>%
+    dplyr::select(-"CodeLine":-"Ring",
+                  -"JulianDate":-"StanderdisedTime",
+                  -"TrapingMethod",
+                  -"BroodId":-"Smear",
+                  -"TotalEggWeight", -"individualID") %>%
     # Turn all remaining columns to characters
     # melt/cast requires all values to be of the same type
     dplyr::mutate_all(as.character) %>%
@@ -299,7 +311,8 @@ create_brood_CHO <- function(data,
     # e.g. laying date, clutch size etc.
     # I've checked manually and the first value is always correct in each brood
     dplyr::group_by(.data$broodID, .data$speciesID, .data$Year, .data$Site, .data$Box, .data$femaleID, .data$maleID) %>%
-    dplyr::summarise(dplyr::across(.cols = everything(), .fns = first),
+    dplyr::summarise(dplyr::across(.cols = everything(),
+                                   .fns = first),
                      .groups = "drop") %>%
     # Convert LayDate and HatchDate to date objects
     dplyr::mutate(observedLayDate = lubridate::ymd(paste0(.data$Year, "-01-01")) + as.numeric(.data$LayingDateJulian),
@@ -351,7 +364,7 @@ create_brood_CHO <- function(data,
   # Add optional variables
   output <- Brood_data %>%
     {if("breedingSeason" %in% optional_variables) calc_season(data = ., season = .data$Year) else .} %>%
-    {if("calculatedClutchType" %in% optional_variables) calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.2") else .} %>%
+    {if("calculatedClutchType" %in% optional_variables) calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "2.0") else .} %>%
     {if("nestAttemptNumber" %in% optional_variables) calc_nestattempt(data = ., season = .data$breedingSeason) else .}
 
   return(output)
@@ -383,13 +396,11 @@ create_capture_CHO <- function(data,
     # Arrange chronologically for each individual
     dplyr::arrange(.data$individualID, .data$captureDate, .data$captureTime) %>%
     dplyr::group_by(.data$individualID) %>%
-    dplyr::mutate(youngestCatch = dplyr::first(.data$Age),
-                  firstYr = dplyr::first(.data$Year),
-                  # First captures are assumed to be ringing events, and thus captureRingNumber = NA.
-                  captureRingNumber = dplyr::case_when(dplyr::row_number() == 1 ~ NA_character_,
-                                                       TRUE ~ stringr::str_sub(.data$individualID, 5, nchar(.data$individualID))),
-                  # All releases are assumed to be alive (also see releaseAlive), so no NAs in releaseRingNumber
-                  releaseRingNumber = stringr::str_sub(.data$individualID, 5, nchar(.data$individualID))) %>%
+    # First captures are assumed to be ringing events, and thus captureTagID = NA.
+    dplyr::mutate(captureTagID = dplyr::case_when(dplyr::row_number() == 1 ~ NA_character_,
+                                                  TRUE ~ stringr::str_sub(.data$individualID, 5, nchar(.data$individualID))),
+                  # All releases are assumed to be alive (also see releaseAlive), so no NAs in releaseTagID
+                  releaseTagID = stringr::str_sub(.data$individualID, 5, nchar(.data$individualID))) %>%
     dplyr::ungroup() %>%
     # Arrange data for each individual chronologically
     dplyr::arrange(.data$individualID, .data$captureDate, .data$captureTime) %>%
@@ -408,41 +419,42 @@ create_capture_CHO <- function(data,
                   originalTarsusMethod = "Alternative") %>%
     # Select columns that are in the standard format
     # + measurement columns (needed for input of create_measurement_CHO())
-    dplyr::select(.data$individualID,
-                  .data$captureRingNumber,
-                  .data$releaseRingNumber,
-                  .data$speciesID,
-                  .data$observedSex,
-                  .data$captureYear,
-                  .data$captureMonth,
-                  .data$captureDay,
-                  .data$captureTime,
-                  .data$recordedBy,
-                  .data$locationID,
-                  .data$capturePhysical,
-                  .data$captureAlive,
-                  .data$releaseAlive,
-                  .data$captureSiteID,
-                  .data$capturePlotID,
-                  .data$releaseSiteID,
-                  .data$releasePlotID,
-                  .data$chickAge,
-                  .data$treatmentID,
-                  .data$row,
-                  .data$rowWarning,
-                  .data$rowError,
-                  mass = .data$Weight,
-                  tarsus = .data$Tarsus,
-                  .data$originalTarsusMethod,
-                  wingLength = .data$Wing) %>%
+    dplyr::select("individualID",
+                  "captureTagID",
+                  "releaseTagID",
+                  "speciesID",
+                  "observedSex",
+                  "captureYear",
+                  "captureMonth",
+                  "captureDay",
+                  "captureTime",
+                  "recordedBy",
+                  "locationID",
+                  "capturePhysical",
+                  "captureAlive",
+                  "releaseAlive",
+                  "captureSiteID",
+                  "capturePlotID",
+                  "releaseSiteID",
+                  "releasePlotID",
+                  "chickAge",
+                  "treatmentID",
+                  "row",
+                  "rowWarning",
+                  "rowError",
+                  "stage",
+                  mass = "Weight",
+                  tarsus = "Tarsus",
+                  "originalTarsusMethod",
+                  wingLength = "Wing") %>%
     dplyr::group_by(.data$individualID) %>%
     dplyr::mutate(captureID = paste(.data$individualID, 1:n(), sep = "_")) %>%
     dplyr::ungroup() %>%
-    dplyr::select(.data$captureID, everything())
+    dplyr::select("captureID", tidyselect::everything())
 
   # Add optional variables
   output <- Capture_data %>%
-    {if("exactAge" %in% optional_variables | "minimumAge" %in% optional_variables) calc_age(data = ., protocol_version = "1.2") %>% dplyr::select(dplyr::contains(c(names(Capture_data), optional_variables))) else .}
+    {if("exactAge" %in% optional_variables | "minimumAge" %in% optional_variables) calc_age(data = ., Age = .data$stage, protocol_version = "2.0") %>% dplyr::select(dplyr::contains(c(names(Capture_data), optional_variables))) else .}
 
   return(output)
 
@@ -477,21 +489,16 @@ create_individual_CHO <- function(data,
                      ringYear = as.integer(dplyr::first(.data$Year)),
                      ringMonth = as.integer(lubridate::month(.data$ringDate)),
                      ringDay = as.integer(lubridate::day(.data$ringDate)),
-                     firstAge = dplyr::first(.data$Age),
+                     ringStage = dplyr::first(.data$stage),
                      speciesID = species_codes[which(species_codes$speciesCode == 10001), ]$speciesID,
                      ringSiteID = dplyr::first(.data$siteID)) %>%
     # Only assign a brood ID if they were first caught as a chick
     # Otherwise, the broodID will be their first clutch as a parent
-    dplyr::mutate(broodIDLaid = dplyr::case_when(is.na(.data$firstAge) | .data$firstAge != "C" ~ NA_character_,
+    dplyr::mutate(broodIDLaid = dplyr::case_when(is.na(.data$ringStage) | .data$ringStage != "chick" ~ NA_character_,
                                                  TRUE ~ .data$firstBrood),
                   # We have no information on cross-fostering, so we assume the brood laid and ringed are the same
-                  broodIDFledged = .data$broodIDLaid,
-                  # Determine stage at ringing as either chick, subadult, or adult.
-                  ringStage = dplyr::case_when(.data$firstAge == "C" ~ "chick",
-                                               .data$firstAge == "first year" ~ "subadult",
-                                               .data$firstAge == "adult" ~ "adult",
-                                               is.na(.data$firstAge) ~ "adult")) %>%
-    # NB: Sex calculation moved to standard utility function (v1.2)
+                  broodIDFledged = .data$broodIDLaid) %>%
+    # NB: Sex calculation moved to standard utility function (v2.0)
     #dplyr::left_join(Sex_calc, by = "IndvID") %>%
     dplyr::ungroup() %>%
     dplyr::mutate(row = 1:n(),
@@ -529,9 +536,9 @@ create_location_CHO <- function(data){
                   rowWarning = NA,
                   rowError = NA) %>%
     # Add missing columns
-    dplyr::bind_cols(data_templates$v1.2$Location_data[1, !(names(data_templates$v1.2$Location_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates$v2.0$Location_data[1, !(names(data_templates$v2.0$Location_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format
-    dplyr::select(names(data_templates$v1.2$Location_data))
+    dplyr::select(names(data_templates$v2.0$Location_data))
 
   return(Location_data)
 
@@ -550,17 +557,17 @@ create_measurement_CHO <- function(Capture_data){
   # Measurements are only taken of individuals (during captures), not of locations,
   # so we only use Capture_data as input
   Measurement_data <- Capture_data %>%
-    dplyr::select(recordID = .data$captureID,
-                  siteID = .data$captureSiteID,
-                  measurementDeterminedYear = .data$captureYear,
-                  measurementDeterminedMonth = .data$captureMonth,
-                  measurementDeterminedDay = .data$captureDay,
-                  measurementDeterminedTime = .data$captureTime,
-                  .data$recordedBy,
-                  .data$mass,
-                  .data$tarsus,
-                  .data$wingLength,
-                  .data$originalTarsusMethod) %>%
+    dplyr::select(recordID = "captureID",
+                  siteID = "captureSiteID",
+                  measurementDeterminedYear = "captureYear",
+                  measurementDeterminedMonth = "captureMonth",
+                  measurementDeterminedDay = "captureDay",
+                  measurementDeterminedTime = "captureTime",
+                  "recordedBy",
+                  "mass",
+                  "tarsus",
+                  "wingLength",
+                  "originalTarsusMethod") %>%
     # Measurements in Capture data are stored as columns, but we want each individual measurement as a row
     # Therefore, we pivot each separate measurement (i.e., mass, tarsus, and wing length) of an individual to a row
     # NAs are removed
@@ -581,9 +588,9 @@ create_measurement_CHO <- function(Capture_data){
                   rowWarning = NA,
                   rowError = NA) %>%
     # Add missing columns
-    dplyr::bind_cols(data_templates$v1.2$Measurement_data[1, !(names(data_templates$v1.2$Measurement_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates$v2.0$Measurement_data[1, !(names(data_templates$v2.0$Measurement_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format
-    dplyr::select(names(data_templates$v1.2$Measurement_data))
+    dplyr::select(names(data_templates$v2.0$Measurement_data))
 
   return(Measurement_data)
 
