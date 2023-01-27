@@ -7,8 +7,7 @@
 #'this data. For a general description of the standard format please see
 #'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.2.0.pdf}{here}.
 #'
-#'\strong{speciesID}: Minority species (i.e., short-toed treecreeper, common redstart)
-#'and species with imprecise identifiers (e.g., Parus, FX) are excluded.
+#'\strong{speciesID}: Species with imprecise identifiers (e.g., Parus, FX) are excluded.
 #'There is a small number of hybrid flycatcher broods. For parents, we know their exact species (i.e., FICALB or FICHYP).
 #'For broods and chicks, we know these are mixed broods, and marked as FICHIB. Check with data owner.
 #'Further, in cases where the species of the father is not specified, it is assumed to be equal to the brood/mother.
@@ -22,8 +21,6 @@
 #'\strong{captureRingNumber}: First captures of all individuals are assumed to be ringing events, and thus captureRingNumber is set to NA.
 #'
 #'\strong{startYear}: Assume all boxes were placed in the first year of the study.
-#'
-#'\strong{habitatID}: Assume that habitat type is 1.4: Forest - Temperate. Check with data owner.
 #'
 #'\strong{Experiment data}: No experiments were conducted, resulting in an empty Experiment data table.
 #'
@@ -57,6 +54,8 @@ format_DLO <- function(db = choose_directory(),
   start_time <- Sys.time()
 
   # Load data
+  message("Importing primary data...")
+
   all_data <- suppressMessages(readxl::read_excel(paste0(db, "/DLO_PrimaryData.xlsx"),
                                                   guess_max = 4000, na = "NA") %>%
     # Convert all cols to snake_case
@@ -83,8 +82,10 @@ format_DLO <- function(db = choose_directory(),
                                                    .x == "SE" ~ species_codes$speciesID[species_codes$speciesCode == "10004"],
                                                    .x == "FH" ~ species_codes$speciesID[species_codes$speciesCode == "10003"],
                                                    .x == "PasMo" ~ species_codes$speciesID[species_codes$speciesCode == "10006"],
-                                                   # TODO: Some species IDs are excluded--too few observations or unknown species; check with data owner
-                                                   .x %in% c("CerBra", "FX", "fx", "Parus", "PhPh") ~ NA_character_,
+                                                   .x == "PhPh" ~ species_codes$speciesID[species_codes$speciesCode == "10010"],
+                                                   .x == "CerBra" ~ species_codes$speciesID[species_codes$speciesCode == "10034"],
+                                                   # TODO: Some species IDs are excluded--unknown species; check with data owner
+                                                   .x %in% c("FX", "fx", "Parus") ~ NA_character_,
                                                    is.na(.x) ~ NA_character_)
 
                                 })) %>%
@@ -155,53 +156,53 @@ format_DLO <- function(db = choose_directory(),
   # EXPERIMENT DATA
 
   # NB: There is no experiment information so we create an empty data table
-  Experiment_data <- data_templates$v1.2$Experiment_data[0,]
+  Experiment_data <- data_templates$v2.0$Experiment_data[0,]
 
 
   # WRANGLE DATA FOR EXPORT
 
   Capture_data <- Capture_data %>%
     # Add row ID
-    dplyr::mutate(row = 1:n()) %>%
+    dplyr::mutate(row = 1:dplyr::n()) %>%
     # Add missing columns
-    dplyr::bind_cols(data_templates$v1.2$Capture_data[1, !(names(data_templates$v1.2$Capture_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates$v2.0$Capture_data[1, !(names(data_templates$v2.0$Capture_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
-    dplyr::select(names(data_templates$v1.2$Capture_data), dplyr::contains(names(utility_variables$Capture_data),
+    dplyr::select(names(data_templates$v2.0$Capture_data), dplyr::contains(names(utility_variables$Capture_data),
                                                                            ignore.case = FALSE))
 
   Brood_data <- Brood_data %>%
     # Add row ID
-    dplyr::mutate(row = 1:n()) %>%
+    dplyr::mutate(row = 1:dplyr::n()) %>%
     # Add missing columns
-    dplyr::bind_cols(data_templates$v1.2$Brood_data[1, !(names(data_templates$v1.2$Brood_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates$v2.0$Brood_data[1, !(names(data_templates$v2.0$Brood_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
-    dplyr::select(names(data_templates$v1.2$Brood_data), dplyr::contains(names(utility_variables$Brood_data),
+    dplyr::select(names(data_templates$v2.0$Brood_data), dplyr::contains(names(utility_variables$Brood_data),
                                                                          ignore.case = FALSE))
 
   Individual_data <- Individual_data %>%
     # Add row ID
-    dplyr::mutate(row = 1:n()) %>%
+    dplyr::mutate(row = 1:dplyr::n()) %>%
     # Add missing columns
-    dplyr::bind_cols(data_templates$v1.2$Individual_data[1, !(names(data_templates$v1.2$Individual_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates$v2.0$Individual_data[1, !(names(data_templates$v2.0$Individual_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
-    dplyr::select(names(data_templates$v1.2$Individual_data), dplyr::contains(names(utility_variables$Individual_data),
+    dplyr::select(names(data_templates$v2.0$Individual_data), dplyr::contains(names(utility_variables$Individual_data),
                                                                               ignore.case = FALSE))
 
   Location_data <- Location_data %>%
     # Add row ID
-    dplyr::mutate(row = 1:n()) %>%
+    dplyr::mutate(row = 1:dplyr::n()) %>%
     # Add missing columns
-    dplyr::bind_cols(data_templates$v1.2$Location_data[1, !(names(data_templates$v1.2$Location_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates$v2.0$Location_data[1, !(names(data_templates$v2.0$Location_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format
-    dplyr::select(names(data_templates$v1.2$Location_data))
+    dplyr::select(names(data_templates$v2.0$Location_data))
 
   Measurement_data <- Measurement_data %>%
     # Add row ID
-    dplyr::mutate(row = 1:n()) %>%
+    dplyr::mutate(row = 1:dplyr::n()) %>%
     # Add missing columns
-    dplyr::bind_cols(data_templates$v1.2$Measurement_data[1, !(names(data_templates$v1.2$Measurement_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates$v2.0$Measurement_data[1, !(names(data_templates$v2.0$Measurement_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format
-    dplyr::select(names(data_templates$v1.2$Measurement_data))
+    dplyr::select(names(data_templates$v2.0$Measurement_data))
 
 
   # TIME
@@ -254,10 +255,7 @@ format_DLO <- function(db = choose_directory(),
 #' Create brood data table in standard format for data from Dlouhá Loučka, Czechia.
 #'
 #' @param data Data frame. Primary data from Dlouhá Loučka, Czechia.
-#' @param species_filter Species of interest. The 6 letter codes of all the species of
-#'  interest as listed in the
-#'  \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.2.0.pdf}{standard
-#'  protocol}.
+#' @param species_filter Species of interest. The 6-letter code of species as listed in the \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Appendices.pdf}{Appendices} to the standard format. If blank will return all major species.
 #' @param optional_variables A character vector of names of optional variables (generated by standard utility functions) to be included in the pipeline output.
 #'
 #' @return A data frame.
@@ -269,7 +267,7 @@ create_brood_DLO <- function(data,
 
   Brood_data <- data %>%
     # Remove columns that do not contain relevant brood info
-    dplyr::select(-.data$source:-.data$notes_57) %>%
+    dplyr::select(-"source":-"notes_57") %>%
     # If femaleID & maleID differ from expected format, set to NA
     # and unify ring formats; both lower-case and upper-case letters are used for the same individual
     dplyr::mutate(femaleID = dplyr::case_when(stringr::str_detect(toupper(.data$f_ring), "^[:upper:]{1,2}[:digit:]{4,6}$") ~ toupper(.data$f_ring),
@@ -301,12 +299,14 @@ create_brood_DLO <- function(data,
                                                         .data$nesting_attempt %in% c("s", "S") ~ "second",
                                                         .data$nesting_attempt == "?" ~ NA_character_,
                                                         TRUE ~ NA_character_),
-                  observedHatchYear = as.integer(lubridate::year(.data$hatching_date)),
+                  observedHatchYear = dplyr::case_when(is.na(.data$hatching_date) ~ as.integer(.data$year),
+                                                       TRUE ~ as.integer(lubridate::year(.data$hatching_date))),
                   observedHatchMonth = as.integer(lubridate::month(.data$hatching_date)),
                   observedHatchDay = as.integer(lubridate::day(.data$hatching_date)),
                   # NB: ? in number hatched is set to NA
                   observedBroodSize = as.integer(dplyr::na_if(.data$no_hatched, "?")),
-                  observedFledgeYear = as.integer(lubridate::year(.data$fledging_date)),
+                  observedFledgeYear = dplyr::case_when(is.na(.data$fledging_date) ~ as.integer(.data$year),
+                                                        TRUE ~ as.integer(lubridate::year(.data$fledging_date))),
                   observedFledgeMonth = as.integer(lubridate::month(.data$fledging_date)),
                   observedFledgeDay = as.integer(lubridate::day(.data$fledging_date)),
                   # NB: ? in number fledged is set to NA
@@ -317,7 +317,7 @@ create_brood_DLO <- function(data,
   # Add optional variables
   output <- Brood_data %>%
     {if("breedingSeason" %in% optional_variables) calc_season(data = ., season = .data$year) else .} %>%
-    {if("calculatedClutchType" %in% optional_variables) calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.2") else .} %>%
+    {if("calculatedClutchType" %in% optional_variables) calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "2.0") else .} %>%
     {if("nestAttemptNumber" %in% optional_variables) calc_nestattempt(data = ., season = .data$breedingSeason) else .}
 
   return(output)
@@ -329,10 +329,7 @@ create_brood_DLO <- function(data,
 #' Create capture data table in standard format for data from Dlouhá Loučka, Czechia.
 #'
 #' @param data Data frame. Primary data from Dlouhá Loučka, Czechia.
-#' @param species_filter Species of interest. The 6 letter codes of all the species of
-#'  interest as listed in the
-#'  \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.2.0.pdf}{standard
-#'  protocol}.
+#' @param species_filter Species of interest. The 6-letter code of species as listed in the \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Appendices.pdf}{Appendices} to the standard format. If blank will return all major species.
 #' @param optional_variables A character vector of names of optional variables (generated by standard utility functions) to be included in the pipeline output.
 #'
 #' @return A data frame.
@@ -345,7 +342,7 @@ create_capture_DLO <- function(data,
   # Retrieve capture information of parents
   parents <- data %>%
     # Pivot information on females and males into rows
-    tidyr::pivot_longer(cols = c(.data$f_ring, .data$m_ring),
+    tidyr::pivot_longer(cols = c("f_ring", "m_ring"),
                         names_to = "sex",
                         values_to = "individualID") %>%
     # If individualID differs from expected format, set to NA
@@ -384,30 +381,30 @@ create_capture_DLO <- function(data,
                   recordedBy = dplyr::case_when(.data$recordedBy == "Fernando" ~ .data$recordedBy,
                                                 TRUE ~ toupper(stringr::str_replace(.data$recordedBy, "/", " | "))),
                   chickAge = NA_integer_) %>%
-    dplyr::select(.data$siteID,
-                  .data$plotID,
-                  .data$broodID,
-                  .data$individualID,
-                  .data$speciesID,
-                  .data$observedSex,
-                  .data$captureYear,
-                  .data$captureMonth,
-                  .data$captureDay,
-                  .data$captureTime,
-                  .data$recordedBy,
-                  .data$locationID,
-                  .data$age,
-                  .data$chickAge,
-                  .data$wingLength,
-                  .data$mass,
-                  .data$tarsus)
+    dplyr::select("siteID",
+                  "plotID",
+                  "broodID",
+                  "individualID",
+                  "speciesID",
+                  "observedSex",
+                  "captureYear",
+                  "captureMonth",
+                  "captureDay",
+                  "captureTime",
+                  "recordedBy",
+                  "locationID",
+                  "age",
+                  "chickAge",
+                  "wingLength",
+                  "mass",
+                  "tarsus")
 
   # Retrieve capture information of chicks
   chicks <- data %>%
     # Remove columns that do not contain relevant chick info
-    dplyr::select(-.data$killed_female:-.data$protected, -.data$source:-.data$notes_57) %>%
+    dplyr::select(-"killed_female":-"protected", -"source":-"notes_57") %>%
     # Pivot information on chicks into rows
-    tidyr::pivot_longer(cols = .data$x1nestling:.data$x12n,
+    tidyr::pivot_longer(cols = "x1nestling":"x12n",
                         names_to = NULL,
                         values_to = "individualID") %>%
     # Remove white space from individualID
@@ -466,6 +463,8 @@ create_capture_DLO <- function(data,
                   releaseSiteID = .data$siteID,
                   capturePlotID = .data$plotID,
                   releasePlotID = .data$plotID,
+                  captureLocationID = .data$locationID,
+                  releaseLocationID = .data$locationID,
                   # TODO: Individuals are assumed to be captured alive, without replacing rings
                   captureAlive = TRUE,
                   releaseAlive = TRUE,
@@ -473,27 +472,27 @@ create_capture_DLO <- function(data,
     # Arrange chronologically for each individual
     dplyr::arrange(.data$individualID, .data$captureYear, .data$captureMonth, .data$captureDay, .data$captureTime) %>%
     dplyr::group_by(.data$individualID) %>%
-    # First captures are assumed to be ringing events, and thus captureRingNumber = NA.
-    dplyr::mutate(captureRingNumber = dplyr::case_when(dplyr::row_number() == 1 ~ NA_character_,
-                                                       TRUE ~ stringr::str_sub(.data$individualID, 5, nchar(.data$individualID))),
-                  # All releases are assumed to be alive (also see releaseAlive), so no NAs in releaseRingNumber
-                  releaseRingNumber = stringr::str_sub(.data$individualID, 5, nchar(.data$individualID))) %>%
+    # First captures are assumed to be tagging events, and thus captureTagID = NA.
+    dplyr::mutate(captureTagID = dplyr::case_when(dplyr::row_number() == 1 ~ NA_character_,
+                                                  TRUE ~ stringr::str_sub(.data$individualID, 5, nchar(.data$individualID))),
+                  # All releases are assumed to be alive (also see releaseAlive), so no NAs in releaseTagID
+                  releaseTagID = stringr::str_sub(.data$individualID, 5, nchar(.data$individualID))) %>%
     dplyr::ungroup() %>%
     # Filter species
-    dplyr::filter(speciesID %in% {species_filter}) %>%
+    dplyr::filter(.data$speciesID %in% {species_filter}) %>%
     # Create captureID
     dplyr::group_by(.data$individualID) %>%
-    dplyr::mutate(captureID = paste(.data$individualID, 1:n(), sep = "_")) %>%
+    dplyr::mutate(captureID = paste(.data$individualID, 1:dplyr::n(), sep = "_")) %>%
     dplyr::ungroup() %>%
-    dplyr::select(.data$captureID, everything())
+    dplyr::select("captureID", everything())
 
   # Add optional variables
   output <- captures %>%
     {if("exactAge" %in% optional_variables | "minimumAge" %in% optional_variables) calc_age(data = .,
                                                                                             Age = .data$age,
                                                                                             Year = .data$captureYear,
-                                                                                            protocol_version = "1.2") %>%
-        dplyr::select(dplyr::contains(c(names(captures), optional_variables))) else .}
+                                                                                            protocol_version = "2.0") %>%
+        dplyr::select(dplyr::any_of(c(names(captures), optional_variables))) else .}
 
   return(output)
 
@@ -505,10 +504,7 @@ create_capture_DLO <- function(data,
 #' Create individual data table in standard format for data from Dlouhá Loučka, Czechia.
 #'
 #' @param capture_data Data frame. Output from \code{\link{create_capture_DLO}}.
-#' @param species_filter Species of interest. The 6 letter codes of all the species of
-#'  interest as listed in the
-#'  \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.2.0.pdf}{standard
-#'  protocol}.
+#' @param species_filter Species of interest. The 6-letter code of species as listed in the \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Appendices.pdf}{Appendices} to the standard format. If blank will return all major species.
 #' @param optional_variables A character vector of names of optional variables (generated by standard utility functions) to be included in the pipeline output.
 #'
 #' @return A data frame.
@@ -527,24 +523,24 @@ create_individual_DLO <- function(capture_data,
                    .data$captureMonth, .data$captureDay, .data$captureTime) %>%
     # For every individual ...
     dplyr::group_by(.data$individualID) %>%
-    # ... determine first stage, brood, ring year, month, day, and ring site of each individual
+    # ... determine first stage, brood, tag year, month, day, and tag site of each individual
     dplyr::summarise(firstBrood = dplyr::first(.data$broodID),
-                     ringStage = dplyr::first(.data$age),
-                     ringDate = dplyr::first(.data$captureDate),
-                     ringYear = dplyr::first(.data$captureYear),
-                     ringSiteID = dplyr::first(.data$siteID),
+                     tagStage = dplyr::first(.data$age),
+                     tagDate = dplyr::first(.data$captureDate),
+                     tagYear = dplyr::first(.data$captureYear),
+                     tagSiteID = dplyr::first(.data$siteID),
                      speciesID = dplyr::case_when(length(unique(.data$speciesID)) == 2 ~ "CCCCCC",
                                                   TRUE ~ dplyr::first(.data$speciesID))) %>%
-    # Determine stage at ringing as either chick, subadult, or adult.
-    dplyr::mutate(ringStage = dplyr::case_when(is.na(.data$ringStage) ~ "adult",
-                                               TRUE ~ .data$ringStage),
-                  ringYear = dplyr::case_when(is.na(.data$ringDate) ~ as.integer(.data$ringYear),
-                                              TRUE ~ as.integer(lubridate::year(.data$ringDate))),
-                  ringMonth = as.integer(lubridate::month(.data$ringDate)),
-                  ringDay = as.integer(lubridate::day(.data$ringDate)),
+    # Determine stage at tagging as either chick, subadult, or adult.
+    dplyr::mutate(tagStage = dplyr::case_when(is.na(.data$tagStage) ~ "adult",
+                                              TRUE ~ .data$tagStage),
+                  tagYear = dplyr::case_when(is.na(.data$tagDate) ~ as.integer(.data$tagYear),
+                                             TRUE ~ as.integer(lubridate::year(.data$tagDate))),
+                  tagMonth = as.integer(lubridate::month(.data$tagDate)),
+                  tagDay = as.integer(lubridate::day(.data$tagDate)),
                   # Only assign a brood ID if they were first caught as a chick
                   # Otherwise, the broodID will be their first clutch as a parent
-                  broodIDLaid = dplyr::case_when(ringStage != "chick" ~ NA_character_,
+                  broodIDLaid = dplyr::case_when(tagStage != "chick" ~ NA_character_,
                                                  TRUE ~ .data$firstBrood),
                   # We have no information on cross-fostering, so we assume the brood laid and ringed are the same
                   broodIDFledged = .data$broodIDLaid) %>%
@@ -573,7 +569,7 @@ create_location_DLO <- function(data) {
 
   # There are no coordinates or box type information
   locations <- data %>%
-    dplyr::select(.data$siteID, .data$plotID, .data$locationID) %>%
+    dplyr::select("siteID", "plotID", "locationID") %>%
     tidyr::drop_na() %>%
     dplyr::distinct() %>%
     dplyr::mutate(locationType = "nest",
@@ -581,8 +577,8 @@ create_location_DLO <- function(data) {
                   decimalLongitude = NA_real_,
                   startYear = as.integer(min(data$year)),
                   endYear = NA_integer_,
-                  # TODO: habitat is set to 1.4 Forest -- Temperate; check with data owner
-                  habitatID = "1.4")
+                  # TODO: habitat is set to NA; check with data owner
+                  habitatID = NA_character_)
 
   return(locations)
 
@@ -602,16 +598,16 @@ create_measurement_DLO <- function(capture_data) {
   # Measurements are only taken of individuals (during captures), not of locations,
   # so we use capture_data as input
   measurements <- capture_data %>%
-    dplyr::select(recordID = .data$captureID,
-                  siteID = .data$captureSiteID,
-                  measurementDeterminedYear = .data$captureYear,
-                  measurementDeterminedMonth = .data$captureMonth,
-                  measurementDeterminedDay = .data$captureDay,
-                  measurementDeterminedTime = .data$captureTime,
-                  .data$recordedBy,
-                  .data$mass,
-                  .data$tarsus,
-                  .data$wingLength) %>%
+    dplyr::select(recordID = "captureID",
+                  siteID = "captureSiteID",
+                  measurementDeterminedYear = "captureYear",
+                  measurementDeterminedMonth = "captureMonth",
+                  measurementDeterminedDay = "captureDay",
+                  measurementDeterminedTime = "captureTime",
+                  "recordedBy",
+                  "mass",
+                  "tarsus",
+                  "wingLength") %>%
     # Measurements in Capture data are stored as columns, but we want each individual measurement as a row
     # Therefore, we pivot each separate measurement (i.e., mass, tarsus, and wing length) of an individual to a row
     # NAs are removed
@@ -620,7 +616,7 @@ create_measurement_DLO <- function(capture_data) {
                         values_to = "measurementValue",
                         values_drop_na = TRUE) %>%
     dplyr::arrange(.data$measurementDeterminedYear, .data$measurementDeterminedMonth, .data$measurementDeterminedDay) %>%
-    dplyr::mutate(measurementID = 1:n(),
+    dplyr::mutate(measurementID = 1:dplyr::n(),
                   measurementSubject = "capture",
                   measurementUnit = dplyr::case_when(.data$measurementType == "mass" ~ "g",
                                                      TRUE ~ "mm"),
