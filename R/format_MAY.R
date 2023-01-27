@@ -76,8 +76,8 @@ format_MAY <- function(db = choose_directory(),
                                               # TODO: No species identification, so all individuals assumed to be pied flycatcher; check with data owner
                                               speciesID = species_codes$speciesID[species_codes$speciesCode == "10003"]) %>%
                                 # Convert dates
-                                dplyr::mutate(dplyr::across(.cols = c(.data$date_of_female_molt_survey,
-                                                                      .data$date_of_male_molt_survey),
+                                dplyr::mutate(dplyr::across(.cols = c("date_of_female_molt_survey",
+                                                                      "date_of_male_molt_survey"),
                                                             .fns = ~{
 
                                                               as.Date(.x)
@@ -162,7 +162,7 @@ format_MAY <- function(db = choose_directory(),
     # Add row ID
     dplyr::mutate(row = 1:dplyr::n(),
                   # Ensure that individuals are unique: add institutionID as prefix to femaleID & maleID
-                  dplyr::across(.cols = c(.data$femaleID, .data$maleID),
+                  dplyr::across(.cols = c("femaleID", "maleID"),
                                 .fns = ~{
 
                                   dplyr::case_when(is.na(.x) ~ NA_character_,
@@ -170,7 +170,7 @@ format_MAY <- function(db = choose_directory(),
 
                                 })) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
-    dplyr::select(names(data_templates$v1.2$Brood_data), dplyr::contains(names(utility_variables$Brood_data),
+    dplyr::select(names(data_templates$v2.0$Brood_data), dplyr::contains(names(utility_variables$Brood_data),
                                                                          ignore.case = FALSE))
 
   # - Capture data
@@ -178,16 +178,16 @@ format_MAY <- function(db = choose_directory(),
     # Add row ID
     dplyr::mutate(row = 1:dplyr::n(),
                   # Ensure that individuals are unique: add institutionID as prefix to individualID and captureID
-                  dplyr::across(.cols = c(.data$individualID, .data$captureID),
+                  dplyr::across(.cols = c("individualID", "captureID"),
                                 .fns = ~{
 
                                   paste0("MAY_", .x)
 
                                 })) %>%
     # Add missing columns
-    dplyr::bind_cols(data_templates$v1.2$Capture_data[1, !(names(data_templates$v1.2$Capture_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates$v2.0$Capture_data[1, !(names(data_templates$v2.0$Capture_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
-    dplyr::select(names(data_templates$v1.2$Capture_data), dplyr::contains(names(utility_variables$Capture_data),
+    dplyr::select(names(data_templates$v2.0$Capture_data), dplyr::contains(names(utility_variables$Capture_data),
                                                                            ignore.case = FALSE))
 
   # - Individual data
@@ -197,9 +197,9 @@ format_MAY <- function(db = choose_directory(),
                   # Ensure that individuals are unique: add institutionID as prefix to individualID and captureID
                   individualID = paste0("MAY_", .data$individualID)) %>%
     # Add missing columns
-    dplyr::bind_cols(data_templates$v1.2$Individual_data[1, !(names(data_templates$v1.2$Individual_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates$v2.0$Individual_data[1, !(names(data_templates$v2.0$Individual_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
-    dplyr::select(names(data_templates$v1.2$Individual_data), dplyr::contains(names(utility_variables$Individual_data),
+    dplyr::select(names(data_templates$v2.0$Individual_data), dplyr::contains(names(utility_variables$Individual_data),
                                                                               ignore.case = FALSE))
 
   # - Location data
@@ -207,9 +207,9 @@ format_MAY <- function(db = choose_directory(),
     # Add row ID
     dplyr::mutate(row = 1:dplyr::n()) %>%
     # Add missing columns
-    dplyr::bind_cols(data_templates$v1.2$Location_data[1, !(names(data_templates$v1.2$Location_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates$v2.0$Location_data[1, !(names(data_templates$v2.0$Location_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format
-    dplyr::select(names(data_templates$v1.2$Location_data))
+    dplyr::select(names(data_templates$v2.0$Location_data))
 
   # - Measurement data
   Measurement_data <- Measurement_data %>%
@@ -218,18 +218,18 @@ format_MAY <- function(db = choose_directory(),
                   # Add institutionID as prefix to recordID to match captureID
                   recordID = paste0("MAY_", .data$recordID)) %>%
     # Add missing columns
-    dplyr::bind_cols(data_templates$v1.2$Measurement_data[1, !(names(data_templates$v1.2$Measurement_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates$v2.0$Measurement_data[1, !(names(data_templates$v2.0$Measurement_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format
-    dplyr::select(names(data_templates$v1.2$Measurement_data))
+    dplyr::select(names(data_templates$v2.0$Measurement_data))
 
   # - Experiment data
   Experiment_data <- Experiment_data %>%
     # Add row ID
     dplyr::mutate(row = 1:dplyr::n()) %>%
     # Add missing columns
-    dplyr::bind_cols(data_templates$v1.2$Experiment_data[1, !(names(data_templates$v1.2$Experiment_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates$v2.0$Experiment_data[1, !(names(data_templates$v2.0$Experiment_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format
-    dplyr::select(names(data_templates$v1.2$Experiment_data))
+    dplyr::select(names(data_templates$v2.0$Experiment_data))
 
 
   # TIME
@@ -282,10 +282,7 @@ format_MAY <- function(db = choose_directory(),
 #'
 #' @param gt_data Data frame. Great tit data from Mayachino, Russia.
 #' @param pf_data Data frame. Pied flycatcher data from Mayachino, Russia.
-#' @param species_filter Species of interest. The 6 letter codes of all the species of
-#'  interest as listed in the
-#'  \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.2.0.pdf}{standard
-#'  protocol}.
+#' @param species_filter Species of interest. The 6-letter code of species as listed in the \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Appendices.pdf}{Appendices} to the standard format. If blank will return all major species.
 #' @param optional_variables A character vector of names of optional variables (generated by standard utility functions) to be included in the pipeline output.
 #'
 #' @return A data frame.
@@ -294,14 +291,14 @@ format_MAY <- function(db = choose_directory(),
 create_brood_MAY <- function(gt_data,
                              pf_data,
                              species_filter,
-                             optional_variables = NULL) {
+                             optional_variables) {
 
     # Pied flycatcher data
     pf_broods <- pf_data %>%
       # Create female & male IDs
       tidyr::unite(femaleID, .data$females_ring_series, .data$females_ring, remove = FALSE, na.rm = TRUE, sep = "") %>%
       tidyr::unite(maleID, .data$males_ring_series, .data$males_ring, remove = FALSE, na.rm = TRUE, sep = "") %>%
-      dplyr::mutate(dplyr::across(.cols = c(.data$femaleID, .data$maleID),
+      dplyr::mutate(dplyr::across(.cols = c("femaleID", "maleID"),
                                   .fns = ~{
 
                                     stringr::str_replace_all(dplyr::na_if(.x, ""), pattern = " ", replacement = "")
@@ -317,7 +314,7 @@ create_brood_MAY <- function(gt_data,
       # Days formatted as e.g., "<32", ">32", "32?", "(32)" or "?" are interpreted without the special characters
       # Days formatted as e.g., "32-35" are interpreted as a minimum and maximum; observed dates are taken as the rounded down average
       # TODO: check with data owner
-      dplyr::mutate(dplyr::across(.cols = c(.data$start_date_of_laying_1_may_1, .data$hatching_date_1_may_1),
+      dplyr::mutate(dplyr::across(.cols = c("start_date_of_laying_1_may_1", "hatching_date_1_may_1"),
                                   .fns = ~{
 
                                     dplyr::case_when(
@@ -333,7 +330,7 @@ create_brood_MAY <- function(gt_data,
 
                                   },
                                   .names = "{.col}_observedMayDate"),
-                    dplyr::across(.cols = c(.data$start_date_of_laying_1_may_1, .data$hatching_date_1_may_1),
+                    dplyr::across(.cols = c("start_date_of_laying_1_may_1", "hatching_date_1_may_1"),
                                   .fns = ~{
 
                                     dplyr::case_when(
@@ -343,7 +340,7 @@ create_brood_MAY <- function(gt_data,
 
                                   },
                                   .names = "{.col}_minimumMayDate"),
-                    dplyr::across(.cols = c(.data$start_date_of_laying_1_may_1, .data$hatching_date_1_may_1),
+                    dplyr::across(.cols = c("start_date_of_laying_1_may_1", "hatching_date_1_may_1"),
                                   .fns = ~{
 
                                     dplyr::case_when(
@@ -369,7 +366,8 @@ create_brood_MAY <- function(gt_data,
                     maximumLayYear = as.integer(lubridate::year(.data$start_date_of_laying_1_may_1_maximumMayDate)),
                     maximumLayMonth = as.integer(lubridate::month(.data$start_date_of_laying_1_may_1_maximumMayDate)),
                     maximumLayDay = as.integer(lubridate::day(.data$start_date_of_laying_1_may_1_maximumMayDate)),
-                    observedHatchYear = as.integer(lubridate::year(.data$hatching_date_1_may_1_observedMayDate)),
+                    observedHatchYear = dplyr::case_when(is.na(.data$hatching_date_1_may_1_observedMayDate) ~ as.integer(.data$year),
+                                                         TRUE ~ as.integer(lubridate::year(.data$hatching_date_1_may_1_observedMayDate))),
                     observedHatchMonth = as.integer(lubridate::month(.data$hatching_date_1_may_1_observedMayDate)),
                     observedHatchDay = as.integer(lubridate::day(.data$hatching_date_1_may_1_observedMayDate)),
                     minimumHatchYear = as.integer(lubridate::year(.data$hatching_date_1_may_1_minimumMayDate)),
@@ -382,13 +380,13 @@ create_brood_MAY <- function(gt_data,
       # Values formatted as e.g. "7+4" or "7-4" are interpreted as arithmetic calculations, yielding values of 11 and 3, respectively
       # Values formatted as e.g. "(4)" or "5?" are interpreted without the special characters
       # TODO: Check with data owner
-      dplyr::mutate(dplyr::across(.cols = c(.data$clutch_size, .data$number_of_hatched_nestlings, .data$number_of_fledlings),
+      dplyr::mutate(dplyr::across(.cols = c("clutch_size", "number_of_hatched_nestlings", "number_of_fledlings"),
                                   .fns = ~{
 
                                     stringr::str_replace_all(.x, pattern = " ", replacement = "")
 
                                   }),
-                    dplyr::across(.cols = c(.data$clutch_size, .data$number_of_hatched_nestlings, .data$number_of_fledlings),
+                    dplyr::across(.cols = c("clutch_size", "number_of_hatched_nestlings", "number_of_fledlings"),
                                   .fns = ~ {
 
                                     dplyr::case_when(
@@ -399,7 +397,7 @@ create_brood_MAY <- function(gt_data,
                                     )
 
                                   }),
-                    dplyr::across(.cols = c(.data$clutch_size, .data$number_of_hatched_nestlings, .data$number_of_fledlings),
+                    dplyr::across(.cols = c("clutch_size", "number_of_hatched_nestlings", "number_of_fledlings"),
                                   .fns = ~ {
 
                                     sapply(.x, function(x) eval(parse(text = x)))
@@ -423,7 +421,7 @@ create_brood_MAY <- function(gt_data,
     # Create female & male IDs
     tidyr::unite(femaleID, .data$females_ring_series, .data$females_ring, remove = FALSE, na.rm = TRUE, sep = "") %>%
     tidyr::unite(maleID, .data$males_ring_series, .data$males_ring, remove = FALSE, na.rm = TRUE, sep = "") %>%
-    dplyr::mutate(dplyr::across(.cols = c(.data$femaleID, .data$maleID),
+    dplyr::mutate(dplyr::across(.cols = c("femaleID", "maleID"),
                                 .fns = ~{
 
                                   stringr::str_replace_all(dplyr::na_if(.x, ""), pattern = " ", replacement = "")
@@ -438,7 +436,7 @@ create_brood_MAY <- function(gt_data,
     # Days formatted as e.g., "<32", "(32)" or "?" are interpreted without the special characters
     # Days formatted as e.g., "32-35" are interpreted as a minimum and maximum; observed dates are taken as the rounded down average
     # TODO: check with data owner
-    dplyr::mutate(dplyr::across(.cols = c(.data$start_date_of_laying_1_may_1, .data$hatching_date_1_may_1),
+    dplyr::mutate(dplyr::across(.cols = c("start_date_of_laying_1_may_1", "hatching_date_1_may_1"),
                                 .fns = ~{
 
                                   dplyr::case_when(
@@ -454,7 +452,7 @@ create_brood_MAY <- function(gt_data,
 
                                 },
                                 .names = "{.col}_observedMayDate"),
-                  dplyr::across(.cols = c(.data$start_date_of_laying_1_may_1, .data$hatching_date_1_may_1),
+                  dplyr::across(.cols = c("start_date_of_laying_1_may_1", "hatching_date_1_may_1"),
                                 .fns = ~{
 
                                   dplyr::case_when(
@@ -464,7 +462,7 @@ create_brood_MAY <- function(gt_data,
 
                                 },
                                 .names = "{.col}_minimumMayDate"),
-                  dplyr::across(.cols = c(.data$start_date_of_laying_1_may_1, .data$hatching_date_1_may_1),
+                  dplyr::across(.cols = c("start_date_of_laying_1_may_1", "hatching_date_1_may_1"),
                                 .fns = ~{
 
                                   dplyr::case_when(
@@ -490,7 +488,8 @@ create_brood_MAY <- function(gt_data,
                   maximumLayYear = as.integer(lubridate::year(.data$start_date_of_laying_1_may_1_maximumMayDate)),
                   maximumLayMonth = as.integer(lubridate::month(.data$start_date_of_laying_1_may_1_maximumMayDate)),
                   maximumLayDay = as.integer(lubridate::day(.data$start_date_of_laying_1_may_1_maximumMayDate)),
-                  observedHatchYear = as.integer(lubridate::year(.data$hatching_date_1_may_1_observedMayDate)),
+                  observedHatchYear = dplyr::case_when(is.na(.data$hatching_date_1_may_1_observedMayDate) ~ as.integer(.data$year),
+                                                       TRUE ~ as.integer(lubridate::year(.data$hatching_date_1_may_1_observedMayDate))),
                   observedHatchMonth = as.integer(lubridate::month(.data$hatching_date_1_may_1_observedMayDate)),
                   observedHatchDay = as.integer(lubridate::day(.data$hatching_date_1_may_1_observedMayDate)),
                   minimumHatchYear = as.integer(lubridate::year(.data$hatching_date_1_may_1_minimumMayDate)),
@@ -503,9 +502,9 @@ create_brood_MAY <- function(gt_data,
     # Values formatted as e.g. "7+4" are interpreted as arithmetic calculations (i.e., value is 11)
     # Values formatted as e.g. "(4)" or "5?" are interpreted without the special characters
     # TODO: Check with data owner
-    dplyr::mutate(dplyr::across(.cols = c(.data$clutch_size_in_brackets_possibly_number_of_eggs,
-                                          .data$number_of_hatched_nestlings_in_brackets_possibly_number_of_nestlings,
-                                          .data$number_of_fledlings),
+    dplyr::mutate(dplyr::across(.cols = c("clutch_size_in_brackets_possibly_number_of_eggs",
+                                          "number_of_hatched_nestlings_in_brackets_possibly_number_of_nestlings",
+                                          "number_of_fledlings"),
                                 .fns = ~{
 
                                   dplyr::case_when(
@@ -516,9 +515,9 @@ create_brood_MAY <- function(gt_data,
                                   )
 
                                 }),
-                  dplyr::across(.cols = c(.data$clutch_size_in_brackets_possibly_number_of_eggs,
-                                          .data$number_of_hatched_nestlings_in_brackets_possibly_number_of_nestlings,
-                                          .data$number_of_fledlings),
+                  dplyr::across(.cols = c("clutch_size_in_brackets_possibly_number_of_eggs",
+                                          "number_of_hatched_nestlings_in_brackets_possibly_number_of_nestlings",
+                                          "number_of_fledlings"),
                                 .fns = ~ {
 
                                   sapply(.x, function(x) eval(parse(text = x)))
@@ -530,7 +529,7 @@ create_brood_MAY <- function(gt_data,
     # Convert clutch type
     # Data owner writes: 1 - normal first; 2 - normal second; 1 or 2 repeat, after losing 1 or 2 brood; (1 or 2) in brackets possibly first, second, or  repeat brood
     # TODO: Check interpretation with data owner
-    dplyr::rename(clutchType = .data$no_of_brood_1_normal_first_2_normal_second_1_or_2_repeat_after_losing_1_or_2_brood_1_or_2_in_brackets_possibly_first_second_or_repeat_brood) %>%
+    dplyr::rename(clutchType = "no_of_brood_1_normal_first_2_normal_second_1_or_2_repeat_after_losing_1_or_2_brood_1_or_2_in_brackets_possibly_first_second_or_repeat_brood") %>%
     dplyr::mutate(observedClutchType = dplyr::case_when(.data$clutchType %in% c("1", "(1)") ~ "first",
                                                         stringr::str_detect(.data$clutchType, "1.*repeat") ~ "replacement",
                                                         stringr::str_detect(.data$clutchType, "[2-3]") ~ "second",
@@ -539,27 +538,27 @@ create_brood_MAY <- function(gt_data,
   # Add optional variables
   pf_output <- pf_broods %>%
     {if("breedingSeason" %in% optional_variables) calc_season(data = ., season = .data$year) else .} %>%
-    {if("calculatedClutchType" %in% optional_variables) calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.2") else .} %>%
+    {if("calculatedClutchType" %in% optional_variables) calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "2.0") else .} %>%
     {if("nestAttemptNumber" %in% optional_variables) calc_nestattempt(data = ., season = .data$breedingSeason) else .}
 
   gt_output <- gt_broods %>%
     {if("breedingSeason" %in% optional_variables) calc_season(data = ., season = .data$year) else .} %>%
-    {if("calculatedClutchType" %in% optional_variables) calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.2") else .} %>%
+    {if("calculatedClutchType" %in% optional_variables) calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "2.0") else .} %>%
     {if("nestAttemptNumber" %in% optional_variables) calc_nestattempt(data = ., season = .data$breedingSeason) else .}
 
   # Combine pied flycatcher and great tit breeding data
   pf_output <- pf_output %>%
     # Add missing columns
-    dplyr::bind_cols(data_templates$v1.2$Brood_data[1, !(names(data_templates$v1.2$Brood_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates$v2.0$Brood_data[1, !(names(data_templates$v2.0$Brood_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
-    dplyr::select(names(data_templates$v1.2$Brood_data), dplyr::contains(names(utility_variables$Brood_data),
+    dplyr::select(names(data_templates$v2.0$Brood_data), dplyr::contains(names(utility_variables$Brood_data),
                                                                          ignore.case = FALSE))
 
   gt_output <- gt_output %>%
     # Add missing columns
-    dplyr::bind_cols(data_templates$v1.2$Brood_data[1, !(names(data_templates$v1.2$Brood_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates$v2.0$Brood_data[1, !(names(data_templates$v2.0$Brood_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
-    dplyr::select(names(data_templates$v1.2$Brood_data), dplyr::contains(names(utility_variables$Brood_data),
+    dplyr::select(names(data_templates$v2.0$Brood_data), dplyr::contains(names(utility_variables$Brood_data),
                                                                          ignore.case = FALSE))
 
   output <- dplyr::bind_rows(pf_output, gt_output) %>%
@@ -578,10 +577,7 @@ create_brood_MAY <- function(gt_data,
 #'
 #' @param gt_data Data frame. Great tit data from Mayachino, Russia.
 #' @param pf_data Data frame. Pied flycatcher data from Mayachino, Russia.
-#' @param species_filter Species of interest. The 6 letter codes of all the species of
-#'  interest as listed in the
-#'  \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.2.0.pdf}{standard
-#'  protocol}.
+#' @param species_filter Species of interest. The 6-letter code of species as listed in the \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Appendices.pdf}{Appendices} to the standard format. If blank will return all major species.
 #' @param optional_variables A character vector of names of optional variables (generated by standard utility functions) to be included in the pipeline output.
 #'
 #' @return A data frame.
@@ -590,14 +586,14 @@ create_brood_MAY <- function(gt_data,
 create_capture_MAY <- function(gt_data,
                                pf_data,
                                species_filter,
-                               optional_variables = NULL) {
+                               optional_variables) {
 
   # 1. Retrieve capture information of pied flycatcher parents
   pf_parents <- pf_data %>%
     # Create female & male IDs
     tidyr::unite(femaleID, .data$females_ring_series, .data$females_ring, remove = FALSE, na.rm = TRUE, sep = "") %>%
     tidyr::unite(maleID, .data$males_ring_series, .data$males_ring, remove = FALSE, na.rm = TRUE, sep = "") %>%
-    dplyr::mutate(dplyr::across(.cols = c(.data$femaleID, .data$maleID),
+    dplyr::mutate(dplyr::across(.cols = c("femaleID", "maleID"),
                                 .fns = ~{
 
                                   stringr::str_replace_all(dplyr::na_if(.x, ""), pattern = " ", replacement = "")
@@ -613,7 +609,7 @@ create_capture_MAY <- function(gt_data,
     # Convert dates from May days (1 = 1st of May) to year, month, day
     # Days formatted as e.g., "<32", ">32", "32?", "(32)" or "?" are interpreted without the special characters
     # Days formatted as e.g., "32-35" are interpreted as a minimum and maximum; observed dates are taken as the rounded down average
-    dplyr::rename(layDate = .data$start_date_of_laying_1_may_1) %>%
+    dplyr::rename(layDate = "start_date_of_laying_1_may_1") %>%
     dplyr::mutate(clutchSize = stringr::str_replace_all(.data$clutch_size, pattern = " ", replacement = ""),
                   clutchSize = dplyr::case_when(stringr::str_detect(.data$clutchSize, "\\?") ~ dplyr::na_if(stringr::str_remove(.data$clutchSize, "\\?"), ""),
                                                 stringr::str_detect(.data$clutchSize, "\\(") ~ stringr::str_extract(.data$clutchSize, "(?<=\\()[:digit:]{1,2}(?=\\))"),
@@ -634,7 +630,7 @@ create_capture_MAY <- function(gt_data,
                   captureMonth = as.integer(lubridate::month(.data$captureDate)),
                   captureDay = as.integer(lubridate::day(.data$captureDate))) %>%
     # Pivot information on females and males into rows
-    tidyr::pivot_longer(cols = c(.data$femaleID, .data$maleID),
+    tidyr::pivot_longer(cols = c("femaleID", "maleID"),
                         names_to = "sex",
                         values_to = "individualID") %>%
     # Remove unknown individualIDs
@@ -698,7 +694,7 @@ create_capture_MAY <- function(gt_data,
     # Convert dates from May days (1 = 1st of May) to year, month, day
     # Days formatted as e.g., "<32", ">32", "32?", "(32)" or "?" are interpreted without the special characters
     # Days formatted as e.g., "32-35" are interpreted as a minimum and maximum; observed dates are taken as the rounded down average
-    dplyr::rename(layDate = .data$start_date_of_laying_1_may_1) %>%
+    dplyr::rename(layDate = "start_date_of_laying_1_may_1") %>%
     dplyr::mutate(clutchSize = stringr::str_replace_all(.data$clutch_size, pattern = " ", replacement = ""),
                   clutchSize = dplyr::case_when(stringr::str_detect(.data$clutchSize, "\\?") ~ dplyr::na_if(stringr::str_remove(.data$clutchSize, "\\?"), ""),
                                                 stringr::str_detect(.data$clutchSize, "\\(") ~ stringr::str_extract(.data$clutchSize, "(?<=\\()[:digit:]{1,2}(?=\\))"),
@@ -729,7 +725,7 @@ create_capture_MAY <- function(gt_data,
     # Create female & male IDs
     tidyr::unite(femaleID, .data$females_ring_series, .data$females_ring, remove = FALSE, na.rm = TRUE, sep = "") %>%
     tidyr::unite(maleID, .data$males_ring_series, .data$males_ring, remove = FALSE, na.rm = TRUE, sep = "") %>%
-    dplyr::mutate(dplyr::across(.cols = c(.data$femaleID, .data$maleID),
+    dplyr::mutate(dplyr::across(.cols = c("femaleID", "maleID"),
                                 .fns = ~{
 
                                   stringr::str_replace_all(dplyr::na_if(.x, ""), pattern = " ", replacement = "")
@@ -745,8 +741,8 @@ create_capture_MAY <- function(gt_data,
     # Convert dates from May days (1 = 1st of May) to year, month, day
     # Days formatted as e.g., "<32", "(32)" or "?" are interpreted without the special characters
     # Days formatted as e.g., "32-35" are interpreted as a minimum and maximum; observed dates are taken as the rounded down average
-    dplyr::rename(layDate = .data$start_date_of_laying_1_may_1,
-                  clutchSize = .data$clutch_size_in_brackets_possibly_number_of_eggs) %>%
+    dplyr::rename(layDate = "start_date_of_laying_1_may_1",
+                  clutchSize = "clutch_size_in_brackets_possibly_number_of_eggs") %>%
     dplyr::mutate(clutchSize = dplyr::case_when(stringr::str_detect(.data$clutchSize, "\\?") ~ dplyr::na_if(stringr::str_remove(.data$clutchSize, "\\?"), ""),
                                                 stringr::str_detect(.data$clutchSize, "\\(") ~ stringr::str_extract(.data$clutchSize, "(?<=\\()[:digit:]{1,2}(?=\\))"),
                                                 stringr::str_detect(.data$clutchSize, ".*[:alpha:]+.*") ~ NA_character_,
@@ -766,14 +762,14 @@ create_capture_MAY <- function(gt_data,
                   captureMonth = as.integer(lubridate::month(.data$captureDate)),
                   captureDay = as.integer(lubridate::day(.data$captureDate))) %>%
     # Pivot information on females and males into rows
-    tidyr::pivot_longer(cols = c(.data$femaleID, .data$maleID),
+    tidyr::pivot_longer(cols = c("femaleID", "maleID"),
                         names_to = "sex",
                         values_to = "individualID") %>%
     # Remove unknown individualIDs
     dplyr::filter(!is.na(.data$individualID)) %>%
     # Rename long variables
-    dplyr::rename(femaleAge = .data$females_age_1_one_year_old_bird_hatched_last_breeding_season_2_two_or_more_years_old_an_adult_hatched_before_the_last_calendar_year_3_or_4_age_3_4_or_more_years,
-                  maleAge = .data$males_age_1_one_year_old_bird_hatched_last_breeding_season_2_two_or_more_years_old_an_adult_hatched_before_the_last_calendar_year_3_or_4_age_3_4_or_more_years) %>%
+    dplyr::rename(femaleAge = "females_age_1_one_year_old_bird_hatched_last_breeding_season_2_two_or_more_years_old_an_adult_hatched_before_the_last_calendar_year_3_or_4_age_3_4_or_more_years",
+                  maleAge = "males_age_1_one_year_old_bird_hatched_last_breeding_season_2_two_or_more_years_old_an_adult_hatched_before_the_last_calendar_year_3_or_4_age_3_4_or_more_years") %>%
     dplyr::mutate(observedSex = dplyr::case_when(grepl(pattern = "f", x = .data$sex) ~ "F",
                                                  grepl(pattern = "m", x = .data$sex) ~ "M"),
                   # TODO: Check with data owner how to interpret ages (units?)
@@ -811,8 +807,8 @@ create_capture_MAY <- function(gt_data,
     # Convert dates from May days (1 = 1st of May) to year, month, day
     # Days formatted as e.g., "<32", "(32)" or "?" are interpreted without the special characters
     # Days formatted as e.g., "32-35" are interpreted as a minimum and maximum; observed dates are taken as the rounded down average
-    dplyr::rename(layDate = .data$start_date_of_laying_1_may_1,
-                  clutchSize = .data$clutch_size_in_brackets_possibly_number_of_eggs) %>%
+    dplyr::rename(layDate = "start_date_of_laying_1_may_1",
+                  clutchSize = "clutch_size_in_brackets_possibly_number_of_eggs") %>%
     dplyr::mutate(clutchSize = dplyr::case_when(stringr::str_detect(.data$clutchSize, "\\?") ~ dplyr::na_if(stringr::str_remove(.data$clutchSize, "\\?"), ""),
                                                 stringr::str_detect(.data$clutchSize, "\\(") ~ stringr::str_extract(.data$clutchSize, "(?<=\\()[:digit:]{1,2}(?=\\))"),
                                                 stringr::str_detect(.data$clutchSize, ".*[:alpha:]+.*") ~ NA_character_,
@@ -844,6 +840,8 @@ create_capture_MAY <- function(gt_data,
                   releaseSiteID = .data$siteID,
                   capturePlotID = .data$plotID,
                   releasePlotID = .data$plotID,
+                  captureLocationID = .data$locationID,
+                  releaseLocationID = .data$locationID,
                   # TODO: Individuals are assumed to be captured alive, without replacing rings
                   captureAlive = TRUE,
                   releaseAlive = TRUE,
@@ -851,13 +849,13 @@ create_capture_MAY <- function(gt_data,
     # Arrange chronologically for each individual
     dplyr::arrange(.data$individualID, .data$captureYear, .data$captureMonth, .data$captureDay) %>%
     dplyr::group_by(.data$individualID) %>%
-    # First captures are assumed to be ringing events, and thus captureRingNumber = NA.
-    # NB: Only add ring numbers if full ring number (letters + numbers) are recorded
-    dplyr::mutate(captureRingNumber = dplyr::case_when(dplyr::row_number() == 1 ~ NA_character_,
+    # First captures are assumed to be tagging events, and thus captureTagID = NA.
+    # NB: Only add tag numbers if full tag number (letters + numbers) are recorded
+    dplyr::mutate(captureTagID = dplyr::case_when(dplyr::row_number() == 1 ~ NA_character_,
                                                        stringr::str_detect(.data$individualID,"^[:digit:]") ~ NA_character_,
                                                        TRUE ~ .data$individualID),
-                  # All releases are assumed to be alive (also see releaseAlive), so no NAs in releaseRingNumber
-                  releaseRingNumber = dplyr::case_when(stringr::str_detect(.data$individualID,"^[:digit:]") ~ NA_character_,
+                  # All releases are assumed to be alive (also see releaseAlive), so no NAs in releaseTagID
+                  releaseTagID = dplyr::case_when(stringr::str_detect(.data$individualID,"^[:digit:]") ~ NA_character_,
                                                        TRUE ~ .data$individualID)) %>%
     dplyr::ungroup() %>%
     # Filter species
@@ -866,15 +864,15 @@ create_capture_MAY <- function(gt_data,
     dplyr::group_by(.data$individualID) %>%
     dplyr::mutate(captureID = paste(.data$individualID, 1:dplyr::n(), sep = "_")) %>%
     dplyr::ungroup() %>%
-    dplyr::select(.data$captureID, everything())
+    dplyr::select("captureID", everything())
 
   # 6. Add optional variables
   output <- captures %>%
     {if("exactAge" %in% optional_variables | "minimumAge" %in% optional_variables) calc_age(data = .,
                                                                                             Age = .data$age,
                                                                                             Year = .data$captureYear,
-                                                                                            protocol_version = "1.2") %>%
-        dplyr::select(dplyr::contains(c(names(captures), optional_variables))) else .}
+                                                                                            protocol_version = "2.0") %>%
+        dplyr::select(tidyselect::any_of(c(names(captures), optional_variables))) else .}
 
   return(output)
 
@@ -885,10 +883,7 @@ create_capture_MAY <- function(gt_data,
 #' Create individual data table in standard format for data from Mayachino, Russia.
 #'
 #' @param capture_data Data frame. Output from \code{\link{create_capture_MAY}}.
-#' @param species_filter Species of interest. The 6 letter codes of all the species of
-#'  interest as listed in the
-#'  \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.2.0.pdf}{standard
-#'  protocol}.
+#' @param species_filter Species of interest. The 6-letter code of species as listed in the \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Appendices.pdf}{Appendices} to the standard format. If blank will return all major species.
 #' @param optional_variables A character vector of names of optional variables (generated by standard utility functions) to be included in the pipeline output.
 #'
 #' @return A data frame.
@@ -896,7 +891,7 @@ create_capture_MAY <- function(gt_data,
 
 create_individual_MAY <- function(capture_data,
                                   species_filter,
-                                  optional_variables = NULL) {
+                                  optional_variables) {
 
   # Create a list of individuals from capture data
   individuals <- capture_data %>%
@@ -914,21 +909,21 @@ create_individual_MAY <- function(capture_data,
                    .data$captureMonth, .data$captureDay) %>%
     # For every individual ...
     dplyr::group_by(.data$individualID) %>%
-    # ... determine first stage, brood, ring year, month, day, and ring site of each individual
+    # ... determine first stage, brood, tag year, month, day, and tag site of each individual
     dplyr::summarise(firstBrood = dplyr::first(.data$broodID),
-                     ringStage = dplyr::first(.data$age),
-                     ringDate = dplyr::first(.data$captureDate),
-                     ringYear = dplyr::first(.data$captureYear),
-                     ringSiteID = dplyr::first(.data$siteID),
+                     tagStage = dplyr::first(.data$age),
+                     tagDate = dplyr::first(.data$captureDate),
+                     tagYear = dplyr::first(.data$captureYear),
+                     tagSiteID = dplyr::first(.data$siteID),
                      # TODO: Check CCCCCC individuals with data owner
                      speciesID = dplyr::case_when(length(unique(.data$speciesID)) == 2 ~ "CCCCCC",
                                                   TRUE ~ dplyr::first(.data$speciesID))) %>%
-    dplyr::mutate(ringYear = dplyr::case_when(is.na(.data$ringDate) ~ as.integer(.data$ringYear),
-                                              TRUE ~ as.integer(lubridate::year(.data$ringDate))),
-                  ringMonth = as.integer(lubridate::month(.data$ringDate)),
-                  ringDay = as.integer(lubridate::day(.data$ringDate)),
+    dplyr::mutate(tagYear = dplyr::case_when(is.na(.data$tagDate) ~ as.integer(.data$tagYear),
+                                              TRUE ~ as.integer(lubridate::year(.data$tagDate))),
+                  tagMonth = as.integer(lubridate::month(.data$tagDate)),
+                  tagDay = as.integer(lubridate::day(.data$tagDate)),
                   # Only assign a brood ID if they were first caught as a chick
-                  broodIDLaid = dplyr::case_when(ringStage != "chick" ~ NA_character_,
+                  broodIDLaid = dplyr::case_when(tagStage != "chick" ~ NA_character_,
                                                  TRUE ~ .data$firstBrood),
                   # We have no information on cross-fostering, so we assume the brood laid and ringed are the same
                   broodIDFledged = .data$broodIDLaid) %>%
@@ -961,12 +956,12 @@ create_location_MAY <- function(gt_data,
 
   # Combine great tit and pied flycatcher location columns
   data <- pf_data %>%
-    dplyr::select(.data$siteID, .data$plotID, .data$locationID, .data$year) %>%
-    dplyr::bind_rows({gt_data %>% dplyr::select(.data$siteID, .data$plotID, .data$locationID, .data$year)})
+    dplyr::select("siteID", "plotID", "locationID", "year") %>%
+    dplyr::bind_rows({gt_data %>% dplyr::select("siteID", "plotID", "locationID", "year")})
 
   # There are no coordinates or box type information
   locations <- data %>%
-    dplyr::select(.data$siteID, .data$plotID, .data$locationID) %>%
+    dplyr::select("siteID", "plotID", "locationID") %>%
     tidyr::drop_na() %>%
     dplyr::distinct() %>%
     dplyr::mutate(locationType = "nest",
@@ -974,8 +969,8 @@ create_location_MAY <- function(gt_data,
                   decimalLongitude = NA_real_,
                   startYear = as.integer(min(data$year)),
                   endYear = NA_integer_,
-                  # TODO: habitat is set to 1.1 Forest -- Boreal; check with data owner
-                  habitatID = "1.1")
+                  # TODO: habitat is set to NA; check with data owner
+                  habitatID = NA_character_)
 
   return(locations)
 
@@ -996,16 +991,16 @@ create_measurement_MAY <- function(capture_data) {
   # Measurements are only taken of individuals (during captures), not of locations,
   # so we use capture_data as input
   measurements <- capture_data %>%
-    dplyr::select(recordID = .data$captureID,
-                  siteID = .data$captureSiteID,
-                  measurementDeterminedYear = .data$captureYear,
-                  measurementDeterminedMonth = .data$captureMonth,
-                  measurementDeterminedDay = .data$captureDay,
-                  .data$tarsus,
-                  .data$wingLength,
-                  .data$molt,
-                  .data$moltDate,
-                  plumageColour = .data$drost) %>%
+    dplyr::select(recordID = "captureID",
+                  siteID = "captureSiteID",
+                  measurementDeterminedYear = "captureYear",
+                  measurementDeterminedMonth = "captureMonth",
+                  measurementDeterminedDay = "captureDay",
+                  "tarsus",
+                  "wingLength",
+                  "molt",
+                  "moltDate",
+                  plumageColour = "drost") %>%
     # Measurements in Capture data are stored as columns, but we want each individual measurement as a row
     # Therefore, we pivot each separate measurement of an individual to a row
     # NAs are removed
@@ -1057,9 +1052,9 @@ create_experiment_MAY <- function(brood_data) {
   experiments <- brood_data %>%
     # Drop broods without treatmentID
     dplyr::filter(!is.na(.data$treatmentID)) %>%
-    dplyr::select(.data$treatmentID,
-                  experimentStartYear = .data$observedLayYear,
-                  .data$siteID)
+    dplyr::select("treatmentID",
+                  treatmentStartYear = "observedLayYear",
+                  "siteID")
 
   return(experiments)
 
