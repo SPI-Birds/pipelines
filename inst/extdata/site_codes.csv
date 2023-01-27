@@ -1,103 +1,115 @@
-siteID,siteName,country,countryCode,institutionID,institutionCode
-AMM,Ammersee,Germany,DE,AMM,Ammersee
-BAN,Bandon Valley,Ireland,IE,BAN,Bandon Valley
-CHO,Choupal,Portugal,PT,CHO,Choupal
-HAR,Harjavalta,Finland,FI,HAR,Harjavalta
-HOC,Hochstadt,Germany,DE,HOC,Hochstadt
-KEV,Kevo,Finland,FI,KEV,Kevo
-MIS,Miscellaneous populations,France,FR,MON,Montpellier
-MON,Montpellier city,France,FR,MON,Montpellier
-MTV,Mont Ventoux,France,FR,MON,Montpellier
-MUR,Muro,France,FR,MON,Montpellier
-PIR,Pirio,France,FR,MON,Montpellier
-ROU,Rouviere,France,FR,MON,Montpellier
-BUU,Buunderkamp,Netherlands,NL,NIOO,NIOO
-HOG,Hoge Veluwe,Netherlands,NL,NIOO,NIOO
-LIE,Liesbos,Netherlands,NL,NIOO,NIOO
-OOS,Oosterhout,Netherlands,NL,NIOO,NIOO
-VLI,Vlieland,Netherlands,NL,NIOO,NIOO
-WAR,Warnsborn,Netherlands,NL,NIOO,NIOO
-WES,Westerheide,Netherlands,NL,NIOO,NIOO
-EDM,East Dartmoor,United Kingdom,GB,PFN,PiedFlyNet
-PIL,Pilis-Visegrad Mountains,Hungary,HU,PIL,Pilis-Visegrad Mountains
-SSQ,Santo Stefano Quisquina,Italy,IT,SSQ,Santo Stefano Quisquina
-BOS,Boshoek,Belgium,BE,UAN,University of Antwerp
-PEE,Peerdsbos,Belgium,BE,UAN,University of Antwerp
-VEL,Velky Kosir,Czechia,CZ,VEL,Velky Kosir
-WYT,Wytham Woods,United Kingdom,GB,WYT,Wytham Woods
-ASK,Askainen,Finland,FI,ASK,Askainen
-BER,Berkenheuvel,Netherlands,NL,RUG,Rijksuniversiteit Groningen
-BRG,Bergen,Norway,NO,BRG,Bergen
-CAN,Cañada de los pájaros,Spain,ES,CAN,Cañada de los pájaros
-CAC,Can Catà,Spain,ES,CAC,Can Catà
-DAE,Daeli,Norway,NO,DAE,Daeli
-DAL,Dalmeny,United Kingdom,GB,DAL,Dalmeny
-DAZ,Dazinj,Croatia,HR,DAZ,Dazinj
-DLO,Dlouhá Lou?ka,Czechia,CZ,DLO,Dlouhá Lou?ka
-DON,Doñana,Spain,ES,DON,Doñana
-DUN,Dunedin,New Zealand,NZ,DUN,Dunedin
-FOR,Forstenrieder Park,Germany,DE,FOR,Forstenrieder Park
-GAR,Garscube campus,United Kingdom,GB,GLA,Glasgow
-CAS,Cashel farm forest,United Kingdom,GB,GLA,Glasgow
-SAL,Sallochy,United Kingdom,GB,GLA,Glasgow
-KEL,Kelvingrove park,United Kingdom,GB,GLA,Glasgow
-SCE,SCENE,United Kingdom,GB,GLA,Glasgow
-GLI,Glimmen,Netherlands,NL,GLI,Glimmen
-GRO,Grobla - Niepo?omice Forest,Poland,PL,GRO,Grobla - Niepo?omice Forest
-LAH,La Hiruela,Spain,ES,LAH,La Hiruela
-KIL,Kilingi-Nõmme,Estonia,EE,KIL,Kilingi-Nõmme
-KUU,Kuusamo,Finland,FI,KUU,Kuusamo
-LAK,Lakselvdalen Troms,Norway,NO,LAK,Lakselvdalen Troms
-LAN,Lancaster,United Kingdom,GB,LAN,Lancaster
-LAS,Lasy Szwalewskie,Poland,PL,LAS,Lasy Szwalewskie
-LUN,Lundy Island,United Kingdom,GB,LUN,Lundy Island
-MAL,Malmo,Sweden,SE,MAL,Malmo
-MAR,Mariola,Spain,ES,MAR,Mariola
-MAY,Mayachino,Russia,RU,MAY,Mayachino
-MET,Metu,Turkey,TR,MET,Metu
-MIE,Mierzeja Wi?lana,Poland,PL,MIE,Mierzeja Wi?lana
-MOU,Moulis,France,FR,MOU,Moulis
-BAL,Balatonfüred,Hungary,HU,MTA,MTA-PE Evolutionary Ecology Group
-GUL,Gulya-domb,Hungary,HU,MTA,MTA-PE Evolutionary Ecology Group
-SZE,Szentgál,Hungary,HU,MTA,MTA-PE Evolutionary Ecology Group
-VES,Veszprém,Hungary,HU,MTA,MTA-PE Evolutionary Ecology Group
-VIL,Vilma-puszta,Hungary,HU,MTA,MTA-PE Evolutionary Ecology Group
-MRC,Murcia,Spain,ES,MRC,Murcia
-OUL,Oulu,Finland,FI,OUL,Oulu
-PET,Petrozevodsk,Russia,RU,PET,Petrozevodsk
-PEW,Peerdsbos West,Belgium,BE,PEW,Peerdsbos West
-RAD,Radofzell,Germany,DE,RAD,Radofzell
-REV,Revinge,Sweden,SE,REV,Revinge
-SAG,Sagunto,Spain,ES,SAG,Sagunto
-SFL,Schopfl,Austria,AT,SFL,Schopfl
-SKG,Schiermonnikoog,Netherlands,NL,SKG,Schiermonnikoog
-SIL,Silwood,United Kingdom,GB,SIL,Silwood
-STR,Strasbourg,France,FR,STR,Strasbourg
-ROB,Robertsau,France,FR,STR,Strasbourg
-WAN,Wantzenau,France,FR,STR,Strasbourg
-TOM,Tomakomai,Japan,JP,TOM,Tomakomai
-VAL,Valsaín,Spain,ES,VAL,Valsaín
-VOM,Vomb Fure,Sweden,SE,VOM,Vomb Fure
-VOS,Vosbergen,Netherlands,NL,VOS,Vosbergen
-WRS,Warsaw,Poland,PL,WRS,Warshav
-WHV,Wilhelmshaven,Germany,DE,WHV,Wilhelmshaven
-WHZ,Westerholtz,Germany,DE,WHZ,Westerholtz
-WIL,Wilrijk,Belgium,BE,WIL,Wilrijk
-ZVE,Zvenigorod,Russia,RU,ZVE,Zvenigorod
-GOT,Gotland,Sweden,SE,GOT,Gotland
-DIN,Dinas,United Kingdom,GB,PFN,PiedFlyNet
-KAT,Loch Katrine,United Kingdom,GB,PFN,PiedFlyNet
-NAG,Forest of Dean,United Kingdom,GB,PFN,PiedFlyNet
-OKE,Okehampton,United Kingdom,GB,PFN,PiedFlyNet
-TEI,Teign Valley,United Kingdom,GB,PFN,PiedFlyNet
-STO,Stogi,Poland,PL,GDA,Gdánsk
-SOB,Sobieszweo,Poland,PL,GDA,Gdánsk
-BIR,Bird Island,United States of America,US,NIS,Ian Nisbet
-RAM,Ram Island,United States of America,US,NIS,Ian Nisbet
-NMI,North Monomoy Island,United States of America,US,NIS,Ian Nisbet
-GOU,Gough Island,United Kingdom,GB,GOU,Gough Island
-ARV,Arvidsjaur,Sweden,SE,ARV,Arvidsjaur
-MIR,Miraflores,Spain,ES,MIR,Miraflores
-KEN,Kent Island,Canada,CA,KEN,Kent Island
-SEK,Sekocin Forest,Poland,PL,SEK,Sekocin Forest
-CAN,Cañada de los Pájaros,Spain,ES,CAN,Cañada de los Pájaros
+siteID,siteName,country,countryCode,institutionID,institutionCode,decimalLatitude,decimalLongitude,locationAccordingTo,data,standardFormat
+AMM,Ammersee-Starnbergersee,Germany,DE,AMM,Ammersee,47.966667,11.233333,data owner,TRUE,TRUE
+BAN,Bandon Valley,Ireland,IE,BAN,Bandon Valley,51.74869,-8.723583,data owner,TRUE,TRUE
+CHO,Choupal,Portugal,PT,CHO,Choupal,40.222,-8.44963889,data owner,TRUE,TRUE
+HAR,Harjavalta,Finland,FI,HAR,Harjavalta,61.31666667,22.11666667,data owner,TRUE,TRUE
+HOC,Hochstadt,Germany,DE,HOC,Hochstadt,48.058824,11.255755,data owner,TRUE,TRUE
+KEV,Kevo,Finland,FI,KEV,Kevo,69.75,27.01667,data owner,TRUE,TRUE
+MIS,Miscellaneous populations,France,FR,MON,Montpellier,42.56886,8.943566,data,TRUE,TRUE
+MON,Montpellier city,France,FR,MON,Montpellier,43.606694,3.876889,data owner,TRUE,TRUE
+MTV,Mont Ventoux,France,FR,MON,Montpellier,44.17444,5.278889,data,TRUE,TRUE
+MUR,Muro,France,FR,MON,Montpellier,42.55149,8.925644,data,TRUE,TRUE
+PIR,Pirio,France,FR,MON,Montpellier,42.373888,8.747781,data owner,TRUE,TRUE
+ROU,Rouviere,France,FR,MON,Montpellier,43.664075,3.669504,data owner,TRUE,TRUE
+BUU,Buunderkamp,Netherlands,NL,NIOO,NIOO,52.01907,5.75744,data owner,TRUE,TRUE
+HOG,Hoge Veluwe,Netherlands,NL,NIOO,NIOO,52.04072,5.85573,data owner,TRUE,TRUE
+LIE,Liesbos,Netherlands,NL,NIOO,NIOO,51.58225,4.70028,data owner,TRUE,TRUE
+OOS,Oosterhout,Netherlands,NL,NIOO,NIOO,51.87366,5.84057,data owner,TRUE,TRUE
+VLI,Vlieland,Netherlands,NL,NIOO,NIOO,53.295861,5.051,data owner,TRUE,TRUE
+WAR,Warnsborn,Netherlands,NL,NIOO,NIOO,52.01079,5.86716,data owner,TRUE,TRUE
+WES,Westerheide,Netherlands,NL,NIOO,NIOO,52.01552,5.83692,data owner,TRUE,TRUE
+EDM,East Dartmoor,United Kingdom,GB,PFN,PiedFlyNet,50.6,-3.71666667,data owner,TRUE,TRUE
+PIL,Pilis-Visegrad Mountains,Hungary,HU,PIL,Pilis-Visegrad Mountains,47.71667,19.01667,data owner,TRUE,TRUE
+SSQ,Santo Stefano Quisquina,Italy,IT,SSQ,Santo Stefano Quisquina,37.6,13.5333333,data owner,TRUE,TRUE
+BOS,Boshoek,Belgium,BE,UAN,University of Antwerp,51.13333333,4.516666667,data owner,TRUE,TRUE
+PEE,Peerdsbos,Belgium,BE,UAN,University of Antwerp,51.272333,4.488333,data owner,TRUE,TRUE
+VEL,Velky Kosir,Czechia,CZ,VEL,Velky Kosir,49.53333333,17.06666667,data owner,TRUE,TRUE
+WYT,Wytham Woods,United Kingdom,GB,WYT,Wytham Woods,51.76667,-1.333333,data owner,TRUE,TRUE
+ASK,Askainen,Finland,FI,ASK,Askainen,60.483333,21.75,data owner,TRUE,TRUE
+BER,Berkenheuvel,Netherlands,NL,RUG,Rijksuniversiteit Groningen,52.876111,6.276389,data owner,TRUE,FALSE
+TOR,Torenlaan,Netherlands,NL,RUG,Rijksuniversiteit Groningen,52.880833,6.3025,data owner,TRUE,FALSE
+MZR,Midzomer,Netherlands,NL,RUG,Rijksuniversiteit Groningen,52.871111,6.304444,data owner,TRUE,FALSE
+DVZ,Dieverzand,Netherlands,NL,RUG,Rijksuniversiteit Groningen,52.871944,6.328889,data owner,TRUE,FALSE
+OWM,Oude Willem,Netherlands,NL,RUG,Rijksuniversiteit Groningen,52.907222,6.314167,data owner,TRUE,FALSE
+APP,Appelscha,Netherlands,NL,RUG,Rijksuniversiteit Groningen,52.945278,6.302222,data owner,TRUE,FALSE
+LBZ,Lheebroekerzand,Netherlands,NL,RUG,Rijksuniversiteit Groningen,52.836944,6.444722,data owner,TRUE,FALSE
+DWI,Dwingeloo,Netherlands,NL,RUG,Rijksuniversiteit Groningen,52.818056,6.432778,data owner,TRUE,FALSE
+RUI,Ruinen,Netherlands,NL,RUG,Rijksuniversiteit Groningen,52.725278,6.398611,data owner,TRUE,FALSE
+DWZ,Dwingelderzand,Netherlands,NL,RUG,Rijksuniversiteit Groningen,52.815278,6.361944,data owner,TRUE,FALSE
+ANS,Anserdennen,Netherlands,NL,RUG,Rijksuniversiteit Groningen,52.79,6.352778,data owner,TRUE,FALSE
+MIA,Maria,Netherlands,NL,RUG,Rijksuniversiteit Groningen,52.819722,6.387778,data owner,TRUE,FALSE
+BRG,Bergen's Arboretum,Norway,NO,BRG,Bergen,60.2575,5.27,data owner,TRUE,FALSE
+CAN,Canada de los Pajaros,Spain,ES,CAN,Canada de los Pajaros,37.2387,-6.1315,data owner,FALSE,
+CAC,Can Cata,Spain,ES,CAC,Can Cata,41.45,2.133333,data owner,TRUE,FALSE
+DAE,Daeli,Norway,NO,DAE,Daeli,59.933333,10.55,data owner,TRUE,FALSE
+DAL,Dalmeny,United Kingdom,GB,DAL,Dalmeny,55.973339,-3.355746,data owner,FALSE,
+DAZ,Dazlina-Ivinj,Croatia,HR,DAZ,Dazlina-Ivinj,43.833333,15.733333,data owner,TRUE,FALSE
+DLO,Dlouha Loucka,Czechia,CZ,DLO,Dlouha Loucka,49.82,17.21,data owner,TRUE,FALSE
+DON,Donana,Spain,ES,DON,Donana,36.933333,-6.35,data owner,TRUE,FALSE
+DUN,Dunedin Botanic Garden,New Zealand,NZ,DUN,Dunedin,-45.86,170.52,data owner,TRUE,FALSE
+FOR,Forstenrieder Park,Germany,DE,FOR,Forstenrieder Park,48.066667,11.45,data owner,TRUE,FALSE
+GAR,Garscube campus,United Kingdom,GB,GLA,Glasgow,55.9048,-4.3199,data owner,TRUE,TRUE
+CAS,Cashel farm forest,United Kingdom,GB,GLA,Glasgow,"56.10888	",-4.57823,data owner,TRUE,TRUE
+SAL,Sallochy,United Kingdom,GB,GLA,Glasgow,56.1232,-4.5993,data owner,TRUE,TRUE
+KEL,Kelvingrove park,United Kingdom,GB,GLA,Glasgow,55.8692216,-4.2818993,data owner,TRUE,TRUE
+SCE,Scene,United Kingdom,GB,GLA,Glasgow,56.1291,-4.61478,data owner,TRUE,TRUE
+GLI,Glimmen,Netherlands,NL,GLI,Glimmen,53.133333,6.633333,data owner,TRUE,FALSE
+GRO,Grobla-Niepolomice Forest,Poland,PL,GRO,Grobla-Niepolomice Forest,50.1,20.41666667,data owner,TRUE,TRUE
+LAH,La Hiruela,Spain,ES,LAH,La Hiruela,41.06667,-3.45,data owner,TRUE,FALSE
+MSC,Montesclaros,Spain,ES,LAH,La Hiruela,41.083333,-3.433333,data owner,TRUE,FALSE
+KIL,Kilingi-Nomme,Estonia,EE,KIL,Kilingi-Nomme,58.116667,25.083333,data owner,TRUE,TRUE
+KUU,Kuusamo,Finland,FI,KUU,Kuusamo,66.033333,29.05,data owner,FALSE,
+LAK,Lakselvdalen,Norway,NO,LAK,Lakselvdalen,69.333333,19.566667,data owner,TRUE,FALSE
+LAN,Lancaster,United Kingdom,GB,LAN,Lancaster,54,-2.783333,data owner,TRUE,FALSE
+LAS,Lasy Szwalewskie,Poland,PL,LAS,Lasy Szwalewskie,53.716667,19.533333,data owner,FALSE,
+LUN,Lundy Island,United Kingdom,GB,LUN,Lundy Island,51.173222,-4.667861,data owner,FALSE,
+MAL,Malmo,Sweden,SE,MAL,Malmo,55.6,13.033333,data owner,TRUE,FALSE
+MAR,Mariola,Spain,ES,MAR,Mariola,38.733333,-0.55,data owner,TRUE,FALSE
+MAY,Mayachino,Russia,RU,MAY,Mayachino,60.766667,32.816667,data owner,TRUE,FALSE
+MET,Metu,Turkey,TR,MET,Metu,39.9,32.8,data owner,TRUE,FALSE
+MIE,Mierzeja Wislana,Poland,PL,MIE,Mierzeja Wislana,54.366667,19.35,data owner,FALSE,
+MOU,Moulis,France,FR,MOU,Moulis,42.967722,1.091306,data owner,TRUE,FALSE
+BAL,Balatonfured,Hungary,HU,MTA,MTA-PE Evolutionary Ecology Group,47.958561,17.892908,data owner,TRUE,FALSE
+GUL,Gulya-domb,Hungary,HU,MTA,MTA-PE Evolutionary Ecology Group,47.091056,17.883222,data owner,TRUE,FALSE
+SZE,Szentgal,Hungary,HU,MTA,MTA-PE Evolutionary Ecology Group,47.111042,17.688317,data owner,TRUE,FALSE
+VES,Veszprém,Hungary,HU,MTA,MTA-PE Evolutionary Ecology Group,47.088136,17.908239,data owner,TRUE,FALSE
+VIL,Vilma-puszta,Hungary,HU,MTA,MTA-PE Evolutionary Ecology Group,47.085194,17.864278,data owner,TRUE,FALSE
+MRC,Murcia,Spain,ES,MRC,Murcia,37.75,-0.95,data owner,FALSE,
+OUL,Oulu,Finland,FI,OUL,Oulu,65.083333,25.883333,data owner,TRUE,FALSE
+PET,Petrozavodsk,Russia,RU,PET,Petrozavodsk,61.842778,34.381667,data owner,TRUE,FALSE
+PEW,Peerdsbos West,Belgium,BE,PEW,Peerdsbos West,51.271667,4.48,data owner,TRUE,TRUE
+RAD,Radolfzell,Germany,DE,RAD,Radolfzell,47.766667,8.983333,data owner,TRUE,FALSE
+REV,Revinge,Sweden,SE,REV,Revinge,55.7,13.466667,data owner,FALSE,
+SAG,Sagunto,Spain,ES,SAG,Sagunto,39.7,-0.25,data owner,TRUE,FALSE
+SFL,Schopfl,Austria,AT,SFL,Schopfl,48.084167,15.923333,data owner,TRUE,FALSE
+SKG,Schiermonnikoog,Netherlands,NL,SKG,Schiermonnikoog,53.483333,6.216667,data owner,FALSE,
+SIL,Silwood Park,United Kingdom,GB,SIL,Silwood Park,51.4091,-0.6392,data owner,TRUE,FALSE
+STR,Strasbourg,France,FR,STR,Strasbourg,48.579081,7.765491,data owner,TRUE,FALSE
+ROB,Robertsau,France,FR,STR,Strasbourg,48.610522,7.802476,data owner,TRUE,FALSE
+WAN,Wantzenau,France,FR,STR,Strasbourg,48.647904,7.833611,data owner,TRUE,FALSE
+TOM,Tomakomai,Japan,JP,TOM,Tomakomai,42.666667,141.6,data owner,TRUE,FALSE
+VAL,Valsain,Spain,ES,VAL,Valsain,40.886,-4.031,data owner,TRUE,FALSE
+VOM,Vomb Fure,Sweden,SE,VOM,Vomb Fure,55.67,13.55,data owner,TRUE,FALSE
+VOS,Vosbergen,Netherlands,NL,VOS,Vosbergen,53.133333,6.583333,data owner,TRUE,FALSE
+WRS,Warsaw,Poland,PL,WRS,Warsaw,52.229694,21.012194,data owner,TRUE,FALSE
+BAS,Banter See,Germany,DE,WHV,Wilhelmshaven,53.6,8.1,data owner,TRUE,FALSE
+WHZ,Westerholz,Germany,DE,WHZ,Westerholz,48.133333,10.883333,data owner,TRUE,FALSE
+WIL,Wilrijk,Belgium,BE,WIL,Wilrijk,51.160214,4.407561,data owner,TRUE,FALSE
+ZVE,Zvenigorod,Russia,RU,ZVE,Zvenigorod,55.683333,36.716667,data owner,FALSE,
+GOT,Gotland,Sweden,SE,GOT,Gotland,57.033333,18.283333,data owner,FALSE,
+DIN,Dinas,United Kingdom,GB,PFN,PiedFlyNet,52.097,-3.788,data owner,TRUE,TRUE
+KAT,Loch Katrine,United Kingdom,GB,PFN,PiedFlyNet,56.242,-4.458,data owner,TRUE,TRUE
+NAG,Forest of Dean,United Kingdom,GB,PFN,PiedFlyNet,51.774,-2.576,data owner,TRUE,TRUE
+OKE,Okehampton,United Kingdom,GB,PFN,PiedFlyNet,50.729,-4.008,data owner,TRUE,TRUE
+TEI,Teign Valley,United Kingdom,GB,PFN,PiedFlyNet,50.694,-3.728,data owner,TRUE,TRUE
+STO,Stogi,Poland,PL,GDA,Gdánsk,54.372983,18.716833,data owner,FALSE,
+SOB,Sobieszewo,Poland,PL,GDA,Gdánsk,54.3526,18.7962,data owner,FALSE,
+BIR,Bird Island,United States of America,US,NIS,Ian Nisbet,41.669239,-70.717018,data owner,TRUE,FALSE
+RAM,Ram Island,United States of America,US,NIS,Ian Nisbet,41.618024,-70.804273,data owner,TRUE,FALSE
+NMI,North Monomoy Island,United States of America,US,NIS,Ian Nisbet,41.634623,-69.975088,data owner,TRUE,FALSE
+GOU,Gough Island,United Kingdom,GB,GOU,Gough Island,-40.316667,-9.933333,data owner,TRUE,FALSE
+ARV,Arvidsjaur,Sweden,SE,ARV,Arvidsjaur,65.666667,19,data owner,FALSE,
+MIR,Miraflores,Spain,ES,MIR,Miraflores,40.811408,-3.782683,data owner,TRUE,FALSE
+BOW,Bowdoin Scientific Station,Canada,CA,BOW,Bowdoin,44.5819,-66.7559,data owner,FALSE,
+SEK,Sekocin Forest,Poland,PL,SEK,Sekocin Forest,52.099,20.875,data owner,TRUE,FALSE
+HSF,Hochstetter Forland,Greenland,GL,HSF,Hochstetter Forland,75.15,-19.75,data owner,FALSE,

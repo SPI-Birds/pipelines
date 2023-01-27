@@ -17,14 +17,8 @@ format_VEL(
 
 \item{species}{Species of interest. The 6 letter codes of all the species of
 interest as listed in the
-\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{standard
+\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.2.0.pdf}{standard
 protocol}. If blank will return all major species.}
-
-\item{pop}{The three-letter code of population as listed in the \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{standard
-protocol}. For data owners with multiple populations (e.g. NIOO, UAN) where a single
-pipeline is used for many populations this argument is used to extract data from
-individual populations. For other pipelines that contain only one population
-this argument can be ignored.}
 
 \item{path}{Location where output csv files will be saved.}
 
