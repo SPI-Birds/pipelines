@@ -342,8 +342,8 @@ test_NA_columns <- function(pipeline_output,
       testthat::expect_equal(
 
         data_table %>%
-          dplyr::select(tidyselect::contains(key_vars, ignore.case = FALSE)) %>% # Select key columns
-          dplyr::select(where(~ any(is.na(.)))) %>% # Select any key column that has NAs
+          dplyr::select(tidyselect::any_of(key_vars)) %>% # Select key columns
+          dplyr::select(tidyselect::where(~ any(is.na(.)))) %>% # Select any key column that has NAs
           ncol(),
         0 # If number of columns is larger than 0, test fails
 
@@ -354,8 +354,8 @@ test_NA_columns <- function(pipeline_output,
   } else {
 
     data_table %>%
-      dplyr::select(tidyselect::contains(key_vars, ignore.case = FALSE)) %>% # Select key columns
-      dplyr::select(where(~ any(is.na(.))))
+      dplyr::select(tidyselect::any_of(key_vars)) %>% # Select key columns
+      dplyr::select(tidyselect::where(~ any(is.na(.))))
 
   }
 
