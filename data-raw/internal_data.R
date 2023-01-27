@@ -467,7 +467,7 @@ categorical_variables <- tibble::lst(
     HabitatType = c("deciduous", "evergreen", "mixed", "urban", NA), # v1.1
     locationType = c("nest", "capture", "observation"), # v2.0
     siteID = site_codes$siteID, # v2.0
-    habitatID = habitat_codes$habitatID # v2.0
+    habitatID = c(habitat_codes$habitatID, NA) # v2.0
   ),
 
   # Measurement data
