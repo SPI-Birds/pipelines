@@ -1,11 +1,13 @@
 #' Species taxonomic ranks and codes
 #'
 #' Species information, including various taxonomic ranks, internal and external codes.
-#' @format A data frame with 33 rows and 13 variables
+#' @format A data frame with 34 rows and 14 variables
 #' \describe{
 #'   \item{speciesCode}{SPI-Birds' internal persistent identifier for a species.}
 #'   \item{speciesID}{SPI-Birds' 6-letter species identifier. First three letters indicate the generic name, last three letters indicate the specific epithet. Note that this identifier might change if a species' genus or species indicator change.}
-#'   \item{speciesEURINGCode}{Species code used in EURING. NA for non-European species.}
+#'   \item{speciesEURINGCode}{Species code used in \href{https://euring.org/}{EURING}. NA for non-European species.}
+#'   \item{speciesCOLID}{Species code used in \href{https://www.catalogueoflife.org/}{Catalogue of Life}.}
+#'   \item{speciesEOLpageID}{Species page ID used in \href{https://eol.org/}{Encyclopedia of Life}.}
 #'   \item{kingdom}{Scientific name of the kingdom in which the species is identified.}
 #'   \item{phylum}{Scientific name of the phylum in which the species is identified.}
 #'   \item{class}{Scientific name of the class in which the species is identified.}
@@ -13,13 +15,13 @@
 #'   \item{family}{Scientific name of the family in which the species is identified.}
 #'   \item{genus}{Scientific name of the genus in which the species is identified.}
 #'   \item{specificEpithet}{Scientific name of the species epithet.}
-#'   \item{infraspecificEpithet}{Scientific name of the infraspecific epithet (e.g. sub-species).}
 #'   \item{scientificNameAuthorship}{Authorship information of the scientific name, including date information if known.}
 #'   \item{vernacularName}{Common English name.}
 #'   }
 #'@name species_codes
 species_codes <- utils::read.csv(system.file("extdata", "species_codes.csv", package = "pipelines", mustWork = TRUE),
-                                 colClasses = c("integer", rep("character", 12)), na.strings = "") %>%
+                                 colClasses = c("integer", rep("character", 3), "integer", rep("character", 9)),
+                                 na.strings = "") %>%
   tibble::as_tibble()
 
 #'Study site names and locations

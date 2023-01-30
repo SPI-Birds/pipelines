@@ -320,7 +320,7 @@ test_unique_values <- function(pipeline_output,
 #'
 #' @param pipeline_output A list of the 4 data frames returned from format_X, where X is the three- or four-letter study site code).
 #' @param table Which data table should be checked for NAs in the key columns? One of: "Brood", "Capture", "Individual", "Measurement, "Location", or "Experiment".
-#' @param verbose Logical (TRUE/FALSE) for whether the function returns the test output (FALSE) or a data frame of column names that failed this test.
+#' @param verbose Logical (TRUE/FALSE) for whether the function returns the test output (FALSE) or a vector of columns that failed this test.
 #'
 #' @return See `verbose`.
 #' @export
@@ -355,7 +355,8 @@ test_NA_columns <- function(pipeline_output,
 
     data_table %>%
       dplyr::select(tidyselect::any_of(key_vars)) %>% # Select key columns
-      dplyr::select(where(~ any(is.na(.))))
+      dplyr::select(where(~ any(is.na(.)))) %>%
+      names()
 
   }
 
@@ -369,7 +370,7 @@ test_NA_columns <- function(pipeline_output,
 #'
 #' @param pipeline_output A list of the 4 data frames returned from format_X, where X is the three- or four-letter study site code).
 #' @param table Which table should be checked? One of: "Brood", "Capture", "Individual", "Location", "Measurement", or "Experiment".
-#' @param verbose Logical (TRUE/FALSE) for whether the function returns the test output (FALSE) or a data frame of column names that failed this test.
+#' @param verbose Logical (TRUE/FALSE) for whether the function returns the test output (FALSE) or a vector of columns that failed this test.
 #'
 #' @return See `verbose`.
 #' @export
