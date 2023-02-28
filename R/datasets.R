@@ -26,26 +26,41 @@ species_codes <- utils::read.csv(system.file("extdata", "species_codes.csv", pac
 
 #'Study site names and locations
 #'
-#'Information and identifying codes for all study sites and data owners.
+#'Information and identifying codes for all study sites.
 #'
-#'@format A data frame with 114 rows and 11 variables
+#'@format A data frame with 114 rows and 7 variables
 #'\describe{
-#'  \item{siteID}{Three-letter identifier for the study site.}
+#'  \item{siteID}{Unique identifier for a study site.}
 #'  \item{siteName}{Name of the study site.}
 #'  \item{country}{Name of the country in which the study site is located.}
 #'  \item{countryCode}{Standard code for the country, using \href{https://www.iso.org/iso-3166-country-codes.html}{ISO 3166-1 alpha-2}.}
-#'  \item{institutionID}{Three- or four-letter identifier for data owner/institution. Note, multiple study sites can have
-#'  the same data owner.}
-#'  \item{institutionCode}{Name of owner/institution.}
 #'  \item{decimalLatitude}{Geographic latitude of the geographic center of the study site in decimal degrees.}
 #'  \item{decimalLongitude}{Geographic longitude of the geographic center of the study site in decimal degrees.}
 #'  \item{locationAccordingTo}{Source of location information. Either "data owner" or "data".}
-#'  \item{data}{Logical. Are the data available through SPI-Birds?}
-#'  \item{standardFormat}{Logical. If data are available, are they standardized?}
 #'  }
 #'@name site_codes
 site_codes <- utils::read.csv(system.file("extdata", "site_codes.csv", package = "pipelines", mustWork = TRUE)) %>%
   tibble::as_tibble()
+
+#'Field studies and data owners
+#'
+#'Information and identifying codes for all field studies and data owners.
+#'
+#'@format A data frame with 115 rows and 8 variables
+#'\describe{
+#'  \item{studyID}{Unique identifier for a field study/monitoring program at a study site.}
+#'  \item{studyName}{Name of the field study/monitoring program.}
+#'  \item{siteID}{Unique identifier for the study site where the field study is conducted. Note: multiple field studies, coordinated by different organisations/researchers, can be conducted at a single study site.}
+#'  \item{creatorID}{Unique identifier for a data owner/institution. Note: multiple field studies can have
+#'  the same data owner.}
+#'  \item{creatorName}{Name of owner/institution.}
+#'  \item{pipelineID}{Unique identifier for the pipeline that converts the data collected by a field study in SPI-Birds' standard format. Note: the data of multiple field studies, coordinated by a single data owner, may be converted in a single pipeline.}
+#'  \item{data}{Logical. Are the data collected through the field study available through SPI-Birds?}
+#'  \item{standardFormat}{Logical. If data are available, are they standardized?}
+#'}
+#'@name study_codes
+# study_codes <- utils::read.csv(system.file("extdata", "study_codes.csv", package = "pipelines", mustWork = TRUE)) %>%
+#   tibble::as_tibble()
 
 #'Habitat types and descriptions
 #'

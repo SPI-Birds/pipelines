@@ -1,0 +1,116 @@
+studyID,studyName,siteID,creatorID,creatorName,pipelineID,data,standardFormat
+AMM-1,,AMM,AMM,Ammersee,AMM,TRUE,TRUE
+BAN-1,,BAN,BAN,Bandon Valley,BAN,TRUE,TRUE
+CHO-1,,CHO,CHO,Choupal,CHO,TRUE,TRUE
+HAR-1,,HAR,HAR,Harjavalta,HAR,TRUE,TRUE
+HOC-1,,HOC,HOC,Hochstadt,HOC,TRUE,TRUE
+KEV-1,,KEV,KEV,Kevo,KEV,TRUE,TRUE
+MIS-1,,MIS,MON,Montpellier,MON,TRUE,TRUE
+MON-1,,MON,MON,Montpellier,MON,TRUE,TRUE
+MTV-1,,MTV,MON,Montpellier,MON,TRUE,TRUE
+MUR-1,,MUR,MON,Montpellier,MON,TRUE,TRUE
+PIR-1,,PIR,MON,Montpellier,MON,TRUE,TRUE
+ROU-1,,ROU,MON,Montpellier,MON,TRUE,TRUE
+BUU-1,,BUU,NIOO,NIOO-KNAW,NIOO,TRUE,TRUE
+HOG-1,,HOG,NIOO,NIOO-KNAW,NIOO,TRUE,TRUE
+LIE-1,,LIE,NIOO,NIOO-KNAW,NIOO,TRUE,TRUE
+OOS-1,,OOS,NIOO,NIOO-KNAW,NIOO,TRUE,TRUE
+VLI-1,,VLI,NIOO,NIOO-KNAW,NIOO,TRUE,TRUE
+WAR-1,,WAR,NIOO,NIOO-KNAW,NIOO,TRUE,TRUE
+WES-1,,WES,NIOO,NIOO-KNAW,NIOO,TRUE,TRUE
+EDM-1,,EDM,PFN,PiedFlyNet,PFN,TRUE,TRUE
+PIL-1,,PIL,PIL,Pilis-Visegrad Mountains,PIL,TRUE,TRUE
+SSQ-1,,SSQ,SSQ,Santo Stefano Quisquina,SSQ,TRUE,TRUE
+BOS-1,,BOS,UAN,University of Antwerp,UAN,TRUE,TRUE
+PEE-1,,PEE,UAN,University of Antwerp,UAN,TRUE,TRUE
+VEL-1,,VEL,VEL,Velky Kosir,VEL,TRUE,TRUE
+WYT-1,,WYT,WYT,Wytham Woods,WYT,TRUE,TRUE
+ASK-1,,ASK,ASK,Askainen,,TRUE,TRUE
+BER-1,,BER,RUG,Rijksuniversiteit Groningen,,TRUE,FALSE
+TOR-1,,TOR,RUG,Rijksuniversiteit Groningen,,TRUE,FALSE
+MZR-1,,MZR,RUG,Rijksuniversiteit Groningen,,TRUE,FALSE
+DVZ-1,,DVZ,RUG,Rijksuniversiteit Groningen,,TRUE,FALSE
+OWM-1,,OWM,RUG,Rijksuniversiteit Groningen,,TRUE,FALSE
+APP-1,,APP,RUG,Rijksuniversiteit Groningen,,TRUE,FALSE
+LBZ-1,,LBZ,RUG,Rijksuniversiteit Groningen,,TRUE,FALSE
+DWI-1,,DWI,RUG,Rijksuniversiteit Groningen,,TRUE,FALSE
+RUI-1,,RUI,RUG,Rijksuniversiteit Groningen,,TRUE,FALSE
+DWZ-1,,DWZ,RUG,Rijksuniversiteit Groningen,,TRUE,FALSE
+ANS-1,,ANS,RUG,Rijksuniversiteit Groningen,,TRUE,FALSE
+MIA-1,,MIA,RUG,Rijksuniversiteit Groningen,,TRUE,FALSE
+BRG-1,,BRG,BRG,Bergen,,TRUE,FALSE
+CAN-1,,CAN,CAN,Canada de los Pajaros,,FALSE,
+CAC-1,,CAC,CAC,Can Cata,,TRUE,FALSE
+DAE-1,,DAE,DAE,Daeli,,TRUE,FALSE
+DAL-1,,DAL,DAL,Dalmeny,,FALSE,
+DAZ-1,,DAZ,DAZ,Dazlina-Ivinj,,TRUE,FALSE
+DLO-1,,DLO,DLO,Dlouha Loucka,,TRUE,FALSE
+DON-1,,DON,DON,Donana,,TRUE,FALSE
+DUN-1,,DUN,DUN,Dunedin,,TRUE,FALSE
+FOR-1,,FOR,FOR,Forstenrieder Park,,TRUE,FALSE
+GAR-1,,GAR,GLA,Glasgow,,TRUE,TRUE
+CAS-1,,CAS,GLA,Glasgow,,TRUE,TRUE
+SAL-1,,SAL,GLA,Glasgow,,TRUE,TRUE
+KEL-1,,KEL,GLA,Glasgow,,TRUE,TRUE
+SCE-1,,SCE,GLA,Glasgow,,TRUE,TRUE
+GLI-1,,GLI,GLI,Glimmen,,TRUE,FALSE
+GRO-1,,GRO,GRO,Grobla-Niepolomice Forest,,TRUE,TRUE
+LAH-1,,LAH,LAH,La Hiruela,,TRUE,FALSE
+MSC-1,,MSC,LAH,La Hiruela,,TRUE,FALSE
+KIL-1,,KIL,KIL,Kilingi-Nomme,KIL,TRUE,TRUE
+KUU-1,,KUU,KUU,Kuusamo,,FALSE,
+LAK-1,,LAK,LAK,Lakselvdalen,,TRUE,FALSE
+LAN-1,,LAN,LAN,Lancaster,,TRUE,FALSE
+LAS-1,,LAS,LAS,Lasy Szwalewskie,,FALSE,
+LUN-1,,LUN,LUN,Lundy Island,,FALSE,
+MAL-1,,MAL,MAL,Malmo,,TRUE,FALSE
+MAR-1,,MAR,MAR,Mariola,,TRUE,FALSE
+MAY-1,,MAY,MAY,Mayachino,,TRUE,FALSE
+MET-1,,MET,MET,Metu,,TRUE,FALSE
+MIE-1,,MIE,MIE,Mierzeja Wislana,,FALSE,
+MOU-1,,MOU,MOU,Moulis,,TRUE,FALSE
+BAL-1,,BAL,MTA,MTA-PE Evolutionary Ecology Group,,TRUE,FALSE
+GUL-1,,GUL,MTA,MTA-PE Evolutionary Ecology Group,,TRUE,FALSE
+SZE-1,,SZE,MTA,MTA-PE Evolutionary Ecology Group,,TRUE,FALSE
+VES-1,,VES,MTA,MTA-PE Evolutionary Ecology Group,,TRUE,FALSE
+VIL-1,,VIL,MTA,MTA-PE Evolutionary Ecology Group,,TRUE,FALSE
+MRC-1,,MRC,MRC,Murcia,,FALSE,
+OUL-1,,OUL,OUL,Oulu,,TRUE,FALSE
+PET-1,,PET,PET,Petrozavodsk,,TRUE,FALSE
+PEW-1,,PEW,PEW,Peerdsbos West,PEW,TRUE,TRUE
+RAD-1,,RAD,RAD,Radolfzell,,TRUE,FALSE
+REV-1,Revinge field study of blue tit and marsh tit,REV,REV,Jan-Åke Nilsson,,FALSE,
+REV-2,Revinge field study of tawny owl,REV,REVT,"Hannah Watson, Johan Nilsson",,FALSE,
+SAG-1,,SAG,SAG,Sagunto,,TRUE,FALSE
+SFL-1,,SFL,SFL,Schopfl,,TRUE,FALSE
+SKG-1,,SKG,SKG,Schiermonnikoog,,FALSE,
+SIL-1,,SIL,SIL,Silwood Park,,TRUE,FALSE
+STR-1,,STR,STR,Strasbourg,,TRUE,FALSE
+ROB-1,,ROB,STR,Strasbourg,,TRUE,FALSE
+WAN-1,,WAN,STR,Strasbourg,,TRUE,FALSE
+TOM-1,,TOM,TOM,Tomakomai,,TRUE,FALSE
+VAL-1,,VAL,VAL,Valsain,,TRUE,FALSE
+VOM-1,,VOM,VOM,Vomb Fure,,TRUE,FALSE
+VOS-1,,VOS,VOS,Vosbergen,,TRUE,FALSE
+WRS-1,,WRS,WRS,Warsaw,,TRUE,FALSE
+BAS-1,,BAS,WHV,Wilhelmshaven,,TRUE,FALSE
+WHZ-1,,WHZ,WHZ,Westerholz,,TRUE,FALSE
+WIL-1,,WIL,WIL,Wilrijk,,TRUE,FALSE
+ZVE-1,,ZVE,ZVE,Zvenigorod,,FALSE,
+GOT-1,,GOT,GOT,Gotland,,FALSE,
+DIN-1,,DIN,PFN,PiedFlyNet,PFN,TRUE,TRUE
+KAT-1,,KAT,PFN,PiedFlyNet,PFN,TRUE,TRUE
+NAG-1,,NAG,PFN,PiedFlyNet,PFN,TRUE,TRUE
+OKE-1,,OKE,PFN,PiedFlyNet,PFN,TRUE,TRUE
+TEI-1,,TEI,PFN,PiedFlyNet,PFN,TRUE,TRUE
+STO-1,,STO,GDA,Gdánsk,,FALSE,
+SOB-1,,SOB,GDA,Gdánsk,,FALSE,
+BIR-1,,BIR,NIS,Ian Nisbet,,TRUE,FALSE
+RAM-1,,RAM,NIS,Ian Nisbet,,TRUE,FALSE
+NMI-1,,NMI,NIS,Ian Nisbet,,TRUE,FALSE
+GOU-1,,GOU,GOU,Gough Island,,TRUE,FALSE
+ARV-1,,ARV,ARV,Arvidsjaur,,FALSE,
+MIR-1,,MIR,MIR,Miraflores,,TRUE,FALSE
+BOW-1,,BOW,BOW,Bowdoin,,FALSE,
+SEK-1,,SEK,SEK,Sekocin Forest,,TRUE,FALSE
+HSF-1,,HSF,HSF,Hochstetter Forland,,FALSE,
