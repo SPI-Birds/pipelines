@@ -197,7 +197,14 @@ format_NIOO <- function(db = choose_directory(),
                   LocationID = as.character(LocationID),
                   CapturePlot = as.character(CapturePlot),
                   ReleasePlot = as.character(ReleasePlot),
-                  CaptureDate = lubridate::ymd(CaptureDate))
+                  CaptureDate = lubridate::ymd(CaptureDate)) %>%
+    ## Keep only necessary columns
+    dplyr::select(dplyr::contains(names(capture_data_template))) %>%
+    ## Add missing columns
+    dplyr::bind_cols(capture_data_template[0, !(names(capture_data_template) %in% names(.))] %>%
+                       dplyr::add_row()) %>%
+    ## Reorder columns
+    dplyr::select(names(capture_data_template))
 
   Brood_data <- Brood_data %>%
     dplyr::mutate(dplyr::across(.cols = ends_with("ID"), .fns = ~as.character(.)))
@@ -314,7 +321,8 @@ create_brood_NIOO <- function(database, location_data, species_filter, pop_filte
     ## Keep only necessary columns
     dplyr::select(dplyr::contains(names(brood_data_template))) %>%
     ## Add missing columns
-    dplyr::bind_cols(brood_data_template[1 ,!(names(brood_data_template) %in% names(.))]) %>%
+    dplyr::bind_cols(brood_data_template[0 ,!(names(brood_data_template) %in% names(.))] %>%
+                       dplyr::add_row()) %>%
     ## Reorder columns
     dplyr::select(names(brood_data_template))
 
@@ -414,13 +422,7 @@ create_capture_NIOO <- function(database, Brood_data, location_data, species_fil
                                               TRUE ~ NA_integer_),
                   CaptureID = paste(.data$IndvID, dplyr::row_number(), sep = "_"),
                   CaptureAlive = TRUE, ReleaseAlive = TRUE, ##FIXME: Ask Marcel about dead captures
-                  ExperimentID = NA_character_) %>% ##FIXME: Ask Marcel about individual only experiments.
-    ## Keep only necessary columns
-    dplyr::select(dplyr::contains(names(capture_data_template))) %>%
-    ## Add missing columns
-    dplyr::bind_cols(capture_data_template[1, !(names(capture_data_template) %in% names(.))]) %>%
-    ## Reorder columns
-    dplyr::select(names(capture_data_template))
+                  ExperimentID = NA_character_) ##FIXME: Ask Marcel about individual only experiments.
 
   return(Capture_data)
 
@@ -484,12 +486,14 @@ create_individual_NIOO <- function(database, Capture_data, location_data, specie
                                              .$SpeciesID == 15980 ~ species_codes[species_codes$SpeciesID == 15980, ]$Species,
                                              .$SpeciesID == 14610 ~ species_codes[species_codes$SpeciesID == 14610, ]$Species),
                   RingAge = .data$RingAge_category,
+                  RingSeason = .data$RingYear,
                   BroodIDLaid = as.character(.data$BroodIDLaid),
                   BroodIDFledged = as.character(.data$BroodIDFledged)) %>%
     ## Keep only necessary columns
     dplyr::select(dplyr::contains(names(individual_data_template))) %>%
     ## Add missing columns
-    dplyr::bind_cols(individual_data_template[1, !(names(individual_data_template) %in% names(.))]) %>%
+    dplyr::bind_cols(individual_data_template[0, !(names(individual_data_template) %in% names(.))] %>%
+                       dplyr::add_row()) %>%
     ## Reorder columns
     dplyr::select(names(individual_data_template))
 
@@ -534,7 +538,8 @@ create_location_NIOO <- function(database, location_data, species_filter, pop_fi
     ## Keep only necessary columns
     dplyr::select(dplyr::contains(names(location_data_template))) %>%
     ## Add missing columns
-    dplyr::bind_cols(location_data_template[1, !(names(location_data_template) %in% names(.))]) %>%
+    dplyr::bind_cols(location_data_template[0, !(names(location_data_template) %in% names(.))] %>%
+                       dplyr::add_row()) %>%
     ## Reorder columns
     dplyr::select(names(location_data_template))
 
