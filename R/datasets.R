@@ -62,6 +62,19 @@ site_codes <- utils::read.csv(system.file("extdata", "site_codes.csv", package =
 study_codes <- utils::read.csv(system.file("extdata", "study_codes.csv", package = "pipelines", mustWork = TRUE)) %>%
   tibble::as_tibble()
 
+#'Combination of all studyIDs and speciesIDs from all pipelines.
+#'
+#'A data frame with each row containing a unique study and species combination.
+#'
+#'@format A data frame with 143 rows and 2 variables.
+#'\describe{
+#'    \item{studyID}{Three-letter and one-digit study ID.}
+#'    \item{speciesID}{Six-letter species ID.}
+#'}
+#'@name study_species_combos
+study_species_combos <- utils::read.csv(system.file("extdata", "study_species_combos.csv", package = "pipelines", mustWork = TRUE), colClasses = "character") %>%
+  tibble::as_tibble()
+
 #'Habitat types and descriptions
 #'
 #'Habitat descriptions according to European Nature Information System (EUNIS) \href{https://www.eea.europa.eu/data-and-maps/data/eunis-habitat-classification-1}{Habitats Classification Scheme} (version 2012).
@@ -84,19 +97,6 @@ habitat_codes <- utils::read.csv(system.file("extdata", "habitat_codes.csv", pac
 #'@format A spatial data polygon.
 #'@name GT_dist_gg
 NULL
-
-#'Combination of all siteID and speciesID from all pipelines.
-#'
-#'A data frame with each row containing a unique site and species combination.
-#'
-#'@format A data frame with 143 rows and 2 variables.
-#'\describe{
-#'    \item{siteID}{Three-letter site ID.}
-#'    \item{speciesID}{Six-letter species ID.}
-#'}
-#'@name site_species_combos
-site_species_combos <- utils::read.csv(system.file("extdata", "site_species_combos.csv", package = "pipelines", mustWork = TRUE), colClasses = "character") %>%
-  tibble::as_tibble()
 
 #' Quality check dummy data
 #'
