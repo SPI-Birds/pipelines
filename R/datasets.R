@@ -51,9 +51,9 @@ site_codes <- utils::read.csv(system.file("extdata", "site_codes.csv", package =
 #'  \item{studyID}{Unique identifier for a field study/monitoring program at a study site.}
 #'  \item{studyName}{Name of the field study/monitoring program.}
 #'  \item{siteID}{Unique identifier for the study site where the field study is conducted. Note: multiple field studies, coordinated by different organisations/researchers, can be conducted at a single study site.}
-#'  \item{creatorID}{Unique identifier for a data owner/institution. Note: multiple field studies can have
-#'  the same data owner.}
-#'  \item{creatorName}{Name of owner/institution.}
+#'  \item{custodianID}{Unique identifier for a person or organisation that has custody of the data. Note: multiple field studies can have
+#'  the same data custodian.}
+#'  \item{custodianName}{Name of the data custodian.}
 #'  \item{pipelineID}{Unique identifier for the pipeline that converts the data collected by a field study in SPI-Birds' standard format. Note: the data of multiple field studies, coordinated by a single data owner, may be converted in a single pipeline.}
 #'  \item{data}{Logical. Are the data collected through the field study available through SPI-Birds?}
 #'  \item{standardFormat}{Logical. If data are available, are they standardized?}
