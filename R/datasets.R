@@ -59,8 +59,8 @@ site_codes <- utils::read.csv(system.file("extdata", "site_codes.csv", package =
 #'  \item{standardFormat}{Logical. If data are available, are they standardized?}
 #'}
 #'@name study_codes
-# study_codes <- utils::read.csv(system.file("extdata", "study_codes.csv", package = "pipelines", mustWork = TRUE)) %>%
-#   tibble::as_tibble()
+study_codes <- utils::read.csv(system.file("extdata", "study_codes.csv", package = "pipelines", mustWork = TRUE)) %>%
+  tibble::as_tibble()
 
 #'Habitat types and descriptions
 #'
