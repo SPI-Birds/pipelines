@@ -1,11 +1,13 @@
 #' Species taxonomic ranks and codes
 #'
 #' Species information, including various taxonomic ranks, internal and external codes.
-#' @format A data frame with 33 rows and 13 variables
+#' @format A data frame with 34 rows and 14 variables
 #' \describe{
 #'   \item{speciesCode}{SPI-Birds' internal persistent identifier for a species.}
 #'   \item{speciesID}{SPI-Birds' 6-letter species identifier. First three letters indicate the generic name, last three letters indicate the specific epithet. Note that this identifier might change if a species' genus or species indicator change.}
-#'   \item{speciesEURINGCode}{Species code used in EURING. NA for non-European species.}
+#'   \item{speciesEURINGCode}{Species code used in \href{https://euring.org/}{EURING}. NA for non-European species.}
+#'   \item{speciesCOLID}{Species code used in \href{https://www.catalogueoflife.org/}{Catalogue of Life}.}
+#'   \item{speciesEOLpageID}{Species page ID used in \href{https://eol.org/}{Encyclopedia of Life}.}
 #'   \item{kingdom}{Scientific name of the kingdom in which the species is identified.}
 #'   \item{phylum}{Scientific name of the phylum in which the species is identified.}
 #'   \item{class}{Scientific name of the class in which the species is identified.}
@@ -13,36 +15,64 @@
 #'   \item{family}{Scientific name of the family in which the species is identified.}
 #'   \item{genus}{Scientific name of the genus in which the species is identified.}
 #'   \item{specificEpithet}{Scientific name of the species epithet.}
-#'   \item{infraspecificEpithet}{Scientific name of the infraspecific epithet (e.g. sub-species).}
 #'   \item{scientificNameAuthorship}{Authorship information of the scientific name, including date information if known.}
 #'   \item{vernacularName}{Common English name.}
 #'   }
 #'@name species_codes
 species_codes <- utils::read.csv(system.file("extdata", "species_codes.csv", package = "pipelines", mustWork = TRUE),
-                                 colClasses = c("integer", rep("character", 12)), na.strings = "") %>%
+                                 colClasses = c("integer", rep("character", 3), "integer", rep("character", 9)),
+                                 na.strings = "") %>%
   tibble::as_tibble()
 
 #'Study site names and locations
 #'
-#'Information and identifying codes for all study sites and data owners.
+#'Information and identifying codes for all study sites.
 #'
-#'@format A data frame with 114 rows and 11 variables
+#'@format A data frame with 114 rows and 7 variables
 #'\describe{
-#'  \item{siteID}{Three-letter identifier for the study site.}
+#'  \item{siteID}{Unique identifier for a study site.}
 #'  \item{siteName}{Name of the study site.}
 #'  \item{country}{Name of the country in which the study site is located.}
 #'  \item{countryCode}{Standard code for the country, using \href{https://www.iso.org/iso-3166-country-codes.html}{ISO 3166-1 alpha-2}.}
-#'  \item{institutionID}{Three- or four-letter identifier for data owner/institution. Note, multiple study sites can have
-#'  the same data owner.}
-#'  \item{institutionCode}{Name of owner/institution.}
 #'  \item{decimalLatitude}{Geographic latitude of the geographic center of the study site in decimal degrees.}
 #'  \item{decimalLongitude}{Geographic longitude of the geographic center of the study site in decimal degrees.}
 #'  \item{locationAccordingTo}{Source of location information. Either "data owner" or "data".}
-#'  \item{data}{Logical. Are the data available through SPI-Birds?}
-#'  \item{standardFormat}{Logical. If data are available, are they standardized?}
 #'  }
 #'@name site_codes
 site_codes <- utils::read.csv(system.file("extdata", "site_codes.csv", package = "pipelines", mustWork = TRUE)) %>%
+  tibble::as_tibble()
+
+#'Field studies and data owners
+#'
+#'Information and identifying codes for all field studies and data owners.
+#'
+#'@format A data frame with 115 rows and 8 variables
+#'\describe{
+#'  \item{studyID}{Unique identifier for a field study/monitoring program at a study site.}
+#'  \item{studyName}{Name of the field study/monitoring program.}
+#'  \item{siteID}{Unique identifier for the study site where the field study is conducted. Note: multiple field studies, coordinated by different organisations/researchers, can be conducted at a single study site.}
+#'  \item{custodianID}{Unique identifier for a person or organisation that has custody of the data. Note: multiple field studies can have
+#'  the same data custodian.}
+#'  \item{custodianName}{Name of the data custodian.}
+#'  \item{pipelineID}{Unique identifier for the pipeline that converts the data collected by a field study in SPI-Birds' standard format. Note: the data of multiple field studies, coordinated by a single data owner, may be converted in a single pipeline.}
+#'  \item{data}{Logical. Are the data collected through the field study available through SPI-Birds?}
+#'  \item{standardFormat}{Logical. If data are available, are they standardized?}
+#'}
+#'@name study_codes
+study_codes <- utils::read.csv(system.file("extdata", "study_codes.csv", package = "pipelines", mustWork = TRUE)) %>%
+  tibble::as_tibble()
+
+#'Combination of all studyIDs and speciesIDs from all pipelines.
+#'
+#'A data frame with each row containing a unique study and species combination.
+#'
+#'@format A data frame with 136 rows and 2 variables.
+#'\describe{
+#'    \item{studyID}{Three-letter and one-digit study ID.}
+#'    \item{speciesID}{Six-letter species ID.}
+#'}
+#'@name study_species_combos
+study_species_combos <- utils::read.csv(system.file("extdata", "study_species_combos.csv", package = "pipelines", mustWork = TRUE), colClasses = "character") %>%
   tibble::as_tibble()
 
 #'Habitat types and descriptions
@@ -67,19 +97,6 @@ habitat_codes <- utils::read.csv(system.file("extdata", "habitat_codes.csv", pac
 #'@format A spatial data polygon.
 #'@name GT_dist_gg
 NULL
-
-#'Combination of all siteID and speciesID from all pipelines.
-#'
-#'A data frame with each row containing a unique site and species combination.
-#'
-#'@format A data frame with 143 rows and 2 variables.
-#'\describe{
-#'    \item{siteID}{Three-letter site ID.}
-#'    \item{speciesID}{Six-letter species ID.}
-#'}
-#'@name site_species_combos
-site_species_combos <- utils::read.csv(system.file("extdata", "site_species_combos.csv", package = "pipelines", mustWork = TRUE), colClasses = "character") %>%
-  tibble::as_tibble()
 
 #' Quality check dummy data
 #'
