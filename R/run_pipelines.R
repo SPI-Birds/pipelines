@@ -168,8 +168,8 @@ run_pipelines <- function(path = choose_directory(),
 
                               }) %>%
     dplyr::ungroup() %>%
-    dplyr::mutate(Row = seq(1, dplyr::n())) %>%
-    dplyr::select(Row, dplyr::everything())
+    dplyr::mutate(row = seq(1, dplyr::n())) %>%
+    dplyr::select(row, dplyr::everything())
 
   Capture_data <- purrr::map_df(.x = R_objects,
                                 .f = ~{
@@ -178,8 +178,8 @@ run_pipelines <- function(path = choose_directory(),
 
                                 }) %>%
     dplyr::ungroup() %>%
-    dplyr::mutate(Row = seq(1, dplyr::n())) %>%
-    dplyr::select(Row, dplyr::everything())
+    dplyr::mutate(row = seq(1, dplyr::n())) %>%
+    dplyr::select(row, dplyr::everything())
 
   Individual_data <- purrr::map_df(.x = R_objects,
                                    .f = ~{
@@ -188,8 +188,8 @@ run_pipelines <- function(path = choose_directory(),
 
                                    }) %>%
     dplyr::ungroup() %>%
-    dplyr::mutate(Row = seq(1, dplyr::n())) %>%
-    dplyr::select(Row, dplyr::everything())
+    dplyr::mutate(row = seq(1, dplyr::n())) %>%
+    dplyr::select(row, dplyr::everything())
 
   Location_data <- purrr::map_df(.x = R_objects,
                                  .f = ~{
@@ -198,8 +198,8 @@ run_pipelines <- function(path = choose_directory(),
 
                                  }) %>%
     dplyr::ungroup() %>%
-    dplyr::mutate(Row = seq(1, dplyr::n())) %>%
-    dplyr::select(Row, dplyr::everything())
+    dplyr::mutate(row = seq(1, dplyr::n())) %>%
+    dplyr::select(row, dplyr::everything())
 
   if("Measurement_data" %in% names(R_objects)) {
 
