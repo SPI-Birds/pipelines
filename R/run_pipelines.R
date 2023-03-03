@@ -69,6 +69,9 @@ run_pipelines <- function(path = choose_directory(),
 
   }
 
+  # If all optional variables are requested, retrieve all names
+  if(!is.null(optional_variables) & "all" %in% optional_variables) optional_variables <- names(unlist(unname(utility_variables)))
+
   # Determine operating system
   OS <- tolower(utils::sessionInfo()$running)
 
@@ -152,7 +155,7 @@ run_pipelines <- function(path = choose_directory(),
 
                              message(paste0('Running ', pipeline, ' pipeline'))
 
-                           eval(parse(text = paste0('format_', pipeline, '(db = dirs, study = studies, species = species, output_type = "R")')))
+                           eval(parse(text = paste0('format_', pipeline, '(db = dirs, study = studies, species = species, output_type = "R", optional_variables = optional_variables)')))
 
                              })
 
