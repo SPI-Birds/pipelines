@@ -14,7 +14,7 @@
 #' \strong{locationID, startYear}: Some nest boxes were replaced over the course of
 #' the study. However, this was not done explicitly (IDs remain the same).
 #' Therefore, we use nest box number as locationID, and all nest boxes are listed
-#' as functional for the full study period. Check with data owner.
+#' as functional for the full study period. Check with data custodian.
 #'
 #' \strong{speciesID}: In the individual data, there are some cases where an
 #' individualID is associated with >1 species. These are considered conflicted species.
@@ -34,7 +34,7 @@
 #' typo. Currently, I leave it as is and assume this is a typo that needs to be
 #' fixed in the primary data.
 #'
-#' \strong{habitatID}: Assume that habitat type is 1.4: Forest - Temperate. Check with data owner.
+#' \strong{habitatID}: Assume that habitat type is 1.4: Forest - Temperate. Check with data custodian.
 #'
 #' @inheritParams pipeline_params
 #'
@@ -45,7 +45,7 @@
 format_SSQ <- function(db = choose_directory(),
                        path = ".",
                        species = NULL,
-                       site = NULL,
+                       study = NULL,
                        optional_variables = NULL,
                        output_type = "R"){
 
@@ -100,6 +100,7 @@ format_SSQ <- function(db = choose_directory(),
                   speciesID = dplyr::case_when(.data$species == "Parus major" ~ species_codes[species_codes$speciesCode == 10001, ]$speciesID,
                                                .data$species == "Cyanistes caeruleus" ~ species_codes[species_codes$speciesCode == 10002, ]$speciesID),
                   siteID = "SSQ",
+                  studyID = "SSQ-1",
                   # broodID: year_locationID_layDate
                   broodID = paste(.data$year,
                                   .data$locationID,
@@ -161,8 +162,7 @@ format_SSQ <- function(db = choose_directory(),
     # Add missing columns
     dplyr::bind_cols(data_templates$v2.0$Brood_data[1, !(names(data_templates$v2.0$Brood_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
-    dplyr::select(names(data_templates$v2.0$Brood_data), dplyr::contains(names(utility_variables$Brood_data),
-                                                                         ignore.case = FALSE))
+    dplyr::select(names(data_templates$v2.0$Brood_data), any_of(names(utility_variables$Brood_data)))
 
   Capture_data <- Capture_data %>%
     # Add row ID
@@ -170,8 +170,7 @@ format_SSQ <- function(db = choose_directory(),
     # Add missing columns
     dplyr::bind_cols(data_templates$v2.0$Capture_data[1, !(names(data_templates$v2.0$Capture_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
-    dplyr::select(names(data_templates$v2.0$Capture_data), dplyr::contains(names(utility_variables$Capture_data),
-                                                                         ignore.case = FALSE))
+    dplyr::select(names(data_templates$v2.0$Capture_data), any_of(names(utility_variables$Capture_data)))
 
   Individual_data <- Individual_data %>%
     # Add row ID
@@ -179,8 +178,7 @@ format_SSQ <- function(db = choose_directory(),
     # Add missing columns
     dplyr::bind_cols(data_templates$v2.0$Individual_data[1, !(names(data_templates$v2.0$Individual_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
-    dplyr::select(names(data_templates$v2.0$Individual_data), dplyr::contains(names(utility_variables$Individual_data),
-                                                                           ignore.case = FALSE))
+    dplyr::select(names(data_templates$v2.0$Individual_data), any_of(names(utility_variables$Individual_data)))
 
   Location_data <- Location_data %>%
     # Add row ID
@@ -345,6 +343,8 @@ create_capture_SSQ <- function(data,
                   capturePlotID = .data$plotID,
                   releaseSiteID = .data$captureSiteID,
                   releasePlotID = .data$capturePlotID,
+                  captureLocationID = .data$locationID,
+                  releaseLocationID = .data$locationID,
                   # TODO: Individuals are assumed to be captured alive, and physically captured
                   captureAlive = TRUE,
                   releaseAlive = TRUE,
@@ -367,7 +367,7 @@ create_capture_SSQ <- function(data,
     {if("exactAge" %in% optional_variables | "minimumAge" %in% optional_variables) calc_age(data = .,
                                                                                             Age = .data$age,
                                                                                             protocol_version = "2.0") %>%
-        dplyr::select(dplyr::contains(c(names(Capture_data), optional_variables))) else .}
+        dplyr::select(any_of(c(names(Capture_data), optional_variables))) else .}
 
   return(output)
 
@@ -392,20 +392,21 @@ create_individual_SSQ <- function(Capture_data,
     dplyr::group_by(.data$individualID) %>%
     dplyr::summarise(speciesID = dplyr::case_when(length(unique(.data$speciesID)) == 2 ~ "CCCCCC",
                                                   TRUE ~ dplyr::first(.data$speciesID)),
-                     ringDate = dplyr::first(.data$captureDate),
-                     ringYear = as.integer(lubridate::year(.data$ringDate)),
-                     ringMonth = as.integer(lubridate::month(.data$ringDate)),
-                     ringDay = as.integer(lubridate::day(.data$ringDate)),
-                     ringStage = dplyr::case_when(is.na(dplyr::first(.data$age)) ~ "adult",
+                     tagDate = dplyr::first(.data$captureDate),
+                     tagYear = as.integer(lubridate::year(.data$tagDate)),
+                     tagMonth = as.integer(lubridate::month(.data$tagDate)),
+                     tagDay = as.integer(lubridate::day(.data$tagDate)),
+                     tagStage = dplyr::case_when(is.na(dplyr::first(.data$age)) ~ "adult",
                                                   TRUE ~ dplyr::first(.data$age)),
-                     ringSiteID = dplyr::first(.data$siteID),
+                     tagSiteID = dplyr::first(.data$siteID),
                      firstBrood = dplyr::first(.data$broodID),
                      .groups = "drop") %>%
-    # Determine broodIDLaid and broodIDFledged for individuals ringed as chicks
-    dplyr::mutate(broodIDLaid = dplyr::case_when(.data$ringStage == "chick" ~ .data$firstBrood,
+    # Determine broodIDLaid and broodIDFledged for individuals tagged as chicks
+    dplyr::mutate(broodIDLaid = dplyr::case_when(.data$tagStage == "chick" ~ .data$firstBrood,
                                                  TRUE ~ NA_character_),
                   # We have no information on cross-fostering, so we assume the brood laid and ringed are the same
                   broodIDFledged = .data$broodIDLaid,
+                  studyID = "SSQ-1",
                   siteID = "SSQ")
 
     # Add optional variables
@@ -434,16 +435,17 @@ create_location_SSQ <- function(data){
     dplyr::summarise(startYear = as.integer(min(data$year, na.rm = TRUE)),
                      # Some nest boxes were replaced over the course of study,
                      # such that a single locationID has varying coordinates
-                     # TODO: Check with data owner
+                     # TODO: Check with data custodian
                      # For now, we use the first recorded coordinates for
                      # each nest box
                      decimalLatitude = dplyr::first(.data$y_coord),
                      decimalLongitude = dplyr::first(.data$x_coord),
                      .groups = "drop") %>%
     dplyr::mutate(locationType = "nest",
+                  studyID = "SSQ-1",
                   siteID = "SSQ",
-                  # TODO: Check habitat type with data owner
-                  habitatID = "1.4")
+                  # TODO: Check habitat type with data custodian
+                  habitatID = NA_character_)
 
   return(Location_data)
 
