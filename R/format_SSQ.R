@@ -1,7 +1,7 @@
 #' Construct standard format for data from Santo Stefano Quisquina, Italy.
 #'
 #' A pipeline to produce the standard format for the great and blue tit population
-#' in Santo Stefano Quisquina, Sicly, Italy, administered by Camillo Cusimano
+#' in Santo Stefano Quisquina, Sicily, Italy, administered by Camillo Cusimano
 #' and Daniela Campobello.
 #'
 #' This section provides details on data management choices that are unique to

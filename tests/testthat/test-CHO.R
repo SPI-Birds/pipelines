@@ -13,47 +13,75 @@ test_that("CHO outputs all files...", {
   expect_true("CHO" %in% pipeline_output$Location_data$siteID)
   #expect_true("CHO" %in% pipeline_output$Experiment_data$siteID) # Experiment_data is empty
 
+  expect_true("CHO-1" %in% pipeline_output$Brood_data$studyID)
+  expect_true("CHO-1" %in% pipeline_output$Capture_data$studyID)
+  expect_true("CHO-1" %in% pipeline_output$Individual_data$studyID)
+  expect_true("CHO-1" %in% pipeline_output$Measurement_data$studyID)
+  expect_true("CHO-1" %in% pipeline_output$Location_data$studyID)
+
 })
 
 test_that("Individual data returns an expected outcome...", {
 
-  #We want to run a test for each sex for adults and chicks
+  # We want to run a test for each sex for adults and chicks
 
-  #Take a subset of CHO - Individual_data
-  CHO_data <- dplyr::filter(pipeline_output$Individual_data, siteID == "CHO")
+  # Take a subset of CHO - Individual_data
+  CHO_data <- dplyr::filter(pipeline_output$Individual_data, studyID == "CHO-1")
 
-  #Test 1: Adult great tit female
-  #Individual C044309 should be listed as a female great tit
+  # Test 1: Adult great tit female
+  # Individual C029842 should be listed as a female great tit
+  expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C029842"))$calculatedSex, "F")
+  expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C029842"))$speciesID, "PARMAJ")
+  # She should have no broodIDLaid or broodIDFledged because this individual was caught as an adult
+  expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C029842"))$broodIDLaid, NA_character_)
+  expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C029842"))$broodIDFledged, NA_character_)
+  # Her tag year should be 2003 with a tagStage of 'adult'
+  expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C029842"))$tagYear, 2003)
+  expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C029842"))$tagStage, "adult")
+
+  # Test 2: Adult great tit male
+  # Individual C029848 should be listed as a male great tit
+  expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C029848"))$calculatedSex, "M")
+  expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C029848"))$speciesID, "PARMAJ")
+  # He should have no broodIDLaid or broodIDFledged because this individual was caught as an adult
+  expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C029848"))$broodIDLaid, NA_character_)
+  expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C029848"))$broodIDFledged, NA_character_)
+  # His tag year should be 2003 with a tagStage of 'adult'
+  expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C029848"))$tagYear, 2003)
+  expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C029848"))$tagStage, "adult")
+
+  # Test 3: Subadult great tit female
+  # Individual C044309 should be listed as a female great tit
   expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C044309"))$calculatedSex, "F")
   expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C044309"))$speciesID, "PARMAJ")
-  #She should have no broodIDLaid or broodIDFledged because this individual was caught as an adult
+  # She should have no broodIDLaid or broodIDFledged because this individual was caught as a subadult
   expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C044309"))$broodIDLaid, NA_character_)
   expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C044309"))$broodIDFledged, NA_character_)
-  #Her ring year should be 2003 with a ringStage of 'adult'
-  expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C044309"))$ringYear, 2003)
-  expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C044309"))$ringStage, "adult")
+  # Her tag year should be 2003 with a tagStage of 'subadult' (first year)
+  expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C044309"))$tagYear, 2003)
+  expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C044309"))$tagStage, "subadult")
 
-  #Test 2: Adult great tit male
-  #Individual C029843 should be listed as a male great tit
+  # Test 4: Subadult great tit male
+  # Individual C029843 should be listed as a male great tit
   expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C029843"))$calculatedSex, "M")
   expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C029843"))$speciesID, "PARMAJ")
-  #He should have no broodIDLaid or broodIDFledged because this individual was caught as an adult
+  # He should have no broodIDLaid or broodIDFledged because this individual was caught as a subadult
   expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C029843"))$broodIDLaid, NA_character_)
   expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C029843"))$broodIDFledged, NA_character_)
-  #His ring year should be 2003 with a ringStage of 'adult'
-  expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C029843"))$ringYear, 2003)
-  expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C029843"))$ringStage, "adult")
+  # His tag year should be 2003 with a tagStage of 'subadult'
+  expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C029843"))$tagYear, 2003)
+  expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C029843"))$tagStage, "subadult")
 
-  #Test 3: Caught as chick
-  #Individual C048092 should be listed as a female great tit
+  # Test 5: Caught as chick
+  # Individual C048092 should be listed as a female great tit
   expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C048092"))$calculatedSex, "F")
   expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C048092"))$speciesID, "PARMAJ")
-  #Should have broodIDLaid and broodIDFledged of 2005_81
+  # Should have broodIDLaid and broodIDFledged of 2005_81
   expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C048092"))$broodIDLaid, "2005_081")
   expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C048092"))$broodIDFledged, "2005_081")
-  #Ring year should be 2005 with a ringStage of 'chick'
-  expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C048092"))$ringYear, 2005)
-  expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C048092"))$ringStage, "chick")
+  # Ring year should be 2005 with a ringStage of 'chick'
+  expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C048092"))$tagYear, 2005)
+  expect_equal(subset(CHO_data, individualID == paste0("CHO_", "C048092"))$tagStage, "chick")
 
 })
 
@@ -62,7 +90,7 @@ test_that("Brood_data returns an expected outcome...", {
   #We want to run tests for all possible outcomes of ClutchType_calculated
 
   #Take a subset of CHO - Brood_data
-  CHO_data <- dplyr::filter(pipeline_output$Brood_data, siteID == "CHO")
+  CHO_data <- dplyr::filter(pipeline_output$Brood_data, studyID == "CHO-1")
 
   #Test 1: Brood clutch type = first
   #broodID 2005_021 should be PARMAJ
@@ -131,7 +159,7 @@ test_that("Capture_data returns an expected outcome...", {
   #We want to run tests for captures as both chicks, males, and females
 
   #Take a subset of CHO - Capture_data
-  CHO_data <- dplyr::filter(pipeline_output$Capture_data, captureSiteID == "CHO")
+  CHO_data <- dplyr::filter(pipeline_output$Capture_data, studyID == "CHO-1")
 
   #Test 1: Female caught as adult
   #Test the female has the correct number of capture records (5)
@@ -140,14 +168,14 @@ test_that("Capture_data returns an expected outcome...", {
   expect_equal(dplyr::first(subset(CHO_data, individualID == paste0("CHO_", "C044309"))$captureYear), 2003)
   expect_equal(dplyr::first(subset(CHO_data, individualID == paste0("CHO_", "C044309"))$captureMonth), 5)
   expect_equal(dplyr::first(subset(CHO_data, individualID == paste0("CHO_", "C044309"))$captureDay), 21)
-  expect_equal(dplyr::first(subset(CHO_data, individualID == paste0("CHO_", "C044309"))$captureRingNumber), NA_character_)
-  expect_equal(dplyr::first(subset(CHO_data, individualID == paste0("CHO_", "C044309"))$releaseRingNumber), "C044309")
+  expect_equal(dplyr::first(subset(CHO_data, individualID == paste0("CHO_", "C044309"))$captureTagID), NA_character_)
+  expect_equal(dplyr::first(subset(CHO_data, individualID == paste0("CHO_", "C044309"))$releaseTagID), "C044309")
   #Test that the 5th capture of the female is as expected (2006-06-24)
   expect_equal(dplyr::nth(subset(CHO_data, individualID == paste0("CHO_", "C044309"))$captureYear, 5), 2006)
   expect_equal(dplyr::nth(subset(CHO_data, individualID == paste0("CHO_", "C044309"))$captureMonth, 5), 6)
   expect_equal(dplyr::nth(subset(CHO_data, individualID == paste0("CHO_", "C044309"))$captureDay, 5), 24)
-  expect_equal(dplyr::nth(subset(CHO_data, individualID == paste0("CHO_", "C044309"))$captureRingNumber, 5), "C044309")
-  expect_equal(dplyr::nth(subset(CHO_data, individualID == paste0("CHO_", "C044309"))$releaseRingNumber, 5), "C044309")
+  expect_equal(dplyr::nth(subset(CHO_data, individualID == paste0("CHO_", "C044309"))$captureTagID, 5), "C044309")
+  expect_equal(dplyr::nth(subset(CHO_data, individualID == paste0("CHO_", "C044309"))$releaseTagID, 5), "C044309")
   #Test that exactAge is as expected (NA, because it's caught as an adult)
   expect_equal(dplyr::first(subset(CHO_data, individualID == paste0("CHO_", "C044309"))$exactAge), NA_integer_)
   #Test that minimumAge is correct on first capture (1, because it's an adult of unknown age because it wasn't caught as a chick)
@@ -156,20 +184,20 @@ test_that("Capture_data returns an expected outcome...", {
   expect_equal(dplyr::nth(subset(CHO_data, individualID == paste0("CHO_", "C044309"))$minimumAge, 5), 4)
 
   #Test 2: Male caught as adult
-  #Test the male has the correct number of capture records (2)
+  #Test the male has the correct ID of capture records (2)
   expect_equal(nrow(subset(CHO_data, individualID == paste0("CHO_", "C029843"))), 2)
   #Test that the first capture of the male is as expected (2013-06-02)
   expect_equal(dplyr::first(subset(CHO_data, individualID == paste0("CHO_", "C029843"))$captureYear), 2003)
   expect_equal(dplyr::first(subset(CHO_data, individualID == paste0("CHO_", "C029843"))$captureMonth), 4)
   expect_equal(dplyr::first(subset(CHO_data, individualID == paste0("CHO_", "C029843"))$captureDay), 9)
-  expect_equal(dplyr::first(subset(CHO_data, individualID == paste0("CHO_", "C029843"))$captureRingNumber), NA_character_)
-  expect_equal(dplyr::first(subset(CHO_data, individualID == paste0("CHO_", "C029843"))$releaseRingNumber), "C029843")
+  expect_equal(dplyr::first(subset(CHO_data, individualID == paste0("CHO_", "C029843"))$captureTagID), NA_character_)
+  expect_equal(dplyr::first(subset(CHO_data, individualID == paste0("CHO_", "C029843"))$releaseTagID), "C029843")
   #Test that the 2nd capture of the male is as expcted (2003-10-17)
   expect_equal(dplyr::nth(subset(CHO_data, individualID == paste0("CHO_", "C029843"))$captureYear, 2), 2003)
   expect_equal(dplyr::nth(subset(CHO_data, individualID == paste0("CHO_", "C029843"))$captureMonth, 2), 10)
   expect_equal(dplyr::nth(subset(CHO_data, individualID == paste0("CHO_", "C029843"))$captureDay, 2), 17)
-  expect_equal(dplyr::nth(subset(CHO_data, individualID == paste0("CHO_", "C029843"))$captureRingNumber, 2), "C029843")
-  expect_equal(dplyr::nth(subset(CHO_data, individualID == paste0("CHO_", "C029843"))$releaseRingNumber, 2), "C029843")
+  expect_equal(dplyr::nth(subset(CHO_data, individualID == paste0("CHO_", "C029843"))$captureTagID, 2), "C029843")
+  expect_equal(dplyr::nth(subset(CHO_data, individualID == paste0("CHO_", "C029843"))$releaseTagID, 2), "C029843")
   #Test that exactAge is as expected on first record (NA, because it's caught as an adult)
   expect_equal(dplyr::first(subset(CHO_data, individualID == paste0("CHO_", "C029843"))$exactAge), NA_integer_)
   #Test that minimumAge is correct on first capture (1, because it's an adult not caught as chick)
@@ -178,21 +206,21 @@ test_that("Capture_data returns an expected outcome...", {
   expect_equal(dplyr::nth(subset(CHO_data, individualID == paste0("CHO_", "C029843"))$minimumAge, 2), 1)
 
   #Test 3: Caught first as chick
-  #Test the male has the correct number of capture records (4)
+  #Test the male has the correct ID of capture records (4)
   expect_equal(nrow(subset(CHO_data, individualID == paste0("CHO_", "C048092"))), 4)
   #Test that the first capture of the male is as expected (2005-06-03)
   expect_equal(dplyr::first(subset(CHO_data, individualID == paste0("CHO_", "C048092"))$captureYear), 2005)
   expect_equal(dplyr::first(subset(CHO_data, individualID == paste0("CHO_", "C048092"))$captureMonth), 6)
   expect_equal(dplyr::first(subset(CHO_data, individualID == paste0("CHO_", "C048092"))$captureDay), 3)
-  expect_equal(dplyr::first(subset(CHO_data, individualID == paste0("CHO_", "C048092"))$captureRingNumber), NA_character_)
-  expect_equal(dplyr::first(subset(CHO_data, individualID == paste0("CHO_", "C048092"))$releaseRingNumber), "C048092")
+  expect_equal(dplyr::first(subset(CHO_data, individualID == paste0("CHO_", "C048092"))$captureTagID), NA_character_)
+  expect_equal(dplyr::first(subset(CHO_data, individualID == paste0("CHO_", "C048092"))$releaseTagID), "C048092")
   expect_equal(dplyr::first(subset(CHO_data, individualID == paste0("CHO_", "C048092"))$chickAge), 14)
   #Test that the 4th capture of the male is as expected (2006-07-01)
   expect_equal(dplyr::nth(subset(CHO_data, individualID == paste0("CHO_", "C048092"))$captureYear, 4), 2006)
   expect_equal(dplyr::nth(subset(CHO_data, individualID == paste0("CHO_", "C048092"))$captureMonth, 4), 7)
   expect_equal(dplyr::nth(subset(CHO_data, individualID == paste0("CHO_", "C048092"))$captureDay, 4), 1)
-  expect_equal(dplyr::nth(subset(CHO_data, individualID == paste0("CHO_", "C048092"))$captureRingNumber, 4), "C048092")
-  expect_equal(dplyr::nth(subset(CHO_data, individualID == paste0("CHO_", "C048092"))$releaseRingNumber, 4), "C048092")
+  expect_equal(dplyr::nth(subset(CHO_data, individualID == paste0("CHO_", "C048092"))$captureTagID, 4), "C048092")
+  expect_equal(dplyr::nth(subset(CHO_data, individualID == paste0("CHO_", "C048092"))$releaseTagID, 4), "C048092")
   expect_equal(dplyr::nth(subset(CHO_data, individualID == paste0("CHO_", "C048092"))$chickAge, 4), NA_integer_)
   #Test that exactAge is as expected on first record (0, because it's caught as chick)
   expect_equal(dplyr::first(subset(CHO_data, individualID == paste0("CHO_", "C048092"))$exactAge), 0)
@@ -212,7 +240,7 @@ test_that("Measurement_data returns an expected outcome...", {
   # We want to run tests for individuals that had all all measurements taken, and individuals with some measurements missing
 
   # Take a subset of CHO - Measurement_data
-  CHO_data <- dplyr::filter(pipeline_output$Measurement_data, siteID == "CHO")
+  CHO_data <- dplyr::filter(pipeline_output$Measurement_data, studyID == "CHO-1")
 
   # Test 1: all three measurements
   # Test that individual C044404 had been taken three measurements of in its first capture
@@ -246,7 +274,7 @@ test_that("Location_data returns an expected outcome...", {
   # We want to run tests for both nesting and capturing (i.e. mist net) locations
 
   # Take a subset of CHO - Location_data
-  CHO_data <- dplyr::filter(pipeline_output$Location_data, siteID == "CHO")
+  CHO_data <- dplyr::filter(pipeline_output$Location_data, studyID == "CHO-1")
 
   # Test 1: Nest box check
   # Nestbox 7 should be type "nest"

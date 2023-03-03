@@ -386,8 +386,7 @@ create_brood_HAR <- function(db,
                                   .data$nestAttemptNumber,
                                   sep = "_"),
                   # Set species codes
-                  # Note, rare species/codes are ignored and set to NA
-                  # e.g., JYNTOR, CERFAM, MOTALB, PARMON
+                  # TODO Check rare species (e.g., JYNTOR, CERFAM, MOTALB, PARMON)
                   speciesID = dplyr::case_when(.data$speciesID == "FICHYP" ~ species_codes$speciesID[species_codes$speciesCode == "10003"],
                                                .data$speciesID == "PARCAE" ~ species_codes$speciesID[species_codes$speciesCode == "10002"],
                                                .data$speciesID == "PARMAJ" ~ species_codes$speciesID[species_codes$speciesCode == "10001"],
@@ -397,12 +396,14 @@ create_brood_HAR <- function(db,
                                                TRUE ~ NA_character_),
                   # If femaleID & maleID differ from expected format, set to NA
                   # Ensure that individuals are unique: add institutionID as prefix to femaleID & maleID
-                  # Remove punctuation
                   dplyr::across(.cols = c(.data$femaleID, .data$maleID),
                                 .fns = ~ {
 
-                                  dplyr::case_when(stringr::str_detect(string = .x,
-                                                                       pattern = "^[:alpha:]{1,2}[:digit:]{5,6}$") ~ paste0("HAR_", stringr::str_remove_all(.x, "[:punct:]")),
+                                  # Remove hyphens
+                                  x <- stringr::str_remove_all(.x, "[:punct:]")
+
+                                  dplyr::case_when(stringr::str_detect(string = x,
+                                                                       pattern = "^[:alpha:]{1,2}[:digit:]{5,6}$") ~ paste0("HAR_", x),
                                                    TRUE ~ NA_character_)
 
                                 }),
@@ -985,7 +986,8 @@ create_capture_HAR <- function(db,
     dplyr::mutate(individualID = dplyr::case_when(stringr::str_detect(stringr::str_sub(.data$individualID, 5,
                                                                                        nchar(.data$individualID)),
                                                                       "^[:alpha:]{1,2}[:digit:]{5,6}$") ~ .data$individualID,
-                                                  TRUE ~ NA_character_))
+                                                  TRUE ~ NA_character_)) %>%
+    dplyr::filter(!is.na(.data$individualID))
 
 
   # Add optional variables
@@ -1173,6 +1175,7 @@ create_measurement_HAR <- function(capture_data) {
   # so we use capture_data as input
   measurements <- capture_data %>%
     dplyr::select(recordID = "captureID",
+                  "studyID",
                   siteID = "captureSiteID",
                   measurementDeterminedYear = "captureYear",
                   measurementDeterminedMonth = "captureMonth",

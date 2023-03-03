@@ -12,6 +12,11 @@ test_that("SSQ outputs all files...", {
   expect_true("SSQ" %in% pipeline_output$Location_data$siteID)
   #expect_true("SSQ" %in% pipeline_output$Experiment_data$siteID) # Experiment_data is empty
 
+  expect_true("SSQ-1" %in% pipeline_output$Brood_data$studyID)
+  expect_true("SSQ-1" %in% pipeline_output$Capture_data$studyID)
+  expect_true("SSQ-1" %in% pipeline_output$Individual_data$studyID)
+  expect_true("SSQ-1" %in% pipeline_output$Location_data$studyID)
+
 })
 
 test_that("Individual data returns an expected outcome...", {
@@ -20,7 +25,7 @@ test_that("Individual data returns an expected outcome...", {
   # Note: all individuals are listed as female (or sex unknown)
 
   # Take a subset of only SSQ data
-  SSQ_data <- dplyr::filter(pipeline_output$Individual_data, siteID == "SSQ")
+  SSQ_data <- dplyr::filter(pipeline_output$Individual_data, studyID == "SSQ-1")
 
   # Test 1: Adult blue tit
   # Individual AS29440 should be listed as a female blue tit
@@ -30,9 +35,9 @@ test_that("Individual data returns an expected outcome...", {
   # She should have no broodIDLaid or broodIDFledged
   expect_equal(subset(SSQ_data, individualID == paste0("SSQ_", "AS29440"))$broodIDLaid, NA_character_)
   expect_equal(subset(SSQ_data, individualID == paste0("SSQ_", "AS29440"))$broodIDFledged, NA_character_)
-  # Her ring season should be 2006 with a ringStage of 'adult'
-  expect_equal(subset(SSQ_data, individualID == paste0("SSQ_", "AS29440"))$ringYear, 2006)
-  expect_equal(subset(SSQ_data, individualID == paste0("SSQ_", "AS29440"))$ringStage, "adult")
+  # Her tag year should be 2006 with a tagStage of 'adult'
+  expect_equal(subset(SSQ_data, individualID == paste0("SSQ_", "AS29440"))$tagYear, 2006)
+  expect_equal(subset(SSQ_data, individualID == paste0("SSQ_", "AS29440"))$tagStage, "adult")
 
   # Test 2: Adult great tit
   # Individual LS30008 should be listed as a female great tit
@@ -42,9 +47,9 @@ test_that("Individual data returns an expected outcome...", {
   # She should have a broodIDLaid and broodIDFledged of 2011_030_039
   expect_equal(subset(SSQ_data, individualID == paste0("SSQ_", "LS30008"))$broodIDLaid, "2011_030_039")
   expect_equal(subset(SSQ_data, individualID == paste0("SSQ_", "LS30008"))$broodIDFledged, "2011_030_039")
-  # Her ring season should be 2011 with a ringStage of 'chick'
-  expect_equal(subset(SSQ_data, individualID == paste0("SSQ_", "LS30008"))$ringYear, 2011)
-  expect_equal(subset(SSQ_data, individualID == paste0("SSQ_", "LS30008"))$ringStage, "chick")
+  # Her tag year should be 2011 with a tagStage of 'chick'
+  expect_equal(subset(SSQ_data, individualID == paste0("SSQ_", "LS30008"))$tagYear, 2011)
+  expect_equal(subset(SSQ_data, individualID == paste0("SSQ_", "LS30008"))$tagStage, "chick")
 
   # Test 3: Chick great tit
   # Individual LA44309 should be listed as a great tit with unknown sex (NA)
@@ -54,9 +59,9 @@ test_that("Individual data returns an expected outcome...", {
   # Individual should have a broodIDLaid and broodIDFledged of 2006_002_051
   expect_equal(subset(SSQ_data, individualID == paste0("SSQ_", "LA44309"))$broodIDLaid, "2006_002_051")
   expect_equal(subset(SSQ_data, individualID == paste0("SSQ_", "LA44309"))$broodIDFledged, "2006_002_051")
-  # Their ring season should be 2006 with a ringStage of 'chick'
-  expect_equal(subset(SSQ_data, individualID == paste0("SSQ_", "LA44309"))$ringYear, 2006)
-  expect_equal(subset(SSQ_data, individualID == paste0("SSQ_", "LA44309"))$ringStage, "chick")
+  # Their tag year should be 2006 with a tagStage of 'chick'
+  expect_equal(subset(SSQ_data, individualID == paste0("SSQ_", "LA44309"))$tagYear, 2006)
+  expect_equal(subset(SSQ_data, individualID == paste0("SSQ_", "LA44309"))$tagStage, "chick")
 
   # Test 4: Chick blue tit
   # Individual 6A33818 should be listed as a blue tit with unknown sex (NA)
@@ -66,9 +71,9 @@ test_that("Individual data returns an expected outcome...", {
   # Individual should have a broodIDLaid and broodIDFledged of 2011_026_043
   expect_equal(subset(SSQ_data, individualID == paste0("SSQ_", "6A33818"))$broodIDLaid, "2011_026_043")
   expect_equal(subset(SSQ_data, individualID == paste0("SSQ_", "6A33818"))$broodIDFledged, "2011_026_043")
-  # Their ring season should be 2011 with a ringStage of 'chick'
-  expect_equal(subset(SSQ_data, individualID == paste0("SSQ_", "6A33818"))$ringYear, 2011)
-  expect_equal(subset(SSQ_data, individualID == paste0("SSQ_", "6A33818"))$ringStage, "chick")
+  # Their tag year should be 2011 with a taStage of 'chick'
+  expect_equal(subset(SSQ_data, individualID == paste0("SSQ_", "6A33818"))$tagYear, 2011)
+  expect_equal(subset(SSQ_data, individualID == paste0("SSQ_", "6A33818"))$tagStage, "chick")
 
   # Test 5: Individual with conflicted species
   # Individual 25A9699 should be listed as a female with conflicting species
@@ -77,9 +82,9 @@ test_that("Individual data returns an expected outcome...", {
   # She should have no broodIDLaid or broodIDFledged
   expect_equal(subset(SSQ_data, individualID == paste0("SSQ_", "25A9699"))$broodIDLaid, NA_character_)
   expect_equal(subset(SSQ_data, individualID == paste0("SSQ_", "25A9699"))$broodIDFledged, NA_character_)
-  # Her ring season should be 2016 with a ringStage of 'adult'
-  expect_equal(subset(SSQ_data, individualID == paste0("SSQ_", "25A9699"))$ringYear, 2016)
-  expect_equal(subset(SSQ_data, individualID == paste0("SSQ_", "25A9699"))$ringStage, "adult")
+  # Her tag year should be 2016 with a tagStage of 'adult'
+  expect_equal(subset(SSQ_data, individualID == paste0("SSQ_", "25A9699"))$tagYear, 2016)
+  expect_equal(subset(SSQ_data, individualID == paste0("SSQ_", "25A9699"))$tagStage, "adult")
 
 })
 
@@ -89,7 +94,7 @@ test_that("Brood_data returns an expected outcome...", {
   # We want to manually check all possible outcomes of clutch type
 
   # Take a subset of only SSQ data
-  SSQ_data <- dplyr::filter(pipeline_output$Brood_data, siteID == "SSQ")
+  SSQ_data <- dplyr::filter(pipeline_output$Brood_data, studyID == "SSQ-1")
 
   #Test 1: Blue tit brood clutch type = first
   # broodID 2010_005_046 should be CYACAE
@@ -166,7 +171,7 @@ test_that("Capture_data returns an expected outcome...", {
   # We want to run tests for great tit and blue tit capture as both chicks and adults
 
   # Take a subset of only SSQ data
-  SSQ_data <- dplyr::filter(pipeline_output$Capture_data, captureSiteID == "SSQ")
+  SSQ_data <- dplyr::filter(pipeline_output$Capture_data, studyID == "SSQ-1")
 
   # Test 1: Great tit caught as a chick
   # Test that the chick has the correct number of capture records (2)
@@ -175,21 +180,21 @@ test_that("Capture_data returns an expected outcome...", {
   expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "LS05355"))$captureYear), 2016)
   expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "LS05355"))$captureMonth), 5)
   expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "LS05355"))$captureDay), 18)
-  expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "LS05355"))$captureRingNumber), NA_character_)
-  expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "LS05355"))$releaseRingNumber), "LS05355")
+  expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "LS05355"))$captureTagID), NA_character_)
+  expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "LS05355"))$releaseTagID), "LS05355")
   # Test that the 2nd capture of the individual is as expected (2015-05-07)
   expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "LS05355"))$captureYear, 2), 2017)
   expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "LS05355"))$captureMonth, 2), 5)
   expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "LS05355"))$captureDay, 2), 7)
-  expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "LS05355"))$captureRingNumber, 2), "LS05355")
-  expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "LS05355"))$releaseRingNumber, 2), "LS05355")
+  expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "LS05355"))$captureTagID, 2), "LS05355")
+  expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "LS05355"))$releaseTagID, 2), "LS05355")
   # Test that exactAge is correct on first capture (0, because it's caught as a chick)
   expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "LS05355"))$exactAge), 0)
-  # Test that exactAge is correct on 2nd capture (1, because it's caught as a chick 1 year later)
-  expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "LS05355"))$exactAge, 2), 1)
+  # Test that exactAge is correct on 2nd capture (0, because it's caught as a chick just under 1 year later)
+  expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "LS05355"))$exactAge, 2), 0)
   # Test that minimumAge is as expected
   expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "LS05355"))$minimumAge), 0)
-  expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "LS05355"))$minimumAge, 2), 1)
+  expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "LS05355"))$minimumAge, 2), 0)
 
   # Test 2: Great tit caught as a adult
   # Test that the female has the correct number of capture records (3)
@@ -198,20 +203,20 @@ test_that("Capture_data returns an expected outcome...", {
   expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "AX42202"))$captureYear), 2009)
   expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "AX42202"))$captureMonth), 5)
   expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "AX42202"))$captureDay), 9)
-  expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "AX42202"))$captureRingNumber), NA_character_)
-  expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "AX42202"))$releaseRingNumber), "AX42202")
+  expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "AX42202"))$captureTagID), NA_character_)
+  expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "AX42202"))$releaseTagID), "AX42202")
   # Test that the 3rd capture of the individual is as expected (2011-05-05, laying date + clutch size)
   expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "AX42202"))$captureYear, 3), 2011)
   expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "AX42202"))$captureMonth, 3), 5)
   expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "AX42202"))$captureDay, 3), 5)
-  expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "AX42202"))$captureRingNumber, 3), "AX42202")
-  expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "AX42202"))$releaseRingNumber, 3), "AX42202")
+  expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "AX42202"))$captureTagID, 3), "AX42202")
+  expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "AX42202"))$releaseTagID, 3), "AX42202")
   # Test that exactAge is as expected (NA, because it's caught as an adult)
   expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "AX42202"))$exactAge), NA_integer_)
   # Test that minimumAge is correct on first capture (1, because it's an adult of unknown age because it wasn't caught as a chick)
   expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "AX42202"))$minimumAge), 1)
-  # Test that minimumAge is correct on 3rd capture (3, because it's an adult caught 2 years after its first capture)
-  expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "AX42202"))$minimumAge, 3), 3)
+  # Test that minimumAge is correct on 3rd capture (2, because it's an adult caught just under 2 years after its first capture)
+  expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "AX42202"))$minimumAge, 3), 2)
 
   # Test 3: Blue tit caught as a chick
   # Test that the chick has the correct number of capture records (4)
@@ -220,21 +225,21 @@ test_that("Capture_data returns an expected outcome...", {
   expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "6A33877"))$captureYear), 2011)
   expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "6A33877"))$captureMonth), 5)
   expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "6A33877"))$captureDay), 20)
-  expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "6A33877"))$captureRingNumber), NA_character_)
-  expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "6A33877"))$releaseRingNumber), "6A33877")
+  expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "6A33877"))$captureTagID), NA_character_)
+  expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "6A33877"))$releaseTagID), "6A33877")
   # Test that the 4th capture of the individual is as expected (2015-04-30, laying date + clutch size)
   expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "6A33877"))$captureYear, 4), 2015)
   expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "6A33877"))$captureMonth, 4), 4)
   expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "6A33877"))$captureDay, 4), 30)
-  expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "6A33877"))$captureRingNumber, 4), "6A33877")
-  expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "6A33877"))$releaseRingNumber, 4), "6A33877")
+  expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "6A33877"))$captureTagID, 4), "6A33877")
+  expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "6A33877"))$releaseTagID, 4), "6A33877")
   # Test that exactAge is correct on first capture (0, because it's caught as a chick)
   expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "6A33877"))$exactAge), 0)
-  # Test that exactAge is correct on 4th capture (1, because it's caught as a chick 4 year later)
-  expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "6A33877"))$exactAge, 4), 4)
+  # Test that exactAge is correct on 4th capture (4, because it's caught as a chick just under 4 year later)
+  expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "6A33877"))$exactAge, 4), 3)
   # Test that minimumAge is as expected
   expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "6A33877"))$minimumAge), 0)
-  expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "6A33877"))$minimumAge, 4), 4)
+  expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "6A33877"))$minimumAge, 4), 3)
 
   # Test 4: Blue tit caught as a adult
   # Test the individual has the correct number of capture records (4)
@@ -243,20 +248,20 @@ test_that("Capture_data returns an expected outcome...", {
   expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "AT36437"))$captureYear), 2009)
   expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "AT36437"))$captureMonth), 4)
   expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "AT36437"))$captureDay), 26)
-  expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "AT36437"))$captureRingNumber), NA_character_)
-  expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "AT36437"))$releaseRingNumber), "AT36437")
+  expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "AT36437"))$captureTagID), NA_character_)
+  expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "AT36437"))$releaseTagID), "AT36437")
   # Test that the 4th capture of the individual is as expected (2012-04-21, laying date + clutch size)
   expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "AT36437"))$captureYear, 4), 2012)
   expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "AT36437"))$captureMonth, 4), 4)
   expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "AT36437"))$captureDay, 4), 21)
-  expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "AT36437"))$captureRingNumber, 4), "AT36437")
-  expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "AT36437"))$releaseRingNumber, 4), "AT36437")
+  expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "AT36437"))$captureTagID, 4), "AT36437")
+  expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "AT36437"))$releaseTagID, 4), "AT36437")
   # Test that exactAge is as expected (NA, because it's caught as an adult)
   expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "AT36437"))$exactAge), NA_integer_)
   # Test that minimumAge is correct on first capture (1, because it's an adult of unknown age because it wasn't caught as a chick)
   expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "AT36437"))$minimumAge), 1)
-  # Test that minimumAge is correct on 4th capture (4, because it's an adult caught 3 years after its first capture)
-  expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "AT36437"))$minimumAge, 4), 4)
+  # Test that minimumAge is correct on 4th capture (3, because it's an adult caught just under 3 years after its first capture)
+  expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "AT36437"))$minimumAge, 4), 3)
 
   # Test 5: Individual classified as different species on 2 captures
   # Test the individual has the correct number of capture records (4)
@@ -265,15 +270,15 @@ test_that("Capture_data returns an expected outcome...", {
   expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "25A9699"))$captureYear), 2016)
   expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "25A9699"))$captureMonth), 4)
   expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "25A9699"))$captureDay), 27)
-  expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "25A9699"))$captureRingNumber), NA_character_)
-  expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "25A9699"))$releaseRingNumber), "25A9699")
-  expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "25A9699"))$releaseRingNumber), "25A9699")
+  expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "25A9699"))$captureTagID), NA_character_)
+  expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "25A9699"))$releaseTagID), "25A9699")
+  expect_equal(dplyr::first(subset(SSQ_data, individualID == paste0("SSQ_", "25A9699"))$releaseTagID), "25A9699")
   # Test that the 2nd capture of the individual is as expected (2017-04-25, laying date + clutch size)
   expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "25A9699"))$captureYear, 2), 2017)
   expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "25A9699"))$captureMonth, 2), 4)
   expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "25A9699"))$captureDay, 2), 25)
-  expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "25A9699"))$captureRingNumber, 2), "25A9699")
-  expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "25A9699"))$releaseRingNumber, 2), "25A9699")
+  expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "25A9699"))$captureTagID, 2), "25A9699")
+  expect_equal(dplyr::nth(subset(SSQ_data, individualID == paste0("SSQ_", "25A9699"))$releaseTagID, 2), "25A9699")
   # Test that the species of the 1st capture is PARMAJ, and of the 2nd capture CYACAE
   expect_equal(subset(SSQ_data, individualID == paste0("SSQ_", "25A9699"))$speciesID, c("PARMAJ", "CYACAE"))
 
@@ -284,7 +289,7 @@ test_that("Location_data returns an expected outcome...", {
   # We want to run tests for nest boxes
 
   # Take a subset of only SSQ data
-  SSQ_data <- dplyr::filter(pipeline_output$Location_data, siteID == "SSQ")
+  SSQ_data <- dplyr::filter(pipeline_output$Location_data, studyID == "SSQ-1")
 
   # Test 1: Nestbox check
   # Nest box "011" should be type "nest" and put up in 2006
