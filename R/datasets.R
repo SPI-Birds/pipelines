@@ -66,7 +66,7 @@ study_codes <- utils::read.csv(system.file("extdata", "study_codes.csv", package
 #'
 #'A data frame with each row containing a unique study and species combination.
 #'
-#'@format A data frame with 143 rows and 2 variables.
+#'@format A data frame with 136 rows and 2 variables.
 #'\describe{
 #'    \item{studyID}{Three-letter and one-digit study ID.}
 #'    \item{speciesID}{Six-letter species ID.}
