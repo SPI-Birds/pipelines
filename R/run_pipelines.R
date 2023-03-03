@@ -95,7 +95,7 @@ run_pipelines <- function(path = choose_directory(),
 
   }
 
-  if(length(siteID) == 0){
+  if(length(studyID) == 0){
 
     stop(paste0('None of the selected pipeline(s) could not be run due to OS incompatibility. Please run on a Windows OS.'))
 

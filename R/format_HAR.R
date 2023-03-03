@@ -92,7 +92,7 @@
 #'
 #'\strong{broodID}: Unique broodID values are generated using year_locationPlotID_nestAttemptNumber, where locationPlotID is a concatenation of plotID (without the institutionID prefix) and locationID, and nestAttemptNumber, the nesting attempt in a nest box (locationID) per season.
 #'
-#'\strong{Experiment start and end}: Start of experimental manipulations are set to the first laying date of the affected broods, so that `experimentStartYear = min(observedLayYear)`, `experimentStartMonth = min(observedLayMonth)`, and `experimentStartDay = min(observedLayDay)`. Experiments are assumed to start and end within the same year, so that experimentEndYear = experimentStartYear. experimentEndMonth and experimentEndDay are, however, set to NA. Discuss with data owner.
+#'\strong{Experiment start and end}: Start of experimental manipulations are set to the first laying date of the affected broods, so that `experimentStartYear = min(observedLayYear)`, `experimentStartMonth = min(observedLayMonth)`, and `experimentStartDay = min(observedLayDay)`. Experiments are assumed to start and end within the same year, so that experimentEndYear = experimentStartYear. experimentEndMonth and experimentEndDay are, however, set to NA. Discuss with data custodian.
 #'
 #'\strong{recordedBy}: Persons who visited the nests/broods that were used in experiments are assumed to have conducted the experiment as well.
 #'
@@ -201,24 +201,24 @@ format_HAR <- function(db = choose_directory(),
     # Add missing columns
     dplyr::bind_cols(data_templates$v2.0$Brood_data[1, !(names(data_templates$v2.0$Brood_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
-    dplyr::select(names(data_templates$v2.0$Brood_data), dplyr::contains(names(utility_variables$Brood_data),
-                                                                         ignore.case = FALSE))
+    dplyr::select(names(data_templates$v2.0$Brood_data), any_of(names(utility_variables$Brood_data)))
 
   # - Capture data
   Capture_data <- Capture_data %>%
     # Add locationID from Location data
-    # Store old locationID as locationCode
-    dplyr::rename(locationCode = "locationID") %>%
-    # TODO: Some locationIDs in Capture_data are missing from Location data. Check with data owner.
-    dplyr::left_join(Location_data %>% dplyr::select("locationPlotID", "locationID", "year"),
+    # Store old captureLocationID as captureLocationCode & old releaseLocationID as releaseLocationCode
+    dplyr::rename(captureLocationCode = "captureLocationID",
+                  releaseLocationCode = "releaseLocationID") %>%
+    # TODO: Some locationIDs in Capture_data are missing from Location data. Check with data custodian.
+    dplyr::left_join(Location_data %>% dplyr::select("locationPlotID", "captureLocationID" = "locationID", "year"),
                      by = c("locationPlotID", "captureYear" = "year")) %>%
+    dplyr::mutate(releaseLocationID = .data$captureLocationID) %>%
     # Add row ID
     dplyr::mutate(row = 1:dplyr::n()) %>%
     # Add missing columns
     dplyr::bind_cols(data_templates$v2.0$Capture_data[1, !(names(data_templates$v2.0$Capture_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
-    dplyr::select(names(data_templates$v2.0$Capture_data), dplyr::contains(names(utility_variables$Capture_data),
-                                                                           ignore.case = FALSE))
+    dplyr::select(names(data_templates$v2.0$Capture_data), any_of(names(utility_variables$Capture_data)))
 
   # - Individual data
   Individual_data <- Individual_data %>%
@@ -227,8 +227,7 @@ format_HAR <- function(db = choose_directory(),
     # Add missing columns
     dplyr::bind_cols(data_templates$v2.0$Individual_data[1, !(names(data_templates$v2.0$Individual_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
-    dplyr::select(names(data_templates$v2.0$Individual_data), dplyr::contains(names(utility_variables$Individual_data),
-                                                                              ignore.case = FALSE))
+    dplyr::select(names(data_templates$v2.0$Individual_data), any_of(names(utility_variables$Individual_data)))
 
   # - Measurement data
   Measurement_data <- Measurement_data %>%
@@ -250,6 +249,7 @@ format_HAR <- function(db = choose_directory(),
                      decimalLongitude = as.numeric(dplyr::first(longitude)),
                      startYear = min(.data$year),
                      endYear = max(.data$year),
+                     studyID = dplyr::first(.data$studyID),
                      siteID = dplyr::first(.data$siteID),
                      habitatID = dplyr::first(.data$habitatID),
                      locationType = dplyr::first(.data$locationType),
@@ -331,7 +331,7 @@ create_brood_HAR <- function(db,
   message("Extracting brood data from paradox database")
 
   # Extract table "Pesat.db" which contains brood data
-  # Rename columns to English (based on description provided by data owner)
+  # Rename columns to English (based on description provided by data custodian)
   # Many of these are subsequently removed, but it makes it easier for non-Finnish speakers to
   # see what is being removed.
   broods <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Pesat.DB") %>%
@@ -368,7 +368,7 @@ create_brood_HAR <- function(db,
     # Create IDs
     # locationPlotID (Nuro) is a concatenation of plot ID (first two symbols)
     # and nestbox number (last two symbols); split, and make both unique
-    # TODO: Check with data owner, it seems that the first two are plot, and the last two are nestbox,
+    # TODO: Check with data custodian, it seems that the first two are plot, and the last two are nestbox,
     # whereas the meta data file states the other way around
     dplyr::mutate(plotID = paste("HAR",
                                  stringr::str_sub(string = .data$locationPlotID,
@@ -406,6 +406,7 @@ create_brood_HAR <- function(db,
                                                    TRUE ~ NA_character_)
 
                                 }),
+                  studyID = "HAR-1",
                   siteID = "HAR") %>%
     # Adjust clutch type observed to meet our wording
     dplyr::mutate(observedClutchType = dplyr::case_when(.data$observedClutchType == 1 ~ "first",
@@ -491,7 +492,7 @@ create_nestling_HAR <- function(db,
 
   # Extract table "Pullit.db" which contains nestling data
   nestling_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Pullit.DB") %>%
-    # Rename columns to English (based on description provided by data owner)
+    # Rename columns to English (based on description provided by data custodian)
     dplyr::rename(captureYear = "Vuos",
                   locationPlotID = "Nuro",
                   nestAttemptNumber = "Anro",
@@ -546,7 +547,7 @@ create_nestling_HAR <- function(db,
     dplyr::mutate(chickAge = as.integer(.data$captureDate - .data$observedHatchDate),
                   # Nestling tarsus measures seem to have different units depending on which leg was measured.
                   # Left in mm, right in 10*mm.
-                  # TODO: check with data owner
+                  # TODO: check with data custodian
                   rightTarsusLength = .data$rightTarsusLength / 10,
                   leftP3 = .data$leftP3 / 10,
                   rightP3 = .data$rightP3 / 10,
@@ -590,7 +591,7 @@ create_capture_HAR <- function(db,
   # 662470, 662471, 662472, 662473
   # The number of nestlings ringed is stored in nestlingNumber (Poik).
   capture_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Rengas.DB") %>%
-    # Rename columns to English (based on description provided by data owner)
+    # Rename columns to English (based on description provided by data custodian)
     dplyr::rename(ringSeries = "Sarja",
                   ringNumber = "Mista",
                   captureType = "Tunnus",
@@ -806,7 +807,7 @@ create_capture_HAR <- function(db,
                                                                          pad = 0)
 
                                              # Set chick IDs to NA if the list of ring numbers is unlikely large
-                                             # TODO: Check with data owner.
+                                             # TODO: Check with data custodian.
                                              # Four cases seem to have typos. ringNumber:
                                              # - 403881
                                              # - 564023
@@ -885,7 +886,7 @@ create_capture_HAR <- function(db,
 
   # TODO: Check with other developers how to deal with "unknown" individuals.
   # In more recently developed pipelines, unknown individualIDs are removed. Should we do the same here?
-  # Or should we rethink the way we deal with this? For instance, use data owner-defined IDs for
+  # Or should we rethink the way we deal with this? For instance, use data custodian-defined IDs for
   # captureTagID & releaseTagID (given that they ARE ring numbers), and create our own
   # individualID? This way, "unringed" or "unknown" individuals do not have to be removed, but
   # users are able to distinguish them from ringed individuals and decide what to do with them
@@ -945,21 +946,23 @@ create_capture_HAR <- function(db,
                                                          start = 1,
                                                          end = 2),
                                         sep = "_"),
-                  locationID = paste(.data$capturePlotID,
-                                     stringr::str_sub(string = .data$locationPlotID,
-                                                      start = 3,
-                                                      end = 4),
-                                     sep = "_"),
+                  captureLocationID = paste(.data$capturePlotID,
+                                            stringr::str_sub(string = .data$locationPlotID,
+                                                             start = 3,
+                                                             end = 4),
+                                            sep = "_"),
                   releasePlotID = .data$capturePlotID,
+                  releaseLocationID = .data$captureLocationID,
+                  studyID = "HAR-1",
                   # Assume that individuals with condition 'D' (dead) are recovered,
                   # rather than died during handling
-                  # TODO: check with data owner
+                  # TODO: check with data custodian
                   captureAlive = dplyr::case_when(.data$condition == "D" ~ FALSE,
                                                   TRUE ~ TRUE),
                   releaseAlive = dplyr::case_when(.data$condition == "D" ~ FALSE,
                                                   TRUE ~ TRUE),
                   # Assume that individuals with captureMethod 'M' (other) are not physically captured
-                  # TODO: check with data owner
+                  # TODO: check with data custodian
                   capturePhysical = dplyr::case_when(.data$captureMethod == "M" ~ FALSE,
                                                      TRUE ~ TRUE),
                   # Pad captureTime to be HH:SS
@@ -1018,33 +1021,34 @@ create_individual_HAR <- function(capture_data,
     # For every individual...
     dplyr::group_by(.data$individualID) %>%
     # ... determine species, first brood, ring date, ring stage
-    # TODO: Check CCCCCC individuals with data owner
+    # TODO: Check CCCCCC individuals with data custodian
     dplyr::summarise(speciesID = dplyr::case_when(length(unique(.data$speciesID)) == 2 ~ "CCCCCC",
                                                   TRUE ~ dplyr::first(.data$speciesID)),
                      firstBrood = dplyr::first(.data$broodID),
-                     ringAge = dplyr::first(.data$age),
-                     ringStage = dplyr::first(.data$captureStage),
-                     ringDate = dplyr::first(.data$captureDate),
+                     tagAge = dplyr::first(.data$age),
+                     tagStage = dplyr::first(.data$captureStage),
+                     tagDate = dplyr::first(.data$captureDate),
                      firstYear = dplyr::first(.data$captureYear),
-                     ringSiteID = dplyr::first(.data$captureSiteID)) %>%
+                     tagSiteID = dplyr::first(.data$captureSiteID)) %>%
     # Ungroup to prevent warnings in debug report
     dplyr::ungroup() %>%
-    # If capture date is NA, use year column from primary data for ringYear instead
-    dplyr::mutate(ringYear = dplyr::case_when(is.na(.data$ringDate) ~ as.integer(.data$firstYear),
-                                              TRUE ~ as.integer(lubridate::year(.data$ringDate))),
-                  ringMonth = as.integer(lubridate::month(.data$ringDate)),
-                  ringDay = as.integer(lubridate::day(.data$ringDate)),
-                  # Determine stage at ringing, either chick (before fledging), subadult (1-year-old),
+    # If capture date is NA, use year column from primary data for tagYear instead
+    dplyr::mutate(tagYear = dplyr::case_when(is.na(.data$tagDate) ~ as.integer(.data$firstYear),
+                                              TRUE ~ as.integer(lubridate::year(.data$tagDate))),
+                  tagMonth = as.integer(lubridate::month(.data$tagDate)),
+                  tagDay = as.integer(lubridate::day(.data$tagDate)),
+                  # Determine stage at tagging, either chick (before fledging), subadult (1-year-old),
                   # or adult (2-year-old or older)
-                  ringStage = dplyr::case_when(.data$ringAge %in% c("1", "+1") ~ "subadult",
-                                               TRUE ~ .data$ringStage),
+                  tagStage = dplyr::case_when(.data$tagAge %in% c("1", "+1") ~ "subadult",
+                                               TRUE ~ .data$tagStage),
                   # Only assign brood ID if individual was caught as a chick
-                  broodIDLaid = dplyr::case_when(.data$ringStage != "chick" ~ NA_character_,
+                  broodIDLaid = dplyr::case_when(.data$tagStage != "chick" ~ NA_character_,
                                                  TRUE ~ .data$firstBrood),
                   # Cross-fostering has been done, but there is no info on which chicks were swapped and two where
-                  # TODO: Check with data owner
+                  # TODO: Check with data custodian
                   broodIDFledged =.data$broodIDLaid,
-                  siteID = .data$ringSiteID)
+                  siteID = .data$tagSiteID,
+                  studyID = "HAR-1")
 
   # Add optional variables
   output <- individuals %>%
@@ -1072,7 +1076,7 @@ create_location_HAR <- function(db){
   location_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Paikat.DB") %>%
     # Remove last 2 columns that have no info
     dplyr::select(-"Aukko", -"Malli") %>%
-    # Rename columns to English (based on description provided by data owner)
+    # Rename columns to English (based on description provided by data custodian)
     dplyr::rename(year = "Vuos",
                   locationPlotID = "Nuro",
                   forestType = "Mety",
@@ -1145,9 +1149,10 @@ create_location_HAR <- function(db){
                   latitude = sf::st_coordinates(location_data_sf)[, 2]) %>%
     dplyr::bind_rows(location_nocoord) %>%
     dplyr::mutate(locationType = "nest",
+                  studyID = "HAR-1",
                   siteID = "HAR",
-                  # TODO: habitat is set to 1.4 Forest - Boreal; check with data owner
-                  habitatID = "1.1")
+                  # TODO: check habitat type with data custodian
+                  habitatID = NA_character_)
 
   return(location_full)
 
@@ -1240,7 +1245,7 @@ create_experiment_HAR <- function(db,
     dplyr::filter(!is.na(.data$treatmentCode)) %>%
     # Group by experiment code: year_experimentID
     dplyr::mutate(treatmentCode = as.integer(.data$treatmentCode)) %>%
-    # Using information provided by the data owner (in meta data file), distinguish treatments from experiments
+    # Using information provided by the data custodian (in meta data file), distinguish treatments from experiments
     # E.g., 1994_1, 1994_2, 1994_3 are three treatments of the experiment carried out in 1994
     # whilst 2004_1 and 2004_2 seem to be two different experiments carried out in 2004.
     dplyr::mutate(experimentType = dplyr::case_when(.data$year == 1994 ~ "calcium experiment, brood size manipulation",
@@ -1315,7 +1320,7 @@ create_experiment_HAR <- function(db,
   message("Extracting data on nest visits from paradox database")
 
   observers <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Visitit.DB") %>%
-    # Rename columns to English (based on description provided by data owner)
+    # Rename columns to English (based on description provided by data custodian)
     dplyr::rename(year = "Vuos",
                   locationPlotID = "Nuro",
                   nestAttemptNumber = "Anro",
@@ -1355,11 +1360,12 @@ create_experiment_HAR <- function(db,
                   # Determine the stage during which the experiment was conducted
                   # - if it involves eggs: incubation
                   # - if it involves nestlings: nestling period
-                  # TODO: Check with data owner
-                  experimentStage = dplyr::case_when(stringr::str_detect(string = .data$experimentType,
-                                                                         pattern = "brood size") ~ "nestling",
-                                                     any(stringr::str_detect(string = .data$treatmentDetails,
-                                                                         pattern = "egg")) ~ "incubation"),
+                  # TODO: Check with data custodian
+                  treatmentStage = dplyr::case_when(stringr::str_detect(string = .data$experimentType,
+                                                                        pattern = "brood size") ~ "nestling",
+                                                    any(stringr::str_detect(string = .data$treatmentDetails,
+                                                                            pattern = "egg")) ~ "incubation"),
+                  studyID = "HAR-1",
                   siteID = "HAR") %>%
     dplyr::ungroup()
 
@@ -1369,15 +1375,15 @@ create_experiment_HAR <- function(db,
     # Start of experiment is set to the laying date of the first brood each year
     # Experiments are assumed to be within a year, so that experimentEndYear = experimentStartYear,
     # but experimentEndMonth and experimentEndDay are unknown
-    # TODO: Check with data owner
-    dplyr::mutate(experimentStartDate = lubridate::make_date(year = .data$year,
-                                                             month = .data$month,
-                                                             day = .data$day)) %>%
+    # TODO: Check with data custodian
+    dplyr::mutate(treatmentStartDate = lubridate::make_date(year = .data$year,
+                                                            month = .data$month,
+                                                            day = .data$day)) %>%
 
-    dplyr::summarise(experimentStartYear = as.integer(lubridate::year(dplyr::first(.data$experimentStartDate))),
-                     experimentStartMonth = as.integer(lubridate::month(dplyr::first(.data$experimentStartDate))),
-                     experimentStartDay = as.integer(lubridate::day(dplyr::first(.data$experimentStartDate))),
-                     experimentEndYear = .data$experimentStartYear,
+    dplyr::summarise(treatmentStartYear = as.integer(lubridate::year(dplyr::first(.data$treatmentStartDate))),
+                     treatmentStartMonth = as.integer(lubridate::month(dplyr::first(.data$treatmentStartDate))),
+                     treatmentStartDay = as.integer(lubridate::day(dplyr::first(.data$treatmentStartDate))),
+                     treatmentEndYear = .data$treatmentStartYear,
                      # Create unique and sorted list of observer IDs, e.g., when different broods/nests in the same
                      # treatment group have been visited by different (but overlapping) groups of observers
                      recordedBy = paste(sort(unique(unlist(stringr::str_split(string = .data$recordedBy,
@@ -1390,9 +1396,10 @@ create_experiment_HAR <- function(db,
     dplyr::select("experimentID",
                   "treatmentID",
                   "experimentCode",
+                  "studyID",
                   "siteID",
                   "experimentType",
-                  "experimentStage",
+                  "treatmentStage",
                   "treatmentDetails") %>%
     dplyr::distinct() %>%
     dplyr::left_join(experiment_times, by = "experimentID")
