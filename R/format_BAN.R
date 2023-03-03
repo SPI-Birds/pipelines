@@ -22,7 +22,7 @@
 #'\strong{Lay date, hatch date, number fledged}: There are some cases where
 #'values are given with uncertainty (e.g. 97+, 95?). We don't know how much
 #'uncertainty is involved here, it is currently ignored, but we need to
-#'discuss this with data owner.
+#'discuss this with data custodian.
 #'
 #'\strong{Clutch size}: Cases where clutch size is uncertain (e.g. nests were
 #'predated before completion) are treated as NA because clutch size is unknown.
@@ -53,7 +53,7 @@
 #'
 #'\strong{startYear}: Assume all boxes were placed in the first year of the study.
 #'
-#'\strong{habitatID}: Assume that habitat type is 1.4: Forest - Temperate. Check with data owner.
+#'\strong{habitatID}: Currently unknown, check with data custodian.
 #'
 #'@inheritParams pipeline_params
 #'
@@ -65,7 +65,7 @@
 format_BAN <- function(db = choose_directory(),
                        path = ".",
                        species = NULL,
-                       site = NULL,
+                       study = NULL,
                        optional_variables = NULL,
                        output_type = 'R'){
 
@@ -101,7 +101,8 @@ format_BAN <- function(db = choose_directory(),
 
                                                              })) %>%
                                  # Convert column names to match standard format
-                                 dplyr::mutate(siteID = "BAN",
+                                 dplyr::mutate(studyID = "BAN-1",
+                                               siteID = "BAN",
                                                plotID = paste0("BAN_", .data$site),
                                                # Create a unique locationID using plot and box number
                                                locationID = paste(.data$site,
@@ -109,7 +110,7 @@ format_BAN <- function(db = choose_directory(),
                                                                                    width = 3,
                                                                                    pad = "0"), sep = "_"),
                                                # Ignore uncertainty in species (e.g. GRETI?)
-                                               # TODO: Need to check with data owners
+                                               # TODO: Need to check with data custodian
                                                speciesID = dplyr::case_when(grepl(pattern = "GRETI",
                                                                                   x = .data$species) ~ species_codes[species_codes$speciesCode == 10001, ]$speciesID,
                                                                             grepl(pattern = "BLUTI",
@@ -198,8 +199,7 @@ format_BAN <- function(db = choose_directory(),
     # Add missing columns
     dplyr::bind_cols(data_templates$v2.0$Brood_data[1, !(names(data_templates$v2.0$Brood_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
-    dplyr::select(names(data_templates$v2.0$Brood_data), dplyr::contains(names(utility_variables$Brood_data),
-                                                                         ignore.case = FALSE))
+    dplyr::select(names(data_templates$v2.0$Brood_data), any_of(names(utility_variables$Brood_data)))
 
   Capture_data <- Capture_data %>%
     # Add row ID
@@ -207,8 +207,7 @@ format_BAN <- function(db = choose_directory(),
     # Add missing columns
     dplyr::bind_cols(data_templates$v2.0$Capture_data[1, !(names(data_templates$v2.0$Capture_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
-    dplyr::select(names(data_templates$v2.0$Capture_data), dplyr::contains(names(utility_variables$Capture_data),
-                                                                           ignore.case = FALSE))
+    dplyr::select(names(data_templates$v2.0$Capture_data), any_of(names(utility_variables$Capture_data)))
 
   Individual_data <- Individual_data %>%
     # Add row ID
@@ -216,8 +215,7 @@ format_BAN <- function(db = choose_directory(),
     # Add missing columns
     dplyr::bind_cols(data_templates$v2.0$Individual_data[1, !(names(data_templates$v2.0$Individual_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
-    dplyr::select(names(data_templates$v2.0$Individual_data), dplyr::contains(names(utility_variables$Individual_data),
-                                                                              ignore.case = FALSE))
+    dplyr::select(names(data_templates$v2.0$Individual_data), any_of(names(utility_variables$Individual_data)))
 
   Location_data <- Location_data %>%
     # Add row ID
@@ -287,7 +285,7 @@ create_brood_BAN <- function(data,
     dplyr::mutate(observedClutchType = dplyr::case_when(grepl(pattern = 1, x = .data$nest_attempt) ~ "first",
                                                         grepl(pattern = 2, x = .data$nest_attempt) ~ "second"),
                   # Ignore uncertainty in lay date (e.g., 97? or 97+)
-                  # TODO: Need to check with data owners
+                  # TODO: Need to check with data custodian
                   observedLayDate = dplyr::case_when(is.na(.data$first_egg_lay_date) ~ as.Date(NA),
                                                      stringr::str_detect(.data$first_egg_lay_date, "^\\?") ~ as.Date(NA),
                                                      TRUE ~ .data$marchDate - 1 + as.numeric(stringr::str_remove(.data$first_egg_lay_date, "\\?|\\+"))),
@@ -337,7 +335,7 @@ create_capture_BAN <- function(data,
                                optional_variables = NULL) {
 
   Capture_data <- data %>%
-    dplyr::select("speciesID", "year", "locationID", "plotID",
+    dplyr::select("studyID", "speciesID", "year", "locationID", "plotID",
                   "femaleCaptureDate", "maleCaptureDate",
                   "femaleID", "maleID") %>%
     tidyr::pivot_longer(cols = c("femaleID", "maleID"),
@@ -403,16 +401,17 @@ create_individual_BAN <- function(Capture_data,
   Individual_data <- Capture_data %>%
     dplyr::group_by(.data$individualID) %>%
     dplyr::summarise(speciesID = unique(stats::na.omit(.data$speciesID)),
-                     ringDate = dplyr::first(.data$captureDate),
-                     ringYear = as.integer(dplyr::first(.data$year)),
-                     ringMonth = as.integer(lubridate::month(.data$ringDate)),
-                     ringDay = as.integer(lubridate::day(.data$ringDate)),
-                     ringSiteID = dplyr::first(.data$captureSiteID)) %>%
+                     tagDate = dplyr::first(.data$captureDate),
+                     tagYear = as.integer(dplyr::first(.data$year)),
+                     tagMonth = as.integer(lubridate::month(.data$tagDate)),
+                     tagDay = as.integer(lubridate::day(.data$tagDate)),
+                     tagSiteID = dplyr::first(.data$captureSiteID)) %>%
     dplyr::ungroup() %>%
-    dplyr::mutate(siteID = "BAN",
+    dplyr::mutate(studyID = "BAN-1",
+                  siteID = "BAN",
                   broodIDLaid = NA_character_,
                   broodIDFledged = NA_character_,
-                  ringStage = "adult")
+                  tagStage = "adult")
 
   # Add optional variables
   output <- Individual_data %>%
@@ -436,12 +435,11 @@ create_location_BAN <- function(data) {
 
   Location_data <- tibble::tibble(locationID = unique(data$locationID),
                                   locationType = "nest",
+                                  studyID = "BAN-1",
                                   siteID = "BAN",
-                                  decimalLatitude = NA_real_,
-                                  decimalLongitude = NA_real_,
                                   startYear = as.integer(min(data$year)),
-                                  # TODO: Check habitat type with data owner
-                                  habitatID = "1.4")
+                                  # TODO: Check habitat type with data custodian
+                                  habitatID = NA_character_)
 
   return(Location_data)
 
