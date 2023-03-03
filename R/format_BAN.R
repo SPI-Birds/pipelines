@@ -358,6 +358,8 @@ create_capture_BAN <- function(data,
                   releaseSiteID = "BAN",
                   capturePlotID = .data$plotID,
                   releasePlotID = .data$plotID,
+                  captureLocationID = .data$locationID,
+                  releaseLocationID = .data$locationID,
                   chickAge = NA_integer_,
                   age = NA_character_) %>%
     # Arrange chronologically for each individual

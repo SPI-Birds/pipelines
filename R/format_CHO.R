@@ -33,7 +33,7 @@
 #'(e.g., see broodID 2004_NA). These capture records should be included, but we
 #'need to determine the amount of potential uncertainty around these records.
 #'
-#'\strong{individualID}: Individuals marked as "no ring", "not ringed" or "branco" are removed from Capture_data and Individual_data. Check with data owner on how to handle these.
+#'\strong{individualID}: Individuals marked as "no ring", "not ringed" or "branco" are removed from Capture_data and Individual_data. Check with data custodian on how to handle these.
 #'
 #'\strong{captureAlive, releaseAlive}: Assume all individuals were alive when captured and released.
 #'
@@ -46,7 +46,7 @@
 #'
 #'\strong{startYear}: Assume all boxes were placed in the first year of the study.
 #'
-#'\strong{habitatID}: Assume that habitat type is 1.4: Forest - Temperate. Check with data owner.
+#'\strong{habitatID}: Check habitat type with data custodian.
 #'
 #'@inheritParams pipeline_params
 #'
@@ -55,7 +55,7 @@
 
 format_CHO <- function(db = choose_directory(),
                        species = NULL,
-                       site = NULL,
+                       study = NULL,
                        optional_variables = NULL,
                        path = ".",
                        output_type = "R"){
@@ -90,6 +90,7 @@ format_CHO <- function(db = choose_directory(),
     {colnames(.) <- iconv(colnames(.), "", "ASCII", sub = "")} %>%
     # Change species to "PARMAJ" because it's only PARMAJ in Choupal
     dplyr::mutate(speciesID = species_codes[which(species_codes$speciesCode == 10001), ]$speciesID,
+                  studyID = "CHO-1",
                   siteID = "CHO",
                   plotID = NA_character_) %>%
     dplyr::filter(speciesID %in% species_filter) %>%
@@ -395,7 +396,9 @@ create_capture_CHO <- function(data,
     dplyr::mutate(captureSiteID = .data$siteID,
                   releaseSiteID = .data$siteID,
                   capturePlotID = .data$plotID,
-                  releasePlotID = .data$plotID) %>%
+                  releasePlotID = .data$plotID,
+                  captureLocationID = .data$locationID,
+                  releaseLocationID = .data$locationID) %>%
     # Filter out individuals without individualID
     dplyr::filter(!is.na(.data$individualID)) %>%
     # Arrange chronologically for each individual
@@ -421,27 +424,30 @@ create_capture_CHO <- function(data,
                   row = 1:dplyr::n(),
                   rowWarning = NA,
                   rowError = NA,
-                  originalTarsusMethod = "Alternative") %>%
+                  originalTarsusMethod = "Alternative",
+                  studyID = "CHO-1") %>%
     # Select columns that are in the standard format
     # + measurement columns (needed for input of create_measurement_CHO())
     dplyr::select("individualID",
                   "captureTagID",
                   "releaseTagID",
                   "speciesID",
+                  "studyID",
                   "observedSex",
                   "captureYear",
                   "captureMonth",
                   "captureDay",
                   "captureTime",
                   "recordedBy",
-                  "locationID",
                   "capturePhysical",
                   "captureAlive",
                   "releaseAlive",
                   "captureSiteID",
                   "capturePlotID",
+                  "captureLocationID",
                   "releaseSiteID",
                   "releasePlotID",
+                  "releaseLocationID",
                   "chickAge",
                   "treatmentID",
                   "row",
@@ -487,22 +493,24 @@ create_individual_CHO <- function(data,
     dplyr::arrange(.data$individualID, .data$captureDate, .data$captureYear,
                    .data$captureMonth, .data$captureDay, .data$captureTime) %>%
     # For every individual
-    dplyr::group_by(data$individualID) %>%
+    dplyr::group_by(.data$individualID) %>%
     # Determine first age, brood, ring year, month, day, and ring site of each individual
     dplyr::summarise(firstBrood = dplyr::first(.data$broodID),
-                     ringDate = dplyr::first(.data$captureDate),
-                     ringYear = as.integer(dplyr::first(.data$Year)),
-                     ringMonth = as.integer(lubridate::month(.data$ringDate)),
-                     ringDay = as.integer(lubridate::day(.data$ringDate)),
-                     ringStage = dplyr::first(.data$stage),
+                     tagDate = dplyr::first(.data$captureDate),
+                     tagYear = as.integer(dplyr::first(.data$Year)),
+                     tagMonth = as.integer(lubridate::month(.data$tagDate)),
+                     tagDay = as.integer(lubridate::day(.data$tagDate)),
+                     tagStage = dplyr::first(.data$stage),
                      speciesID = species_codes[which(species_codes$speciesCode == 10001), ]$speciesID,
-                     ringSiteID = dplyr::first(.data$siteID)) %>%
+                     tagSiteID = dplyr::first(.data$siteID)) %>%
     # Only assign a brood ID if they were first caught as a chick
     # Otherwise, the broodID will be their first clutch as a parent
-    dplyr::mutate(broodIDLaid = dplyr::case_when(is.na(.data$ringStage) | .data$ringStage != "chick" ~ NA_character_,
+    dplyr::mutate(broodIDLaid = dplyr::case_when(is.na(.data$tagStage) | .data$tagStage != "chick" ~ NA_character_,
                                                  TRUE ~ .data$firstBrood),
                   # We have no information on cross-fostering, so we assume the brood laid and ringed are the same
-                  broodIDFledged = .data$broodIDLaid) %>%
+                  broodIDFledged = .data$broodIDLaid,
+                  studyID = "CHO-1",
+                  siteID = "CHO") %>%
     # NB: Sex calculation moved to standard utility function (v2.0)
     #dplyr::left_join(Sex_calc, by = "IndvID") %>%
     dplyr::ungroup() %>%
@@ -533,12 +541,11 @@ create_location_CHO <- function(data){
   Location_data <- dplyr::tibble(locationID = stats::na.omit(unique(data$locationID))) %>%
     dplyr::mutate(locationType = dplyr::case_when(.data$locationID == "MN1" ~ "capture",
                                                   .data$locationID != "MN1" ~ "nest"),
+                  studyID = "CHO-1",
                   siteID = "CHO",
-                  decimalLatitude = NA_real_,
-                  decimalLongitude = NA_real_,
                   startYear = 2003L,
                   endYear = NA_integer_,
-                  habitatID = "1.4", # Formerly: HabitatType: Deciduous
+                  habitatID = NA_character_, # Formerly: HabitatType: Deciduous; check with data custodian
                   row = 1:dplyr::n(),
                   rowWarning = NA,
                   rowError = NA) %>%
@@ -565,6 +572,7 @@ create_measurement_CHO <- function(Capture_data){
   # so we only use Capture_data as input
   Measurement_data <- Capture_data %>%
     dplyr::select(recordID = "captureID",
+                  "studyID",
                   siteID = "captureSiteID",
                   measurementDeterminedYear = "captureYear",
                   measurementDeterminedMonth = "captureMonth",
@@ -604,5 +612,5 @@ create_measurement_CHO <- function(Capture_data){
 }
 
 #----------------------#
-#TODO Check with data owner how to handle "no ring", "not ringed", or "branco" individuals
-#TODO Check habitatID with data owner
+#TODO Check with data custodian how to handle "no ring", "not ringed", or "branco" individuals
+#TODO Check habitatID with data custodian
