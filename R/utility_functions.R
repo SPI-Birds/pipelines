@@ -977,9 +977,9 @@ calc_sex <- function(individual_data,
 #'
 #' \strong{Version 2.0}
 #'
-#' From version 2.0 onwards, age is no longer part of the standard format, but optionally available through this utility function. In addition, age is now provided in two variables, exactAge and minimumAge. \emph{exactAge} is the exact age of individuals, which can only be determined for individuals first captured as chicks/fledglings. \emph{minimumAge} is the minimum age of individuals, which can be determined for all individuals. In case of chicks/fledglings, \emph{exactAge} and \emph{minimumAge} are identical.
+#' From version 2.0 onwards, age is no longer part of the standard format, but optionally available through this standard utility function. In addition, age is now provided as two variables, exactAge and minimumAge. \emph{exactAge} is the exact age of individuals, which can only be determined for individuals first captured as chicks/fledglings. \emph{minimumAge} is the minimum age of individuals, which can be determined for all individuals. In case of chicks/fledglings, \emph{exactAge} and \emph{minimumAge} are identical.
 #'
-#' The default behaviour of this function is that age is determined as number of years since birth (exactAge) or ringing (minimumAge). Age increases each time the ringing date is passed. For example, an individual born on 01/07/2022 will become 1 at 01/07/2023. If date of ringing is unknown, we pick an arbitrary date of ringing based on lay date, clutch size/hatch date, and average incubation length. This is specified in the documentation of each individual pipeline.
+#' The default behaviour of this function is that age is determined as number of years since birth (exactAge) or ringing (minimumAge). Age increases each time the ringing date is passed. For example, an individual born on 01/07/2022 will become 1 at 01/07/2023. Note: for individuals for which the date of first capture is incomplete or unknown (e.g., only the year is known), this function will return NA.
 #'
 #' @param data Data frame. Data frame with capture information.
 #' @param ID Unquoted expression (i.e. character without quotation marks). Name
@@ -1090,4 +1090,3 @@ calc_age <- function(data, ID, Age, Date, Year, protocol_version = "1.0", showpb
   return(output)
 
 }
-
