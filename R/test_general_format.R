@@ -11,7 +11,7 @@
 #' "Brood", "Individual", "Capture", "Location", "Measurement" or "Experiment".
 #' @param protocol_version The protocol version of the SPI-Birds
 #' standard data being used to process the primary data. Either "1.0", "1.1", or "2.0" (default).
-#' @param verbose Logical (TRUE/FALSE) for whether the function returns the test output (FALSE) or a vector of columns that failed this test.
+#' @param verbose Logical (TRUE/FALSE) for whether the function returns the test output (FALSE) or a vector of columns that failed this test (TRUE).
 #'
 #' @return See `verbose`.
 #' @export
@@ -61,7 +61,7 @@ test_col_present <- function(pipeline_output,
 #' "Brood", "Individual", "Capture", "Location", "Measurement", or "Experiment".
 #' @param protocol_version The protocol version of the SPI Birds
 #' standard data being used to process the primary data. Either "1.0", "1.1", or "2.0" (default).
-#' @param verbose Logical (TRUE/FALSE) for whether the function returns the test output (FALSE) or a data frame of column names that failed this test, their incorrectly assigned classes, and the classes they should have been assigned.
+#' @param verbose Logical (TRUE/FALSE) for whether the function returns the test output (FALSE) or a data frame of column names that failed this test, their incorrectly assigned classes, and the classes they should have been assigned (TRUE).
 #'
 #' @return See `verbose`.
 #' @export
@@ -233,82 +233,100 @@ test_ID_format <- function(pipeline_output,
 #'
 #' @param pipeline_output A list of the 4 data frames returned from format_X, where X is the three- or four-letter study site code).
 #' @param column Character string. Which column should be checked for duplicates? One of: "broodID", "captureID", "individualID", "measurementID", "locationID", "treatmentID". Note that for "individualID" we use <siteID>_<individualID to check for duplicates within sites.
+#' @param verbose Logical (TRUE/FALSE) for whether the function returns the test output (FALSE) or a vector of IDs that failed this test (TRUE).
 #'
-#' @return Logical (TRUE/FALSE) for whether all values in the column are unique
+#' @return See `verbose`.
 #' @export
 #'
 test_unique_values <- function(pipeline_output,
-                               column) {
+                               column,
+                               verbose = FALSE) {
 
-  eval(bquote(testthat::expect_true(
+  # Select IDs
+  ## broodID
+  if (column == "broodID") {
 
-    ## broodID
-    if (column == "broodID") {
+    if("broodID" %in% names(pipeline_output$Brood_data)) {
 
-      if("broodID" %in% names(pipeline_output$Brood_data)) {
+      IDs <- pipeline_output$Brood_data$broodID
 
-        !any(duplicated(pipeline_output$Brood_data$broodID))
+    } else {
 
-      } else {
-
-        !any(duplicated(pipeline_output$Brood_data$BroodID))
-
-      }
+      IDs <- pipeline_output$Brood_data$BroodID
 
     }
 
-    ## captureID
-    else if (column == "captureID") {
+  }
 
-      if("captureID" %in% names(pipeline_output$Capture_data)) {
+  ## captureID
+  else if (column == "captureID") {
 
-        !any(duplicated(pipeline_output$Capture_data$captureID))
+    if("captureID" %in% names(pipeline_output$Capture_data)) {
 
-      } else {
+      IDs <- pipeline_output$Capture_data$captureID
 
-        !any(duplicated(pipeline_output$Capture_data$CaptureID))
+    } else {
 
-      }
-
-    }
-
-    ## individualID
-    else if (column == "individualID") {
-
-      if("individualID" %in% names(pipeline_output$Individual_data)) {
-
-        !any(duplicated(pipeline_output$Individual_data$individualID))
-
-      } else {
-
-        !any(duplicated(paste(pipeline_output[[3]]$PopID, pipeline_output[[3]]$IndvID, sep = "-")))
-
-      }
+      IDs <- pipeline_output$Capture_data$CaptureID
 
     }
 
-    ## measurementID
-    else if (column == "measurementID") {
+  }
 
-      !any(duplicated(pipeline_output$Measurement_data$measurementID))
+  ## individualID
+  else if (column == "individualID") {
 
-    }
+    if("individualID" %in% names(pipeline_output$Individual_data)) {
 
-    ## locationID
-    else if (column == "locationID") {
+      IDs <- pipeline_output$Individual_data$individualID
 
-      !any(duplicated(pipeline_output$Location_data$locationID))
+    } else {
 
-    }
-
-    ## treatmentID
-    else if (column == "treatmentID") {
-
-      !any(duplicated(pipeline_output$Experiment_data$treatmentID))
+      IDs <- paste(pipeline_output[[3]]$PopID, pipeline_output[[3]]$IndvID, sep = "-")
 
     }
 
-  )))
+  }
+
+  ## measurementID
+  else if (column == "measurementID") {
+
+    IDs <- pipeline_output$Measurement_data$measurementID
+
+  }
+
+  ## locationID
+  else if (column == "locationID") {
+
+    IDs <- pipeline_output$Location_data$locationID
+
+  }
+
+  ## treatmentID
+  else if (column == "treatmentID") {
+
+    IDs <- pipeline_output$Experiment_data$treatmentID
+
+  }
+
+  # Select any duplicated IDs
+  duplicated_IDs <- IDs[duplicated(IDs)]
+
+  # Test that there are 0 duplicated IDs
+  if(verbose == FALSE) {
+
+    eval(bquote(testthat::expect_true(
+
+      !any(duplicated(IDs))
+
+    )))
+
+  } else {
+
+    IDs[duplicated(IDs)]
+
+  }
+
 
 }
 
@@ -320,7 +338,7 @@ test_unique_values <- function(pipeline_output,
 #'
 #' @param pipeline_output A list of the 4 data frames returned from format_X, where X is the three- or four-letter study site code).
 #' @param table Which data table should be checked for NAs in the key columns? One of: "Brood", "Capture", "Individual", "Measurement, "Location", or "Experiment".
-#' @param verbose Logical (TRUE/FALSE) for whether the function returns the test output (FALSE) or a vector of columns that failed this test.
+#' @param verbose Logical (TRUE/FALSE) for whether the function returns the test output (FALSE) or a vector of columns that failed this test (TRUE).
 #'
 #' @return See `verbose`.
 #' @export
@@ -370,7 +388,7 @@ test_NA_columns <- function(pipeline_output,
 #'
 #' @param pipeline_output A list of the 4 data frames returned from format_X, where X is the three- or four-letter study site code).
 #' @param table Which table should be checked? One of: "Brood", "Capture", "Individual", "Location", "Measurement", or "Experiment".
-#' @param verbose Logical (TRUE/FALSE) for whether the function returns the test output (FALSE) or a vector of columns that failed this test.
+#' @param verbose Logical (TRUE/FALSE) for whether the function returns the test output (FALSE) or a vector of columns that failed this test (TRUE).
 #'
 #' @return See `verbose`.
 #' @export
