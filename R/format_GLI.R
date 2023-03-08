@@ -1,7 +1,7 @@
 #' Construct standard format for data from Glimmen, the Netherlands
 #'
 #' A pipeline to produce the standard format for the study site at
-#' Glimmen, the Netherlands, administred by Simon Verhulst (University of Groningen).
+#' Glimmen, the Netherlands, administered by Simon Verhulst (University of Groningen).
 #'
 #' This pipeline is built using SPI-Birds' \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v2.0.0.pdf}{standard format v2.0.0}.
 #'
@@ -9,25 +9,25 @@
 #'
 #' \strong{speciesID}: Species are not explicitly recorded, but we assume that all individuals are successfully identified as Eurasian jackdaws.
 #'
-#' \strong{observedClutchSize}: Broods with less than 0 eggs are excluded. Check with data owner.
+#' \strong{observedClutchSize}: Broods with less than 0 eggs are excluded. Check with data custodian.
 #'
 #' \strong{Capture data, Individual data}: Only individual-level data on breeding individuals is recorded.
 #'
-#' \strong{captureYear}: captureYear is assumed to be equal to year of breeding. captureMonth and captureDay are unknown, but could possibly be deduced from observedLayMonth and observedLayDay. Check with data owner.
+#' \strong{captureYear}: captureYear is assumed to be equal to year of breeding. captureMonth and captureDay are unknown, but could possibly be deduced from observedLayMonth and observedLayDay. Check with data custodian.
 #'
 #' \strong{exactAge, minimumAge}: As a result of captureMonth and captureDay being unknown, age cannot be determined using the standard utility function \code{\link{calc_age}}.
 #'
-#' \strong{captureTagID, releaseTagID}: Check with data owner for information on ring numbers (or other tags).
+#' \strong{captureTagID, releaseTagID}: Check with data custodian for information on ring numbers (or other tags).
 #'
 #' \strong{captureAlive, releaseAlive}: All individuals are assumed to be captured and released alive.
 #'
 #' \strong{capturePhysical}: All captures are assumed to be physical captures.
 #'
-#' \strong{tagStage}: All individuals are assumed to be tagged as 'adults'. Check with data owner.
+#' \strong{tagStage}: All individuals are assumed to be tagged as 'adults'. Check with data custodian.
 #'
-#' \strong{tagYear}: All individuals are assumed to be tagged in the first year the appear in the dataset. Check with data owner.
+#' \strong{tagYear}: All individuals are assumed to be tagged in the first year the appear in the dataset. Check with data custodian.
 #'
-#' \strong{tagSiteID}: All individuals are assumed to be tagged at Glimmen. Check with data owner.
+#' \strong{tagSiteID}: All individuals are assumed to be tagged at Glimmen. Check with data custodian.
 #'
 #' \strong{Location data}: No location information is available, resulting in an empty Location data table.
 #'
@@ -71,7 +71,8 @@ format_GLI <- function(db = choose_directory(),
   all_data <- readxl::read_excel(path = paste0(db, "/GLI_PrimaryData.xlsx")) %>%
     # Convert all column names to snake case
     janitor::clean_names() %>%
-    dplyr::mutate(siteID = "GLI",
+    dplyr::mutate(studyID = "GLI-1",
+                  siteID = "GLI",
                   # Ensure unique plotIDs; add siteID as prefix
                   # TODO: Check whether 'colony' is interpreted correctly
                   plotID = paste0("GLI_", .data$colony)) %>%
@@ -85,7 +86,7 @@ format_GLI <- function(db = choose_directory(),
 
                                 })) %>%
     # Filter species
-    dplyr::filter(.data$speciesID %in% {species})
+    dplyr::filter(.data$speciesID %in% {{species}})
 
 
   # BROOD DATA
@@ -135,8 +136,7 @@ format_GLI <- function(db = choose_directory(),
     # Add missing columns
     dplyr::bind_cols(data_templates$v2.0$Brood_data[1, !(names(data_templates$v2.0$Brood_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
-    dplyr::select(names(data_templates$v2.0$Brood_data), dplyr::contains(names(utility_variables$Brood_data),
-                                                                         ignore.case = FALSE))
+    dplyr::select(names(data_templates$v2.0$Brood_data), any_of(names(utility_variables$Brood_data)))
 
   Capture_data <- Capture_data %>%
     # Add row ID
@@ -144,8 +144,7 @@ format_GLI <- function(db = choose_directory(),
     # Add missing columns
     dplyr::bind_cols(data_templates$v2.0$Capture_data[1, !(names(data_templates$v2.0$Capture_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
-    dplyr::select(names(data_templates$v2.0$Capture_data), dplyr::contains(names(utility_variables$Capture_data),
-                                                                           ignore.case = FALSE))
+    dplyr::select(names(data_templates$v2.0$Capture_data), any_of(names(utility_variables$Capture_data)))
 
   Individual_data <- Individual_data %>%
     # Add row ID
@@ -153,8 +152,7 @@ format_GLI <- function(db = choose_directory(),
     # Add missing columns
     dplyr::bind_cols(data_templates$v2.0$Individual_data[1, !(names(data_templates$v2.0$Individual_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format or in the list of optional variables
-    dplyr::select(names(data_templates$v2.0$Individual_data), dplyr::contains(names(utility_variables$Individual_data),
-                                                                              ignore.case = FALSE))
+    dplyr::select(names(data_templates$v2.0$Individual_data), any_of(names(utility_variables$Individual_data)))
 
   # TIME
 
@@ -221,7 +219,7 @@ create_brood_GLI <- function(data,
                   observedClutchSize = "cs",
                   observedHatchDate = "hd") %>%
     # Remove broods with observedClutchSize < 0
-    # TODO: Check with data owner
+    # TODO: Check with data custodian
     dplyr::filter(.data$observedClutchSize >= 0 | is.na(.data$observedClutchSize)) %>%
     # femaleID & maleID are unique numbers, except when negative then:
     # -1: unringed individual
@@ -301,7 +299,7 @@ create_capture_GLI <- function(brood_data,
                   chickAge = NA_integer_) %>%
     # Arrange chronologically per individual
     dplyr::arrange(.data$individualID, .data$captureYear, .data$observedLayMonth, .data$observedLayDay) %>%
-    # TODO: Check with data owner for tag IDs (e.g., ring numbers)
+    # TODO: Check with data custodian for tag IDs (e.g., ring numbers)
     # Create captureID
     dplyr::group_by(.data$individualID) %>%
     dplyr::mutate(captureID = paste(.data$individualID, 1:dplyr::n(), sep = "_")) %>%
@@ -344,7 +342,8 @@ create_individual_GLI <- function(capture_data,
                      tagSiteID = dplyr::first(.data$captureSiteID),
                      speciesID = dplyr::first(.data$speciesID)) %>%
     dplyr::ungroup() %>%
-    dplyr::mutate(siteID = "GLI")
+    dplyr::mutate(studyID = "GLI-1",
+                  siteID = "GLI")
 
   # Add optional variables
   output <- individuals %>%

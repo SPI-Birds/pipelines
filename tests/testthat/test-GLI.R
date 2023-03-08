@@ -13,6 +13,10 @@ test_that("GLI outputs all files...", {
   #expect_true("GLI" %in% pipeline_output$Location_data$siteID) # Location_data is empty
   #expect_true("GLI" %in% pipeline_output$Experiment_data$siteID) # Experiment_data is empty
 
+  expect_true("GLI-1" %in% pipeline_output$Brood_data$studyID)
+  expect_true("GLI-1" %in% pipeline_output$Capture_data$studyID)
+  expect_true("GLI-1" %in% pipeline_output$Individual_data$studyID)
+
 })
 
 test_that("Individual data returns an expected outcome...", {
@@ -20,12 +24,12 @@ test_that("Individual data returns an expected outcome...", {
   # We want to run a test for each sex for adults
 
   # Take a subset of GLI - Individual_data
-  GLI_data <- dplyr::filter(pipeline_output$Individual_data, siteID == "GLI")
+  GLI_data <- dplyr::filter(pipeline_output$Individual_data, studyID == "GLI-1")
 
   # Test 1: Adult female
   # Individual 12 should be listed as a female Eurasian jackdaw
   expect_equal(subset(GLI_data, individualID == paste0("GLI_", "12"))$calculatedSex, "F")
-  expect_equal(subset(GLI_data, individualID == paste0("GLI_", "12"))$speciesID, "CORMON")
+  expect_equal(subset(GLI_data, individualID == paste0("GLI_", "12"))$speciesID, "COLMON")
   # She should have no broodIDLaid or broodIDFledged because this individual was caught as an adult
   expect_equal(subset(GLI_data, individualID == paste0("GLI_", "12"))$broodIDLaid, NA_character_)
   expect_equal(subset(GLI_data, individualID == paste0("GLI_", "12"))$broodIDFledged, NA_character_)
@@ -36,7 +40,7 @@ test_that("Individual data returns an expected outcome...", {
   # Test 2: Adult male
   # Individual 103 should be listed as a male Eurasian jackdaw
   expect_equal(subset(GLI_data, individualID == paste0("GLI_", "103"))$calculatedSex, "M")
-  expect_equal(subset(GLI_data, individualID == paste0("GLI_", "103"))$speciesID, "CORMON")
+  expect_equal(subset(GLI_data, individualID == paste0("GLI_", "103"))$speciesID, "COLMON")
   # Individual should have no broodIDLaid or broodIDFledged because caught as an adult
   expect_equal(subset(GLI_data, individualID == paste0("GLI_", "103"))$broodIDLaid, NA_character_)
   expect_equal(subset(GLI_data, individualID == paste0("GLI_", "103"))$broodIDFledged, NA_character_)
@@ -47,7 +51,7 @@ test_that("Individual data returns an expected outcome...", {
   # Test 3: Adult (conflicted sex)
   # Individual 1058 should be listed as a Eurasian jackdaw of conflicted sex
   expect_equal(subset(GLI_data, individualID == paste0("GLI_", "1058"))$calculatedSex, "C")
-  expect_equal(subset(GLI_data, individualID == paste0("GLI_", "1058"))$speciesID, "CORMON")
+  expect_equal(subset(GLI_data, individualID == paste0("GLI_", "1058"))$speciesID, "COLMON")
   # Individual should have no broodIDLaid or broodIDFledged because caught as an adult
   expect_equal(subset(GLI_data, individualID == paste0("GLI_", "1058"))$broodIDLaid, NA_character_)
   expect_equal(subset(GLI_data, individualID == paste0("GLI_", "1058"))$broodIDFledged, NA_character_)
@@ -62,11 +66,11 @@ test_that("Brood data returns an expected outcome...", {
   # We want to run tests for all possible types of broods
 
   # Take a subset of GLI - Brood_data
-  GLI_data <- dplyr::filter(pipeline_output$Brood_data, siteID == "GLI")
+  GLI_data <- dplyr::filter(pipeline_output$Brood_data, studyID == "GLI-1")
 
   # Test 1: all brood parameters recorded
   # broodID 10 should be CORMON
-  expect_equal(subset(GLI_data, broodID == "10")$speciesID, "CORMON")
+  expect_equal(subset(GLI_data, broodID == "10")$speciesID, "COLMON")
   # broodID 10 should have clutch type observed & calculated NA
   expect_equal(subset(GLI_data, broodID == "10")$observedClutchType, NA_character_)
   expect_equal(subset(GLI_data, broodID == "10")$calculatedClutchType, NA_character_)
@@ -86,7 +90,7 @@ test_that("Brood data returns an expected outcome...", {
 
   # Test 2: no laying date, but clutch size and hatch date
   # broodID 248 should be CORMON
-  expect_equal(subset(GLI_data, broodID == "248")$speciesID, "CORMON")
+  expect_equal(subset(GLI_data, broodID == "248")$speciesID, "COLMON")
   # broodID 10 should have clutch type observed & calculated NA
   expect_equal(subset(GLI_data, broodID == "248")$observedClutchType, NA_character_)
   expect_equal(subset(GLI_data, broodID == "248")$calculatedClutchType, NA_character_)
@@ -111,7 +115,7 @@ test_that("Capture data returns an expected outcome...", {
   # We want to run tests for captures as both males and females
 
   # Take a subset of GLI - Capture_data
-  GLI_data <- dplyr::filter(pipeline_output$Capture_data, captureSiteID == "GLI")
+  GLI_data <- dplyr::filter(pipeline_output$Capture_data, studyID == "GLI-1")
 
   # Test 1: Female caught as adult
   # Test the female has the correct number of capture records (9)
