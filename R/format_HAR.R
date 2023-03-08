@@ -7,7 +7,7 @@
 #'this data. For a general description of the standard protocl please see
 #'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v2.0.0.pdf}{here}.
 #'
-#'\strong{Species}: Data from Harjavalta contains information on 23 different species. We only include records for species with at least 50 broods throughout the study period: pied flycatcher, great tit, blue tit, coal tit, European crested tit, and common redstart. The few records for other species (e.g., Eurasian wryneck, common starling, house sparrow) are excluded.
+#'\strong{Species}: Data from Harjavalta contain information on 23 different species. We include records for the 6 species that include marked individuals: pied flycatcher, blue tit, great tit, coal tit, common redstart, and wryneck. Check with data custodian how to treat other/minority species.
 #'
 #'\strong{Stage}: Age/stage is listed as: PP (nestling), PM (fledgling), FL(unknown),
 #'1, +1, 2, +2. PP/PM are 'chicks', where PP are chicks in the nest and PM chicks left the nest but caught by hand (i.e. still not able to fly), for which exact ages can be calculated. 1 (fully grown in first year) and +1 (fully grown, after first-year) are considered 'subadults', and 2 (fully grown and known to be born last year) and +2 (fully grown, after second-year) 'adults'. For either, exact age cannot be calculated. FL is unknown.
@@ -386,13 +386,13 @@ create_brood_HAR <- function(db,
                                   .data$nestAttemptNumber,
                                   sep = "_"),
                   # Set species codes
-                  # TODO Check rare species (e.g., JYNTOR, CERFAM, MOTALB, PARMON)
+                  # TODO Check rare/other species with data custodian
                   speciesID = dplyr::case_when(.data$speciesID == "FICHYP" ~ species_codes$speciesID[species_codes$speciesCode == "10003"],
                                                .data$speciesID == "PARCAE" ~ species_codes$speciesID[species_codes$speciesCode == "10002"],
                                                .data$speciesID == "PARMAJ" ~ species_codes$speciesID[species_codes$speciesCode == "10001"],
                                                .data$speciesID == "PARATE" ~ species_codes$speciesID[species_codes$speciesCode == "10005"],
                                                .data$speciesID == "PHOPHO" ~ species_codes$speciesID[species_codes$speciesCode == "10010"],
-                                               .data$speciesID == "PARCRI" ~ species_codes$speciesID[species_codes$speciesCode == "10012"],
+                                               .data$speciesID == "JYNTOR" ~ species_codes$speciesID[species_codes$speciesCode == "10011"],
                                                TRUE ~ NA_character_),
                   # If femaleID & maleID differ from expected format, set to NA
                   # Ensure that individuals are unique: add institutionID as prefix to femaleID & maleID
@@ -641,14 +641,13 @@ create_capture_HAR <- function(db,
                   captureTime = dplyr::na_if(x = paste0(.data$captureTime, ":00"),
                                              y = "NA:00")) %>%
     # Set species codes
-    # Note, rare species/codes are ignored and set to NA
-    # e.g., JYNTOR, CERFAM, MOTALB, PARMON
+    # Note: some species/codes are ignored (if individuals have not been marked) and set to NA
     dplyr::mutate(speciesID = dplyr::case_when(.data$speciesID == "FICHYP" ~ species_codes$speciesID[species_codes$speciesCode == "10003"],
                                                .data$speciesID == "PARCAE" ~ species_codes$speciesID[species_codes$speciesCode == "10002"],
                                                .data$speciesID == "PARMAJ" ~ species_codes$speciesID[species_codes$speciesCode == "10001"],
                                                .data$speciesID == "PARATE" ~ species_codes$speciesID[species_codes$speciesCode == "10005"],
                                                .data$speciesID == "PHOPHO" ~ species_codes$speciesID[species_codes$speciesCode == "10010"],
-                                               .data$speciesID == "PARCRI" ~ species_codes$speciesID[species_codes$speciesCode == "10012"],
+                                               .data$speciesID == "JYNTOR" ~ species_codes$speciesID[species_codes$speciesCode == "10011"],
                                                TRUE ~ NA_character_)) %>%
     dplyr::mutate(observedSex = dplyr::case_when(.data$observedSex %in% c("N", "O") ~ "F",
                                                  .data$observedSex %in% c("K", "L") ~ "M"),
