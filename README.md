@@ -54,7 +54,7 @@
 
 # SPI-Birds pipeline: Introduction (for the general user)
 
-Welcome to the SPI-Birds pipeline package. This section of the README will give you an introduction on how to load the package, how to find out details about each pipeline, and how to use the package for creating bird data following the [SPI-Birds community data standard](https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf) and generating [standard quality checks](https://github.com/SPI-Birds/documentation/blob/master/quality_check/SPI-Birds_quality-check-protocol_v1.0.pdf).
+Welcome to the SPI-Birds pipeline package. This section of the README will give you an introduction on how to load the package, how to find out details about each pipeline, and how to use the package for creating bird data following the [SPI-Birds community data standard](https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v2.0.0.pdf) and generating [standard quality checks](https://github.com/SPI-Birds/documentation/blob/master/quality_check/SPI-Birds_quality-check-protocol.pdf).
 
 <a name="load"/>
 
@@ -67,13 +67,13 @@ remotes::install_github("SPI-Birds/pipelines")
 library(pipelines)
 ```
 
-This will install all pipelines and quality check code on your computer and attach our `pipeline` package into your session of R. Individual pipelines are build as separate functions for each data owner (where one data owner can administer multiple populations). Each function is given the name `format_X()` where *X* is the letter code for the data owner. The codes for different data owners and corresponding populations are described in the [SPI-Birds standard protocol](https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.1.0.pdf). *Note* in cases where a data owner administers one population, the unique 3 letter population ID code and the data owner code are identical.
+This will install all pipelines and quality check code on your computer and attach our `pipeline` package into your session of R. Individual pipelines are build as separate functions for each data owner (where one data owner can administer multiple populations). Each function is given the name `format_X()` where *X* is the letter code for the data owner. The codes for different data owners and corresponding populations are described in the [SPI-Birds standard protocol](https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v2.0.0.pdf). *Note* in cases where a data owner administers one population, the unique 3 letter population ID code and the data owner code are identical.
 
 <a name="docs"/>
 
 ## Pipeline documentation
 
-To process each set of primary data into the structure described in the [SPI-Birds standard protocol](https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.1.0.pdf) it is often necessary to make assumptions about how each variable is interpreted. All assumptions made during the pipeline process are described in the help documentation for a given function. This can be accessed using the `?` in R. For example, to read about the assumptions made when processing data from the NIOO, you can use the code:
+To process each set of primary data into the structure described in the [SPI-Birds standard protocol](https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v2.0.0.pdf) it is often necessary to make assumptions about how each variable is interpreted. All assumptions made during the pipeline process are described in the help documentation for a given function. This can be accessed using the `?` in R. For example, to read about the assumptions made when processing data from the NIOO, you can use the code:
 
 ```
 ?format_NIOO
@@ -322,7 +322,7 @@ Below we describe the workflow that any developer should follow when building a 
 - `format_X()` should always take 4 standard arguments:
     * path: The location of the folder where primary data are stored. Can be left blank and R will prompt you to find the folder.
     * PopID: The population code(s) for the populations where you want to run pipelines. Relevant for data owners that administer multiple populations.
-    * Species: The species code(s) for the species you want to use (e.g. PARMAJ for great tit). See the [SPI-Birds standard protocol](https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v1.1.0.pdf) for all species codes.
+    * Species: The species code(s) for the species you want to use (e.g. PARMAJ for great tit). See the [SPI-Birds standard protocol](https://github.com/LiamDBailey/SPIBirds_Newsletter/blob/master/SPI_Birds_Protocol_v2.0.0.pdf) for all species codes.
     * output_type: Should the data be output in R or as separate .csv files
     
 - These arguments are all documented under pipeline_params in the `zzz.R` file within /R.
@@ -505,6 +505,7 @@ THIS IS STILL DONE MANUALLY AND NEEDS TO BE UPDATED. EVERY TIME A NEW PIPELINE I
 <a name="quality_check"/>
 
 ## Quality check
+Note: the quality check is built for pipelines tailored to version 1.0.0 and 1.1.0 of the standard format. Updating the quality checks to match pipelines tailored to version 2.0.0 of the standard format is in progress.
 
 ### Creating checks
 The `quality_check()` function is a wrapper function that combines 4 dataset-specific wrapper functions:
