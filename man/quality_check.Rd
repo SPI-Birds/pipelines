@@ -6,9 +6,9 @@
 \usage{
 quality_check(
   R_data,
-  output = "both",
+  output = c("both", "errors", "warnings"),
   report = TRUE,
-  report_format = "both",
+  report_format = c("both", "html", "pdf"),
   report_file = "quality-check-report",
   latex_engine = "lualatex",
   test = FALSE,
@@ -38,8 +38,9 @@ dummy data will be used instead.}
 \item{skip}{Character. Identifiers of the individual quality checks (CheckID) that should be skipped.}
 }
 \value{
+\subsection{List}
 A list of:
-\item{CheckList}{A summary dataframe of check warnings and potential errors.}
+\item{CheckList}{A summary data frame of check warnings and potentials errors, with the following columns: (1) \code{CheckID}: {identifier of the individual quality check}, (2) \code{CheckDescription}: {a short description of the individual check}, (3) \code{Warning}: {TRUE/FALSE. Did this check flag any records as warning?}, (4) \code{Error}: {TRUE/FALSE. Did this check flag any records as error?}, (5) \code{WarningRecords}: {number of records flagged as warning by this check}, (6) \code{ErrorRecords}: {number of records flagged as error by this check.}, and (7) \code{Skipped}: {TRUE/FALSE. Was this check skipped?}.}
 \item{NumberChecks}{Number of checks performed.}
 \item{SkippedChecks}{Number of checks manually skipped.}
 \item{WarningChecks}{Number of checks resulted in warnings.}
@@ -47,7 +48,8 @@ A list of:
 \item{ElapsedTime}{Elapsed time in seconds.}
 \item{R_data}{Pipeline output (a list of 4 dataframes) with Warning & Error columns marking the rows with warnings and errors.}
 
-and reports (pdf, html or both) of potential errors and/or warnings if \code{report = TRUE}.
+\subsection{Reports (optional)}
+Quality check reports (pdf, html or both) of potential errors and/or warnings if \code{report = TRUE}.
 }
 \description{
 A wrapper function that performs a quality check and produces a report.
@@ -62,6 +64,4 @@ CHO <- run_pipelines(PopID = "CHO", output_type = "R")
 CHO_checked <- quality_check(R_data = CHO)
 
 }
-invisible(lapply(Location_checks$Maps, print))', # To suppress the printing of indices
-invisible(purrr::map(.x = Location_checks$Maps, .f = ~{.x}))', # To suppress the printing of indices
 }
