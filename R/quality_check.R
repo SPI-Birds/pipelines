@@ -40,9 +40,9 @@
 
 
 quality_check <- function(R_data,
-                          output = "both",
+                          output = c("both", "errors", "warnings"),
                           report = TRUE,
-                          report_format = "both",
+                          report_format = c("both", "html", "pdf"),
                           report_file = "quality-check-report",
                           latex_engine = "lualatex",
                           test = FALSE,
@@ -53,12 +53,20 @@ quality_check <- function(R_data,
 
   message("Running quality check")
 
-  if(report_format == "both"){
+  # Match arguments
+  if("both" %in% report_format){
 
     report_format <- c("html", "pdf")
 
+  } else {
+
+    report_format <- match.arg(report_format)
+
   }
 
+  output <- match.arg(output)
+
+  # Load approved list: dummy for testing, latest list for actual quality check
   if(test) {
 
     R_data <- create_dummy_data()
@@ -97,7 +105,7 @@ quality_check <- function(R_data,
 
   }
 
-  # Subset each item
+  # Subset each item of R_data
   Brood_data <- R_data$Brood_data
   Capture_data <- R_data$Capture_data
   Individual_data <- R_data$Individual_data
