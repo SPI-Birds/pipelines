@@ -46,9 +46,11 @@ individual_check <- function(Individual_data, Capture_data, Location_data, appro
                                                     "Check that individuals in Individual_data also appear in Capture_data"),
                                Warning = NA,
                                Error = NA,
+                               WarningRecords = NA_integer_,
+                               ErrorRecords = NA_integer_,
                                Skipped = NA)
 
-  check_list[,3:5] <- purrr::map_dfr(.x = check_outputs, .f = 1) # Combine check lists of single checks
+  check_list[,3:7] <- purrr::map_dfr(.x = check_outputs, .f = 1) # Combine check lists of single checks
 
   # Create list of 'warning' messages
   warning_list <- purrr::map(.x = check_outputs, .f = 4)
@@ -142,8 +144,13 @@ check_unique_IndvID <- function(Individual_data, approved_list, output, skip){
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
+  # Count number of records flagged
+  error_count <- sum(!is.na(error_records$Row))
+
   check_list <- tibble::tibble(Warning = war,
                                Error = err,
+                               WarningRecords = NA_integer_,
+                               ErrorRecords = error_count,
                                Skipped = skip_check)
 
   return(list(CheckList = check_list,
@@ -208,7 +215,7 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data, a
       dplyr::group_by(.data$Row) %>%
       dplyr::mutate(BreedingSeason = .data$StartSeason + row_number() - 1) %>%
       dplyr::ungroup() %>%
-      dplyr::select(-.data$Row)
+      dplyr::select(-"Row")
 
     # Select first captures of chicks and link to the information of their locations
     first_captures <- Capture_data %>%
@@ -218,7 +225,7 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data, a
       dplyr::slice(1) %>% # Select first row if multiple captures have been made on the first day
       dplyr::ungroup() %>%
       dplyr::right_join(annual_locations, by = c("CapturePopID" = "PopID", "LocationID", "BreedingSeason")) %>%
-      dplyr::select(-.data$Row)
+      dplyr::select(-"Row")
 
     # Join with individual data
     ind_cap_loc_data <- Individual_data %>%
@@ -256,8 +263,13 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data, a
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
+  # Count number of records flagged
+  error_count <- sum(!is.na(error_records$Row))
+
   check_list <- tibble::tibble(Warning = war,
                                Error = err,
+                               WarningRecords = NA_integer_,
+                               ErrorRecords = error_count,
                                Skipped = skip_check)
 
   return(list(CheckList = check_list,
@@ -342,8 +354,13 @@ check_conflicting_sex <- function(Individual_data, approved_list, output, skip) 
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
+  # Count number of records flagged
+  error_count <- sum(!is.na(error_records$Row))
+
   check_list <- tibble::tibble(Warning = war,
                                Error = err,
+                               WarningRecords = NA_integer_,
+                               ErrorRecords = error_count,
                                Skipped = skip_check)
 
   return(list(CheckList = check_list,
@@ -427,8 +444,13 @@ check_conflicting_species <- function(Individual_data, approved_list, output, sk
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
+  # Count number of records flagged
+  error_count <- sum(!is.na(error_records$Row))
+
   check_list <- tibble::tibble(Warning = war,
                                Error = err,
+                               WarningRecords = NA_integer_,
+                               ErrorRecords = error_count,
                                Skipped = skip_check)
 
   return(list(CheckList = check_list,
@@ -519,8 +541,13 @@ check_individuals_captures <- function(Individual_data, Capture_data, approved_l
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
+  # Count number of records flagged
+  error_count <- sum(!is.na(error_records$Row))
+
   check_list <- tibble::tibble(Warning = war,
                                Error = err,
+                               WarningRecords = NA_integer_,
+                               ErrorRecords = error_count,
                                Skipped = skip_check)
 
   return(list(CheckList = check_list,

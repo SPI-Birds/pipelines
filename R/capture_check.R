@@ -50,9 +50,11 @@ capture_check <- function(Capture_data, Location_data, Brood_data, Individual_da
                                                     "Check that capture locations appear in Location_data"),
                                Warning = NA,
                                Error = NA,
+                               WarningRecords = NA_integer_,
+                               ErrorRecords = NA_integer_,
                                Skipped = NA)
 
-  check_list[,3:5] <- purrr::map_dfr(.x = check_outputs, .f = 1) # Combine check lists of single checks
+  check_list[,3:7] <- purrr::map_dfr(.x = check_outputs, .f = 1) # Combine check lists of single checks
 
   # Create list of 'warning' messages
   warning_list <- purrr::map(.x = check_outputs, .f = 4)
@@ -163,7 +165,7 @@ check_values_capture <- function(Capture_data, var, approved_list, output, skip)
                        Error_max = 2 * round(stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE), 1),
                        n = dplyr::n(),
                        Logis = FALSE) %>%
-      dplyr::rename(PopID = .data$CapturePopID) %>%
+      dplyr::rename("PopID" = "CapturePopID") %>%
       dplyr::mutate_at(c("Error_min", "Error_max"), ~round(., 2))
 
     # Print message for population-species combinations with too low number of observations
@@ -171,7 +173,7 @@ check_values_capture <- function(Capture_data, var, approved_list, output, skip)
 
       low_obs <- ref %>%
         dplyr::filter(.data$n < 100) %>%
-        dplyr::select(.data$Species, .data$PopID, .data$Stage)
+        dplyr::select("Species", "PopID", "Stage")
 
       purrr::pwalk(.l = list(low_obs$Species,
                              low_obs$PopID,
@@ -201,7 +203,7 @@ check_values_capture <- function(Capture_data, var, approved_list, output, skip)
                        Error_max = 2 * stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE),
                        n = dplyr::n(),
                        Logis = FALSE) %>%
-      dplyr::rename(PopID = .data$CapturePopID) %>%
+      dplyr::rename("PopID" = "CapturePopID") %>%
       dplyr::mutate_at(c("Error_min", "Error_max"), ~round(., 2))
 
     # Print message for population-species combinations with too low number of observations for adults
@@ -209,7 +211,7 @@ check_values_capture <- function(Capture_data, var, approved_list, output, skip)
 
       low_obs_adults <- ref_adults %>%
         dplyr::filter(.data$n < 100) %>%
-        dplyr::select(.data$Species, .data$PopID)
+        dplyr::select("Species", "PopID")
 
       purrr::pwalk(.l = list(low_obs_adults$Species,
                              low_obs_adults$PopID,
@@ -259,7 +261,7 @@ check_values_capture <- function(Capture_data, var, approved_list, output, skip)
                                Error_max = 2 * stats::quantile(!!rlang::sym(var), probs = 0.99, na.rm = TRUE),
                                n = dplyr::n(),
                                Logis = FALSE) %>%
-              dplyr::rename(PopID = .data$CapturePopID)
+              dplyr::rename("PopID" = "CapturePopID")
 
           })
 
@@ -273,7 +275,7 @@ check_values_capture <- function(Capture_data, var, approved_list, output, skip)
 
       low_obs_chicks <- ref_chicks %>%
         dplyr::filter(.data$Logis == FALSE & .data$n < 100 & !is.na(.data$Stage)) %>%
-        dplyr::select(.data$Species, .data$PopID, .data$Stage)
+        dplyr::select("Species", "PopID", "Stage")
 
       purrr::pwalk(.l = list(low_obs_chicks$Species,
                              low_obs_chicks$PopID,
@@ -385,8 +387,8 @@ check_values_capture <- function(Capture_data, var, approved_list, output, skip)
                                                        Ref = ..4) %>%
                                          dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2, .data$Age_calculated > 3,
                                                        !!rlang::sym(var) < ..4) %>%
-                                         dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
-                                                       .data$Species, .data$Variable, .data$Threshold, .data$Ref)
+                                         dplyr::select("Row", "PopID" = "CapturePopID", "CaptureID", !!rlang::sym(var),
+                                                       "Species", "Variable", "Threshold", "Ref")
 
                                        # Capture records above upper error threshold
                                        upper_err <- Capture_data %>%
@@ -395,8 +397,8 @@ check_values_capture <- function(Capture_data, var, approved_list, output, skip)
                                                        Ref = ..5) %>%
                                          dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2, .data$Age_calculated > 3,
                                                        !!rlang::sym(var) > ..5) %>%
-                                         dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
-                                                       .data$Species, .data$Variable, .data$Threshold, .data$Ref)
+                                         dplyr::select("Row", "PopID" = "CapturePopID", "CaptureID", !!rlang::sym(var),
+                                                       "Species", "Variable", "Threshold", "Ref")
 
                                        dplyr::bind_rows(lower_err, upper_err)
 
@@ -411,8 +413,8 @@ check_values_capture <- function(Capture_data, var, approved_list, output, skip)
                                                        Ref = ..4) %>%
                                          dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2, .data$Age_calculated > 3,
                                                        !!rlang::sym(var) < ..4) %>%
-                                         dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
-                                                       .data$Species, .data$Variable, .data$Threshold, .data$Ref)
+                                         dplyr::select("Row", "PopID" = "CapturePopID", "CaptureID", !!rlang::sym(var),
+                                                       "Species", "Variable", "Threshold", "Ref")
 
                                      }
 
@@ -429,8 +431,8 @@ check_values_capture <- function(Capture_data, var, approved_list, output, skip)
                                                        Ref = ..4) %>%
                                          dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2, .data$CurrentChickAge == ..3,
                                                        !!rlang::sym(var) < ..4) %>%
-                                         dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
-                                                       .data$Species, .data$Variable, .data$Threshold, .data$Ref)
+                                         dplyr::select("Row", "PopID" = "CapturePopID", "CaptureID", !!rlang::sym(var),
+                                                       "Species", "Variable", "Threshold", "Ref")
 
                                        # Else, compare to all reference values
                                      } else {
@@ -442,8 +444,8 @@ check_values_capture <- function(Capture_data, var, approved_list, output, skip)
                                                        Ref = ..4) %>%
                                          dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2,
                                                        .data$CurrentChickAge == ..3, !!rlang::sym(var) < ..4) %>%
-                                         dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
-                                                       .data$Species, .data$Variable, .data$Threshold, .data$Ref)
+                                         dplyr::select("Row", "PopID" = "CapturePopID", "CaptureID", !!rlang::sym(var),
+                                                       "Species", "Variable", "Threshold", "Ref")
 
                                        # Capture records above upper error threshold
                                        upper_err <- Capture_data %>%
@@ -452,8 +454,8 @@ check_values_capture <- function(Capture_data, var, approved_list, output, skip)
                                                        Ref = ..5) %>%
                                          dplyr::filter(.data$Species == ..1, .data$CapturePopID == ..2,
                                                        .data$CurrentChickAge == ..3, !!rlang::sym(var) > ..5) %>%
-                                         dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, !!rlang::sym(var),
-                                                       .data$Species, .data$Variable, .data$Threshold, .data$Ref)
+                                         dplyr::select("Row", "PopID" = "CapturePopID", "CaptureID", !!rlang::sym(var),
+                                                       "Species", "Variable", "Threshold", "Ref")
 
                                        dplyr::bind_rows(lower_err, upper_err)
 
@@ -508,7 +510,7 @@ check_values_capture <- function(Capture_data, var, approved_list, output, skip)
 
       low_obs <- ref %>%
         dplyr::filter(.data$n < 100) %>%
-        dplyr::select(.data$Species, .data$PopID, .data$Stage)
+        dplyr::select("Species", "PopID", "Stage")
 
       skipped_output <- purrr::pmap(.l = list(low_obs$Species,
                                               low_obs$PopID,
@@ -531,7 +533,7 @@ check_values_capture <- function(Capture_data, var, approved_list, output, skip)
 
         low_obs_adults <- ref_adults %>%
           dplyr::filter(.data$n < 100) %>%
-          dplyr::select(.data$Species, .data$PopID) %>%
+          dplyr::select("Species", "PopID") %>%
           dplyr::mutate(Stage = "adults")
 
         skipped_adults_output <- purrr::pmap(.l = list(low_obs_adults$Species,
@@ -547,7 +549,7 @@ check_values_capture <- function(Capture_data, var, approved_list, output, skip)
 
         low_obs_chicks <- ref_chicks %>%
           dplyr::filter(.data$Logis == FALSE & .data$n < 100 & !is.na(.data$Stage)) %>%
-          dplyr::select(.data$Species, .data$PopID, .data$Stage)
+          dplyr::select("Species", "PopID", "Stage")
 
         skipped_chicks_output <- purrr::pmap(.l = list(low_obs_chicks$Species,
                                                        low_obs_chicks$PopID,
@@ -583,8 +585,13 @@ check_values_capture <- function(Capture_data, var, approved_list, output, skip)
 
   }
 
+  # Count number of records flagged
+  error_count <- sum(!is.na(error_records$Row))
+
   check_list <- tibble::tibble(Warning = war,
                                Error = err,
+                               WarningRecords = NA_integer_,
+                               ErrorRecords = error_count,
                                Skipped = skip_check)
 
   return(list(CheckList = check_list,
@@ -637,7 +644,7 @@ check_chick_age <- function(Capture_data, approved_list, output, skip){
     # Select records with chick age < 0 OR > 30
     chick_age_err <- Capture_data %>%
       dplyr::filter(.data$ChickAge < 0 | .data$ChickAge > 30) %>% #TODO: make species-specific
-      dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, .data$Species, .data$ChickAge)
+      dplyr::select("Row", "PopID" = "CapturePopID", "CaptureID", "Species", "ChickAge")
 
     # If potential errors, add to report
     if(nrow(chick_age_err) > 0) {
@@ -669,8 +676,13 @@ check_chick_age <- function(Capture_data, approved_list, output, skip){
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
+  # Count number of records flagged
+  error_count <- sum(!is.na(error_records$Row))
+
   check_list <- tibble::tibble(Warning = war,
                                Error = err,
+                               WarningRecords = NA_integer_,
+                               ErrorRecords = error_count,
                                Skipped = skip_check)
 
   return(list(CheckList = check_list,
@@ -786,7 +798,7 @@ check_adult_parent_nest <- function(Capture_data, Location_data, Brood_data, app
       dplyr::group_by(.data$Row) %>%
       dplyr::mutate(BreedingSeason = .data$StartSeason + row_number() - 1) %>%
       dplyr::ungroup() %>%
-      dplyr::select(-.data$Row)
+      dplyr::select(-"Row")
 
     # Add location type to adults data frame and filter captures on nest box
     adults_nest_box <- adults %>%
@@ -806,7 +818,7 @@ check_adult_parent_nest <- function(Capture_data, Location_data, Brood_data, app
     unassociated_adults <- adults_nest_box %>%
       dplyr::anti_join(females_w_nests, by = c("CapturePopID", "BreedingSeason", "LocationID", "IndvID")) %>%
       dplyr::anti_join(males_w_nests, by = c("CapturePopID", "BreedingSeason", "LocationID", "IndvID")) %>%
-      dplyr::select(.data$Row, .data$CaptureID, .data$IndvID, PopID = .data$CapturePopID)
+      dplyr::select("Row", "CaptureID", "IndvID", "PopID" = "CapturePopID")
 
     # If warnings, add to report
     if(nrow(unassociated_adults) > 0) {
@@ -839,8 +851,13 @@ check_adult_parent_nest <- function(Capture_data, Location_data, Brood_data, app
   #error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
+  # Count number of records flagged
+  warning_count <- sum(!is.na(warning_records$Row))
+
   check_list <- tibble::tibble(Warning = war,
                                Error = err,
+                               WarningRecords = warning_count,
+                               ErrorRecords = NA_integer_,
                                Skipped = skip_check)
 
   return(list(CheckList = check_list,
@@ -904,8 +921,8 @@ check_age_captures <- function(Capture_data, approved_list, output, skip){
                 (.data$Age_observed_next == 2 | .data$Age_observed_next >= 4))
           )
       ) %>%
-      dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$IndvID, .data$CaptureID,
-                    .data$Species, .data$Age_observed, .data$Age_observed_next)
+      dplyr::select("Row", "PopID" = "CapturePopID", "IndvID", "CaptureID",
+                    "Species", "Age_observed", "Age_observed_next")
 
     # If warnings, add to report
     if(nrow(wrong_age_order) > 0) {
@@ -949,8 +966,8 @@ check_age_captures <- function(Capture_data, approved_list, output, skip){
       dplyr::filter(.data$Age_observed > .data$Age_observed_next &
                       (.data$Age_observed == 2 | .data$Age_observed >= 4) &
                       .data$Age_observed_next %in% c(1, 3)) %>%
-      dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$IndvID, .data$CaptureID,
-                    .data$Species, .data$Age_observed, .data$Age_observed_next)
+      dplyr::select("Row", "PopID" = "CapturePopID", "IndvID", "CaptureID",
+                    "Species", "Age_observed", "Age_observed_next")
 
     # If potential errors, add to report
     if(nrow(chicks_caught_after_adults) > 0) {
@@ -978,8 +995,14 @@ check_age_captures <- function(Capture_data, approved_list, output, skip){
 
   }
 
+  # Count number of records flagged
+  warning_count <- sum(!is.na(warning_records$Row))
+  error_count <- sum(!is.na(error_records$Row))
+
   check_list <- tibble::tibble(Warning = war,
                                Error = err,
+                               WarningRecords = warning_count,
+                               ErrorRecords = error_count,
                                Skipped = skip_check)
 
   return(list(CheckList = check_list,
@@ -1040,7 +1063,7 @@ check_captures_individuals <- function(Capture_data, Individual_data, approved_l
 
                                       }) %>%
       dplyr::bind_rows() %>%
-      dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, .data$IndvID)
+      dplyr::select("Row", "PopID" = "CapturePopID", "CaptureID", "IndvID")
 
     # If potential errors, add to report
     if(nrow(missing_individuals) > 0) {
@@ -1073,8 +1096,13 @@ check_captures_individuals <- function(Capture_data, Individual_data, approved_l
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
+  # Count number of records flagged
+  error_count <- sum(!is.na(error_records$Row))
+
   check_list <- tibble::tibble(Warning = war,
                                Error = err,
+                               WarningRecords = NA_integer_,
+                               ErrorRecords = error_count,
                                Skipped = skip_check)
 
   return(list(CheckList = check_list,
@@ -1136,7 +1164,7 @@ check_capture_locations <- function(Capture_data, Location_data, approved_list, 
 
                                     }) %>%
       dplyr::bind_rows() %>%
-      dplyr::select(.data$Row, PopID = .data$CapturePopID, .data$CaptureID, .data$LocationID)
+      dplyr::select("Row", "PopID" = "CapturePopID", "CaptureID", "LocationID")
 
     # If potential errors, add to report
     if(nrow(missing_locations) > 0) {
@@ -1166,9 +1194,15 @@ check_capture_locations <- function(Capture_data, Location_data, approved_list, 
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
+  # Count number of records flagged
+  error_count <- sum(!is.na(error_records$Row))
+
   check_list <- tibble::tibble(Warning = war,
                                Error = err,
+                               WarningRecords = NA_integer_,
+                               ErrorRecords = error_count,
                                Skipped = skip_check)
+
 
   return(list(CheckList = check_list,
               WarningRows = NULL,
