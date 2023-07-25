@@ -97,9 +97,11 @@ brood_check <- function(Brood_data, Individual_data, Capture_data, Location_data
                                                     "Check that nest locations appear in Location_data"),
                                Warning = NA,
                                Error = NA,
+                               WarningRecords = NA_integer_,
+                               ErrorRecords = NA_integer_,
                                Skipped = NA)
 
-  check_list[,3:5] <- purrr::map_dfr(.x = check_outputs, .f = 1) # Combine check lists of single checks
+  check_list[,3:7] <- purrr::map_dfr(.x = check_outputs, .f = 1) # Combine check lists of single checks
 
   # Create list of 'warning' messages
   warning_list <- purrr::map(.x = check_outputs, .f = 4)
@@ -164,8 +166,8 @@ compare_clutch_brood <- function(Brood_data, approved_list, output, skip){
       error_records <- brood_data_non %>%
         dplyr::mutate(CheckID = "B1") %>%
         dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID")) %>%
-        {if(all(c("ClutchSize", "BroodSize") %in% colnames(.))) dplyr::select(., .data$Row, .data$PopID, .data$BroodID, .data$ClutchSize, .data$BroodSize)
-          else dplyr::select(., .data$Row, .data$PopID, .data$BroodID, .data$ClutchSize_observed, .data$BroodSize_observed)}
+        {if(all(c("ClutchSize", "BroodSize") %in% colnames(.))) dplyr::select(., "Row", "PopID", "BroodID", "ClutchSize", "BroodSize")
+          else dplyr::select(., "Row", "PopID", "BroodID", "ClutchSize_observed", "BroodSize_observed")}
 
       # Create quality check report statements
       error_output <- purrr::pmap(.l = error_records,
@@ -203,8 +205,8 @@ compare_clutch_brood <- function(Brood_data, approved_list, output, skip){
       warning_records <- brood_data_man %>%
         dplyr::mutate(CheckID = "B1") %>%
         dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID")) %>%
-        {if(all(c("ClutchSize", "BroodSize") %in% colnames(.))) dplyr::select(., .data$Row, .data$PopID, .data$BroodID, .data$ClutchSize, .data$BroodSize)
-          else dplyr::select(., .data$Row, .data$PopID, .data$BroodID, .data$ClutchSize_observed, .data$BroodSize_observed)}
+        {if(all(c("ClutchSize", "BroodSize") %in% colnames(.))) dplyr::select(., "Row", "PopID", "BroodID", "ClutchSize", "BroodSize")
+          else dplyr::select(., "Row", "PopID", "BroodID", "ClutchSize_observed", "BroodSize_observed")}
 
       # Create quality check report statements
       warning_output <- purrr::pmap(.l = warning_records,
@@ -221,8 +223,14 @@ compare_clutch_brood <- function(Brood_data, approved_list, output, skip){
 
   }
 
+  # Count number of records flagged
+  warning_count <- sum(!is.na(warning_records$Row))
+  error_count <- sum(!is.na(error_records$Row))
+
   check_list <- tibble::tibble(Warning = war,
                                Error = err,
+                               WarningRecords = warning_count,
+                               ErrorRecords = error_count,
                                Skipped = skip_check)
 
 
@@ -288,8 +296,8 @@ compare_brood_fledglings <- function(Brood_data, approved_list, output, skip){
       error_records <- brood_data_non %>%
         dplyr::mutate(CheckID = "B2") %>%
         dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID")) %>%
-        {if(all(c("BroodSize", "NumberFledged") %in% colnames(.))) dplyr::select(., .data$Row, .data$PopID, .data$BroodID, .data$BroodSize, .data$NumberFledged)
-          else dplyr::select(., .data$Row, .data$PopID, .data$BroodID, .data$BroodSize_observed, .data$NumberFledged_observed)}
+        {if(all(c("BroodSize", "NumberFledged") %in% colnames(.))) dplyr::select(., "Row", "PopID", "BroodID", "BroodSize", "NumberFledged")
+          else dplyr::select(., "Row", "PopID", "BroodID", "BroodSize_observed", "NumberFledged_observed")}
 
       # Create quality check report statements
       error_output <- purrr::pmap(.l = error_records,
@@ -327,8 +335,8 @@ compare_brood_fledglings <- function(Brood_data, approved_list, output, skip){
       warning_records <- brood_data_man %>%
         dplyr::mutate(CheckID = "B2") %>%
         dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID")) %>%
-        {if(all(c("BroodSize", "NumberFledged") %in% colnames(.))) dplyr::select(., .data$Row, .data$PopID, .data$BroodID, .data$BroodSize, .data$NumberFledged)
-          else dplyr::select(., .data$Row, .data$PopID, .data$BroodID, .data$BroodSize_observed, .data$NumberFledged_observed)}
+        {if(all(c("BroodSize", "NumberFledged") %in% colnames(.))) dplyr::select(., "Row", "PopID", "BroodID", "BroodSize", "NumberFledged")
+          else dplyr::select(., "Row", "PopID", "BroodID", "BroodSize_observed", "NumberFledged_observed")}
 
       # Create quality check report statements
       warning_output <- purrr::pmap(.l = warning_records,
@@ -345,8 +353,14 @@ compare_brood_fledglings <- function(Brood_data, approved_list, output, skip){
 
   }
 
+  # Count number of records flagged
+  warning_count <- sum(!is.na(warning_records$Row))
+  error_count <- sum(!is.na(error_records$Row))
+
   check_list <- tibble::tibble(Warning = war,
                                Error = err,
+                               WarningRecords = warning_count,
+                               ErrorRecords = error_count,
                                Skipped = skip_check)
 
   return(list(CheckList = check_list,
@@ -422,8 +436,8 @@ compare_laying_hatching <- function(Brood_data, approved_list, output, skip){
       error_records <- brood_data_late %>%
         dplyr::mutate(CheckID = "B3") %>%
         dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID")) %>%
-        {if(all(c("LayDate", "HatchDate") %in% colnames(.))) dplyr::select(., .data$Row, .data$PopID, .data$BroodID, .data$LayDate, .data$HatchDate)
-          else dplyr::select(., .data$Row, .data$PopID, .data$BroodID, .data$LayDate_observed, .data$HatchDate_observed)}
+        {if(all(c("LayDate", "HatchDate") %in% colnames(.))) dplyr::select(., "Row", "PopID", "BroodID", "LayDate", "HatchDate")
+          else dplyr::select(., "Row", "PopID", "BroodID", "LayDate_observed", "HatchDate_observed")}
 
       # Create quality check report statements
       error_output <- purrr::pmap(.l = error_records,
@@ -444,8 +458,13 @@ compare_laying_hatching <- function(Brood_data, approved_list, output, skip){
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
+  # Count number of records flagged
+  error_count <- sum(!is.na(error_records$Row))
+
   check_list <- tibble::tibble(Warning = war,
                                Error = err,
+                               WarningRecords = NA_integer_,
+                               ErrorRecords = error_count,
                                Skipped = skip_check)
 
   return(list(CheckList = check_list,
@@ -520,8 +539,8 @@ compare_hatching_fledging <- function(Brood_data, approved_list, output, skip){
     error_records <- brood_data_late %>%
       dplyr::mutate(CheckID = "B4") %>%
       dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID")) %>%
-      {if(all(c("HatchDate", "FledgeDate") %in% colnames(.))) dplyr::select(., .data$Row, .data$PopID, .data$BroodID, .data$HatchDate, .data$FledgeDate)
-        else dplyr::select(., .data$Row, .data$PopID, .data$BroodID, .data$HatchDate_observed, .data$FledgeDate_observed)}
+      {if(all(c("HatchDate", "FledgeDate") %in% colnames(.))) dplyr::select(., "Row", "PopID", "BroodID", "HatchDate", "FledgeDate")
+        else dplyr::select(., "Row", "PopID", "BroodID", "HatchDate_observed", "FledgeDate_observed")}
 
     # Create quality check report statements
     error_output <- purrr::pmap(.l = error_records,
@@ -542,8 +561,13 @@ compare_hatching_fledging <- function(Brood_data, approved_list, output, skip){
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
+  # Count number of records flagged
+  error_count <- sum(!is.na(error_records$Row))
+
   check_list <- tibble::tibble(Warning = war,
                                Error = err,
+                               WarningRecords = NA_integer_,
+                               ErrorRecords = error_count,
                                Skipped = skip_check)
 
   return(list(CheckList = check_list,
@@ -680,7 +704,7 @@ check_values_brood <- function(Brood_data, var, approved_list, output, skip) {
 
       low_obs <- ref %>%
         dplyr::filter(.data$n < 100) %>%
-        dplyr::select(.data$Species, .data$PopID)
+        dplyr::select("Species", "PopID")
 
       purrr::pwalk(.l = list(low_obs$Species,
                              low_obs$PopID,
@@ -740,7 +764,7 @@ check_values_brood <- function(Brood_data, var, approved_list, output, skip) {
                                                    Threshold = "L",
                                                    Ref = ..3) %>%
                                      dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(var) < ..3) %>%
-                                     dplyr::select(.data$Row, .data$PopID, .data$BroodID, !!rlang::sym(var), .data$Species, .data$Variable, .data$Threshold, .data$Ref)
+                                     dplyr::select("Row", "PopID", "BroodID", !!rlang::sym(var), "Species", "Variable", "Threshold", "Ref")
 
 
                                    # Brood records above upper error threshold
@@ -749,7 +773,7 @@ check_values_brood <- function(Brood_data, var, approved_list, output, skip) {
                                                    Threshold = "U",
                                                    Ref = ..4) %>%
                                      dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(var) > ..4) %>%
-                                     dplyr::select(.data$Row, .data$PopID, .data$BroodID, !!rlang::sym(var), .data$Species, .data$Variable, .data$Threshold, .data$Ref)
+                                     dplyr::select("Row", "PopID", "BroodID", !!rlang::sym(var), "Species", "Variable", "Threshold", "Ref")
 
 
                                    dplyr::bind_rows(lower_err, upper_err)
@@ -764,7 +788,7 @@ check_values_brood <- function(Brood_data, var, approved_list, output, skip) {
                                                    Threshold = "L",
                                                    Ref = ..3) %>%
                                      dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(var) < ..3) %>%
-                                     dplyr::select(.data$Row, .data$PopID, .data$BroodID, !!rlang::sym(var), .data$Species, .data$Variable, .data$Threshold, .data$Ref)
+                                     dplyr::select("Row", "PopID", "BroodID", !!rlang::sym(var), "Species", "Variable", "Threshold", "Ref")
 
                                  }
 
@@ -780,8 +804,8 @@ check_values_brood <- function(Brood_data, var, approved_list, output, skip) {
                                                  Threshold = "L",
                                                  Ref = paste(.data$BreedingSeason, "01", "01", sep = "-")) %>%
                                    dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(paste0(var, "_julian")) < ..3) %>%
-                                   dplyr::select(.data$Row, .data$PopID, .data$BroodID, !!rlang::sym(var),
-                                                 .data$Species, .data$Variable, .data$Threshold, .data$Ref)
+                                   dplyr::select("Row", "PopID", "BroodID", !!rlang::sym(var),
+                                                 "Species", "Variable", "Threshold", "Ref")
 
                                  # Brood records above upper error threshold
                                  upper_err <- Brood_data %>%
@@ -792,8 +816,8 @@ check_values_brood <- function(Brood_data, var, approved_list, output, skip) {
                                                  Threshold = "U",
                                                  Ref = paste(.data$BreedingSeason, "12", "31", sep = "-")) %>%
                                    dplyr::filter(.data$Species == ..1 & .data$PopID == ..2 & !!rlang::sym(paste0(var, "_julian")) > ..4) %>%
-                                   dplyr::select(.data$Row, .data$PopID, .data$BroodID, !!rlang::sym(var),
-                                                 .data$Species, .data$Variable, .data$Threshold, .data$Ref)
+                                   dplyr::select("Row", "PopID", "BroodID", !!rlang::sym(var),
+                                                 "Species", "Variable", "Threshold", "Ref")
 
                                  dplyr::bind_rows(lower_err, upper_err)
 
@@ -888,10 +912,14 @@ check_values_brood <- function(Brood_data, var, approved_list, output, skip) {
 
   }
 
+  # Count number of records flagged
+  error_count <- sum(!is.na(error_records$Row))
+
   check_list <- tibble::tibble(Warning = war,
                                Error = err,
+                               WarningRecords = NA_integer_,
+                               ErrorRecords = error_count,
                                Skipped = skip_check)
-
   return(list(CheckList = check_list,
               WarningRows = NULL,
               ErrorRows = error_records$Row,
@@ -938,7 +966,7 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data, approved_
 
     # Link BroodID from Individual_data to each capture in Capture_data
     chicks_captured <- Individual_data %>%
-      dplyr::select(.data$IndvID, .data$BroodIDLaid) %>%
+      dplyr::select("IndvID", "BroodIDLaid") %>%
       dplyr::group_by(.data$BroodIDLaid) %>%
       dplyr::summarise(Chicks = n_distinct(.data$IndvID)) %>%
       dplyr::ungroup()
@@ -959,8 +987,8 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data, approved_
       dplyr::left_join(chicks_captured, by=c("BroodID" = "BroodIDLaid")) %>%
       {if("BroodSize" %in% colnames(.)) dplyr::filter(.,  (is.na(.data$ExperimentID) | .data$ExperimentID == "") &.data$BroodSize < .data$Chicks)
         else dplyr::filter(., (is.na(.data$ExperimentID) | .data$ExperimentID == "") & .data$BroodSize_observed < .data$Chicks)} %>%
-      {if("BroodSize" %in% colnames(.)) dplyr::select(., .data$Row, .data$PopID, .data$BroodID, .data$BroodSize, .data$Chicks)
-        else dplyr::select(., .data$Row, .data$PopID, .data$BroodID, .data$BroodSize_observed, .data$Chicks)}
+      {if("BroodSize" %in% colnames(.)) dplyr::select(., "Row", "PopID", "BroodID", "BroodSize", "Chicks")
+        else dplyr::select(., "Row", "PopID", "BroodID", "BroodSize_observed", "Chicks")}
 
     # If potential errors, add to report
     if(nrow(brood_err) > 0) {
@@ -1002,8 +1030,8 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data, approved_
       dplyr::left_join(chicks_captured, by=c("BroodID" = "BroodIDLaid")) %>%
       {if("BroodSize" %in% colnames(.)) dplyr::filter(.,  .data$BroodSize > .data$Chicks | ((!is.na(.data$ExperimentID) | .data$ExperimentID != "") & .data$BroodSize < .data$Chicks))
         else dplyr::filter(., .data$BroodSize_observed > .data$Chicks | ((!is.na(.data$ExperimentID) | .data$ExperimentID != "") & .data$BroodSize_observed < .data$Chicks))} %>%
-      {if("BroodSize" %in% colnames(.)) dplyr::select(., .data$Row, .data$PopID, .data$BroodID, .data$BroodSize, .data$Chicks)
-        else dplyr::select(., .data$Row, .data$PopID, .data$BroodID, .data$BroodSize_observed, .data$Chicks)}
+      {if("BroodSize" %in% colnames(.)) dplyr::select(., "Row", "PopID", "BroodID", "BroodSize", "Chicks")
+        else dplyr::select(., "Row", "PopID", "BroodID", "BroodSize_observed", "Chicks")}
 
     # If warnings, add to report
     if(nrow(brood_war) > 0) {
@@ -1041,8 +1069,14 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data, approved_
 
   }
 
+  # Count number of records flagged
+  warning_count <- sum(!is.na(warning_records$Row))
+  error_count <- sum(!is.na(error_records$Row))
+
   check_list <- tibble::tibble(Warning = war,
                                Error = err,
+                               WarningRecords = warning_count,
+                               ErrorRecords = error_count,
                                Skipped = skip_check)
 
   return(list(CheckList = check_list,
@@ -1107,7 +1141,7 @@ check_unique_BroodID <- function(Brood_data, approved_list, output, skip){
       error_records <- duplicated %>%
         dplyr::mutate(CheckID = "B7") %>%
         dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID")) %>%
-        dplyr::select(.data$Row, .data$BroodID, .data$PopID)
+        dplyr::select("Row", "BroodID", "PopID")
 
       # Create quality check report statements
       error_output <- purrr::map(.x = unique(error_records$BroodID),
@@ -1136,8 +1170,13 @@ check_unique_BroodID <- function(Brood_data, approved_list, output, skip){
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
+  # Count number of records flagged
+  error_count <- sum(!is.na(error_records$Row))
+
   check_list <- tibble::tibble(Warning = war,
                                Error = err,
+                               WarningRecords = NA_integer_,
+                               ErrorRecords = error_count,
                                Skipped = skip_check)
 
   return(list(CheckList = check_list,
@@ -1228,8 +1267,13 @@ check_clutch_type_order <- function(Brood_data, approved_list, output, skip){
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
+  # Count number of records flagged
+  error_count <- sum(!is.na(error_records$Row))
+
   check_list <- tibble::tibble(Warning = war,
                                Error = err,
+                               WarningRecords = NA_integer_,
+                               ErrorRecords = error_count,
                                Skipped = skip_check)
 
   return(list(CheckList = check_list,
@@ -1279,17 +1323,17 @@ compare_species_parents <- function(Brood_data, Individual_data, approved_list, 
     # Find species information of mothers
     females <- Brood_data %>%
       dplyr::filter(!is.na(.data$FemaleID) & !is.na(.data$MaleID)) %>%
-      dplyr::select(.data$Row, .data$PopID, .data$BroodID, .data$FemaleID) %>%
+      dplyr::select("Row", "PopID", "BroodID", "FemaleID") %>%
       dplyr::left_join(Individual_data[,c("IndvID", "Species")], by=c("FemaleID" = "IndvID")) %>%
-      dplyr::rename(FemaleSpecies = .data$Species)
+      dplyr::rename(FemaleSpecies = "Species")
 
     # Find species information of fathers
     males <- Brood_data %>%
       dplyr::filter(!is.na(.data$FemaleID) & !is.na(.data$MaleID)) %>%
-      dplyr::select(.data$Row, .data$PopID, .data$BroodID, .data$MaleID) %>%
+      dplyr::select("Row", "PopID", "BroodID", "MaleID") %>%
       dplyr::left_join(Individual_data[,c("IndvID", "Species")],
                        by=c("MaleID" = "IndvID")) %>%
-      dplyr::rename(MaleSpecies = .data$Species)
+      dplyr::rename(MaleSpecies = "Species")
 
     # Select records where parents are different species
     hybrid_broods <- dplyr::left_join(females, males,
@@ -1372,8 +1416,14 @@ compare_species_parents <- function(Brood_data, Individual_data, approved_list, 
 
   }
 
+  # Count number of records flagged
+  warning_count <- sum(!is.na(warning_records$Row))
+  error_count <- sum(!is.na(error_records$Row))
+
   check_list <- tibble::tibble(Warning = war,
                                Error = err,
+                               WarningRecords = warning_count,
+                               ErrorRecords = error_count,
                                Skipped = skip_check)
 
   return(list(CheckList = check_list,
@@ -1419,20 +1469,20 @@ compare_species_brood_parents <- function(Brood_data, Individual_data, approved_
     # Find species information of mothers
     females <- Brood_data %>%
       dplyr::filter(!is.na(.data$FemaleID) & !is.na(.data$MaleID)) %>%
-      dplyr::select(.data$Row, .data$PopID, .data$BroodID,
-                    .data$FemaleID, "BroodSpecies" = .data$Species) %>%
+      dplyr::select("Row", "PopID", "BroodID",
+                    "FemaleID", "BroodSpecies" = "Species") %>%
       dplyr::left_join(Individual_data[,c("IndvID", "Species")],
                        by=c("FemaleID" = "IndvID")) %>%
-      dplyr::rename("FemaleSpecies" = .data$Species)
+      dplyr::rename("FemaleSpecies" = "Species")
 
     # Find species information of fathers
     males <- Brood_data %>%
       dplyr::filter(!is.na(.data$FemaleID) & !is.na(.data$MaleID)) %>%
-      dplyr::select(.data$Row, .data$PopID, .data$BroodID,
-                    .data$MaleID, "BroodSpecies" = .data$Species) %>%
+      dplyr::select("Row", "PopID", "BroodID",
+                    "MaleID", "BroodSpecies" = "Species") %>%
       dplyr::left_join(Individual_data[,c("IndvID", "Species")],
                        by=c("MaleID" = "IndvID")) %>%
-      dplyr::rename("MaleSpecies" = .data$Species)
+      dplyr::rename("MaleSpecies" = "Species")
 
     # Select records where parents are not of the same species as the brood
     females_males <- dplyr::left_join(females, males,
@@ -1530,8 +1580,14 @@ compare_species_brood_parents <- function(Brood_data, Individual_data, approved_
 
   }
 
+  # Count number of records flagged
+  warning_count <- sum(!is.na(warning_records$Row))
+  error_count <- sum(!is.na(error_records$Row))
+
   check_list <- tibble::tibble(Warning = war,
                                Error = err,
+                               WarningRecords = warning_count,
+                               ErrorRecords = error_count,
                                Skipped = skip_check)
 
   return(list(CheckList = check_list,
@@ -1581,7 +1637,7 @@ compare_species_brood_chicks <- function(Brood_data, Individual_data, approved_l
       # Do not select individuals without BroodID and conflicted species
       # The latter is evaluated in check I5.
       dplyr::filter(!is.na(.data$BroodIDLaid) & (.data$Species != "CONFLICTED" | .data$Species != "CCCCCC")) %>%
-      dplyr::select(.data$IndvID, "IndvSpecies" = .data$Species, .data$BroodIDLaid, .data$PopID)
+      dplyr::select("IndvID", "IndvSpecies" = "Species", "BroodIDLaid", "PopID")
 
   }
 
@@ -1669,8 +1725,14 @@ compare_species_brood_chicks <- function(Brood_data, Individual_data, approved_l
 
   }
 
+  # Count number of records flagged
+  warning_count <- sum(!is.na(warning_records$Row))
+  error_count <- sum(!is.na(error_records$Row))
+
   check_list <- tibble::tibble(Warning = war,
                                Error = err,
+                               WarningRecords = warning_count,
+                               ErrorRecords = error_count,
                                Skipped = skip_check)
 
   return(list(CheckList = check_list,
@@ -1727,7 +1789,7 @@ check_sex_mothers <- function(Brood_data, Individual_data, approved_list, output
 
       parents <- Individual_data %>%
         dplyr::filter(.data$RingAge == "adult") %>%
-        dplyr::select(.data$IndvID, .data$PopID, .data$Sex)
+        dplyr::select("IndvID", "PopID", "Sex")
 
     } else {# Use Sex_genetic if non_NA, otherwise Sex_calculated
 
@@ -1735,7 +1797,7 @@ check_sex_mothers <- function(Brood_data, Individual_data, approved_list, output
         dplyr::filter(.data$RingAge == "adult") %>%
         dplyr::mutate(Sex = dplyr::case_when(is.na(.data$Sex_genetic) ~ .data$Sex_calculated,
                                              !is.na(.data$Sex_genetic) ~ .data$Sex_genetic)) %>%
-        dplyr::select(.data$IndvID, .data$PopID, .data$Sex)
+        dplyr::select("IndvID", "PopID", "Sex")
 
     }
 
@@ -1743,8 +1805,8 @@ check_sex_mothers <- function(Brood_data, Individual_data, approved_list, output
     non_female_mothers <- Brood_data %>%
       dplyr::left_join(parents, by = c("PopID", "FemaleID" = "IndvID")) %>%
       dplyr::filter(.data$Sex == "M") %>%
-      dplyr::select(.data$Row, .data$BroodID, .data$PopID,
-                    .data$FemaleID, .data$Sex) %>%
+      dplyr::select("Row", "BroodID", "PopID",
+                    "FemaleID", "Sex") %>%
       dplyr::arrange(.data$Row)
 
     # If potential errors, add to report
@@ -1775,8 +1837,13 @@ check_sex_mothers <- function(Brood_data, Individual_data, approved_list, output
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
+  # Count number of records flagged
+  error_count <- sum(!is.na(error_records$Row))
+
   check_list <- tibble::tibble(Warning = war,
                                Error = err,
+                               WarningRecords = NA_integer_,
+                               ErrorRecords = error_count,
                                Skipped = skip_check)
 
   return(list(CheckList = check_list,
@@ -1833,7 +1900,7 @@ check_sex_fathers <- function(Brood_data, Individual_data, approved_list, output
 
       parents <- Individual_data %>%
         dplyr::filter(.data$RingAge == "adult") %>%
-        dplyr::select(.data$IndvID, .data$PopID, .data$Sex)
+        dplyr::select("IndvID", "PopID", "Sex")
 
     } else {# Use Sex_genetic if non_NA, otherwise Sex_calculated
 
@@ -1841,7 +1908,7 @@ check_sex_fathers <- function(Brood_data, Individual_data, approved_list, output
         dplyr::filter(.data$RingAge == "adult") %>%
         dplyr::mutate(Sex = dplyr::case_when(is.na(.data$Sex_genetic) ~ .data$Sex_calculated,
                                              !is.na(.data$Sex_genetic) ~ .data$Sex_genetic)) %>%
-        dplyr::select(.data$IndvID, .data$PopID, .data$Sex)
+        dplyr::select("IndvID", "PopID", "Sex")
 
     }
 
@@ -1849,8 +1916,8 @@ check_sex_fathers <- function(Brood_data, Individual_data, approved_list, output
     non_male_fathers <- Brood_data %>%
       dplyr::left_join(parents, by = c("PopID", "MaleID" = "IndvID")) %>%
       dplyr::filter(.data$Sex == "F") %>%
-      dplyr::select(.data$Row, .data$BroodID, .data$PopID,
-                    .data$MaleID, .data$Sex) %>%
+      dplyr::select("Row", "BroodID", "PopID",
+                    "MaleID", "Sex") %>%
       dplyr::arrange(.data$Row)
 
     # If potential errors, add to report
@@ -1881,8 +1948,13 @@ check_sex_fathers <- function(Brood_data, Individual_data, approved_list, output
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
+  # Count number of records flagged
+  error_count <- sum(!is.na(error_records$Row))
+
   check_list <- tibble::tibble(Warning = war,
                                Error = err,
+                               WarningRecords = NA_integer_,
+                               ErrorRecords = error_count,
                                Skipped = skip_check)
 
   return(list(CheckList = check_list,
@@ -1942,14 +2014,14 @@ check_parents_captures <- function(Brood_data, Capture_data, approved_list, outp
                                     missing_mothers <- dplyr::anti_join({Brood_data %>% dplyr::filter(!is.na(FemaleID) &.data$PopID == .x)},
                                                                         {Capture_data %>% dplyr::filter(.data$CapturePopID == .x)},
                                                                         by = c("FemaleID" = "IndvID", "PopID" = "CapturePopID")) %>%
-                                      dplyr::select(.data$Row, .data$PopID, .data$BroodID, IndvID = .data$FemaleID) %>%
+                                      dplyr::select("Row", "PopID", "BroodID", "IndvID" = "FemaleID") %>%
                                       dplyr::mutate(Parent = "mother")
 
                                     # Missing fathers
                                     missing_fathers <- dplyr::anti_join({Brood_data %>% dplyr::filter(!is.na(MaleID) & .data$PopID == .x)},
                                                                         {Capture_data %>% dplyr::filter(.data$CapturePopID == .x)},
                                                                         by = c("MaleID" = "IndvID", "PopID" = "CapturePopID")) %>%
-                                      dplyr::select(.data$Row, .data$PopID, .data$BroodID, IndvID = .data$MaleID) %>%
+                                      dplyr::select("Row", "PopID", "BroodID", "IndvID" = "MaleID") %>%
                                       dplyr::mutate(Parent = "father")
 
                                     # Bind data frames, and combine info if both mother & father of the same brood are missing
@@ -2001,8 +2073,13 @@ check_parents_captures <- function(Brood_data, Capture_data, approved_list, outp
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
+  # Count number of records flagged
+  error_count <- sum(!is.na(error_records$Row))
+
   check_list <- tibble::tibble(Warning = war,
                                Error = err,
+                               WarningRecords = NA_integer_,
+                               ErrorRecords = error_count,
                                Skipped = skip_check)
 
   return(list(CheckList = check_list,
@@ -2064,7 +2141,7 @@ check_brood_locations <- function(Brood_data, Location_data, approved_list, outp
 
                                     }) %>%
       dplyr::bind_rows() %>%
-      dplyr::select(.data$Row, .data$PopID, .data$BroodID, .data$LocationID)
+      dplyr::select("Row", "PopID", "BroodID", "LocationID")
 
     # If potential errors, add to report
     if(nrow(missing_locations) > 0) {
@@ -2094,8 +2171,13 @@ check_brood_locations <- function(Brood_data, Location_data, approved_list, outp
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
+  # Count number of records flagged
+  error_count <- sum(!is.na(error_records$Row))
+
   check_list <- tibble::tibble(Warning = war,
                                Error = err,
+                               WarningRecords = NA_integer_,
+                               ErrorRecords = error_count,
                                Skipped = skip_check)
 
   return(list(CheckList = check_list,

@@ -32,9 +32,11 @@ location_check <- function(Location_data, Brood_data, Capture_data, approved_lis
                                CheckDescription = c("Check location coordinates"),
                                Warning = NA,
                                Error = NA,
+                               WarningRecords = NA_integer_,
+                               ErrorRecords = NA_integer_,
                                Skipped = NA)
 
-  check_list[,3:5] <- purrr::map_dfr(.x = check_outputs, .f = 1) # Combine check lists of single checks
+  check_list[,3:7] <- purrr::map_dfr(.x = check_outputs, .f = 1) # Combine check lists of single checks
 
   # Create list of 'warning' messages
   warning_list <- purrr::map(.x = check_outputs, .f = 4)
@@ -119,7 +121,7 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
 
       few_coords <- records_w_longlat %>%
         dplyr::filter(.data$n_unique_lon < 2 | .data$n_unique_lat < 2) %>%
-        dplyr::select(.data$PopID)
+        dplyr::select("PopID")
 
       purrr::walk(.x = list(few_coords$PopID),
                   .f = ~{
@@ -134,7 +136,7 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
     # Select PopIDs with at least 2 locations with known and unique coordinates
     pops_w_longlat <- records_w_longlat %>%
       dplyr::filter(.data$n_unique_lon >= 2 | .data$n_unique_lat >= 2) %>%
-      dplyr::pull(.data$PopID)
+      dplyr::pull("PopID")
 
     # Determine centre point per PopID
     centre_points <- Location_data %>%
@@ -170,7 +172,7 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
     # Filter very remote locations (20 km or farther)
     remote_locations <- locations %>%
       dplyr::filter(.data$Distance >= 20000) %>%
-      dplyr::select(.data$Row, .data$LocationID, .data$PopID, .data$Distance)
+      dplyr::select("Row", "LocationID", "PopID", "Distance")
 
     # If potential errors, add to report
     if(nrow(remote_locations) > 0) {
@@ -256,8 +258,13 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
 
   }
 
+  # Count number of records flagged
+  error_count <- sum(!is.na(error_records$Row))
+
   check_list <- tibble::tibble(Warning = war,
                                Error = err,
+                               WarningRecords = NA_integer_,
+                               ErrorRecords = error_count,
                                Skipped = skip_check)
 
   return(list(CheckList = check_list,
