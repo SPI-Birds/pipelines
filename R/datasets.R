@@ -46,10 +46,11 @@ site_codes <- utils::read.csv(system.file("extdata", "site_codes.csv", package =
 #'
 #'Information and identifying codes for all field studies and data owners.
 #'
-#'@format A data frame with 115 rows and 8 variables
+#'@format A data frame with 116 rows and 9 variables
 #'\describe{
 #'  \item{studyID}{Unique identifier for a field study/monitoring program at a study site.}
-#'  \item{studyName}{Name of the field study/monitoring program.}
+#'  \item{studyUUID}{University unique identifier for the field study, to be referenced in the EML metadata document that can be used to cite it elsewhere.}
+#'  \item{studyName}{Name of the field study.}
 #'  \item{siteID}{Unique identifier for the study site where the field study is conducted. Note: multiple field studies, coordinated by different organisations/researchers, can be conducted at a single study site.}
 #'  \item{custodianID}{Unique identifier for a person or organisation that has custody of the data. Note: multiple field studies can have
 #'  the same data custodian.}

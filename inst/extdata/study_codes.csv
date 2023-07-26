@@ -1,117 +1,117 @@
-studyID,studyName,siteID,custodianID,custodianName,pipelineID,data,standardFormat
-AMM-1,,AMM,LMU,Ludwig-Maximilian University,AMM,TRUE,TRUE
-BAN-1,,BAN,UCC,University College Cork,BAN,TRUE,TRUE
-CHO-1,,CHO,MESC,Marine and Environmental Sciences Centre,CHO,TRUE,TRUE
-HAR-1,,HAR,TUR,University of Turku,HAR,TRUE,TRUE
-HOC-1,,HOC,MPIO,Max Planck Institute for Ornithology,HOC,TRUE,TRUE
-KEV-1,,KEV,TUR,University of Turku,KEV,TRUE,TRUE
-MIS-1,,MIS,CEFE,CEFE CNRS,MON,TRUE,TRUE
-MON-1,,MON,CEFE,CEFE CNRS,MON,TRUE,TRUE
-MTV-1,,MTV,CEFE,CEFE CNRS,MON,TRUE,TRUE
-MUR-1,,MUR,CEFE,CEFE CNRS,MON,TRUE,TRUE
-PIR-1,,PIR,CEFE,CEFE CNRS,MON,TRUE,TRUE
-ROU-1,,ROU,CEFE,CEFE CNRS,MON,TRUE,TRUE
-BUU-1,,BUU,NIOO,Netherlands Institute of Ecology (NIOO-KNAW),NIOO,TRUE,TRUE
-HOG-1,,HOG,NIOO,Netherlands Institute of Ecology (NIOO-KNAW),NIOO,TRUE,TRUE
-LIE-1,,LIE,NIOO,Netherlands Institute of Ecology (NIOO-KNAW),NIOO,TRUE,TRUE
-OOS-1,,OOS,NIOO,Netherlands Institute of Ecology (NIOO-KNAW),NIOO,TRUE,TRUE
-VLI-1,,VLI,NIOO,Netherlands Institute of Ecology (NIOO-KNAW),NIOO,TRUE,TRUE
-WAR-1,,WAR,NIOO,Netherlands Institute of Ecology (NIOO-KNAW),NIOO,TRUE,TRUE
-WES-1,,WES,NIOO,Netherlands Institute of Ecology (NIOO-KNAW),NIOO,TRUE,TRUE
-EDM-1,,EDM,PFN,PiedFly.Net,PFN,TRUE,TRUE
-PIL-1,,PIL,ELU,"Department of Systematic Zoology and Ecology, Eotvos Lorand University",PIL,TRUE,TRUE
-SSQ-1,,SSQ,SSQ,Santo Stefano Quisquina,SSQ,TRUE,TRUE
-BOS-1,,BOS,EEA,"Evolutionary Ecology Group, University of Antwerp",UAN,TRUE,TRUE
-PEE-1,,PEE,EEA,"Evolutionary Ecology Group, University of Antwerp",UAN,TRUE,TRUE
-VEL-1,,VEL,ZLOP,"Department of Zoology and Laboratory of Ornithology, Palacky University",VEL,TRUE,TRUE
-WYT-1,,WYT,EGI,"Edward Grey Institute, Department of Zoology, University of Oxford",WYT,TRUE,TRUE
-ASK-1,,ASK,TUR,University of Turku,,TRUE,TRUE
-BER-1,,BER,RUG,University of Groningen,,TRUE,FALSE
-TOR-1,,TOR,RUG,University of Groningen,,TRUE,FALSE
-MZR-1,,MZR,RUG,University of Groningen,,TRUE,FALSE
-DVZ-1,,DVZ,RUG,University of Groningen,,TRUE,FALSE
-OWM-1,,OWM,RUG,University of Groningen,,TRUE,FALSE
-APP-1,,APP,RUG,University of Groningen,,TRUE,FALSE
-LBZ-1,,LBZ,RUG,University of Groningen,,TRUE,FALSE
-DWI-1,,DWI,RUG,University of Groningen,,TRUE,FALSE
-RUI-1,,RUI,RUG,University of Groningen,,TRUE,FALSE
-DWZ-1,,DWZ,RUG,University of Groningen,,TRUE,FALSE
-ANS-1,,ANS,RUG,University of Groningen,,TRUE,FALSE
-MIA-1,,MIA,RUG,University of Groningen,,TRUE,FALSE
-BRG-1,,BRG,BRG,"Department of Biological Sciences, University of Bergen",,TRUE,FALSE
-CAN-1,,CAN,EBD,Estacion Biologica de Donana,,FALSE,
-CAC-1,,CAC,MCNB,Museu de Ciencies Naturals de Barcelona,,TRUE,FALSE
-DAE-1,,DAE,OSL,University of Oslo,,TRUE,FALSE
-DAL-1,,DAL,EDI,University of Edinburgh,,FALSE,
-DAZ-1,,DAZ,IOZ,"Croatian Academy of Sciences and Arts, Institute of Ornithology",,TRUE,FALSE
-DLO-1,,DLO,ZLOP,"Department of Zoology and Laboratory of Ornithology, Palacky University",,TRUE,FALSE
-DON-1,,DON,EBD,Estacion Biologica de Donana,,TRUE,FALSE
-DUN-1,,DUN,OTA,University of Otago,,TRUE,FALSE
-FOR-1,,FOR,LMU,Ludwig-Maximilian University,,TRUE,FALSE
-GAR-1,,GAR,GLA,University of Glasgow,GLA,TRUE,TRUE
-CAS-1,,CAS,GLA,University of Glasgow,GLA,TRUE,TRUE
-SAL-1,,SAL,GLA,University of Glasgow,GLA,TRUE,TRUE
-KEL-1,,KEL,GLA,University of Glasgow,GLA,TRUE,TRUE
-SCE-1,,SCE,GLA,University of Glasgow,GLA,TRUE,TRUE
-GLI-1,,GLI,RUG,University of Groningen,,TRUE,FALSE
-GRO-1,,GRO,JAG,Jagiellonian University,GRO,TRUE,TRUE
-LAH-1,,LAH,JPT,Jaime Potti,,TRUE,FALSE
-MSC-1,,MSC,JPT,Jaime Potti,,TRUE,FALSE
-KIL-1,,KIL,TAR,University of Tartu,KIL,TRUE,TRUE
-KUU-1,,KUU,OUL,University of Oulu,,FALSE,
-LAK-1,,LAK,NINA,Norwegian Institute for Nature Research,,TRUE,FALSE
-LAN-1,,LAN,LAN,Lancaster University,,TRUE,FALSE
-LAS-1,,LAS,OSPAS,"Ornithological Station, Museum and Institute of Zoology, Polish Academy of Sciences",,FALSE,
-LUN-1,,LUN,SHF,University of Sheffield,,FALSE,
-MAL-1,,MAL,LND,Lund University,,TRUE,FALSE
-MAR-1,,MAR,UPV,Universitat Politecnica de Valencia,,TRUE,FALSE
-MAY-1,,MAY,KRC,"Karelian Research Centre, Russian Academy of Sciences",,TRUE,FALSE
-MET-1,,MET,METU,Middle East Technical University,,TRUE,FALSE
-MIE-1,,MIE,OSPAS,"Ornithological Station, Museum and Institute of Zoology, Polish Academy of Sciences",,FALSE,
-MOU-1,,MOU,SETE,SETE CNRS,,TRUE,FALSE
-BAL-1,,BAL,MTA,"MTA-PE Evolutionary Ecology Group, University of Pannonia",,TRUE,FALSE
-GUL-1,,GUL,MTA,"MTA-PE Evolutionary Ecology Group, University of Pannonia",,TRUE,FALSE
-SZE-1,,SZE,MTA,"MTA-PE Evolutionary Ecology Group, University of Pannonia",,TRUE,FALSE
-VES-1,,VES,MTA,"MTA-PE Evolutionary Ecology Group, University of Pannonia",,TRUE,FALSE
-VIL-1,,VIL,MTA,"MTA-PE Evolutionary Ecology Group, University of Pannonia",,TRUE,FALSE
-MRC-1,,MRC,MRC,University of Murcia,,FALSE,
-OUL-1,,OUL,OUL,University of Oulu,,TRUE,FALSE
-PET-1,,PET,KRC,"Karelian Research Centre, Russian Academy of Sciences",,TRUE,FALSE
-PEW-1,,PEW,BEEA,"Behavioural Ecology and Ecophysiology Group, University of Antwerp",PEW,TRUE,TRUE
-RAD-1,,RAD,MPIAB,Max Plank Institute of Animal Behavior,,TRUE,FALSE
-REV-1,Revinge field study of blue tit and marsh tit,REV,LND,Lund University,,FALSE,
-REV-2,Revinge field study of tawny owl,REV,LND,Lund University,,FALSE,
-SAG-1,,SAG,CIBEB,Cavanilles Institute of Biodiversity and Evolutionary Biology,,TRUE,FALSE
-SFL-1,,SFL,UNRLS,University of Natural Resources and Life Sciences,,TRUE,FALSE
-SKG-1,,SKG,DCFO,Dutch Centre for Field Ornithology,,FALSE,
-SIL-1,,SIL,ICL,Imperial College London,,TRUE,FALSE
-STR-1,,STR,IPHC,Institut Pluridisciplinaire Hubert Curien,,TRUE,FALSE
-ROB-1,,ROB,IPHC,Institut Pluridisciplinaire Hubert Curien,,TRUE,FALSE
-WAN-1,,WAN,IPHC,Institut Pluridisciplinaire Hubert Curien,,TRUE,FALSE
-TOM-1,,TOM,HOK,Hokkaido University,,TRUE,FALSE
-VAL-1,,VAL,NMNSM,"National Museum of Natural Sciences, Madrid",,TRUE,FALSE
-VOM-1,,VOM,LND,Lund University,,TRUE,FALSE
-VOS-1,,VOS,RUG,University of Groningen,,TRUE,FALSE
-WRS-1,,WRS,WRS,"Wild Urban Evolution & Ecology Lab, University of Warsaw",,TRUE,FALSE
-BAS-1,,BAS,IAR,Institute of Avian Research,,TRUE,FALSE
-WHZ-1,,WHZ,MPIO,Max Planck Institute for Ornithology,,TRUE,FALSE
-WIL-1,,WIL,BEEA,"Behavioural Ecology and Ecophysiology Group, University of Antwerp",,TRUE,FALSE
-ZVE-1,,ZVE,LMS,Lomonosov Moscow State University,,FALSE,
-GOT-1,,GOT,JAG,Jagiellonian University,,FALSE,
-GOT-2,,GOT,LBBE,Laboratory of Biometry and Evolutionary Biology CNRS,,FALSE,
-DIN-1,,DIN,PFN,PiedFly.Net,PFN,TRUE,TRUE
-KAT-1,,KAT,PFN,PiedFly.Net,PFN,TRUE,TRUE
-NAG-1,,NAG,PFN,PiedFly.Net,PFN,TRUE,TRUE
-OKE-1,,OKE,PFN,PiedFly.Net,PFN,TRUE,TRUE
-TEI-1,,TEI,PFN,PiedFly.Net,PFN,TRUE,TRUE
-STO-1,,STO,OSPAS,"Ornithological Station, Museum and Institute of Zoology, Polish Academy of Sciences",,FALSE,
-SOB-1,,SOB,OSPAS,"Ornithological Station, Museum and Institute of Zoology, Polish Academy of Sciences",,FALSE,
-BIR-1,,BIR,NIS,Ian Nisbet,,TRUE,FALSE
-RAM-1,,RAM,NIS,Ian Nisbet,,TRUE,FALSE
-NMI-1,,NMI,NIS,Ian Nisbet,,TRUE,FALSE
-GOU-1,,GOU,RSPB,RSPB,,TRUE,FALSE
-ARV-1,,ARV,KON,University of Konstanz,,FALSE,
-MIR-1,,MIR,NMNSM,"National Museum of Natural Sciences, Madrid",,TRUE,FALSE
-KEI-1,,KEI,BOW,Bowdoin Scientific Station,,FALSE,
-SEK-1,,SEK,MIZPAS,"Museum and Institute of Zoology, Polish Academy of Sciences",,TRUE,FALSE
-HSF-1,,HSF,UFC,Universite de Franche Comte,,FALSE,
+studyID,studyUUID,studyName,siteID,custodianID,custodianName,pipelineID,data,standardFormat
+AMM-1,4625cf53-c13e-4988-9dab-1bda5b0df449,,AMM,LMU,Ludwig-Maximilian University,AMM,TRUE,TRUE
+BAN-1,85227522-6a00-4995-835a-69f5ef51391d,,BAN,UCC,University College Cork,BAN,TRUE,TRUE
+CHO-1,74a38999-2922-4180-81d4-59531451c61b,,CHO,MESC,Marine and Environmental Sciences Centre,CHO,TRUE,TRUE
+HAR-1,24f63e00-ad6e-4863-9ffb-13b26931a04d,,HAR,TUR,University of Turku,HAR,TRUE,TRUE
+HOC-1,e86d682a-4929-421d-8ecb-af77e674efcc,,HOC,MPIO,Max Planck Institute for Ornithology,HOC,TRUE,TRUE
+KEV-1,9263c26b-873f-4255-95d8-933c9c68236f,,KEV,TUR,University of Turku,KEV,TRUE,TRUE
+MIS-1,024882b4-08ae-44cc-91cd-ad8743f5b339,,MIS,CEFE,CEFE CNRS,MON,TRUE,TRUE
+MON-1,085e8a3c-1145-4eeb-857d-f0065f21267d,,MON,CEFE,CEFE CNRS,MON,TRUE,TRUE
+MTV-1,3cfc0a5a-59c1-42fd-a125-9e67a37bdf9a,,MTV,CEFE,CEFE CNRS,MON,TRUE,TRUE
+MUR-1,f443e52f-525a-4671-8b61-14bc156bbbc0,,MUR,CEFE,CEFE CNRS,MON,TRUE,TRUE
+PIR-1,410e4be4-485f-4646-97e6-cfb43dd701e6,,PIR,CEFE,CEFE CNRS,MON,TRUE,TRUE
+ROU-1,1f6d39e0-fd49-40d2-aa4c-1932846f4e06,,ROU,CEFE,CEFE CNRS,MON,TRUE,TRUE
+BUU-1,ac41017a-c30c-4c64-93a4-04e043d32557,,BUU,NIOO,Netherlands Institute of Ecology (NIOO-KNAW),NIOO,TRUE,TRUE
+HOG-1,7cf00143-55d6-442e-bd76-cdf452d2b814,,HOG,NIOO,Netherlands Institute of Ecology (NIOO-KNAW),NIOO,TRUE,TRUE
+LIE-1,24bcd0c3-36d3-4fa9-9038-b8e1dba30289,,LIE,NIOO,Netherlands Institute of Ecology (NIOO-KNAW),NIOO,TRUE,TRUE
+OOS-1,7399d1b1-d57d-4d4f-99bf-21f5c46e0d10,,OOS,NIOO,Netherlands Institute of Ecology (NIOO-KNAW),NIOO,TRUE,TRUE
+VLI-1,ad9de535-2d47-4e8f-9c09-9c0c1fa72cdc,,VLI,NIOO,Netherlands Institute of Ecology (NIOO-KNAW),NIOO,TRUE,TRUE
+WAR-1,580f5f58-da04-4058-b833-411e33c10230,,WAR,NIOO,Netherlands Institute of Ecology (NIOO-KNAW),NIOO,TRUE,TRUE
+WES-1,47fb1db6-4355-469f-8a22-7e62142452bb,,WES,NIOO,Netherlands Institute of Ecology (NIOO-KNAW),NIOO,TRUE,TRUE
+EDM-1,7cbc8e70-7a75-4c80-a2d2-28b34b6ae526,,EDM,PFN,PiedFly.Net,PFN,TRUE,TRUE
+PIL-1,a68aba12-f021-4236-88d5-2032077ad312,,PIL,ELU,"Department of Systematic Zoology and Ecology, Eotvos Lorand University",PIL,TRUE,TRUE
+SSQ-1,bdb0a278-af41-4600-8ae0-94dad2f4f4f5,,SSQ,SSQ,Santo Stefano Quisquina,SSQ,TRUE,TRUE
+BOS-1,226528a2-a994-4494-9973-b06e18b76c0c,,BOS,EEA,"Evolutionary Ecology Group, University of Antwerp",UAN,TRUE,TRUE
+PEE-1,5d07ff08-fbcf-46db-8587-0c1ab19ca9de,,PEE,EEA,"Evolutionary Ecology Group, University of Antwerp",UAN,TRUE,TRUE
+VEL-1,607edcce-c959-4fdc-b9b2-4c0420962d88,,VEL,ZLOP,"Department of Zoology and Laboratory of Ornithology, Palacky University",VEL,TRUE,TRUE
+WYT-1,84f7702f-7688-445f-bc90-09c11abe3ce9,,WYT,EGI,"Edward Grey Institute, Department of Zoology, University of Oxford",WYT,TRUE,TRUE
+ASK-1,b4cb6d28-aa8e-44d6-a201-e4b60538d8b3,,ASK,TUR,University of Turku,,TRUE,TRUE
+BER-1,28d31fa2-9f09-4b87-97bb-a4057ff919d8,,BER,RUG,University of Groningen,,TRUE,FALSE
+TOR-1,7f5cf1d0-999e-4c82-9e0f-9157a5e050c9,,TOR,RUG,University of Groningen,,TRUE,FALSE
+MZR-1,033ade6d-900a-4bdc-bbbc-5ba9beff6149,,MZR,RUG,University of Groningen,,TRUE,FALSE
+DVZ-1,ba3ef44b-c1d0-4f29-a75b-9edf6105b05e,,DVZ,RUG,University of Groningen,,TRUE,FALSE
+OWM-1,eb7e280d-6110-4917-9268-627dae63bb83,,OWM,RUG,University of Groningen,,TRUE,FALSE
+APP-1,6d2672a3-86d5-4dc7-9049-cf215462b984,,APP,RUG,University of Groningen,,TRUE,FALSE
+LBZ-1,9948329a-9a7e-482c-8d0a-ddbff810e219,,LBZ,RUG,University of Groningen,,TRUE,FALSE
+DWI-1,9693e11a-a379-41c7-8d3e-cc1e528bf55b,,DWI,RUG,University of Groningen,,TRUE,FALSE
+RUI-1,b5592333-05a5-4a76-a97c-7bdf57493cfa,,RUI,RUG,University of Groningen,,TRUE,FALSE
+DWZ-1,bb584333-8b80-460e-ac05-61f03f562d04,,DWZ,RUG,University of Groningen,,TRUE,FALSE
+ANS-1,38a4e441-1bb5-4294-b99b-5d6c5b2ea780,,ANS,RUG,University of Groningen,,TRUE,FALSE
+MIA-1,b2536130-7c30-49a0-9f37-8237f2d0ae5e,,MIA,RUG,University of Groningen,,TRUE,FALSE
+BRG-1,0898aac4-9db0-4230-8f41-ab1c8f7e5b13,,BRG,BRG,"Department of Biological Sciences, University of Bergen",,TRUE,FALSE
+CAN-1,3e67fbd7-facd-4d4b-971b-bbd9c2391fb2,,CAN,EBD,Estacion Biologica de Donana,,FALSE,NA
+CAC-1,2cb86ee3-89ff-48a0-a010-88a5fb6f8151,,CAC,MCNB,Museu de Ciencies Naturals de Barcelona,,TRUE,FALSE
+DAE-1,01c2f578-60b7-4ca5-a69b-212c6c133e4b,,DAE,OSL,University of Oslo,,TRUE,FALSE
+DAL-1,9943d2d5-66b9-4dc8-a86b-391b88c19164,,DAL,EDI,University of Edinburgh,,FALSE,NA
+DAZ-1,b593f613-a93f-4662-b5ec-c1557d0af774,,DAZ,IOZ,"Croatian Academy of Sciences and Arts, Institute of Ornithology",,TRUE,FALSE
+DLO-1,d4b4f82b-e873-4cb4-bea7-bfdf3c567710,,DLO,ZLOP,"Department of Zoology and Laboratory of Ornithology, Palacky University",,TRUE,FALSE
+DON-1,fbd6269f-33cb-493a-8fda-b2884e342b8d,,DON,EBD,Estacion Biologica de Donana,,TRUE,FALSE
+DUN-1,2c6763d0-aa03-4989-b6be-6b7a0a0aef39,,DUN,OTA,University of Otago,,TRUE,FALSE
+FOR-1,9c0e328d-162a-49c4-b9ac-7ef7bae7fef3,,FOR,LMU,Ludwig-Maximilian University,,TRUE,FALSE
+GAR-1,24103194-7897-41eb-ba61-6e6368c2c284,,GAR,GLA,University of Glasgow,GLA,TRUE,TRUE
+CAS-1,6a05e438-f6bc-43b8-801e-dd1096401020,,CAS,GLA,University of Glasgow,GLA,TRUE,TRUE
+SAL-1,aefd7cdd-e133-491a-98aa-0470635f7542,,SAL,GLA,University of Glasgow,GLA,TRUE,TRUE
+KEL-1,ad724bae-149e-4dc5-8c6d-b1efbbbdffd0,,KEL,GLA,University of Glasgow,GLA,TRUE,TRUE
+SCE-1,32717afc-b174-45bf-9eef-10d48972629e,,SCE,GLA,University of Glasgow,GLA,TRUE,TRUE
+GLI-1,0aa79d46-7eb8-4ad6-a3f0-54738fad9d31,,GLI,RUG,University of Groningen,,TRUE,FALSE
+GRO-1,3afd2ea5-bf84-4757-83fb-cf4e8cf1c62b,,GRO,JAG,Jagiellonian University,GRO,TRUE,TRUE
+LAH-1,4f57e20c-50db-4917-b7a7-4b3bfe54291d,,LAH,JPT,Jaime Potti,,TRUE,FALSE
+MSC-1,0edc5b9b-812a-44ad-9b14-095d9f99a6ea,,MSC,JPT,Jaime Potti,,TRUE,FALSE
+KIL-1,4d773924-bbc7-46bc-be6e-80fcaf6a90cb,,KIL,TAR,University of Tartu,KIL,TRUE,TRUE
+KUU-1,641cb11c-e447-4460-a84c-c65b3b3ff2b0,,KUU,OUL,University of Oulu,,FALSE,NA
+LAK-1,766bf6db-05ef-4317-be76-dd266647c639,,LAK,NINA,Norwegian Institute for Nature Research,,TRUE,FALSE
+LAN-1,bcb3de8e-96aa-48d8-8a85-1fc6639b0aba,,LAN,LAN,Lancaster University,,TRUE,FALSE
+LAS-1,915d2842-afa8-4765-a17c-89c28ca3d3e2,,LAS,OSPAS,"Ornithological Station, Museum and Institute of Zoology, Polish Academy of Sciences",,FALSE,NA
+LUN-1,150d9143-56f8-43e3-95fd-94e5e27fcd2f,,LUN,SHF,University of Sheffield,,FALSE,NA
+MAL-1,ec9c9254-0b7d-4b57-8036-dfc1802d576f,,MAL,LND,Lund University,,TRUE,FALSE
+MAR-1,7bfb3b64-7d60-47e1-bdba-fa298a4992bb,,MAR,UPV,Universitat Politecnica de Valencia,,TRUE,FALSE
+MAY-1,911af888-7f21-43b8-a85d-7b74a3f785eb,,MAY,KRC,"Karelian Research Centre, Russian Academy of Sciences",,TRUE,FALSE
+MET-1,a5fadb80-0809-4448-acc6-0109dccb604c,,MET,METU,Middle East Technical University,,TRUE,FALSE
+MIE-1,0b5eb585-eac0-4feb-ad0d-ff0e30714ca0,,MIE,OSPAS,"Ornithological Station, Museum and Institute of Zoology, Polish Academy of Sciences",,FALSE,NA
+MOU-1,86545677-c13c-4df2-977d-6a1d7ea89f8d,,MOU,SETE,SETE CNRS,,TRUE,FALSE
+BAL-1,84b78c6a-a4c6-4c42-9afb-eb661ba089ae,,BAL,MTA,"MTA-PE Evolutionary Ecology Group, University of Pannonia",,TRUE,FALSE
+GUL-1,7341f349-4d34-4a74-be97-37cd61a3110a,,GUL,MTA,"MTA-PE Evolutionary Ecology Group, University of Pannonia",,TRUE,FALSE
+SZE-1,0311e88d-d900-4130-808a-0f8eda7c451e,,SZE,MTA,"MTA-PE Evolutionary Ecology Group, University of Pannonia",,TRUE,FALSE
+VES-1,b97b762c-13aa-49c1-a2fa-15adfa3f21df,,VES,MTA,"MTA-PE Evolutionary Ecology Group, University of Pannonia",,TRUE,FALSE
+VIL-1,44ba7220-bf12-42e8-9196-5df803c913bf,,VIL,MTA,"MTA-PE Evolutionary Ecology Group, University of Pannonia",,TRUE,FALSE
+MRC-1,fd03ce0b-8bb0-42af-883d-3d99391c331f,,MRC,MRC,University of Murcia,,FALSE,NA
+OUL-1,f93dfc68-7167-44cf-9c37-5d2978f0b718,,OUL,OUL,University of Oulu,,TRUE,FALSE
+PET-1,101461fd-b113-4798-837c-180c9b5df583,,PET,KRC,"Karelian Research Centre, Russian Academy of Sciences",,TRUE,FALSE
+PEW-1,f5fe5b10-4c51-4be7-976c-d561cc7fe78c,,PEW,BEEA,"Behavioural Ecology and Ecophysiology Group, University of Antwerp",PEW,TRUE,TRUE
+RAD-1,d4c0e104-f46e-4d3d-8f98-741204e5c518,,RAD,MPIAB,Max Plank Institute of Animal Behavior,,TRUE,FALSE
+REV-1,737bb84c-a4df-42bc-bad5-3fc96ab2b73e,Revinge field study of blue tit and marsh tit,REV,LND,Lund University,,FALSE,NA
+REV-2,77b7bd83-7b26-45e8-a88b-0576e56ee96c,Revinge field study of tawny owl,REV,LND,Lund University,,FALSE,NA
+SAG-1,528f3a0d-67d6-47eb-a56a-a0c4e6e64ca0,,SAG,CIBEB,Cavanilles Institute of Biodiversity and Evolutionary Biology,,TRUE,FALSE
+SFL-1,40ebd527-c3ad-4495-8725-3618dd0b5a5e,,SFL,UNRLS,University of Natural Resources and Life Sciences,,TRUE,FALSE
+SKG-1,fd10f663-628e-4e87-b25e-b93f9a9b9f88,,SKG,DCFO,Dutch Centre for Field Ornithology,,FALSE,NA
+SIL-1,15872a9a-ad10-46d0-a37e-3abd503ee290,,SIL,ICL,Imperial College London,,TRUE,FALSE
+STR-1,e61137fb-89f3-4f75-9d3f-a466db148e26,,STR,IPHC,Institut Pluridisciplinaire Hubert Curien,,TRUE,FALSE
+ROB-1,6f0900ae-1978-4e63-8588-f0368ee83945,,ROB,IPHC,Institut Pluridisciplinaire Hubert Curien,,TRUE,FALSE
+WAN-1,4bceec60-7d0c-4e7f-a0ad-f61513d1ab5d,,WAN,IPHC,Institut Pluridisciplinaire Hubert Curien,,TRUE,FALSE
+TOM-1,2bff61fd-7c54-425c-b929-c8d8c31c1d74,,TOM,HOK,Hokkaido University,,TRUE,FALSE
+VAL-1,af60001c-b44e-4c06-a4fe-4909dd67a983,,VAL,NMNSM,"National Museum of Natural Sciences, Madrid",,TRUE,FALSE
+VOM-1,37b18a71-59cc-4c48-8bae-41d49b9c602e,,VOM,LND,Lund University,,TRUE,FALSE
+VOS-1,7dc74c73-4f0c-455d-a5ef-b209c2d0029b,,VOS,RUG,University of Groningen,,TRUE,FALSE
+WRS-1,0d95d847-05b1-4e18-90dc-bc0409db7860,,WRS,WRS,"Wild Urban Evolution & Ecology Lab, University of Warsaw",,TRUE,FALSE
+BAS-1,e57fb765-8870-4fb5-8dac-1522c54a8f0f,,BAS,IAR,Institute of Avian Research,,TRUE,FALSE
+WHZ-1,fa1d9e72-35b1-4b41-8ec5-42d8e888cca8,,WHZ,MPIO,Max Planck Institute for Ornithology,,TRUE,FALSE
+WIL-1,28cf3e84-b957-4f6a-99b6-9edee2cb96b3,,WIL,BEEA,"Behavioural Ecology and Ecophysiology Group, University of Antwerp",,TRUE,FALSE
+ZVE-1,87582c0d-0b15-4cec-98e1-e1ed3757217c,,ZVE,LMS,Lomonosov Moscow State University,,FALSE,NA
+GOT-1,dab9ede3-8f6a-4d62-9d06-d7e665c0f95f,,GOT,JAG,Jagiellonian University,,FALSE,NA
+GOT-2,25b5ea8a-b306-4d59-afcc-ac9caf88c7b7,,GOT,LBBE,Laboratory of Biometry and Evolutionary Biology CNRS,,FALSE,NA
+DIN-1,04a11366-8307-47cf-8c0e-745cc6d41a5f,,DIN,PFN,PiedFly.Net,PFN,TRUE,TRUE
+KAT-1,9d8a2622-7156-47f5-afb8-b0b890f15cfe,,KAT,PFN,PiedFly.Net,PFN,TRUE,TRUE
+NAG-1,511cf35d-e051-4080-a288-854a6b639f22,,NAG,PFN,PiedFly.Net,PFN,TRUE,TRUE
+OKE-1,b75c0ca9-103f-4fcd-9230-1bef408540ec,,OKE,PFN,PiedFly.Net,PFN,TRUE,TRUE
+TEI-1,437f52c3-f8a8-468a-a88d-dd049de98211,,TEI,PFN,PiedFly.Net,PFN,TRUE,TRUE
+STO-1,0e65db5e-5a33-439f-b2d5-572eaa0539c9,,STO,OSPAS,"Ornithological Station, Museum and Institute of Zoology, Polish Academy of Sciences",,FALSE,NA
+SOB-1,39f9573d-ebd2-4533-8a78-69efc1099a6f,,SOB,OSPAS,"Ornithological Station, Museum and Institute of Zoology, Polish Academy of Sciences",,FALSE,NA
+BIR-1,e25c0367-1604-4b6b-a516-de3153ec499e,,BIR,NIS,Ian Nisbet,,TRUE,FALSE
+RAM-1,60a81405-43ab-422d-b34c-5a1dbaffd6e8,,RAM,NIS,Ian Nisbet,,TRUE,FALSE
+NMI-1,39498730-8ab9-4610-b36e-9c1c319d99fb,,NMI,NIS,Ian Nisbet,,TRUE,FALSE
+GOU-1,e304e177-c62b-4a84-8ada-eaec524b535e,,GOU,RSPB,RSPB,,TRUE,FALSE
+ARV-1,1bae69bb-61b0-4d88-b9df-188625660cfe,,ARV,KON,University of Konstanz,,FALSE,NA
+MIR-1,5facca87-9bae-419d-8218-e58dc0318120,,MIR,NMNSM,"National Museum of Natural Sciences, Madrid",,TRUE,FALSE
+KEI-1,c89506bc-87b6-4c0a-b527-56c266bd1481,,KEI,BOW,Bowdoin Scientific Station,,FALSE,NA
+SEK-1,262e962d-d4cc-4f5a-980c-6bb89cc34ddf,,SEK,MIZPAS,"Museum and Institute of Zoology, Polish Academy of Sciences",,TRUE,FALSE
+HSF-1,118196ae-36a5-4cf1-9f9c-6658bc79d6f7,,HSF,UFC,Universite de Franche Comte,,FALSE,NA
