@@ -4,7 +4,7 @@ Version: 0.0.1
 Authors@R: 
   c(person(given = "Liam",
            family = "Bailey",
-           role = c("aut", "cre"),
+           role = c("aut"),
            email = "liam.bailey@liamdbailey.com",
            comment = c(ORCID = "0000-0002-8226-9454")),
     person(given = "Stefan",
@@ -21,7 +21,7 @@ Authors@R:
            family = "Zajková",
            role = "aut",
            email = "zajkova@icm.csic.es",
-           comment = c(ORCID = "0000-0002-7540-3651"))
+           comment = c(ORCID = "0000-0002-7540-3651")),
     person(given = "Chris",
            family = "Tyson",
            role = "aut",
