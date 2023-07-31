@@ -46,7 +46,6 @@
 #'
 #' @return Generates 4 .csv files with data in a standard format.
 #' @export
-#' @import stringr
 
 format_VEL <- function(db = choose_directory(),
                        species = NULL,

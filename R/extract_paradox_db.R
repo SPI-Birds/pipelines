@@ -6,7 +6,6 @@
 #'
 #' @return A data frame
 #' @export
-#' @import reticulate
 
 extract_paradox_db <- function(path, file_name){
 

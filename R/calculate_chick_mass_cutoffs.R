@@ -7,7 +7,6 @@
 #'
 #' @return A data frame with reference values for mass at each age
 #' @export
-#' @importFrom stats nls
 #'
 #' @examples
 #' \dontrun{
@@ -50,8 +49,8 @@ calculate_chick_mass_cutoffs <- function(Capture_data, plot = FALSE) {
                          c = 0.1)
 
   # Fit logistic model
-  logistic_model <- nls(Mass ~ a / (1 + b * (exp(-c * ChickAge))), data = data,
-                        start = initial_values, trace = TRUE)
+  logistic_model <- stats::nls(Mass ~ a / (1 + b * (exp(-c * ChickAge))), data = data,
+                               start = initial_values, trace = TRUE)
 
   # Predict and calculate 1st and 99th quantiles
   newdata <- data.frame(ChickAge = seq(1, max(data$ChickAge), by = 1))

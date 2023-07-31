@@ -28,7 +28,6 @@
 #'
 #' @inherit checks_return return
 #' @importFrom rlang sym `:=`
-#' @importFrom progress progress_bar
 #' @export
 
 brood_check <- function(Brood_data, Individual_data, Capture_data, Location_data, approved_list, output, skip){

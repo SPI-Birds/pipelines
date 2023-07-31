@@ -73,8 +73,6 @@ location_check <- function(Location_data, Brood_data, Capture_data, approved_lis
 #' \item{Errors}{A list of row-by-row errors.}
 #' \item{Maps}{A list of maps with capture locations.}
 #'
-#' @import leaflet
-#'
 #' @export
 
 check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_list, output, skip, map){
