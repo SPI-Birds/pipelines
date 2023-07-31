@@ -246,7 +246,7 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
                                                 colors = "white", labels = "Centre point (*)")
 
                          }) %>%
-      setNames(pops_w_longlat)
+      stats::setNames(pops_w_longlat)
 
     })
 

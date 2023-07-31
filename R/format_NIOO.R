@@ -54,6 +54,7 @@
 #'
 #'@return Generates 4 .csv files or R data frames in the SPI-Birds standard format.
 #'@export
+#'@import rlang
 
 format_NIOO <- function(db = choose_directory(),
                         species = NULL,

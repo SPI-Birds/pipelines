@@ -1,7 +1,7 @@
 #'Construct standard format for data from Ammersee, Germany
 #'
 #'A pipeline to produce the standard format for the nest box population in Ammersee,
-#'Germany, administered by Niels Digamanse.
+#'Germany, administered by Niels Dingemanse.
 #'
 #'This section provides details on data management choices that are unique to
 #'this data. For a general description of the standard format please see
@@ -15,7 +15,7 @@
 #'\strong{ClutchType_observed}: Code 6 'Replacement First Replacement' is considered to be
 #'a 2nd replacement after the first (i.e. not successful clutch) and is defined as 'replacement'.
 #'Code 4 'Replacement second' is counted as 'second' in our method because it has come after at least
-#'one successful clutch. Code 5 'Probably repalcement first or second' is considered unknown and treated
+#'one successful clutch. Code 5 'Probably replacement first or second' is considered unknown and treated
 #'as NA.
 #'
 #'\strong{ClutchSize}: In a small number of cases (13 as of 2019 data) there are eggs from multiple species.
@@ -26,7 +26,7 @@
 #'observed. BroodSize_maximum is NumberHatched + ErrorHatched (i.e. number of eggs never observed either alive
 #'or dead, so status was unknown).
 #'
-#'\strong{NumberFledged}: Use NumberFledged to determine observed number of fledlings.
+#'\strong{NumberFledged}: Use NumberFledged to determine observed number of fledglings.
 #'NumberFledged_minimum is equal to BroodSize_observed.
 #'BroodSize_maximum is NumberFledged + ErrorFledged (i.e. number of chicks never observed either alive
 #'or dead, so status was unknown).
@@ -48,7 +48,7 @@ format_AMM <- function(db = choose_directory(),
   force(db)
 
   #Assign to database location
-  db <- paste0(db, "\\AMM_PrimaryData.accdb")
+  db <- paste0(gsub("\\\\", "/", db), "\\AMM_PrimaryData.accdb")
 
   #Assign species for filtering
   #If no species are specified, all species are included
@@ -184,18 +184,22 @@ create_brood_AMM   <- function(connection) {
 
   Brood_data <- dplyr::tbl(connection, "Broods") %>%
     dplyr::left_join(Catches_F, by = c("BroodID")) %>%
+    dplyr::collapse() %>%
     dplyr::left_join(Catches_M, by = c("BroodID")) %>%
+    dplyr::collapse() %>%
     dplyr::left_join(Nest_boxes, by = c("NestBox" = "NestBox")) %>%
     dplyr::collect() %>%
-    #Remove -99 and replace with NA
-    dplyr::mutate_all(~dplyr::na_if(., -99)) %>%
-    #For day data, remove any cases >= 500. These equate to NA
-    dplyr::mutate_at(vars(.data$HatchDay, .data$FledgeDay), ~{
+    # Remove -99 and replace with NA
+    dplyr::mutate(dplyr::across(.cols = tidyselect::where(~is.numeric(.)),
+                                .fns = ~dplyr::na_if(., -99))) %>%
+    # For day data, remove any cases >= 500. These equate to NA
+    dplyr::mutate(dplyr::across(.cols = c("HatchDay", "FledgeDay"),
+                                .fns = ~{
 
-      dplyr::case_when(. >= 500 ~ NA_integer_,
-                       TRUE ~ .)
+                                  dplyr::case_when(. >= 500 ~ NA_integer_,
+                                                   TRUE ~ .)
 
-    }) %>%
+                                })) %>%
     dplyr::mutate(BroodID = as.character(.data$BroodID),
                   BreedingSeason = .data$BroodYear,
                   PopID = "AMM",

@@ -35,7 +35,7 @@ Generates either 4 .csv files or 4 data frames in the standard format.
 }
 \description{
 A pipeline to produce the standard format for the nest box population in Ammersee,
-Germany, administered by Niels Digamanse.
+Germany, administered by Niels Dingemanse.
 }
 \details{
 This section provides details on data management choices that are unique to
@@ -50,7 +50,7 @@ currently only occurs once in the data. Similarly, species code 0 refers to
 \strong{ClutchType_observed}: Code 6 'Replacement First Replacement' is considered to be
 a 2nd replacement after the first (i.e. not successful clutch) and is defined as 'replacement'.
 Code 4 'Replacement second' is counted as 'second' in our method because it has come after at least
-one successful clutch. Code 5 'Probably repalcement first or second' is considered unknown and treated
+one successful clutch. Code 5 'Probably replacement first or second' is considered unknown and treated
 as NA.
 
 \strong{ClutchSize}: In a small number of cases (13 as of 2019 data) there are eggs from multiple species.
@@ -61,7 +61,7 @@ about ways to more effectively deal with multi-species clutches.
 observed. BroodSize_maximum is NumberHatched + ErrorHatched (i.e. number of eggs never observed either alive
 or dead, so status was unknown).
 
-\strong{NumberFledged}: Use NumberFledged to determine observed number of fledlings.
+\strong{NumberFledged}: Use NumberFledged to determine observed number of fledglings.
 NumberFledged_minimum is equal to BroodSize_observed.
 BroodSize_maximum is NumberFledged + ErrorFledged (i.e. number of chicks never observed either alive
 or dead, so status was unknown).

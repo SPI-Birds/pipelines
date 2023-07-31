@@ -37,7 +37,6 @@ LazyData: true
 Imports: 
     dplyr,
     devtools,
-    dbplyr,
     DBI,
     purrr,
     stringr,
@@ -51,17 +50,17 @@ Imports:
     readxl,
     readr,
     janitor,
-    here,
-    progress,
+    progress,  
     tcltk,
     rlang,
-    rstudioapi,
-    usethis,
     tidyselect,
     leaflet
 RoxygenNote: 7.2.2
 Suggests: 
     knitr,
     rmarkdown,
-    testthat
+    testthat,
+    here,
+    ggplot2,
+    maps
 VignetteBuilder: knitr
