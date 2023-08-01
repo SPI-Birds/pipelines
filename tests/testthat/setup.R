@@ -1,3 +1,3 @@
-if (Sys.getenv("test") == TRUE) {
-  data_path <- choose_directory()
-}
+data_path <- choose_directory()
+
+withr::defer(teardown_env())
