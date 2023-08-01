@@ -113,7 +113,7 @@ format_UAN <- function(db = choose_directory(),
                                                  "text", "text", "text", "text", "text",
                                                  "numeric", "numeric", "text", "numeric",
                                                  "text")) %>%
-    dplyr::mutate_at(.vars = vars(LD, WD), function(x){
+    dplyr::mutate_at(.vars = dplyr::vars(LD, WD), function(x){
 
       janitor::excel_numeric_to_date(as.numeric(x))
 
@@ -127,7 +127,7 @@ format_UAN <- function(db = choose_directory(),
                                                 "list", "text", "list", "text",
                                                 "list", "text", "list", "text",
                                                 rep("numeric", 8), "text")) %>%
-    dplyr::mutate_at(.vars = vars(vd, klr1date, klr2date, klr3date, klr4date), function(x){
+    dplyr::mutate_at(.vars = dplyr::vars(vd, klr1date, klr2date, klr3date, klr4date), function(x){
 
       janitor::excel_numeric_to_date(as.numeric(x))
 
@@ -204,7 +204,7 @@ format_UAN <- function(db = choose_directory(),
                              CaptureType = mode, PlotID = gb,
                              FirstCaptureDate = vd,
                              MetalRingStatus = nrn,
-                             TotalRecords = n,
+                             TotalRecords = .data$n,
                              TagCode = pit, TagPlacementDate = pitdate,
                              ColourRing1 = klr1, ColourRing1PlacementDate = klr1date,
                              ColourRing2 = klr2, ColourRing2PlacementDate = klr2date,
@@ -400,10 +400,10 @@ create_capture_UAN <- function(data, species_filter, pop_filter){
     # Convert date/time
     dplyr::mutate(CaptureDate = lubridate::ymd(.data$CaptureDate),
                   BreedingSeason = as.integer(lubridate::year(.data$CaptureDate)),
-                  CaptureTime = na_if(paste(.data$CaptureTime %/% 1,
-                                            stringr::str_pad(string = round((.data$CaptureTime %% 1)*60),
-                                                             width = 2,
-                                                             pad = "0"), sep = ":"), "NA:NA"),
+                  CaptureTime = dplyr::na_if(paste(.data$CaptureTime %/% 1,
+                                                   stringr::str_pad(string = round((.data$CaptureTime %% 1)*60),
+                                                                    width = 2,
+                                                                    pad = "0"), sep = ":"), "NA:NA"),
                   ReleasePopID = .data$CapturePopID, ReleasePlot = .data$CapturePlot) %>%
     # TODO: Uncertainty in sex observations (M?, W?) is ignored
     dplyr::mutate(Sex_observed = dplyr::case_when(.data$Sex %in% c("M", "M?") ~ "M",
@@ -435,11 +435,11 @@ create_capture_UAN <- function(data, species_filter, pop_filter){
     # Arrange by IndvID and CaptureDate and add unique CaptureID
     dplyr::arrange(.data$IndvID, .data$CaptureDate) %>%
     dplyr::group_by(.data$IndvID) %>%
-    dplyr::mutate(CaptureID = paste(.data$IndvID, 1:n(), sep = "_")) %>%
+    dplyr::mutate(CaptureID = paste(.data$IndvID, 1:dplyr::n(), sep = "_")) %>%
     dplyr::ungroup() %>%
     # Arrange columns
     # Keep only necessary columns, and BroodID (to be used when creating the individual table)
-    dplyr::select(dplyr::contains(c(names(capture_data_template), "BroodID"))) %>%
+    dplyr::select(tidyselect::contains(c(names(capture_data_template), "BroodID"))) %>%
     # Add missing columns
     dplyr::bind_cols(capture_data_template[1, !(names(capture_data_template) %in% names(.))]) %>%
     # Reorder columns
@@ -512,7 +512,7 @@ create_individual_UAN <- function(data, Capture_data, species_filter){
     dplyr::left_join(Sex_calc, by = "IndvID") %>%
     dplyr::filter(Species %in% species_filter) %>%
     # Keep only necessary columns
-    dplyr::select(dplyr::contains(names(individual_data_template))) %>%
+    dplyr::select(tidyselect::contains(names(individual_data_template))) %>%
     # Add missing columns
     dplyr::bind_cols(individual_data_template[1, !(names(individual_data_template) %in% names(.))]) %>%
     # Reorder columns
@@ -566,7 +566,7 @@ create_location_UAN <- function(BOX_info){
 
   Location_data <- dplyr::bind_rows(Location_data) %>%
     # Keep only necessary columns
-    dplyr::select(dplyr::contains(names(location_data_template))) %>%
+    dplyr::select(tidyselect::contains(names(location_data_template))) %>%
     # Add missing columns
     dplyr::bind_cols(location_data_template[1, !(names(location_data_template) %in% names(.))]) %>%
     # Reorder columns

@@ -85,7 +85,7 @@ format_BAN <- function(db = choose_directory(),
   all_data <- suppressWarnings(readxl::read_excel(paste0(db, "/BAN_PrimaryData.xlsx")) %>%
                                  #Convert all cols to snake_case
                                  janitor::clean_names() %>%
-                                 dplyr::mutate_all(.funs = na_if, y = "NA") %>%
+                                 dplyr::mutate_all(.funs = ~dplyr::na_if(as.character(.), "NA")) %>%
                                  #Convert column names to match standard format
                                  dplyr::mutate(BreedingSeason = as.integer(.data$year),
                                                PopID = "BAN",
@@ -314,9 +314,9 @@ create_capture_BAN <- function(data) {
                   .data$WingLength, .data$Age_observed, .data$Age_calculated,
                   .data$ChickAge, .data$ExperimentID) %>%
     dplyr::group_by(.data$IndvID) %>%
-    dplyr::mutate(CaptureID = paste(.data$IndvID, 1:n(), sep = "_")) %>%
+    dplyr::mutate(CaptureID = paste(.data$IndvID, 1:dplyr::n(), sep = "_")) %>%
     dplyr::ungroup() %>%
-    dplyr::select(.data$CaptureID, everything())
+    dplyr::select(.data$CaptureID, tidyselect::everything())
 
   return(Capture_data)
 

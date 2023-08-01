@@ -76,7 +76,7 @@ make_IndIdentifier = function(raw_data){
     #Create a unique IndvID from the row number that is independent of the ring
     tibble::rowid_to_column(var = "Identifier") %>%
     #Pivot so that each ring number has its own row
-    tidyr::pivot_longer(cols = starts_with("RING"), values_to = "RingNr") %>%
+    tidyr::pivot_longer(cols = tidyselect::starts_with("RING"), values_to = "RingNr") %>%
     dplyr::filter(!is.na(.data$RingNr)) %>%
     dplyr::select(.data$RingNr, .data$Identifier)
 

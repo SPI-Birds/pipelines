@@ -175,7 +175,7 @@ create_brood_SSQ <- function(data){
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.1"),
                   OriginalTarsusMethod = NA_character_) %>%
     ## Keep only necessary columns
-    dplyr::select(dplyr::contains(names(brood_data_template))) %>%
+    dplyr::select(tidyselect::contains(names(brood_data_template))) %>%
     ## Add missing columns
     dplyr::bind_cols(brood_data_template[1, !(names(brood_data_template) %in% names(.))]) %>%
     ## Reorder columns
@@ -246,7 +246,7 @@ create_capture_SSQ <- function(data){
                   ChickAge = NA_integer_, ObserverID = NA_character_) %>%
     calc_age(ID = .data$IndvID, Age = .data$Age, Date = .data$CaptureDate, Year = .data$BreedingSeason) %>%
     ## Keep only necessary columns
-    dplyr::select(dplyr::contains(names(capture_data_template))) %>%
+    dplyr::select(tidyselect::contains(names(capture_data_template))) %>%
     ## Add missing columns
     dplyr::bind_cols(capture_data_template[1, !(names(capture_data_template) %in% names(.))]) %>%
     ## Reorder columns
@@ -283,8 +283,8 @@ create_individual_SSQ <- function(data, Capture_data, Brood_data){
                                                 TRUE ~ dplyr::first(.data$Species)),
                      RingSeason = as.integer(min(lubridate::year(.data$CaptureDate))),
                      RingAge = dplyr::case_when(is.na(first(.data$Age_observed)) ~ "adult",
-                                                first(.data$Age_observed) == 1 ~ "chick",
-                                                first(.data$Age_observed) > 1 ~ "adult")) %>%
+                                                dplyr::first(.data$Age_observed) == 1 ~ "chick",
+                                                dplyr::first(.data$Age_observed) > 1 ~ "adult")) %>%
     dplyr::mutate(Sex_calculated = dplyr::case_when(.$IndvID %in% Brood_data$FemaleID ~ "F",
                                                     .$IndvID %in% Brood_data$MaleID ~ "M",
                                                     .$IndvID %in% Brood_data$MaleID & .$IndvID %in% Brood_data$FemaleID ~ "C")) %>%
@@ -293,7 +293,7 @@ create_individual_SSQ <- function(data, Capture_data, Brood_data){
     dplyr::mutate(BroodIDFledged = .data$BroodIDLaid,
                   PopID = "SSQ") %>%
     ## Keep only necessary columns
-    dplyr::select(dplyr::contains(names(individual_data_template))) %>%
+    dplyr::select(tidyselect::contains(names(individual_data_template))) %>%
     ## Add missing columns
     dplyr::bind_cols(individual_data_template[1, !(names(individual_data_template) %in% names(.))]) %>%
     ## Reorder columns
@@ -319,9 +319,9 @@ create_location_SSQ <- function(data){
     dplyr::mutate(NestboxID = .data$LocationID) %>%
     #Join in first latitude and longitude data recorded for this box.
     #It's not clear why these are ever different, need to ask.
-    dplyr::left_join(data %>% group_by(.data$LocationID) %>% slice(1) %>% select(.data$LocationID, .data$Latitude, .data$Longitude), by = "LocationID") %>%
+    dplyr::left_join(data %>% dplyr::group_by(.data$LocationID) %>% dplyr::slice(1) %>% dplyr::select(.data$LocationID, .data$Latitude, .data$Longitude), by = "LocationID") %>%
     ## Keep only necessary columns
-    dplyr::select(dplyr::contains(names(location_data_template))) %>%
+    dplyr::select(tidyselect::contains(names(location_data_template))) %>%
     ## Add missing columns
     dplyr::bind_cols(location_data_template[1, !(names(location_data_template) %in% names(.))]) %>%
     ## Reorder columns

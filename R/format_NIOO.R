@@ -55,6 +55,7 @@
 #'@return Generates 4 .csv files or R data frames in the SPI-Birds standard format.
 #'@export
 #'@import rlang
+#'@importFrom dplyr `%>%`
 
 format_NIOO <- function(db = choose_directory(),
                         species = NULL,
@@ -96,12 +97,12 @@ format_NIOO <- function(db = choose_directory(),
 
                                          })) %>%
     #Join in all the Areas within each AreaGroup (i.e. 'plots' within each population).
-    dplyr::left_join(tbl(connection, "dbo_tx_Area_AreaGroup") %>%
+    dplyr::left_join(dplyr::tbl(connection, "dbo_tx_Area_AreaGroup") %>%
                        dplyr::select(Area, AreaGroup) %>%
                        dplyr::collect(), by = "AreaGroup") %>%
     dplyr::rename(AreaID = Area) %>%
     #Join in all locations that are inside each Area within each AreaGroup (i.e. nest boxes/mist net locations in each plot within each population).
-    dplyr::left_join(tbl(connection, "dbo_tbl_Location") %>%
+    dplyr::left_join(dplyr::tbl(connection, "dbo_tbl_Location") %>%
                        dplyr::select(ID, UserPlaceName, AreaID, Latitude, Longitude) %>%
                        dplyr::collect(),
                      by = "AreaID")
@@ -183,7 +184,7 @@ format_NIOO <- function(db = choose_directory(),
   Brood_data <- Brood_data %>%
     dplyr::left_join(avg_mass, by = "BroodID") %>%
     ## Keep only necessary columns
-    dplyr::select(dplyr::contains(names(brood_data_template))) %>%
+    dplyr::select(tidyselect::contains(names(brood_data_template))) %>%
     ## Add missing columns
     dplyr::bind_cols(brood_data_template[1, !(names(brood_data_template) %in% names(.))]) %>%
     ## Reorder columns
@@ -191,7 +192,7 @@ format_NIOO <- function(db = choose_directory(),
 
   # REMOVE UNWANTED COLUMNS AND CHANGE FORMATS
   Individual_data <- Individual_data %>%
-    dplyr::mutate(dplyr::across(.cols = ends_with("ID"), .fns = ~as.character(.)))
+    dplyr::mutate(dplyr::across(.cols = tidyselect::ends_with("ID"), .fns = ~as.character(.)))
 
   Capture_data <- Capture_data %>%
     dplyr::mutate(IndvID = as.character(IndvID),
@@ -200,7 +201,7 @@ format_NIOO <- function(db = choose_directory(),
                   ReleasePlot = as.character(ReleasePlot),
                   CaptureDate = lubridate::ymd(CaptureDate)) %>%
     ## Keep only necessary columns
-    dplyr::select(dplyr::contains(names(capture_data_template))) %>%
+    dplyr::select(tidyselect::contains(names(capture_data_template))) %>%
     ## Add missing columns
     dplyr::bind_cols(capture_data_template[0, !(names(capture_data_template) %in% names(.))] %>%
                        dplyr::add_row()) %>%
@@ -208,13 +209,13 @@ format_NIOO <- function(db = choose_directory(),
     dplyr::select(names(capture_data_template))
 
   Brood_data <- Brood_data %>%
-    dplyr::mutate(dplyr::across(.cols = ends_with("ID"), .fns = ~as.character(.)))
+    dplyr::mutate(dplyr::across(.cols = tidyselect::ends_with("ID"), .fns = ~as.character(.)))
 
   # EXPORT DATA
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
-  dbDisconnect(connection)
+  DBI::dbDisconnect(connection)
 
   message(paste0("All tables generated in ", round(time, 2), " seconds"))
 

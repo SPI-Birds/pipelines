@@ -126,11 +126,11 @@ format_PEW <- function(db = choose_directory(),
                   Tarsus = as.numeric(.data$Tarsus),
                   Mass = as.numeric(dplyr::case_when(stringr::str_detect(.data$Mass, pattern = "dead") ~ NA_character_,
                                                      TRUE ~ .data$Mass)),
-                  NumberOfRingedChicks = as.integer(case_when(.data$DateRingingChicks %in% c("verlaten incubatie", "all dead d1") ~ "0",
-                                                              .data$HatchDateD0 %in% c("abandoned", "bumblebee nest", "dead embryos") ~ "0",
-                                                              .data$NumberOfRingedChicks == "all dead" ~ "0",
-                                                              .data$NumberOfRingedChicks == "joris" ~ "0",
-                                                              TRUE ~ .data$NumberOfRingedChicks)),
+                  NumberOfRingedChicks = as.integer(dplyr::case_when(.data$DateRingingChicks %in% c("verlaten incubatie", "all dead d1") ~ "0",
+                                                                     .data$HatchDateD0 %in% c("abandoned", "bumblebee nest", "dead embryos") ~ "0",
+                                                                     .data$NumberOfRingedChicks == "all dead" ~ "0",
+                                                                     .data$NumberOfRingedChicks == "joris" ~ "0",
+                                                                     TRUE ~ .data$NumberOfRingedChicks)),
                   #Anything that can't be coerced to numeric should be NA, so we coercion warnings are expected.
                   HatchDateD0 = janitor::excel_numeric_to_date(suppressWarnings(as.numeric(.data$HatchDateD0)),
                                                                date_system = "modern"),
@@ -179,7 +179,7 @@ format_PEW <- function(db = choose_directory(),
                   .data$IndvID,
                   .data$Sex,
                   .data$Age,
-                  everything()) %>%
+                  tidyselect::everything()) %>%
     #### Remove observations without ID
     dplyr::filter(!is.na(.data$IndvID)) %>%
     #### Change ID of unringed individuals to be NA
@@ -394,7 +394,7 @@ create_brood_PEW <- function(data) {
   #### Join parents and chick data
   Brood_data <-
     parents_brood_data %>%
-    left_join(chicks_measurements, by = "BroodID") %>%
+    dplyr::left_join(chicks_measurements, by = "BroodID") %>%
 
     #### Final arrangement
     dplyr::select(.data$BroodID, .data$PopID, .data$BreedingSeason,
@@ -453,22 +453,22 @@ create_capture_PEW <- function(pew_data, Brood_data) {
                                                   .data$Experiment == "2h Temp D4" ~ "SURVIVAL",
                                                   .data$Experiment == "2h Temp D4 + Handicaping Male: Griffioen et al. 2019 Front Ecol&Evol" ~
                                                     "SURVIVAL; PARENTAGE"),
-                  Age_observed = case_when(.data$Age == "0" & .data$Method == "ChickRinging" ~ 1L,
-                                           .data$Age == "1" ~ 5L,
-                                           .data$Age == ">=2" ~ 6L,
-                                           #### Account for controls in January & February
-                                           .data$Age == "1" & .data$Method == "Night Control Winter" &
-                                             lubridate::month(.data$CaptureDate) %in% c(1, 2) ~ 6L,
-                                           #### Account for controls in January & February
-                                           .data$Age == ">=2" & .data$Method == "Night Control Winter" &
-                                             lubridate::month(.data$CaptureDate) %in% c(1, 2) ~ 8L,
-                                           is.na(.data$Age) ~ 4L))
+                  Age_observed = dplyr::case_when(.data$Age == "0" & .data$Method == "ChickRinging" ~ 1L,
+                                                  .data$Age == "1" ~ 5L,
+                                                  .data$Age == ">=2" ~ 6L,
+                                                  #### Account for controls in January & February
+                                                  .data$Age == "1" & .data$Method == "Night Control Winter" &
+                                                    lubridate::month(.data$CaptureDate) %in% c(1, 2) ~ 6L,
+                                                  #### Account for controls in January & February
+                                                  .data$Age == ">=2" & .data$Method == "Night Control Winter" &
+                                                    lubridate::month(.data$CaptureDate) %in% c(1, 2) ~ 8L,
+                                                  is.na(.data$Age) ~ 4L))
 
 
 
   Capture_data <-
     Capture_data_temp %>%
-    left_join(Brood_data_sel,
+    dplyr::left_join(Brood_data_sel,
               by = c("Species", "PopID", "LocationID", "BroodID")) %>%
     #### Calculate Capture date for chicks from Hatch date
     #### Create fake Hatch_date for several broods
@@ -476,21 +476,21 @@ create_capture_PEW <- function(pew_data, Brood_data) {
                                                         .data$Method == "ChickRinging",
                                                       as.Date(paste0(.data$BreedingSeason, "-06-01")),
                                                       .data$HatchDate_observed),
-                  CaptureDate = case_when(is.na(.data$CaptureDate) & .data$D14Chicks == "yes" ~ .data$HatchDate_observed + 14,
-                                          #### Create fake capture dates
-                                          is.na(.data$CaptureDate) ~ as.Date(paste0(.data$BreedingSeason, "-04-01"), "%Y-%m-%d"),
-                                          TRUE ~ .data$CaptureDate)) %>%
+                  CaptureDate = dplyr::case_when(is.na(.data$CaptureDate) & .data$D14Chicks == "yes" ~ .data$HatchDate_observed + 14,
+                                                 #### Create fake capture dates
+                                                 is.na(.data$CaptureDate) ~ as.Date(paste0(.data$BreedingSeason, "-04-01"), "%Y-%m-%d"),
+                                                 TRUE ~ .data$CaptureDate)) %>%
     #### The age of captured chicks in days since hatching
     dplyr::mutate(ChickAge = dplyr::if_else(.data$Age_observed == 1L,
                                             as.integer(difftime(.data$CaptureDate, .data$HatchDate_observed,
                                                                 units = "days")),
                                             NA_integer_),
                   BroodIDLaid = .data$BroodID) %>%
-    distinct() %>%
+    dplyr::distinct() %>%
     #### Create CaptureID
     dplyr::group_by(.data$IndvID) %>%
     dplyr::arrange(.data$Year, .data$CaptureDate, .by_group = TRUE) %>%
-    dplyr::mutate(CaptureID = paste(.data$IndvID, row_number(), sep = "_")) %>%
+    dplyr::mutate(CaptureID = paste(.data$IndvID, dplyr::row_number(), sep = "_")) %>%
     dplyr::ungroup() %>%
 
 
@@ -514,7 +514,7 @@ create_capture_PEW <- function(pew_data, Brood_data) {
                   .data$Mass, .data$Tarsus, .data$OriginalTarsusMethod,
                   .data$WingLength, .data$Age_observed, .data$Age_calculated,
                   .data$ChickAge, .data$ExperimentID) %>%
-    distinct()
+    dplyr::distinct()
 
   return(Capture_data)
 
@@ -547,7 +547,7 @@ create_individual_PEW <- function(data){
                                                        }
                                                      }),
                      Sex_genetic = NA_character_,
-                     Species = first(.data$Species),
+                     Species = dplyr::first(.data$Species),
                      PopID = "PEW",
                      RingSeason = min(.data$BreedingSeason),
                      RingAge = ifelse(min(.data$Age_observed) == 1, "chick", "adult"),

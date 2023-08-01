@@ -106,7 +106,7 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
 
     # Keep records with known & unique longitude/latitudes
     records_w_longlat <- Location_data %>%
-      tidyr::drop_na(dplyr::any_of(c("Longitude", "Latitude"))) %>%
+      tidyr::drop_na(tidyselect::any_of(c("Longitude", "Latitude"))) %>%
       # Filter location records that appear in Brood_data or Capture_data only
       dplyr::filter(.data$LocationID %in% unique(Brood_data$LocationID) | .data$LocationID %in% unique(Capture_data$LocationID)) %>%
       dplyr::group_by(.data$PopID) %>%
@@ -143,7 +143,7 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
       # not FD (dead recoveries)
       # TODO: For populations with a lot of subplots, or for migratory species,
       # determine centre points via k-clustering?
-      tidyr::drop_na(dplyr::any_of(c("Longitude", "Latitude"))) %>%
+      tidyr::drop_na(tidyselect::any_of(c("Longitude", "Latitude"))) %>%
       # Filter location records that appear in Brood_data and/or Capture_data only
       # And keep populations with at least 2 records with known coordinates
       dplyr::filter((.data$LocationID %in% unique(Brood_data$LocationID) | .data$LocationID %in% unique(Capture_data$LocationID)) &

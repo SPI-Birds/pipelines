@@ -172,7 +172,7 @@ format_MON <- function(db = choose_directory(),
 
     utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_MON.csv"), row.names = F)
 
-    utils::write.csv(x = Capture_data %>% select(-Sex, -BroodID), file = paste0(path, "\\Capture_data_MON.csv"), row.names = F)
+    utils::write.csv(x = Capture_data %>% dplyr::select(-Sex, -BroodID), file = paste0(path, "\\Capture_data_MON.csv"), row.names = F)
 
     utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_MON.csv"), row.names = F)
 
@@ -213,8 +213,8 @@ create_capture_MON <- function(db, species_filter, pop_filter){
     #These can easily be coerced back to numerics, but this throws many warnings,
     #which will masks any real problematic coercion issues (e.g. NA introduced by coercion)
     #Therefore, we read everything as text and coerce individually
-    dplyr::mutate_at(.vars = vars(3, 7, 16, 37), as.integer) %>%
-    dplyr::mutate_at(.vars = vars(5, 6, 14, 18:24, 26, 27, 35), as.numeric) %>%
+    dplyr::mutate_at(.vars = dplyr::vars(3, 7, 16, 37), as.integer) %>%
+    dplyr::mutate_at(.vars = dplyr::vars(5, 6, 14, 18:24, 26, 27, 35), as.numeric) %>%
     dplyr::mutate(Species = dplyr::case_when(.$espece == "ble" ~ species_codes$Species[which(species_codes$SpeciesID == 14620)],
                                              .$espece == "noi" ~ species_codes$Species[which(species_codes$SpeciesID == 14610)],
                                              .$espece == "cha" ~ species_codes$Species[which(species_codes$SpeciesID == 14640)],
@@ -394,8 +394,8 @@ create_capture_MON <- function(db, species_filter, pop_filter){
   #As above, we read all in as text and then coerce afterwards
   Chick_capture_data <- readxl::read_excel(paste0(db, "//MON_PrimaryData_POUS.xlsx"),
                                            col_types = "text") %>%
-    dplyr::mutate_at(.vars = vars(2, 15), as.integer) %>%
-    dplyr::mutate_at(.vars = vars(16, 18:20), as.numeric) %>%
+    dplyr::mutate_at(.vars = dplyr::vars(2, 15), as.integer) %>%
+    dplyr::mutate_at(.vars = dplyr::vars(16, 18:20), as.numeric) %>%
     dplyr::mutate(Species = dplyr::case_when(.$espece == "ble" ~ species_codes$Species[which(species_codes$SpeciesID == 14620)],
                                              .$espece == "noi" ~ species_codes$Species[which(species_codes$SpeciesID == 14610)],
                                              .$espece == "cha" ~ species_codes$Species[which(species_codes$SpeciesID == 14640)],
@@ -703,7 +703,7 @@ create_individual_MON <- function(Capture_data, Brood_data, verbose){
         #If it has been transferred to an aviary, list this
         if (stringr::str_detect(string = split_info[1], pattern = "voli")) {
 
-          return(tibble(IndvID = x["IndvID"], BroodIDFledged = "aviary"))
+          return(tibble::tibble(IndvID = x["IndvID"], BroodIDFledged = "aviary"))
 
         }
 
@@ -721,7 +721,7 @@ create_individual_MON <- function(Capture_data, Brood_data, verbose){
         } else if(nrow(possible_nest) > 1 & length(unique(possible_nest$BoxNumber)) == 1){
 
           possible_nest <- possible_nest %>%
-            dplyr::slice(n())
+            dplyr::slice(dplyr::n())
 
         } else {
 
@@ -797,9 +797,9 @@ create_individual_MON <- function(Capture_data, Brood_data, verbose){
                                               }
 
                                             }),
-                  PopID = first(CapturePopID),
-                  RingSeason = first(BreedingSeason),
-                  RingAge = purrr::pmap_chr(.l = list(first(Age_observed)),
+                  PopID = dplyr::first(CapturePopID),
+                  RingSeason = dplyr::first(BreedingSeason),
+                  RingAge = purrr::pmap_chr(.l = list(dplyr::first(Age_observed)),
                                             .f = ~{
 
                                               if(is.na(..1)){
@@ -890,8 +890,8 @@ create_individual_MON <- function(Capture_data, Brood_data, verbose){
   #Identify those cases where an individual has multiple records in individual data
   duplicates <- Individual_data_single_records %>%
     dplyr::group_by(IndvID) %>%
-    dplyr::summarise(n = n()) %>%
-    dplyr::filter(n > 1) %>%
+    dplyr::summarise(n = dplyr::n()) %>%
+    dplyr::filter(.data$n > 1) %>%
     dplyr::pull(IndvID)
 
   #If we are showing warnings, return this warning message
@@ -929,14 +929,14 @@ create_location_MON <- function(db, Capture_data, Brood_data){
     dplyr::filter(!is.na(latitude)) %>%
     dplyr::mutate(LocationID_join = paste(abr_station, nichoir, sep = "_")) %>%
     dplyr::select(LocationID_join, latitude, longitude) %>%
-    dplyr::mutate_at(.vars = vars(latitude:longitude), as.numeric)
+    dplyr::mutate_at(.vars = dplyr::vars(latitude:longitude), as.numeric)
 
   #There are some nestboxes outside the study area
   nestbox_latlong_outside <- readxl::read_excel(paste0(db, "//MON_PrimaryData_NestBoxLocation.xlsx"), sheet = "Feuil1") %>%
     dplyr::filter(!is.na(la)) %>%
     dplyr::mutate(LocationID_join = paste(.data$st, .data$ni, sep = "_"), latitude = la, longitude = lo) %>%
     dplyr::select(LocationID_join, latitude, longitude) %>%
-    dplyr::mutate_at(.vars = vars(latitude:longitude), as.numeric) %>%
+    dplyr::mutate_at(.vars = dplyr::vars(latitude:longitude), as.numeric) %>%
     #There are some replicate groups, compress them to one record per location
     dplyr::group_by(LocationID_join) %>%
     dplyr::slice(1)
@@ -961,7 +961,7 @@ create_location_MON <- function(db, Capture_data, Brood_data){
                        PopID = "MIS", NestboxID = NA_character_,
                        LocationType = "MN", Habitat = NA_character_) %>%
       dplyr::ungroup() %>%
-      dplyr::mutate(LocationID = paste("hs", 1:n(), sep = "_")) %>%
+      dplyr::mutate(LocationID = paste("hs", 1:dplyr::n(), sep = "_")) %>%
       dplyr::select(LocationID, NestboxID, LocationType, PopID, Latitude = latitude, Longitude = longitude, StartSeason, EndSeason, Habitat)
 
   } else {
@@ -975,14 +975,16 @@ create_location_MON <- function(db, Capture_data, Brood_data){
   inside_locations <- Capture_data %>%
     dplyr::filter(is.na(longitude) & !is.na(LocationID)) %>%
     dplyr::rowwise() %>%
-    dplyr::mutate(LocationID_join = paste(str_split(LocationID, pattern = "_", simplify = TRUE)[1:2], collapse = "_")) %>%
+    dplyr::mutate(LocationID_join = paste(stringr::str_split(LocationID, pattern = "_", simplify = TRUE)[1:2],
+                                          collapse = "_")) %>%
     dplyr::ungroup() %>%
     dplyr::select(BreedingSeason, LocationID, LocationID_join, PopID = CapturePopID)
 
   #Also for broods only identified in the brood data table
   nest_locations <- Brood_data %>%
     dplyr::rowwise() %>%
-    dplyr::mutate(LocationID_join = paste(str_split(LocationID, pattern = "_", simplify = TRUE)[1:2], collapse = "_")) %>%
+    dplyr::mutate(LocationID_join = paste(stringr::str_split(LocationID, pattern = "_", simplify = TRUE)[1:2],
+                                          collapse = "_")) %>%
     dplyr::ungroup() %>%
     dplyr::select(BreedingSeason, LocationID, LocationID_join, PopID)
 
@@ -1002,15 +1004,15 @@ create_location_MON <- function(db, Capture_data, Brood_data){
 
       }
 
-    }), LocationType = str_split(unique(LocationID), pattern = "_", simplify = TRUE)[3],
+    }), LocationType = stringr::str_split(unique(LocationID), pattern = "_", simplify = TRUE)[3],
     PopID = unique(PopID),
-    Latitude = first(latitude),
-    Longitude = first(longitude),
+    Latitude = dplyr::first(latitude),
+    Longitude = dplyr::first(longitude),
     StartSeason = min(BreedingSeason),
     EndSeason = NA_integer_,
     Habitat = purrr::map_chr(.x = unique(LocationID), .f = ~{
 
-      plot <- str_split(LocationID, pattern = "_", simplify = TRUE)[1]
+      plot <- stringr::str_split(LocationID, pattern = "_", simplify = TRUE)[1]
 
       if(plot %in% c("ava", "fel", "mur", "rou")){
 

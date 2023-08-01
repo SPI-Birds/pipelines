@@ -104,7 +104,7 @@ format_AMM <- function(db = choose_directory(),
     ##Do we want this to be the norm? Or would be rather use the average
     ##of the brood of measurement (i.e. after cross-fostering)
     dplyr::summarise(AvgTarsus = mean(.data$Tarsus),
-                     NumberChicksTarsus = n(),
+                     NumberChicksTarsus = dplyr::n(),
                      OriginalTarsusMethod = "Alternative")
 
   #Add average tarsus
@@ -267,8 +267,8 @@ create_brood_AMM   <- function(connection) {
                 .data$AvgChickMass, .data$NumberChicksMass,
                 .data$ExperimentID) %>%
     # Convert to correct formats
-    dplyr::mutate_at(.vars = vars(.data$Plot:.data$MaleID), as.character) %>%
-    dplyr::mutate_at(.vars = vars(.data$LayDate_observed, .data$HatchDate_observed, .data$FledgeDate_observed), as.Date)
+    dplyr::mutate_at(.vars = dplyr::vars(.data$Plot:.data$MaleID), as.character) %>%
+    dplyr::mutate_at(.vars = dplyr::vars(.data$LayDate_observed, .data$HatchDate_observed, .data$FledgeDate_observed), as.Date)
 
   Brood_data
 
@@ -328,7 +328,8 @@ create_capture_AMM <- function(Brood_data, connection) {
                   ReleaseAlive = dplyr::case_when(.data$CatchType %in% 13L:15L ~ FALSE,
                                                   .data$DeadOrAlive == 0L ~ FALSE,
                                                   TRUE ~ TRUE)) %>%
-    mutate_at(.vars = vars(.data$BodyMassField, .data$Tarsus, .data$WingP3), .funs = ~ifelse(. <= 0, NA_real_, .)) %>%
+    dplyr::mutate_at(.vars = dplyr::vars(.data$BodyMassField, .data$Tarsus, .data$WingP3),
+                     .funs = ~ifelse(. <= 0, NA_real_, .)) %>%
     dplyr::select(.data$IndvID,
                   .data$Species,
                   .data$Sex_observed,
@@ -371,16 +372,17 @@ create_capture_AMM <- function(Brood_data, connection) {
                   .data$Day14P3, .data$Day14Tarsus, .data$Day14BodyMass, .data$Day14BodyMassTime,
                   .data$Day14Observer, Day18BodyMass = .data$Day18Bodymass, .data$Day18BodyMassTime, .data$Day18Observer) %>%
     dplyr::mutate_all(~dplyr::na_if(as.character(.), "-99")) %>% #Needed because pivot functions expect coercable classes when making value col
-    dplyr::mutate_at(.vars = vars(contains("BodyMassTime")), ~str_extract(., "[0-9]{2}:[0-9]{2}")) %>%
+    dplyr::mutate_at(.vars = dplyr::vars(tidyselect::contains("BodyMassTime")),
+                     ~stringr::str_extract(., "[0-9]{2}:[0-9]{2}")) %>%
     tidyr::pivot_longer(data = ., cols = .data$Day2BodyMass:.data$Day18Observer, names_to = "column", values_to = "value") %>%
-    dplyr::mutate(Day = str_extract(.data$column, "[0-9]{1,}"),
+    dplyr::mutate(Day = stringr::str_extract(.data$column, "[0-9]{1,}"),
                   OriginalTarsusMethod = "Alternative",
                   Age_observed = 1L) %>%
     tidyr::separate(.data$column, into = c(NA, "Variable"), sep = "^Day[0-9]{1,}") %>%
     tidyr::pivot_wider(data = ., names_from = .data$Variable, values_from = .data$value) %>%
     #Mutate columns back to correct type
-    dplyr::mutate_at(.vars = vars(.data$ChickYear, .data$HatchDay, .data$Day), as.integer) %>%
-    dplyr::mutate_at(.vars = vars(.data$BodyMass, .data$P3, .data$Tarsus), ~ifelse(as.numeric(.) <= 0, NA_real_, as.numeric(.))) %>%
+    dplyr::mutate_at(.vars = dplyr::vars(.data$ChickYear, .data$HatchDay, .data$Day), as.integer) %>%
+    dplyr::mutate_at(.vars = dplyr::vars(.data$BodyMass, .data$P3, .data$Tarsus), ~ifelse(as.numeric(.) <= 0, NA_real_, as.numeric(.))) %>%
     dplyr::filter(!(is.na(.data$BodyMass) & is.na(.data$P3) & is.na(.data$Tarsus))) %>%
     dplyr::mutate(CaptureDate = as.Date(.data$EndMarch) + .data$HatchDay + .data$Day) %>%
     dplyr::select(IndvID = .data$BirdID,
@@ -408,8 +410,8 @@ create_capture_AMM <- function(Brood_data, connection) {
     #Arrange by ID/Date and add unique capture ID
     dplyr::arrange(.data$IndvID, .data$CaptureDate) %>%
     dplyr::group_by(.data$IndvID) %>%
-    dplyr::mutate(CaptureID = paste(.data$IndvID, 1:n(), sep = "_")) %>%
-    dplyr::select(.data$CaptureID, everything())
+    dplyr::mutate(CaptureID = paste(.data$IndvID, 1:dplyr::n(), sep = "_")) %>%
+    dplyr::select(.data$CaptureID, tidyselect::everything())
 
   Capture_data
 
@@ -506,7 +508,7 @@ create_location_AMM <- function(Capture_data, connection) {
     dplyr::select(.data$NestBox, .data$Beech:.data$OtherTree) %>%
     dplyr::collect() %>%
     dplyr::group_by(.data$NestBox) %>%
-    dplyr::summarise(across(everything(), ~sum(.x, na.rm = TRUE)), .groups = "keep") %>%
+    dplyr::summarise(dplyr::across(tidyselect::everything(), ~sum(.x, na.rm = TRUE)), .groups = "keep") %>%
     dplyr::summarise(DEC = sum(c(.data$Beech, .data$Larch, .data$Maple, .data$Birch, .data$Oak, .data$Willow, .data$Poplar, .data$Alder, .data$AshTree)),
                      EVE = sum(c(.data$Spruce, .data$Pine))) %>%
     dplyr::mutate(perc_dec = .data$DEC/(.data$DEC + .data$EVE),

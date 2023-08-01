@@ -200,29 +200,29 @@ subset_datarqst <- function(file = file.choose(),
 
     #Remove individuals never identified as one of the species of interest
     output_individual <- output_individual %>%
-      filter(!(.data$IndvID %in% Irrelevant_IndvIDs$IndvID))
+      dplyr::filter(!(.data$IndvID %in% Irrelevant_IndvIDs$IndvID))
 
     output_capture <- output_capture %>%
-      filter(!(.data$IndvID %in% Irrelevant_IndvIDs$IndvID))
+      dplyr::filter(!(.data$IndvID %in% Irrelevant_IndvIDs$IndvID))
   }
 
   #Arrange outputs chronologically
   output_brood <- output_brood %>%
     dplyr::arrange(.data$PopID, .data$BreedingSeason, .data$Species, .data$BroodID) %>%
-    dplyr::mutate(Row = seq(1, n()))
+    dplyr::mutate(Row = seq(1, dplyr::n()))
 
   output_capture <- output_capture %>%
     dplyr::ungroup() %>%
     dplyr::arrange(.data$CapturePopID, .data$Species, .data$IndvID, .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
-    dplyr::mutate(Row = seq(1, n()))
+    dplyr::mutate(Row = seq(1, dplyr::n()))
 
   output_individual <- output_individual %>%
     dplyr::arrange(.data$PopID, .data$Species, .data$IndvID) %>%
-    dplyr::mutate(Row = seq(1, n()))
+    dplyr::mutate(Row = seq(1, dplyr::n()))
 
   output_location <- output_location %>%
     dplyr::arrange(.data$PopID, .data$LocationType, .data$StartSeason, .data$EndSeason, .data$LocationID) %>%
-    dplyr::mutate(Row = seq(1, n()))
+    dplyr::mutate(Row = seq(1, dplyr::n()))
 
   #Combine output into one R object
   output_data <- list(Brood_data = output_brood,

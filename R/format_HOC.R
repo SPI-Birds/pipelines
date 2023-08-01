@@ -88,7 +88,7 @@ format_HOC <- function(db = choose_directory(),
   #Add average chick mass and tarsus for every nest
   #Filter only those captures with chick age (nestlings with no age are excluded)
   chick_measures <- Capture_data %>%
-    dplyr::filter(!is.na(ChickAge) & between(ChickAge, 14, 16)) %>%
+    dplyr::filter(!is.na(ChickAge) & dplyr::between(ChickAge, 14, 16)) %>%
     dplyr::group_by(BroodID) %>%
     dplyr::summarise(AvgChickMass = mean(Mass, na.rm = TRUE),
                      NumberChicksMass = dplyr::na_if(length(stats::na.omit(Mass)), 0),
@@ -135,7 +135,8 @@ format_HOC <- function(db = choose_directory(),
 
     utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_HOC.csv"), row.names = F)
 
-    utils::write.csv(x = Capture_data %>% select(-Sex, -BroodID), file = paste0(path, "\\Capture_data_HOC.csv"), row.names = F)
+    utils::write.csv(x = Capture_data %>% dplyr::select(-Sex, -BroodID),
+                     file = paste0(path, "\\Capture_data_HOC.csv"), row.names = F)
 
     utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_HOC.csv"), row.names = F)
 

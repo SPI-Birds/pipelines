@@ -108,20 +108,20 @@ format_WYT <- function(db = choose_directory(),
     dplyr::filter(dplyr::between(.data$ChickAge, 14, 16) & !is.na(.data$Mass)) %>%
     dplyr::group_by(.data$BroodIDLaid) %>%
     dplyr::summarise(AvgChickMass = mean(.data$Mass, na.rm = TRUE),
-                     NumberChicksMass = n())
+                     NumberChicksMass = dplyr::n())
 
   avg_chick_tarsus <- Capture_data %>%
     dplyr::filter(dplyr::between(.data$ChickAge, 14, 16) & !is.na(.data$Tarsus)) %>%
     dplyr::group_by(.data$BroodIDLaid) %>%
     dplyr::summarise(AvgTarsus = mean(.data$Tarsus, na.rm = TRUE),
-                     NumberChicksTarsus = n(),
+                     NumberChicksTarsus = dplyr::n(),
                      OriginalTarsusMethod = dplyr::first(.data$OriginalTarsusMethod))
 
   Brood_data <- Brood_data %>%
     dplyr::left_join(avg_chick_mass, by = c("BroodID" = "BroodIDLaid")) %>%
     dplyr::left_join(avg_chick_tarsus, by = c("BroodID" = "BroodIDLaid")) %>%
     # Keep only necessary columns
-    dplyr::select(dplyr::contains(names(brood_data_template))) %>%
+    dplyr::select(tidyselect::contains(names(brood_data_template))) %>%
     # Add missing columns
     dplyr::bind_cols(brood_data_template[1, !(names(brood_data_template) %in% names(.))]) %>%
     # Reorder columns
@@ -130,7 +130,7 @@ format_WYT <- function(db = choose_directory(),
   # Remove unneeded columns in Capture data
   Capture_data <- Capture_data %>%
     # Keep only necessary columns
-    dplyr::select(dplyr::contains(names(capture_data_template))) %>%
+    dplyr::select(tidyselect::contains(names(capture_data_template))) %>%
     # Add missing columns
     dplyr::bind_cols(capture_data_template[1, !(names(capture_data_template) %in% names(.))]) %>%
     # Reorder columns
@@ -150,7 +150,8 @@ format_WYT <- function(db = choose_directory(),
 
     utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_WYT.csv"), row.names = F)
 
-    utils::write.csv(x = Capture_data %>% select(-Sex, -BroodID), file = paste0(path, "\\Capture_data_WYT.csv"), row.names = F)
+    utils::write.csv(x = Capture_data %>% dplyr::select(-Sex, -BroodID),
+                     file = paste0(path, "\\Capture_data_WYT.csv"), row.names = F)
 
     utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_WYT.csv"), row.names = F)
 
@@ -380,7 +381,7 @@ create_capture_WYT <- function(db, Brood_data, species_filter){
                   ReleaseAlive = TRUE) %>%
     # Arrange by IndvID and CaptureDate and add unique CaptureID
     dplyr::group_by(.data$IndvID) %>%
-    dplyr::mutate(CaptureID = paste(.data$IndvID, 1:n(), sep = "_")) %>%
+    dplyr::mutate(CaptureID = paste(.data$IndvID, 1:dplyr::n(), sep = "_")) %>%
     dplyr::ungroup()
 
   return(Capture_data)
@@ -416,7 +417,7 @@ create_individual_WYT <- function(Capture_data){
                                       TRUE ~ dplyr::first(stats::na.omit(.data$Sex_observed))),
     .groups = "drop") %>%
     # Keep only necessary columns
-    dplyr::select(dplyr::contains(names(individual_data_template))) %>%
+    dplyr::select(tidyselect::contains(names(individual_data_template))) %>%
     # Add missing columns
     dplyr::bind_cols(individual_data_template[1, !(names(individual_data_template) %in% names(.))]) %>%
     # Reorder columns

@@ -133,15 +133,15 @@ format_KIL <- function(db = choose_directory(),
                   NestboxID = tolower(.data$NestId),
                   FemaleID = as.character(.data$FemaleRingNo),
                   MaleID = as.character(.data$MaleRingNo),
-                  BreedingAttempt = case_when(.data$Brood == "First" ~ 1L,
-                                              .data$Brood == "Second" ~ 2L),
+                  BreedingAttempt = dplyr::case_when(.data$Brood == "First" ~ 1L,
+                                                     .data$Brood == "Second" ~ 2L),
                   BroodID = paste(.data$Year, .data$NestboxID, .data$BreedingAttempt,
                                   sep = "_")) %>%
     #### Reorder columns
     dplyr::select(.data$BreedingSeason,
                   .data$Species,
                   .data$PopID,
-                  everything(),
+                  tidyselect::everything(),
                   -.data$NestId,
                   -.data$FemaleRingNo,
                   -.data$MaleRingNo,
@@ -161,19 +161,19 @@ format_KIL <- function(db = choose_directory(),
                         names_to = "Sex_observed",
                         values_to = "IndvID") %>%
     dplyr::mutate(Sex_observed = substr(.data$Sex_observed, start = 1, stop = 1),
-                  Tarsus = case_when(.data$Sex_observed == "F" ~ AdultFemaleTarsusMm,
-                                     .data$Sex_observed == "M" ~ AdultMaleTarsusMm),
-                  Mass = case_when(.data$Sex_observed == "F" ~ AdultFemaleMassG,
-                                   .data$Sex_observed == "M" ~ AdultMaleMassG),
-                  WingLength = case_when(.data$Sex_observed == "F" ~ AdultFemaleWingMm,
-                                   .data$Sex_observed == "M" ~ AdultMaleWingMm),
-                  CatchDate1May1St = case_when(.data$Sex_observed == "F" ~ FemaleCatchDate1May1St,
-                                               .data$Sex_observed == "M" ~ MaleCatchDate1May1St),
+                  Tarsus = dplyr::case_when(.data$Sex_observed == "F" ~ AdultFemaleTarsusMm,
+                                            .data$Sex_observed == "M" ~ AdultMaleTarsusMm),
+                  Mass = dplyr::case_when(.data$Sex_observed == "F" ~ AdultFemaleMassG,
+                                          .data$Sex_observed == "M" ~ AdultMaleMassG),
+                  WingLength = dplyr::case_when(.data$Sex_observed == "F" ~ AdultFemaleWingMm,
+                                                .data$Sex_observed == "M" ~ AdultMaleWingMm),
+                  CatchDate1May1St = dplyr::case_when(.data$Sex_observed == "F" ~ FemaleCatchDate1May1St,
+                                                      .data$Sex_observed == "M" ~ MaleCatchDate1May1St),
                   CaptureDate = as.Date(paste(.data$BreedingSeason, "05-01", sep = "-"),
                                         format = "%Y-%m-%d") + .data$CatchDate1May1St - 1,
                   CaptureTime = NA_character_,
-                  AgeEuringCode = case_when(.data$Sex_observed == "F" ~ as.integer(FemaleAgeEuringCode),
-                                            .data$Sex_observed == "M" ~ as.integer(MaleAgeEuringCode))) %>%
+                  AgeEuringCode = dplyr::case_when(.data$Sex_observed == "F" ~ as.integer(FemaleAgeEuringCode),
+                                                   .data$Sex_observed == "M" ~ as.integer(MaleAgeEuringCode))) %>%
     #### Remove records where the partner is not known
     dplyr::filter(!is.na(.data$IndvID)) %>%
     dplyr::select(-.data$AdultFemaleTarsusMm,
@@ -197,9 +197,9 @@ format_KIL <- function(db = choose_directory(),
                                      "numeric", "numeric", "text", "numeric")) %>%
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
-    dplyr::mutate(NestlingTarsus15D = str_replace(.data$NestlingTarsus15D,
-                                               pattern = ",",
-                                               replacement = ".")) %>%
+    dplyr::mutate(NestlingTarsus15D = stringr::str_replace(.data$NestlingTarsus15D,
+                                                           pattern = ",",
+                                                           replacement = ".")) %>%
     #### Convert to corresponding format and rename
     dplyr::mutate(Species = species_codes[which(species_codes$SpeciesID == 14640), ]$Species,
                   PopID   = "KIL",
@@ -210,11 +210,11 @@ format_KIL <- function(db = choose_directory(),
                   IndvID = as.character(.data$NestlingRingNo),
                   CaptureDate = as.Date(paste(.data$BreedingSeason, "05-01", sep = "-"),
                                      format = "%Y-%m-%d") + .data$RingDate1May1St - 1,
-                  CaptureTime = if_else(!is.na(.data$RingTime),
-                                        (str_replace(sprintf("%05.2f", .data$RingTime),
-                                                     pattern = "\\.",
-                                                     replacement = ":")),
-                                        NA_character_),
+                  CaptureTime = dplyr::if_else(!is.na(.data$RingTime),
+                                               (stringr::str_replace(sprintf("%05.2f", .data$RingTime),
+                                                                     pattern = "\\.",
+                                                                     replacement = ":")),
+                                               NA_character_),
                   AgeEuringCode = 1L,
                   Mass = as.numeric(.data$NestlingMass15D),
                   Tarsus = as.numeric(.data$NestlingTarsus15D)) %>%
@@ -420,7 +420,7 @@ create_brood_KIL <- function(brood_data_til92, kil_data_95) {
                   NumberChicksMass = NA_integer_,
                   AvgTarsus = .data$NestlingTarsusDay15Mm,
                   NumberChicksTarsus = NA_integer_,
-                  OriginalTarsusMethod = if_else(!is.na(.data$AvgTarsus), "alternative", NA_character_),
+                  OriginalTarsusMethod = dplyr::if_else(!is.na(.data$AvgTarsus), "alternative", NA_character_),
                   ExperimentID = NA_character_) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.1")) %>%
 
@@ -485,21 +485,21 @@ create_capture_KIL <- function(brood_data_til92,
                   #### The method used in this population is the Svensson Standard method, but
                   #### for adults no data were recorded in earlier years
                   OriginalTarsusMethod = NA_character_,
-                  Age_observed = case_when(.data$Age == "1" ~ 5L,
-                                           .data$Age == "2" ~ 7L,
-                                           .data$Age == "3" ~ 9L,
-                                           .data$Age == "4" ~ 11L,
-                                           .data$Age == "5" ~ 13L,
-                                           .data$Age == "6" ~ 15L,
-                                           .data$Age == "7" ~ 17L,
-                                           .data$Age == "2y+" ~ 6L,
-                                           .data$Age == "3y+" ~ 8L,
-                                           .data$Age == "4y+" ~ 10L,
-                                           .data$Age == "5y+" ~ 12L,
-                                           .data$Age == "6y+" ~ 14L,
-                                           .data$Age == "7y+" ~ 16L,
-                                           .data$Age == "8y+" ~ 18L,
-                                           .data$Age == "9y+" ~ 20L),
+                  Age_observed = dplyr::case_when(.data$Age == "1" ~ 5L,
+                                                  .data$Age == "2" ~ 7L,
+                                                  .data$Age == "3" ~ 9L,
+                                                  .data$Age == "4" ~ 11L,
+                                                  .data$Age == "5" ~ 13L,
+                                                  .data$Age == "6" ~ 15L,
+                                                  .data$Age == "7" ~ 17L,
+                                                  .data$Age == "2y+" ~ 6L,
+                                                  .data$Age == "3y+" ~ 8L,
+                                                  .data$Age == "4y+" ~ 10L,
+                                                  .data$Age == "5y+" ~ 12L,
+                                                  .data$Age == "6y+" ~ 14L,
+                                                  .data$Age == "7y+" ~ 16L,
+                                                  .data$Age == "8y+" ~ 18L,
+                                                  .data$Age == "9y+" ~ 20L),
                   ChickAge = NA_integer_,
                   ExperimentID = NA_character_) %>%
     dplyr::select(-.data$Age,
@@ -524,7 +524,7 @@ create_capture_KIL <- function(brood_data_til92,
                   ReleasePlot  = ifelse(.data$ReleaseAlive == TRUE, .data$CapturePlot, NA_character_),
                   Mass = as.numeric(.data$Mass),
                   Tarsus = convert_tarsus(as.numeric(.data$Tarsus), method = "Standard"),
-                  OriginalTarsusMethod = if_else(!is.na(.data$Tarsus), "Standard", NA_character_),
+                  OriginalTarsusMethod = dplyr::if_else(!is.na(.data$Tarsus), "Standard", NA_character_),
                   WingLength = NA_real_,
                   Age_observed = 1L,
                   ChickAge = 8L,
@@ -553,7 +553,7 @@ create_capture_KIL <- function(brood_data_til92,
                   CapturePlot  = NA_character_,
                   ReleasePopID = ifelse(.data$ReleaseAlive == TRUE, .data$CapturePopID, NA_character_),
                   ReleasePlot  = ifelse(.data$ReleaseAlive == TRUE, .data$CapturePlot, NA_character_),
-                  OriginalTarsusMethod = if_else(!is.na(.data$Tarsus), "alternative", NA_character_),
+                  OriginalTarsusMethod = dplyr::if_else(!is.na(.data$Tarsus), "alternative", NA_character_),
                   WingLength = NA_real_,
                   Age_observed = as.integer(.data$AgeEuringCode),
                   ChickAge = NA_integer_,
@@ -576,7 +576,7 @@ create_capture_KIL <- function(brood_data_til92,
                   CapturePlot  = NA_character_,
                   ReleasePopID = ifelse(.data$ReleaseAlive == TRUE, .data$CapturePopID, NA_character_),
                   ReleasePlot  = ifelse(.data$ReleaseAlive == TRUE, .data$CapturePlot, NA_character_),
-                  OriginalTarsusMethod = if_else(!is.na(.data$Tarsus), "alternative", NA_character_),
+                  OriginalTarsusMethod = dplyr::if_else(!is.na(.data$Tarsus), "alternative", NA_character_),
                   Age_observed = 1L,
                   ChickAge = 15L,
                   ExperimentID = NA_character_) %>%
@@ -595,7 +595,7 @@ create_capture_KIL <- function(brood_data_til92,
     dplyr::bind_rows(capture_chicks_95) %>%
     dplyr::group_by(.data$IndvID) %>%
     dplyr::arrange(.data$BreedingSeason, .data$CaptureDate, .by_group = TRUE) %>%
-    dplyr::mutate(CaptureID = paste(IndvID, row_number(), sep = "_")) %>%
+    dplyr::mutate(CaptureID = paste(IndvID, dplyr::row_number(), sep = "_")) %>%
     dplyr::ungroup() %>%
 
     #### USE THE NEW VERSION OF THE FUNCTION
@@ -714,14 +714,14 @@ create_individual_KIL <- function(adults_data_til92,
                                                          return("C")
                                                        }
                                                      }),
-                     Species = first(.data$Species),
-                     PopID = first(.data$PopID),
-                     RingSeason = first(.data$RingSeason),
-                     RingAge = first(.data$RingAge),
-                     BroodIDLaid = first(.data$BroodIDLaid),
-                     BroodIDFledged = first(.data$BroodIDFledged),
+                     Species = dplyr::first(.data$Species),
+                     PopID = dplyr::first(.data$PopID),
+                     RingSeason = dplyr::first(.data$RingSeason),
+                     RingAge = dplyr::first(.data$RingAge),
+                     BroodIDLaid = dplyr::first(.data$BroodIDLaid),
+                     BroodIDFledged = dplyr::first(.data$BroodIDFledged),
                      Sex_genetic = NA_character_) %>%
-    ungroup() %>%
+    dplyr::ungroup() %>%
     #### Final arrangement
     dplyr::select(.data$IndvID, .data$Species, .data$PopID,
                   .data$BroodIDLaid, .data$BroodIDFledged,
@@ -756,7 +756,7 @@ create_location_KIL <- function(kil_data_95, Brood_data) {
     dplyr::full_join(loc_data_95, by = c("BreedingSeason", "LocationID", "NestboxID", "PopID")) %>%
     dplyr::group_by(.data$LocationID) %>%
     dplyr::arrange(.data$BreedingSeason, .by_group = TRUE) %>%
-    dplyr::summarise(StartSeason = first(.data$BreedingSeason),
+    dplyr::summarise(StartSeason = dplyr::first(.data$BreedingSeason),
                      #### CHECK WITH DATA OWNER
                      # EndSeason = last(.data$BreedingSeason))
                      EndSeason = NA_integer_,

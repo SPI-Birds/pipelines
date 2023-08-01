@@ -194,8 +194,8 @@ create_brood_CHO <- function(data){
     tidyr::pivot_longer(cols = c(.data$IndvID)) %>%
     tidyr::pivot_wider(names_from = .data$Sex, values_from = .data$value) %>%
     dplyr::rename(FemaleID = `F`, MaleID = `M`) %>%
-    select(-.data$name) %>%
-    arrange(.data$BroodID)
+    dplyr::select(-.data$name) %>%
+    dplyr::arrange(.data$BroodID)
 
   #Determine whether clutches are 2nd clutch
   #Determine if there is mean egg mass data
@@ -233,7 +233,8 @@ create_brood_CHO <- function(data){
     #e.g. laying date, clutch size etc.
     #I've checked manually and the first value is always correct in each brood
     dplyr::group_by(.data$BroodID, .data$Species, .data$Year, .data$Site, .data$Box, .data$FemaleID, .data$MaleID) %>%
-    dplyr::summarise(across(.cols = everything(), .fns = first), .groups = "drop") %>%
+    dplyr::summarise(dplyr::across(.cols = tidyselect::everything(),
+                                   .fns = ~dplyr::first(.)), .groups = "drop") %>%
     #Add in population/plot info
     #Convert LayDate and HatchDate to date objects
     dplyr::mutate(LayDate_observed = lubridate::ymd(paste0(.data$Year, "-01-01")) + as.numeric(.data$LayingDateJulian),
@@ -337,9 +338,9 @@ create_capture_CHO <- function(data){
                   .data$Age_observed, .data$Age_calculated,
                   .data$ChickAge, .data$ExperimentID) %>%
     dplyr::group_by(.data$IndvID) %>%
-    dplyr::mutate(CaptureID = paste(.data$IndvID, 1:n(), sep = "_")) %>%
+    dplyr::mutate(CaptureID = paste(.data$IndvID, 1:dplyr::n(), sep = "_")) %>%
     dplyr::ungroup() %>%
-    dplyr::select(.data$CaptureID, everything())
+    dplyr::select(.data$CaptureID, tidyselect::everything())
 
   return(Capture_data)
 

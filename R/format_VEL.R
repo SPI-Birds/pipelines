@@ -98,7 +98,7 @@ format_VEL <- function(db = choose_directory(),
     ## Instead we parse each one separately, based on the best guess of readxl.
     ## This returns dates for dd/mm/yyyy, but character for dd.mm.yyyy.
     ## Then we just have to go through and make these few character strings into dates.
-    dplyr::mutate_at(.vars = dplyr::vars(contains("date")),
+    dplyr::mutate_at(.vars = dplyr::vars(tidyselect::contains("date")),
                      function(date){
 
                        purrr::map(.x = date,
@@ -179,7 +179,7 @@ format_VEL <- function(db = choose_directory(),
                                                "text", "text", "text", "text",
                                                "skip")) %>%
     janitor::clean_names() %>%
-    dplyr::mutate_at(.vars = dplyr::vars(contains("date")),
+    dplyr::mutate_at(.vars = dplyr::vars(tidyselect::contains("date")),
                      function(date){
 
                        purrr::map(.x = date,
@@ -310,8 +310,8 @@ format_VEL <- function(db = choose_directory(),
 
   Brood_data <- Brood_data %>%
     dplyr::left_join(avg_measures, by = "BroodID") %>%
-    dplyr::mutate(NumberChicksMass   = na_if(.data$NumberChicksMass, 0),
-                  NumberChicksTarsus = na_if(.data$NumberChicksTarsus, 0),
+    dplyr::mutate(NumberChicksMass   = dplyr::na_if(.data$NumberChicksMass, 0),
+                  NumberChicksTarsus = dplyr::na_if(.data$NumberChicksTarsus, 0),
                   OriginalTarsusMethod = dplyr::case_when(!is.na(.data$AvgTarsus) ~ "Oxford")) %>%
     dplyr::select(.data$BroodID:.data$NumberEggs,
                   .data$AvgChickMass:.data$NumberChicksTarsus,
@@ -325,9 +325,9 @@ format_VEL <- function(db = choose_directory(),
                   .data$WingLength, .data$Age_observed, .data$Age_calculated, .data$ChickAge,
                   .data$ExperimentID) %>%
     dplyr::group_by(.data$IndvID) %>%
-    dplyr::mutate(CaptureID = paste(.data$IndvID, 1:n(), sep = "_")) %>%
+    dplyr::mutate(CaptureID = paste(.data$IndvID, 1:dplyr::n(), sep = "_")) %>%
     dplyr::ungroup() %>%
-    dplyr::select(.data$CaptureID, everything())
+    dplyr::select(.data$CaptureID, tidyselect::everything())
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
@@ -433,10 +433,12 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
 
                                        output <- ..2 %>%
                                          dplyr::select(.data$BreedingSeason:.data$HatchDate_observed, .data$IndvID, contains(..1)) %>%
-                                         tidyr::pivot_longer(cols = contains("_mass"), values_to = "Mass", names_to = "variable") %>%
+                                         tidyr::pivot_longer(cols = tidyselect::contains("_mass"), values_to = "Mass", names_to = "variable") %>%
                                          ## Rename tarsus and wing to remove name of chick
-                                         dplyr::rename_at(.vars = dplyr::vars(contains("tarsus")), .funs = ~{"Tarsus"}) %>%
-                                         dplyr::rename_at(.vars = dplyr::vars(contains("wing")), .funs = ~{"WingLength"}) %>%
+                                         dplyr::rename_at(.vars = dplyr::vars(tidyselect::contains("tarsus")),
+                                                          .funs = ~{"Tarsus"}) %>%
+                                         dplyr::rename_at(.vars = dplyr::vars(tidyselect::contains("wing")),
+                                                          .funs = ~{"WingLength"}) %>%
                                          ## Add chick age based on the variable name
                                          dplyr::mutate(ChickAge = as.integer(stringr::str_sub(.data$variable, 9, -1)),
                                                        ## Capture date is hatchdate + chick age
