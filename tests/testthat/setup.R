@@ -1,3 +1,8 @@
-data_path <- choose_directory()
+if(Sys.getenv("test") == TRUE) {
 
-withr::defer(teardown_env())
+  data_path <- choose_directory()
+
+  withr::defer(teardown_env())
+  Sys.unsetenv("test")
+
+}

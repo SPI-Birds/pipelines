@@ -35,32 +35,33 @@ BugReports: https://github.com/SPI-Birds/pipelines/issues
 Encoding: UTF-8
 LazyData: true
 Imports: 
-    dplyr,
-    devtools,
-    DBI,
-    purrr,
-    stringr,
     crayon,
+    DBI,
+    devtools,
+    dplyr,
+    janitor,
+    leaflet,
     lubridate,
     odbc,
+    progress, 
+    purrr,
+    readr,
+    readxl,
     reticulate,
+    rlang,
     sf,
+    stringr,
+    tcltk,
     tibble,
     tidyr,
-    readxl,
-    readr,
-    janitor,
-    progress,  
-    tcltk,
-    rlang,
-    tidyselect,
-    leaflet
+    tidyselect
 RoxygenNote: 7.2.2
 Suggests: 
+    ggplot2,
+    here,
     knitr,
+    maps,
     rmarkdown,
     testthat,
-    here,
-    ggplot2,
-    maps
+    withr
 VignetteBuilder: knitr
