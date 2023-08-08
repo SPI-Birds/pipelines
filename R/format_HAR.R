@@ -176,25 +176,26 @@ format_HAR <- function(db = choose_directory(),
   ## Add average chick mass and tarsus to brood data
 
   Chick_avg <- Capture_data %>%
-    dplyr::filter(dplyr::between(ChickAge, 14, 16)) %>%
+    dplyr::filter(dplyr::between(.data$ChickAge, 14, 16)) %>%
     #Remove cases where tarsus or weight are 0 (make them NA)
-    dplyr::mutate(Mass = dplyr::na_if(Mass, 0),
-                  Tarsus = dplyr::na_if(Tarsus, 0)) %>%
-    dplyr::group_by(BroodID) %>%
-    dplyr::summarise(AvgEggMass = NA, NumberEggs = NA,
-                     AvgChickMass = mean(Mass, na.rm = TRUE),
+    dplyr::mutate(Mass = dplyr::na_if(.data$Mass, 0),
+                  Tarsus = dplyr::na_if(.data$Tarsus, 0)) %>%
+    dplyr::group_by(.data$BroodID) %>%
+    dplyr::summarise(AvgEggMass = NA,
+                     NumberEggs = NA,
+                     AvgChickMass = mean(.data$Mass, na.rm = TRUE),
                      NumberChicksMass = dplyr::n(),
-                     AvgTarsus = mean(Tarsus, na.rm = TRUE),
+                     AvgTarsus = mean(.data$Tarsus, na.rm = TRUE),
                      NumberChicksTarsus = dplyr::n(),
                      OriginalTarsusMethod = "Alternative")
 
   #Join these into Brood_data
   #Only existing broods will be used.
   Brood_data <- dplyr::left_join(Brood_data, Chick_avg, by = "BroodID") %>%
-    dplyr::select(BroodID:NumberFledgedError, AvgEggMass:OriginalTarsusMethod, ExperimentID)
+    dplyr::select("BroodID":"NumberFledgedError", "AvgEggMass":"OriginalTarsusMethod", "ExperimentID")
 
   Capture_data <- Capture_data %>%
-    dplyr::select(-Sex, -BroodID)
+    dplyr::select(-"Sex", -"BroodID")
 
   # EXPORT DATA
 
@@ -206,14 +207,14 @@ format_HAR <- function(db = choose_directory(),
 
     message("Saving .csv files...")
 
-    utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_HAR.csv"), row.names = F)
+    utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_HAR.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_HAR.csv"), row.names = F)
+    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_HAR.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Capture_data %>% dplyr::select(-Sex, -BroodID),
-                     file = paste0(path, "\\Capture_data_HAR.csv"), row.names = F)
+    utils::write.csv(x = Capture_data %>% dplyr::select(-"Sex", -"BroodID"),
+                     file = paste0(path, "\\Capture_data_HAR.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_HAR.csv"), row.names = F)
+    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_HAR.csv"), row.names = FALSE)
 
     invisible(NULL)
 
@@ -253,77 +254,72 @@ create_brood_HAR <- function(db, species_filter){
   #Many of these are subsequently removed, but it makes it easier for non-Finnish speakers to
   #see what is being removed.
   Brood_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Nests.DB") %>%
-    dplyr::rename(BreedingSeason = Vuos, LocationID = Nuro,
-                  BroodID = Anro, Species = Laji,
-                  ClutchType_observed = Pesa, FemaleID = Naaras, MaleID = Koiras,
-                  LayDate_day = Mpv, LayDate_month = Mkk, LayDateError = Mtar,
-                  HatchDate_day = Kpv, HatchDate_month = Kkk, HatchDateError = Ktar,
-                  Incubation = Halku, ClutchSize = Mulu, BroodSize = Kuor,
-                  NumberFledged = Lent, ReasonFailed = Tsyy,
-                  NestlingInjuries = Jalat, MalePresent = Koir,
-                  ExperimentID = Koe, ExpData1 = Olent,
-                  ExpData2 = Vlent, DeadParent = Delfh,
-                  EggShells = Mkuor, TempCode1 = Tark,
-                  TempCode2 = Tark2) %>%
+    dplyr::rename("BreedingSeason" = "Vuos", "LocationID" = "Nuro",
+                  "BroodID" = "Anro", "Species" = "Laji",
+                  "ClutchType_observed" = "Pesa", "FemaleID" = "Naaras", "MaleID" = "Koiras",
+                  "LayDate_day" = "Mpv", "LayDate_month" = "Mkk", "LayDateError" = "Mtar",
+                  "HatchDate_day" = "Kpv", "HatchDate_month" = "Kkk", "HatchDateError" = "Ktar",
+                  "Incubation" = "Halku", "ClutchSize" = "Mulu", "BroodSize" = "Kuor",
+                  "NumberFledged" = "Lent", "ReasonFailed" = "Tsyy",
+                  "NestlingInjuries" = "Jalat", "MalePresent" = "Koir",
+                  "ExperimentID" = "Koe", "ExpData1" = "Olent",
+                  "ExpData2" = "Vlent", "DeadParent" = "Delfh",
+                  "EggShells" = "Mkuor", "TempCode1" = "Tark",
+                  "TempCode2" = "Tark2") %>%
     #Remove unwanted columns
-    dplyr::select(-ReasonFailed:-MalePresent, -ExpData1:-TempCode2) %>%
+    dplyr::select(-"ReasonFailed":-"MalePresent", -"ExpData1":-"TempCode2") %>%
     #Create unique BroodID with year_locationID_BroodID
-    dplyr::mutate(BroodID = paste(BreedingSeason, LocationID, BroodID, sep = "_")) %>%
+    dplyr::mutate(BroodID = paste(.data$BreedingSeason, .data$LocationID, .data$BroodID, sep = "_")) %>%
     #Convert species codes to letter codes
-    dplyr::mutate(Species = dplyr::case_when(Species == "FICHYP" ~ species_codes$Species[which(species_codes$SpeciesID == 13490)],
-                                      Species == "PARCAE" ~ species_codes$Species[which(species_codes$SpeciesID == 14620)],
-                                      Species == "PARMAJ" ~ species_codes$Species[which(species_codes$SpeciesID == 14640)],
-                                      Species == "PARATE" ~ species_codes$Species[which(species_codes$SpeciesID == 14610)])) %>%
-    dplyr::filter(!is.na(Species) & Species %in% species_filter) %>%
+    dplyr::mutate(Species = dplyr::case_when(.data$Species == "FICHYP" ~ species_codes$Species[which(species_codes$SpeciesID == 13490)],
+                                             .data$Species == "PARCAE" ~ species_codes$Species[which(species_codes$SpeciesID == 14620)],
+                                             .data$Species == "PARMAJ" ~ species_codes$Species[which(species_codes$SpeciesID == 14640)],
+                                             .data$Species == "PARATE" ~ species_codes$Species[which(species_codes$SpeciesID == 14610)])) %>%
+    dplyr::filter(!is.na(.data$Species) & .data$Species %in% species_filter) %>%
     #Add pop and plot id
-    dplyr::mutate(PopID = "HAR", Plot = NA) %>%
+    dplyr::mutate(PopID = "HAR",
+                  Plot = NA_character_) %>%
     #Adjust clutch type observed to meet our wording
-    dplyr::mutate(ClutchType_observed = dplyr::case_when(ClutchType_observed == 1 ~ "first",
-                                                  ClutchType_observed %in% c(2, 3, 6) ~ "replacement",
-                                                  ClutchType_observed == 5 ~ "second")) %>%
+    dplyr::mutate(ClutchType_observed = dplyr::case_when(.data$ClutchType_observed == 1 ~ "first",
+                                                         .data$ClutchType_observed %in% c(2, 3, 6) ~ "replacement",
+                                                         .data$ClutchType_observed == 5 ~ "second")) %>%
     #Create calendar date for laying date and hatch date
-    dplyr::mutate(LayDate = as.Date(paste(LayDate_day, LayDate_month, BreedingSeason, sep = "/"), format = "%d/%m/%Y"),
-           HatchDate  = as.Date(paste(HatchDate_day, HatchDate_month, BreedingSeason, sep = "/"), format = "%d/%m/%Y")) %>%
-    dplyr::arrange(BreedingSeason, Species, FemaleID, LayDate) %>%
+    dplyr::mutate(LayDate = as.Date(paste(.data$LayDate_day, .data$LayDate_month, .data$BreedingSeason, sep = "/"),
+                                    format = "%d/%m/%Y"),
+                  HatchDate  = as.Date(paste(.data$HatchDate_day, .data$HatchDate_month, .data$BreedingSeason, sep = "/"),
+                                       format = "%d/%m/%Y")) %>%
+    dplyr::arrange(.data$BreedingSeason, .data$Species, .data$FemaleID, .data$LayDate) %>%
     #Calculate clutchtype
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
-    dplyr::mutate(LayDateError = dplyr::case_when(LayDateError == "1" ~ 1L,
-                                                  LayDateError == "2" ~ 2L,
-                                                  LayDateError == "3" ~ 3L,
-                                                  LayDateError == "4" ~ 7L),
-                  HatchDateError = dplyr::case_when(HatchDateError == "1" ~ 1L,
-                                                    HatchDateError == "2" ~ 2L,
-                                                    HatchDateError == "3" ~ 3L,
-                                                    HatchDateError == "4" ~ 7L),
-                  FledgeDate = as.Date(NA), ClutchSizeError = NA_real_, BroodSizeError = NA_real_,
-                  FledgeDateError = NA_real_, NumberFledgedError = NA_real_,
-                  BroodSize = as.integer(BroodSize)) %>%
+    dplyr::mutate(LayDateError = dplyr::case_when(.data$LayDateError == "1" ~ 1L,
+                                                  .data$LayDateError == "2" ~ 2L,
+                                                  .data$LayDateError == "3" ~ 3L,
+                                                  .data$LayDateError == "4" ~ 7L),
+                  HatchDateError = dplyr::case_when(.data$HatchDateError == "1" ~ 1L,
+                                                    .data$HatchDateError == "2" ~ 2L,
+                                                    .data$HatchDateError == "3" ~ 3L,
+                                                    .data$HatchDateError == "4" ~ 7L),
+                  FledgeDate = as.Date(NA),
+                  ClutchSizeError = NA_real_,
+                  BroodSizeError = NA_real_,
+                  FledgeDateError = NA_real_,
+                  NumberFledgedError = NA_real_,
+                  BroodSize = as.integer(.data$BroodSize)) %>%
     #Arrange columns correctly
-    dplyr::select(BroodID, PopID, BreedingSeason, Species, Plot, LocationID, FemaleID, MaleID,
-           ClutchType_observed, ClutchType_calculated, LayDate, LayDateError,
-           ClutchSize, ClutchSizeError, HatchDate, HatchDateError,
-           BroodSize, BroodSizeError, FledgeDate, FledgeDateError, NumberFledged, NumberFledgedError,
-           ExperimentID)
+    dplyr::select("BroodID", "PopID", "BreedingSeason", "Species", "Plot", "LocationID",
+                  "FemaleID", "MaleID", "ClutchType_observed", "ClutchType_calculated",
+                  "LayDate", "LayDateError", "ClutchSize", "ClutchSizeError",
+                  "HatchDate", "HatchDateError", "BroodSize", "BroodSizeError",
+                  "FledgeDate", "FledgeDateError", "NumberFledged", "NumberFledgedError",
+                  "ExperimentID")
 
   ## Set non-conforming IDs to NA
   Brood_data <- Brood_data %>%
-    dplyr::mutate(dplyr::across(c(.data$FemaleID, .data$MaleID),
-                                ~ dplyr::case_when(stringr::str_detect(., "^[:alpha:]{1,2}[-][:digit:]{5,6}$") ~ .,
-                                                   TRUE ~ NA_character_)))
+    dplyr::mutate(dplyr::across(c("FemaleID", "MaleID"),
+                                ~dplyr::case_when(stringr::str_detect(., "^[:alpha:]{1,2}[-][:digit:]{5,6}$") ~ .,
+                                                  TRUE ~ NA_character_)))
 
   return(Brood_data)
-
-  #Satisfy RCMD Check
-  `.` <- AvgEggMass <- BroodID <- NULL
-  PopID <- BreedingSeason <- Species <- Plot <- LocationID <- NULL
-  FemaleID <- MaleID <- ClutchType_observed <- ClutchType_calculated <- NULL
-  LayDate <- LayDateError <- ClutchSize <- ClutchSizeError <- NULL
-  HatchDate <- HatchDateError <- BroodSize <- BroodSizeError <- NULL
-  FledgeDate <- FledgeDateError <- NumberFledged <- NumberFledgedError <- NULL
-  NumberEggs <- AvgChickMass <- AvgTarsus <- NumberChicksTarsus <- NULL
-  OriginalTarsusMethod <- ExperimentID <- NULL
-  ReasonFailed <- MalePresent <- ExpData1 <- TempCode2 <- NULL
-  LayDate_day <- LayDate_month <- HatchDate_day <- HatchDate_month <- NULL
 
 }
 
@@ -343,33 +339,36 @@ create_nestling_HAR <- function(db, Brood_data){
 
   #Extract table "Pullit.db" which contains brood data
   Nestling_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Nestlings.DB") %>%
-    dplyr::rename(BreedingSeason = Vuos, LocationID = Nuro, BroodID = Anro,
-                  Month = Kk, Day = Pv, Time = Klo,
-                  NrNestlings = Poik, Last2DigitsRingNr = Reng,
-                  Dead = Dead, WingLength = Siipi,
-                  Mass = Paino, LeftLegAbnormal = Vjalka,
-                  RightLegAbnormal = Ojalka, Left3Primary = Vkas,
-                  Right3Primary = Okas, LeftRectrix = Vpys,
-                  RightRectrix = Opys, LeftTarsusLength = Vnil,
-                  RightTarsusLength = Onil, LeftTarsusWidth = Vpak,
-                  RightTarsusWidth = Opak, GTBreastYellow = Vari,
-                  Lutein = Lkoe, BloodSample = Wb,
-                  ColLengthBlood = Tot, LengthBlood = Pun,
-                  BreastFeatherLutein = FetLut,
-                  NailClipping = Varpaat, Sex = Sp,
-                  HeadLength = Head)
+    dplyr::rename("BreedingSeason" = "Vuos", "LocationID" = "Nuro", "BroodID" = "Anro",
+                  "Month" = "Kk", "Day" = "Pv", "Time" = "Klo",
+                  "NrNestlings" = "Poik", "Last2DigitsRingNr" = "Reng",
+                  "Dead" = "Dead", "WingLength" = "Siipi",
+                  "Mass" = "Paino", "LeftLegAbnormal" = "Vjalka",
+                  "RightLegAbnormal" = "Ojalka", "Left3Primary" = "Vkas",
+                  "Right3Primary" = "Okas", "LeftRectrix" = "Vpys",
+                  "RightRectrix" = "Opys", "LeftTarsusLength" = "Vnil",
+                  "RightTarsusLength" = "Onil", "LeftTarsusWidth" = "Vpak",
+                  "RightTarsusWidth" = "Opak", "GTBreastYellow" = "Vari",
+                  "Lutein" = "Lkoe", "BloodSample" = "Wb",
+                  "ColLengthBlood" = "Tot", "LengthBlood" = "Pun",
+                  "BreastFeatherLutein" = "FetLut",
+                  "NailClipping" = "Varpaat", "Sex" = "Sp",
+                  "HeadLength" = "Head")
 
   #Remove unwanted columns
   Nestling_data <- Nestling_data %>%
-    dplyr::select(BreedingSeason:Mass, LeftTarsusLength, Sex) %>%
+    dplyr::select("BreedingSeason":"Mass", "LeftTarsusLength", "Sex") %>%
     #Create unique broodID (BreedingSeason_LocationID_BroodID)
-    dplyr::mutate(BroodID = paste(BreedingSeason, LocationID, BroodID, sep = "_"),
-                  CaptureDate = as.Date(paste(Day, Month, BreedingSeason, sep = "/"), format = "%d/%m/%Y"),
-                  CaptureTime = dplyr::na_if(paste0(Time, ":00"), "NA:00")) %>%
+    dplyr::mutate(BroodID = paste(.data$BreedingSeason, .data$LocationID, .data$BroodID, sep = "_"),
+                  CaptureDate = as.Date(paste(.data$Day, .data$Month, .data$BreedingSeason, sep = "/"),
+                                        format = "%d/%m/%Y"),
+                  CaptureTime = dplyr::na_if(paste0(.data$Time, ":00"), "NA:00")) %>%
     #Join hatch date data from brood data table
-    dplyr::left_join(dplyr::select(Brood_data, BroodID, HatchDate), by = "BroodID") %>%
+    dplyr::left_join(Brood_data %>%
+                       dplyr::select("BroodID", "HatchDate"),
+                     by = "BroodID") %>%
     #Determine age at capture
-    dplyr::mutate(ChickAge = as.integer(CaptureDate - HatchDate))
+    dplyr::mutate(ChickAge = as.integer(.data$CaptureDate - .data$HatchDate))
 
   return(Nestling_data)
 
@@ -401,39 +400,41 @@ create_capture_HAR    <- function(db, Brood_data, species_filter, return_errors)
   # 662470, 662471, 662472, 662473
   # The number of nestlings ringed is stored in NrNestlings.
   Capture_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Ringings.DB") %>%
-    dplyr::rename(RingSeries = Sarja, RingNumber = Mista,
-                  CaptureType = Tunnus, BreedingSeason = Vuos,
-                  Month = Kk, Day = Pv, Time = Klo,
-                  LocationID = Nuro, BroodID = Anro,
-                  ObserverID = Havno, LastRingNumber = Mihin,
-                  Species = Laji, Sex = Suku,
-                  Sex_method = Sp, Age = Ika,
-                  Age_method = Ip, RingType = Rtapa,
-                  Condition = Kunto, BirdStatus = Tila,
-                  CaptureMethod = Ptapa, NrNestlings = Poik,
-                  WingLength = Siipi, Mass = Paino, Moult = Sulsat,
-                  FatScore = Rasik, ExtraInfo = Lisa,
-                  Plumage = Vari, TailFeather = Psulka,
-                  ColLengthBlood = Tot,
-                  LengthBlood = Pun, BreastMuscle = Lihas,
-                  HeadLength = Head)
+    dplyr::rename("RingSeries" = "Sarja", "RingNumber" = "Mista",
+                  "CaptureType" = "Tunnus", "BreedingSeason" = "Vuos",
+                  "Month" = "Kk", "Day" = "Pv", "Time" = "Klo",
+                  "LocationID" = "Nuro", "BroodID" = "Anro",
+                  "ObserverID" = "Havno", "LastRingNumber" = "Mihin",
+                  "Species" = "Laji", "Sex" = "Suku",
+                  "Sex_method" = "Sp", "Age" = "Ika",
+                  "Age_method" = "Ip", "RingType" = "Rtapa",
+                  "Condition" = "Kunto", "BirdStatus" = "Tila",
+                  "CaptureMethod" = "Ptapa", "NrNestlings" = "Poik",
+                  "WingLength" = "Siipi", "Mass" = "Paino", "Moult" = "Sulsat",
+                  "FatScore" = "Rasik", "ExtraInfo" = "Lisa",
+                  "Plumage" = "Vari", "TailFeather" = "Psulka",
+                  "ColLengthBlood" = "Tot",
+                  "LengthBlood" = "Pun", "BreastMuscle" = "Lihas",
+                  "HeadLength" = "Head")
+
 
   Capture_data <- Capture_data %>%
     #Create unique broodID
-    dplyr::mutate(BroodID = paste(BreedingSeason, LocationID, BroodID, sep = "_"),
-                  CaptureDate = as.Date(paste(Day, Month, BreedingSeason, sep = "/"), format = "%d/%m/%Y"),
-                  CaptureTime = dplyr::na_if(paste0(Time, ":00"), "NA:00")) %>%
+    dplyr::mutate(BroodID = paste(.data$BreedingSeason, .data$LocationID, .data$BroodID, sep = "_"),
+                  CaptureDate = as.Date(paste(.data$Day, .data$Month, .data$BreedingSeason, sep = "/"),
+                                        format = "%d/%m/%Y"),
+                  CaptureTime = dplyr::na_if(paste0(.data$Time, ":00"), "NA:00")) %>%
     #Convert species codes to EUring codes and then remove only the major species
-    dplyr::mutate(Species = dplyr::case_when(Species == "FICHYP" ~ species_codes$Species[which(species_codes$SpeciesID == 13490)],
-                                      Species == "PARCAE" ~ species_codes$Species[which(species_codes$SpeciesID == 14620)],
-                                      Species == "PARMAJ" ~ species_codes$Species[which(species_codes$SpeciesID == 14640)],
-                                      Species == "PARATE" ~ species_codes$Species[which(species_codes$SpeciesID == 14610)]),
+    dplyr::mutate(Species = dplyr::case_when(.data$Species == "FICHYP" ~ species_codes$Species[which(species_codes$SpeciesID == 13490)],
+                                             .data$Species == "PARCAE" ~ species_codes$Species[which(species_codes$SpeciesID == 14620)],
+                                             .data$Species == "PARMAJ" ~ species_codes$Species[which(species_codes$SpeciesID == 14640)],
+                                             .data$Species == "PARATE" ~ species_codes$Species[which(species_codes$SpeciesID == 14610)]),
                   ) %>%
-    dplyr::filter(!is.na(Species) & Species %in% species_filter) %>%
-    dplyr::mutate(Sex = dplyr::case_when(Sex %in% c("N", "O") ~ "F",
-                                  Sex %in% c("K", "L") ~ "M"),
-                  Mass = dplyr::na_if(Mass, 0),
-                  WingLength = dplyr::na_if(WingLength, 0))
+    dplyr::filter(!is.na(.data$Species) & .data$Species %in% species_filter) %>%
+    dplyr::mutate(Sex = dplyr::case_when(.data$Sex %in% c("N", "O") ~ "F",
+                                         .data$Sex %in% c("K", "L") ~ "M"),
+                  Mass = dplyr::na_if(.data$Mass, 0),
+                  WingLength = dplyr::na_if(.data$WingLength, 0))
 
   #We have eight scenarios we need to deal with in the capture data.
   #See an explanation in the help documentation:
@@ -441,34 +442,43 @@ create_capture_HAR    <- function(db, Brood_data, species_filter, return_errors)
   ####
 
   #1. Individual adult captures
-  Adult_capture    <- Capture_data %>%
-    dplyr::filter(!Age %in% c("PP", "PM") | is.na(Age)) %>%
-    dplyr::mutate(Capture_type = "Adult", Last2DigitsRingNr = NA, ChickAge = NA) %>%
-    dplyr::mutate(IndvID = paste(RingSeries, RingNumber, sep = "-")) %>%
-    dplyr::select(IndvID, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, BroodID, Species, Sex, Age, WingLength, Mass, CaptureType, BirdStatus, Last2DigitsRingNr, ChickAge)
+  Adult_capture <- Capture_data %>%
+    dplyr::filter(!.data$Age %in% c("PP", "PM") | is.na(.data$Age)) %>%
+    dplyr::mutate(Capture_type = "Adult",
+                  Last2DigitsRingNr = NA,
+                  ChickAge = NA,
+                  IndvID = paste(.data$RingSeries, .data$RingNumber, sep = "-")) %>%
+    dplyr::select("IndvID", "BreedingSeason", "CaptureDate", "CaptureTime",
+                  "ObserverID", "LocationID", "BroodID", "Species", "Sex", "Age",
+                  "WingLength", "Mass", "CaptureType", "BirdStatus", "Last2DigitsRingNr", "ChickAge")
 
   ####
 
   message("Determining chick ring numbers...")
 
   #Isolate only chick captures
-  chick_data <- dplyr::filter(Capture_data, Age %in% c("PP", "PM"))
+  chick_data <- dplyr::filter(Capture_data, .data$Age %in% c("PP", "PM"))
 
   #2-4. Individual chick captures
   indv_chick_capture <- chick_data %>%
-    dplyr::filter(is.na(LastRingNumber))
+    dplyr::filter(is.na(.data$LastRingNumber))
 
   #2. No information in Nestling data
   #In this case, it doesn't matter whether mass/wing length is NA, they are still legit capture records
   indv_chick_capture_only <- indv_chick_capture %>%
     #Filter only those where the BroodID_RingNumber combo is not found in Nestling data
-    dplyr::filter(!paste(BroodID, stringr::str_sub(RingNumber, start = -2), sep = "_") %in% paste(Nestling_data$BroodID, Nestling_data$Last2DigitsRingNr, sep = "_")) %>%
-    dplyr::left_join(dplyr::select(Brood_data, BroodID, HatchDate), by = "BroodID") %>%
+    dplyr::filter(!paste(.data$BroodID, stringr::str_sub(.data$RingNumber, start = -2), sep = "_") %in% paste(Nestling_data$BroodID, Nestling_data$Last2DigitsRingNr, sep = "_")) %>%
+    dplyr::left_join(Brood_data %>%
+                       dplyr::select("BroodID", "HatchDate"),
+                     by = "BroodID") %>%
     #Join in Brood_data (with HatchDate) so we can determine ChickAge
-    dplyr::mutate(Capture_type = "Chick", Last2DigitsRingNr = NA,
-                  ChickAge = as.integer(CaptureDate - HatchDate),
-                  IndvID = paste(RingSeries, RingNumber, sep = "-")) %>%
-    dplyr::select(IndvID, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, BroodID, Species, Sex, Age, WingLength, Mass, CaptureType, BirdStatus, Last2DigitsRingNr, ChickAge)
+    dplyr::mutate(Capture_type = "Chick",
+                  Last2DigitsRingNr = NA,
+                  ChickAge = as.integer(.data$CaptureDate - .data$HatchDate),
+                  IndvID = paste(.data$RingSeries, .data$RingNumber, sep = "-")) %>%
+    dplyr::select("IndvID", "BreedingSeason", "CaptureDate", "CaptureTime",
+                  "ObserverID", "LocationID", "BroodID", "Species", "Sex", "Age",
+                  "WingLength", "Mass", "CaptureType", "BirdStatus", "Last2DigitsRingNr", "ChickAge")
 
   ####
 
@@ -479,183 +489,205 @@ create_capture_HAR    <- function(db, Brood_data, species_filter, return_errors)
 
   #First, identify those cases where the individual chick record is in both tables
   non_matching_records <- indv_chick_capture %>%
-    dplyr::mutate(Last2DigitsRingNr = stringr::str_sub(RingNumber, start = -2),
-                  IndvID = paste(RingSeries, RingNumber, sep = "-")) %>%
+    dplyr::mutate(Last2DigitsRingNr = stringr::str_sub(.data$RingNumber, start = -2),
+                  IndvID = paste(.data$RingSeries, .data$RingNumber, sep = "-")) %>%
     dplyr::semi_join(Nestling_data %>%
-                       dplyr::select(BroodID, Last2DigitsRingNr, CaptureDateNestling = CaptureDate),
+                       dplyr::select("BroodID", "Last2DigitsRingNr", "CaptureDateNestling" = "CaptureDate"),
                      by = c("BroodID", "Last2DigitsRingNr")) %>%
-    dplyr::pull(IndvID)
+    dplyr::pull("IndvID")
 
   #Next, go through capture data records and return all the cases where these
   #chicks had a record in capture data that didn't match anything in nestling data
   unique_individual_captures <- indv_chick_capture %>%
-    dplyr::mutate(Last2DigitsRingNr = stringr::str_sub(RingNumber, start = -2),
-                  IndvID = paste(RingSeries, RingNumber, sep = "-")) %>%
-    dplyr::filter(IndvID %in% non_matching_records) %>%
+    dplyr::mutate(Last2DigitsRingNr = stringr::str_sub(.data$RingNumber, start = -2),
+                  IndvID = paste(.data$RingSeries, .data$RingNumber, sep = "-")) %>%
+    dplyr::filter(.data$IndvID %in% non_matching_records) %>%
     dplyr::anti_join(Nestling_data %>%
-                       dplyr::select(BroodID, Last2DigitsRingNr, CaptureDate),
+                       dplyr::select("BroodID", "Last2DigitsRingNr", "CaptureDate"),
                      by = c("BroodID", "Last2DigitsRingNr", "CaptureDate")) %>%
     dplyr::left_join(Brood_data %>%
-                       dplyr::select(BroodID, HatchDate), by = "BroodID") %>%
-    dplyr::mutate(ChickAge = as.integer(CaptureDate - HatchDate)) %>%
-    dplyr::select(IndvID, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, BroodID, Species,
-                  Sex, Age, WingLength, Mass, CaptureType, BirdStatus, ChickAge)
+                       dplyr::select("BroodID", "HatchDate"), by = "BroodID") %>%
+    dplyr::mutate(ChickAge = as.integer(.data$CaptureDate - .data$HatchDate)) %>%
+    dplyr::select("IndvID", "BreedingSeason", "CaptureDate", "CaptureTime",
+                  "ObserverID", "LocationID", "BroodID", "Species", "Sex", "Age",
+                  "WingLength", "Mass", "CaptureType", "BirdStatus", "Last2DigitsRingNr", "ChickAge")
 
   #Go through the nestling data records and do the same thing
   unique_individual_nestlings <- Nestling_data %>%
     dplyr::left_join(indv_chick_capture %>%
-                       dplyr::mutate(Last2DigitsRingNr = stringr::str_sub(RingNumber, start = -2)) %>%
-                       dplyr::select(BroodID, Last2DigitsRingNr, RingSeries, RingNumber, Species),
+                       dplyr::mutate(Last2DigitsRingNr = stringr::str_sub(.data$RingNumber, start = -2)) %>%
+                       dplyr::select("BroodID", "Last2DigitsRingNr", "RingSeries", "RingNumber", "Species"),
                      by = c("BroodID", "Last2DigitsRingNr")) %>%
-    dplyr::mutate(IndvID = paste(RingSeries, RingNumber, sep = "-")) %>%
-    dplyr::filter(IndvID %in% non_matching_records) %>%
+    dplyr::mutate(IndvID = paste(.data$RingSeries, .data$RingNumber, sep = "-")) %>%
+    dplyr::filter(.data$IndvID %in% non_matching_records) %>%
     dplyr::anti_join(indv_chick_capture %>%
-                       dplyr::mutate(Last2DigitsRingNr = stringr::str_sub(RingNumber, start = -2)) %>%
-                       dplyr::select(BroodID, Last2DigitsRingNr, CaptureDate),
+                       dplyr::mutate(Last2DigitsRingNr = stringr::str_sub(.data$RingNumber, start = -2)) %>%
+                       dplyr::select("BroodID", "Last2DigitsRingNr", "CaptureDate"),
                      by = c("BroodID", "Last2DigitsRingNr", "CaptureDate")) %>%
-    dplyr::mutate(ObserverID = NA_character_, Sex = NA_character_, Age = "PP", CaptureType = "5",
+    dplyr::mutate(ObserverID = NA_character_,
+                  Sex = NA_character_,
+                  Age = "PP",
+                  CaptureType = "5",
                   BirdStatus = NA_character_) %>%
-    dplyr::select(IndvID, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, BroodID, Species,
-                  Sex, Age, WingLength, Mass, CaptureType, BirdStatus, ChickAge)
+    dplyr::select("IndvID", "BreedingSeason", "CaptureDate", "CaptureTime",
+                  "ObserverID", "LocationID", "BroodID", "Species", "Sex", "Age",
+                  "WingLength", "Mass", "CaptureType", "BirdStatus", "Last2DigitsRingNr", "ChickAge")
 
   indv_chick_multirecord <- dplyr::bind_rows(unique_individual_captures, unique_individual_nestlings)
 
   #Go through and find the exact matches
   indv_chick_record_conflict <- indv_chick_capture %>%
     #Join Nestling data and filter those cases where the same date is present
-    dplyr::mutate(Last2DigitsRingNr = stringr::str_sub(RingNumber, start = -2),
-                  IndvID = paste(RingSeries, RingNumber, sep = "-")) %>%
-    dplyr::left_join(dplyr::select(Nestling_data, BroodID, Last2DigitsRingNr, CaptureDateNestling = CaptureDate,
-                                   CaptureTimeNestling = CaptureTime, MassNestling = Mass, WingLengthNestling = WingLength, HatchDate, ChickAge),
+    dplyr::mutate(Last2DigitsRingNr = stringr::str_sub(.data$RingNumber, start = -2),
+                  IndvID = paste(.data$RingSeries, .data$RingNumber, sep = "-")) %>%
+    dplyr::left_join(Nestling_data %>%
+                       dplyr::select("BroodID", "Last2DigitsRingNr",
+                                     "CaptureDateNestling" = "CaptureDate",
+                                     "CaptureTimeNestling" = "CaptureTime", "MassNestling" = "Mass",
+                                     "WingLengthNestling" = "WingLength", "HatchDate", "ChickAge"),
                      by = c("BroodID", "Last2DigitsRingNr")) %>%
     #Filter those cases that are individual captures (i.e. no last ring number)
     #Find cases where there was mass and/or wing length in the nestling data
     #AND where the CaptureDate in the Nestling data is different to Capture_data
-    dplyr::filter(CaptureDate == CaptureDateNestling) %>%
-    dplyr::mutate(Mass = purrr::map2_dbl(.x = .$Mass, .y = .$MassNestling, .f = ~{
-
-      if(is.na(..2)){
-
-        return(..1)
-
-      } else {
-
-        return(..2)
-
-      }
-
-    }),
-    WingLength = purrr::map2_dbl(.x = .$WingLength, .$WingLengthNestling,
-                                 ~{
-
-                                   if(is.na(..2)){
-
-                                     return(..1)
-
-                                   } else {
-
-                                     return(..2)
-
-                                   }
-
-                                 })) %>%
-    dplyr::select(IndvID, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, BroodID, Species,
-                  Sex, Age, WingLength, Mass, CaptureType, BirdStatus, ChickAge)
+    dplyr::filter(.data$CaptureDate == .data$CaptureDateNestling) %>%
+    dplyr::mutate(Mass = dplyr::case_when(is.na(.data$MassNestling) ~ .data$Mass,
+                                          TRUE ~ .data$MassNestling),
+                  WingLength = dplyr::case_when(is.na(.data$WingLengthNestling) ~ .data$WingLength,
+                                                TRUE ~ .data$WingLengthNestling)) %>%
+    dplyr::select("IndvID", "BreedingSeason", "CaptureDate", "CaptureTime",
+                  "ObserverID", "LocationID", "BroodID", "Species", "Sex", "Age",
+                  "WingLength", "Mass", "CaptureType", "BirdStatus", "Last2DigitsRingNr", "ChickAge")
 
   ####
 
   #5. Cases where the record in capture is for multiple chicks
   #The individual data is stored in nestling data
   flat_multi_chick_capture <- chick_data %>%
-    dplyr::filter(!is.na(LastRingNumber))
-
-  ring_pb <- progress::progress_bar$new(total = nrow(flat_multi_chick_capture))
+    dplyr::filter(!is.na(.data$LastRingNumber))
 
   expanded_multi_chick_capture <- flat_multi_chick_capture %>%
-    #Split data into rowwise list
-    purrr::pmap(~c(...)) %>%
-    #map over each row
-    purrr::map_dfr(function(current_row){
+    # Determine series of chick ring numbers
+    dplyr::mutate(RingNumber = purrr::map2(.x = .data$RingNumber,
+                                           .y = .data$LastRingNumber,
+                                           .f = ~ {
 
-      ring_pb$tick()
+                                             # Determine ring series
+                                             ring_string <- paste0(.x, ":", .y)
 
-      #Determine first part of Ringnumber
-      ring_start <- stringr::str_sub(current_row["RingNumber"], end = -6)
+                                             # Parse text
+                                             ring_series <- eval(parse(text = ring_string))
 
-      #We use the last 5 digits (rather than last 2) to deal with
-      #cases where the ring series passes 10000 (e.g. 9999 - 0000).
-      ring_ends  <- stringr::str_sub(current_row["RingNumber"], start = -5):stringr::str_sub(current_row["LastRingNumber"], start = -5)
-      #Pad numbers with leading 0s to ensure they're all the right length
-      ring_ends  <- stringr::str_pad(ring_ends, 5, pad = "0")
+                                             # Pad chick ring numbers with leading 0
+                                             output <-  stringr::str_pad(as.character(ring_series),
+                                                                         width = nchar(.x),
+                                                                         side = "left",
+                                                                         pad = 0)
 
-      #Create a list of all chicks in the series
-      All_rings <- paste0(ring_start, ring_ends)
+                                             # Set chick IDs to NA if the list of ring numbers is unlikely large
+                                             # TODO: Check with data custodian.
+                                             # Four cases seem to have typos. RingNumber:
+                                             # - 403881
+                                             # - 564023
+                                             # - 956423
+                                             # - 418760
+                                             if(length(output) > 14) {
 
-      return(tibble::tibble(LocationID = current_row["LocationID"], BroodID = current_row["BroodID"], RingSeries = current_row["RingSeries"],
-                            RingNumber = All_rings, BreedingSeason = as.integer(current_row["BreedingSeason"]),
-                            Species = current_row["Species"], Sex = current_row["Sex"],
-                            Age = current_row["Age"], ObserverID = current_row["ObserverID"],
-                            CaptureType = current_row["CaptureType"], BirdStatus = current_row["BirdStatus"]))
+                                               output <- NA_character_
 
-    })
+                                             }
+
+                                             return(output)
+
+                                           })) %>%
+    tidyr::unnest(cols = "RingNumber") %>%
+    dplyr::select("LocationID", "BroodID", "RingSeries", "RingNumber",
+                  "BreedingSeason", "Species", "Sex", "Age",
+                  "ObserverID", "CaptureType", "BirdStatus") %>%
+    dplyr::distinct()
+
 
   #Remove names so that it doesn't break tests
   #We need to come up with a more robust fix for this (i.e. change the above code!)
   expanded_multi_chick_capture <- expanded_multi_chick_capture %>%
-    dplyr::mutate(dplyr::across(.cols = tidyselect::where(~!is.null(names(.))), .fns = ~stats::setNames(., NULL)))
+    dplyr::mutate(dplyr::across(.cols = tidyselect::where(~!is.null(names(.))),
+                                .fns = ~stats::setNames(., NULL)))
 
   #Now, for each recorded chick ring number determine the last 2 digits of the ring
   multirecord_captures <- expanded_multi_chick_capture %>%
-    dplyr::mutate(Last2DigitsRingNr = stringr::str_sub(RingNumber, start = -2),
+    dplyr::mutate(Last2DigitsRingNr = stringr::str_sub(.data$RingNumber, start = -2),
                   Capture_type = "Chick") %>%
     #Join in all nestling data where the broodID and Last2Digits is the same
     #N.B. We do left_join with BroodID and Last2Digits, so we can get multiple
     #records for each chick when they were captured more than once
     dplyr::left_join(Nestling_data %>%
-                       dplyr::select(BroodID, CaptureDate, CaptureTime,
-                                     Last2DigitsRingNr, WingLength,
-                                     Mass, ChickAge), by = c("BroodID", "Last2DigitsRingNr")) %>%
-    dplyr::mutate(IndvID = paste(RingSeries, RingNumber, sep = "-")) %>%
-    dplyr::select(IndvID, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, BroodID, Species, Sex, Age, WingLength, Mass, CaptureType, BirdStatus, ChickAge)
+                       dplyr::select("BroodID", "CaptureDate", "CaptureTime",
+                                     "Last2DigitsRingNr", "WingLength",
+                                     "Mass", "ChickAge"),
+                     by = c("BroodID", "Last2DigitsRingNr"),
+                     ## TODO: Check BroodID 2005_0210_1 with data custodian
+                     # 1 record with LastRing 707300 & 1 record with LastRing 707699
+                     relationship = "many-to-many") %>%
+    dplyr::mutate(IndvID = paste(.data$RingSeries, .data$RingNumber, sep = "-")) %>%
+    dplyr::select("IndvID", "BreedingSeason", "CaptureDate", "CaptureTime",
+                  "ObserverID", "LocationID", "BroodID", "Species", "Sex", "Age",
+                  "WingLength", "Mass", "CaptureType", "BirdStatus", "Last2DigitsRingNr", "ChickAge")
 
   ####
 
   #6. Nestling records that don't correspond to any capture data
   #Brood/RingNumber combos from individual captures
   single_capture_records <- indv_chick_capture %>%
-    dplyr::mutate(Brood_RingNr = paste(BroodID, stringr::str_sub(RingNumber, start = -2), sep = "_")) %>%
-    dplyr::pull(Brood_RingNr)
+    dplyr::mutate(Brood_RingNr = paste(.data$BroodID,
+                                       stringr::str_sub(.data$RingNumber, start = -2), sep = "_")) %>%
+    dplyr::pull("Brood_RingNr")
 
   #Brood/RingNumber combos from multi-captures
   multi_capture_records <- expanded_multi_chick_capture %>%
-    dplyr::mutate(Brood_RingNr = paste(BroodID, stringr::str_sub(RingNumber, start = -2), sep = "_")) %>%
-    dplyr::pull(Brood_RingNr)
+    dplyr::mutate(Brood_RingNr = paste(.data$BroodID,
+                                       stringr::str_sub(.data$RingNumber, start = -2), sep = "_")) %>%
+    dplyr::pull("Brood_RingNr")
 
   nocapture_nestlings <- Nestling_data %>%
-    dplyr::mutate(Brood_RingNr = paste(BroodID, Last2DigitsRingNr, sep = "_")) %>%
-    dplyr::filter(!Brood_RingNr %in% c(single_capture_records, multi_capture_records))
+    dplyr::mutate(Brood_RingNr = paste(.data$BroodID, .data$Last2DigitsRingNr, sep = "_")) %>%
+    dplyr::filter(!.data$Brood_RingNr %in% c(single_capture_records, multi_capture_records))
 
   #6a. Filter unringed individuals. These are just given records associated with a brood where the individual ID is unknown.
   unringed_chicks <- nocapture_nestlings %>%
-    dplyr::filter(toupper(Last2DigitsRingNr) %in% LETTERS) %>%
-    dplyr::mutate(IndvID = NA_character_, ObserverID = NA_character_, Sex = NA_character_, Age = "PP", CaptureType = NA_character_) %>%
+    dplyr::filter(toupper(.data$Last2DigitsRingNr) %in% LETTERS) %>%
+    dplyr::mutate(IndvID = NA_character_,
+                  ObserverID = NA_character_,
+                  Sex = NA_character_,
+                  Age = "PP",
+                  CaptureType = NA_character_) %>%
     #Join in Species information from Brood_data
-    dplyr::left_join(dplyr::select(Brood_data, BroodID, Species), by = "BroodID") %>%
-    dplyr::select(IndvID, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, BroodID, Species, Sex, Age, WingLength, Mass, CaptureType, ChickAge)
+    dplyr::left_join(Brood_data %>%
+                       dplyr::select("BroodID", "Species"),
+                     by = "BroodID") %>%
+    dplyr::select("IndvID", "BreedingSeason", "CaptureDate", "CaptureTime",
+                  "ObserverID", "LocationID", "BroodID", "Species", "Sex", "Age",
+                  "WingLength", "Mass", "CaptureType", "ChickAge")
 
   ringed_chicks_nocapture <- nocapture_nestlings %>%
-    dplyr::filter(!toupper(Last2DigitsRingNr) %in% LETTERS) %>%
-    dplyr::mutate(IndvID = NA_character_, ObserverID = NA_character_, Sex = NA_character_, Age = "PP", CaptureType = NA_character_) %>%
+    dplyr::filter(!toupper(.data$Last2DigitsRingNr) %in% LETTERS) %>%
+    dplyr::mutate(IndvID = NA_character_,
+                  ObserverID = NA_character_,
+                  Sex = NA_character_,
+                  Age = "PP",
+                  CaptureType = NA_character_) %>%
     #Join in Species information from Brood_data
-    dplyr::left_join(dplyr::select(Brood_data, BroodID, Species), by = "BroodID") %>%
-    dplyr::select(IndvID, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, BroodID, Species, Sex, Age, WingLength, Mass, CaptureType, ChickAge)
+    dplyr::left_join(Brood_data %>%
+                       dplyr::select("BroodID", "Species"),
+                     by = "BroodID") %>%
+    dplyr::select("IndvID", "BreedingSeason", "CaptureDate", "CaptureTime",
+                  "ObserverID", "LocationID", "BroodID", "Species", "Sex", "Age",
+                  "WingLength", "Mass", "CaptureType", "ChickAge")
 
   message(paste0("There are ", nrow(ringed_chicks_nocapture), " nestling records where we cannot translate Last2Digits into an IndvID"))
 
   if(return_errors){
 
     return(nocapture_nestlings %>%
-             dplyr::filter(!toupper(Last2DigitsRingNr) %in% LETTERS))
+             dplyr::filter(!toupper(.data$Last2DigitsRingNr) %in% LETTERS))
 
   }
 
@@ -663,7 +695,8 @@ create_capture_HAR    <- function(db, Brood_data, species_filter, return_errors)
 
   #Now that we have dealt with all 6 scenarios, we can join the data back together.
   Capture_data_expanded <- dplyr::bind_rows(Adult_capture, indv_chick_capture_only, indv_chick_multirecord,
-                                            indv_chick_record_conflict, multirecord_captures, unringed_chicks, ringed_chicks_nocapture)
+                                            indv_chick_record_conflict, multirecord_captures, unringed_chicks,
+                                            ringed_chicks_nocapture)
 
   ####
 
@@ -676,38 +709,37 @@ create_capture_HAR    <- function(db, Brood_data, species_filter, return_errors)
     #1+ = 4 (hatched atleast 1 year ago), 2 = 5 (known to have hatched last year),
     #2+ = 6 (hatched at least 2 years ago)
     #FL is 2. We cannot even distinguish it as adult or chick. We just know it's fully grown.
-    dplyr::mutate(Mass = Mass/10,
-                  CapturePopID = "HAR", CapturePlot = NA_character_,
-                  ReleasePopID = "HAR", ReleasePlot = NA_character_,
-                  Age_observed = dplyr::case_when(Age %in% c("PM", "PP") ~ 1L,
-                                                  Age == "FL" ~ 2L,
-                                                  Age == "1" ~ 3L,
-                                                  Age == "+1" ~ 4L,
-                                                  Age == "2" ~ 5L,
-                                                  Age == "+2" ~ 6L)) %>%
+    dplyr::mutate(Mass = .data$Mass/10,
+                  CapturePopID = "HAR",
+                  CapturePlot = NA_character_,
+                  ReleasePopID = "HAR",
+                  ReleasePlot = NA_character_,
+                  Age_observed = dplyr::case_when(.data$Age %in% c("PM", "PP") ~ 1L,
+                                                  .data$Age == "FL" ~ 2L,
+                                                  .data$Age == "1" ~ 3L,
+                                                  .data$Age == "+1" ~ 4L,
+                                                  .data$Age == "2" ~ 5L,
+                                                  .data$Age == "+2" ~ 6L)) %>%
     #Determine age at first capture for every individual
     #First arrange the data chronologically within each individual
-    dplyr::arrange(IndvID, CaptureDate, CaptureTime) %>%
+    dplyr::arrange(.data$IndvID, .data$CaptureDate, .data$CaptureTime) %>%
     #Calculate age at each capture based on first capture
-    calc_age(ID = IndvID, Age = Age_observed, Date = CaptureDate, Year = BreedingSeason) %>%
-    dplyr::mutate(Tarsus = NA_real_, OriginalTarsusMethod = NA_character_,
+    calc_age(ID = .data$IndvID, Age = .data$Age_observed,
+             Date = .data$CaptureDate, Year = .data$BreedingSeason) %>%
+    dplyr::mutate(Tarsus = NA_real_,
+                  OriginalTarsusMethod = NA_character_,
                   ## Set non-conforming IDs to NA
                   IndvID = dplyr::case_when(stringr::str_detect(.data$IndvID, "^[:alpha:]{1,2}[-][:digit:]{5,6}$") ~ .data$IndvID,
                                             TRUE ~ NA_character_)) %>%
-    dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime, ObserverID, LocationID, CapturePopID, CapturePlot,
-                  ReleasePopID, ReleasePlot, Mass, Tarsus, OriginalTarsusMethod, WingLength, Age_observed, Age_calculated, ChickAge, Sex, BroodID, CaptureType, BirdStatus) %>%
+    dplyr::select("IndvID", "Species", "BreedingSeason", "CaptureDate", "CaptureTime",
+                  "ObserverID", "LocationID", "CapturePopID", "CapturePlot",
+                  "ReleasePopID", "ReleasePlot", "Mass", "Tarsus", "OriginalTarsusMethod",
+                  "WingLength", "Age_observed", "Age_calculated", "ChickAge",
+                  "Sex", "BroodID", "CaptureType", "BirdStatus") %>%
     #Remove duplicates that can arise from cases when CaptureDate is the same in Capture and Nestling
     dplyr::distinct()
 
   return(Capture_data_output)
-
-  #Satisfy RCMD Check
-  Species <- IndvID <- BreedingSeason <- LocationID <- Plot <- Sex <- Age_observed <- NULL
-  CaptureDate <- CaptureTime <- ObserverID <- CapturePopID <- ReleasePopID <- Mass <- Tarsus <- NULL
-  OriginalTarsusMethod <- WingLength <- Age_calculated <- ChickAge <- NULL
-  LastRingNumber_Brood <- Age <- NrNestlings <- RingNumber <- NULL
-  Capture_type <- Last2DigitsRingNr <- Month <- Wing <- LeftTarsusLength <- NULL
-  `.` <- Ring_Time <- Final_BreedingSeason <- Final_Month <- Final_Day <- Final_Time <- Day <- ischick <- NULL
 
 }
 
@@ -723,55 +755,59 @@ create_individual_HAR <- function(Capture_data){
 
   #Take capture data and determine summary data for each individual
   Indv_data <- Capture_data %>%
-    dplyr::filter(!is.na(IndvID)) %>%
-    dplyr::arrange(IndvID, BreedingSeason, CaptureDate, CaptureTime) %>%
-    dplyr::group_by(IndvID) %>%
-    dplyr::summarise(Species = purrr::map_chr(.x = list(unique(stats::na.omit(Species))), .f = ~{
+    dplyr::filter(!is.na(.data$IndvID)) %>%
+    dplyr::arrange(.data$IndvID, .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
+    dplyr::group_by(.data$IndvID) %>%
+    dplyr::summarise(Species = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Species))),
+                                              .f = ~{
 
-      if(length(..1) == 0){
+                                                if(length(..1) == 0){
 
-        return(NA_character_)
+                                                  return(NA_character_)
 
-      } else if(length(..1) == 1){
+                                                } else if(length(..1) == 1){
 
-        return(..1)
+                                                  return(..1)
 
-      } else {
+                                                } else {
 
-        return("CONFLICTED")
+                                                  return("CONFLICTED")
 
-      }
+                                                }
 
-    }), PopID = "HAR",
-              BroodIDLaid = dplyr::first(BroodID),
-              BroodIDFledged = BroodIDLaid,
-              RingSeason = dplyr::first(BreedingSeason),
-              RingAge = ifelse(any(Age_calculated %in% c(1, 3)), "chick", ifelse(min(Age_calculated) == 2, NA_character_, "adult")),
-              Sex = purrr::map_chr(.x = list(unique(stats::na.omit(Sex))), .f = ~{
+                                              }),
+                     PopID = "HAR",
+                     BroodIDLaid = dplyr::first(.data$BroodID),
+                     BroodIDFledged = .data$BroodIDLaid,
+                     RingSeason = dplyr::first(.data$BreedingSeason),
+                     RingAge = ifelse(any(.data$Age_calculated %in% c(1, 3)), "chick",
+                                      ifelse(min(.data$Age_calculated) == 2, NA_character_, "adult")),
+                     Sex = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Sex))),
+                                          .f = ~{
 
-                if(length(..1) == 0){
+                                            if(length(..1) == 0){
 
-                  return(NA_character_)
+                                              return(NA_character_)
 
-                } else if(length(..1) == 1){
+                                            } else if(length(..1) == 1){
 
-                  return(..1)
+                                              return(..1)
 
-                } else {
+                                            } else {
 
-                  return("C")
+                                              return("C")
 
-                }
+                                            }
 
-              })) %>%
+                                          })) %>%
     dplyr::rowwise() %>%
     #For each individual, if their ring age was 1 or 3 (caught in first breeding year)
     #Then we take their first BroodID, otherwise it is NA
-    dplyr::mutate(BroodIDLaid = ifelse(RingAge == "chick", BroodIDLaid, NA),
-           BroodIDFledged = BroodIDLaid) %>%
+    dplyr::mutate(BroodIDLaid = ifelse(.data$RingAge == "chick", .data$BroodIDLaid, NA_character_),
+                  BroodIDFledged = .data$BroodIDLaid) %>%
     #Ungroup to prevent warnings in debug report
     dplyr::ungroup() %>%
-    dplyr::arrange(RingSeason, IndvID)
+    dplyr::arrange(.data$RingSeason, .data$IndvID)
 
   return(Indv_data)
 
@@ -793,48 +829,57 @@ create_location_HAR <- function(db){
   #Extract table "Pullit.db" which contains brood data
   Location_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Locations.DB") %>%
     #Remove last 2 cols that have no info
-    dplyr::select(-Aukko, -Malli) %>%
-    dplyr::rename(BreedingSeason = Vuos, LocationID = Nuro,
-                  ForestType = Mety, PinusSylvestris = Manty,
-                  PiceaAbies = Kuusi, Betulasp = Koivu,
-                  PopulusTremula = Haapa,
-                  SorbusAcuparia = Pihlaja,
-                  Salixsp = Pajut, JuniperusCommunis = Kataja,
-                  Alnussp = Leppa, PrunusPadas = Tuomi,
-                  TreeHeight = Kork, BasalArea = Totrel,
-                  PineHeight = Makor, SpruceHeight = Kukor,
-                  BirchHeight = Kokor, PineBasalArea = Marel,
-                  SpruceBasalArea = Kurel, BirchBasalArea = Korel,
-                  Latitude = Leve, Longitude = Pitu, Municipality = Kunta,
-                  LocationName = Paikka)
+    dplyr::select(-"Aukko", -"Malli") %>%
+    dplyr::rename("BreedingSeason" = "Vuos", "LocationID" = "Nuro",
+                  "ForestType" = "Mety", "PinusSylvestris" = "Manty",
+                  "PiceaAbies" = "Kuusi", "Betulasp" = "Koivu",
+                  "PopulusTremula" = "Haapa",
+                  "SorbusAcuparia" = "Pihlaja",
+                  "Salixsp" = "Pajut", "JuniperusCommunis" = "Kataja",
+                  "Alnussp" = "Leppa", "PrunusPadas" = "Tuomi",
+                  "TreeHeight" = "Kork", "BasalArea" = "Totrel",
+                  "PineHeight" = "Makor", "SpruceHeight" = "Kukor",
+                  "BirchHeight" = "Kokor", "PineBasalArea" = "Marel",
+                  "SpruceBasalArea" = "Kurel", "BirchBasalArea" = "Korel",
+                  "Latitude" = "Leve", "Longitude" = "Pitu", "Municipality" = "Kunta",
+                  "LocationName" = "Paikka")
 
   #Separate locations with and without coordinates
   Location_nocoord <- Location_data %>%
-    dplyr::filter(is.na(Longitude))
+    dplyr::filter(is.na(.data$Longitude))
 
   Location_wcoord  <- Location_data %>%
-    dplyr::filter(!is.na(Longitude))
+    dplyr::filter(!is.na(.data$Longitude))
 
   #Read location data with coordinates as sf object in Finnish Coordinate system
   #Coordinates are in Finland Uniform Coordinate System (EPSG 2393)
 
   Location_data_sf <- sf::st_as_sf(Location_wcoord,
-                                         coords = c("Longitude", "Latitude"),
-                                         crs = 2393) %>%
+                                   coords = c("Longitude", "Latitude"),
+                                   crs = 2393) %>%
     sf::st_transform(crs = 4326)
 
-  Location_full <- dplyr::bind_rows(dplyr::bind_cols(dplyr::select(Location_wcoord, -Longitude, -Latitude),
-                                    tibble::tibble(Longitude = sf::st_coordinates(Location_data_sf)[, 1]),
-                                    tibble::tibble(Latitude = sf::st_coordinates(Location_data_sf)[, 2])),
-                                    Location_nocoord)
+  Location_full <- dplyr::bind_rows(
+    dplyr::bind_cols(Location_wcoord %>%
+                       dplyr::select(-"Longitude", -"Latitude"),
+                     tibble::tibble(Longitude = sf::st_coordinates(Location_data_sf)[, 1]),
+                     tibble::tibble(Latitude = sf::st_coordinates(Location_data_sf)[, 2])),
+    Location_nocoord)
 
   #The records of each Location should show the start/end season
   Location_data <- Location_full %>%
-    dplyr::group_by(LocationID) %>%
-    dplyr::arrange(BreedingSeason, .by_group = TRUE) %>%
-    dplyr::summarise(NestboxID = unique(LocationID), PopID = "HAR", Latitude = as.numeric(dplyr::first(Latitude)), Longitude = as.numeric(dplyr::first(Longitude)),
-                     LocationType = "NB", StartSeason = min(BreedingSeason), EndSeason = max(BreedingSeason), Habitat = "Evergreen") %>%
-    dplyr::select(LocationID, NestboxID, LocationType, PopID, Latitude, Longitude, StartSeason, EndSeason, Habitat)
+    dplyr::group_by(.data$LocationID) %>%
+    dplyr::arrange(.data$BreedingSeason, .by_group = TRUE) %>%
+    dplyr::summarise(NestboxID = unique(.data$LocationID),
+                     PopID = "HAR",
+                     Latitude = as.numeric(dplyr::first(.data$Latitude)),
+                     Longitude = as.numeric(dplyr::first(.data$Longitude)),
+                     LocationType = "NB",
+                     StartSeason = min(.data$BreedingSeason),
+                     EndSeason = max(.data$BreedingSeason),
+                     Habitat = "Evergreen") %>%
+    dplyr::select("LocationID", "NestboxID", "LocationType", "PopID",
+                  "Latitude", "Longitude", "StartSeason", "EndSeason", "Habitat")
 
   return(Location_data)
 

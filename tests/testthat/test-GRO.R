@@ -317,7 +317,7 @@ test_that("Column classes are as expected", {
   ## Will fail if columns that are shared by the output and the templates have different classes.
 
   # ## Brood data: Test that all column classes are expected
-  # test_col_classes(pipeline_output, "Brood")
+  test_col_classes(pipeline_output, "Brood")
 
   ## Capture data: Test that all column classes are expected
   test_col_classes(pipeline_output, "Capture")

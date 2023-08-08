@@ -148,37 +148,37 @@ format_PEW <- function(db = choose_directory(),
                                                        "Catch incubation"),
                                    paste(.data$Year, .data$NestboxID, sep = "_"), NA)) %>%
     #### Rename variables to standardized format
-    dplyr::rename(IndvID = .data$Id,
-                  Sex = .data$Seks,
-                  ObserverID = .data$Measurer) %>%
+    dplyr::rename("IndvID" = "Id",
+                  "Sex" = "Seks",
+                  "ObserverID" = "Measurer") %>%
     #### Remove columns which we do not store in the standardized format
-    dplyr::select(-.data$ObservationTimeH,
-                  -.data$FeatherCollection ,
-                  -.data$BreathRateTime50Breaths,
-                  -.data$FeathersPartner,
-                  -.data$BreathRatePartnerTime50Breaths,
-                  -.data$BloodSample,
-                  -.data$TimeBloodSample,
-                  -.data$BloodSampleDuration,
-                  -.data$VisitRateVisitsH,
-                  -.data$VrPartner,
-                  -.data$VisitsAlternated,
-                  -.data$VisitsAlternatedPartner,
-                  -.data$VisitsSync10,
-                  -.data$ChickAgeOfBehavObserv,
-                  -.data$Nest,
-                  -.data$MassPartner,
-                  -.data$AgePartner,
-                  -.data$TarsusPartner,
-                  -.data$Date,
-                  -.data$Date_temp) %>%
+    dplyr::select(-"ObservationTimeH",
+                  -"FeatherCollection" ,
+                  -"BreathRateTime50Breaths",
+                  -"FeathersPartner",
+                  -"BreathRatePartnerTime50Breaths",
+                  -"BloodSample",
+                  -"TimeBloodSample",
+                  -"BloodSampleDuration",
+                  -"VisitRateVisitsH",
+                  -"VrPartner",
+                  -"VisitsAlternated",
+                  -"VisitsAlternatedPartner",
+                  -"VisitsSync10",
+                  -"ChickAgeOfBehavObserv",
+                  -"Nest",
+                  -"MassPartner",
+                  -"AgePartner",
+                  -"TarsusPartner",
+                  -"Date",
+                  -"Date_temp") %>%
     #### Reorder columns
-    dplyr::select(.data$BreedingSeason,
-                  .data$Species,
-                  .data$PopID,
-                  .data$IndvID,
-                  .data$Sex,
-                  .data$Age,
+    dplyr::select("BreedingSeason",
+                  "Species",
+                  "PopID",
+                  "IndvID",
+                  "Sex",
+                  "Age",
                   tidyselect::everything()) %>%
     #### Remove observations without ID
     dplyr::filter(!is.na(.data$IndvID)) %>%
@@ -273,15 +273,10 @@ format_PEW <- function(db = choose_directory(),
 
 }
 
-#### --------------------------------------------------------------------------~
-#### FUNCTIONS
-#### --------------------------------------------------------------------------~
-
-
 #' Create brood data table for Peerdsbos West, Belgium.
 #'
 #' Create brood data table in standard format for blue tit data from Peerdsbos West, Belgium.
-#' @param data Data frame pew_data with primary data from Peerdsbos West, Belgium.
+#' @param data Data frame. Primary data from Peerdsbos West, Belgium.
 #'
 #' @return A data frame.
 
@@ -289,27 +284,31 @@ create_brood_PEW <- function(data) {
 
   sex_set <- c("Female", "Male")
 
+  ##FIXME: Duplicated BroodID 2015_24, 2016_60: both parents female
+  ##FIXME: Duplicated BroodID 2017_109: different clutch sizes
+  ##FIXME: Duplicated BroodIDs 2016_78, 2017_79: different females
+  ##FIXME: Duplicated BroodID 2017_49: different partner association
   parent_info <- data %>%
     #### Exclude non-breeding data, exclude chicks
     dplyr::filter(.data$Method %in% c("Catch adults nestbox", "Catch incubation")) %>%
-    dplyr::select(.data$BroodID, .data$IndvID, .data$PartnerId, .data$Sex) %>%
-    tidyr::pivot_longer(cols = c(.data$IndvID, .data$PartnerId)) %>%
+    dplyr::select("BroodID", "IndvID", "PartnerId", "Sex") %>%
+    tidyr::pivot_longer(cols = c("IndvID", "PartnerId")) %>%
     dplyr::filter(!is.na(.data$value)) %>%
-    dplyr::rowwise() %>%
     dplyr::mutate(Sex = dplyr::case_when(.data$name == "IndvID" ~ .data$Sex,
-                                         .data$name == "PartnerId" ~ setdiff(sex_set, .data$Sex))) %>%
-    dplyr::select(-.data$name) %>%
+                                         .data$name == "PartnerId" & .data$Sex == "Female" ~ "Male",
+                                         .data$name == "PartnerId" & .data$Sex == "Male" ~ "Female")) %>%
+    dplyr::select(-"name") %>%
     dplyr::distinct() %>%
-    tidyr::pivot_wider(names_from = .data$Sex, values_from = .data$value, values_fn = list) %>%
-    tidyr::unnest(cols = c(.data$Female, .data$Male)) %>%
-    dplyr::rename(FemaleID = .data$Female, MaleID = .data$Male)
+    tidyr::pivot_wider(names_from = "Sex", values_from = "value", values_fn = list) %>%
+    tidyr::unnest(cols = c("Female", "Male")) %>%
+    dplyr::rename("FemaleID" = "Female", "MaleID" = "Male")
 
   parents_brood_data <-
     data %>%
     #### Exclude non-breeding data, exclude chicks
     dplyr::filter(.data$Method %in% c("Catch adults nestbox", "Catch incubation")) %>%
     #### Rename variables
-    dplyr::rename(LocationID = .data$NestboxID) %>%
+    dplyr::rename("LocationID" = "NestboxID") %>%
     dplyr::mutate(ExperimentID = dplyr::case_when(.data$Experiment == "BSM - Griffioen et al. 2019 PeerJ" ~
                                                     "COHORT; PARENTAGE",
                                                   .data$Experiment == "2h Temp D4" ~ "SURVIVAL",
@@ -318,17 +317,16 @@ create_brood_PEW <- function(data) {
     #### Remove unnecessary variables which may cause duplicated rows
     #### Exclude also Date column, as for few broods, there may be
     #### several catches of parents, but the brood parameters are the same
-    dplyr::select(-c(.data$IndvID, .data$Sex, .data$Age, .data$PartnerId, .data$NumberTransponder,
-                     .data$NewRing, .data$CaptureDate,
-                     .data$Tarsus, .data$Mass, .data$ObserverID,
-                     .data$Experiment, .data$D14Chicks)) %>%
+    dplyr::select(-"IndvID", -"Sex", -"Age", -"PartnerId", -"NumberTransponder", -"Method", -"NewRing",
+                  -"CaptureDate", -"Tarsus", -"Mass", -"ObserverID", -"Experiment", -"D14Chicks") %>%
     dplyr::distinct() %>%
     #### Remove rows with no information about the brood
     dplyr::filter(!(is.na(.data$ClutchSize) & is.na(.data$DateEgg1) & is.na(.data$HatchDateD0) &
                       is.na(.data$NumberOfRingedChicks) & is.na(.data$DateRingingChicks) &
                       is.na(.data$NoOfChicksD3) & is.na(.data$BroodMassD3))) %>%
     #Join in parentage data
-    dplyr::left_join(parent_info, by = "BroodID") %>%
+    dplyr::left_join(parent_info,
+                     by = "BroodID") %>%
 
 
     ### This part of the code can be removed after fixing the data from data owner
@@ -348,8 +346,8 @@ create_brood_PEW <- function(data) {
                   ClutchSize_observed = as.integer(stringr::str_replace(string = .data$ClutchSize,
                                                                         pattern = "\\?",
                                                                         replace = "")),
-                  ClutchSize_min = dplyr::case_when(stringr::str_detect(.data$ClutchSize, pattern = "\\?") ~ as.numeric(.data$NoOfChicksD3),
-                                                    TRUE ~ NA_real_),
+                  ClutchSize_min = dplyr::case_when(stringr::str_detect(.data$ClutchSize, pattern = "\\?") ~ as.integer(.data$NoOfChicksD3),
+                                                    TRUE ~ NA_integer_),
                   ClutchSize_max = dplyr::case_when(stringr::str_detect(.data$ClutchSize, pattern = "\\?") ~ Inf,
                                                     TRUE ~ NA_real_),
                   HatchDate_observed = .data$HatchDateD0,
@@ -357,15 +355,16 @@ create_brood_PEW <- function(data) {
                   HatchDate_max = as.Date(NA),
                   #### For few broods, there is number of chicks on day 3
                   BroodSize_observed = .data$NoOfChicksD3,
-                  BroodSize_min = NA_real_,
-                  BroodSize_max = NA_real_,
+                  BroodSize_min = NA_integer_,
+                  BroodSize_max = NA_integer_,
                   FledgeDate_observed = as.Date(NA),
                   FledgeDate_min = as.Date(NA),
                   FledgeDate_max = as.Date(NA),
                   #### Correction regarding one brood from data owner:
+                  ## FIXME: Get this corrected in data rather than in file?
                   NumberFledged_observed = ifelse(.data$BroodID == "2015_79", 0L, .data$NumberOfRingedChicks),
-                  NumberFledged_min = NA_real_,
-                  NumberFledged_max = NA_real_,
+                  NumberFledged_min = NA_integer_,
+                  NumberFledged_max = NA_integer_,
                   AvgEggMass = NA_real_,
                   NumberEggs = NA_integer_,
                   #### Metadata states that only the first clutches are recorded
@@ -377,7 +376,7 @@ create_brood_PEW <- function(data) {
   chicks_measurements <-
     data %>%
     dplyr::filter(.data$Method == "ChickRinging") %>%
-    dplyr::select(.data$IndvID, .data$BroodID, .data$Tarsus, .data$Mass) %>%
+    dplyr::select("IndvID", "BroodID", "Tarsus", "Mass") %>%
     dplyr::group_by(.data$BroodID) %>%
     dplyr::summarise(AvgChickMass = mean(as.numeric(.data$Mass), na.rm = TRUE),
                      NumberChicksMass = sum(!is.na(.data$Mass)),
@@ -397,19 +396,19 @@ create_brood_PEW <- function(data) {
     dplyr::left_join(chicks_measurements, by = "BroodID") %>%
 
     #### Final arrangement
-    dplyr::select(.data$BroodID, .data$PopID, .data$BreedingSeason,
-                  .data$Species, .data$Plot, .data$LocationID,
-                  .data$FemaleID, .data$MaleID,
-                  .data$ClutchType_observed, .data$ClutchType_calculated,
-                  .data$LayDate_observed, .data$LayDate_min, .data$LayDate_max,
-                  .data$ClutchSize_observed, .data$ClutchSize_min, .data$ClutchSize_max,
-                  .data$HatchDate_observed, .data$HatchDate_min, .data$HatchDate_max,
-                  .data$BroodSize_observed, .data$BroodSize_min, .data$BroodSize_max,
-                  .data$FledgeDate_observed, .data$FledgeDate_min, .data$FledgeDate_max,
-                  .data$NumberFledged_observed, .data$NumberFledged_min, .data$NumberFledged_max,
-                  .data$AvgEggMass, .data$NumberEggs, .data$AvgChickMass, .data$NumberChicksMass,
-                  .data$AvgTarsus, .data$NumberChicksTarsus,
-                  .data$OriginalTarsusMethod, .data$ExperimentID)
+    dplyr::select("BroodID", "PopID", "BreedingSeason",
+                  "Species", "Plot", "LocationID",
+                  "FemaleID", "MaleID",
+                  "ClutchType_observed", "ClutchType_calculated",
+                  "LayDate_observed", "LayDate_min", "LayDate_max",
+                  "ClutchSize_observed", "ClutchSize_min", "ClutchSize_max",
+                  "HatchDate_observed", "HatchDate_min", "HatchDate_max",
+                  "BroodSize_observed", "BroodSize_min", "BroodSize_max",
+                  "FledgeDate_observed", "FledgeDate_min", "FledgeDate_max",
+                  "NumberFledged_observed", "NumberFledged_min", "NumberFledged_max",
+                  "AvgEggMass", "NumberEggs", "AvgChickMass", "NumberChicksMass",
+                  "AvgTarsus", "NumberChicksTarsus",
+                  "OriginalTarsusMethod", "ExperimentID")
 
   return(Brood_data)
 
@@ -426,9 +425,9 @@ create_capture_PEW <- function(pew_data, Brood_data) {
 
   Brood_data_sel <-
     Brood_data %>%
-    # dplyr::select(BreedingSeason, Species, PopID, BroodID, LocationID,
-    dplyr::select(.data$Species, .data$PopID, .data$BroodID,
-                  .data$LocationID, .data$HatchDate_observed)
+    dplyr::select("Species", "PopID", "BroodID",
+                  "LocationID", "HatchDate_observed") %>%
+    dplyr::distinct()
 
 
   Capture_data_temp <-
@@ -436,8 +435,8 @@ create_capture_PEW <- function(pew_data, Brood_data) {
     #Captures without an ID are no use to us
     dplyr::filter(!is.na(.data$IndvID)) %>%
     #### Rename variables
-    dplyr::rename(LocationID = .data$NestboxID) %>%
-    dplyr::select(-.data$DateRingingChicks) %>%
+    dplyr::rename("LocationID" = "NestboxID") %>%
+    dplyr::select(-"DateRingingChicks") %>%
     dplyr::mutate(CaptureTime  = NA_character_,
                   Sex_observed = ifelse(.data$Sex == "Chick", NA_character_, substr(.data$Sex, 1, 1)),
                   CaptureAlive = ifelse(.data$Method != "Found dead", TRUE, FALSE),
@@ -469,7 +468,7 @@ create_capture_PEW <- function(pew_data, Brood_data) {
   Capture_data <-
     Capture_data_temp %>%
     dplyr::left_join(Brood_data_sel,
-              by = c("Species", "PopID", "LocationID", "BroodID")) %>%
+                     by = c("Species", "PopID", "LocationID", "BroodID")) %>%
     #### Calculate Capture date for chicks from Hatch date
     #### Create fake Hatch_date for several broods
     dplyr::mutate(HatchDate_observed = dplyr::if_else(is.na(.data$HatchDate_observed) & is.na(.data$CaptureDate) &
@@ -504,16 +503,16 @@ create_capture_PEW <- function(pew_data, Brood_data) {
              Year = .data$BreedingSeason,
              showpb = TRUE) %>%
     #### Final arrangement
-    dplyr::select(.data$CaptureID, .data$IndvID, .data$Species,
-                  .data$Sex_observed, .data$BreedingSeason,
-                  .data$CaptureDate, .data$CaptureTime,
-                  .data$ObserverID, .data$LocationID,
-                  .data$CaptureAlive, .data$ReleaseAlive,
-                  .data$CapturePopID, .data$CapturePlot,
-                  .data$ReleasePopID, .data$ReleasePlot,
-                  .data$Mass, .data$Tarsus, .data$OriginalTarsusMethod,
-                  .data$WingLength, .data$Age_observed, .data$Age_calculated,
-                  .data$ChickAge, .data$ExperimentID) %>%
+    dplyr::select("CaptureID", "IndvID", "Species",
+                  "Sex_observed", "BreedingSeason",
+                  "CaptureDate", "CaptureTime",
+                  "ObserverID", "LocationID",
+                  "CaptureAlive", "ReleaseAlive",
+                  "CapturePopID", "CapturePlot",
+                  "ReleasePopID", "ReleasePlot",
+                  "Mass", "Tarsus", "OriginalTarsusMethod",
+                  "WingLength", "Age_observed", "Age_calculated",
+                  "ChickAge", "ExperimentID") %>%
     dplyr::distinct()
 
   return(Capture_data)
@@ -556,10 +555,10 @@ create_individual_PEW <- function(data){
                                           NA_character_),
                      BroodIDFledged = .data$BroodIDLaid) %>%
     dplyr::ungroup() %>%
-    dplyr::select(.data$IndvID, .data$Species, .data$PopID,
-                  .data$BroodIDLaid, .data$BroodIDFledged,
-                  .data$RingSeason, .data$RingAge,
-                  .data$Sex_calculated, .data$Sex_genetic)
+    dplyr::select("IndvID", "Species", "PopID",
+                  "BroodIDLaid", "BroodIDFledged",
+                  "RingSeason", "RingAge",
+                  'Sex_calculated', "Sex_genetic")
 
   return(Individual_data)
 
@@ -578,7 +577,7 @@ create_location_PEW <- function(data) {
 
   Location_data <-
     data %>%
-    dplyr::select(.data$BreedingSeason, .data$CaptureDate, .data$NestboxID, .data$PopID) %>%
+    dplyr::select("BreedingSeason", "CaptureDate", "NestboxID", "PopID") %>%
     dplyr::group_by(.data$NestboxID) %>%
     dplyr::arrange(.data$BreedingSeason, .data$CaptureDate, .by_group = TRUE) %>%
     dplyr::summarise(StartSeason = min(.data$BreedingSeason, na.rm = TRUE),
@@ -591,10 +590,10 @@ create_location_PEW <- function(data) {
                   Latitude  = NA_real_,
                   Longitude = NA_real_) %>%
     #### Final arrangement
-    dplyr::select(.data$LocationID, .data$NestboxID,
-                  .data$LocationType, .data$PopID,
-                  .data$Latitude, .data$Longitude,
-                  .data$StartSeason, .data$EndSeason, .data$HabitatType)
+    dplyr::select("LocationID", "NestboxID",
+                  "LocationType", "PopID",
+                  "Latitude", "Longitude",
+                  "StartSeason", "EndSeason", "HabitatType")
 
   return(Location_data)
 

@@ -97,29 +97,36 @@ format_PFN <- function(db = choose_directory(),
   # Load Nest data files for all populations
 
   ## East Dartmoor (EDM)
-  Nest_EDM <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_Nest_EDM.csv"), na.strings = c("", "?"), colClasses = "character") %>%
+  Nest_EDM <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_Nest_EDM.csv"),
+                              na.strings = c("", "?"), colClasses = "character") %>%
     dplyr::mutate(PopID = 'EDM')
 
   ## Nags Head (NAG)
-  Nest_NAG <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_Nest_NAG.csv"), na.strings = c("", "?"), colClasses = "character") %>%
+  Nest_NAG <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_Nest_NAG.csv"),
+                              na.strings = c("", "?"), colClasses = "character") %>%
     dplyr::mutate(PopID = 'NAG')
 
   ## Loch Katrine (KAT)
-  Nest_KAT <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_Nest_KAT.csv"), na.strings = c("", "?"), colClasses = "character") %>%
+  Nest_KAT <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_Nest_KAT.csv"),
+                              na.strings = c("", "?"), colClasses = "character") %>%
     dplyr::mutate(PopID = 'KAT')
 
   ## Dinas (DIN)
-  Nest_DIN <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_Nest_DIN.csv"), na.strings = c("", "?"), colClasses = "character") %>%
+  Nest_DIN <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_Nest_DIN.csv"),
+                              na.strings = c("", "?"), colClasses = "character") %>%
     dplyr::mutate(PopID = 'DIN',
-                  Box = stringr::str_replace(string = .data$Box, pattern = 'DV', replacement = 'DOV'), # Standardize naming convention
-                  Box = stringr::str_replace(string = .data$Box, pattern = 'TN', replacement = 'TYN')) # Standardize naming convention
+                  # Standardize naming convention
+                  Box = stringr::str_replace(string = Box, pattern = 'DV', replacement = 'DOV'),
+                  Box = stringr::str_replace(string = Box, pattern = 'TN', replacement = 'TYN'))
 
   ## Teign (TEI)
-  Nest_TEI <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_Nest_TEI.csv"), na.strings = c("", "?"), colClasses = "character") %>%
+  Nest_TEI <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_Nest_TEI.csv"),
+                              na.strings = c("", "?"), colClasses = "character") %>%
     dplyr::mutate(PopID = 'TEI')
 
   ## Okehampton (OKE)
-  Nest_OKE <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_Nest_OKE.csv"), na.strings = c("", "?"), colClasses = "character") %>%
+  Nest_OKE <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_Nest_OKE.csv"),
+                              na.strings = c("", "?"), colClasses = "character") %>%
     dplyr::mutate(PopID = 'OKE')
 
   ## North Wales (NWA)
@@ -129,13 +136,13 @@ format_PFN <- function(db = choose_directory(),
 
   # Combine all Nest data files together
   Nest_data <- dplyr::bind_rows(Nest_EDM,
-                               Nest_NAG,
-                               Nest_KAT,
-                               Nest_DIN,
-                               Nest_TEI,
-                               Nest_OKE#,
-                               #Nest_NWA
-                               )
+                                Nest_NAG,
+                                Nest_KAT,
+                                Nest_DIN,
+                                Nest_TEI,
+                                Nest_OKE#,
+                                #Nest_NWA
+  )
 
   #----------------------------#
   # IPMR PRIMARY DATA ASSEMBLY #
@@ -144,10 +151,12 @@ format_PFN <- function(db = choose_directory(),
   # Load Nest data files for all populations
 
   ## PiedFlyNet collection (EDM, TEI, OKE)
-  IPMR_PFN <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_IPMR_PFN.csv"), na.strings = c("", "?", "UNK", "-"), colClasses = "character")
+  IPMR_PFN <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_IPMR_PFN.csv"),
+                              na.strings = c("", "?", "UNK", "-"), colClasses = "character")
 
   ## Scotland (KAT)
-  IPMR_KAT <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_IPMR_KAT.csv"), na.strings = c("", "?", "UNK", "-"), colClasses = "character") %>%
+  IPMR_KAT <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_IPMR_KAT.csv"),
+                              na.strings = c("", "?", "UNK", "-"), colClasses = "character") %>%
     dplyr::mutate(PopID = 'KAT',
                   PLACE = dplyr::case_when(.data$PLACE == "HRA" ~ "BR.W",
                                            .data$PLACE %in% c("HRB", "HRO") ~ "BR.E",
@@ -161,24 +170,31 @@ format_PFN <- function(db = choose_directory(),
                                            .data$PLACE == "NS5997" ~ "PoG",
                                            TRUE ~ .data$PLACE),
                   SITE = NA_character_) %>%
-    dplyr::rename(SPEC = .data$SPNAME,
-                  SCHEME = .data$COUNTRY)
+    dplyr::rename("SPEC" = "SPNAME",
+                  "SCHEME" = "COUNTRY")
   # NOTE: The KAT IPMR data has some different column names and formats than the
   #      other IPMR input data file, so these need to be adjusted here.
 
   ## Dinas (DIN)
-  IPMR_DIN <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_IPMR_DIN.csv"), na.strings = c("", "?", "UNK", "-"), colClasses = "character") %>%
+  IPMR_DIN <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_IPMR_DIN.csv"),
+                              na.strings = c("", "?", "UNK", "-"), colClasses = "character") %>%
     dplyr::mutate(PopID = 'DIN',
-                  SITE_DIN = stringr::str_split(string = .data$USERV1, pattern = c(','), simplify = T)[,1], # Drop everything after the first ","
-                  SITE_DIN = stringr::str_split(string = .data$SITE_DIN, pattern = c(';'), simplify = T)[,1], # Drop everything after the first ";"
+                  # Drop everything after the first ","
+                  SITE_DIN = stringr::str_split(string = .data$USERV1, pattern = c(','), simplify = T)[,1],
+                  # Drop everything after the first ";"
+                  SITE_DIN = stringr::str_split(string = .data$SITE_DIN, pattern = c(';'), simplify = T)[,1],
                   SITE_DIN = stringr::str_remove_all(string = .data$SITE_DIN, pattern = ' '), # Remove all spaces
                   SITE_DIN = stringr::str_remove(string = .data$SITE_DIN, pattern = 'Box'), # Remove "Box"
-                  SITE_DIN = stringr::str_replace(string = .data$SITE_DIN, pattern = 'DINAS', replacement = 'DIN'), # Replace "DINAS" with "DIN"
+                  # Replace "DINAS" with "DIN"
+                  SITE_DIN = stringr::str_replace(string = .data$SITE_DIN,
+                                                  pattern = 'DINAS', replacement = 'DIN'),
+                  # Set all to NA that contain lower case letters (mostly part of comments)
                   SITE_DIN = dplyr::case_when(stringr::str_detect(.data$SITE_DIN, "[[:lower:]]") ~ NA_character_,
-                                              TRUE ~ .data$SITE_DIN), # Set all to NA that contain lower case letters (mostly part of comments)
-                  SITE_DIN = stringr::str_replace(string = .data$SITE_DIN, pattern = 'DV', replacement = 'DOV'), # Standardize naming convention
-                  SITE_DIN = stringr::str_replace(string = .data$SITE_DIN, pattern = 'TN', replacement = 'TYN'), # Standardize naming convention
-                  RING2 = dplyr::case_when(grepl("rering", .data$USERV1) ~ stringr::str_extract(string = .data$USERV1, pattern = regex("[A-Z]{1,}[0-9]{1,}")),
+                                              TRUE ~ .data$SITE_DIN),
+                  # Standardize naming convention
+                  SITE_DIN = stringr::str_replace(string = .data$SITE_DIN, pattern = 'DV', replacement = 'DOV'),
+                  SITE_DIN = stringr::str_replace(string = .data$SITE_DIN, pattern = 'TN', replacement = 'TYN'),
+                  RING2 = dplyr::case_when(grepl("rering", .data$USERV1) ~ stringr::str_extract(string = .data$USERV1, pattern = stringr::regex("[A-Z]{1,}[0-9]{1,}")),
                                                 TRUE ~ .data$RING2)
                   )
 
@@ -193,15 +209,17 @@ format_PFN <- function(db = choose_directory(),
 
   # Combine all IPMR data files together
   IPMR_data <- dplyr::bind_rows(IPMR_PFN,
-                               IPMR_KAT,
-                               IPMR_DIN)
+                                IPMR_KAT,
+                                IPMR_DIN)
 
 
   #--------------------------------#
   # LOCATION PRIMARY DATA ASSEMBLY #
   #--------------------------------#
 
-  Location_details <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_Locations_EDM.csv"), na.strings = c("", "?"), colClasses = "character", fileEncoding="UTF-8-BOM")
+  Location_details <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_Locations_EDM.csv"),
+                                      na.strings = c("", "?"), colClasses = "character",
+                                      fileEncoding="UTF-8-BOM")
 
   # NOTE: For now, location details is only available for EDM.
   #       However, this may be added for other populations later.
@@ -221,27 +239,36 @@ format_PFN <- function(db = choose_directory(),
 
   # Determine earliest occurrence of each ring
   RING1.Dates <- RingCombos[,c('RING', 'DATE')] %>%
-    dplyr::distinct(.data$RING, .data$DATE, .keep_all = T) %>%
-    dplyr::rename("RingNr" = .data$RING,
-                  "DATE1" = .data$DATE)
-  RING2.Dates <- RingCombos[,c('RING2', 'DATE')] %>%
-    dplyr::distinct(.data$RING2, .data$DATE, .keep_all = T) %>%
-    dplyr::filter(!is.na(.data$RING2)) %>%
-    dplyr::rename("RingNr" = .data$RING2,
-                  "DATE2" = .data$DATE)
+    dplyr::distinct(.data$RING, .data$DATE, .keep_all = TRUE) %>%
+    dplyr::rename("RingNr" = "RING",
+                  "DATE1" = "DATE")
 
-  RING.Dates <- dplyr::left_join(RING1.Dates, RING2.Dates, by = "RingNr") %>%
-    dplyr::mutate(firstDATE = pmin(.data$DATE1, .data$DATE2, na.rm = T)) %>%
-    dplyr::select(.data$RingNr, .data$firstDATE)
+  RING2.Dates <- RingCombos[,c('RING2', 'DATE')] %>%
+    dplyr::distinct(.data$RING2, .data$DATE, .keep_all = TRUE) %>%
+    dplyr::filter(!is.na(.data$RING2)) %>%
+    dplyr::rename("RingNr" = "RING2",
+                  "DATE2" = "DATE")
+
+  RING.Dates <- dplyr::left_join(RING1.Dates, RING2.Dates,
+                                 by = "RingNr") %>%
+    dplyr::mutate(firstDATE = pmin(.data$DATE1, .data$DATE2, na.rm = TRUE)) %>%
+    dplyr::select("RingNr", "firstDATE")
 
   # Merge identifiers and (re-)ringing dates, and set individual identifier (ReRingID) = first ring
-  ReRingTable <- dplyr::left_join(ReRingTable, RING.Dates, by = 'RingNr') %>%
+  ReRingTable <- dplyr::left_join(ReRingTable, RING.Dates,
+                                  by = 'RingNr') %>%
+    ## TODO: check many-to-many matches
+    ## RingNr E605260 is assigned to different identifiers (61565, 62479)
+    ## Same is true for E605264, E606283, E606284
+    ## There is a bunch of RingNr with multiple first dates:
+    ## C437604, C437610, C437622, C437624, and more
+    ## Check with data custodian
     dplyr::arrange(.data$Identifier, .data$firstDATE) %>%
     dplyr::group_by(.data$Identifier) %>%
     dplyr::mutate(ReRingID = dplyr::first(.data$RingNr)) %>%
     dplyr::ungroup() %>%
     dplyr::distinct(.data$RingNr, .data$ReRingID) %>%
-    dplyr::distinct(.data$RingNr, .keep_all = T)
+    dplyr::distinct(.data$RingNr, .keep_all = TRUE)
     # NOTE: At the moment, I am using this last line to remove duplicate pairings
     #       arising from two-way matches in RingCombos. Eventually, this is something
     #       that the make_IndIdentifier() function should fix.
@@ -253,10 +280,11 @@ format_PFN <- function(db = choose_directory(),
 
   # Create a vector of all non-NA ID records in the Nest data (males, females, and chicks)
   allIDs <- stats::na.omit(c(Nest_data$MaleID, Nest_data$FemaleID, Nest_data$Young1,
-                      Nest_data$Young2, Nest_data$Young3, Nest_data$Young4,
-                      Nest_data$Young5, Nest_data$Young6, Nest_data$Young7,
-                      Nest_data$Young8, Nest_data$Young9, Nest_data$Young10,
-                      Nest_data$Young11))
+                             Nest_data$Young2, Nest_data$Young3, Nest_data$Young4,
+                             Nest_data$Young5, Nest_data$Young6, Nest_data$Young7,
+                             Nest_data$Young8, Nest_data$Young9, Nest_data$Young10,
+                             Nest_data$Young11))
+
   #Return only those that don't match the expected ringing format (i.e. XXX9999)
   #"^[A-Z]{1,}[0-9]{1,}$" is a regular expression that looks for IDs that follow a pattern:
   #- Starts with at least one capital letter: '^[A-Z]{1,}'
@@ -274,7 +302,6 @@ format_PFN <- function(db = choose_directory(),
                                  ReRingTable = ReRingTable,
                                  badIDs = badIDs)
 
-
   #---------------------------------------#
   # CREATING STANDARD FORMAT CAPTURE DATA #
   #---------------------------------------#
@@ -286,9 +313,6 @@ format_PFN <- function(db = choose_directory(),
                                      ReRingTable = ReRingTable,
                                      badIDs = badIDs)
 
-
-
-
   #------------------------------------------#
   # CREATING STANDARD FORMAT INDIVIDUAL DATA #
   #------------------------------------------#
@@ -296,7 +320,6 @@ format_PFN <- function(db = choose_directory(),
   message("Compiling individual data...")
 
   Individual_data <- create_individual_PFN(Capture_data = Capture_data)
-
 
   #----------------------------------------#
   # CREATING STANDARD FORMAT LOCATION DATA #
@@ -308,7 +331,6 @@ format_PFN <- function(db = choose_directory(),
                                        Capture_data = Capture_data,
                                        Location_details = Location_details)
 
-
   #-------------------------------------------#
   # STANDARD FORMAT DATA WRANGLING FOR EXPORT #
   #-------------------------------------------#
@@ -318,9 +340,11 @@ format_PFN <- function(db = choose_directory(),
     dplyr::mutate(PULALIV = as.integer(.data$PULALIV)) %>%
     dplyr::filter(!is.na(.data$PULALIV) & !is.na(.data$BroodID)) %>%
     dplyr::group_by(.data$BroodID) %>%
-    dplyr::summarise(BroodSize_IPMR = max(.data$PULALIV), .groups = "drop")
+    dplyr::summarise(BroodSize_IPMR = max(.data$PULALIV),
+                     .groups = "drop")
 
-  Brood_data <- dplyr::left_join(Brood_data, IPMRBroodSize_data, by = 'BroodID') %>%
+  Brood_data <- dplyr::left_join(Brood_data, IPMRBroodSize_data,
+                                 by = 'BroodID') %>%
     dplyr::mutate(BroodSize_observed = dplyr::case_when(
       is.na(.data$BroodSize_observed) ~ .data$BroodSize_IPMR,
       is.na(.data$BroodSize_IPMR) ~ .data$BroodSize_observed,
@@ -332,16 +356,19 @@ format_PFN <- function(db = choose_directory(),
 
   # Capture data: Merge in information on ChickAge (from Brood_data) & remove unnecessary columns
   ChickAge_data <- Brood_data[,c('BroodID', 'ChickAge')]
-  Capture_data <- dplyr::left_join(Capture_data, ChickAge_data, by = 'BroodID')
-  Capture_data$ChickAge[which(Capture_data$Age_observed > 3)] <- NA_integer_ #***
+
+  Capture_data <- dplyr::left_join(Capture_data, ChickAge_data,
+                                   by = 'BroodID')
+  Capture_data$ChickAge[which(Capture_data$Age_observed > 3)] <- NA_integer_
 
   # Remove unnecessary columns
   Brood_data <- Brood_data %>%
-    dplyr::select(-.data$ChickAge, -.data$BroodSize_IPMR)
+    dplyr::select(-"ChickAge", -"BroodSize_IPMR")
 
   Capture_data <- Capture_data %>%
-    dplyr::select(-.data$BroodID, -.data$PULALIV) %>%
-    dplyr::relocate(.data$ExperimentID, .after = .data$ChickAge)
+    dplyr::select(-"BroodID", -"PULALIV") %>%
+    dplyr::relocate("ExperimentID",
+                    .after = "ChickAge")
 
 
   #-----------------------------#
@@ -381,13 +408,6 @@ format_PFN <- function(db = choose_directory(),
 
 }
 
-
-
-
-#***********************#
-# BROOD DATA FORMATTING #
-#***********************#
-
 #' Create brood data table for PiedFlyNet populations.
 #'
 #' @param Nest_data Collated Nest primary data from PiedFlyNet populations
@@ -400,12 +420,12 @@ create_brood_PFN <- function(Nest_data, ReRingTable, badIDs){
 
   # 1) Rename columns that are equivalent (content and format) to columns in the standard format
   Brood_data <- Nest_data %>%
-    dplyr::rename(Plot = .data$Popn,
-                  LocationID = .data$Box) %>%
+    dplyr::rename("Plot" = "Popn",
+                  "LocationID" = "Box") %>%
 
     # 2) Add unique BroodID and reformat columns with equivalent content but different format
     dplyr::mutate(BroodID = paste0(.data$PopID, "-", .data$BroodID),
-                  BreedingSeason = as.integer(Year),
+                  BreedingSeason = as.integer(.data$Year),
                   Species = dplyr::case_when(.data$Species %in% c("BLUTI", "BLUTI ") ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
                                              .data$Species == "PIEFL" ~ species_codes[species_codes$SpeciesID == 13490, ]$Species,
                                              .data$Species %in% c("GRETI", "GRETI ") ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
@@ -416,13 +436,15 @@ create_brood_PFN <- function(Nest_data, ReRingTable, badIDs){
                                              .data$Species == "WREN" ~ NA_character_, # Not currently included, 1 observation only
                                              .data$Species == "TREEC" ~ NA_character_), # Not currently, 1 observation only
                   ClutchType_observed = dplyr::case_when(.data$CltCd == "1" ~ "first",
-                                                .data$CltCd == "2" ~ "replacement",
-                                                .data$CltCd == "3" ~ "second"),
-                  LayDate_observed = as.Date(paste('31/03/', .data$BreedingSeason, sep = ''), format = "%d/%m/%Y") + as.numeric(.data$DFE),
+                                                         .data$CltCd == "2" ~ "replacement",
+                                                         .data$CltCd == "3" ~ "second"),
+                  LayDate_observed = as.Date(paste('31/03/', .data$BreedingSeason, sep = ''),
+                                             format = "%d/%m/%Y") + as.numeric(.data$DFE),
                   ClutchSize = dplyr::case_when(as.integer(.data$CltSize) > 0 ~ as.integer(.data$CltSize),
                                                 as.integer(.data$CltSize) == 0 | is.na(.data$CltSize) ~ NA_integer_),
                   ClutchSize_min = dplyr::case_when(is.na(.data$CltSize) | as.integer(.data$CltSize) == 0 ~ suppressWarnings(pmax(as.integer(.data$MinEggs), as.integer(.data$UnHatch)+as.integer(.data$Hatch), as.integer(.data$UnHatch)+as.integer(.data$Fledged), na.rm = TRUE))),
-                  HatchDate = as.Date(paste('31/03/', .data$BreedingSeason, sep = ''), format = "%d/%m/%Y") + as.numeric(.data$DH),
+                  HatchDate = as.Date(paste('31/03/', .data$BreedingSeason, sep = ''),
+                                      format = "%d/%m/%Y") + as.numeric(.data$DH),
                   BroodSize = as.integer(.data$Hatch),
                   NumberFledged_observed = as.integer(.data$Fledged),
                   ChickAge = as.integer(as.Date(.data$YoungDate, format = "%d/%m/%Y") - .data$HatchDate)) %>%
@@ -442,32 +464,42 @@ create_brood_PFN <- function(Nest_data, ReRingTable, badIDs){
   ## 3.1) Calculate and add means and observation numbers for fledgling weight/tarsus length
   #	IF any chick ages fall into the relevant range
   if(any(Brood_data$ChickAge %in% c(14:16))){
-    Brood_averages <- Brood_data %>%
-  	dplyr::filter(dplyr::between(.data$ChickAge, 14, 16)) %>%  #Remove chicks outside the age range
-  	dplyr::select(.data$BroodID,
-  	              tidyselect::contains("Weight."),
-  	              tidyselect::contains("Tarsus.")) %>% #Select only weight and tarsus cols
-  	tidyr::pivot_longer(cols = -.data$BroodID) %>%  #Rearrange so they're individual rows rather than individual columns
-  	dplyr::filter(!is.na(.data$value)) %>% #Remove Nas
-  	dplyr::mutate(name = gsub(pattern = "Weight", replacement = "ChickMass", gsub(pattern = ".Y\\d+", replacement = "", x = .data$name))) %>% #Change the names so it's not 'Weight.Y1' and 'Tarsus.Y1' but just 'ChickMass' and 'Tarsus'
-  	dplyr::group_by(.data$BroodID, .data$name) %>% #Group by brood, weight and tarsus
-  	dplyr::summarise(Avg = mean(as.numeric(.data$value), na.rm = TRUE), Number = dplyr::n()) %>% #Extract the mean and sample size
-  	tidyr::pivot_wider(names_from = .data$name, values_from = c(.data$Avg, .data$Number), names_sep = "") %>% #Move this back into cols so we have AvgChickMass, NumberChickMass etc.
-  	dplyr::ungroup()
 
-  	Brood_data <- Brood_data %>%
-    		dplyr::left_join(Brood_averages, by = "BroodID")
-  }else{
+    Brood_averages <- Brood_data %>%
+      dplyr::filter(dplyr::between(.data$ChickAge, 14, 16)) %>%  #Remove chicks outside the age range
+      dplyr::select("BroodID",
+                    tidyselect::contains("Weight."),
+                    tidyselect::contains("Tarsus.")) %>% #Select only weight and tarsus cols
+      tidyr::pivot_longer(cols = -"BroodID") %>%  #Rearrange so they're individual rows rather than individual columns
+      dplyr::filter(!is.na(.data$value)) %>% #Remove Nas
+      dplyr::mutate(name = gsub(pattern = "Weight",
+                                replacement = "ChickMass",
+                                gsub(pattern = ".Y\\d+", replacement = "", x = .data$name))) %>% #Change the names so it's not 'Weight.Y1' and 'Tarsus.Y1' but just 'ChickMass' and 'Tarsus'
+      dplyr::group_by(.data$BroodID, .data$name) %>% #Group by brood, weight and tarsus
+      dplyr::summarise(Avg = mean(as.numeric(.data$value), na.rm = TRUE),
+                       Number = dplyr::n(),
+                       .groups = "drop") %>% #Extract the mean and sample size
+      tidyr::pivot_wider(names_from = "name", values_from = c("Avg", "Number"),
+                         names_sep = "") #Move this back into cols so we have AvgChickMass, NumberChickMass etc.
+
+    Brood_data <- Brood_data %>%
+      dplyr::left_join(Brood_averages,
+                       by = "BroodID")
+
+  } else {
+
     Brood_data <- Brood_data %>%
       dplyr::mutate(AvgChickMass = NA_real_,
                     NumberChickMass = NA_integer_,
                     AvgTarsus = NA_real_,
                     NumberChicksTarsus = NA_integer_)
+
   }
 
   ## 3.2) Add other calculated columns
   Brood_data <- Brood_data %>%
-    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = Brood_data, na.rm = FALSE, protocol_version = "1.1"))
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = Brood_data, na.rm = FALSE,
+                                                          protocol_version = "1.1"))
 
   # 4) Rename columns and add columns without data
   Brood_data <- Brood_data %>%
@@ -476,7 +508,7 @@ create_brood_PFN <- function(Nest_data, ReRingTable, badIDs){
                     LayDate_min = as.Date(NA),
                     LayDate_max = as.Date(NA),
                     ClutchSize_observed = .data$ClutchSize,
-                    ClutchSize_max = dplyr::case_when(!is.na(ClutchSize_min) ~ Inf),
+                    ClutchSize_max = dplyr::case_when(!is.na(.data$ClutchSize_min) ~ Inf),
                     HatchDate_observed = .data$HatchDate,
                     HatchDate_min = as.Date(NA),
                     HatchDate_max = as.Date(NA),
@@ -497,51 +529,49 @@ create_brood_PFN <- function(Nest_data, ReRingTable, badIDs){
     dplyr::filter(.data$Species %in% species_codes$Species) %>%
 
     # 6) Replace non-conclusive male and female IDs with NA
-    dplyr::mutate(FemaleID = dplyr::case_when(!(.data$FemaleID%in%badIDs) ~ .data$FemaleID,
-                                              .data$FemaleID%in%badIDs ~ NA_character_),
-                  MaleID = dplyr::case_when(!(.data$MaleID%in%badIDs) ~ .data$MaleID,
-                                            .data$MaleID%in%badIDs ~ NA_character_))
+    dplyr::mutate(FemaleID = dplyr::case_when(!(.data$FemaleID %in% badIDs) ~ .data$FemaleID,
+                                              .data$FemaleID %in% badIDs ~ NA_character_),
+                  MaleID = dplyr::case_when(!(.data$MaleID %in% badIDs) ~ .data$MaleID,
+                                            .data$MaleID %in% badIDs ~ NA_character_))
 
   # 7) Convert ring numbers for re-ringed females and males
   ReRingTableF <- ReRingTable %>%
-    dplyr::rename(FemaleID = .data$RingNr,
-                  FemaleReRingID = .data$ReRingID)
+    dplyr::rename("FemaleID" = "RingNr",
+                  "FemaleReRingID" = "ReRingID")
 
   ReRingTableM <- ReRingTable %>%
-    dplyr::rename(MaleID = .data$RingNr,
-                  MaleReRingID = .data$ReRingID)
+    dplyr::rename("MaleID" = "RingNr",
+                  "MaleReRingID" = "ReRingID")
 
   Brood_data <- Brood_data %>%
-    dplyr::left_join(ReRingTableF, by = 'FemaleID') %>%
-    dplyr::left_join(ReRingTableM, by = 'MaleID') %>%
-    dplyr::mutate(FemaleID = ifelse(is.na(.data$FemaleReRingID), .data$FemaleID, .data$FemaleReRingID),
-                  MaleID = ifelse(is.na(.data$MaleReRingID), .data$MaleID, .data$MaleReRingID)) %>%
+    dplyr::left_join(ReRingTableF,
+                     by = 'FemaleID') %>%
+    dplyr::left_join(ReRingTableM,
+                     by = 'MaleID') %>%
+    dplyr::mutate(FemaleID = ifelse(is.na(.data$FemaleReRingID),
+                                    .data$FemaleID, .data$FemaleReRingID),
+                  MaleID = ifelse(is.na(.data$MaleReRingID),
+                                  .data$MaleID, .data$MaleReRingID)) %>%
 
     # 8) Select and arrange columns for output
-    dplyr::select(.data$BroodID, .data$PopID, .data$BreedingSeason,
-                  .data$Species, .data$Plot, .data$LocationID, .data$FemaleID, .data$MaleID,
-                  .data$ClutchType_observed, .data$ClutchType_calculated,
-                  .data$LayDate_observed, .data$LayDate_min, .data$LayDate_max,
-                  .data$ClutchSize_observed, .data$ClutchSize_min, .data$ClutchSize_max,
-                  .data$HatchDate_observed, .data$HatchDate_min, .data$HatchDate_max,
-                  .data$BroodSize_observed, .data$BroodSize_min, .data$BroodSize_max,
-                  .data$FledgeDate_observed, .data$FledgeDate_min, .data$FledgeDate_max,
-                  .data$NumberFledged_observed, .data$NumberFledged_min, .data$NumberFledged_max,
-                  .data$AvgEggMass, .data$NumberEggs,
-                  .data$AvgChickMass, .data$NumberChicksMass,
-                  .data$AvgTarsus, .data$NumberChicksTarsus,
-                  .data$OriginalTarsusMethod,
-                  .data$ExperimentID, .data$ChickAge)
+    dplyr::select("BroodID", "PopID", "BreedingSeason",
+                  "Species", "Plot", "LocationID", "FemaleID", "MaleID",
+                  "ClutchType_observed", "ClutchType_calculated",
+                  "LayDate_observed", "LayDate_min", "LayDate_max",
+                  "ClutchSize_observed", "ClutchSize_min", "ClutchSize_max",
+                  "HatchDate_observed", "HatchDate_min", "HatchDate_max",
+                  "BroodSize_observed", "BroodSize_min", "BroodSize_max",
+                  "FledgeDate_observed", "FledgeDate_min", "FledgeDate_max",
+                  "NumberFledged_observed", "NumberFledged_min", "NumberFledged_max",
+                  "AvgEggMass", "NumberEggs",
+                  "AvgChickMass", "NumberChicksMass",
+                  "AvgTarsus", "NumberChicksTarsus",
+                  "OriginalTarsusMethod",
+                  "ExperimentID", "ChickAge")
 
   # 9) Return data
-  return(tibble::as_tibble(Brood_data))
+  return(Brood_data)
 }
-
-
-
-#*************************#
-# CAPTURE DATA FORMATTING #
-#*************************#
 
 #' Create capture data table for PiedFlyNet populations from
 #' consolidated Nest and IPMR primary data sources.
@@ -575,7 +605,9 @@ create_capture_PFN <- function(Nest_data, IPMR_data, ReRingTable, badIDs){
   # 2) Match and combine unique captures from both data sources
 
   ## 2.1) Merge information on identical captures (IndvID-Capture data combos) appearing in both datasets
-  Captures_FullMatch <- dplyr::inner_join(Capture_data_Nest, Capture_data_IPMR, by = c("IndvID", "BreedingSeason", "CaptureDate"))
+  Captures_FullMatch <- dplyr::inner_join(Capture_data_Nest, Capture_data_IPMR,
+                                          by = c("IndvID", "BreedingSeason", "CaptureDate"),
+                                          relationship = "many-to-many")
 
   ## 2.2) Identify Nest and IPMR data captures that have been
   ##      duplicated/matched >1 time (Full Matches)
@@ -598,7 +630,9 @@ create_capture_PFN <- function(Nest_data, IPMR_data, ReRingTable, badIDs){
 
       # ...based on manual identification of actual multiple captures
       .data$BreedingSeason == 2011 & .data$CapturePopID_Nest == "OKE"  ~ 1
+
       ))
+
   # NOTE: With the currently included datasets, this resolves all occurences.
   #       If new datasets are added, this will have to be updated.
 
@@ -608,50 +642,46 @@ create_capture_PFN <- function(Nest_data, IPMR_data, ReRingTable, badIDs){
     dplyr::filter(.data$Duplicate_IPMRCapture == 1) %>%
 
     # Determining true matches...
-
     # ...based on location information (whenever available)
-    dplyr::mutate(
-      TrueMatch_IPMR = dplyr::case_when(
-        !is.na(.data$LocationID_IPMR) & .data$LocationID_IPMR == .data$LocationID_Nest ~ 1),
-    ) %>%
+    dplyr::mutate(TrueMatch_IPMR = dplyr::case_when(!is.na(.data$LocationID_IPMR) & .data$LocationID_IPMR == .data$LocationID_Nest ~ 1)) %>%
 
     #...based on whether another capture in the set was assigned as the true match
     dplyr::group_by(.data$rowNo_IPMR) %>%
-    dplyr::mutate(
-      MatchedSet = ifelse(any(.data$TrueMatch_IPMR == 1, na.rm = T), TRUE, FALSE)
-    ) %>%
+    dplyr::mutate(MatchedSet = ifelse(any(.data$TrueMatch_IPMR == 1,
+                                          na.rm = TRUE), TRUE, FALSE)) %>%
     dplyr::ungroup() %>%
-    dplyr::mutate(
-      TrueMatch_IPMR = dplyr::case_when(
-        !is.na(.data$TrueMatch_IPMR) ~ .data$TrueMatch_IPMR,
-        .data$MatchedSet ~ 0
-      )
-    )
+    dplyr::mutate(TrueMatch_IPMR = dplyr::case_when(!is.na(.data$TrueMatch_IPMR) ~ .data$TrueMatch_IPMR,
+                                                    .data$MatchedSet ~ 0))
 
   ## 2.3) Resolve IPMR and Nest captures that were matched several times if possible, "flag" them otherwise (Full Matches)
   ##      --> We remove duplicated Nest captures that were determined to definitely NOT match with IPMR (TrueMatch_Nest = 0, NA not an option)
   ##      --> We flag duplicated IPMR captures whose Nest match could not be definitely confirmed (is.na(TrueMatch_IPMR), 0 not an option)
+
   Captures_FullMatch <- Captures_FullMatch %>%
-    dplyr::left_join(Duplicates_Full_IPMR[,c('rowNo_Nest', 'rowNo_IPMR', 'Duplicate_IPMRCapture', 'TrueMatch_IPMR')], by = c("rowNo_Nest", "rowNo_IPMR")) %>%
-    dplyr::left_join(Duplicates_Full_Nest[,c('rowNo_Nest', 'rowNo_IPMR', 'Duplicate_NestCapture', 'TrueMatch_Nest')], by = c("rowNo_Nest", "rowNo_IPMR")) %>%
+    dplyr::left_join(Duplicates_Full_IPMR[,c('rowNo_Nest', 'rowNo_IPMR',
+                                             'Duplicate_IPMRCapture', 'TrueMatch_IPMR')],
+                     by = c("rowNo_Nest", "rowNo_IPMR")) %>%
+    dplyr::left_join(Duplicates_Full_Nest[,c('rowNo_Nest', 'rowNo_IPMR',
+                                             'Duplicate_NestCapture', 'TrueMatch_Nest')],
+                     by = c("rowNo_Nest", "rowNo_IPMR")) %>%
 
     dplyr::mutate(DropRecord = dplyr::case_when(.data$TrueMatch_Nest == 0 | .data$TrueMatch_IPMR == 0  ~ TRUE,
                                                 TRUE ~ FALSE),
                   UnconfirmedIPMRMatch = dplyr::case_when(is.na(.data$Duplicate_IPMRCapture) ~ FALSE,
-                                                         .data$TrueMatch_Nest == 1 ~ FALSE,
-                                                         .data$TrueMatch_IPMR == 1 ~ FALSE,
+                                                          .data$TrueMatch_Nest == 1 ~ FALSE,
+                                                          .data$TrueMatch_IPMR == 1 ~ FALSE,
                                                          TRUE ~ TRUE)) %>%
-    dplyr::filter(!(.data$DropRecord))
+    dplyr::filter(!.data$DropRecord)
 
 
   ## 2.4) Remove full matches from both datasets (using row identifiers) & rename CaptureDate columns
   Capture_data_Nest <- Capture_data_Nest %>%
-    dplyr::filter(!(.data$rowNo_Nest%in%Captures_FullMatch$rowNo_Nest)) %>%
-    dplyr::rename(CaptureDate_Nest = .data$CaptureDate)
+    dplyr::filter(!(.data$rowNo_Nest %in% Captures_FullMatch$rowNo_Nest)) %>%
+    dplyr::rename("CaptureDate_Nest" = "CaptureDate")
 
   Capture_data_IPMR <- Capture_data_IPMR %>%
-    dplyr::filter(!(.data$rowNo_IPMR%in%Captures_FullMatch$rowNo_IPMR)) %>%
-    dplyr::rename(CaptureDate_IPMR = .data$CaptureDate)
+    dplyr::filter(!(.data$rowNo_IPMR %in% Captures_FullMatch$rowNo_IPMR)) %>%
+    dplyr::rename("CaptureDate_IPMR" = "CaptureDate")
 
   ## 2.5) Identify unique dated captures from Nest data, then remove them from dataset
   ##      (These are Nest captures that have a CaptureDate, but the date does not match with any date in IPMR)
@@ -659,21 +689,23 @@ create_capture_PFN <- function(Nest_data, IPMR_data, ReRingTable, badIDs){
     dplyr::filter(!is.na(.data$CaptureDate_Nest))
 
   Capture_data_Nest <- Capture_data_Nest %>%
-    dplyr::filter(!(.data$rowNo_Nest%in%Captures_Nest_unique$rowNo_Nest))
+    dplyr::filter(!(.data$rowNo_Nest %in% Captures_Nest_unique$rowNo_Nest))
 
 
   ## 2.6) Merge information on likely identical captures (IndvID-BreedingSeason combos) appearing
   ##      in both datasets
-  Captures_LikelyMatch <- dplyr::full_join(Capture_data_Nest, Capture_data_IPMR, by = c("IndvID", "BreedingSeason"))
+  Captures_LikelyMatch <- dplyr::full_join(Capture_data_Nest, Capture_data_IPMR,
+                                           by = c("IndvID", "BreedingSeason"),
+                                           relationship = "many-to-many")
 
   # ATTENTION:
   # If the same individual is noted several times within the same year in the nest files,
   #	but no capture dates are provided there, this approach will lead to duplicated captures
   #	and an inability to correctly "match" equivalent captures from IPMR.
-  #	Important to check if that may be the case (i.e. through duplicate occurences of row numbers in merged data),
+  #	Important to check if that may be the case (i.e. through duplicate occurrences of row numbers in merged data),
   # for any given dataset. If such entries are present, it may be possible to "match" the correct data pairs
   #	by location (all individuals) and/or age/trait information (latter only for chick). Most likely, however,
-  #	we may have to set CaptureDate to NA (most conservatigve). Most importantly, duplicates need to be removed!
+  #	we may have to set CaptureDate to NA (most conservative). Most importantly, duplicates need to be removed!
 
 
   ## 2.7) Identify Nest and IPMR data captures that have been
@@ -685,25 +717,15 @@ create_capture_PFN <- function(Nest_data, IPMR_data, ReRingTable, badIDs){
     dplyr::filter(.data$Duplicate_NestCapture == 1) %>%
 
     # Determining true matches...
-
     # ...based on location information (whenever available)
-    dplyr::mutate(
-      TrueMatch_Nest = dplyr::case_when(
-        !is.na(.data$LocationID_IPMR) & .data$LocationID_IPMR == .data$LocationID_Nest ~ 1),
-    ) %>%
+    dplyr::mutate(TrueMatch_Nest = dplyr::case_when(!is.na(.data$LocationID_IPMR) & .data$LocationID_IPMR == .data$LocationID_Nest ~ 1)) %>%
 
     #...based on whether another capture in the set was assigned as the true match
     dplyr::group_by(.data$rowNo_Nest) %>%
-    dplyr::mutate(
-      MatchedSet = ifelse(any(.data$TrueMatch_Nest == 1, na.rm = T), TRUE, FALSE)
-    ) %>%
+    dplyr::mutate(MatchedSet = ifelse(any(.data$TrueMatch_Nest == 1, na.rm = TRUE), TRUE, FALSE)) %>%
     dplyr::ungroup() %>%
-    dplyr::mutate(
-      TrueMatch_Nest2 = dplyr::case_when(
-        !is.na(.data$TrueMatch_Nest) ~ .data$TrueMatch_Nest,
-        .data$MatchedSet ~ 0
-      )
-    )
+    dplyr::mutate(TrueMatch_Nest2 = dplyr::case_when(!is.na(.data$TrueMatch_Nest) ~ .data$TrueMatch_Nest,
+                                                     .data$MatchedSet ~ 0))
 
   Duplicates_Likely_IPMR <- Captures_LikelyMatch %>%
     dplyr::filter(!is.na(.data$rowNo_Nest) & !is.na(.data$rowNo_IPMR)) %>%
@@ -711,32 +733,27 @@ create_capture_PFN <- function(Nest_data, IPMR_data, ReRingTable, badIDs){
     dplyr::filter(.data$Duplicate_IPMRCapture == 1) %>%
 
     # Determining true matches...
-
     # ...based on location information (whenever available)
-    dplyr::mutate(
-      TrueMatch_IPMR = dplyr::case_when(
-        !is.na(.data$LocationID_IPMR) & .data$LocationID_IPMR == .data$LocationID_Nest ~ 1),
-    ) %>%
+    dplyr::mutate(TrueMatch_IPMR = dplyr::case_when(!is.na(.data$LocationID_IPMR) & .data$LocationID_IPMR == .data$LocationID_Nest ~ 1)) %>%
 
     #...based on whether another capture in the set was assigned as the true match
     dplyr::group_by(.data$rowNo_IPMR) %>%
-    dplyr::mutate(
-      MatchedSet = ifelse(any(.data$TrueMatch_IPMR == 1, na.rm = T), TRUE, FALSE)
-    ) %>%
+    dplyr::mutate(MatchedSet = ifelse(any(.data$TrueMatch_IPMR == 1,
+                                          na.rm = TRUE), TRUE, FALSE)) %>%
     dplyr::ungroup() %>%
-    dplyr::mutate(
-      TrueMatch_IPMR = dplyr::case_when(
-        !is.na(.data$TrueMatch_IPMR) ~ .data$TrueMatch_IPMR,
-        .data$MatchedSet ~ 0
-      )
-    )
+    dplyr::mutate(TrueMatch_IPMR = dplyr::case_when(!is.na(.data$TrueMatch_IPMR) ~ .data$TrueMatch_IPMR,
+                                                    .data$MatchedSet ~ 0))
 
   ## 2.8) Resolve IPMR and Nest captures that were matched several times if possible, "flag" them otherwise (Likely Matches)
   ##      --> We cannot remove any captures based on the assessment here (as none can be clearly proven to be "wrong")
   ##      --> We flag duplicated Nest and IPMR captures whose match could not be definitely confirmed (is.na(TrueMatch_Nest) or is.na(TrueMatch_IPMR), 0 not an option)
   Captures_LikelyMatch <- Captures_LikelyMatch %>%
-    dplyr::left_join(Duplicates_Likely_IPMR[,c('rowNo_Nest', 'rowNo_IPMR', 'Duplicate_IPMRCapture', 'TrueMatch_IPMR')], by = c("rowNo_Nest", "rowNo_IPMR")) %>%
-    dplyr::left_join(Duplicates_Likely_Nest[,c('rowNo_Nest', 'rowNo_IPMR', 'Duplicate_NestCapture', 'TrueMatch_Nest')], by = c("rowNo_Nest", "rowNo_IPMR")) %>%
+    dplyr::left_join(Duplicates_Likely_IPMR[,c('rowNo_Nest', 'rowNo_IPMR',
+                                               'Duplicate_IPMRCapture', 'TrueMatch_IPMR')],
+                     by = c("rowNo_Nest", "rowNo_IPMR")) %>%
+    dplyr::left_join(Duplicates_Likely_Nest[,c('rowNo_Nest', 'rowNo_IPMR',
+                                               'Duplicate_NestCapture', 'TrueMatch_Nest')],
+                     by = c("rowNo_Nest", "rowNo_IPMR")) %>%
 
     dplyr::mutate(DropRecord = dplyr::case_when(.data$TrueMatch_Nest == 0 | .data$TrueMatch_IPMR == 0  ~ TRUE,
                                                 TRUE ~ FALSE),
@@ -751,8 +768,10 @@ create_capture_PFN <- function(Nest_data, IPMR_data, ReRingTable, badIDs){
 
   ## 2.9) Re-combine CaptureDate- and BreedingSeason-based matches (also including unique IPMR captures), and unique nest captures
   Capture_data <- dplyr::bind_rows(Captures_FullMatch, Captures_LikelyMatch, Captures_Nest_unique) %>%
-    dplyr::mutate(UnconfirmedIPMRMatch = ifelse(is.na(.data$UnconfirmedIPMRMatch), FALSE, .data$UnconfirmedIPMRMatch),
-                  UnconfirmedNestMatch = ifelse(is.na(.data$UnconfirmedNestMatch), FALSE, .data$UnconfirmedNestMatch))
+    dplyr::mutate(UnconfirmedIPMRMatch = ifelse(is.na(.data$UnconfirmedIPMRMatch),
+                                                FALSE, .data$UnconfirmedIPMRMatch),
+                  UnconfirmedNestMatch = ifelse(is.na(.data$UnconfirmedNestMatch),
+                                                FALSE, .data$UnconfirmedNestMatch))
 
 
   # 3) Consolidate information from Nest and IPMR captures
@@ -769,14 +788,14 @@ create_capture_PFN <- function(Nest_data, IPMR_data, ReRingTable, badIDs){
       ),
 
       CaptureTime = dplyr::case_when(
-        is.na(.data$CaptureDate) ~ NA_character_,
+        is.na(CaptureDate) ~ NA_character_,
         .data$CaptureDate == .data$CaptureDate_IPMR ~ .data$CaptureTime,
         TRUE ~ NA_character_
       ),
       # NOTE: Think about having criteria for defining certain types of CaptureTimes as NA (e.g. 00:00)
 
       ObserverID = dplyr::case_when(
-        is.na(.data$CaptureDate) ~ NA_character_,
+        is.na(CaptureDate) ~ NA_character_,
         .data$CaptureDate == .data$CaptureDate_IPMR ~ .data$ObserverID,
         TRUE ~ NA_character_
       ),
@@ -910,7 +929,8 @@ create_capture_PFN <- function(Nest_data, IPMR_data, ReRingTable, badIDs){
 
     #Calculate age at each capture based on first capture
     # NOTE: Ideally, this will be done for data from all populations together (to correctly calculate age of known immigrants)
-    calc_age(ID = .data$IndvID, Age = .data$Age_observed, Date = .data$CaptureDate, Year = .data$BreedingSeason) %>%
+    calc_age(ID = .data$IndvID, Age = .data$Age_observed,
+             Date = .data$CaptureDate, Year = .data$BreedingSeason) %>%
 
 
     ## 5) Remove captures from individuals not part of any included populations
@@ -924,13 +944,13 @@ create_capture_PFN <- function(Nest_data, IPMR_data, ReRingTable, badIDs){
     dplyr::ungroup() %>%
 
     ## 11) Select required columns
-    dplyr::select(.data$CaptureID, .data$IndvID, .data$Species, .data$Sex_observed,
-                  .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime, .data$ObserverID,
-                  .data$LocationID, .data$CaptureAlive, .data$ReleaseAlive,
-                  .data$CapturePopID, .data$CapturePlot, .data$ReleasePopID, .data$ReleasePlot,
-                  .data$Mass, .data$Tarsus, .data$OriginalTarsusMethod, .data$WingLength,
-                  .data$Age_observed, .data$Age_calculated, .data$ExperimentID,
-                  .data$BroodID, .data$PULALIV)
+    dplyr::select("CaptureID", "IndvID", "Species", "Sex_observed",
+                  "BreedingSeason", "CaptureDate", "CaptureTime", "ObserverID",
+                  "LocationID", "CaptureAlive", "ReleaseAlive",
+                  "CapturePopID", "CapturePlot", "ReleasePopID", "ReleasePlot",
+                  "Mass", "Tarsus", "OriginalTarsusMethod", "WingLength",
+                  "Age_observed", "Age_calculated", "ExperimentID",
+                  "BroodID", "PULALIV")
 
   # Return complete Capture data
   return(Capture_data)
@@ -950,98 +970,98 @@ create_capture_Nest_PFN <- function(Nest_data, ReRingTable, badIDs){
   Capture_data <- Nest_data
 
   # 1) Extract male capture data
-  Male_Capture_data <- data.frame(IndvID = Capture_data$MaleID,
-                                  BroodID = NA_character_, # Will be removed later
-                                  Species_Nest = dplyr::case_when(Capture_data$Species %in% c("BLUTI", "BLUTI ") ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
-                                                           Capture_data$Species == "PIEFL" ~ species_codes[species_codes$SpeciesID == 13490, ]$Species,
-                                                           Capture_data$Species %in% c("GRETI", "GRETI ") ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
-                                                           Capture_data$Species == "REDST" ~ species_codes[species_codes$SpeciesID == 11220, ]$Species,
-                                                           Capture_data$Species == "MARTI" ~ species_codes[species_codes$SpeciesID == 14400, ]$Species,
-                                                           Capture_data$Species == "NUTHA" ~ species_codes[species_codes$SpeciesID == 14790, ]$Species,
-                                                           Capture_data$Species == "COATI" ~ species_codes[species_codes$SpeciesID == 14610, ]$Species,
-                                                           Capture_data$Species == "WREN" ~ NA_character_, # Not currently included, 1 observation only
-                                                           Capture_data$Species == "TREEC" ~ NA_character_), # Not currently, 1 observation only
-                                  BreedingSeason = as.integer(Capture_data$Year),
-                                  CaptureDate = as.Date(Capture_data$MaleDate, format = "%d/%m/%Y"),
-                                  LocationID_Nest = Capture_data$Box,
-                                  CapturePopID_Nest = Capture_data$PopID,
-                                  CapturePlot_Nest = Capture_data$Popn,
-                                  ReleasePopID_Nest = Capture_data$PopID,
-                                  ReleasePlot_Nest = Capture_data$Popn,
-                                  Mass_Nest = NA_real_,
-                                  Tarsus_Nest = NA_real_,
-                                  OriginalTarsusMethod_Nest = NA_character_,
-                                  #WingLength = NA_real_,
-                                  Age_observed_Nest = dplyr::case_when(is.na(Capture_data$MaleMinAge) ~ 4L,
-                                                                       Capture_data$MaleStatus == 'R' ~ as.integer(Capture_data$MaleMinAge)*2L + 3L,
-                                                                       TRUE ~ as.integer(Capture_data$MaleMinAge)*2L + 2L),
-                                  Sex_observed_Nest = "M",
-                                  CaptureAlive_Nest = TRUE,
-                                  ReleaseAlive_Nest = TRUE)
+  Male_Capture_data <- tibble::tibble(IndvID = Capture_data$MaleID,
+                                      BroodID = NA_character_, # Will be removed later
+                                      Species_Nest = dplyr::case_when(Capture_data$Species %in% c("BLUTI", "BLUTI ") ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
+                                                                      Capture_data$Species == "PIEFL" ~ species_codes[species_codes$SpeciesID == 13490, ]$Species,
+                                                                      Capture_data$Species %in% c("GRETI", "GRETI ") ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
+                                                                      Capture_data$Species == "REDST" ~ species_codes[species_codes$SpeciesID == 11220, ]$Species,
+                                                                      Capture_data$Species == "MARTI" ~ species_codes[species_codes$SpeciesID == 14400, ]$Species,
+                                                                      Capture_data$Species == "NUTHA" ~ species_codes[species_codes$SpeciesID == 14790, ]$Species,
+                                                                      Capture_data$Species == "COATI" ~ species_codes[species_codes$SpeciesID == 14610, ]$Species,
+                                                                      Capture_data$Species == "WREN" ~ NA_character_, # Not currently included, 1 observation only
+                                                                      Capture_data$Species == "TREEC" ~ NA_character_), # Not currently, 1 observation only
+                                      BreedingSeason = as.integer(Capture_data$Year),
+                                      CaptureDate = as.Date(Capture_data$MaleDate, format = "%d/%m/%Y"),
+                                      LocationID_Nest = Capture_data$Box,
+                                      CapturePopID_Nest = Capture_data$PopID,
+                                      CapturePlot_Nest = Capture_data$Popn,
+                                      ReleasePopID_Nest = Capture_data$PopID,
+                                      ReleasePlot_Nest = Capture_data$Popn,
+                                      Mass_Nest = NA_real_,
+                                      Tarsus_Nest = NA_real_,
+                                      OriginalTarsusMethod_Nest = NA_character_,
+                                      #WingLength = NA_real_,
+                                      Age_observed_Nest = dplyr::case_when(is.na(Capture_data$MaleMinAge) ~ 4L,
+                                                                           Capture_data$MaleStatus == 'R' ~ as.integer(Capture_data$MaleMinAge)*2L + 3L,
+                                                                           TRUE ~ as.integer(Capture_data$MaleMinAge)*2L + 2L),
+                                      Sex_observed_Nest = "M",
+                                      CaptureAlive_Nest = TRUE,
+                                      ReleaseAlive_Nest = TRUE)
 
   # 2) Extract female capture data
-  Female_Capture_data <- data.frame(IndvID = Capture_data$FemaleID,
-                                    BroodID = NA_character_, # Will be removed later
-                                    Species_Nest = dplyr::case_when(Capture_data$Species %in% c("BLUTI", "BLUTI ") ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
-                                                             Capture_data$Species == "PIEFL" ~ species_codes[species_codes$SpeciesID == 13490, ]$Species,
-                                                             Capture_data$Species %in% c("GRETI", "GRETI ") ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
-                                                             Capture_data$Species == "REDST" ~ species_codes[species_codes$SpeciesID == 11220, ]$Species,
-                                                             Capture_data$Species == "MARTI" ~ species_codes[species_codes$SpeciesID == 14400, ]$Species,
-                                                             Capture_data$Species == "NUTHA" ~ species_codes[species_codes$SpeciesID == 14790, ]$Species,
-                                                             Capture_data$Species == "COATI" ~ species_codes[species_codes$SpeciesID == 14610, ]$Species,
-                                                             Capture_data$Species == "WREN" ~ NA_character_, # Not currently included, 1 observation only
-                                                             Capture_data$Species == "TREEC" ~ NA_character_), # Not currently, 1 observation only
-                                    BreedingSeason = as.integer(Capture_data$Year),
-                                    CaptureDate = as.Date(Capture_data$FemaleDate, format = "%d/%m/%Y"),
-                                    LocationID_Nest = Capture_data$Box,
-                                    CapturePopID_Nest = Capture_data$PopID,
-                                    CapturePlot_Nest = Capture_data$Popn,
-                                    ReleasePopID_Nest = Capture_data$PopID,
-                                    ReleasePlot_Nest = Capture_data$Popn,
-                                    Mass_Nest = NA_real_,
-                                    Tarsus_Nest = NA_real_,
-                                    OriginalTarsusMethod_Nest = NA_character_,
-                                    #WingLength = NA_real_,
-                                    Age_observed_Nest = dplyr::case_when(is.na(Capture_data$FemaleMinAge) ~ 4L,
-                                                                         Capture_data$FemaleStatus == 'R' ~ as.integer(Capture_data$FemaleMinAge)*2L + 3L,
-                                                                         TRUE ~ as.integer(Capture_data$FemaleMinAge)*2L + 2L),
-                                    Sex_observed_Nest = "F",
-                                    CaptureAlive_Nest = TRUE,
-                                    ReleaseAlive_Nest = TRUE)
+  Female_Capture_data <- tibble::tibble(IndvID = Capture_data$FemaleID,
+                                        BroodID = NA_character_, # Will be removed later
+                                        Species_Nest = dplyr::case_when(Capture_data$Species %in% c("BLUTI", "BLUTI ") ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
+                                                                        Capture_data$Species == "PIEFL" ~ species_codes[species_codes$SpeciesID == 13490, ]$Species,
+                                                                        Capture_data$Species %in% c("GRETI", "GRETI ") ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
+                                                                        Capture_data$Species == "REDST" ~ species_codes[species_codes$SpeciesID == 11220, ]$Species,
+                                                                        Capture_data$Species == "MARTI" ~ species_codes[species_codes$SpeciesID == 14400, ]$Species,
+                                                                        Capture_data$Species == "NUTHA" ~ species_codes[species_codes$SpeciesID == 14790, ]$Species,
+                                                                        Capture_data$Species == "COATI" ~ species_codes[species_codes$SpeciesID == 14610, ]$Species,
+                                                                        Capture_data$Species == "WREN" ~ NA_character_, # Not currently included, 1 observation only
+                                                                        Capture_data$Species == "TREEC" ~ NA_character_), # Not currently, 1 observation only
+                                        BreedingSeason = as.integer(Capture_data$Year),
+                                        CaptureDate = as.Date(Capture_data$FemaleDate, format = "%d/%m/%Y"),
+                                        LocationID_Nest = Capture_data$Box,
+                                        CapturePopID_Nest = Capture_data$PopID,
+                                        CapturePlot_Nest = Capture_data$Popn,
+                                        ReleasePopID_Nest = Capture_data$PopID,
+                                        ReleasePlot_Nest = Capture_data$Popn,
+                                        Mass_Nest = NA_real_,
+                                        Tarsus_Nest = NA_real_,
+                                        OriginalTarsusMethod_Nest = NA_character_,
+                                        #WingLength = NA_real_,
+                                        Age_observed_Nest = dplyr::case_when(is.na(Capture_data$FemaleMinAge) ~ 4L,
+                                                                             Capture_data$FemaleStatus == 'R' ~ as.integer(Capture_data$FemaleMinAge)*2L + 3L,
+                                                                             TRUE ~ as.integer(Capture_data$FemaleMinAge)*2L + 2L),
+                                        Sex_observed_Nest = "F",
+                                        CaptureAlive_Nest = TRUE,
+                                        ReleaseAlive_Nest = TRUE)
 
   # 3) Extract chick capture data
-  Chick_Capture_list <- list()
-  for(i in 1:nrow(Capture_data)){
-    Chick_Capture_list[[i]] <- data.frame(IndvID = unname(t(Capture_data[i, paste0("Young", c(1:11))])),
-                                          BroodID = paste0(Capture_data$PopID[i], "-", Capture_data$BroodID[i]), # Will be removed later
-                                          Species_Nest = dplyr::case_when(Capture_data$Species[i] %in% c("BLUTI", "BLUTI ") ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
-                                                                   Capture_data$Species[i] == "PIEFL" ~ species_codes[species_codes$SpeciesID == 13490, ]$Species,
-                                                                   Capture_data$Species[i] %in% c("GRETI", "GRETI ") ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
-                                                                   Capture_data$Species[i] == "REDST" ~ species_codes[species_codes$SpeciesID == 11220, ]$Species,
-                                                                   Capture_data$Species[i] == "MARTI" ~ species_codes[species_codes$SpeciesID == 14400, ]$Species,
-                                                                   Capture_data$Species[i] == "NUTHA" ~ species_codes[species_codes$SpeciesID == 14790, ]$Species,
-                                                                   Capture_data$Species[i] == "COATI" ~ species_codes[species_codes$SpeciesID == 14610, ]$Species,
-                                                                   Capture_data$Species[i] == "WREN" ~ NA_character_, # Not currently included, 1 observation only
-                                                                   Capture_data$Species[i] == "TREEC" ~ NA_character_), # Not currently, 1 observation only
-                                          BreedingSeason = as.integer(Capture_data$Year[i]),
-                                          CaptureDate = as.Date(Capture_data$YoungDate[i], format = "%d/%m/%Y"),
-                                          LocationID_Nest = Capture_data$Box[i],
-                                          CapturePopID_Nest = Capture_data$PopID[i],
-                                          CapturePlot_Nest = Capture_data$Popn[i],
-                                          ReleasePopID_Nest = Capture_data$PopID[i],
-                                          ReleasePlot_Nest = Capture_data$Popn[i],
-                                          Mass_Nest = as.numeric(Capture_data[i, paste0("Weight.Y", c(1:11))]),
-                                          Tarsus_Nest = as.numeric(Capture_data[i, paste0("Tarsus.Y", c(1:11))]),
-                                          OriginalTarsusMethod_Nest = "Alternative",
-                                          #WingLength = NA_real_,
-                                          Age_observed_Nest = 1L,
-                                          Sex_observed_Nest = NA_character_,
-                                          CaptureAlive_Nest = TRUE,
-                                          ReleaseAlive_Nest = TRUE)
-  }
-
-  Chick_Capture_data <- dplyr::bind_rows(Chick_Capture_list)
-
+  Chick_Capture_data <- Capture_data %>%
+    dplyr::select(-"Young12") %>%
+    # Pivot information stored in columns to rows
+    tidyr::pivot_longer(cols = tidyselect::matches("Young[[:digit:]]|Weight.Y[[:digit:]]|Tarsus.Y[[:digit:]]"),
+                        names_to = c(".value", "id"),
+                        names_pattern = "^([[:alpha:]]+).*([[:digit:]]{1,2})$") %>%
+    dplyr::rename("IndvID" = "Young") %>%
+    dplyr::mutate(BroodID = paste(.data$PopID, .data$BroodID, sep = "-"),
+                  Species_Nest = dplyr::case_when(.data$Species %in% c("BLUTI", "BLUTI ") ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
+                                                  .data$Species == "PIEFL" ~ species_codes[species_codes$SpeciesID == 13490, ]$Species,
+                                                  .data$Species %in% c("GRETI", "GRETI ") ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
+                                                  .data$Species == "REDST" ~ species_codes[species_codes$SpeciesID == 11220, ]$Species,
+                                                  .data$Species == "MARTI" ~ species_codes[species_codes$SpeciesID == 14400, ]$Species,
+                                                  .data$Species == "NUTHA" ~ species_codes[species_codes$SpeciesID == 14790, ]$Species,
+                                                  .data$Species == "COATI" ~ species_codes[species_codes$SpeciesID == 14610, ]$Species,
+                                                  .data$Species == "WREN" ~ NA_character_, # Not currently included, 1 observation only
+                                                  .data$Species == "TREEC" ~ NA_character_),
+                  BreedingSeason = as.integer(.data$Year),
+                  CaptureDate = as.Date(.data$YoungDate, format = "%d/%m/%Y"),
+                  LocationID_Nest = .data$Box,
+                  CapturePopID_Nest = .data$PopID,
+                  CapturePlot_Nest = .data$Popn,
+                  ReleasePopID_Nest = .data$PopID,
+                  ReleasePlot_Nest = .data$Popn,
+                  Mass_Nest = as.numeric(.data$Weight),
+                  Tarsus_Nest = as.numeric(.data$Tarsus),
+                  OriginalTarsusMethod_Nest = "Alternative",
+                  Age_observed_Nest = 1L,
+                  Sex_observed_Nest = NA_character_,
+                  CaptureAlive_Nest = TRUE,
+                  ReleaseAlive_Nest = TRUE) %>%
+    dplyr::select("IndvID", "BroodID", "Species_Nest":"ReleaseAlive_Nest")
 
   # 4) Combine data
   Capture_data <- dplyr::bind_rows(Chick_Capture_data, Male_Capture_data, Female_Capture_data) %>%
@@ -1050,13 +1070,14 @@ create_capture_Nest_PFN <- function(Nest_data, ReRingTable, badIDs){
     tidyr::separate_rows(.data$IndvID, sep = '/') %>%
 
     # 6) Remove all individuals with missing IDs and/or from species not included in Species_codes
-    dplyr::filter(.data$Species_Nest %in% species_codes$Species & !is.na(IndvID) & !(IndvID%in%badIDs)) %>%
+    dplyr::filter(.data$Species_Nest %in% species_codes$Species & !is.na(.data$IndvID) & !(.data$IndvID %in% badIDs)) %>%
 
     # 7) Add a unique row identifier
     dplyr::mutate(rowNo_Nest = dplyr::row_number())
 
   # 8) Adjust IndvID for re-ringed individuals
-  Capture_data <- dplyr::left_join(Capture_data, ReRingTable, by = c('IndvID' = 'RingNr')) %>%
+  Capture_data <- dplyr::left_join(Capture_data, ReRingTable,
+                                   by = c('IndvID' = 'RingNr')) %>%
     dplyr::mutate(IndvID = dplyr::case_when(is.na(.data$ReRingID) ~ .data$IndvID,
                                             .data$IndvID != .data$ReRingID ~ .data$ReRingID,
                                             .data$IndvID == .data$ReRingID ~ .data$IndvID))
@@ -1079,9 +1100,9 @@ create_capture_IPMR_PFN <- function(IPMR_data, Nest_data, ReRingTable){
 
   ## 1) Rename columns that are equivalent (content and format) to columns in the standard format
   Capture_data <- IPMR_data %>%
-    dplyr::rename(IndvID = .data$RING,
-                  CapturePlot_IPMR = .data$PLACE,
-                  Sex_observed_IPMR = .data$SEX) %>%
+    dplyr::rename("IndvID" = "RING",
+                  "CapturePlot_IPMR" = "PLACE",
+                  "Sex_observed_IPMR" = "SEX") %>%
 
     ## 2) Add population ID and reformat colums with equivalent content but different format
     dplyr::mutate(PopID = dplyr::case_when(!is.na(.data$PopID) ~ .data$PopID,
@@ -1101,7 +1122,7 @@ create_capture_IPMR_PFN <- function(IPMR_data, Nest_data, ReRingTable){
                                                      .data$SITE == "HIDE2" ~ "HIDE1D", # Specific EDM location
                                                      .data$PopID == "EDM" ~ .data$SITE, # Remaining EDM locations (perfect matches)
                                                      .data$PopID == "DIN" ~ .data$SITE_DIN,
-                                                     #.data$PopID %in% c("TEI", "OKE") & stringr::str_detect(.data$SITE, "[[:digit:]]") ~ as.character(readr::parse_number(.data$SITE)), # TEI and OKE locations (number match)
+                                                     #PopID %in% c("TEI", "OKE") & stringr::str_detect(SITE, "[[:digit:]]") ~ as.character(readr::parse_number(SITE)), # TEI and OKE locations (number match)
                                                      .data$PopID %in% c("TEI", "OKE") & stringr::str_detect(.data$SITE, "[[:digit:]]") ~ gsub(".*?([0-9]+).*", "\\1", .data$SITE),
                                                      TRUE ~ .data$SITE), # All other conditions
 
@@ -1147,28 +1168,24 @@ create_capture_IPMR_PFN <- function(IPMR_data, Nest_data, ReRingTable){
     dplyr::mutate(rowNo_IPMR = dplyr::row_number()) %>%
 
     ## 6) Adjust IndvID for re-ringed individuals
-    dplyr::left_join(ReRingTable, by = c('IndvID' = 'RingNr')) %>%
+    dplyr::left_join(ReRingTable,
+                     by = c('IndvID' = 'RingNr')) %>%
     dplyr::mutate(IndvID = dplyr::case_when(is.na(.data$ReRingID) ~ .data$IndvID,
                                             .data$IndvID != .data$ReRingID ~ .data$ReRingID,
                                             .data$IndvID == .data$ReRingID ~ .data$IndvID)) %>%
 
     ## 7) Select required columns
-    dplyr::select(.data$IndvID, .data$Species_IPMR, .data$Sex_observed_IPMR,
-                  .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime, .data$ObserverID,
-                  .data$LocationID_IPMR, .data$CaptureAlive_IPMR, .data$ReleaseAlive_IPMR,
-                  .data$CapturePopID_IPMR, .data$CapturePlot_IPMR, .data$ReleasePopID_IPMR, .data$ReleasePlot_IPMR,
-                  .data$Mass_IPMR, .data$Tarsus_IPMR, .data$OriginalTarsusMethod_IPMR, .data$WingLength,
-                  .data$Age_observed_IPMR, .data$ExperimentID, .data$rowNo_IPMR,
-                  .data$PULALIV)
+    dplyr::select("IndvID", "Species_IPMR", "Sex_observed_IPMR",
+                  "BreedingSeason", "CaptureDate", "CaptureTime", "ObserverID",
+                  "LocationID_IPMR", "CaptureAlive_IPMR", "ReleaseAlive_IPMR",
+                  "CapturePopID_IPMR", "CapturePlot_IPMR", "ReleasePopID_IPMR", "ReleasePlot_IPMR",
+                  "Mass_IPMR", "Tarsus_IPMR", "OriginalTarsusMethod_IPMR", "WingLength",
+                  "Age_observed_IPMR", "ExperimentID", "rowNo_IPMR",
+                  "PULALIV")
 
   ## 7) Return data
   return(Capture_data)
 }
-
-
-#****************************#
-# INDIVIDUAL DATA FORMATTING #
-#****************************#
 
 #' Create individual data table for PiedFlyNet populations
 #'
@@ -1180,100 +1197,97 @@ create_individual_PFN <- function(Capture_data){
 
   # 1) Take capture data and determine basic summary data for each individual (within population)
   IndvPop_data <- Capture_data %>%
-    dplyr::arrange(.data$CapturePopID, .data$IndvID, .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
+    dplyr::arrange(.data$CapturePopID, .data$IndvID, .data$BreedingSeason,
+                   .data$CaptureDate, .data$CaptureTime) %>%
     dplyr::group_by(.data$IndvID, .data$CapturePopID) %>%
-    dplyr::summarise(PopID = dplyr::first(.data$CapturePopID), .groups = "keep") %>%
-    dplyr::rowwise() %>%
-
-    #Ungroup
+    dplyr::summarise(PopID = dplyr::first(.data$CapturePopID),
+                     .groups = "keep") %>%
     dplyr::ungroup()
 
   # 2) Take capture data and determine basic summary data for each individual (across populations)
   Indv_data <- Capture_data %>%
-    dplyr::arrange(.data$IndvID, .data$CapturePopID, .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
+    dplyr::arrange(.data$IndvID, .data$CapturePopID, .data$BreedingSeason,
+                   .data$CaptureDate, .data$CaptureTime) %>%
     dplyr::group_by(.data$IndvID) %>%
-    dplyr::summarise(Species = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Species))), .f = ~{
+    dplyr::summarise(Species = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Species))),
+                                              .f = ~{
 
-      if(length(..1) == 0){
+                                                if(length(..1) == 0){
 
-        return(NA_character_)
+                                                  return(NA_character_)
 
-      } else if(length(..1) == 1){
+                                                } else if(length(..1) == 1){
 
-        return(..1)
+                                                  return(..1)
 
-      } else {
+                                                } else {
 
-        return("CCCCCC")
+                                                  return("CCCCCC")
 
-      }
+                                                }
 
-    }),
-    BroodIDLaid = purrr::map_chr(.x = list(unique(stats::na.omit(.data$BroodID))), .f = ~{
+                                              }),
+                     BroodIDLaid = purrr::map_chr(.x = list(unique(stats::na.omit(.data$BroodID))),
+                                                  .f = ~{
 
-      if(length(..1) == 0){
+                                                    if(length(..1) == 0){
 
-        return(NA_character_)
+                                                      return(NA_character_)
 
-      } else if(length(..1) == 1){
+                                                    } else if(length(..1) == 1){
 
-        return(..1)
+                                                      return(..1)
 
-      } else {
+                                                    } else {
 
-        return("CONFLICTED")
+                                                      return("CONFLICTED")
 
-      }
+                                                    }
 
-    }),
-    BroodIDFledged = .data$BroodIDLaid, # Identical, as no cross-fostering experiments were made
-    Sex_calculated = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Sex_observed))), .f = ~{
+                                                  }), ## TODO: check with data custodian
+                     BroodIDFledged = .data$BroodIDLaid, # Identical, as no cross-fostering experiments were made
+                     Sex_calculated = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Sex_observed))),
+                                                     .f = ~{
 
-      if(length(..1) == 0){
+                                                       if(length(..1) == 0){
 
-        return(NA_character_)
+                                                         return(NA_character_)
 
-      } else if(length(..1) == 1){
+                                                       } else if(length(..1) == 1){
 
-        return(..1)
+                                                         return(..1)
 
-      } else {
+                                                       } else {
 
-        return("C")
+                                                         return("C")
 
-      }
+                                                       }
 
-    }),
-    RingSeason = min(.data$BreedingSeason),
-    RingAge = ifelse(any(.data$Age_calculated %in% c(1, 3)), "chick", ifelse(min(.data$Age_calculated) == 2, NA_character_, "adult")),
-    .groups = "keep") %>%
-    dplyr::rowwise() %>%
-
-    #Ungroup
+                                                     }),
+                     RingSeason = min(.data$BreedingSeason),
+                     RingAge = ifelse(any(.data$Age_calculated %in% c(1, 3)), "chick",
+                                      ifelse(min(.data$Age_calculated) == 2, NA_character_, "adult")),
+                     .groups = "keep") %>%
     dplyr::ungroup()
 
 
   # 3) Merge information and format
-  Individual_data <- dplyr::left_join(IndvPop_data, Indv_data, by = c('IndvID')) %>%
+  Individual_data <- dplyr::left_join(IndvPop_data, Indv_data,
+                                      by = c('IndvID')) %>%
 
     # Add a column for genetic sex (not available here)
     dplyr::mutate(Sex_genetic = NA_character_) %>%
 
     # Order columns and sort
-    dplyr::select(.data$IndvID, .data$Species, .data$PopID,
-                  .data$BroodIDLaid, .data$BroodIDFledged,
-                  .data$RingSeason, .data$RingAge,
-                  .data$Sex_calculated, .data$Sex_genetic) %>%
-    dplyr::arrange(.data$IndvID, .data$PopID, .data$RingSeason, )
+    dplyr::select("IndvID", "Species", "PopID",
+                  "BroodIDLaid", "BroodIDFledged",
+                  "RingSeason", "RingAge",
+                  "Sex_calculated", "Sex_genetic") %>%
+    dplyr::arrange(.data$IndvID, .data$PopID, .data$RingSeason)
 
   return(Individual_data)
+
 }
-
-
-
-#**************************#
-# LOCATION DATA FORMATTING #
-#**************************#
 
 #' Create location data table for PiedFlyNet populations.
 #'
@@ -1293,13 +1307,13 @@ create_location_PFN <- function(Brood_data, Capture_data, Location_details){
 
   Location_details <- Location_details %>%
 
-    dplyr::select(-.data$Popn) %>%
+    dplyr::select(-"Popn") %>%
 
-    dplyr::rename(NestboxID = .data$Box,
-                  Latitude = .data$lat,
-                  Longitude = .data$long,
-                  StartSeason_ext = .data$First,
-                  EndSeason_ext = .data$Last) %>%
+    dplyr::rename("NestboxID" = "Box",
+                  "Latitude" = "lat",
+                  "Longitude" = "long",
+                  "StartSeason_ext" = "First",
+                  "EndSeason_ext" = "Last") %>%
 
     dplyr::mutate(PopID = 'EDM',
                   Latitude = suppressWarnings(as.numeric(.data$Latitude)),
@@ -1317,32 +1331,33 @@ create_location_PFN <- function(Brood_data, Capture_data, Location_details){
                   LocationType = 'NB') %>%
 
     # 4) Merge in detailed information
-    dplyr::left_join(Location_details, by = c('PopID', 'NestboxID')) %>%
+    dplyr::left_join(Location_details,
+                     by = c('PopID', 'NestboxID')) %>%
 
     # 5) Prioritize detailed information when available
-    dplyr::mutate(
-      StartSeason = ifelse(!is.na(.data$StartSeason_ext), .data$StartSeason_ext, .data$StartSeason),
-      EndSeason = ifelse(!is.na(.data$StartSeason_ext), .data$EndSeason_ext, .data$EndSeason)
-      ) %>%
-    dplyr::select(-.data$StartSeason_ext, -.data$EndSeason_ext)
+    dplyr::mutate(StartSeason = ifelse(!is.na(.data$StartSeason_ext), .data$StartSeason_ext, .data$StartSeason),
+                  EndSeason = ifelse(!is.na(.data$StartSeason_ext), .data$EndSeason_ext, .data$EndSeason)) %>%
+    dplyr::select(-"StartSeason_ext", -"EndSeason_ext")
 
   # 6) Collect information on additional capture locations (from capture data)
   CapLocations <- Capture_data[,c('CapturePopID', 'LocationID')] %>%
     dplyr::distinct() %>%
-    dplyr::rename(PopID = CapturePopID)
+    dplyr::rename("PopID" = "CapturePopID")
 
   # 6) Combine data, add HabitatType, and select relevant columns
   Location_data <- Location_data %>%
-    dplyr::full_join(CapLocations, by = c('PopID', 'LocationID')) %>%
+    dplyr::full_join(CapLocations,
+                     by = c('PopID', 'LocationID')) %>%
     dplyr::mutate(HabitatType = 'deciduous') %>%
-    dplyr::select(.data$LocationID, .data$NestboxID,
-                  .data$LocationType, .data$PopID,
-                  .data$Latitude, .data$Longitude,
-                  .data$StartSeason, .data$EndSeason,
-                  .data$HabitatType) %>%
+    dplyr::select("LocationID", "NestboxID",
+                  "LocationType", "PopID",
+                  "Latitude", "Longitude",
+                  "StartSeason", "EndSeason",
+                  "HabitatType") %>%
     dplyr::arrange(.data$PopID, .data$StartSeason, .data$LocationID, .data$NestboxID)
 
   return(Location_data)
+
 }
 
 #' Make a summary table containing all ring numbers of re-ringed individual
@@ -1370,7 +1385,8 @@ make_IndIdentifier = function(raw_data){
 
   #First, we need make sure any first ring ("RING") only appears once in the data.
   #(This involves removing pairings of re-curring rings with NA for RING2)
-  duplicateRING <- c(raw_data[which(duplicated(raw_data$RING)),'RING'], raw_data[which(raw_data$RING %in% raw_data$RING2), 'RING'])
+  duplicateRING <- c(raw_data[which(duplicated(raw_data$RING)),'RING'],
+                     raw_data[which(raw_data$RING %in% raw_data$RING2), 'RING'])
 
   raw_data <- raw_data %>%
     dplyr::filter(!(.data$RING %in% duplicateRING & is.na(.data$RING2)))
@@ -1378,7 +1394,8 @@ make_IndIdentifier = function(raw_data){
   #We will be left joining one set of data to the other
   #so we need to make sure the column names match
   check_data  <- raw_data %>%
-    dplyr::rename("RING2" = .data$RING, "RING3" = .data$RING2)
+    dplyr::rename("RING2" = "RING",
+                  "RING3" = "RING2")
 
   #Create an output_data object that will be updated
   output_data <- raw_data
@@ -1392,7 +1409,8 @@ make_IndIdentifier = function(raw_data){
     #Add a new column to the output
     #Instead of RING > RING2, we now have RING > RING2 > RING3
     output_data <- output_data %>%
-      dplyr::left_join(check_data, by = "RING2") %>%
+      dplyr::left_join(check_data,
+                       by = "RING2") %>%
       #Here we are removing the now redundant rows (where RING2 is now RING3 somewhere else)
       #!!as.symbol is just a way of referring to a column in dplyr using some code that returns a string rather than just a column name
       #e.g. !!as.symbol(names(.)[ncol(.) - 1]) refers to the column with the second last name
@@ -1421,9 +1439,10 @@ make_IndIdentifier = function(raw_data){
     #Create a unique IndvID from the row number that is independent of the ring
     tibble::rowid_to_column(var = "Identifier") %>%
     #Pivot so that each ring number has its own row
-    tidyr::pivot_longer(cols = tidyselect::starts_with("RING"), values_to = "RingNr") %>%
+    tidyr::pivot_longer(cols = tidyselect::starts_with("RING"),
+                        values_to = "RingNr") %>%
     dplyr::filter(!is.na(.data$RingNr)) %>%
-    dplyr::select(.data$RingNr, .data$Identifier)
+    dplyr::select("RingNr", "Identifier")
 
   # Return final re-ringing table
   return(final_rings)

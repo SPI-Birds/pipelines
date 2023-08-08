@@ -188,8 +188,6 @@ create_brood_WYT <- function(db, species_filter){
                               sep = ",", stringsAsFactors = FALSE) %>%
     janitor::clean_names()
 
-  pb <- progress::progress_bar$new(total = nrow(Brood_data_raw)*3)
-
   Brood_data <- Brood_data_raw %>%
     #Rename columns to meet our standard format
     dplyr::mutate(BreedingSeason = .data$year,
@@ -201,7 +199,7 @@ create_brood_WYT <- function(db, species_filter){
                                              .data$species == "c" ~ species_codes[species_codes$SpeciesID == 14610, ]$Species,
                                              .data$species == "n" ~ species_codes[species_codes$SpeciesID == 14790, ]$Species,
                                              .data$species == "m" ~ species_codes[species_codes$SpeciesID == 14400, ]$Species)) %>%
-    dplyr::filter(Species %in% species_filter) %>%
+    dplyr::filter(.data$Species %in% species_filter) %>%
     dplyr::mutate(LayDate_observed = as.Date(.data$lay_date, format = "%d/%m/%Y"),
                   # Uncertainty in LayDate_observed (stored in lay_date_uncertainty) is currently not used
                   # TODO: ask data owner
@@ -230,7 +228,7 @@ create_brood_WYT <- function(db, species_filter){
                                                   .data$experiment_codes == "13" ~ "SURVIVAL"),
                   BroodID = toupper(.data$pnum)) %>%
     dplyr::arrange(.data$BreedingSeason, .data$FemaleID, .data$LayDate_observed) %>%
-    dplyr::mutate(ClutchType_observed = NA,
+    dplyr::mutate(ClutchType_observed = NA_character_,
                   ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.1"))
 
   return(Brood_data)
@@ -261,7 +259,7 @@ create_capture_WYT <- function(db, Brood_data, species_filter){
                                              toupper(.data$species_code) == "BLUTI" ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
                                              toupper(.data$species_code) == "COATI" ~ species_codes[species_codes$SpeciesID == 14610, ]$Species,
                                              toupper(.data$species_code) == "MARTI" ~ species_codes[species_codes$SpeciesID == 14400, ]$Species)) %>%
-    dplyr::filter(Species %in% species_filter) %>%
+    dplyr::filter(.data$Species %in% species_filter) %>%
     dplyr::mutate(CaptureDate = janitor::excel_numeric_to_date(as.numeric(.data$date_time)),
                   CaptureTime = NA_character_,
                   BreedingSeason = dplyr::case_when(is.na(.data$CaptureDate) ~ as.numeric(stringr::str_sub(.data$pnum, start = 1, end = 4)),
@@ -304,11 +302,11 @@ create_capture_WYT <- function(db, Brood_data, species_filter){
                                                  .data$Age_observed %in% c(1, 3) & !is.na(.data$origin_pnum) ~ toupper(.data$origin_pnum)),
                   BroodIDFledged = dplyr::case_when(!.data$Age_observed %in% c(1, 3) ~ NA_character_,
                                                     TRUE ~ toupper(.data$pnum))) %>%
-    dplyr::select(.data$IndvID, .data$Species, .data$BreedingSeason, .data$CaptureDate,
-                  .data$CaptureTime, .data$ObserverID, .data$LocationID, .data$CapturePopID,
-                  .data$CapturePlot, .data$ReleasePopID, .data$ReleasePlot, .data$Mass,
-                  .data$Tarsus, .data$OriginalTarsusMethod, .data$WingLength,
-                  .data$Age_observed, .data$Sex_observed, .data$BroodIDLaid, .data$BroodIDFledged)
+    dplyr::select("IndvID", "Species", "BreedingSeason", "CaptureDate",
+                  "CaptureTime", "ObserverID", "LocationID", "CapturePopID",
+                  "CapturePlot", "ReleasePopID", "ReleasePlot", "Mass",
+                  "Tarsus", "OriginalTarsusMethod", "WingLength",
+                  "Age_observed", "Sex_observed", "BroodIDLaid", "BroodIDFledged")
 
   Chick_captures_new <- readxl::read_xlsx(paste0(db, "/WYT_PrimaryData_Capture.xlsx"),
                                           col_types = "text", sheet = "2013-2018",
@@ -359,11 +357,11 @@ create_capture_WYT <- function(db, Brood_data, species_filter){
                                                  TRUE ~ toupper(.data$pnum)),
                   BroodIDFledged = dplyr::case_when(!.data$Age_observed %in% c(1, 3) ~ NA_character_,
                                                     TRUE ~ toupper(.data$pnum))) %>%
-    dplyr::select(.data$IndvID, .data$Species, .data$BreedingSeason, .data$CaptureDate,
-                  .data$CaptureTime, .data$ObserverID, .data$LocationID, .data$CapturePopID,
-                  .data$CapturePlot, .data$ReleasePopID, .data$ReleasePlot, .data$Mass,
-                  .data$Tarsus, .data$OriginalTarsusMethod, .data$WingLength,
-                  .data$Age_observed, .data$Sex_observed, .data$BroodIDLaid, .data$BroodIDFledged)
+    dplyr::select("IndvID", "Species", "BreedingSeason", "CaptureDate",
+                  "CaptureTime", "ObserverID", "LocationID", "CapturePopID",
+                  "CapturePlot", "ReleasePopID", "ReleasePlot", "Mass",
+                  "Tarsus", "OriginalTarsusMethod", "WingLength",
+                  "Age_observed", "Sex_observed", "BroodIDLaid", "BroodIDFledged")
 
   # Combine old and new
   Capture_data <- dplyr::bind_rows(Chick_captures_new, Chick_captures_old) %>%
@@ -371,7 +369,7 @@ create_capture_WYT <- function(db, Brood_data, species_filter){
     calc_age(ID = .data$IndvID, Age = .data$Age_observed,
              Date = .data$CaptureDate, Year = .data$BreedingSeason) %>%
     dplyr::left_join(Brood_data %>%
-                       dplyr::select(.data$BroodID, .data$HatchDate_observed),
+                       dplyr::select("BroodID", "HatchDate_observed"),
                      by = c("BroodIDLaid" = "BroodID")) %>%
     dplyr::mutate(ChickAge = dplyr::case_when(.data$Age_observed == 1 ~ as.integer(.data$CaptureDate - .data$HatchDate_observed),
                                               TRUE ~ NA_integer_),
@@ -400,22 +398,23 @@ create_individual_WYT <- function(Capture_data){
   Individual_data <- Capture_data %>%
     dplyr::filter(!is.na(.data$IndvID)) %>%
     dplyr::group_by(.data$IndvID) %>%
-    dplyr::summarise(Species = dplyr::case_when(length(unique(stats::na.omit(.data$Species))) == 2 ~ "CCCCCC",
+    dplyr::summarise(Species = dplyr::case_when(length(unique(stats::na.omit(.data$Species))) > 1 ~ "CCCCCC",
                                                 TRUE ~ dplyr::first(stats::na.omit(.data$Species))),
-    PopID = "WYT",
-    BroodIDLaid = dplyr::case_when(length(unique(stats::na.omit(.data$BroodIDLaid))) == 1 ~ dplyr::first(stats::na.omit(.data$BroodIDLaid)),
-                                   length(unique(stats::na.omit(.data$BroodIDLaid))) > 1 ~ "CONFLICTED",
-                                   TRUE ~ NA_character_),
-    BroodIDFledged = dplyr::case_when(length(unique(stats::na.omit(.data$BroodIDFledged))) == 1 ~ dplyr::first(stats::na.omit(.data$BroodIDFledged)),
-                                      length(unique(stats::na.omit(.data$BroodIDFledged))) > 1 ~ "CONFLICTED",
-                                      TRUE ~ NA_character_),
-    RingSeason = dplyr::first(.data$BreedingSeason),
-    RingAge = ifelse(all(is.na(Age_calculated)), NA_character_,
-                     ifelse(any(Age_calculated %in% c(1, 3)), "chick",
-                            ifelse(min(Age_calculated) == 2, NA_character_, "adult"))),
-    Sex_calculated = dplyr::case_when(length(unique(stats::na.omit(.data$Sex_observed))) == 2 ~ "C",
-                                      TRUE ~ dplyr::first(stats::na.omit(.data$Sex_observed))),
-    .groups = "drop") %>%
+                     PopID = "WYT",
+                     BroodIDLaid = dplyr::case_when(length(unique(stats::na.omit(.data$BroodIDLaid))) == 1 ~ dplyr::first(stats::na.omit(.data$BroodIDLaid)),
+                                                    length(unique(stats::na.omit(.data$BroodIDLaid))) > 1 ~ "CONFLICTED",
+                                                    TRUE ~ NA_character_),
+                     BroodIDFledged = dplyr::case_when(length(unique(stats::na.omit(.data$BroodIDFledged))) == 1 ~ dplyr::first(stats::na.omit(.data$BroodIDFledged)),
+                                                       length(unique(stats::na.omit(.data$BroodIDFledged))) > 1 ~ "CONFLICTED",
+                                                       TRUE ~ NA_character_),
+                     RingSeason = dplyr::first(.data$BreedingSeason),
+                     RingAge = dplyr::case_when(all(is.na(.data$Age_calculated)) ~ NA_character_,
+                                                any(.data$Age_calculated %in% c(1, 3)) ~ "chick",
+                                                min(.data$Age_calculated) == 2 ~ NA_character_,
+                                                TRUE ~ "adult"),
+                     Sex_calculated = dplyr::case_when(length(unique(stats::na.omit(.data$Sex_observed))) == 2 ~ "C",
+                                                       TRUE ~ dplyr::first(stats::na.omit(.data$Sex_observed))),
+                     .groups = "drop") %>%
     # Keep only necessary columns
     dplyr::select(tidyselect::contains(names(individual_data_template))) %>%
     # Add missing columns

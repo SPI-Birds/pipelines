@@ -34,11 +34,11 @@ calc_clutchtype <- function(data,
   ## Version 1.0
   if (protocol_version == "1.0"){
     cutoff_dat <- data %>%
-      dplyr::group_by(PopID, BreedingSeason, Species) %>%
-      dplyr::mutate(cutoff = tryCatch(expr = min(LayDate, na.rm = TRUE) + lubridate::days(30),
+      dplyr::group_by(.data$PopID, .data$BreedingSeason, .data$Species) %>%
+      dplyr::mutate(cutoff = tryCatch(expr = min(.data$LayDate, na.rm = TRUE) + lubridate::days(30),
                                       warning = function(...) return(NA))) %>%
       # Determine brood type for each nest based on female ID
-      dplyr::group_by(BreedingSeason, Species, FemaleID)
+      dplyr::group_by(.data$BreedingSeason, .data$Species, .data$FemaleID)
 
     #Depending on whether NAs should be treated as 0s or NAs we have different paths
     if(na.rm == TRUE){
@@ -47,11 +47,11 @@ calc_clutchtype <- function(data,
         dplyr::mutate(total_fledge = calc_cumfledge(x = .data$NumberFledged, na.rm = TRUE),
                       row = 1:dplyr::n()) %>%
         dplyr::ungroup() %>%
-        dplyr::mutate(ClutchType_calculated = purrr::pmap_chr(.l = list(rows = .$row,
-                                                                        femID = .$FemaleID,
-                                                                        cutoff_date = .$cutoff,
-                                                                        nr_fledge_before = .$total_fledge,
-                                                                        LD = .$LayDate),
+        dplyr::mutate(ClutchType_calculated = purrr::pmap_chr(.l = list(rows = .data$row,
+                                                                        femID = .data$FemaleID,
+                                                                        cutoff_date = .data$cutoff,
+                                                                        nr_fledge_before = .data$total_fledge,
+                                                                        LD = .data$LayDate),
                                                               .f = function(rows, femID, cutoff_date,
                                                                             nr_fledge_before,
                                                                             LD){
@@ -123,7 +123,7 @@ calc_clutchtype <- function(data,
                                                                 }
 
                                                               })) %>%
-        dplyr::pull(ClutchType_calculated)
+        dplyr::pull("ClutchType_calculated")
 
     } else {
 
@@ -132,12 +132,12 @@ calc_clutchtype <- function(data,
                       total_fledge_na = calc_cumfledge(x = .data$NumberFledged, na.rm = FALSE),
                       row = 1:dplyr::n()) %>%
         dplyr::ungroup() %>%
-        dplyr::mutate(ClutchType_calculated = purrr::pmap_chr(.l = list(rows = .$row,
-                                                                        femID = .$FemaleID,
-                                                                        cutoff_date = .$cutoff,
-                                                                        nr_fledge_before = .$total_fledge,
-                                                                        na_fledge_before = .$total_fledge_na,
-                                                                        LD = .$LayDate),
+        dplyr::mutate(ClutchType_calculated = purrr::pmap_chr(.l = list(rows = .data$row,
+                                                                        femID = .data$FemaleID,
+                                                                        cutoff_date = .data$cutoff,
+                                                                        nr_fledge_before = .data$total_fledge,
+                                                                        na_fledge_before = .data$total_fledge_na,
+                                                                        LD = .data$LayDate),
                                                               .f = function(rows, femID, cutoff_date,
                                                                             nr_fledge_before, na_fledge_before,
                                                                             LD){
@@ -221,7 +221,7 @@ calc_clutchtype <- function(data,
                                                                 }
 
                                                               })) %>%
-        dplyr::pull(ClutchType_calculated)
+        dplyr::pull("ClutchType_calculated")
 
     }
 
@@ -231,24 +231,24 @@ calc_clutchtype <- function(data,
   if (protocol_version == "1.1"){
 
     cutoff_dat <- data %>%
-      dplyr::group_by(PopID, BreedingSeason, Species) %>%
+      dplyr::group_by(.data$PopID, .data$BreedingSeason, .data$Species) %>%
       dplyr::mutate(cutoff = tryCatch(expr = min(.data$LayDate_observed, na.rm = TRUE) + lubridate::days(30),
                                       warning = function(...) return(NA))) %>%
       # Determine brood type for each nest based on female ID
-      dplyr::group_by(BreedingSeason, Species, FemaleID)
+      dplyr::group_by(.data$BreedingSeason, .data$Species, .data$FemaleID)
 
     #Depending on whether NAs should be treated as 0s or NAs we have different paths
     if(na.rm == TRUE){
 
       clutchtype_calculated <- cutoff_dat %>%
-        dplyr::mutate(total_fledge = calc_cumfledge(x = NumberFledged_observed, na.rm = TRUE),
+        dplyr::mutate(total_fledge = calc_cumfledge(x = .data$NumberFledged_observed, na.rm = TRUE),
                       row = 1:dplyr::n()) %>%
         dplyr::ungroup() %>%
-        dplyr::mutate(ClutchType_calculated = purrr::pmap_chr(.l = list(rows = .$row,
-                                                                        femID = .$FemaleID,
-                                                                        cutoff_date = .$cutoff,
-                                                                        nr_fledge_before = .$total_fledge,
-                                                                        LD = .$LayDate_observed),
+        dplyr::mutate(ClutchType_calculated = purrr::pmap_chr(.l = list(rows = .data$row,
+                                                                        femID = .data$FemaleID,
+                                                                        cutoff_date = .data$cutoff,
+                                                                        nr_fledge_before = .data$total_fledge,
+                                                                        LD = .data$LayDate_observed),
                                                               .f = function(rows, femID, cutoff_date,
                                                                             nr_fledge_before,
                                                                             LD){
@@ -320,21 +320,21 @@ calc_clutchtype <- function(data,
                                                                 }
 
                                                               })) %>%
-        dplyr::pull(ClutchType_calculated)
+        dplyr::pull("ClutchType_calculated")
 
     } else {
 
       clutchtype_calculated <- cutoff_dat %>%
-        dplyr::mutate(total_fledge = calc_cumfledge(x = NumberFledged_observed, na.rm = TRUE),
-                      total_fledge_na = calc_cumfledge(x = NumberFledged_observed, na.rm = FALSE),
+        dplyr::mutate(total_fledge = calc_cumfledge(x = .data$NumberFledged_observed, na.rm = TRUE),
+                      total_fledge_na = calc_cumfledge(x = .data$NumberFledged_observed, na.rm = FALSE),
                       row = 1:dplyr::n()) %>%
         dplyr::ungroup() %>%
-        dplyr::mutate(ClutchType_calculated = purrr::pmap_chr(.l = list(rows = .$row,
-                                                                        femID = .$FemaleID,
-                                                                        cutoff_date = .$cutoff,
-                                                                        nr_fledge_before = .$total_fledge,
-                                                                        na_fledge_before = .$total_fledge_na,
-                                                                        LD = .$LayDate_observed),
+        dplyr::mutate(ClutchType_calculated = purrr::pmap_chr(.l = list(rows = .data$row,
+                                                                        femID = .data$FemaleID,
+                                                                        cutoff_date = .data$cutoff,
+                                                                        nr_fledge_before = .data$total_fledge,
+                                                                        na_fledge_before = .data$total_fledge_na,
+                                                                        LD = .data$LayDate_observed),
                                                               .f = function(rows, femID, cutoff_date,
                                                                             nr_fledge_before, na_fledge_before,
                                                                             LD){
@@ -418,16 +418,12 @@ calc_clutchtype <- function(data,
                                                                 }
 
                                                               })) %>%
-        dplyr::pull(ClutchType_calculated)
+        dplyr::pull("ClutchType_calculated")
 
     }
 
   }
 
   return(clutchtype_calculated)
-
-  #Satisfy RCMD Checks
-  PopID <- BreedingSeason <- Species <- LayDate <- FemaleID <- NumberFledged_observed <- NULL
-  `.` <- ClutchType_calculated <- NULL
 
 }

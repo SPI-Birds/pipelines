@@ -113,11 +113,12 @@ format_UAN <- function(db = choose_directory(),
                                                  "text", "text", "text", "text", "text",
                                                  "numeric", "numeric", "text", "numeric",
                                                  "text")) %>%
-    dplyr::mutate_at(.vars = dplyr::vars(LD, WD), function(x){
+    dplyr::mutate(dplyr::across(.cols = c("LD", "WD"),
+                                .fns = ~{
 
-      janitor::excel_numeric_to_date(as.numeric(x))
+                                  janitor::excel_numeric_to_date(as.numeric(.x))
 
-    })
+                                }))
 
   INDV_info <- readxl::read_excel(all_files[grepl("IND", all_files)],
                                   col_types = c("text", "text", "text",
@@ -127,12 +128,15 @@ format_UAN <- function(db = choose_directory(),
                                                 "list", "text", "list", "text",
                                                 "list", "text", "list", "text",
                                                 rep("numeric", 8), "text")) %>%
-    dplyr::mutate_at(.vars = dplyr::vars(vd, klr1date, klr2date, klr3date, klr4date), function(x){
+    dplyr::mutate(dplyr::across(.cols = c("vd", "klr1date", "klr2date",
+                                  "klr3date", "klr4date"),
+                                .fns = ~{
 
-      janitor::excel_numeric_to_date(as.numeric(x))
+                                  janitor::excel_numeric_to_date(as.numeric(.x))
 
-    })
+                                }))
 
+  ## TODO: Should PLOT_info be loaded and used?
   PLOT_info <- readxl::read_excel(all_files[grepl("PL", all_files)],
                                   col_types = c(rep("text", 4),
                                                 rep("numeric", 6),
@@ -147,78 +151,125 @@ format_UAN <- function(db = choose_directory(),
                                                    rep("numeric", 3),
                                                    "text", "numeric",
                                                    rep("text", 3))) %>%
-    dplyr::mutate(VD = janitor::excel_numeric_to_date(as.numeric(VD)))
+    dplyr::mutate(VD = janitor::excel_numeric_to_date(as.numeric(.data$VD)))
 
   # Rename columns
-  BROOD_info <- dplyr::mutate(BROOD_info, BroodID = NN, Species = SOORT, Plot = GB, NestboxNumber = PL,
-                              LayDate_observed = LD, ClutchSizeError = JAE,
-                              ClutchSize_observed = as.integer(AE), NrUnhatchedChicks = AEN,
-                              BroodSize_observed = as.integer(NP), NrDeadChicks = PD,
-                              NumberFledged_observed = as.integer(PU), LDInterruption = LO,
-                              ClutchType_observed = TY, MaleID = RM, FemaleID = RW,
-                              Unknown = AW, ChickWeighAge = WD, ChickWeighTime = WU,
-                              ObserverID = ME, NumberChicksMass = as.integer(GN),
-                              AvgTarsus = GT, AvgChickMass = GG,
-                              AvgChickBodyCondition = CON, PopID = SA,
-                              NestNumberFirstBrood = NNN1,
-                              NestNumberSecondBrood = NNN2,
-                              NestNumberThirdBrood = NNN3,
-                              NestNumberBigamousMale = NNBI,
-                              NestNumberTrigamousMale = NNTRI,
-                              StageAbandoned = VERL,
-                              # TODO: Ask Frank Adriaensen what the experiment codes mean
-                              ExperimentID = exp,
-                              Longitude = coorx, Latitude = coory,
-                              Comments = comm, BreedingSeason = as.integer(year),
-                              LocationID = gbpl)
+  BROOD_info <- BROOD_info %>%
+    dplyr::rename("BroodID" = "NN",
+                  "Species" = "SOORT",
+                  "Plot" = "GB",
+                  "NestboxNumber" = "PL",
+                  "LayDate_observed" = "LD",
+                  "ClutchSizeError" = "JAE",
+                  "ClutchSize_observed" = "AE",
+                  "NrUnhatchedChicks" = "AEN",
+                  "BroodSize_observed" = "NP",
+                  "NrDeadChicks" = "PD",
+                  "NumberFledged_observed" = "PU",
+                  "LDInterruption" = "LO",
+                  "ClutchType_observed" = "TY",
+                  "MaleID" = "RM",
+                  "FemaleID" = "RW",
+                  "Unknown" = "AW",
+                  "ChickWeighAge" = "WD",
+                  "ChickWeighTime" = "WU",
+                  "ObserverID" = "ME",
+                  "NumberChicksMass" = "GN",
+                  "AvgTarsus" = "GT",
+                  "AvgChickMass" = "GG",
+                  "AvgChickBodyCondition" = "CON",
+                  "PopID" = "SA",
+                  "NestNumberFirstBrood" = "NNN1",
+                  "NestNumberSecondBrood" = "NNN2",
+                  "NestNumberThirdBrood" = "NNN3",
+                  "NestNumberBigamousMale" = "NNBI",
+                  "NestNumberTrigamousMale" = "NNTRI",
+                  "StageAbandoned" = "VERL",
+                  # TODO: Ask Frank Adriaensen what the experiment codes mean
+                  "ExperimentID" = "exp",
+                  "Longitude" = "coorx",
+                  "Latitude" = "coory",
+                  "Comments" = "comm",
+                  "BreedingSeason" = "year",
+                  "LocationID" = "gbpl") %>%
+    dplyr::mutate(ClutchSize_observed = as.integer(.data$ClutchSize_observed),
+                  BroodSize_observed = as.integer(.data$BroodSize_observed),
+                  NumberFledged_observed = as.integer(.data$NumberFledged_observed),
+                  NumberChicksMass = as.integer(.data$NumberChicksMass),
+                  BreedingSeason = as.integer(.data$BreedingSeason))
 
   #Rename columns to make it easier to understand
-  CAPTURE_info <- dplyr::mutate(CAPTURE_info, Species = SOORT,
-                                IndvID = RN, MetalRingStatus = NRN,
-                                ColourRing = KLR, ColourRingStatus = NKLR,
-                                TagType = TAGTY, TagID = TAG,
-                                TagStatus = NTAG, BroodID = NN,
-                                Sex = GS, CaptureDate = VD,
-                                Age_observed = as.integer(LT),
-                                CapturePlot = GB, NestBoxNumber = PL,
-                                CaptureMethod = VW,
-                                ObserverID = ME, WingLength = VLL,
-                                Mass = GEW, CaptureTime = UUR,
-                                TarsusStandard = TA,
-                                BeakLength = BL, BeakHeight = BH,
-                                MoultStatus = DMVL,
-                                DNASample = BLOED,
-                                MoultScore = RUI, Comments = COMM,
-                                PrimaryKey = RECNUM, SplitRing = SPLIT,
-                                TarsusAlt = TANEW, Longitude = COORX,
-                                Latitude = COORY, CapturePopID = SA,
-                                Ticks = TEEK,
-                                # TODO: Ask Frank Adriaensen what the experiment codes mean
-                                ExperimentID = exp,
-                                OldColourRing = klr_old,
-                                LocationID = gbpl)
+  CAPTURE_info <- CAPTURE_info %>%
+    dplyr::rename("Species" = "SOORT",
+                  "IndvID" = "RN",
+                  "MetalRingStatus" = "NRN",
+                  "ColourRing" = "KLR",
+                  "ColourRingStatus" = "NKLR",
+                  "TagType" = "TAGTY",
+                  "TagID" = "TAG",
+                  "TagStatus" = "NTAG",
+                  "BroodID" = "NN",
+                  "Sex" = "GS",
+                  "CaptureDate" = "VD",
+                  "Age_observed" =  "LT",
+                  "CapturePlot" = "GB",
+                  "NestBoxNumber" = "PL",
+                  "CaptureMethod" = "VW",
+                  "ObserverID" = "ME",
+                  "WingLength" = "VLL",
+                  "Mass" = "GEW",
+                  "CaptureTime" = "UUR",
+                  "TarsusStandard" = "TA",
+                  "BeakLength" = "BL",
+                  "BeakHeight" = "BH",
+                  "MoultStatus" = "DMVL",
+                  "DNASample" = "BLOED",
+                  "MoultScore" = "RUI",
+                  "Comments" = "COMM",
+                  "PrimaryKey" = "RECNUM",
+                  "SplitRing" = "SPLIT",
+                  "TarsusAlt" = "TANEW",
+                  "Longitude" = "COORX",
+                  "Latitude" = "COORY",
+                  "CapturePopID" = "SA",
+                  "Ticks" = "TEEK",
+                  # TODO: Ask Frank Adriaensen what the experiment codes mean
+                  "ExperimentID" = "exp",
+                  "OldColourRing" = "klr_old",
+                  "LocationID" = "gbpl") %>%
+    dplyr::mutate(Age_observed = as.integer(.data$Age_observed))
 
-  INDV_info <- dplyr::mutate(INDV_info, Species = soort,
-                             IndvID = rn, Sex = sex,
-                             BirthYear = gbj, BirthYearKnown = cgj,
-                             CaptureType = mode, PlotID = gb,
-                             FirstCaptureDate = vd,
-                             MetalRingStatus = nrn,
-                             TotalRecords = .data$n,
-                             TagCode = pit, TagPlacementDate = pitdate,
-                             ColourRing1 = klr1, ColourRing1PlacementDate = klr1date,
-                             ColourRing2 = klr2, ColourRing2PlacementDate = klr2date,
-                             ColourRing3 = klr3, ColourRing3PlacementDate = klr3date,
-                             ColourRing4 = klr4, ColourRing4PlacementDate = klr4date,
-                             MolecularSex = molsex, MedianWingLength = vll_med,
-                             NrWingLengthObservations = vll_n,
-                             MedianTarsusStandard = cta_med,
-                             NrTarsusStandardObservations = cta_n,
-                             MedianTarsusAlt = ctanew_med,
-                             NrTarsusAltObservations = ctanew_n,
-                             MedianAllTarsus = tarsus_med,
-                             AllTarsusObservations = tarsus_n,
-                             TarsusMethod = tarsus_ty)
+  INDV_info <- INDV_info %>%
+    dplyr::rename("Species" = "soort",
+                  "IndvID" = "rn",
+                  "Sex" = "sex",
+                  "BirthYear" = "gbj",
+                  "BirthYearKnown" = "cgj",
+                  "CaptureType" = "mode",
+                  "PlotID" = "gb",
+                  "FirstCaptureDate" = "vd",
+                  "MetalRingStatus" = "nrn",
+                  "TotalRecords" = "n",
+                  "TagCode" = "pit",
+                  "TagPlacementDate" = "pitdate",
+                  "ColourRing1" = "klr1",
+                  "ColourRing1PlacementDate" = "klr1date",
+                  "ColourRing2" = "klr2",
+                  "ColourRing2PlacementDate" = "klr2date",
+                  "ColourRing3" = "klr3",
+                  "ColourRing3PlacementDate" = "klr3date",
+                  "ColourRing4" = "klr4",
+                  "ColourRing4PlacementDate" = "klr4date",
+                  "MolecularSex" = "molsex",
+                  "MedianWingLength" = "vll_med",
+                  "NrWingLengthObservations" = "vll_n",
+                  "MedianTarsusStandard" = "cta_med",
+                  "NrTarsusStandardObservations" = "cta_n",
+                  "MedianTarsusAlt" = "ctanew_med",
+                  "NrTarsusAltObservations" = "ctanew_n",
+                  "MedianAllTarsus" = "tarsus_med",
+                  "AllTarsusObservations" = "tarsus_n",
+                  "TarsusMethod" = "tarsus_ty")
 
   # BROOD DATA
 
@@ -259,12 +310,13 @@ format_UAN <- function(db = choose_directory(),
     dplyr::rowwise() %>%
     dplyr::mutate(AvgChickMass = ifelse(!is.na(.data$AvgChickMass_capture), .data$AvgChickMass_capture, .data$AvgChickMass),
                   AvgTarsus = ifelse(!is.na(.data$AvgTarsus_capture), .data$AvgTarsus_capture, .data$AvgTarsus)) %>%
-    dplyr::select(-.data$AvgChickMass_capture, -.data$AvgTarsus_capture) %>%
+    dplyr::select(-"AvgChickMass_capture",
+                  -"AvgTarsus_capture") %>%
     dplyr::select(names(brood_data_template)) %>%
     dplyr::ungroup()
 
   Capture_data <- Capture_data %>%
-    dplyr::select(-.data$BroodID)
+    dplyr::select(-"BroodID")
 
   # EXPORT DATA
 
@@ -306,14 +358,14 @@ format_UAN <- function(db = choose_directory(),
 #' Create brood data table in standard format for data from University of
 #' Antwerp, Belgium.
 #'
-#' @param data Data frame. Primary data from University of Antwerp.
-#' @param CAPTURE_info Capture data table from the raw data
+#' @param BROOD_info Data frame. Primary brood data from University of Antwerp.
+#' @param CAPTURE_info Data frame. Primary capture data from University of Antwerp.
 #' @param species_filter 6 letter species codes for filtering data.
 #' @param pop_filter Population three letter codes from the standard protocol.
 #'
 #' @return A data frame.
 
-create_brood_UAN <- function(data, CAPTURE_info, species_filter, pop_filter){
+create_brood_UAN <- function(BROOD_info, CAPTURE_info, species_filter, pop_filter){
 
   # For every brood in the capture data table, determine whether measurements were
   # taken with Svensson's standard or alternative
@@ -325,15 +377,15 @@ create_brood_UAN <- function(data, CAPTURE_info, species_filter, pop_filter){
     dplyr::mutate(OriginalTarsusMethod = dplyr::case_when(.data$TarsusAlt == "TRUE" ~ "Alternative",
                                                           .data$TarsusAlt != "TRUE" & .data$TarsusStd == "TRUE" ~ "Standard",
                                                           .data$TarsusAlt != "TRUE" & .data$TarsusStd != "TRUE" ~ NA_character_)) %>%
-    dplyr::select(-.data$TarsusAlt, -.data$TarsusStd)
+    dplyr::select(-"TarsusAlt", -"TarsusStd")
 
   # Create a table with brood information
-  Brood_data <- data %>%
+  Brood_data <- BROOD_info %>%
     # Convert columns to expected values
     dplyr::mutate(PopID = dplyr::case_when(.data$PopID == "FR" ~ "BOS",
                                            .data$PopID == "PB" ~ "PEE"),
-                  Species = dplyr::case_when(.data$Species == "pm" ~ species_codes[which(species_codes$SpeciesID == 14640), ]$Species,
-                                             .data$Species == "pc" ~ species_codes[which(species_codes$SpeciesID == 14620), ]$Species),
+                  Species = dplyr::case_when(.data$Species == "pm" ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
+                                             .data$Species == "pc" ~ species_codes[species_codes$SpeciesID == 14620, ]$Species),
                   ClutchType_observed = dplyr::case_when(.data$ClutchType_observed %in% c(1, 9) ~ "first",
                                                          .data$ClutchType_observed %in% c(2, 6, 7) ~ "second",
                                                          .data$ClutchType_observed %in% c(3, 4, 5, 8) ~ "replacement"),
@@ -342,15 +394,16 @@ create_brood_UAN <- function(data, CAPTURE_info, species_filter, pop_filter){
                   ClutchSize_min = .data$ClutchSize_observed - .data$ClutchSizeError,
                   ClutchSize_max = .data$ClutchSize_observed + .data$ClutchSizeError) %>%
     # Keep filtered species
-    dplyr::filter(Species %in% species_filter) %>%
+    dplyr::filter(.data$Species %in% species_filter) %>%
     # Coerce BroodID to be character, convert LayDate
     dplyr::mutate(BroodID = as.character(.data$BroodID),
                   LayDate_observed = lubridate::ymd(.data$LayDate_observed),
                   NumberChicksTarsus = .data$NumberChicksMass) %>%
     # Calculate clutchtype, assuming NAs are true unknowns
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(., na.rm = FALSE, protocol_version = "1.1")) %>%
-    dplyr::left_join(Tarsus_method, by = "BroodID") %>%
-    dplyr::filter(PopID %in% pop_filter) %>%
+    dplyr::left_join(Tarsus_method,
+                     by = "BroodID") %>%
+    dplyr::filter(.data$PopID %in% pop_filter) %>%
     # Keep only necessary columns
     dplyr::select(dplyr::contains(names(brood_data_template))) %>%
     # Add missing columns
@@ -367,25 +420,25 @@ create_brood_UAN <- function(data, CAPTURE_info, species_filter, pop_filter){
 #' Create capture data table in standard format for data from University of
 #' Antwerp, Belgium.
 #'
-#' @param data Data frame. Primary data from University of Antwerp.
+#' @param CAPTURE_info Data frame. Primary capture data from University of Antwerp.
 #' @param species_filter 6 letter species codes for filtering data.
 #' @param pop_filter Population three letter codes from the standard protocol.
 #'
 #' @return A data frame.
 
-create_capture_UAN <- function(data, species_filter, pop_filter){
+create_capture_UAN <- function(CAPTURE_info, species_filter, pop_filter){
 
   # Capture data includes all times an individual was captured (with measurements
   # like mass, tarsus etc.). This will include first capture as nestling (for
   # residents) This means there will be multiple records for a single individual.
-  Capture_data <- data %>%
+  Capture_data <- CAPTURE_info %>%
     # Adjust species and PopID
     dplyr::mutate(CapturePopID = dplyr::case_when(.data$CapturePopID == "FR" ~ "BOS",
                                                   .data$CapturePopID == "PB" ~ "PEE"),
-                  Species = dplyr::case_when(.data$Species == "pm" ~ species_codes[which(species_codes$SpeciesID == 14640), ]$Species,
-                                             .data$Species == "pc" ~ species_codes[which(species_codes$SpeciesID == 14620), ]$Species)) %>%
+                  Species = dplyr::case_when(.data$Species == "pm" ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
+                                             .data$Species == "pc" ~ species_codes[species_codes$SpeciesID == 14620, ]$Species)) %>%
     # Keep filtered species
-    dplyr::filter(Species %in% species_filter) %>%
+    dplyr::filter(.data$Species %in% species_filter) %>%
     # Make tarsus length into standard method (Svensson Alt)
     # Firstly, convert the Svennson's standard measures to Svennson's Alt.
     # Then only use this converted measure when actual Svennson's Alt is unavailable.
@@ -404,7 +457,8 @@ create_capture_UAN <- function(data, species_filter, pop_filter){
                                                    stringr::str_pad(string = round((.data$CaptureTime %% 1)*60),
                                                                     width = 2,
                                                                     pad = "0"), sep = ":"), "NA:NA"),
-                  ReleasePopID = .data$CapturePopID, ReleasePlot = .data$CapturePlot) %>%
+                  ReleasePopID = .data$CapturePopID,
+                  ReleasePlot = .data$CapturePlot) %>%
     # TODO: Uncertainty in sex observations (M?, W?) is ignored
     dplyr::mutate(Sex_observed = dplyr::case_when(.data$Sex %in% c("M", "M?") ~ "M",
                                                   .data$Sex %in% c("W", "W?") ~ "F",
@@ -428,8 +482,9 @@ create_capture_UAN <- function(data, species_filter, pop_filter){
                   ReleaseAlive = .data$CaptureAlive) %>%
     # Determine age at first capture for every individual
     dplyr::mutate(ischick = dplyr::case_when(.data$Age_observed_new <= 3 ~ 1L)) %>%
-    calc_age(ID = .data$IndvID, Age = .data$ischick, Date = .data$CaptureDate, Year = .data$BreedingSeason) %>%
-    dplyr::filter(CapturePopID %in% pop_filter) %>%
+    calc_age(ID = .data$IndvID, Age = .data$ischick,
+             Date = .data$CaptureDate, Year = .data$BreedingSeason) %>%
+    dplyr::filter(.data$CapturePopID %in% pop_filter) %>%
     # Replace Age_observed with Age_observed_new which has been converted to EURING codes
     dplyr::mutate(Age_observed = .data$Age_observed_new) %>%
     # Arrange by IndvID and CaptureDate and add unique CaptureID
@@ -454,16 +509,16 @@ create_capture_UAN <- function(data, species_filter, pop_filter){
 #' Create individual data table in standard format for data from University of
 #' Antwerp, Belgium.
 #'
-#' @param data Data frame. Primary data from University of Antwerp.
+#' @param INDV_info Data frame. Primary individual data from University of Antwerp.
 #' @param Capture_data Output of \code{\link{create_capture_UAN}}.
 #' @param species_filter 6 letter species codes for filtering data.
 #'
 #' @return A data frame.
 
-create_individual_UAN <- function(data, Capture_data, species_filter){
+create_individual_UAN <- function(INDV_info, Capture_data, species_filter){
 
   # Take capture data and determine summary data for each individual
-  Indv_info <- Capture_data %>%
+  individuals <- Capture_data %>%
     dplyr::arrange(.data$IndvID, .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
     dplyr::group_by(.data$IndvID) %>%
     dplyr::summarise(Species = dplyr::case_when(length(unique(.data$Species)) == 2 ~ "CCCCCC",
@@ -480,12 +535,12 @@ create_individual_UAN <- function(data, Capture_data, species_filter){
     dplyr::arrange(.data$RingSeason, .data$IndvID)
 
   # Retrieve sex information from primary data
-  Indv_sex_primary <- data %>%
+  Indv_sex_primary <- INDV_info %>%
     dplyr::mutate(Sex = dplyr::case_when(.data$Sex %in% c(1, 3) ~ "M",
                                          .data$Sex %in% c(2, 4) ~ "F"),
                   Sex_genetic = dplyr::case_when(.data$MolecularSex == 1 ~ "M",
                                                  .data$MolecularSex == 2 ~ "F")) %>%
-    dplyr::select(.data$IndvID, .data$Sex, .data$Sex_genetic)
+    dplyr::select("IndvID", "Sex", "Sex_genetic")
 
   # Retrieve sex information from capture data
   Indv_sex_capture <- Capture_data %>%
@@ -497,20 +552,22 @@ create_individual_UAN <- function(data, Capture_data, species_filter){
     dplyr::mutate(Sex_calculated = dplyr::case_when(.data$length_sex > 1 ~ "C",
                                                     TRUE ~ .data$unique_sex[[1]])) %>%
     dplyr::ungroup() %>%
-    dplyr::select(.data$IndvID, .data$Sex_calculated)
+    dplyr::select("IndvID", "Sex_calculated")
 
   # For now, we use sex as recorded in primary data (Sex; even if Sex_calculated gives another value)
   # For individuals without sex recorded in primary data, we use Sex_calculated
   # TODO: Verify with Frank Adriaensen
   Sex_calc <- Indv_sex_primary %>%
-    dplyr::left_join(Indv_sex_capture, by = "IndvID") %>%
+    dplyr::left_join(Indv_sex_capture,
+                     by = "IndvID") %>%
     dplyr::mutate(Sex_calculated = dplyr::case_when(!is.na(.data$Sex) ~ .data$Sex,
                                                     is.na(.data$Sex) ~ .data$Sex_calculated)) %>%
-    dplyr::select(.data$IndvID, .data$Sex_calculated, .data$Sex_genetic)
+    dplyr::select("IndvID", "Sex_calculated", "Sex_genetic")
 
-  Indv_data <- Indv_info %>%
-    dplyr::left_join(Sex_calc, by = "IndvID") %>%
-    dplyr::filter(Species %in% species_filter) %>%
+  Indv_data <- individuals %>%
+    dplyr::left_join(Sex_calc,
+                     by = "IndvID") %>%
+    dplyr::filter(.data$Species %in% species_filter) %>%
     # Keep only necessary columns
     dplyr::select(tidyselect::contains(names(individual_data_template))) %>%
     # Add missing columns
@@ -527,7 +584,7 @@ create_individual_UAN <- function(data, Capture_data, species_filter){
 #' Create location data table in standard format for data from University of
 #' Antwerp, Belgium.
 #'
-#' @param BOX_info Data frame. Primary data from University of Antwerp.
+#' @param BOX_info Data frame. Primary location data from University of Antwerp.
 #'
 #' @return A data frame.
 
@@ -535,19 +592,20 @@ create_location_UAN <- function(BOX_info){
 
   Location_data <- BOX_info %>%
     dplyr::mutate(LocationID = .data$GBPL,
-                  LocationType = dplyr::case_when(.data$TYPE %in% c("pc", "pm", "cb") | is.na(.data$TYPE) ~ "NB",
+                  LocationType = dplyr::case_when(.data$TYPE %in% c("pc", "pm", "cb") ~ "NB",
+                                                  is.na(.data$TYPE) ~ "NB",
                                                   .data$TYPE == "FPT" ~ "FD",
-                                                  .data$TYPE %in% c("PMO", "&") ~ "MN")) %>%
-    dplyr::rowwise() %>%
-    dplyr::mutate(NestboxID = ifelse(.data$LocationType == "NB", .data$LocationID, NA_character_)) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(PopID = dplyr::case_when(.$SA == "FR" ~ "BOS",
-                                           .$SA == "PB" ~ "PEE"),
+                                                  .data$TYPE %in% c("PMO", "&") ~ "MN"),
+                  NestboxID = dplyr::case_when(.data$LocationType == "NB" ~ .data$LocationID,
+                                               TRUE ~ NA_character_),
+                  PopID = dplyr::case_when(.data$SA == "FR" ~ "BOS",
+                                           .data$SA == "PB" ~ "PEE"),
                   Latitude = .data$Y_deg,
                   Longitude = .data$X_deg,
                   Latitude_Lambert = .data$Y,
                   Longitude_Lambert = .data$X,
-                  StartSeason = as.integer(.data$YEARFIRST), EndSeason = as.integer(.data$YEARLAST),
+                  StartSeason = as.integer(.data$YEARFIRST),
+                  EndSeason = as.integer(.data$YEARLAST),
                   HabitatType = "deciduous",
                   HasCoords = as.factor(!is.na(.data$Latitude_Lambert))) %>%
     # Split into two groups whether they have coordinates or not

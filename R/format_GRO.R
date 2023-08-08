@@ -20,17 +20,14 @@ format_GRO <- function(db = choose_directory(),
                        pop = NULL,
                        output_type = 'R'){
 
-  #Force choose_directory() if used
+  # Force choose_directory() if used
   force(db)
 
   start_time <- Sys.time()
 
   message("Importing primary data...")
 
-  #### Force user to select directory
-  force(db)
-
-  #### Determine species and population codes for filtering
+  # Determine species and population codes for filtering
   if(is.null(species)){
 
     species_filter <- NULL
@@ -41,7 +38,7 @@ format_GRO <- function(db = choose_directory(),
 
   }
 
-  ## Otherwise, use the specified pop filter
+  # Otherwise, use the specified pop filter
   if(is.null(pop)){
 
     pop_filter <- NULL
@@ -58,12 +55,17 @@ format_GRO <- function(db = choose_directory(),
   options(dplyr.summarise.inform = FALSE)
 
   ## Read in the three separate primary data tables
-  bt_data <- nest_data <- readxl::read_excel(path = paste0(db, "/GRO_PrimaryData_BT.xls"), guess_max = 5000, range = readxl::cell_cols("A:L")) %>%
-    dplyr::mutate(Species = rep(species_codes[species_codes$SpeciesID == 14620,]$Species, nrow(.)))
-  cf_data <- nest_data <- readxl::read_excel(path = paste0(db, "/GRO_PrimaryData_CF.xls"), guess_max = 5000, range = readxl::cell_cols("A:L")) %>%
-    dplyr::mutate(Species = rep(species_codes[species_codes$SpeciesID == 13480,]$Species, nrow(.)))
-  gt_data <- nest_data <- readxl::read_excel(path = paste0(db, "/GRO_PrimaryData_GT.xls"), guess_max = 5000, range = readxl::cell_cols("A:L")) %>%
-    dplyr::mutate(Species = rep(species_codes[species_codes$SpeciesID == 14640,]$Species, nrow(.)))
+  bt_data <- nest_data <- readxl::read_excel(path = paste0(db, "/GRO_PrimaryData_BT.xls"),
+                                             guess_max = 5000, range = readxl::cell_cols("A:L")) %>%
+    dplyr::mutate(Species = species_codes[species_codes$SpeciesID == 14620,]$Species)
+
+  cf_data <- nest_data <- readxl::read_excel(path = paste0(db, "/GRO_PrimaryData_CF.xls"),
+                                             guess_max = 5000, range = readxl::cell_cols("A:L")) %>%
+    dplyr::mutate(Species = species_codes[species_codes$SpeciesID == 13480,]$Species)
+
+  gt_data <- nest_data <- readxl::read_excel(path = paste0(db, "/GRO_PrimaryData_GT.xls"),
+                                             guess_max = 5000, range = readxl::cell_cols("A:L")) %>%
+    dplyr::mutate(Species = species_codes[species_codes$SpeciesID == 14640,]$Species)
 
   ## Rbind data
   gro_data <- rbind(bt_data, cf_data, gt_data) %>%
@@ -71,16 +73,16 @@ format_GRO <- function(db = choose_directory(),
 
     ## Rename
     janitor::clean_names(case = "upper_camel") %>%
-    dplyr::rename(BreedingSeason = .data$Year,
-                  LocationID = .data$Box,
-                  FemaleID = .data$FemaleRing,
-                  MaleID = .data$MaleRing,
-                  LayDate_observed = .data$LayingDate,
-                  ClutchSize_observed = .data$ClutchSize,
-                  HatchDate_observed = .data$HatchingDate,
-                  BroodSize_observed = .data$HatchlingN,
-                  NumberFledged_observed = .data$FledglingN,
-                  ObserverID = .data$Observer) %>%
+    dplyr::rename("BreedingSeason" = "Year",
+                  "LocationID" = "Box",
+                  "FemaleID" = "FemaleRing",
+                  "MaleID" = "MaleRing",
+                  "LayDate_observed" = "LayingDate",
+                  "ClutchSize_observed" = "ClutchSize",
+                  "HatchDate_observed" = "HatchingDate",
+                  "BroodSize_observed" = "HatchlingN",
+                  "NumberFledged_observed" = "FledglingN",
+                  "ObserverID" = "Observer") %>%
 
     ## Reformat
     ## Few cases of clutch size observed have '?' - these should be considered the minimum clutch size, otherwise on information provided on minimum clutch size
@@ -107,19 +109,19 @@ format_GRO <- function(db = choose_directory(),
     dplyr::arrange(.data$BreedingSeason, .data$LocationID) %>%
 
     ## Set non-conforming IDs to NA (as of 2020 there are 2 in FemaleID: KP6855, LE3665)
-    dplyr::mutate(dplyr::across(c(.data$FemaleID, .data$MaleID),
+    dplyr::mutate(dplyr::across(c("FemaleID", "MaleID"),
                                 ~dplyr::case_when(stringr::str_detect(., "^[[:digit:][:alpha:]]{7}$") ~ .,
                                                   TRUE ~ NA_character_)))
 
 
   ## Read in experiment table
-  exp_table <- readr::read_csv(paste0(db, "/GRO_PrimaryData_ExperimentLabels.csv"))
-
+  exp_table <- readr::read_csv(paste0(db, "/GRO_PrimaryData_ExperimentLabels.csv")) %>%
+    dplyr::mutate(BreedingSeason = as.integer(.data$BreedingSeason))
 
 
   ## Join in experiment labels
   gro_data <- gro_data %>%
-    dplyr::rename(Experiment_Treatment = .data$Experiment) %>%
+    dplyr::rename("Experiment_Treatment" = "Experiment") %>%
     dplyr::left_join(exp_table, by = c("BreedingSeason","Species","Experiment_Treatment"))
 
   ## Filter to keep only desired Species if specified
@@ -210,7 +212,9 @@ create_brood_GRO <- function(gro_data) {
     dplyr::group_by(.data$BreedingSeason, .data$PopID, .data$LocationID, .data$LayDate_observed) %>%
 
     dplyr::mutate(FemaleID = .data$FemaleID,
-                  MaleID = .data$MaleID)  %>%
+                  MaleID = .data$MaleID,
+                  dplyr::across(c("ClutchSize_observed", "BroodSize_observed", "NumberFledged_observed"),
+                                as.integer))  %>%
 
     ## Keep only necessary columns
     dplyr::select(tidyselect::contains(names(brood_data_template))) %>%
@@ -238,11 +242,6 @@ create_brood_GRO <- function(gro_data) {
     ## Remove any cases without a BroodID
     dplyr::filter(!is.na(.data$BroodID))
 
-
-
-  # ## Check column classes
-  # purrr::map_df(brood_data_template, class) == purrr::map_df(Brood_data, class)
-
   return(Brood_data)
 
 }
@@ -260,7 +259,7 @@ create_capture_GRO <- function(gro_data) {
   Capture_data <- gro_data %>%
 
     ## Pivot longer to make a row for each individual
-    tidyr::pivot_longer(cols=c("FemaleID","MaleID"), names_to = "Sex_observed", values_to = "IndvID") %>%
+    tidyr::pivot_longer(cols=c("FemaleID", "MaleID"), names_to = "Sex_observed", values_to = "IndvID") %>%
 
     ## Only keep records with band numbers
     dplyr::filter(!(is.na(.data$IndvID))) %>%
@@ -303,9 +302,6 @@ create_capture_GRO <- function(gro_data) {
 
     ## Add CaptureID
     dplyr::mutate(CaptureID = paste(.data$IndvID, dplyr::row_number(), sep = "_"))
-
-  # ## Check column classes
-  # purrr::map_df(capture_data_template, class) == purrr::map_df(Capture_data, class)
 
   return(Capture_data)
 
@@ -398,7 +394,7 @@ create_location_GRO <- function(gro_data) {
   ## Build location data based on nest data
   ## Some boxes were removed in the early years of the study, but there is no information about which boxes or when
   Location_data <- gro_data %>%
-    dplyr::select(.data$BreedingSeason, .data$PopID, .data$LocationID) %>%
+    dplyr::select("BreedingSeason", "PopID", "LocationID") %>%
     dplyr::filter(!is.na(.data$LocationID)) %>%
 
     ## Keep distinct records
@@ -427,9 +423,6 @@ create_location_GRO <- function(gro_data) {
 
     ## Reorder columns
     dplyr::select(names(location_data_template))
-
-  # ## Check column classes
-  # purrr::map_df(location_data_template, class) == purrr::map_df(Location_data, class)
 
   return(Location_data)
 

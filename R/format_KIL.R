@@ -33,11 +33,6 @@
 #' @return Generates either 4 .csv files or 4 data frames in the standard format.
 #' @export
 
-
-#### --------------------------------------------------------------------------~
-#### --------------------------------------------------------------------------~
-
-
 format_KIL <- function(db = choose_directory(),
                        species = NULL,
                        pop = NULL,
@@ -46,9 +41,11 @@ format_KIL <- function(db = choose_directory(),
 
   #Avoid with scientific notation (creates unusable IDs)
   original_options <- options(scipen = 200)
+
   #Make sure we revert back to original scientific notation afterwards
   #Otherwise, we are overwriting the users local settings
   on.exit(options(original_options), add = TRUE, after = FALSE)
+
   ## TODO: If there are multiple option/setup changes we need to make, this could be in
   # a function (e.g. pipeline_setup)
 
@@ -82,11 +79,11 @@ format_KIL <- function(db = choose_directory(),
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
     dplyr::mutate(Species = species_codes[which(species_codes$SpeciesID == 14640), ]$Species,
-                  PopID   = "KIL",
+                  PopID = "KIL",
                   BreedingSeason = as.integer(.data$Year),
                   LocationID = tolower(.data$NestboxId)) %>%
-    dplyr::select(-.data$Year,
-                  -.data$NestboxId)
+    dplyr::select(-"Year",
+                  -"NestboxId")
 
 
   message("Importing primary data ... 2/4")
@@ -98,11 +95,11 @@ format_KIL <- function(db = choose_directory(),
     janitor::remove_empty(which = "rows") %>%
     dplyr::mutate(IndvID  = as.character(.data$AdultId),
                   Species = species_codes[which(species_codes$SpeciesID == 14640), ]$Species,
-                  PopID   = "KIL",
+                  PopID = "KIL",
                   BreedingSeason = .data$RingDate,
                   Age = tolower(.data$Age)) %>%
-    dplyr::select(-.data$AdultId,
-                  -.data$RingDate)
+    dplyr::select(-"AdultId",
+                  -"RingDate")
 
 
   message("Importing primary data ... 3/4")
@@ -114,10 +111,10 @@ format_KIL <- function(db = choose_directory(),
     janitor::remove_empty(which = "rows") %>%
     dplyr::mutate(IndvID  = as.character(.data$NestlingRingNumber),
                   Species = species_codes[which(species_codes$SpeciesID == 14640), ]$Species,
-                  PopID   = "KIL",
+                  PopID = "KIL",
                   BreedingSeason = .data$RingDate) %>%
-    dplyr::select(-.data$NestlingRingNumber,
-                  -.data$RingDate)
+    dplyr::select(-"NestlingRingNumber",
+                  -"RingDate")
 
   message("Importing primary data ... 4/4")
 
@@ -128,7 +125,7 @@ format_KIL <- function(db = choose_directory(),
     janitor::remove_empty(which = "rows") %>%
     #### Convert to corresponding format and rename
     dplyr::mutate(Species = species_codes[which(species_codes$SpeciesID == 14640), ]$Species,
-                  PopID   = "KIL",
+                  PopID = "KIL",
                   BreedingSeason = as.integer(.data$Year),
                   NestboxID = tolower(.data$NestId),
                   FemaleID = as.character(.data$FemaleRingNo),
@@ -138,26 +135,25 @@ format_KIL <- function(db = choose_directory(),
                   BroodID = paste(.data$Year, .data$NestboxID, .data$BreedingAttempt,
                                   sep = "_")) %>%
     #### Reorder columns
-    dplyr::select(.data$BreedingSeason,
-                  .data$Species,
-                  .data$PopID,
+    dplyr::select("BreedingSeason",
+                  "Species",
+                  "PopID",
                   tidyselect::everything(),
-                  -.data$NestId,
-                  -.data$FemaleRingNo,
-                  -.data$MaleRingNo,
-                  -.data$Year)
+                  -"NestId",
+                  -"FemaleRingNo",
+                  -"MaleRingNo",
+                  -"Year")
 
   ### Prepare info about individuals/captures from data from 1995
-  adults_data_95 <-
-    kil_data_95 %>%
-    dplyr::select(.data$Species, .data$PopID, .data$BreedingSeason,
-                  .data$FemaleID, .data$MaleID, .data$BroodID, .data$NestboxID,
-                  .data$FemaleAgeEuringCode, .data$FemaleCatchDate1May1St,
-                  .data$MaleAgeEuringCode, .data$MaleCatchDate1May1St,
-                  .data$AdultFemaleTarsusMm, .data$AdultMaleTarsusMm,
-                  .data$AdultFemaleMassG, .data$AdultMaleMassG,
-                  .data$AdultFemaleWingMm, .data$AdultMaleWingMm) %>%
-    tidyr::pivot_longer(cols = c(.data$FemaleID, .data$MaleID),
+  adults_data_95 <- kil_data_95 %>%
+    dplyr::select("Species", "PopID", "BreedingSeason",
+                  "FemaleID", "MaleID", "BroodID", "NestboxID",
+                  "FemaleAgeEuringCode", "FemaleCatchDate1May1St",
+                  "MaleAgeEuringCode", "MaleCatchDate1May1St",
+                  "AdultFemaleTarsusMm", "AdultMaleTarsusMm",
+                  "AdultFemaleMassG", "AdultMaleMassG",
+                  "AdultFemaleWingMm", "AdultMaleWingMm") %>%
+    tidyr::pivot_longer(cols = c("FemaleID", "MaleID"),
                         names_to = "Sex_observed",
                         values_to = "IndvID") %>%
     dplyr::mutate(Sex_observed = substr(.data$Sex_observed, start = 1, stop = 1),
@@ -176,16 +172,16 @@ format_KIL <- function(db = choose_directory(),
                                                    .data$Sex_observed == "M" ~ as.integer(MaleAgeEuringCode))) %>%
     #### Remove records where the partner is not known
     dplyr::filter(!is.na(.data$IndvID)) %>%
-    dplyr::select(-.data$AdultFemaleTarsusMm,
-                  -.data$AdultMaleTarsusMm,
-                  -.data$AdultFemaleMassG,
-                  -.data$AdultMaleMassG,
-                  -.data$AdultFemaleWingMm,
-                  -.data$AdultMaleWingMm,
-                  -.data$FemaleCatchDate1May1St,
-                  -.data$MaleCatchDate1May1St,
-                  -.data$FemaleAgeEuringCode,
-                  -.data$MaleAgeEuringCode)
+    dplyr::select(-"AdultFemaleTarsusMm",
+                  -"AdultMaleTarsusMm",
+                  -"AdultFemaleMassG",
+                  -"AdultMaleMassG",
+                  -"AdultFemaleWingMm",
+                  -"AdultMaleWingMm",
+                  -"FemaleCatchDate1May1St",
+                  -"MaleCatchDate1May1St",
+                  -"FemaleAgeEuringCode",
+                  -"MaleAgeEuringCode")
 
 
   #### Load data after 1995 chicks
@@ -218,12 +214,12 @@ format_KIL <- function(db = choose_directory(),
                   AgeEuringCode = 1L,
                   Mass = as.numeric(.data$NestlingMass15D),
                   Tarsus = as.numeric(.data$NestlingTarsus15D)) %>%
-    dplyr::select(-.data$Year,
-                  -.data$NestId,
-                  -.data$NestlingRingNo,
-                  -.data$RingDate,
-                  -.data$RingDate1May1St,
-                  -.data$RingTime)
+    dplyr::select(-"Year",
+                  -"NestId",
+                  -"NestlingRingNo",
+                  -"RingDate",
+                  -"RingDate1May1St",
+                  -"RingTime")
 
 
 
@@ -298,12 +294,15 @@ format_KIL <- function(db = choose_directory(),
 }
 
 
-#### --------------------------------------------------------------------------~
-#### FUNCTIONS
-#### --------------------------------------------------------------------------~
-
-
-#### BROOD DATA
+#' Create brood data table for Kilingi Nomme, Estonia.
+#'
+#' Create brood data table in the standard format (v1.1.0) for data from Kilingi Nomme, Estonia.
+#'
+#' @param brood_data_til92 Data frame. Primary brood data from Kilingi Nomme, Estonia from 1971 to 1992.
+#' @param kil_data_95 Data frame. Primary brood data from Kilingi Nomme, Estonia from 1995 onwards.
+#'
+#' @return A data frame.
+#'
 
 create_brood_KIL <- function(brood_data_til92, kil_data_95) {
 
@@ -350,31 +349,31 @@ create_brood_KIL <- function(brood_data_til92, kil_data_95) {
     #### Even though, there are no dates for the clutch type calculation
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.1")) %>%
     #### Remove columns which we do not store in the standardized format
-    dplyr::select(-.data$BroodId,
-                  -.data$FemaleId,
-                  -.data$FemaleDate,
-                  -.data$MaleId,
-                  -.data$MaleDate,
-                  -.data$LayingDate,
-                  -.data$FemaleRecruits,
-                  -.data$MaleRecruits,
-                  -.data$AverageMass,
-                  -.data$AverageTarsus) %>%
+    dplyr::select(-"BroodId",
+                  -"FemaleId",
+                  -"FemaleDate",
+                  -"MaleId",
+                  -"MaleDate",
+                  -"LayingDate",
+                  -"FemaleRecruits",
+                  -"MaleRecruits",
+                  -"AverageMass",
+                  -"AverageTarsus") %>%
 
     #### Final arrangement
-    dplyr::select(.data$BroodID, .data$PopID, .data$BreedingSeason, .data$Species,
-                  .data$Plot, .data$LocationID,
-                  .data$FemaleID, .data$MaleID,
-                  .data$ClutchType_observed, .data$ClutchType_calculated,
-                  .data$LayDate_observed, .data$LayDate_min, .data$LayDate_max,
-                  .data$ClutchSize_observed, .data$ClutchSize_min, .data$ClutchSize_max,
-                  .data$HatchDate_observed, .data$HatchDate_min, .data$HatchDate_max,
-                  .data$BroodSize_observed, .data$BroodSize_min, .data$BroodSize_max,
-                  .data$FledgeDate_observed, .data$FledgeDate_min, .data$FledgeDate_max,
-                  .data$NumberFledged_observed, .data$NumberFledged_min, .data$NumberFledged_max,
-                  .data$AvgEggMass, .data$NumberEggs, .data$AvgChickMass, .data$NumberChicksMass,
-                  .data$AvgTarsus, .data$NumberChicksTarsus,
-                  .data$OriginalTarsusMethod, .data$ExperimentID)
+    dplyr::select("BroodID", "PopID", "BreedingSeason", "Species",
+                  "Plot", "LocationID",
+                  "FemaleID", "MaleID",
+                  "ClutchType_observed", "ClutchType_calculated",
+                  "LayDate_observed", "LayDate_min", "LayDate_max",
+                  "ClutchSize_observed", "ClutchSize_min", "ClutchSize_max",
+                  "HatchDate_observed", "HatchDate_min", "HatchDate_max",
+                  "BroodSize_observed", "BroodSize_min", "BroodSize_max",
+                  "FledgeDate_observed", "FledgeDate_min", "FledgeDate_max",
+                  "NumberFledged_observed", "NumberFledged_min", "NumberFledged_max",
+                  "AvgEggMass", "NumberEggs", "AvgChickMass", "NumberChicksMass",
+                  "AvgTarsus", "NumberChicksTarsus",
+                  "OriginalTarsusMethod", "ExperimentID")
 
 
 
@@ -425,20 +424,20 @@ create_brood_KIL <- function(brood_data_til92, kil_data_95) {
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.1")) %>%
 
     #### Final arrangement
-    dplyr::select(.data$BroodID, .data$PopID, .data$BreedingSeason, .data$Species,
-                  .data$Plot, .data$LocationID,
-                  .data$FemaleID, .data$MaleID,
-                  .data$ClutchType_observed, .data$ClutchType_calculated,
-                  .data$LayDate_observed, .data$LayDate_min, .data$LayDate_max,
-                  .data$ClutchSize_observed, .data$ClutchSize_min, .data$ClutchSize_max,
-                  .data$HatchDate_observed, .data$HatchDate_min, .data$HatchDate_max,
-                  .data$BroodSize_observed, .data$BroodSize_min, .data$BroodSize_max,
-                  .data$FledgeDate_observed, .data$FledgeDate_min, .data$FledgeDate_max,
-                  .data$NumberFledged_observed, .data$NumberFledged_min, .data$NumberFledged_max,
-                  .data$AvgEggMass, .data$NumberEggs,
-                  .data$AvgChickMass, .data$NumberChicksMass,
-                  .data$AvgTarsus, .data$NumberChicksTarsus,
-                  .data$OriginalTarsusMethod, .data$ExperimentID)
+    dplyr::select("BroodID", "PopID", "BreedingSeason", "Species",
+                  "Plot" , "LocationID",
+                  "FemaleID", "MaleID",
+                  "ClutchType_observed", "ClutchType_calculated",
+                  "LayDate_observed", "LayDate_min", "LayDate_max",
+                  "ClutchSize_observed", "ClutchSize_min", "ClutchSize_max",
+                  "HatchDate_observed", "HatchDate_min", "HatchDate_max",
+                  "BroodSize_observed", "BroodSize_min", "BroodSize_max",
+                  "FledgeDate_observed", "FledgeDate_min", "FledgeDate_max",
+                  "NumberFledged_observed", "NumberFledged_min", "NumberFledged_max",
+                  "AvgEggMass", "NumberEggs",
+                  "AvgChickMass", "NumberChicksMass",
+                  "AvgTarsus", "NumberChicksTarsus",
+                  "OriginalTarsusMethod", "ExperimentID")
 
 
   Brood_data <-
@@ -451,7 +450,18 @@ create_brood_KIL <- function(brood_data_til92, kil_data_95) {
 
 
 
-#### CAPTURE DATA
+#' Create capture data table for Kilingi Nomme, Estonia.
+#'
+#' Create capture data table in the standard format (v1.1.0) for data from Kilingi Nomme, Estonia.
+#'
+#' @param brood_data_til92 Data frame. Primary brood data from Kilingi Nomme, Estonia from 1971 to 1992.
+#' @param adults_data_til92 Data frame. Primary adult capture data from Kilingi Nomme, Estonia from 1971 to 1992.
+#' @param chicks_data_til92 Data frame. Primary chick capture data from Kilingi Nomme, Estonia from 1971 to 1992.
+#' @param adults_data_95 Data frame. Primary adult capture data from Kilingi Nomme, Estonia from 1995 onwards.
+#' @param chicks_data_95 Data frame. Primary chick capture data from Kilingi Nomme, Estonia from 1995 onwards.
+#'
+#' @return A data frame.
+#'
 
 create_capture_KIL <- function(brood_data_til92,
                                adults_data_til92,
@@ -462,7 +472,7 @@ create_capture_KIL <- function(brood_data_til92,
   ### Subset brood data to get location (nestbox) ID
   brood_data_til92_temp <-
     brood_data_til92 %>%
-    dplyr::select(.data$BroodId, .data$Species, .data$PopID, .data$BreedingSeason, .data$LocationID)
+    dplyr::select("BroodId", "Species", "PopID", "BreedingSeason", "LocationID")
 
 
   #### Adults
@@ -502,9 +512,9 @@ create_capture_KIL <- function(brood_data_til92,
                                                   .data$Age == "9y+" ~ 20L),
                   ChickAge = NA_integer_,
                   ExperimentID = NA_character_) %>%
-    dplyr::select(-.data$Age,
-                  -.data$Sex,
-                  -.data$Status)
+    dplyr::select(-"Age",
+                  -"Sex",
+                  -"Status")
 
 
   #### Chicks
@@ -529,7 +539,7 @@ create_capture_KIL <- function(brood_data_til92,
                   Age_observed = 1L,
                   ChickAge = 8L,
                   ExperimentID = NA_character_) %>%
-    dplyr::select(-.data$Sex)
+    dplyr::select(-"Sex")
 
 
   #### Merge with brood data to get LocationID
@@ -538,7 +548,7 @@ create_capture_KIL <- function(brood_data_til92,
     dplyr::bind_rows(capture_chicks_til92) %>%
     dplyr::left_join(brood_data_til92_temp,
                      by = c("Species", "PopID", "BreedingSeason", "BroodId")) %>%
-    dplyr::select(-.data$BroodId)
+    dplyr::select(-"BroodId")
 
 
   #### Adults (breeding pairs)
@@ -558,9 +568,9 @@ create_capture_KIL <- function(brood_data_til92,
                   Age_observed = as.integer(.data$AgeEuringCode),
                   ChickAge = NA_integer_,
                   ExperimentID = NA_character_) %>%
-    dplyr::select(-.data$CatchDate1May1St,
-                  -.data$AgeEuringCode,
-                  -.data$BroodID)
+    dplyr::select(-"CatchDate1May1St",
+                  -"AgeEuringCode",
+                  -"BroodID")
 
 
   #### Chicks
@@ -580,12 +590,12 @@ create_capture_KIL <- function(brood_data_til92,
                   Age_observed = 1L,
                   ChickAge = 15L,
                   ExperimentID = NA_character_) %>%
-    dplyr::select(-.data$NoFledglings,
-                  -.data$NestlingMass15D,
-                  -.data$NestlingTarsus15D,
-                  -.data$BreedingAttempt,
-                  -.data$AgeEuringCode,
-                  -.data$BroodID)
+    dplyr::select(-"NoFledglings",
+                  -"NestlingMass15D",
+                  -"NestlingTarsus15D",
+                  -"BreedingAttempt",
+                  -"AgeEuringCode",
+                  -"BroodID")
 
 
   #### Join all capture data
@@ -595,31 +605,41 @@ create_capture_KIL <- function(brood_data_til92,
     dplyr::bind_rows(capture_chicks_95) %>%
     dplyr::group_by(.data$IndvID) %>%
     dplyr::arrange(.data$BreedingSeason, .data$CaptureDate, .by_group = TRUE) %>%
-    dplyr::mutate(CaptureID = paste(IndvID, dplyr::row_number(), sep = "_")) %>%
+    dplyr::mutate(CaptureID = paste(.data$IndvID, dplyr::row_number(), sep = "_")) %>%
     dplyr::ungroup() %>%
 
     #### USE THE NEW VERSION OF THE FUNCTION
     # dplyr::mutate(Age_calculated = calc_age())
 
     #### OLD VERSION OF THE FUNCTION
-    calc_age(ID = IndvID,
-             Age = Age_observed,
-             Date = CaptureDate,
-             Year = BreedingSeason,
+    calc_age(ID = .data$IndvID,
+             Age = .data$Age_observed,
+             Date = .data$CaptureDate,
+             Year = .data$BreedingSeason,
              showpb = TRUE) %>%
     #### Final arrangement
-    dplyr::select(.data$CaptureID, .data$IndvID, .data$Species, .data$Sex_observed, .data$BreedingSeason,
-                  .data$CaptureDate, .data$CaptureTime, .data$ObserverID, .data$LocationID,
-                  .data$CaptureAlive, .data$ReleaseAlive, .data$CapturePopID, .data$CapturePlot,
-                  .data$ReleasePopID, .data$ReleasePlot, .data$Mass, .data$Tarsus, .data$OriginalTarsusMethod,
-                  .data$WingLength, .data$Age_observed, .data$Age_calculated, .data$ChickAge, .data$ExperimentID)
+    dplyr::select("CaptureID", "IndvID", "Species", "Sex_observed", "BreedingSeason",
+                  "CaptureDate", "CaptureTime", "ObserverID", "LocationID",
+                  "CaptureAlive", "ReleaseAlive", "CapturePopID", "CapturePlot",
+                  "ReleasePopID", "ReleasePlot", "Mass", "Tarsus", "OriginalTarsusMethod",
+                  "WingLength", "Age_observed", "Age_calculated", "ChickAge", "ExperimentID")
 
   return(Capture_data)
 
 }
 
 
-#### INDIVIDUAL DATA
+#' Create individual data table for Kilingi Nomme, Estonia.
+#'
+#' Create individual data table in the standard format (v1.1.0) for data from Kilingi Nomme, Estonia.
+#'
+#' @param adults_data_til92 Data frame. Primary adult capture data from Kilingi Nomme, Estonia from 1971 to 1992.
+#' @param chicks_data_til92 Data frame. Primary chick capture data from Kilingi Nomme, Estonia from 1971 to 1992.
+#' @param adults_data_95 Data frame. Primary adult capture data from Kilingi Nomme, Estonia from 1995 onwards.
+#' @param chicks_data_95 Data frame. Primary chick capture data from Kilingi Nomme, Estonia from 1995 onwards.
+#'
+#' @return A data frame.
+#'
 
 create_individual_KIL <- function(adults_data_til92,
                                   chicks_data_til92,
@@ -635,15 +655,15 @@ create_individual_KIL <- function(adults_data_til92,
                   Sex_observed = .data$Sex,
                   BroodIDLaid = NA_character_,
                   BroodIDFledged = NA_character_) %>%
-    dplyr::select(-.data$Status,
-                  -.data$Sex,
-                  -.data$Age,
-                  -.data$BroodId) %>%
+    dplyr::select(-"Status",
+                  -"Sex",
+                  -"Age",
+                  -"BroodId") %>%
     #### Final arrangement
-    dplyr::select(.data$IndvID, .data$Species, .data$PopID,
-                  .data$BroodIDLaid, .data$BroodIDFledged,
-                  .data$RingSeason, .data$RingAge,
-                  .data$Sex_observed)
+    dplyr::select("IndvID", "Species", "PopID",
+                  "BroodIDLaid", "BroodIDFledged",
+                  "RingSeason", "RingAge",
+                  "Sex_observed")
 
 
   #### Chicks
@@ -655,15 +675,15 @@ create_individual_KIL <- function(adults_data_til92,
                   BroodIDLaid = as.character(.data$BroodId),
                   BroodIDFledged = as.character(.data$BroodId),
                   Sex_observed = .data$Sex) %>%
-    dplyr::select(-.data$Mass,
-                  -.data$Tarsus,
-                  -.data$Sex,
-                  -.data$BroodId) %>%
+    dplyr::select(-"Mass",
+                  -"Tarsus",
+                  -"Sex",
+                  -"BroodId") %>%
     #### Final arrangement
-    dplyr::select(.data$IndvID, .data$Species, .data$PopID,
-                  .data$BroodIDLaid, .data$BroodIDFledged,
-                  .data$RingSeason, .data$RingAge,
-                  .data$Sex_observed)
+    dplyr::select("IndvID", "Species", "PopID",
+                  "BroodIDLaid", "BroodIDFledged",
+                  "RingSeason", "RingAge",
+                  "Sex_observed")
 
 
   #### Adults
@@ -675,10 +695,10 @@ create_individual_KIL <- function(adults_data_til92,
                   BroodIDLaid = NA_character_,
                   BroodIDFledged = NA_character_) %>%
     #### Final arrangement
-    dplyr::select(.data$IndvID, .data$Species, .data$PopID,
-                  .data$BroodIDLaid, .data$BroodIDFledged,
-                  .data$RingSeason, .data$RingAge,
-                  .data$Sex_observed)
+    dplyr::select("IndvID", "Species", "PopID",
+                  "BroodIDLaid", "BroodIDFledged",
+                  "RingSeason", "RingAge",
+                  "Sex_observed")
 
 
   #### Chicks
@@ -691,10 +711,10 @@ create_individual_KIL <- function(adults_data_til92,
                   BroodIDFledged = as.character(.data$BroodID),
                   Sex_observed = NA_character_) %>%
     #### Final arrangement
-    dplyr::select(.data$IndvID, .data$Species, .data$PopID,
-                  .data$BroodIDLaid, .data$BroodIDFledged,
-                  .data$RingSeason, .data$RingAge,
-                  .data$Sex_observed)
+    dplyr::select("IndvID", "Species", "PopID",
+                  "BroodIDLaid", "BroodIDFledged",
+                  "RingSeason", "RingAge",
+                  "Sex_observed")
 
 
   Individual_data <-
@@ -723,56 +743,63 @@ create_individual_KIL <- function(adults_data_til92,
                      Sex_genetic = NA_character_) %>%
     dplyr::ungroup() %>%
     #### Final arrangement
-    dplyr::select(.data$IndvID, .data$Species, .data$PopID,
-                  .data$BroodIDLaid, .data$BroodIDFledged,
-                  .data$RingSeason, .data$RingAge,
-                  .data$Sex_calculated, .data$Sex_genetic)
+    dplyr::select("IndvID", "Species", "PopID",
+                  "BroodIDLaid", "BroodIDFledged",
+                  "RingSeason", "RingAge",
+                  "Sex_calculated", "Sex_genetic")
 
   return(Individual_data)
 
 }
 
 
-
-#### LOCATION DATA
+#' Create location data table for Kilingi Nomme, Estonia.
+#'
+#' Create location data table in the standard format (v1.1.0) for data from Kilingi Nomme, Estonia.
+#'
+#' @param kil_data_95 Data frame. Primary brood data from Kilingi Nomme, Estonia from 1995 onwards.
+#' @param Brood_data Data frame. Brood data generated by \code{\link{create_brood_KIL}}.
+#'
+#' @return A data frame.
+#'
 
 create_location_KIL <- function(kil_data_95, Brood_data) {
 
   #### Get habitat type for data after 1995
   loc_data_95 <-
     kil_data_95 %>%
-    dplyr::select(.data$BreedingSeason, .data$Habitat, .data$NestboxID, .data$PopID) %>%
+    dplyr::select("BreedingSeason", "Habitat", "NestboxID", "PopID") %>%
     dplyr::mutate(NestboxID = tolower(.data$NestboxID),
                   LocationID = .data$NestboxID,
                   HabitatType = dplyr::case_when(.data$Habitat == "Deciduous forest" ~ "deciduous",
                                                  .data$Habitat == "Coniferous forest" ~ "evergreen")) %>%
-    dplyr::select(-.data$Habitat)
+    dplyr::select(-"Habitat")
 
 
   Location_data <-
     Brood_data %>%
-    dplyr::select(.data$BreedingSeason, .data$LocationID, .data$PopID) %>%
+    dplyr::select("BreedingSeason", "LocationID", "PopID") %>%
     dplyr::mutate(NestboxID = .data$LocationID) %>%
+    dplyr::distinct() %>%
     dplyr::full_join(loc_data_95, by = c("BreedingSeason", "LocationID", "NestboxID", "PopID")) %>%
     dplyr::group_by(.data$LocationID) %>%
     dplyr::arrange(.data$BreedingSeason, .by_group = TRUE) %>%
-    dplyr::summarise(StartSeason = dplyr::first(.data$BreedingSeason),
-                     #### CHECK WITH DATA OWNER
-                     # EndSeason = last(.data$BreedingSeason))
-                     EndSeason = NA_integer_,
-                     LocationID = unique(.data$LocationID),
-                     NestboxID  = unique(.data$NestboxID),
-                     HabitatType = unique(.data$HabitatType),
-                     PopID = unique(.data$PopID)) %>%
+    dplyr::reframe(StartSeason = dplyr::first(.data$BreedingSeason),
+                   #### CHECK WITH DATA OWNER
+                   # EndSeason = last(.data$BreedingSeason))
+                   EndSeason = NA_integer_,
+                   LocationID = unique(.data$LocationID),
+                   NestboxID  = unique(.data$NestboxID),
+                   HabitatType = unique(.data$HabitatType),
+                   PopID = unique(.data$PopID)) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(LocationType = "NB",
                   Latitude  = NA_real_,
                   Longitude = NA_real_) %>%
     #### Final arrangement
-    dplyr::select(.data$LocationID, .data$NestboxID, .data$LocationType, .data$PopID,
-                  .data$Latitude, .data$Longitude, .data$StartSeason, .data$EndSeason, .data$HabitatType)
+    dplyr::select("LocationID", "NestboxID", "LocationType", "PopID",
+                  "Latitude", "Longitude", "StartSeason", "EndSeason", "HabitatType")
 
   return(Location_data)
 
 }
-

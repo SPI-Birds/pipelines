@@ -85,7 +85,8 @@ format_BAN <- function(db = choose_directory(),
   all_data <- suppressWarnings(readxl::read_excel(paste0(db, "/BAN_PrimaryData.xlsx")) %>%
                                  #Convert all cols to snake_case
                                  janitor::clean_names() %>%
-                                 dplyr::mutate_all(.funs = ~dplyr::na_if(as.character(.), "NA")) %>%
+                                 dplyr::mutate(dplyr::across(.cols = tidyselect::everything(),
+                                                             .fns = ~dplyr::na_if(as.character(.), "NA"))) %>%
                                  #Convert column names to match standard format
                                  dplyr::mutate(BreedingSeason = as.integer(.data$year),
                                                PopID = "BAN",
@@ -177,13 +178,13 @@ format_BAN <- function(db = choose_directory(),
 
     message("Saving .csv files...")
 
-    utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_BAN.csv"), row.names = F)
+    utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_BAN.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_BAN.csv"), row.names = F)
+    utils::write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_BAN.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_BAN.csv"), row.names = F)
+    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_BAN.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_BAN.csv"), row.names = F)
+    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_BAN.csv"), row.names = FALSE)
 
     invisible(NULL)
 
@@ -235,22 +236,22 @@ create_brood_BAN <- function(data) {
     ## Remove egg weights when the day of weighing is during incubation
     dplyr::mutate(AvgEggMass = purrr::map2_dbl(.x = .data$AvgEggMass, .y = .data$EggWasIncubated,
                                                .f = ~{ifelse(..2, NA_real_, as.numeric(..1))})) %>%
-    dplyr::select(.data$BroodID, .data$PopID, .data$BreedingSeason,
-                  .data$Species, .data$Plot, .data$LocationID,
-                  .data$FemaleID, .data$MaleID,
-                  .data$ClutchType_observed,
-                  .data$ClutchType_calculated,
-                  .data$LayDate_observed, .data$LayDate_min, .data$LayDate_max,
-                  .data$ClutchSize_observed, .data$ClutchSize_min, .data$ClutchSize_max,
-                  .data$HatchDate_observed, .data$HatchDate_min, .data$HatchDate_max,
-                  .data$BroodSize_observed, .data$BroodSize_min, .data$BroodSize_max,
-                  .data$FledgeDate_observed, .data$FledgeDate_min, .data$FledgeDate_max,
-                  .data$NumberFledged_observed, .data$NumberFledged_min, .data$NumberFledged_max,
-                  .data$AvgEggMass, .data$NumberEggs,
-                  .data$AvgChickMass, .data$NumberChicksMass,
-                  .data$AvgTarsus, .data$NumberChicksTarsus,
-                  .data$OriginalTarsusMethod,
-                  .data$ExperimentID)
+    dplyr::select("BroodID", "PopID", "BreedingSeason",
+                  "Species", "Plot", "LocationID",
+                  "FemaleID", "MaleID",
+                  "ClutchType_observed",
+                  "ClutchType_calculated",
+                  "LayDate_observed", "LayDate_min", "LayDate_max",
+                  "ClutchSize_observed", "ClutchSize_min", "ClutchSize_max",
+                  "HatchDate_observed", "HatchDate_min", "HatchDate_max",
+                  "BroodSize_observed", "BroodSize_min", "BroodSize_max",
+                  "FledgeDate_observed", "FledgeDate_min", "FledgeDate_max",
+                  "NumberFledged_observed", "NumberFledged_min", "NumberFledged_max",
+                  "AvgEggMass", "NumberEggs",
+                  "AvgChickMass", "NumberChicksMass",
+                  "AvgTarsus", "NumberChicksTarsus",
+                  "OriginalTarsusMethod",
+                  "ExperimentID")
 
   return(Brood_data)
 
@@ -267,10 +268,10 @@ create_brood_BAN <- function(data) {
 create_capture_BAN <- function(data) {
 
   Capture_data <- data %>%
-    dplyr::select(.data$Species, .data$BreedingSeason, .data$LocationID, .data$Plot,
-                  .data$FemaleCaptureDate, .data$MaleCaptureDate,
-                  .data$FemaleID, .data$MaleID) %>%
-    tidyr::pivot_longer(cols = c(.data$FemaleID, .data$MaleID), names_to = "Sex", values_to = "IndvID") %>%
+    dplyr::select("Species", "BreedingSeason", "LocationID", "Plot",
+                  "FemaleCaptureDate", "MaleCaptureDate",
+                  "FemaleID", "MaleID") %>%
+    tidyr::pivot_longer(cols = c("FemaleID", "MaleID"), names_to = "Sex", values_to = "IndvID") %>%
     dplyr::arrange(.data$Sex) %>%
     dplyr::filter(!is.na(.data$IndvID) & !.data$IndvID %in% c("UNKNOWN", "NA")) %>%
     dplyr::mutate(Sex_observed = dplyr::case_when(grepl(pattern = "Female", .data$Sex) ~ "F",
@@ -304,19 +305,19 @@ create_capture_BAN <- function(data) {
                   ExperimentID = NA_character_) %>%
     calc_age(ID = .data$IndvID, Age = .data$Age_observed,
              Date = .data$CaptureDate, Year = .data$BreedingSeason) %>%
-    dplyr::select(.data$IndvID, .data$Species, .data$Sex_observed,
-                  .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime,
-                  .data$ObserverID, .data$LocationID,
-                  .data$CaptureAlive, .data$ReleaseAlive,
-                  .data$CapturePopID, .data$CapturePlot,
-                  .data$ReleasePopID, .data$ReleasePlot,
-                  .data$Mass, .data$Tarsus, .data$OriginalTarsusMethod,
-                  .data$WingLength, .data$Age_observed, .data$Age_calculated,
-                  .data$ChickAge, .data$ExperimentID) %>%
+    dplyr::select("IndvID", "Species", "Sex_observed",
+                  "BreedingSeason", "CaptureDate", "CaptureTime",
+                  "ObserverID", "LocationID",
+                  "CaptureAlive", "ReleaseAlive",
+                  "CapturePopID", "CapturePlot",
+                  "ReleasePopID", "ReleasePlot",
+                  "Mass", "Tarsus", "OriginalTarsusMethod",
+                  "WingLength", "Age_observed", "Age_calculated",
+                  "ChickAge", "ExperimentID") %>%
     dplyr::group_by(.data$IndvID) %>%
     dplyr::mutate(CaptureID = paste(.data$IndvID, 1:dplyr::n(), sep = "_")) %>%
     dplyr::ungroup() %>%
-    dplyr::select(.data$CaptureID, tidyselect::everything())
+    dplyr::select("CaptureID", tidyselect::everything())
 
   return(Capture_data)
 

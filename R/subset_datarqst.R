@@ -91,19 +91,19 @@ subset_datarqst <- function(file = file.choose(),
     output_brood <- standard_data$Brood_data %>%
       dplyr::mutate(PopID_Species = paste(.data$PopID, .data$Species, sep = "_")) %>%
       dplyr::filter(.data$PopID_Species %in% {{PopSpec}}) %>%
-      dplyr::select(-.data$PopID_Species)
+      dplyr::select(-"PopID_Species")
 
     output_individual <- standard_data$Individual_data %>%
       dplyr::mutate(PopID_Species = paste(.data$PopID, .data$Species, sep = "_"),
                     PopID_IndvID = paste(.data$PopID, .data$IndvID, sep = "_")) %>%
       dplyr::filter(.data$PopID_Species %in% {{PopSpec}}) %>%
-      dplyr::select(-.data$PopID_Species)
+      dplyr::select(-"PopID_Species")
 
     output_capture <- standard_data$Capture_data %>%
       dplyr::mutate(PopID_Species = paste(.data$CapturePopID, .data$Species, sep = "_"),
                     PopID_IndvID = paste(.data$CapturePopID, .data$IndvID, sep = "_")) %>%
       dplyr::filter(.data$PopID_IndvID %in% output_individual$PopID_IndvID) %>%
-      dplyr::select(-.data$PopID_Species, -.data$PopID_IndvID)
+      dplyr::select(-"PopID_Species", -"PopID_IndvID")
 
     output_location <- standard_data$Location_data %>%
       dplyr::filter(.data$PopID %in% {{unique_pops}})
@@ -114,7 +114,7 @@ subset_datarqst <- function(file = file.choose(),
 
     #Check that Species and PopID are correct
     Species_original <- check_species(Species)
-    PopID            <- check_pop(PopID)
+    PopID <- check_pop(PopID)
 
     if(include_conflicting){
       #Species <- c(Species, 'CCCCCC') # Use after pipelines updated to standard format 1.1
@@ -132,14 +132,14 @@ subset_datarqst <- function(file = file.choose(),
       dplyr::filter(.data$CapturePopID %in% {{PopID}}) %>%
       dplyr::mutate(PopID_IndvID = paste(.data$CapturePopID, .data$IndvID, sep = "_")) %>%
       dplyr::filter(.data$PopID_IndvID %in% output_individual$PopID_IndvID) %>%
-      dplyr::select(-.data$PopID_IndvID)
+      dplyr::select(-"PopID_IndvID")
 
 
     if(!all(unique(species_codes$Species) %in% Species) & all(unique(pop_codes$PopID) %in% PopID)){
 
       PopID <- pop_species_combos %>%
         dplyr::filter(.data$species %in% {{Species}}) %>%
-        dplyr::pull(.data$pop) %>%
+        dplyr::pull("pop") %>%
         unique()
 
     }
@@ -151,7 +151,7 @@ subset_datarqst <- function(file = file.choose(),
 
   #Drop auxiliary columns
   output_individual <- output_individual %>%
-    dplyr::select(-.data$PopID_IndvID)
+    dplyr::select(-"PopID_IndvID")
 
   #If keeping conflicted species: identify conflicted species individuals that were
   # never identified as one of the species of interest and remove them from output
@@ -161,15 +161,19 @@ subset_datarqst <- function(file = file.choose(),
 
     #Set species of interest
     if(!is.null(PopSpec)){
+
       SpeciesInt <- unique(stringr::str_split(string = PopSpec_original, pattern = "_", simplify = TRUE)[,2])
-    }else{
+
+    } else {
+
       SpeciesInt <- Species_original
+
     }
 
     #Make a list of all individuals with conflicting species
     ConflSpec_IndvIDs <- output_individual %>%
       dplyr::filter(.data$Species %in% c('CONFLICTED', 'CCCCCC')) %>%
-      dplyr::select(.data$IndvID)
+      dplyr::select("IndvID")
 
     #Progress bar
     pb <- progress::progress_bar$new(total = length(unique(ConflSpec_IndvIDs$IndvID)),
@@ -183,18 +187,20 @@ subset_datarqst <- function(file = file.choose(),
       dplyr::group_by(.data$IndvID) %>%
       dplyr::summarise(Relevant = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Species))),
                                                  .f = ~{
-                                                 pb$tick()
-        if(any((..1) %in% SpeciesInt)){
 
-          return("yes")
+                                                   pb$tick()
 
-        } else {
+                                                   if(any((..1) %in% SpeciesInt)){
 
-          return("no")
+                                                     return("yes")
 
-        }
+                                                   } else {
 
-      }), .groups = "drop") %>%
+                                                     return("no")
+
+                                                   }
+
+                                                 }), .groups = "drop") %>%
       dplyr::rowwise() %>%
       dplyr::filter(.data$Relevant == "no")
 

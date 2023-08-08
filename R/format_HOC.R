@@ -88,38 +88,38 @@ format_HOC <- function(db = choose_directory(),
   #Add average chick mass and tarsus for every nest
   #Filter only those captures with chick age (nestlings with no age are excluded)
   chick_measures <- Capture_data %>%
-    dplyr::filter(!is.na(ChickAge) & dplyr::between(ChickAge, 14, 16)) %>%
-    dplyr::group_by(BroodID) %>%
-    dplyr::summarise(AvgChickMass = mean(Mass, na.rm = TRUE),
-                     NumberChicksMass = dplyr::na_if(length(stats::na.omit(Mass)), 0),
-                     AvgTarsus = mean(Tarsus, na.rm = TRUE),
-                     NumberChicksTarsus = dplyr::na_if(length(stats::na.omit(Tarsus)), 0)) %>%
-    dplyr::mutate(OriginalTarsusMethod = ifelse(!is.na(AvgTarsus), "Alternative", NA_character_))
+    dplyr::filter(!is.na(.data$ChickAge) & dplyr::between(.data$ChickAge, 14, 16)) %>%
+    dplyr::group_by(.data$BroodID) %>%
+    dplyr::summarise(AvgChickMass = mean(.data$Mass, na.rm = TRUE),
+                     NumberChicksMass = dplyr::na_if(length(stats::na.omit(.data$Mass)), 0),
+                     AvgTarsus = mean(.data$Tarsus, na.rm = TRUE),
+                     NumberChicksTarsus = dplyr::na_if(length(stats::na.omit(.data$Tarsus)), 0)) %>%
+    dplyr::mutate(OriginalTarsusMethod = ifelse(!is.na(.data$AvgTarsus), "Alternative", NA_character_))
 
   brood_exp <- Capture_data %>%
-    dplyr::group_by(BroodID) %>%
-    dplyr::summarise(ExperimentID = as.character(any(ExperimentID)))
+    dplyr::group_by(.data$BroodID) %>%
+    dplyr::summarise(ExperimentID = as.character(any(.data$ExperimentID)))
 
   Brood_data <- Brood_data %>%
     dplyr::left_join(chick_measures, by = "BroodID") %>%
     dplyr::left_join(brood_exp, by = "BroodID") %>%
-    dplyr::select(BroodID, PopID, BreedingSeason,
-                  Species, Plot, LocationID, FemaleID, MaleID,
-                  ClutchType_observed, ClutchType_calculated,
-                  LayDate, LayDateError,
-                  ClutchSize, ClutchSizeError,
-                  HatchDate, HatchDateError,
-                  BroodSize, BroodSizeError,
-                  FledgeDate, FledgeDateError,
-                  NumberFledged, NumberFledgedError,
-                  AvgEggMass, NumberEggs,
-                  AvgChickMass, NumberChicksMass,
-                  AvgTarsus, NumberChicksTarsus,
-                  OriginalTarsusMethod,
-                  ExperimentID)
+    dplyr::select("BroodID", "PopID", "BreedingSeason",
+                  "Species", "Plot", "LocationID", "FemaleID", "MaleID",
+                  "ClutchType_observed", "ClutchType_calculated",
+                  "LayDate", "LayDateError",
+                  "ClutchSize", "ClutchSizeError",
+                  "HatchDate", "HatchDateError",
+                  "BroodSize", "BroodSizeError",
+                  "FledgeDate", "FledgeDateError",
+                  "NumberFledged", "NumberFledgedError",
+                  "AvgEggMass", "NumberEggs",
+                  "AvgChickMass", "NumberChicksMass",
+                  "AvgTarsus", "NumberChicksTarsus",
+                  "OriginalTarsusMethod",
+                  "ExperimentID")
 
   Capture_data <- Capture_data %>%
-    dplyr::select(-BroodID, -ExperimentID, -capture_method)
+    dplyr::select(-"BroodID", -"ExperimentID", -"capture_method")
 
   # EXPORT DATA
 
@@ -131,14 +131,14 @@ format_HOC <- function(db = choose_directory(),
 
     message("Saving .csv files...")
 
-    utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_HOC.csv"), row.names = F)
+    utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_HOC.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_HOC.csv"), row.names = F)
+    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_HOC.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Capture_data %>% dplyr::select(-Sex, -BroodID),
-                     file = paste0(path, "\\Capture_data_HOC.csv"), row.names = F)
+    utils::write.csv(x = Capture_data %>% dplyr::select(-"Sex", -"BroodID"),
+                     file = paste0(path, "\\Capture_data_HOC.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_HOC.csv"), row.names = F)
+    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_HOC.csv"), row.names = FALSE)
 
     invisible(NULL)
 
@@ -172,30 +172,33 @@ create_brood_HOC <- function(db){
   Brood_data <- readxl::read_excel(path = paste0(db, "/HOC_PrimaryData.xlsx"), sheet = "Nests_ID", na = c("", "na"),
                                    col_types = "text") %>%
     janitor::clean_names() %>%
-    dplyr::mutate(BroodID = unique_nest_id,
+    dplyr::mutate(BroodID = .data$unique_nest_id,
                   PopID = "HOC",
                   Species = "PARMAJ",
                   Plot = NA_character_,
-                  LocationID = paste0("H", nestbox_no),
-                  ClutchType_observed = clutch_no,
-                  BreedingSeason = as.integer(year),
-                  MaleID = social_male_bird_id,
-                  FemaleID = social_female_bird_id,
-                  LayDate = janitor::excel_numeric_to_date(as.numeric(x1st_egg_lay_date)),
-                  LayDateError = as.numeric(lay_date_error),
-                  ClutchSize = as.integer(clutch_size), ClutchSizeError = as.numeric(clutch_size_error),
-                  HatchDate = janitor::excel_numeric_to_date(as.numeric(hatch_date)),
-                  HatchDateError = as.numeric(hatch_date_error),
-                  BroodSize = as.integer(hatch_number), BroodSizeError = as.numeric(hatch_number_error),
-                  NumberFledged = as.integer(fledge_number),
-                  NumberFledgedError = as.numeric(fledge_number_error),
-                  FledgeDate = janitor::excel_numeric_to_date(as.numeric(fledge_date)),
-                  FledgeDateError = as.numeric(fledge_date_error),
-                  AvgEggMass = NA_real_, NumberEggs = NA_integer_) %>%
-    dplyr::arrange(BreedingSeason, FemaleID, LayDate) %>%
+                  LocationID = paste0("H", .data$nestbox_no),
+                  ClutchType_observed = .data$clutch_no,
+                  BreedingSeason = as.integer(.data$year),
+                  MaleID = .data$social_male_bird_id,
+                  FemaleID = .data$social_female_bird_id,
+                  LayDate = janitor::excel_numeric_to_date(as.numeric(.data$x1st_egg_lay_date)),
+                  LayDateError = as.numeric(.data$lay_date_error),
+                  ClutchSize = as.integer(.data$clutch_size),
+                  ClutchSizeError = as.numeric(.data$clutch_size_error),
+                  HatchDate = janitor::excel_numeric_to_date(as.numeric(.data$hatch_date)),
+                  HatchDateError = as.numeric(.data$hatch_date_error),
+                  BroodSize = as.integer(.data$hatch_number),
+                  BroodSizeError = as.numeric(.data$hatch_number_error),
+                  NumberFledged = as.integer(.data$fledge_number),
+                  NumberFledgedError = as.numeric(.data$fledge_number_error),
+                  FledgeDate = janitor::excel_numeric_to_date(as.numeric(.data$fledge_date)),
+                  FledgeDateError = as.numeric(.data$fledge_date_error),
+                  AvgEggMass = NA_real_,
+                  NumberEggs = NA_integer_) %>%
+    dplyr::arrange("BreedingSeason", "FemaleID", "LayDate") %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
     #No need to order cols yet because we still need to add AvgChickMass etc.
-    dplyr::select(BroodID:NumberEggs, ClutchType_calculated)
+    dplyr::select("BroodID":"NumberEggs", "ClutchType_calculated")
 
   return(Brood_data)
 
@@ -212,32 +215,45 @@ create_capture_HOC <- function(db){
   Capture_data <- readxl::read_excel(paste0(db, "/HOC_PrimaryData.xlsx"), sheet = "Capture ID", na = c("", "na"),
                                      col_types = "text") %>%
     janitor::clean_names() %>%
-    dplyr::mutate(IndvID = bird_id, BroodID = nest_id,
-                  Species = "PARMAJ", ObserverID = measures_taken_by,
-                  CapturePopID = "HOC", ReleasePopID = "HOC",
-                  CapturePlot = NA_character_, ReleasePlot = NA_character_,
-                  CaptureDate = janitor::excel_numeric_to_date(as.numeric(date)),
-                  CaptureTime = paste0(stringr::str_pad(string = (as.numeric(time_capture) * (24*60)) %/% 60, width = 2, pad = "0"),
-                                       ":", stringr::str_pad(string = round((as.numeric(time_capture) * (24*60)) %% 60), width = 2, pad = "0")),
-                  BreedingSeason = as.integer(lubridate::year(CaptureDate)),
-                  FoundDead = grepl(pattern = "dead|died", status),
-                  LocationID = purrr::map_chr(.x = nest_location, ~{
+    dplyr::mutate(IndvID = .data$bird_id,
+                  BroodID = .data$nest_id,
+                  Species = "PARMAJ",
+                  ObserverID = .data$measures_taken_by,
+                  CapturePopID = "HOC",
+                  ReleasePopID = "HOC",
+                  CapturePlot = NA_character_,
+                  ReleasePlot = NA_character_,
+                  CaptureDate = janitor::excel_numeric_to_date(as.numeric(.data$date)),
+                  CaptureTime = paste0(stringr::str_pad(string = (as.numeric(.data$time_capture) * (24*60)) %/% 60,
+                                                        width = 2, pad = "0"),
+                                       ":", stringr::str_pad(string = round((as.numeric(.data$time_capture) * (24*60)) %% 60),
+                                                             width = 2, pad = "0")),
+                  BreedingSeason = as.integer(lubridate::year(.data$CaptureDate)),
+                  FoundDead = grepl(pattern = "dead|died", .data$status),
+                  LocationID = purrr::map_chr(.x = .data$nest_location,
+                                              .f = ~{
 
-                    if(is.na(..1)){
+                                                if(is.na(..1)){
 
-                      return(NA_character_)
+                                                  return(NA_character_)
 
-                    } else {
+                                                } else {
 
-                      boxnumber <- stats::na.omit(dplyr::na_if(unlist(strsplit(..1, split = "[^0-9]+")), ""))
+                                                  boxnumber <- stats::na.omit(dplyr::na_if(stringr::str_split_1(..1,
+                                                                                                                "[^0-9]+"), ""))
 
-                      return(paste0("H", boxnumber))
+                                                  return(paste0("H", boxnumber))
 
-                    }
+                                                }
 
-                  }), Mass = as.numeric(mass_g), WingLength = as.numeric(.data$wing_length_mm),
-                  Tarsus = as.numeric(tarsus_length_mm), OriginalTarsusMethod = "Alternative") %>%
-    dplyr::bind_cols(., purrr::pmap_df(.l = list(age_exact = .$age_exact, age_simple = .$age_simple, BreedingSeason = .$BreedingSeason),
+                                              }),
+                  Mass = as.numeric(.data$mass_g),
+                  WingLength = as.numeric(.data$wing_length_mm),
+                  Tarsus = as.numeric(.data$tarsus_length_mm),
+                  OriginalTarsusMethod = "Alternative") %>%
+    dplyr::bind_cols(., purrr::pmap_df(.l = list(age_exact = .$age_exact,
+                                                 age_simple = .$age_simple,
+                                                 BreedingSeason = .$BreedingSeason),
 
                                        function(age_exact, age_simple, BreedingSeason){
 
@@ -265,9 +281,9 @@ create_capture_HOC <- function(db){
 
                                     })) %>%
     dplyr::rowwise() %>%
-    dplyr::mutate(ExperimentID = any(c(physical_manipulation_present_at_time_of_catching,
-                                       physical_manipulation_present_at_time_of_release,
-                                       physiological_manipulation) %in% "manipulated")) %>%
+    dplyr::mutate(ExperimentID = any(c(.data$physical_manipulation_present_at_time_of_catching,
+                                       .data$physical_manipulation_present_at_time_of_release,
+                                       .data$physiological_manipulation) %in% "manipulated")) %>%
     dplyr::ungroup()
 
   Death_captures <- readxl::read_excel(paste0(db, "/HOC_PrimaryData.xlsx"), sheet = "DeadBirds ID", na = c("", "na"),
@@ -276,26 +292,40 @@ create_capture_HOC <- function(db){
     dplyr::mutate(CaptureDate = janitor::excel_numeric_to_date(as.numeric(.data$date_found)),
                   IndvID = .data$ringnumber) %>%
     #Find cases where that individual was not recorded captured on that date
-    dplyr::left_join(x = ., y = (Capture_data %>% dplyr::mutate(in_capt = TRUE) %>% dplyr::select(CaptureDate, IndvID, .data$in_capt)), by = c("CaptureDate", "IndvID")) %>%
+    dplyr::left_join(Capture_data %>%
+                       dplyr::mutate(in_capt = TRUE) %>%
+                       dplyr::select("CaptureDate", "IndvID", "in_capt"),
+                     by = c("CaptureDate", "IndvID")) %>%
     dplyr::filter(is.na(.data$in_capt)) %>%
-    dplyr::mutate(Species = "PARMAJ", BreedingSeason = lubridate::year(CaptureDate),
-                  CaptureTime = NA_character_, ObserverID = NA_character_,
-                  LocationID = NA_character_, CapturePopID = "HOC",
-                  CapturePlot = NA_character_, ReleasePopID = "HOC",
-                  ReleasePlot = NA_character_, Mass = NA_real_,
-                  Tarsus = NA_real_, OriginalTarsusMethod = NA_character_,
-                  WingLength = NA_real_, Age_observed = dplyr::case_when(.$age == "adult" ~ 4L,
-                                                                         .$age == "nestling" ~ 1L),
-                  ChickAge = NA_integer_, BroodID = NA_character_, ExperimentID = NA,
-                  FoundDead = TRUE, capture_method = NA_character_)
+    dplyr::mutate(Species = "PARMAJ",
+                  BreedingSeason = lubridate::year(.data$CaptureDate),
+                  CaptureTime = NA_character_,
+                  ObserverID = NA_character_,
+                  LocationID = NA_character_,
+                  CapturePopID = "HOC",
+                  CapturePlot = NA_character_,
+                  ReleasePopID = "HOC",
+                  ReleasePlot = NA_character_,
+                  Mass = NA_real_,
+                  Tarsus = NA_real_,
+                  OriginalTarsusMethod = NA_character_,
+                  WingLength = NA_real_,
+                  Age_observed = dplyr::case_when(.data$age == "adult" ~ 4L,
+                                                  .data$age == "nestling" ~ 1L),
+                  ChickAge = NA_integer_,
+                  BroodID = NA_character_,
+                  ExperimentID = NA,
+                  FoundDead = TRUE,
+                  capture_method = NA_character_)
 
   Capture_data_combined <- dplyr::bind_rows(Capture_data, Death_captures) %>%
-    dplyr::arrange(IndvID, BreedingSeason, CaptureDate, CaptureTime) %>%
-    calc_age(ID = IndvID, Age = Age_observed, Date = CaptureDate, Year = BreedingSeason)  %>%
-    dplyr::select(IndvID, Species, BreedingSeason, CaptureDate, CaptureTime,
-                  ObserverID, LocationID, CapturePopID, CapturePlot, ReleasePopID, ReleasePlot,
-                  Mass, Tarsus, OriginalTarsusMethod, WingLength, Age_observed,
-                  Age_calculated, ChickAge, FoundDead, BroodID, ExperimentID, capture_method)
+    dplyr::arrange(.data$IndvID, .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
+    calc_age(ID = .data$IndvID, Age = .data$Age_observed,
+             Date = .data$CaptureDate, Year = .data$BreedingSeason)  %>%
+    dplyr::select("IndvID", "Species", "BreedingSeason", "CaptureDate", "CaptureTime",
+                  "ObserverID", "LocationID", "CapturePopID", "CapturePlot", "ReleasePopID", "ReleasePlot",
+                  "Mass", "Tarsus", "OriginalTarsusMethod", "WingLength", "Age_observed",
+                  "Age_calculated", "ChickAge", "FoundDead", "BroodID", "ExperimentID", "capture_method")
 
   return(Capture_data_combined)
 
@@ -314,15 +344,18 @@ create_individual_HOC <- function(db){
   Individual_data <- readxl::read_excel(paste0(db, "/HOC_PrimaryData.xlsx"), sheet = "Bird_ID", na = c("", "na"),
                                      col_types = "text") %>%
     janitor::clean_names() %>%
-    dplyr::mutate(IndvID = ring_number, Species = "PARMAJ",
-                  Sex = dplyr::case_when(sex == "female" ~ "F",
-                                         sex == "male" ~ "M"),
-                  PopID = "HOC", RingSeason = lubridate::year(janitor::excel_numeric_to_date(as.numeric(date_ringed))),
-                  RingAge = dplyr::case_when(age_simple == "adult" ~ "adult",
-                                             age_simple == "nestling" ~ "chick"),
-                  BroodIDLaid = nest_of_origin_id,
-                  BroodIDFledged = rearing_nest_id) %>%
-    dplyr::select(IndvID, Species, PopID, BroodIDLaid, BroodIDFledged, RingSeason, RingAge, Sex)
+    dplyr::mutate(IndvID = .data$ring_number,
+                  Species = "PARMAJ",
+                  Sex = dplyr::case_when(.data$sex == "female" ~ "F",
+                                         .data$sex == "male" ~ "M"),
+                  PopID = "HOC",
+                  RingSeason = lubridate::year(janitor::excel_numeric_to_date(as.numeric(.data$date_ringed))),
+                  RingAge = dplyr::case_when(.data$age_simple == "adult" ~ "adult",
+                                             .data$age_simple == "nestling" ~ "chick"),
+                  BroodIDLaid = .data$nest_of_origin_id,
+                  BroodIDFledged = .data$rearing_nest_id) %>%
+    dplyr::select("IndvID", "Species", "PopID", "BroodIDLaid", "BroodIDFledged",
+                  "RingSeason", "RingAge", "Sex")
 
   return(Individual_data)
 
@@ -339,12 +372,12 @@ create_location_HOC <- function(db){
   Location_data <- readxl::read_excel(paste0(db, "/HOC_PrimaryData.xlsx"), sheet = "Location Data", na = c("", "na"),
                                       col_types = "text") %>%
     janitor::clean_names() %>%
-    dplyr::mutate(LocationID = paste0("H", nestbox_number),
-                  NestboxID = LocationID,
+    dplyr::mutate(LocationID = paste0("H", .data$nestbox_number),
+                  NestboxID = .data$LocationID,
                   LocationType = "NB",
                   PopID = "HOC",
-                  Latitude = as.numeric(latitude),
-                  Longitude = as.numeric(longitude),
+                  Latitude = as.numeric(.data$latitude),
+                  Longitude = as.numeric(.data$longitude),
                   StartSeason = 2014L,
                   EndSeason = NA_integer_,
                   Habitat = "mixed")
