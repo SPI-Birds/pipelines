@@ -4,10 +4,10 @@
 \alias{create_capture_UAN}
 \title{Create capture data table for data from University of Antwerp, Belgium.}
 \usage{
-create_capture_UAN(data, species_filter, pop_filter)
+create_capture_UAN(CAPTURE_info, species_filter, pop_filter)
 }
 \arguments{
-\item{data}{Data frame. Primary data from University of Antwerp.}
+\item{CAPTURE_info}{Data frame. Primary capture data from University of Antwerp.}
 
 \item{species_filter}{6 letter species codes for filtering data.}
 
