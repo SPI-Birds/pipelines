@@ -116,8 +116,8 @@ format_PFN <- function(db = choose_directory(),
                               na.strings = c("", "?"), colClasses = "character") %>%
     dplyr::mutate(PopID = 'DIN',
                   # Standardize naming convention
-                  Box = stringr::str_replace(string = Box, pattern = 'DV', replacement = 'DOV'),
-                  Box = stringr::str_replace(string = Box, pattern = 'TN', replacement = 'TYN'))
+                  Box = stringr::str_replace(string = .data$Box, pattern = 'DV', replacement = 'DOV'),
+                  Box = stringr::str_replace(string = .data$Box, pattern = 'TN', replacement = 'TYN'))
 
   ## Teign (TEI)
   Nest_TEI <- utils::read.csv(file = paste0(db, "/PFN_PrimaryData_Nest_TEI.csv"),
@@ -387,7 +387,8 @@ format_PFN <- function(db = choose_directory(),
 
     utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_PFN.csv"), row.names = F)
 
-    utils::write.csv(x = Capture_data %>% dplyr::select(-Sex, -BroodID),
+    utils::write.csv(x = Capture_data %>%
+                       dplyr::select(-"Sex", -"BroodID"),
                      file = paste0(path, "\\Capture_data_PFN.csv"), row.names = F)
 
     utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_PFN.csv"), row.names = F)

@@ -44,6 +44,7 @@
 #'
 #'@return Generates either 4 .csv files or 4 data frames in the standard format.
 #'@export
+#'@importFrom magrittr `%T>%`
 
 format_CHO <- function(db = choose_directory(),
                        species = NULL,
@@ -76,33 +77,33 @@ format_CHO <- function(db = choose_directory(),
     dplyr::mutate(Species = "PARMAJ",
                   PopID = "CHO",
                   Plot = NA_character_) %>%
-    dplyr::filter(Species %in% species) %>%
+    dplyr::filter(.data$Species %in% species) %>%
     #BroodIDs are not unique (they are repeated each year)
     #We need to create unique IDs for each year using Year_BroodID
     dplyr::mutate(BroodID = paste(.data$Year, stringr::str_pad(.data$BroodId, width = 3, pad = "0"), sep = "_"),
-           IndvID = .data$Ring,
-           CaptureDate = lubridate::ymd(paste0(.data$Year, "-01-01")) + .data$JulianDate,
-           CaptureTime = format.POSIXct(.data$Time, format = "%H:%M:%S"),
-           ChickAge = as.integer(dplyr::na_if(.data$ChickAge, "na")),
-           BreedingSeason = as.integer(.data$Year),
-           #If an individual was caught in a mist net give a generic LocationID (MN1)
-           #Otherwise, give the box number.
-           LocationID = purrr::pmap_chr(.l = list(.data$TrapingMethod, as.character(.data$Box)),
-                                        .f = ~{
+                  IndvID = .data$Ring,
+                  CaptureDate = lubridate::ymd(paste0(.data$Year, "-01-01")) + .data$JulianDate,
+                  CaptureTime = format.POSIXct(.data$Time, format = "%H:%M:%S"),
+                  ChickAge = as.integer(dplyr::na_if(.data$ChickAge, "na")),
+                  BreedingSeason = as.integer(.data$Year),
+                  #If an individual was caught in a mist net give a generic LocationID (MN1)
+                  #Otherwise, give the box number.
+                  LocationID = purrr::pmap_chr(.l = list(.data$TrapingMethod, as.character(.data$Box)),
+                                               .f = ~{
 
-                                          if(..1 == "mist net"){
+                                                 if(..1 == "mist net"){
 
-                                            return("MN1")
+                                                   return("MN1")
 
-                                          } else {
+                                                 } else {
 
-                                            return(stringr::str_pad(..2, width = 3, pad = "0"))
+                                                   return(stringr::str_pad(..2, width = 3, pad = "0"))
 
-                                          }
+                                                 }
 
-                                        }),
-           AvgEggMass = .data$MeanEggWeight,
-           NumberEggs = .data$NoEggsWeighted)
+                                               }),
+                  AvgEggMass = .data$MeanEggWeight,
+                  NumberEggs = .data$NoEggsWeighted)
 
   # CAPTURE DATA
 
@@ -379,12 +380,13 @@ create_individual_CHO <- function(data, Capture_data){
     #Determine the first recorded broodID, year and age.
     #Determine if there were any records where sex was identified.
     dplyr::summarise(FirstBrood = dplyr::first(.data$BroodID),
-              FirstYr = as.integer(dplyr::first(.data$Year)),
-              FirstAge = dplyr::first(.data$Age),
-              Species = "PARMAJ") %>%
+                     FirstYr = as.integer(dplyr::first(.data$Year)),
+                     FirstAge = dplyr::first(.data$Age),
+                     Species = "PARMAJ") %>%
     dplyr::mutate(#Only assign a brood ID if they were first caught as a chick
       #Otherwise, the broodID will be their first clutch as a parent
-      BroodIDLaid = purrr::pmap_chr(.l = list(FirstBrood = .data$FirstBrood, FirstAge = .data$FirstAge),
+      BroodIDLaid = purrr::pmap_chr(.l = list(FirstBrood = .data$FirstBrood,
+                                              FirstAge = .data$FirstAge),
                                     function(FirstBrood, FirstAge){
 
                                       if(is.na(FirstAge) || FirstAge != "C"){

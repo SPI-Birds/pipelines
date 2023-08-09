@@ -19,37 +19,37 @@ create_dummy_data <- function() {
   # Create skeletons for each pipeline data frame
   # Brood data
   Brood_data <- brood_data_template[1,] %>%
-    dplyr::mutate(dplyr::across(.cols = where(is.character), .fns = ~ NA_character_),
-                  dplyr::across(.cols = where(is.integer), .fns = ~ NA_integer_),
-                  dplyr::across(.cols = where(~ class(.x) == "Date"), .fns = ~ as.Date(NA_character_)),
+    dplyr::mutate(dplyr::across(.cols = tidyselect::where(is.character), .fns = ~ NA_character_),
+                  dplyr::across(.cols = tidyselect::where(is.integer), .fns = ~ NA_integer_),
+                  dplyr::across(.cols = tidyselect::where(~ class(.x) == "Date"), .fns = ~ as.Date(NA_character_)),
                   Row = NA_integer_) %>%
-    dplyr::select(Row, dplyr::everything())
+    dplyr::select("Row", tidyselect::everything())
 
 
   # Capture data
   Capture_data <- capture_data_template[1,] %>%
-    dplyr::mutate(dplyr::across(.cols = where(is.character), .fns = ~ NA_character_),
-                  dplyr::across(.cols = where(is.integer), .fns = ~ NA_integer_),
-                  dplyr::across(.cols = where(~ class(.x) == "Date"), .fns = ~ as.Date(NA_character_)),
+    dplyr::mutate(dplyr::across(.cols = tidyselect::where(is.character), .fns = ~ NA_character_),
+                  dplyr::across(.cols = tidyselect::where(is.integer), .fns = ~ NA_integer_),
+                  dplyr::across(.cols = tidyselect::where(~ class(.x) == "Date"), .fns = ~ as.Date(NA_character_)),
                   Row = NA_integer_) %>%
-    dplyr::select(Row, dplyr::everything())
+    dplyr::select("Row", tidyselect::everything())
 
 
   # Individual data
   Individual_data <- individual_data_template[1,] %>%
-    dplyr::mutate(dplyr::across(.cols = where(is.character), .fns = ~ NA_character_),
-                  dplyr::across(.cols = where(is.integer), .fns = ~ NA_integer_),
+    dplyr::mutate(dplyr::across(.cols = tidyselect::where(is.character), .fns = ~ NA_character_),
+                  dplyr::across(.cols = tidyselect::where(is.integer), .fns = ~ NA_integer_),
                   Row = NA_integer_) %>%
-    dplyr::select(Row, dplyr::everything())
+    dplyr::select("Row", tidyselect::everything())
 
 
   # Location data
   Location_data <- location_data_template[1,] %>%
-    dplyr::mutate(dplyr::across(.cols = where(is.character), .fns = ~ NA_character_),
-                  dplyr::across(.cols = where(is.integer), .fns = ~ NA_integer_),
-                  dplyr::across(.cols = where(is.numeric), .fns = ~ NA_real_),
+    dplyr::mutate(dplyr::across(.cols = tidyselect::where(is.character), .fns = ~ NA_character_),
+                  dplyr::across(.cols = tidyselect::where(is.integer), .fns = ~ NA_integer_),
+                  dplyr::across(.cols = tidyselect::where(is.numeric), .fns = ~ NA_real_),
                   Row = NA_integer_) %>%
-    dplyr::select(Row, dplyr::everything())
+    dplyr::select("Row", tidyselect::everything())
 
 
   # Add rows in which single checks can be validated
@@ -336,7 +336,7 @@ create_dummy_data <- function() {
       BreedingSeason = B6_indv_rows$RingSeason,
       Species = B6_indv_rows$Species
     ) %>%
-    tidyr::drop_na(IndvID) %>%
+    tidyr::drop_na(.data$IndvID) %>%
     dplyr::mutate(
       CaptureDate = paste(.data$BreedingSeason, "06", "01", sep = "-"),
       Row = seq_len(dplyr::n()),
@@ -490,7 +490,7 @@ create_dummy_data <- function() {
       BreedingSeason = B9_indv_rows$RingSeason,
       Species = B9_indv_rows$Species
     ) %>%
-    tidyr::drop_na(IndvID) %>%
+    tidyr::drop_na(.data$IndvID) %>%
     dplyr::mutate(
       CaptureDate = paste(.data$BreedingSeason, "06", "01", sep = "-"),
       Row = seq(max(B8_capture_rows$Row) + 1, length.out = dplyr::n()),
@@ -534,7 +534,7 @@ create_dummy_data <- function() {
     ID = as.character(1:(30*17)),
     ChickAge = rep(1:30, each = 17),
   ) %>%
-    dplyr::group_by(ID) %>%
+    dplyr::group_by(.data$ID) %>%
     dplyr::group_modify(~{
 
       a <- stats::rnorm(1, mean = 25, sd = 7.5)
@@ -756,7 +756,7 @@ create_dummy_data <- function() {
       BreedingSeason = I1_indv_rows$RingSeason,
       Species = I1_indv_rows$Species
     ) %>%
-    tidyr::drop_na(IndvID) %>%
+    tidyr::drop_na(.data$IndvID) %>%
     dplyr::mutate(
       CaptureDate = paste(.data$BreedingSeason, "06", "01", sep = "-"),
       Row = seq(max(C2_rows$Row) + 1, length.out = dplyr::n()),
@@ -792,7 +792,7 @@ create_dummy_data <- function() {
       BreedingSeason = I2_indv_rows$RingSeason,
       Species = I2_indv_rows$Species
     ) %>%
-    tidyr::drop_na(IndvID) %>%
+    tidyr::drop_na(.data$IndvID) %>%
     dplyr::mutate(
       CaptureDate = paste(.data$BreedingSeason, "06", "01", sep = "-"),
       Row = seq(max(I1_capture_rows$Row) + 1, length.out = dplyr::n()),
@@ -845,7 +845,7 @@ create_dummy_data <- function() {
       BreedingSeason = I3_indv_rows$RingSeason,
       Species = I3_indv_rows$Species
     ) %>%
-    tidyr::drop_na(IndvID) %>%
+    tidyr::drop_na(.data$IndvID) %>%
     dplyr::mutate(
       CaptureDate = paste(.data$BreedingSeason, "06", "01", sep = "-"),
       Row = seq(max(I2_capture_rows$Row) + 1, length.out = dplyr::n()),
@@ -878,9 +878,9 @@ create_dummy_data <- function() {
       BreedingSeason = I4_indv_rows$RingSeason,
       Species = I4_indv_rows$Species
     ) %>%
-    tidyr::drop_na(IndvID) %>%
+    tidyr::drop_na(.data$IndvID) %>%
     dplyr::mutate(
-      CaptureDate = paste(BreedingSeason, "06", "01", sep = "-"),
+      CaptureDate = paste(.data$BreedingSeason, "06", "01", sep = "-"),
       Row = seq(max(I3_capture_rows$Row) + 1, length.out = dplyr::n()),
       CaptureID = paste(.data$CapturePopID, .data$IndvID, .data$CaptureDate, sep="_"),
       LocationID = .data$CaptureID,
@@ -1149,7 +1149,7 @@ create_dummy_data <- function() {
       PopID = "AAA",
       BreedingSeason = as.integer(2020),
       Species = "PARMAJ",
-      BroodID = paste(PopID, .data$BreedingSeason, .data$Row, sep = "-"),
+      BroodID = paste(.data$PopID, .data$BreedingSeason, .data$Row, sep = "-"),
       FemaleID = paste0("K", .data$Row),
       MaleID = paste0("L", .data$Row),
       CheckID = "B12"
@@ -1378,7 +1378,7 @@ create_dummy_data <- function() {
       Row = max(L1_capture_rows$Row) + 2,
     ) %>%
     dplyr::mutate( # Probable
-      IndvID = paste0("I", Row),
+      IndvID = paste0("I", .data$Row),
       CapturePopID = "AAA",
       BreedingSeason = as.integer(2020),
       Species = "PARMAJ",
@@ -1413,8 +1413,8 @@ create_dummy_data <- function() {
       Row = max(B13_brood_rows$Row) + 4
     ) %>%
     dplyr::mutate(
-      FemaleID = paste0("K", Row),
-      MaleID = paste0("L", Row),
+      FemaleID = paste0("K", .data$Row),
+      MaleID = paste0("L", .data$Row),
       PopID = "AAA",
       BreedingSeason = as.integer(2020),
       Species = "CYACAE",
@@ -1475,8 +1475,8 @@ create_dummy_data <- function() {
       Row = max(B14_brood_rows$Row) + 2
     ) %>%
     dplyr::mutate(
-      FemaleID = paste0("K", Row),
-      MaleID = paste0("L", Row),
+      FemaleID = paste0("K", .data$Row),
+      MaleID = paste0("L", .data$Row),
       PopID = "AAA",
       BreedingSeason = as.integer(2020),
       Species = "CYACAE",
@@ -1550,7 +1550,7 @@ create_dummy_data <- function() {
       Row = max(B15_capture_rows$Row) + 2
     ) %>%
     dplyr::mutate(
-      IndvID = paste0("I", Row),
+      IndvID = paste0("I", .data$Row),
       CapturePopID = "AAA",
       BreedingSeason = as.integer(2020),
       Species = "PARMAJ",

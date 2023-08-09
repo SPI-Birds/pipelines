@@ -87,7 +87,7 @@ format_GRO <- function(db = choose_directory(),
     ## Reformat
     ## Few cases of clutch size observed have '?' - these should be considered the minimum clutch size, otherwise on information provided on minimum clutch size
     dplyr::mutate(PopID = "GRO",
-                  LocationID = toupper(LocationID),
+                  LocationID = toupper(.data$LocationID),
                   BreedingSeason = as.integer(.data$BreedingSeason),
                   LayDate_observed =  as.Date(.data$LayDate_observed),
                   HatchDate_observed =  as.Date(.data$HatchDate_observed),

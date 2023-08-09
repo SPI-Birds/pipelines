@@ -309,7 +309,7 @@ create_brood_GLA <- function(nest_data, rr_data) {
     dplyr::mutate(RingAge = ifelse(.data$Age_observed == 1, "chick", "adult")) %>%
 
     ## Only keeping chicks to calculate brood information
-    dplyr::filter(RingAge == "chick") %>%
+    dplyr::filter(.data$RingAge == "chick") %>%
 
     ## Summarize brood information for each nest
     dplyr::group_by(.data$BreedingSeason, .data$PopID, .data$Species, .data$LocationID) %>%
@@ -322,10 +322,10 @@ create_brood_GLA <- function(nest_data, rr_data) {
                                                TRUE ~ unique(.data$MotherRing)),
                    MaleID = dplyr::case_when(dplyr::n_distinct(.data$FatherRing) > 1 ~ NA_character_,
                                              TRUE ~ unique(.data$FatherRing)),
-                   AvgChickMass = round(mean(Mass[ChickAge <= 16L & ChickAge >= 14L], na.rm = TRUE),1),
-                   NumberChicksMass = sum(ChickAge <= 16L & ChickAge >= 14L & is.na(Mass) == F),
-                   AvgTarsus = round(mean(Tarsus[ChickAge <= 16L & ChickAge >= 14L ], na.rm = TRUE),1),
-                   NumberChicksTarsus = sum(ChickAge <= 16L & ChickAge >= 14L & is.na(Tarsus) == FALSE)) %>%
+                   AvgChickMass = round(mean(.data$Mass[.data$ChickAge <= 16L & .data$ChickAge >= 14L], na.rm = TRUE),1),
+                   NumberChicksMass = sum(.data$ChickAge <= 16L & .data$ChickAge >= 14L & is.na(.data$Mass) == F),
+                   AvgTarsus = round(mean(.data$Tarsus[.data$ChickAge <= 16L & .data$ChickAge >= 14L ], na.rm = TRUE),1),
+                   NumberChicksTarsus = sum(.data$ChickAge <= 16L & .data$ChickAge >= 14L & is.na(.data$Tarsus) == FALSE)) %>%
     dplyr::distinct() %>%
     dplyr::group_by(.data$BreedingSeason, .data$PopID, .data$Species, .data$LocationID) %>%
 
@@ -514,7 +514,7 @@ create_capture_GLA <- function(nest_data, rr_data, Brood_data) {
     ## Filter out incorrect IDs
     dplyr::mutate(IndvID = dplyr::case_when(stringr::str_detect(.data$IndvID, "^[[:digit:][:alpha:]]{7}$") ~ .data$IndvID,
                                    TRUE ~ NA_character_)) %>%
-    dplyr::filter(!is.na(IndvID)) %>%
+    dplyr::filter(!is.na(.data$IndvID)) %>%
 
     ##  Change column class
     dplyr::mutate(BreedingSeason = as.integer(.data$BreedingSeason)) %>%

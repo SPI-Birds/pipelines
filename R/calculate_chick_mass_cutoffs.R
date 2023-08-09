@@ -44,7 +44,12 @@ calculate_chick_mass_cutoffs <- function(Capture_data, plot = FALSE) {
   }
 
   # Set initial values for logistic model
-  initial_values <- list(a = {data %>% dplyr::filter(.data$ChickAge == max(.data$ChickAge)) %>% dplyr::summarise(M = max(.data$Mass)) %>% dplyr::pull(.data$M)},
+  max_mass <- data %>%
+    dplyr::filter(.data$ChickAge == max(.data$ChickAge)) %>%
+    dplyr::summarise(M = max(.data$Mass)) %>%
+    dplyr::pull("M")
+
+  initial_values <- list(a = max_mass,
                          b = 5,
                          c = 0.1)
 
@@ -67,10 +72,10 @@ calculate_chick_mass_cutoffs <- function(Capture_data, plot = FALSE) {
 
       # Plot logistic growth curve and data
       p <- ggplot2::ggplot() +
-        ggplot2::geom_jitter(data = data, ggplot2::aes(x = ChickAge, y = Mass), shape = 21, alpha = 0.4, width = 0.2) +
-        ggplot2::geom_line(data = logistic_pred, ggplot2::aes(x = x, y = lower), colour = "darkred", lty = 2) +
-        ggplot2::geom_line(data = logistic_pred, ggplot2::aes(x = x, y = upper), colour = "darkred", lty = 2) +
-        ggplot2::geom_line(data = logistic_pred, ggplot2::aes(x = x, y = fit), size = 1, colour = "darkred") +
+        ggplot2::geom_jitter(data = data, ggplot2::aes(x = .data$ChickAge, y = .data$Mass), shape = 21, alpha = 0.4, width = 0.2) +
+        ggplot2::geom_line(data = logistic_pred, ggplot2::aes(x = .data$x, y = .data$lower), colour = "darkred", lty = 2) +
+        ggplot2::geom_line(data = logistic_pred, ggplot2::aes(x = .data$x, y = .data$upper), colour = "darkred", lty = 2) +
+        ggplot2::geom_line(data = logistic_pred, ggplot2::aes(x = .data$x, y = .data$fit), size = 1, colour = "darkred") +
         ggplot2::labs(title = paste0(unique(data$CapturePopID), ": ", unique(data$Species))) +
         ggplot2::theme_classic()
 
@@ -93,7 +98,7 @@ calculate_chick_mass_cutoffs <- function(Capture_data, plot = FALSE) {
                                    dplyr::group_by(.data$ChickAge) %>%
                                    dplyr::summarise(N = dplyr::n()) %>%
                                    tidyr::complete(ChickAge = logistic_pred$x) %>%
-                                   dplyr::pull(.data$N)},
+                                   dplyr::pull("N")},
                                Logis = TRUE
   )
 

@@ -148,7 +148,8 @@ format_MON <- function(db = choose_directory(),
 
   # WRANGLE DATA FOR EXPORT
 
-  Capture_data <- Capture_data %>% dplyr::select(IndvID:ChickAge)
+  Capture_data <- Capture_data %>%
+    dplyr::select("IndvID":"ChickAge")
 
   #Remove chick rings from brood data
   #Add NAs for Avg measurements until we add them later
@@ -220,19 +221,19 @@ create_capture_MON <- function(db, species_filter, pop_filter){
     #Therefore, we read everything as text and coerce individually
     dplyr::mutate(dplyr::across(c(3, 7, 16, 37), as.integer)) %>%
     dplyr::mutate(dplyr::across(c(5, 6, 14, 18:24, 26, 27, 35), as.numeric)) %>%
-    dplyr::mutate(Species = dplyr::case_when(.data$espece == "ble" ~ species_codes$Species[which(species_codes$SpeciesID == 14620)],
-                                             .data$espece == "noi" ~ species_codes$Species[which(species_codes$SpeciesID == 14610)],
-                                             .data$espece == "cha" ~ species_codes$Species[which(species_codes$SpeciesID == 14640)],
+    dplyr::mutate(Species = dplyr::case_when(.data$espece == "ble" ~ species_codes$Species[species_codes$SpeciesID == 14620],
+                                             .data$espece == "noi" ~ species_codes$Species[species_codes$SpeciesID == 14610],
+                                             .data$espece == "cha" ~ species_codes$Species[species_codes$SpeciesID == 14640],
                                              .data$espece == "eto" ~ "STARLING",
                                              .data$espece == "grp" ~ "UN-IDENTIFIED CREEPER",
                                              .data$espece == "grpj" ~ "SHORT-TOED TREECREEPER",
                                              .data$espece == "grpd" ~ "EURASIAN TREECREEPER",
                                              .data$espece == "hup" ~ "CRESTED TIT",
-                                             .data$espece == "sit" ~ species_codes$Species[which(species_codes$SpeciesID == 14790)],
+                                             .data$espece == "sit" ~ species_codes$Species[species_codes$SpeciesID == 14790],
                                              .data$espece == "moi" ~ "UN-IDENTIFIED SPARROW",
                                              .data$espece == "moid" ~ "HOUSE SPARROW",
-                                             .data$espece == "moif" ~ species_codes$Species[which(species_codes$SpeciesID == 15980)],
-                                             .data$espece == "non" ~ species_codes$Species[which(species_codes$SpeciesID == 14400)])) %>%
+                                             .data$espece == "moif" ~ species_codes$Species[species_codes$SpeciesID == 15980],
+                                             .data$espece == "non" ~ species_codes$Species[species_codes$SpeciesID == 14400])) %>%
     #Filter by species
     dplyr::filter(.data$Species %in% species_filter) %>%
     dplyr::mutate(CaptureDate = suppressWarnings(janitor::excel_numeric_to_date(as.numeric(.data$date_mesure))),
@@ -357,19 +358,19 @@ create_capture_MON <- function(db, species_filter, pop_filter){
                                            col_types = "text") %>%
     dplyr::mutate(dplyr::across(c(2, 15), as.integer)) %>%
     dplyr::mutate(dplyr::across(c(16, 18:20), as.numeric)) %>%
-    dplyr::mutate(Species = dplyr::case_when(.data$espece == "ble" ~ species_codes$Species[which(species_codes$SpeciesID == 14620)],
-                                             .data$espece == "noi" ~ species_codes$Species[which(species_codes$SpeciesID == 14610)],
-                                             .data$espece == "cha" ~ species_codes$Species[which(species_codes$SpeciesID == 14640)],
+    dplyr::mutate(Species = dplyr::case_when(.data$espece == "ble" ~ species_codes$Species[species_codes$SpeciesID == 14620],
+                                             .data$espece == "noi" ~ species_codes$Species[species_codes$SpeciesID == 14610],
+                                             .data$espece == "cha" ~ species_codes$Species[species_codes$SpeciesID == 14640],
                                              .data$espece == "eto" ~ "STARLING",
                                              .data$espece == "grp" ~ "UN-IDENTIFIED CREEPER",
                                              .data$espece == "grpj" ~ "SHORT-TOED TREECREEPER",
                                              .data$espece == "grpd" ~ "EURASIAN TREECREEPER",
                                              .data$espece == "hup" ~ "CRESTED TIT",
-                                             .data$espece == "sit" ~ species_codes$Species[which(species_codes$SpeciesID == 14790)],
+                                             .data$espece == "sit" ~ species_codes$Species[species_codes$SpeciesID == 14790],
                                              .data$espece == "moi" ~ "UN-IDENTIFIED SPARROW",
                                              .data$espece == "moid" ~ "HOUSE SPARROW",
-                                             .data$espece == "moif" ~ species_codes$Species[which(species_codes$SpeciesID == 15980)],
-                                             .data$espece == "non" ~ species_codes$Species[which(species_codes$SpeciesID == 14400)])) %>%
+                                             .data$espece == "moif" ~ species_codes$Species[species_codes$SpeciesID == 15980],
+                                             .data$espece == "non" ~ species_codes$Species[species_codes$SpeciesID == 14400])) %>%
     #Filter by species
     #Also remove only the pops we know
     dplyr::filter(.data$Species %in% species_filter) %>%
@@ -465,8 +466,8 @@ create_capture_MON <- function(db, species_filter, pop_filter){
 
                                                    })) %>%
     #If there is a destination box, give it a different ReleasePlot/PopID
-    dplyr::mutate(ReleasePlot = purrr::map2_chr(.x = DestBoxNumber,
-                                                .y = CapturePlot,
+    dplyr::mutate(ReleasePlot = purrr::map2_chr(.x = .data$DestBoxNumber,
+                                                .y = .data$CapturePlot,
                                                 .f = ~{
 
                                                   if(length(.x) == 2){
@@ -922,15 +923,15 @@ create_location_MON <- function(db, Capture_data, Brood_data){
   #We need to link the lat/long from separate file (nestbox_latlong above)
   inside_locations <- Capture_data %>%
     dplyr::filter(is.na(.data$longitude) & !is.na(.data$LocationID)) %>%
-    dplyr::mutate(LocationID_join = paste(stringr::str_split_i(LocationID, pattern = "_", i = 1),
-                                          stringr::str_split_i(LocationID, pattern = "_", i = 2),
+    dplyr::mutate(LocationID_join = paste(stringr::str_split_i(.data$LocationID, pattern = "_", i = 1),
+                                          stringr::str_split_i(.data$LocationID, pattern = "_", i = 2),
                                           sep = "_")) %>%
     dplyr::select("BreedingSeason", "LocationID", "LocationID_join", "PopID" = "CapturePopID")
 
   #Also for broods only identified in the brood data table
   nest_locations <- Brood_data %>%
-    dplyr::mutate(LocationID_join = paste(stringr::str_split_i(LocationID, pattern = "_", i = 1),
-                                          stringr::str_split_i(LocationID, pattern = "_", i = 2),
+    dplyr::mutate(LocationID_join = paste(stringr::str_split_i(.data$LocationID, pattern = "_", i = 1),
+                                          stringr::str_split_i(.data$LocationID, pattern = "_", i = 2),
                                           sep = "_")) %>%
     dplyr::select("BreedingSeason", "LocationID", "LocationID_join", "PopID")
 

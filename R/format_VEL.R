@@ -434,7 +434,7 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
     tidyr::pivot_longer(cols = c("Mass6", "Mass13"),
                         names_to = c(".value", "ChickAge"),
                         names_pattern = "^(Mass)([[:digit:]]{1,2})$") %>%
-    dplyr::mutate(ChickAge = as.integer(ChickAge),
+    dplyr::mutate(ChickAge = as.integer(.data$ChickAge),
                   # Tarsus and Wing Length are only measured on day 13
                   dplyr::across(.cols = c("Tarsus", "WingLength"),
                                 .fns = ~{

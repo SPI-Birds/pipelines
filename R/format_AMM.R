@@ -170,14 +170,14 @@ create_brood_AMM   <- function(connection) {
 
   Catches_M <- dplyr::tbl(connection, "Catches") %>%
     dplyr::select("BroodID", "MaleID" = "BirdID", "SexConclusion") %>%
-    dplyr::filter(!is.na(BroodID)) %>%
+    dplyr::filter(!is.na(.data$BroodID)) %>%
     dplyr::distinct() %>%
     dplyr::filter(.data$SexConclusion == 2L) %>%
     dplyr::select(-"SexConclusion")
 
   Catches_F <- dplyr::tbl(connection, "Catches") %>%
     dplyr::select("BroodID", "FemaleID" = "BirdID", "SexConclusion") %>%
-    dplyr::filter(!is.na(BroodID)) %>%
+    dplyr::filter(!is.na(.data$BroodID)) %>%
     dplyr::distinct() %>%
     dplyr::filter(.data$SexConclusion == 1L) %>%
     dplyr::select(-"SexConclusion")
@@ -186,11 +186,14 @@ create_brood_AMM   <- function(connection) {
     dplyr::select("NestBox", "Plot")
 
   Brood_data <- dplyr::tbl(connection, "Broods") %>%
-    dplyr::left_join(Catches_F, by = c("BroodID")) %>%
+    dplyr::left_join(Catches_F,
+                     by = c("BroodID")) %>%
     dplyr::collapse() %>%
-    dplyr::left_join(Catches_M, by = c("BroodID")) %>%
+    dplyr::left_join(Catches_M,
+                     by = c("BroodID")) %>%
     dplyr::collapse() %>%
-    dplyr::left_join(Nest_boxes, by = c("NestBox" = "NestBox")) %>%
+    dplyr::left_join(Nest_boxes,
+                     by = c("NestBox" = "NestBox")) %>%
     dplyr::collect() %>%
     # Remove -99 and replace with NA
     dplyr::mutate(dplyr::across(.cols = tidyselect::where(~is.numeric(.)),
@@ -247,7 +250,7 @@ create_brood_AMM   <- function(connection) {
                                        collapse = ";")) %>%
     dplyr::ungroup() %>%
     # Remove NAs from the experiment list
-    dplyr::mutate(ExperimentID = stringr::str_remove_all(ExperimentID, pattern = "NA[;]*|;NA^")) %>%
+    dplyr::mutate(ExperimentID = stringr::str_remove_all(.data$ExperimentID, pattern = "NA[;]*|;NA^")) %>%
     # Determine clutch type
     dplyr::arrange(.data$BreedingSeason, .data$FemaleID, .data$LayDate_observed) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.1"),
@@ -255,24 +258,26 @@ create_brood_AMM   <- function(connection) {
                                                          .data$ClutchNumber %in% c(2L, 4L) ~ "second",
                                                          .data$ClutchNumber %in% c(3L, 5L, 6L) ~ "replacement")) %>%
   # Arrange columns
-  dplyr::select(.data$BroodID, .data$PopID, .data$BreedingSeason,
-                .data$Species, .data$Plot, LocationID = .data$NestBox, .data$FemaleID, .data$MaleID,
-                .data$ClutchType_observed, .data$ClutchType_calculated,
-                .data$LayDate_observed, .data$LayDate_minimum, .data$LayDate_maximum,
-                .data$ClutchSize_observed, .data$ClutchSize_minimum, .data$ClutchSize_maximum,
-                .data$HatchDate_observed, .data$HatchDate_minimum, .data$HatchDate_maximum,
-                .data$BroodSize_observed, .data$BroodSize_minimum,
-                .data$BroodSize_maximum,
-                .data$FledgeDate_observed, .data$FledgeDate_minimum,
-                .data$FledgeDate_maximum,
-                .data$NumberFledged_observed, .data$NumberFledged_minimum,
-                .data$NumberFledged_maximum,
-                .data$AvgEggMass, .data$NumberEggs,
-                .data$AvgChickMass, .data$NumberChicksMass,
-                .data$ExperimentID) %>%
+  dplyr::select("BroodID", "PopID", "BreedingSeason",
+                "Species", "Plot", "LocationID" = "NestBox", "FemaleID", "MaleID",
+                "ClutchType_observed", "ClutchType_calculated",
+                "LayDate_observed", "LayDate_minimum", "LayDate_maximum",
+                "ClutchSize_observed", "ClutchSize_minimum", "ClutchSize_maximum",
+                "HatchDate_observed", "HatchDate_minimum", "HatchDate_maximum",
+                "BroodSize_observed", "BroodSize_minimum",
+                "BroodSize_maximum",
+                "FledgeDate_observed", "FledgeDate_minimum",
+                "FledgeDate_maximum",
+                "NumberFledged_observed", "NumberFledged_minimum",
+                "NumberFledged_maximum",
+                "AvgEggMass", "NumberEggs",
+                "AvgChickMass", "NumberChicksMass",
+                "ExperimentID") %>%
     # Convert to correct formats
-    dplyr::mutate(dplyr::across(c("Plot":"MaleID"), as.character)) %>%
-    dplyr::mutate(dplyr::across(c("LayDate_observed", "HatchDate_observed", "FledgeDate_observed"), as.Date))
+    dplyr::mutate(dplyr::across(c("Plot":"MaleID"),
+                                as.character)) %>%
+    dplyr::mutate(dplyr::across(c("LayDate_observed", "HatchDate_observed", "FledgeDate_observed"),
+                                as.Date))
 
   return(Brood_data)
 

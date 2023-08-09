@@ -159,19 +159,19 @@ quality_check <- function(R_data,
 
   # Subset approved list items
   Brood_approved_list <- approved_list$Brood_approved_list %>%
-    dplyr::filter(PopID %in% unique(R_data$Brood_data$PopID)) %>%
+    dplyr::filter(.data$PopID %in% unique(R_data$Brood_data$PopID)) %>%
     dplyr::arrange(.data$PopID, .data$BroodID, .data$CheckID)
 
   Capture_approved_list <- approved_list$Capture_approved_list %>%
-    dplyr::filter(PopID %in% unique(R_data$Brood_data$PopID)) %>%
+    dplyr::filter(.data$PopID %in% unique(R_data$Brood_data$PopID)) %>%
     dplyr::arrange(.data$PopID, .data$CaptureID, .data$CheckID)
 
   Individual_approved_list <- approved_list$Individual_approved_list %>%
-    dplyr::filter(PopID %in% unique(R_data$Brood_data$PopID)) %>%
+    dplyr::filter(.data$PopID %in% unique(R_data$Brood_data$PopID)) %>%
     dplyr::arrange(.data$PopID, .data$IndvID, .data$CheckID)
 
   Location_approved_list <- approved_list$Location_approved_list %>%
-    dplyr::filter(PopID %in% unique(R_data$Brood_data$PopID)) %>%
+    dplyr::filter(.data$PopID %in% unique(R_data$Brood_data$PopID)) %>%
     dplyr::arrange(.data$PopID, .data$LocationID, .data$CheckID)
 
 
@@ -186,9 +186,13 @@ quality_check <- function(R_data,
 
   checks_skipped <- sum(check_list$Skipped == TRUE, na.rm = TRUE) # Total number of checks skipped
 
-  skipped_errors <- check_list %>% dplyr::filter(!is.na(.data$Error), .data$Skipped == TRUE) %>% nrow() # Number of potential error checks skipped
+  skipped_errors <- check_list %>%
+    dplyr::filter(!is.na(.data$Error), .data$Skipped == TRUE) %>%
+    nrow() # Number of potential error checks skipped
 
-  skipped_warnings <- check_list %>% dplyr::filter(!is.na(.data$Warning), .data$Skipped == TRUE) %>% nrow() # Number of warning checks skipped
+  skipped_warnings <- check_list %>%
+    dplyr::filter(!is.na(.data$Warning), .data$Skipped == TRUE) %>%
+    nrow() # Number of warning checks skipped
 
   if(output %in% c("warnings", "both")) {
 
@@ -634,8 +638,5 @@ quality_check <- function(R_data,
                             Capture_data = Capture_data,
                             Individual_data = Individual_data,
                             Location_data = Location_data)))
-
-  # Satisfy RCMD checks
-  approved_list <- CheckID <- NULL
 
 }

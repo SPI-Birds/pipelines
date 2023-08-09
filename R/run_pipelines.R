@@ -104,16 +104,16 @@ run_pipelines <- function(path = choose_directory(),
 
   #Firstly, check if there are any cases where a requested population does not have any info on a given species
   missing_species <- pop_species_combos %>%
-    dplyr::filter(PopCode %in% PopID) %>%
-    dplyr::group_by(PopCode) %>%
-    dplyr::summarise(total_sp = sum(SpeciesCode %in% Species))
+    dplyr::filter(.data$PopCode %in% PopID) %>%
+    dplyr::group_by(.data$PopCode) %>%
+    dplyr::summarise(total_sp = sum(.data$SpeciesCode %in% Species))
 
   #If there are any with missing data, give a warning message
   if(any(missing_species$total_sp == 0)){
 
     missing_species %>%
-      dplyr::filter(total_sp == 0) %>%
-      purrr::pwalk(.l = list(.$PopCode),
+      dplyr::filter(.data$total_sp == 0) %>%
+      purrr::pwalk(.l = list(.data$PopCode),
                    .f = ~{
 
                      message(paste0('Population ', ..1, ' has no information on the focal species and has been excluded.'))
@@ -124,11 +124,13 @@ run_pipelines <- function(path = choose_directory(),
 
   #Now just work with those populations where the population and species are present
   pop_species_subset <- pop_species_combos %>%
-    dplyr::filter(PopCode %in% PopID & SpeciesCode %in% Species) %>%
-    dplyr::left_join(dplyr::select(pop_codes, PopID, Owner), by = c("PopCode" = "PopID")) %>%
-    dplyr::group_by(Owner) %>%
-    dplyr::summarise(Species = list(c(unique(SpeciesCode))),
-                     Pops = list(c(unique(PopCode))))
+    dplyr::filter(.data$PopCode %in% PopID & .data$SpeciesCode %in% Species) %>%
+    dplyr::left_join(pop_codes %>%
+                       dplyr::select("PopID", "Owner"),
+                     by = c("PopCode" = "PopID")) %>%
+    dplyr::group_by(.data$Owner) %>%
+    dplyr::summarise(Species = list(c(unique(.data$SpeciesCode))),
+                     Pops = list(c(unique(.data$PopCode))))
 
   #Find the file path for each of the data owners of interest
   all_dirs <- list.dirs(path = path, full.names = TRUE, recursive = FALSE)
@@ -143,11 +145,11 @@ run_pipelines <- function(path = choose_directory(),
                                      species = pop_species_subset$Species),
                            .f = function(dirs, owner, pops, species){
 
-                             message(paste0('Running ', owner, ' pipeline'))
+                             message(crayon::cyan$bold(paste0('Running ', owner, ' pipeline')))
 
-                           eval(parse(text = paste0('format_', owner, '(db = dirs, pop = pops, species = species, output_type = "R")')))
+                             eval(parse(text = paste0('format_', owner, '(db = dirs, pop = pops, species = species, output_type = "R")')))
 
-                             })
+                           })
 
   #For each of the four tables, go through and combine the outputs
   #Add row numbers for each
@@ -159,7 +161,7 @@ run_pipelines <- function(path = choose_directory(),
                                    }) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(Row = seq(1, dplyr::n())) %>%
-    dplyr::select(Row, dplyr::everything())
+    dplyr::select("Row", dplyr::everything())
 
   Capture_data <- purrr::map_df(.x = R_objects,
                                      .f = ~{
@@ -169,7 +171,7 @@ run_pipelines <- function(path = choose_directory(),
                                      }) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(Row = seq(1, dplyr::n())) %>%
-    dplyr::select(Row, dplyr::everything())
+    dplyr::select("Row", dplyr::everything())
 
   Individual_data <- purrr::map_df(.x = R_objects,
                                         .f = ~{
@@ -179,7 +181,7 @@ run_pipelines <- function(path = choose_directory(),
                                         }) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(Row = seq(1, dplyr::n())) %>%
-    dplyr::select(Row, dplyr::everything())
+    dplyr::select("Row", dplyr::everything())
 
   Location_data   <- purrr::map_df(.x = R_objects,
                                         .f = ~{
@@ -189,7 +191,7 @@ run_pipelines <- function(path = choose_directory(),
                                         }) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(Row = seq(1, dplyr::n())) %>%
-    dplyr::select(Row, dplyr::everything())
+    dplyr::select("Row", dplyr::everything())
 
   #If we want an R output, return a list with the 4 different data frames
   if(output_type == "R"){
@@ -222,8 +224,5 @@ run_pipelines <- function(path = choose_directory(),
     invisible(NULL)
 
   }
-
-  # Satisfy RCMD checks
-  PopCode <- SpeciesCode <- Owner <- NULL
 
 }

@@ -29,16 +29,17 @@ plot_popmap <- function(scale = 2, filename = NULL){
   world_map <- ggplot2::map_data("world")
 
   ggplot2::ggplot()+
-    ggplot2::geom_polygon(data = GT_dist_gg, ggplot2::aes(x = long, y = lat, group = group), fill = "light grey") +
+    ggplot2::geom_polygon(data = GT_dist_gg, ggplot2::aes(x = .data$long, y = .data$lat, group = .data$group), fill = "light grey") +
     ggplot2::geom_polygon(data = world_map,
-                          ggplot2::aes(x = long, y = lat, group = group), color = "black", fill = NA) +
+                          ggplot2::aes(x = .data$long, y = .data$lat, group = .data$group), color = "black", fill = NA) +
     ggplot2::coord_cartesian(xlim = c(-20, 145), ylim = c(10, 70)) +
     ggplot2::geom_point(data = pop_locations,
-                        ggplot2::aes(x = longitude, y = latitude, fill = data), shape = 21, size = 4) +
+                        ggplot2::aes(x = .data$longitude, y = .data$latitude, fill = .data$data), shape = 21, size = 4) +
     #Add a second time to make sure that green points are always on top.
     #These are the ones we want people to see.
-    ggplot2::geom_point(data = dplyr::filter(pop_locations, data == "Yes"),
-                        ggplot2::aes(x = longitude, y = latitude), fill = "green",
+    ggplot2::geom_point(data = pop_locations %>%
+                          dplyr::filter(.data$data == "Yes"),
+                        ggplot2::aes(x = .data$longitude, y = .data$latitude), fill = "green",
                shape = 21, size = 4) +
     ggplot2::scale_fill_manual(breaks = c("Yes", "No"),
                       values = c("#CCFFCC", "green"),

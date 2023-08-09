@@ -163,7 +163,7 @@ format_KEV <- function(db = choose_directory(),
     #Remove cases where tarsus or weight are 0 (make them NA)
     dplyr::mutate(Mass = dplyr::na_if(.data$Mass, 0),
                   Tarsus = dplyr::na_if(.data$Tarsus, 0)) %>%
-    dplyr::group_by(BroodID) %>%
+    dplyr::group_by(.data$BroodID) %>%
     dplyr::summarise(AvgEggMass = NA,
                      NumberEggs = NA,
                      AvgChickMass = mean(.data$Mass, na.rm = T)/10,
@@ -504,7 +504,7 @@ create_capture_KEV <- function(db, Brood_data, species_filter, return_errors){
                        dplyr::select("BroodID", "Last2DigitsRingNr", "RingSeries", "RingNumber", "Species"),
                      by = c("BroodID", "Last2DigitsRingNr")) %>%
     dplyr::mutate(IndvID = paste(.data$RingSeries, .data$RingNumber, sep = "-")) %>%
-    dplyr::filter(IndvID %in% non_matching_records) %>%
+    dplyr::filter(.data$IndvID %in% non_matching_records) %>%
     dplyr::anti_join(indv_chick_capture %>%
                        dplyr::mutate(Last2DigitsRingNr = stringr::str_sub(.data$RingNumber, start = -2)) %>%
                        dplyr::select("BroodID", "Last2DigitsRingNr", "CaptureDate"),
@@ -727,7 +727,7 @@ create_individual_KEV <- function(Capture_data){
     dplyr::filter(!is.na(.data$IndvID)) %>%
     dplyr::arrange(.data$IndvID, .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
     dplyr::group_by(.data$IndvID) %>%
-    dplyr::summarise(Species = purrr::map_chr(.x = list(unique(stats::na.omit(Species))),
+    dplyr::summarise(Species = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Species))),
                                               .f = ~{
 
                                                 if(length(..1) == 0){
@@ -746,29 +746,29 @@ create_individual_KEV <- function(Capture_data){
 
                                               }),
                      PopID = "KEV",
-    BroodIDLaid = dplyr::first(.data$BroodID),
-    BroodIDFledged = .data$BroodIDLaid,
-    RingSeason = dplyr::first(.data$BreedingSeason),
-    RingAge = ifelse(any(.data$Age_calculated %in% c(1, 3)), "chick",
-                     ifelse(min(.data$Age_calculated) == 2, NA_character_, "adult")),
-    Sex = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Sex))),
-                         .f = ~{
+                     BroodIDLaid = dplyr::first(.data$BroodID),
+                     BroodIDFledged = .data$BroodIDLaid,
+                     RingSeason = dplyr::first(.data$BreedingSeason),
+                     RingAge = ifelse(any(.data$Age_calculated %in% c(1, 3)), "chick",
+                                      ifelse(min(.data$Age_calculated) == 2, NA_character_, "adult")),
+                     Sex = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Sex))),
+                                          .f = ~{
 
-                           if(length(..1) == 0){
+                                            if(length(..1) == 0){
 
-                             return(NA_character_)
+                                              return(NA_character_)
 
-                           } else if(length(..1) == 1){
+                                            } else if(length(..1) == 1){
 
-                             return(..1)
+                                              return(..1)
 
-                           } else {
+                                            } else {
 
-                             return("C")
+                                              return("C")
 
-                           }
+                                            }
 
-                         })) %>%
+                                          })) %>%
     dplyr::rowwise() %>%
     #For each individual, if their ring age was 1 or 3 (caught in first breeding year)
     #Then we take their first BroodID, otherwise it is NA

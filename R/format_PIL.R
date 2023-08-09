@@ -187,7 +187,9 @@ format_PIL <- function(db = choose_directory(),
 
     utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_PIL.csv"), row.names = F)
 
-    utils::write.csv(x = Capture_data %>% dplyr::select(-Sex, -BroodID), file = paste0(path, "\\Capture_data_PIL.csv"), row.names = F)
+    utils::write.csv(x = Capture_data %>%
+                       dplyr::select(-"Sex", -"BroodID"),
+                     file = paste0(path, "\\Capture_data_PIL.csv"), row.names = F)
 
     utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_PIL.csv"), row.names = F)
 
@@ -328,7 +330,7 @@ create_capture_PIL <- function(PIL_data, species_filter){
                                              .data$species == "PARMAJ" ~ species_codes$Species[species_codes$SpeciesID == 14640],
                                              .data$species == "FICALB" ~ species_codes$Species[species_codes$SpeciesID == 13480],
                                              .data$species == "SITEUR" ~ species_codes$Species[species_codes$SpeciesID == 14790])) %>%
-    dplyr::filter(Species %in% species_filter) %>%
+    dplyr::filter(.data$Species %in% species_filter) %>%
     #Remove cases where no chicks were ever ringed
     dplyr::filter(!dplyr::if_all(.cols = tidyselect::contains("nestling_ring"),
                                  .fns = is.na)) %>%
@@ -337,7 +339,7 @@ create_capture_PIL <- function(PIL_data, species_filter){
     tidyr::pivot_longer(cols = c("ring_date", "nestling_measure_date"),
                         names_to = "date_type", values_to = "CaptureDate") %>%
     #If measure date is NA, then there's only one capture and we can remove it
-    dplyr::filter(.data$date_type == "ring_date" | (.data$date_type == "nestling_measure_date" & !is.na(CaptureDate))) %>%
+    dplyr::filter(.data$date_type == "ring_date" | (.data$date_type == "nestling_measure_date" & !is.na(.data$CaptureDate))) %>%
     #Identify every case where there were two captures
     dplyr::group_by(.data$BroodID) %>%
     dplyr::mutate(n = dplyr::n()) %>%

@@ -803,7 +803,7 @@ check_adult_parent_nest <- function(Capture_data, Location_data, Brood_data, app
     # Add location type to adults data frame and filter captures on nest box
     adults_nest_box <- adults %>%
       dplyr::left_join(annual_locations, by = c("CapturePopID" = "PopID", "LocationID", "BreedingSeason")) %>%
-      dplyr::filter(LocationType == "NB")
+      dplyr::filter(.data$LocationType == "NB")
 
     # Check whether adults caught in nest box are associated with that nest in Brood data
     females_w_nests <- adults_nest_box %>%
