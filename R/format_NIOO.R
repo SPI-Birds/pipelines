@@ -274,26 +274,30 @@ create_brood_NIOO <- function(database, location_data, species_filter, pop_filte
   Female_rings <- dplyr::tbl(database, "dbo_tbl_Individual") %>%
     dplyr::select("FemaleID" = "ID", "Female_ring" = "RingNumber")
 
+  Brood_types <- dplyr::tbl(database, "dbo_tl_BroodType") %>%
+    dplyr::select("BroodType" = "ID", "Description")
+
   ##FIXME BroodID 69290, 70603, 71812 are duplicated, duplicates differ in assigned female
   ##FIXME BroodID 69862 is duplicated, each with different Male assigned
   Brood_data <- dplyr::tbl(database, "dbo_tbl_Brood") %>%
     #Subset only broods of designated species in designated population
     dplyr::filter(.data$BroodSpecies %in% species_filter & .data$BroodLocationID %in% !!target_locations$ID) %>%
+    #Set unknown ring numbers to NA
+    dplyr::mutate(Female_ring = dplyr::sql("IIF(RingNumberFemale = '0000000000' OR RingNumberFemale = '', NULL, RingNumberFemale)"),
+                  Male_ring = dplyr::sql("IIF(RingNumberMale = '0000000000' OR RingNumberMale = '', NULL, RingNumberMale)")) %>%
     #Link the ClutchType description (e.g. first, second, replacement)
-    dplyr::left_join(dplyr::tbl(database, "dbo_tl_BroodType") %>%
-                       dplyr::select("BroodType" = "ID", "Description"),
+    dplyr::left_join(Brood_types,
                      by = "BroodType") %>%
-    dplyr::mutate(Female_ring = dplyr::sql("IIF(RingNumberFemale = '0000000000' OR RingNumberFemale = '', NULL, CStr(RingNumberFemale))"),
-                  Male_ring = dplyr::sql("IIF(RingNumberMale = '0000000000' OR RingNumberMale = '', NULL, Cstr(RingNumberMale))"),
-                  ##FIXME: Translate ExperimentID to the standard format
-                  ExperimentID = dplyr::sql("IIF(IsNull(ExperimentCode) OR ExperimentCode = '', Null, CStr(ExperimentCode))")) %>%
+    dplyr::collapse() %>%
     dplyr::left_join(Male_rings,
                      by = "Male_ring") %>%
     dplyr::collapse() %>%
     dplyr::left_join(Female_rings,
                      by = "Female_ring") %>%
     dplyr::collect() %>%
-    dplyr::mutate(HatchDate_observed = lubridate::ymd(.data$HatchDate),
+    ##FIXME: Translate ExperimentID to the standard format
+    dplyr::mutate(ExperimentID = dplyr::na_if(.data$ExperimentCode, c("")),
+                  HatchDate_observed = lubridate::ymd(.data$HatchDate),
                   ##FIXME: Translate HatchDateAccuracy into min & max
                   LayDate_observed = lubridate::ymd(.data$LayDate),
                   LayDate_min = .data$LayDate_observed - .data$LayDateDeviation,
@@ -443,7 +447,7 @@ create_capture_NIOO <- function(database, Brood_data, location_data, species_fil
     #Determine difference between hatch and capture date for all individuals
     #that were ~before fledging (we'll say up until 30 days because this covers all possibilites)
     dplyr::mutate(diff = as.integer(lubridate::ymd(.data$CaptureDate) - .data$HatchDate_observed),
-                  ChickAge = dplyr::case_when(!is.na(.data$diff) & between(.data$diff, 0, 30) ~ .data$diff,
+                  ChickAge = dplyr::case_when(!is.na(.data$diff) & dplyr::between(.data$diff, 0, 30) ~ .data$diff,
                                               TRUE ~ NA_integer_),
                   CaptureID = paste(.data$IndvID, dplyr::row_number(), sep = "_"),
                   CaptureAlive = TRUE,
