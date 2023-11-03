@@ -253,7 +253,7 @@ create_brood_HAR <- function(db, species_filter){
   #Rename columns to English (based on description provided by Tapio Eeva)
   #Many of these are subsequently removed, but it makes it easier for non-Finnish speakers to
   #see what is being removed.
-  Brood_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Nests.DB") %>%
+  Brood_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Pesat.DB") %>%
     dplyr::rename("BreedingSeason" = "Vuos", "LocationID" = "Nuro",
                   "BroodID" = "Anro", "Species" = "Laji",
                   "ClutchType_observed" = "Pesa", "FemaleID" = "Naaras", "MaleID" = "Koiras",
@@ -338,7 +338,7 @@ create_nestling_HAR <- function(db, Brood_data){
   message("Extracting nestling ringing data from paradox database")
 
   #Extract table "Pullit.db" which contains brood data
-  Nestling_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Nestlings.DB") %>%
+  Nestling_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Pullit.DB") %>%
     dplyr::rename("BreedingSeason" = "Vuos", "LocationID" = "Nuro", "BroodID" = "Anro",
                   "Month" = "Kk", "Day" = "Pv", "Time" = "Klo",
                   "NrNestlings" = "Poik", "Last2DigitsRingNr" = "Reng",
@@ -394,12 +394,12 @@ create_capture_HAR    <- function(db, Brood_data, species_filter, return_errors)
 
   message("Extracting capture data from paradox database")
 
-  #Extract table "Pullit.db" which contains brood data
+  #Extract table "Rengas.db" which contains adult ringing data
   ##N.B. LastRingNumber_Brood = the end of the ringing series when ringing chicks
   #e.g. a record with RingNumber = 662470 and LastRingNumber_Brood = 662473 had three ringed chicks:
   # 662470, 662471, 662472, 662473
   # The number of nestlings ringed is stored in NrNestlings.
-  Capture_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Ringings.DB") %>%
+  Capture_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Rengas.DB") %>%
     dplyr::rename("RingSeries" = "Sarja", "RingNumber" = "Mista",
                   "CaptureType" = "Tunnus", "BreedingSeason" = "Vuos",
                   "Month" = "Kk", "Day" = "Pv", "Time" = "Klo",
@@ -826,8 +826,8 @@ create_location_HAR <- function(db){
 
   message("Extracting location data from paradox database")
 
-  #Extract table "Pullit.db" which contains brood data
-  Location_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Locations.DB") %>%
+  # Extract table "Paikat.db" which contains location data
+  Location_data <- extract_paradox_db(path = db, file_name = "HAR_PrimaryData_Paikat.DB") %>%
     #Remove last 2 cols that have no info
     dplyr::select(-"Aukko", -"Malli") %>%
     dplyr::rename("BreedingSeason" = "Vuos", "LocationID" = "Nuro",

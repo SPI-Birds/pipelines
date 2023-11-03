@@ -266,8 +266,8 @@ create_brood_KEV <- function(db, species_filter){
 
   message("Extracting brood data from paradox database")
 
-  #Extract table "Pesat.db" which contains brood data
-  Brood_data <- extract_paradox_db(path = db, file_name = "KEV_PrimaryData_Nests.DB") %>%
+  #Extract table "Kevopesa.db" which contains brood data
+  Brood_data <- extract_paradox_db(path = db, file_name = "KEV_PrimaryData_Kevopesa.DB") %>%
     #Rename columns to English (based on description provided by data owner)
     dplyr::rename("BreedingSeason" = "Vuos", "LocationID" = "Nuro",
                   "BroodID" = "Anro", "Species" = "Laji",
@@ -334,8 +334,8 @@ create_nestling_KEV <- function(db, Brood_data){
 
   message("Extracting nestling ringing data from paradox database")
 
-  #Extract table "Pullit.db" which contains brood data
-  Nestling_data <- extract_paradox_db(path = db, file_name = "KEV_PrimaryData_Nestlings.DB") %>%
+  #Extract table "Pullit.db" which contains nestling data
+  Nestling_data <- extract_paradox_db(path = db, file_name = "KEV_PrimaryData_Pullit.DB") %>%
     dplyr::rename("BreedingSeason" = "Vuos", "LocationID" = "Nuro",
                   "BroodID" = "Anro", "Month" = "Kk", "Day" = "Pv", "Time" = "Klo",
                   "NrNestlings" = "Poik", "Last2DigitsRingNr" = "Reng",
@@ -382,8 +382,8 @@ create_capture_KEV <- function(db, Brood_data, species_filter, return_errors){
 
   message("Extracting capture data from paradox database")
 
-  #Extract table "Pullit.db" which contains brood data
-  Capture_data <- extract_paradox_db(path = db, file_name = "KEV_PrimaryData_Ringings.DB") %>%
+  #Extract table "Rengas.db" which contains adult capture data
+  Capture_data <- extract_paradox_db(path = db, file_name = "KEV_PrimaryData_Rengas.DB") %>%
     #Change colnames to English to make data management more understandable
     ##N.B. LastRingNumber_Brood = the end of the ringing series when ringing chicks
     #e.g. a record with RingNumber = 662470 and LastRingNumber_Brood = 662473 had three ringed chicks:
@@ -795,8 +795,8 @@ create_location_KEV <- function(db){
 
   message("Extracting location data from paradox database")
 
-  #Extract table "Pullit.db" which contains brood data
-  Location_data <- extract_paradox_db(path = db, file_name = "KEV_PrimaryData_Locations.DB") %>%
+  #Extract table "Pontot.db" which contains location data
+  Location_data <- extract_paradox_db(path = db, file_name = "KEV_PrimaryData_Pontot.DB") %>%
     dplyr::rename("BreedingSeason" = "Vuos", "LocationID" = "Nuro",
                   "Latitude" = "Leve", "Longitude" = "Pitu",
                   "BoxMaterial" = "Pontlaji",
