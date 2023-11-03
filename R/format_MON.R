@@ -276,18 +276,28 @@ create_capture_MON <- function(db, species_filter, pop_filter){
 
                                                      split_age <- strsplit(..1, split = "")
 
-                                                     letter <- split_age[[1]][1]
+                                                     letter <- toupper(split_age[[1]][1])
                                                      number <- as.integer(split_age[[1]][2])
 
                                                      if(letter == "P"){
 
-                                                       if(number == 0L){
+                                                       # FIXME: there is one instance with only "P"
+                                                       # new issue related to 2021 data update
+                                                       if(is.na(number)) {
 
-                                                         return(1L)
+                                                         return(NA_integer_)
 
                                                        } else {
 
-                                                         return(3L + 2L*number)
+                                                         if(number == 0L) {
+
+                                                           return(1L)
+
+                                                         } else {
+
+                                                           return(3L + 2L*number)
+
+                                                         }
 
                                                        }
 
