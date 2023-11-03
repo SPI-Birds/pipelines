@@ -79,9 +79,10 @@ format_VEL <- function(db = choose_directory(),
                                                      col_types = c("skip", "numeric", "text",
                                                                    "text", "list",
                                                                    "text", "text",
+                                                                   "text", # FIXME new column added in data update 2022
                                                                    "text", "text",
                                                                    "list", "text",
-                                                                   rep("text", 8),
+                                                                   rep("text", 9), # FIXME new column added in data update 2022
                                                                    rep(c(rep("numeric", 4), "skip"), 8),
                                                                    "text", "list", "numeric",
                                                                    "numeric", "numeric",
@@ -118,7 +119,7 @@ format_VEL <- function(db = choose_directory(),
 
                                 })) %>%
     tidyr::unnest(cols = c("laying_date", "hatching_date",
-                           "date_of_capture_52", "date_of_capture_57")) %>%
+                           "date_of_capture_54", "date_of_capture_59")) %>%
     ## CHANGE COL NAMES TO MATCH STANDARD FORMAT
     dplyr::mutate(PopID = "VEL",
                   BreedingSeason =
@@ -175,7 +176,7 @@ format_VEL <- function(db = choose_directory(),
   ## Dates are dealt with the same way as flycatchers
   ## We only use data on GT and BT. There is a small number of clutches
   ## for other species, but all < 40.
-  TIT_data <- readxl::read_excel(paste0(db, "/VEL_PrimaryData_tits.xls"),
+  TIT_data <- readxl::read_excel(paste0(db, "/VEL_PrimaryData_tits.xlsx"),
                                  col_types = c("skip", "numeric", "text", "text",
                                                "text", "text", "list",
                                                "list", "list", "text",
@@ -471,8 +472,8 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
   # Extract data from adult captures
   FICALB_adults <- FICALB_data %>%
     dplyr::select("BreedingSeason", "Species", "Plot", "LocationID", "LayDate_observed",
-                  "BroodID", "FemaleID", "date_of_capture_52", "tarsus_53":"wing_55",
-                  "MaleID", "date_of_capture_57", "age":"wing_61",
+                  "BroodID", "FemaleID", "date_of_capture_54", "tarsus_55":"wing_57",
+                  "MaleID", "date_of_capture_59", "age":"wing_63",
                   "ExperimentID") %>%
     tidyr::pivot_longer(cols = c("FemaleID", "MaleID"),
                         values_to = "IndvID",
@@ -482,12 +483,12 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
   FICALB_adults <- FICALB_adults %>%
     ## Give individuals a sex, we will use this in our Individual_data table
     dplyr::mutate(Sex = stringr::str_sub(.data$Sex, 0, 1),
-                  Tarsus = dplyr::case_when(.data$Sex == "F" ~ .data$tarsus_53,
-                                            .data$Sex == "M" ~ .data$tarsus_59),
-                  WingLength = dplyr::case_when(.data$Sex == "F" ~ .data$wing_55,
-                                                .data$Sex == "M" ~ .data$wing_61),
-                  Mass = dplyr::case_when(.data$Sex == "F" ~ .data$mass_54,
-                                          .data$Sex == "M" ~ .data$mass_60),
+                  Tarsus = dplyr::case_when(.data$Sex == "F" ~ .data$tarsus_55,
+                                            .data$Sex == "M" ~ .data$tarsus_61),
+                  WingLength = dplyr::case_when(.data$Sex == "F" ~ .data$wing_57,
+                                                .data$Sex == "M" ~ .data$wing_63),
+                  Mass = dplyr::case_when(.data$Sex == "F" ~ .data$mass_56,
+                                          .data$Sex == "M" ~ .data$mass_62),
                   # Determine age of males based on 'age' column
                   Age_observed = dplyr::case_when(.data$Sex == "M" & .data$age == "old" ~ 6L,
                                                   .data$Sex == "M" & .data$age == "young" ~ 5L,
@@ -497,8 +498,8 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
                   CapturePlot = .data$Plot,
                   ReleasePlot = .data$Plot,
                   ObserverID = NA_character_,
-                  CaptureDate = dplyr::case_when(.data$Sex == "F" ~ .data$date_of_capture_52,
-                                                 .data$Sex == "M" ~ .data$date_of_capture_57)) %>%
+                  CaptureDate = dplyr::case_when(.data$Sex == "F" ~ .data$date_of_capture_54,
+                                                 .data$Sex == "M" ~ .data$date_of_capture_59)) %>%
     dplyr::mutate(Tarsus = convert_tarsus(.data$Tarsus, method = "Oxford"),
                   OriginalTarsusMethod = dplyr::case_when(!is.na(.data$Tarsus) ~ "Oxford")) %>%
     dplyr::select("Species", "BreedingSeason", "LocationID", "BroodID",
