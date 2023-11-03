@@ -528,7 +528,7 @@ create_individual_UAN <- function(INDV_info, Capture_data, species_filter){
                      RingAge = dplyr::case_when(dplyr::first(.data$Age_observed) == 1 ~ "chick",
                                                 dplyr::first(.data$Age_observed) != 1 ~ "adult",
                                                 is.na(dplyr::first(.data$Age_observed)) ~ "adult"),
-                     BroodIDLaid = dplyr::case_when(RingAge == "chick" ~ first(.data$BroodID),
+                     BroodIDLaid = dplyr::case_when(RingAge == "chick" ~ dplyr::first(.data$BroodID),
                                                     RingAge == "adult" ~ NA_character_),
                      BroodIDFledged = .data$BroodIDLaid,
                      .groups = "drop") %>%
