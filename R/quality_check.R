@@ -315,14 +315,14 @@ quality_check <- function(R_data,
                    '',
                    '```{r, echo = FALSE, fig.cap = "", results = "asis", out.width="100%"}',
                    'invisible(
-                      iwalk(.x = Location_checks$Maps,
+                      purrr::iwalk(.x = Location_checks$Maps,
                             .f = ~{
                               htmlwidgets::saveWidget(widget = .x, file = paste0("figure/", .y, ".html"))
                             })
                     )
 
                     invisible(
-                      map(.x = names(Location_checks$Maps),
+                      purrr::map(.x = names(Location_checks$Maps),
                           .f = ~{
                             webshot::webshot(url = paste0("figure/", .x, ".html"),
                                              file = paste0("figure/", .x, ".png"))
