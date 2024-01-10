@@ -7,6 +7,7 @@ inst/doc
 debug_report
 
 *.html
+*.rmd
 *.md
 *.pdf
 figure/
