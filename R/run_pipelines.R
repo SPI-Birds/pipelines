@@ -44,7 +44,7 @@ run_pipelines <- function(path = choose_directory(),
                           save_path = NULL,
                           filename = "standard_format"){
 
-  #Force choose_directory()
+  # Force choose_directory()
   force(path)
 
   if((output_type == "csv" | (output_type == "R" & save)) & is.null(save_path)){
