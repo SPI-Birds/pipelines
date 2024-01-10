@@ -1,115 +1,119 @@
 siteID,siteName,country,countryCode,decimalLatitude,decimalLongitude,locationAccordingTo
-AMM,Ammersee-Starnbergersee,Germany,DE,47.966667,11.233333,data owner
-BAN,Bandon Valley,Ireland,IE,51.74869,-8.723583,data owner
-CHO,Choupal,Portugal,PT,40.222,-8.44963889,data owner
-HAR,Harjavalta,Finland,FI,61.31666667,22.11666667,data owner
-HOC,Hochstadt,Germany,DE,48.058824,11.255755,data owner
-KEV,Kevo,Finland,FI,69.75,27.01667,data owner
+AMM,Ammersee-Starnbergersee,Germany,DE,47.966667,11.233333,metadataProvider
+BAN,Bandon Valley,Ireland,IE,51.74869,-8.723583,metadataProvider
+CHO,Choupal,Portugal,PT,40.222,-8.44963889,metadataProvider
+HAR,Harjavalta,Finland,FI,61.31666667,22.11666667,metadataProvider
+HOC,Hochstadt,Germany,DE,48.058824,11.255755,metadataProvider
+KEV,Kevo,Finland,FI,69.75,27.01667,metadataProvider
 MIS,Miscellaneous populations,France,FR,42.56886,8.943566,data
-MON,Montpellier city,France,FR,43.606694,3.876889,data owner
+MON,Montpellier city,France,FR,43.606694,3.876889,metadataProvider
 MTV,Mont Ventoux,France,FR,44.17444,5.278889,data
 MUR,Muro,France,FR,42.55149,8.925644,data
-PIR,Pirio,France,FR,42.373888,8.747781,data owner
-ROU,Rouviere,France,FR,43.664075,3.669504,data owner
-BUU,Buunderkamp,Netherlands,NL,52.01907,5.75744,data owner
-HOG,Hoge Veluwe,Netherlands,NL,52.04072,5.85573,data owner
-LIE,Liesbos,Netherlands,NL,51.58225,4.70028,data owner
-OOS,Oosterhout,Netherlands,NL,51.87366,5.84057,data owner
-VLI,Vlieland,Netherlands,NL,53.295861,5.051,data owner
-WAR,Warnsborn,Netherlands,NL,52.01079,5.86716,data owner
-WES,Westerheide,Netherlands,NL,52.01552,5.83692,data owner
-EDM,East Dartmoor,United Kingdom,GB,50.6,-3.71666667,data owner
-PIL,Pilis-Visegrad Mountains,Hungary,HU,47.71667,19.01667,data owner
-SSQ,Santo Stefano Quisquina,Italy,IT,37.6,13.5333333,data owner
-BOS,Boshoek,Belgium,BE,51.13333333,4.516666667,data owner
-PEE,Peerdsbos,Belgium,BE,51.272333,4.488333,data owner
-VEL,Velky Kosir,Czechia,CZ,49.53333333,17.06666667,data owner
-WYT,Wytham Woods,United Kingdom,GB,51.76667,-1.333333,data owner
-ASK,Askainen,Finland,FI,60.483333,21.75,data owner
-BER,Berkenheuvel,Netherlands,NL,52.876111,6.276389,data owner
-TOR,Torenlaan,Netherlands,NL,52.880833,6.3025,data owner
-MZR,Midzomer,Netherlands,NL,52.871111,6.304444,data owner
-DVZ,Dieverzand,Netherlands,NL,52.871944,6.328889,data owner
-OWM,Oude Willem,Netherlands,NL,52.907222,6.314167,data owner
-APP,Appelscha,Netherlands,NL,52.945278,6.302222,data owner
-LBZ,Lheebroekerzand,Netherlands,NL,52.836944,6.444722,data owner
-DWI,Dwingeloo,Netherlands,NL,52.818056,6.432778,data owner
-RUI,Ruinen,Netherlands,NL,52.725278,6.398611,data owner
-DWZ,Dwingelderzand,Netherlands,NL,52.815278,6.361944,data owner
-ANS,Anserdennen,Netherlands,NL,52.79,6.352778,data owner
-MIA,Maria,Netherlands,NL,52.819722,6.387778,data owner
-BRG,Bergen's Arboretum,Norway,NO,60.2575,5.27,data owner
-CAN,Canada de los Pajaros,Spain,ES,37.2387,-6.1315,data owner
-CAC,Can Cata,Spain,ES,41.45,2.133333,data owner
-DAE,Daeli,Norway,NO,59.933333,10.55,data owner
-DAL,Dalmeny,United Kingdom,GB,55.973339,-3.355746,data owner
-DAZ,Dazlina-Ivinj,Croatia,HR,43.833333,15.733333,data owner
-DLO,Dlouha Loucka,Czechia,CZ,49.82,17.21,data owner
-DON,Donana,Spain,ES,36.933333,-6.35,data owner
-DUN,Dunedin Botanic Garden,New Zealand,NZ,-45.86,170.52,data owner
-FOR,Forstenrieder Park,Germany,DE,48.066667,11.45,data owner
-GAR,Garscube campus,United Kingdom,GB,55.9048,-4.3199,data owner
-CAS,Cashel farm forest,United Kingdom,GB,"56.10888	",-4.57823,data owner
-SAL,Sallochy,United Kingdom,GB,56.1232,-4.5993,data owner
-KEL,Kelvingrove park,United Kingdom,GB,55.8692216,-4.2818993,data owner
-SCE,Scene,United Kingdom,GB,56.1291,-4.61478,data owner
-GLI,Glimmen,Netherlands,NL,53.133333,6.633333,data owner
-GRO,Grobla-Niepolomice Forest,Poland,PL,50.1,20.41666667,data owner
-LAH,La Hiruela,Spain,ES,41.06667,-3.45,data owner
-MSC,Montesclaros,Spain,ES,41.083333,-3.433333,data owner
-KIL,Kilingi-Nomme,Estonia,EE,58.116667,25.083333,data owner
-KUU,Kuusamo,Finland,FI,66.033333,29.05,data owner
-LAK,Lakselvdalen,Norway,NO,69.333333,19.566667,data owner
-LAN,Lancaster,United Kingdom,GB,54,-2.783333,data owner
-LAS,Lasy Szwalewskie,Poland,PL,53.716667,19.533333,data owner
-LUN,Lundy Island,United Kingdom,GB,51.173222,-4.667861,data owner
-MAL,Malmo,Sweden,SE,55.6,13.033333,data owner
-MAR,Mariola,Spain,ES,38.733333,-0.55,data owner
-MAY,Mayachino,Russia,RU,60.766667,32.816667,data owner
-MET,Metu,Turkey,TR,39.9,32.8,data owner
-MIE,Mierzeja Wislana,Poland,PL,54.366667,19.35,data owner
-MOU,Moulis,France,FR,42.967722,1.091306,data owner
-BAL,Balatonfured,Hungary,HU,47.958561,17.892908,data owner
-GUL,Gulya-domb,Hungary,HU,47.091056,17.883222,data owner
-SZE,Szentgal,Hungary,HU,47.111042,17.688317,data owner
-VES,Veszprém,Hungary,HU,47.088136,17.908239,data owner
-VIL,Vilma-puszta,Hungary,HU,47.085194,17.864278,data owner
-MRC,Murcia,Spain,ES,37.75,-0.95,data owner
-OUL,Oulu,Finland,FI,65.083333,25.883333,data owner
-PET,Petrozavodsk,Russia,RU,61.842778,34.381667,data owner
-PEW,Peerdsbos West,Belgium,BE,51.271667,4.48,data owner
-RAD,Radolfzell,Germany,DE,47.766667,8.983333,data owner
-REV,Revinge,Sweden,SE,55.7,13.466667,data owner
-SAG,Sagunto,Spain,ES,39.7,-0.25,data owner
-SFL,Schopfl,Austria,AT,48.084167,15.923333,data owner
-SKG,Schiermonnikoog,Netherlands,NL,53.483333,6.216667,data owner
-SIL,Silwood Park,United Kingdom,GB,51.4091,-0.6392,data owner
-STR,Strasbourg,France,FR,48.579081,7.765491,data owner
-ROB,Robertsau,France,FR,48.610522,7.802476,data owner
-WAN,Wantzenau,France,FR,48.647904,7.833611,data owner
-TOM,Tomakomai,Japan,JP,42.666667,141.6,data owner
-VAL,Valsain,Spain,ES,40.886,-4.031,data owner
-VOM,Vomb Fure,Sweden,SE,55.67,13.55,data owner
-VOS,Vosbergen,Netherlands,NL,53.133333,6.583333,data owner
-WRS,Warsaw,Poland,PL,52.229694,21.012194,data owner
-BAS,Banter See,Germany,DE,53.6,8.1,data owner
-WHZ,Westerholz,Germany,DE,48.133333,10.883333,data owner
-WIL,Wilrijk,Belgium,BE,51.160214,4.407561,data owner
-ZVE,Zvenigorod,Russia,RU,55.683333,36.716667,data owner
-GOT,Gotland,Sweden,SE,57.033333,18.283333,data owner
-DIN,Dinas,United Kingdom,GB,52.097,-3.788,data owner
-KAT,Loch Katrine,United Kingdom,GB,56.242,-4.458,data owner
-NAG,Forest of Dean,United Kingdom,GB,51.774,-2.576,data owner
-OKE,Okehampton,United Kingdom,GB,50.729,-4.008,data owner
-TEI,Teign Valley,United Kingdom,GB,50.694,-3.728,data owner
-STO,Stogi,Poland,PL,54.372983,18.716833,data owner
-SOB,Sobieszewo,Poland,PL,54.3526,18.7962,data owner
-BIR,Bird Island,United States of America,US,41.669239,-70.717018,data owner
-RAM,Ram Island,United States of America,US,41.618024,-70.804273,data owner
-NMI,North Monomoy Island,United States of America,US,41.634623,-69.975088,data owner
-GOU,Gough Island,United Kingdom,GB,-40.316667,-9.933333,data owner
-ARV,Arvidsjaur,Sweden,SE,65.666667,19,data owner
-MIR,Miraflores,Spain,ES,40.811408,-3.782683,data owner
-BOW,Bowdoin Scientific Station,Canada,CA,44.5819,-66.7559,data owner
-SEK,Sekocin Forest,Poland,PL,52.099,20.875,data owner
-HSF,Hochstetter Forland,Greenland,GL,75.15,-19.75,data owner
+PIR,Pirio,France,FR,42.373888,8.747781,metadataProvider
+ROU,Rouviere,France,FR,43.664075,3.669504,metadataProvider
+BUU,Buunderkamp,Netherlands,NL,52.01907,5.75744,metadataProvider
+HOG,Hoge Veluwe,Netherlands,NL,52.04072,5.85573,metadataProvider
+LIE,Liesbos,Netherlands,NL,51.58225,4.70028,metadataProvider
+OOS,Oosterhout,Netherlands,NL,51.87366,5.84057,metadataProvider
+VLI,Vlieland,Netherlands,NL,53.295861,5.051,metadataProvider
+WAR,Warnsborn,Netherlands,NL,52.01079,5.86716,metadataProvider
+WES,Westerheide,Netherlands,NL,52.01552,5.83692,metadataProvider
+EDM,East Dartmoor,United Kingdom,GB,50.6,-3.71666667,metadataProvider
+PIL,Pilis-Visegrad Mountains,Hungary,HU,47.71667,19.01667,metadataProvider
+SSQ,Santo Stefano Quisquina,Italy,IT,37.6,13.5333333,metadataProvider
+BOS,Boshoek,Belgium,BE,51.13333333,4.516666667,metadataProvider
+PEE,Peerdsbos,Belgium,BE,51.272333,4.488333,metadataProvider
+VEL,Velky Kosir,Czechia,CZ,49.53333333,17.06666667,metadataProvider
+WYT,Wytham Woods,United Kingdom,GB,51.76667,-1.333333,metadataProvider
+ASK,Askainen,Finland,FI,60.483333,21.75,metadataProvider
+BER,Berkenheuvel,Netherlands,NL,52.876111,6.276389,metadataProvider
+TOR,Torenlaan,Netherlands,NL,52.880833,6.3025,metadataProvider
+MZR,Midzomer,Netherlands,NL,52.871111,6.304444,metadataProvider
+DVZ,Dieverzand,Netherlands,NL,52.871944,6.328889,metadataProvider
+OWM,Oude Willem,Netherlands,NL,52.907222,6.314167,metadataProvider
+APP,Appelscha,Netherlands,NL,52.945278,6.302222,metadataProvider
+LBZ,Lheebroekerzand,Netherlands,NL,52.836944,6.444722,metadataProvider
+DWI,Dwingeloo,Netherlands,NL,52.818056,6.432778,metadataProvider
+RUI,Ruinen,Netherlands,NL,52.725278,6.398611,metadataProvider
+DWZ,Dwingelderzand,Netherlands,NL,52.815278,6.361944,metadataProvider
+ANS,Anserdennen,Netherlands,NL,52.79,6.352778,metadataProvider
+MIA,Maria,Netherlands,NL,52.819722,6.387778,metadataProvider
+BRG,Bergen's Arboretum,Norway,NO,60.2575,5.27,metadataProvider
+CAN,Canada de los Pajaros,Spain,ES,37.2387,-6.1315,metadataProvider
+CAC,Can Cata,Spain,ES,41.45,2.133333,metadataProvider
+DAE,Daeli,Norway,NO,59.933333,10.55,metadataProvider
+DAL,Dalmeny,United Kingdom,GB,55.973339,-3.355746,metadataProvider
+DAZ,Dazlina-Ivinj,Croatia,HR,43.833333,15.733333,metadataProvider
+DLO,Dlouha Loucka,Czechia,CZ,49.82,17.21,metadataProvider
+DON,Donana,Spain,ES,36.933333,-6.35,metadataProvider
+DUN,Dunedin Botanic Garden,New Zealand,NZ,-45.86,170.52,metadataProvider
+FOR,Forstenrieder Park,Germany,DE,48.066667,11.45,metadataProvider
+GAR,Garscube campus,United Kingdom,GB,55.9048,-4.3199,metadataProvider
+CAS,Cashel farm forest,United Kingdom,GB,56.10888,-4.57823,metadataProvider
+SAL,Sallochy,United Kingdom,GB,56.1232,-4.5993,metadataProvider
+KEL,Kelvingrove park,United Kingdom,GB,55.8692216,-4.2818993,metadataProvider
+SCE,Scene,United Kingdom,GB,56.1291,-4.61478,metadataProvider
+GLI,Glimmen,Netherlands,NL,53.133333,6.633333,metadataProvider
+GRO,Grobla-Niepolomice Forest,Poland,PL,50.1,20.41666667,metadataProvider
+LAH,La Hiruela,Spain,ES,41.06667,-3.45,metadataProvider
+MSC,Montesclaros,Spain,ES,41.083333,-3.433333,metadataProvider
+KIL,Kilingi-Nomme,Estonia,EE,58.116667,25.083333,metadataProvider
+KUU,Kuusamo,Finland,FI,66.033333,29.05,metadataProvider
+LAK,Lakselvdalen,Norway,NO,69.333333,19.566667,metadataProvider
+LAN,Lancaster,United Kingdom,GB,54,-2.783333,metadataProvider
+LAS,Lasy Szwalewskie,Poland,PL,53.716667,19.533333,metadataProvider
+LUN,Lundy Island,United Kingdom,GB,51.173222,-4.667861,metadataProvider
+MAL,Malmo,Sweden,SE,55.6,13.033333,metadataProvider
+MAR,Mariola,Spain,ES,38.733333,-0.55,metadataProvider
+MAY,Mayachino,Russia,RU,60.766667,32.816667,metadataProvider
+MET,Metu,Turkey,TR,39.9,32.8,metadataProvider
+MIE,Mierzeja Wislana,Poland,PL,54.366667,19.35,metadataProvider
+MOU,Moulis,France,FR,42.967722,1.091306,metadataProvider
+BAL,Balatonfured,Hungary,HU,47.958561,17.892908,metadataProvider
+GUL,Gulya-domb,Hungary,HU,47.091056,17.883222,metadataProvider
+SZE,Szentgal,Hungary,HU,47.111042,17.688317,metadataProvider
+VES,Veszprém,Hungary,HU,47.088136,17.908239,metadataProvider
+VIL,Vilma-puszta,Hungary,HU,47.085194,17.864278,metadataProvider
+MRC,Murcia,Spain,ES,37.75,-0.95,metadataProvider
+OUL,Oulu,Finland,FI,65.083333,25.883333,metadataProvider
+PET,Petrozavodsk,Russia,RU,61.842778,34.381667,metadataProvider
+PEW,Peerdsbos West,Belgium,BE,51.271667,4.48,metadataProvider
+RAD,Radolfzell,Germany,DE,47.766667,8.983333,metadataProvider
+REV,Revinge,Sweden,SE,55.7,13.466667,metadataProvider
+SAG,Sagunto,Spain,ES,39.7,-0.25,metadataProvider
+SFL,Schopfl,Austria,AT,48.084167,15.923333,metadataProvider
+SKG,Schiermonnikoog,Netherlands,NL,53.483333,6.216667,metadataProvider
+SIL,Silwood Park,United Kingdom,GB,51.4091,-0.6392,metadataProvider
+STR,Strasbourg,France,FR,48.579081,7.765491,metadataProvider
+ROB,Robertsau,France,FR,48.610522,7.802476,metadataProvider
+WAN,Wantzenau,France,FR,48.647904,7.833611,metadataProvider
+TOM,Tomakomai,Japan,JP,42.666667,141.6,metadataProvider
+VAL,Valsain,Spain,ES,40.886,-4.031,metadataProvider
+VOM,Vomb Fure,Sweden,SE,55.67,13.55,metadataProvider
+VOS,Vosbergen,Netherlands,NL,53.133333,6.583333,metadataProvider
+WRS,Warsaw,Poland,PL,52.229694,21.012194,metadataProvider
+BAS,Banter See,Germany,DE,53.6,8.1,metadataProvider
+WHZ,Westerholz,Germany,DE,48.133333,10.883333,metadataProvider
+WIL,Wilrijk,Belgium,BE,51.160214,4.407561,metadataProvider
+ZVE,Zvenigorod,Russia,RU,55.683333,36.716667,metadataProvider
+GOT,Gotland,Sweden,SE,57.033333,18.283333,metadataProvider
+DIN,Dinas,United Kingdom,GB,52.097,-3.788,metadataProvider
+KAT,Loch Katrine,United Kingdom,GB,56.242,-4.458,metadataProvider
+NAG,Forest of Dean,United Kingdom,GB,51.774,-2.576,metadataProvider
+OKE,Okehampton,United Kingdom,GB,50.729,-4.008,metadataProvider
+TEI,Teign Valley,United Kingdom,GB,50.694,-3.728,metadataProvider
+STO,Stogi,Poland,PL,54.372983,18.716833,metadataProvider
+SOB,Sobieszewo,Poland,PL,54.3526,18.7962,metadataProvider
+BIR,Bird Island,United States of America,US,41.669239,-70.717018,metadataProvider
+RAM,Ram Island,United States of America,US,41.618024,-70.804273,metadataProvider
+NMI,North Monomoy Island,United States of America,US,41.634623,-69.975088,metadataProvider
+GOU,Gough Island,United Kingdom,GB,-40.316667,-9.933333,metadataProvider
+ARV,Arvidsjaur,Sweden,SE,65.666667,19,metadataProvider
+MIR,Miraflores,Spain,ES,40.811408,-3.782683,metadataProvider
+BOW,Bowdoin Scientific Station,Canada,CA,44.5819,-66.7559,metadataProvider
+SEK,Sekocin Forest,Poland,PL,52.099,20.875,metadataProvider
+HSF,Hochstetter Forland,Greenland,GL,75.15,-19.75,metadataProvider
+BAG,Bagley Wood,United Kingdom,GB,51.7,-1.25,metadataProvider
+GTM,Greater Manchester,United Kingdom,GB,53.47781,-2.25237,metadataProvider
+UPP,Uppsala,Sweden,SE,59.795,17.83,metadataProvider
+ZER,Zeromski Park,Poland,PL,53.433,14.562,metadataProvider
