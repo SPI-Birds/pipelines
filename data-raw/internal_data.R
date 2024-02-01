@@ -412,7 +412,7 @@ key_variables <- tibble::lst(
 
   # Measurement data
   Measurement_data = c("row", "measurementID", "recordID", "studyID", "siteID", "measurementSubject", # v2.0 variables
-                       "measurementType", "measurementValue", "measurementUnit", "measurementDeterminedYear"),
+                       "measurementType", "measurementValue", "measurementDeterminedYear"), #remove 'measurementUnits' which allow NAs
 
   # Experiment data
   Experiment_data = c("row", "treatmentID", "experimentID", "studyID", "siteID", "experimentType", # v2.0 variables
