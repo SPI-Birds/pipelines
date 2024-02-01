@@ -62,7 +62,7 @@ calc_age <- function(data, ID, Age, Date, Year, showpb = TRUE){
                                                     .data$FirstAge %in% c(1, 3) & .data$yr_diff > 0 ~ 3L + 2L*.data$yr_diff,
                                                     #Rule 5: All other cases (e.g. ID unknown, year of capture unknown) have no Age_calculated
                                                     TRUE ~ NA_integer_)) %>%
-    dplyr::select(-.data$FirstAge, -.data$FirstYear, -.data$yr_diff)
+    dplyr::select(-"FirstAge", -"FirstYear", -"yr_diff")
 
   return(output)
 

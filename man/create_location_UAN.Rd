@@ -7,7 +7,7 @@
 create_location_UAN(BOX_info)
 }
 \arguments{
-\item{BOX_info}{Data frame. Primary data from University of Antwerp.}
+\item{BOX_info}{Data frame. Primary location data from University of Antwerp.}
 }
 \value{
 A data frame.

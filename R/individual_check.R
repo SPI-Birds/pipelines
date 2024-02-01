@@ -104,7 +104,7 @@ check_unique_IndvID <- function(Individual_data, approved_list, output, skip){
     # Select records with IndvIDs that are duplicated within populations
     duplicated_within <- Individual_data %>%
       dplyr::group_by(.data$PopID, .data$IndvID) %>%
-      dplyr::filter(n() > 1) %>%
+      dplyr::filter(dplyr::n() > 1) %>%
       dplyr::ungroup()
 
     # If potential errors, add to report
@@ -213,7 +213,7 @@ check_BroodID_chicks <- function(Individual_data, Capture_data, Location_data, a
                                                    !is.na(.data$StartSeason) ~ .data$StartSeason)) %>%
       tidyr::uncount(weights = .data$EndSeason - .data$StartSeason + 1) %>%
       dplyr::group_by(.data$Row) %>%
-      dplyr::mutate(BreedingSeason = .data$StartSeason + row_number() - 1) %>%
+      dplyr::mutate(BreedingSeason = .data$StartSeason + dplyr::row_number() - 1) %>%
       dplyr::ungroup() %>%
       dplyr::select(-"Row")
 

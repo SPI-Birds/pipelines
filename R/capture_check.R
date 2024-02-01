@@ -146,7 +146,7 @@ check_values_capture <- function(Capture_data, var, approved_list, output, skip)
                      .groups = "drop")
 
   var_not_recorded <- var_recorded %>%
-    dplyr::filter(recorded == FALSE)
+    dplyr::filter(.data$recorded == FALSE)
 
   # Create reference values from data
   # Tarsus
@@ -796,14 +796,14 @@ check_adult_parent_nest <- function(Capture_data, Location_data, Brood_data, app
                                                    !is.na(.data$StartSeason) ~ .data$StartSeason)) %>%
       tidyr::uncount(weights = .data$EndSeason - .data$StartSeason + 1) %>%
       dplyr::group_by(.data$Row) %>%
-      dplyr::mutate(BreedingSeason = .data$StartSeason + row_number() - 1) %>%
+      dplyr::mutate(BreedingSeason = .data$StartSeason + dplyr::row_number() - 1) %>%
       dplyr::ungroup() %>%
       dplyr::select(-"Row")
 
     # Add location type to adults data frame and filter captures on nest box
     adults_nest_box <- adults %>%
       dplyr::left_join(annual_locations, by = c("CapturePopID" = "PopID", "LocationID", "BreedingSeason")) %>%
-      dplyr::filter(LocationType == "NB")
+      dplyr::filter(.data$LocationType == "NB")
 
     # Check whether adults caught in nest box are associated with that nest in Brood data
     females_w_nests <- adults_nest_box %>%
@@ -913,7 +913,7 @@ check_age_captures <- function(Capture_data, approved_list, output, skip){
     wrong_age_order <- Capture_data %>%
       dplyr::group_by(.data$CapturePopID, .data$IndvID) %>%
       dplyr::arrange(.data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
-      dplyr::mutate(Age_observed_next = lead(.data$Age_observed)) %>%
+      dplyr::mutate(Age_observed_next = dplyr::lead(.data$Age_observed)) %>%
       dplyr::filter(
         .data$Age_observed > .data$Age_observed_next &
           ((.data$Age_observed %in% c(1, 3) & .data$Age_observed_next %in% c(1, 3)) | # chicks
@@ -962,7 +962,7 @@ check_age_captures <- function(Capture_data, approved_list, output, skip){
     chicks_caught_after_adults <- Capture_data %>%
       dplyr::group_by(.data$CapturePopID, .data$IndvID) %>%
       dplyr::arrange(.data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
-      dplyr::mutate(Age_observed_next = lead(.data$Age_observed)) %>%
+      dplyr::mutate(Age_observed_next = dplyr::lead(.data$Age_observed)) %>%
       dplyr::filter(.data$Age_observed > .data$Age_observed_next &
                       (.data$Age_observed == 2 | .data$Age_observed >= 4) &
                       .data$Age_observed_next %in% c(1, 3)) %>%

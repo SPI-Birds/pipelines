@@ -74,39 +74,29 @@ format_PIL <- function(db = choose_directory(),
     janitor::clean_names() %>%
     #Convert all date columns
     #Some are march days some are actual dates (but different formats)
-    dplyr::mutate(mar_31 = as.Date(paste(year, 3, 31, sep = "-")),
+    dplyr::mutate(mar_31 = as.Date(paste(.data$year, 3, 31, sep = "-")),
                   #Nestbox numbers are not unique across plots
-                  LocationID = paste(plot, nestbox, sep = "_"),
+                  LocationID = paste(.data$plot, .data$nestbox, sep = "_"),
                   #BroodID requires year, plot, nestbox, laying_date
                   #This accounts for multiple clutches in a year
-                  BroodID = paste(year, plot, nestbox, laying_date, sep = "_")) %>%
+                  #TODO: check with data custodian what to do with records
+                  # where nestbox and/or laying date are NA
+                  BroodID = paste(.data$year, .data$plot, .data$nestbox, .data$laying_date,
+                                  sep = "_")) %>%
     #Convert march days
-    dplyr::mutate_at(.vars = vars(.data$laying_date, .data$hdate), .funs = ~{mar_31 + as.numeric(..1)}) %>%
+    dplyr::mutate(dplyr::across(.cols = c("laying_date", "hdate"),
+                                .fns = ~{.data$mar_31 + as.numeric(.x)})) %>%
     #Convert regular dates
-    dplyr::rowwise() %>%
-    dplyr::mutate_at(.vars = vars(.data$female_date, .data$male_date, .data$ring_date, .data$nestling_measure_date),
-                     .funs = ~{
+    dplyr::mutate(dplyr::across(.cols = c("female_date", "male_date",
+                                          "ring_date", "nestling_measure_date"),
+                                .fns = ~{
 
-                       if(is.na(..1)){
+                                  dplyr::case_when(is.na(.x) ~ as.Date(NA),
+                                                   grepl(pattern = "\\.", .x) ~ as.Date(.x, format = "%Y.%m.%d"),
+                                                   TRUE ~ suppressWarnings(janitor::excel_numeric_to_date(as.numeric(.x))))
 
-                         as.Date(NA)
+                                }))
 
-                       } else {
-
-                         if(grepl(pattern = "\\.", ..1)){
-
-                           as.Date(..1, format = "%Y.%m.%d")
-
-                         } else {
-
-                           janitor::excel_numeric_to_date(as.numeric(..1))
-
-                         }
-
-                       }
-
-                     }) %>%
-    dplyr::ungroup()
 
   # BROOD DATA
 
@@ -137,34 +127,39 @@ format_PIL <- function(db = choose_directory(),
   # Add ChickAge to capture data
   # Add hatchdate from brood data
   Capture_data <- Capture_data %>%
-    dplyr::left_join(dplyr::select(Brood_data, BroodID, HatchDate_observed), by = "BroodID") %>%
+    dplyr::left_join(Brood_data %>%
+                       dplyr::select("BroodID", "HatchDate_observed"),
+                     by = "BroodID") %>%
     dplyr::mutate(ChickAge = dplyr::case_when(is.na(.data$Age_observed) ~ NA_integer_,
-                                              !is.na(.data$Age_observed) ~ as.integer(.data$CaptureDate - .data$HatchDate_observed))) %>%
-    dplyr::ungroup()
+                                              !is.na(.data$Age_observed) ~ as.integer(.data$CaptureDate - .data$HatchDate_observed)))
+  ## FIXME: many-to-many relationship because of duplicated BroodIDs,
+  ## where one or more of the components that make up BroodID are NA.
 
   # Determine avg measures for each brood
   avg_mass <- Capture_data %>%
-    dplyr::filter(between(ChickAge, 14, 16) & !is.na(Mass)) %>%
-    dplyr::group_by(BroodID) %>%
-    dplyr::summarise(AvgChickMass = mean(Mass),
-                     NumberChicksMass = n())
+    dplyr::filter(dplyr::between(.data$ChickAge, 14, 16) & !is.na(.data$Mass)) %>%
+    dplyr::group_by(.data$BroodID) %>%
+    dplyr::summarise(AvgChickMass = mean(.data$Mass),
+                     NumberChicksMass = dplyr::n())
 
   avg_tarsus <- Capture_data %>%
-    dplyr::filter(between(ChickAge, 14, 16) & !is.na(Tarsus)) %>%
-    dplyr::group_by(BroodID) %>%
-    dplyr::summarise(AvgTarsus = mean(Tarsus),
-                     NumberChicksTarsus = n(),
+    dplyr::filter(dplyr::between(.data$ChickAge, 14, 16) & !is.na(.data$Tarsus)) %>%
+    dplyr::group_by(.data$BroodID) %>%
+    dplyr::summarise(AvgTarsus = mean(.data$Tarsus),
+                     NumberChicksTarsus = dplyr::n(),
                      OriginalTarsusMethod = "Alternative")
 
   # Add into Brood_data
   Brood_data <- Brood_data %>%
-    dplyr::left_join(avg_mass, by = "BroodID") %>%
-    dplyr::left_join(avg_tarsus, by = "BroodID")
+    dplyr::left_join(avg_mass,
+                     by = "BroodID") %>%
+    dplyr::left_join(avg_tarsus,
+                     by = "BroodID")
 
   # Remove unneccesary columns in Brood and Capture data
   Brood_data <- Brood_data %>%
     # Keep only necessary columns
-    dplyr::select(dplyr::contains(names(brood_data_template))) %>%
+    dplyr::select(tidyselect::contains(names(brood_data_template))) %>%
     # Add missing columns
     dplyr::bind_cols(brood_data_template[1, !(names(brood_data_template) %in% names(.))]) %>%
     # Reorder columns
@@ -172,7 +167,7 @@ format_PIL <- function(db = choose_directory(),
 
   Capture_data <- Capture_data %>%
     # Keep only necessary columns
-    dplyr::select(dplyr::contains(names(capture_data_template))) %>%
+    dplyr::select(tidyselect::contains(names(capture_data_template))) %>%
     # Add missing columns
     dplyr::bind_cols(capture_data_template[1, !(names(capture_data_template) %in% names(.))]) %>%
     # Reorder columns
@@ -192,7 +187,9 @@ format_PIL <- function(db = choose_directory(),
 
     utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_PIL.csv"), row.names = F)
 
-    utils::write.csv(x = Capture_data %>% select(-Sex, -BroodID), file = paste0(path, "\\Capture_data_PIL.csv"), row.names = F)
+    utils::write.csv(x = Capture_data %>%
+                       dplyr::select(-"Sex", -"BroodID"),
+                     file = paste0(path, "\\Capture_data_PIL.csv"), row.names = F)
 
     utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_PIL.csv"), row.names = F)
 
@@ -238,14 +235,14 @@ create_brood_PIL <- function(PIL_data, species_filter){
                   #Note, we still use our species_codes table even though they use the same 6 letter codes
                   #This is because it will be easier to change if e.g. species are renamed
                   #because we can just update the species_codes table once.
-                  Species = dplyr::case_when(species == "CYACAE" ~ species_codes$Species[species_codes$SpeciesID == 14620],
-                                             species == "PARMAJ" ~ species_codes$Species[species_codes$SpeciesID == 14640],
-                                             species == "FICALB" ~ species_codes$Species[species_codes$SpeciesID == 13480],
-                                             species == "SITEUR" ~ species_codes$Species[species_codes$SpeciesID == 14790]),
-                  ExperimentID = dplyr::case_when(exp == "0" ~ NA_character_,
-                                                  exp == "1" ~ "COHORT",
-                                                  exp == "2" ~ "COHORT;PHENOLOGY",
-                                                  exp == "3" ~ "COHORT"),
+                  Species = dplyr::case_when(.data$species == "CYACAE" ~ species_codes$Species[species_codes$SpeciesID == 14620],
+                                             .data$species == "PARMAJ" ~ species_codes$Species[species_codes$SpeciesID == 14640],
+                                             .data$species == "FICALB" ~ species_codes$Species[species_codes$SpeciesID == 13480],
+                                             .data$species == "SITEUR" ~ species_codes$Species[species_codes$SpeciesID == 14790]),
+                  ExperimentID = dplyr::case_when(.data$exp == "0" ~ NA_character_,
+                                                  .data$exp == "1" ~ "COHORT",
+                                                  .data$exp == "2" ~ "COHORT;PHENOLOGY",
+                                                  .data$exp == "3" ~ "COHORT"),
                   LayDate_observed = .data$laying_date,
                   ClutchSize_observed = as.integer(.data$clutch_size),
                   BroodSize_observed = as.integer(.data$number_hatchlings),
@@ -253,7 +250,7 @@ create_brood_PIL <- function(PIL_data, species_filter){
                   HatchDate_observed = .data$hdate,
                   FemaleID = .data$femalering,
                   MaleID = .data$malering) %>%
-    dplyr::filter(Species %in% species_filter) %>%
+    dplyr::filter(.data$Species %in% species_filter) %>%
     dplyr::arrange(.data$BreedingSeason, .data$FemaleID, .data$LayDate_observed) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.1"))
 
@@ -275,8 +272,9 @@ create_brood_PIL <- function(PIL_data, species_filter){
 
 create_capture_PIL <- function(PIL_data, species_filter){
 
+  # Female captures
   female_capture_data <- PIL_data %>%
-    dplyr::select(.data$year:.data$species, .data$femalering:.data$f_mass) %>%
+    dplyr::select("year":"species", "femalering":"f_mass") %>%
     dplyr::filter(!is.na(.data$femalering)) %>%
     dplyr::mutate(CapturePopID = "PIL",
                   ReleasePopID = "PIL",
@@ -293,15 +291,16 @@ create_capture_PIL <- function(PIL_data, species_filter){
                   WingLength = suppressWarnings(as.numeric(.data$f_wing)),
                   Mass = suppressWarnings(as.numeric(.data$f_mass))/10,
                   Sex_observed = "F",
-                  Species = dplyr::case_when(species == "CYACAE" ~ species_codes$Species[species_codes$SpeciesID == 14620],
-                                             species == "PARMAJ" ~ species_codes$Species[species_codes$SpeciesID == 14640],
-                                             species == "FICALB" ~ species_codes$Species[species_codes$SpeciesID == 13480],
-                                             species == "SITEUR" ~ species_codes$Species[species_codes$SpeciesID == 14790],
-                                             species == "FICHIB" ~ species_codes$Species[species_codes$SpeciesID == 13480]))
+                  Species = dplyr::case_when(.data$species == "CYACAE" ~ species_codes$Species[species_codes$SpeciesID == 14620],
+                                             .data$species == "PARMAJ" ~ species_codes$Species[species_codes$SpeciesID == 14640],
+                                             .data$species == "FICALB" ~ species_codes$Species[species_codes$SpeciesID == 13480],
+                                             .data$species == "SITEUR" ~ species_codes$Species[species_codes$SpeciesID == 14790],
+                                             .data$species == "FICHIB" ~ species_codes$Species[species_codes$SpeciesID == 13480]))
 
+  # Male captures
   male_capture_data <- PIL_data %>%
-    dplyr::select(.data$year:.data$species,
-                  .data$malering:.data$m_mass) %>%
+    dplyr::select("year":"species",
+                  "malering":"m_mass") %>%
     dplyr::filter(!is.na(.data$malering)) %>%
     dplyr::mutate(CapturePopID = "PIL",
                   ReleasePopID = "PIL",
@@ -318,59 +317,73 @@ create_capture_PIL <- function(PIL_data, species_filter){
                   WingLength = suppressWarnings(as.numeric(.data$m_wing)),
                   Mass = suppressWarnings(as.numeric(.data$m_mass))/10,
                   Sex_observed = "M",
-                  Species = dplyr::case_when(species == "CYACAE" ~ species_codes$Species[species_codes$SpeciesID == 14620],
-                                             species == "PARMAJ" ~ species_codes$Species[species_codes$SpeciesID == 14640],
-                                             species == "FICALB" ~ species_codes$Species[species_codes$SpeciesID == 13480],
-                                             species == "SITEUR" ~ species_codes$Species[species_codes$SpeciesID == 14790],
-                                             species == "FICHIB" ~ species_codes$Species[species_codes$SpeciesID == 13490]))
+                  Species = dplyr::case_when(.data$species == "CYACAE" ~ species_codes$Species[species_codes$SpeciesID == 14620],
+                                             .data$species == "PARMAJ" ~ species_codes$Species[species_codes$SpeciesID == 14640],
+                                             .data$species == "FICALB" ~ species_codes$Species[species_codes$SpeciesID == 13480],
+                                             .data$species == "SITEUR" ~ species_codes$Species[species_codes$SpeciesID == 14790],
+                                             .data$species == "FICHIB" ~ species_codes$Species[species_codes$SpeciesID == 13490]))
 
+  # Chick captures
   chick_capture_data <- PIL_data %>%
     #Remove unwanted species
-    dplyr::mutate(Species = dplyr::case_when(species == "CYACAE" ~ species_codes$Species[species_codes$SpeciesID == 14620],
-                                             species == "PARMAJ" ~ species_codes$Species[species_codes$SpeciesID == 14640],
-                                             species == "FICALB" ~ species_codes$Species[species_codes$SpeciesID == 13480],
-                                             species == "SITEUR" ~ species_codes$Species[species_codes$SpeciesID == 14790])) %>%
-    dplyr::filter(Species %in% species_filter) %>%
+    dplyr::mutate(Species = dplyr::case_when(.data$species == "CYACAE" ~ species_codes$Species[species_codes$SpeciesID == 14620],
+                                             .data$species == "PARMAJ" ~ species_codes$Species[species_codes$SpeciesID == 14640],
+                                             .data$species == "FICALB" ~ species_codes$Species[species_codes$SpeciesID == 13480],
+                                             .data$species == "SITEUR" ~ species_codes$Species[species_codes$SpeciesID == 14790])) %>%
+    dplyr::filter(.data$Species %in% species_filter) %>%
     #Remove cases where no chicks were ever ringed
-    dplyr::filter_at(.vars = vars(contains("nestling_ring")), .vars_predicate = any_vars(!is.na(.))) %>%
-    dplyr::select(.data$BroodID, .data$year:.data$nestbox, .data$Species, .data$ring_date:.data$tarsus_15) %>%
+    dplyr::filter(!dplyr::if_all(.cols = tidyselect::contains("nestling_ring"),
+                                 .fns = is.na)) %>%
+    dplyr::select("BroodID", "year":"nestbox", "Species", "ring_date":"tarsus_15") %>%
     #we need to give two records to chicks that were ringed and measured at different times
-    tidyr::pivot_longer(cols = c(.data$ring_date, .data$nestling_measure_date),
+    tidyr::pivot_longer(cols = c("ring_date", "nestling_measure_date"),
                         names_to = "date_type", values_to = "CaptureDate") %>%
     #If measure date is NA, then there's only one capture and we can remove it
-    dplyr::filter(.data$date_type == "ring_date" | (.data$date_type == "nestling_measure_date" & !is.na(CaptureDate))) %>%
+    dplyr::filter(.data$date_type == "ring_date" | (.data$date_type == "nestling_measure_date" & !is.na(.data$CaptureDate))) %>%
     #Identify every case where there were two captures
     dplyr::group_by(.data$BroodID) %>%
-    dplyr::mutate(n = n()) %>%
-    tidyr::pivot_longer(cols = .data$nestling_ring_1:.data$nestling_ring_15, names_to = "ChickNr", values_to = "IndvID") %>%
-    dplyr::filter(!is.na(IndvID)) %>%
-    tidyr::pivot_longer(cols = .data$mass_1:.data$mass_15, names_to = "ChickNr_Mass", values_to = "Mass") %>%
-    tidyr::pivot_longer(cols = .data$tarsus_1:.data$tarsus_15, names_to = "ChickNr_Tarsus", values_to = "Tarsus") %>%
-    #Convert to just have the number of the chick
-    dplyr::mutate_at(.vars = vars(contains("ChickNr")),
-                     .funs = ~{stringr::str_remove_all(..1, pattern = "[^0-9]")}) %>%
-    dplyr::filter(ChickNr == .data$ChickNr_Mass & ChickNr == .data$ChickNr_Tarsus) %>%
-    #When there is a ring and measure date, make tarsus and mass NA at the ring date
-    dplyr::rowwise() %>%
-    dplyr::mutate_at(.vars = vars(.data$Mass, .data$Tarsus),
-                     .funs = ~ ifelse(n == 2 & .data$date_type == "ring_date", NA, .)) %>%
+    dplyr::mutate(n = dplyr::n()) %>%
     dplyr::ungroup() %>%
-    dplyr::mutate(CapturePopID = "PIL",
+    tidyr::pivot_longer(cols = "nestling_ring_1":"nestling_ring_15",
+                        names_to = "ChickNr", values_to = "IndvID") %>%
+    dplyr::filter(!is.na(.data$IndvID)) %>%
+    tidyr::pivot_longer(cols = "mass_1":"mass_15",
+                        names_to = "ChickNr_Mass", values_to = "Mass") %>%
+    tidyr::pivot_longer(cols = "tarsus_1":"tarsus_15",
+                        names_to = "ChickNr_Tarsus", values_to = "Tarsus") %>%
+    #Convert to just have the number of the chick
+    dplyr::mutate(dplyr::across(.cols = tidyselect::contains("ChickNr"),
+                                .fns = ~{
+
+                                  stringr::str_remove_all(.x, pattern = "[^0-9]")
+
+                                })) %>%
+    dplyr::filter(.data$ChickNr == .data$ChickNr_Mass,
+                  .data$ChickNr == .data$ChickNr_Tarsus) %>%
+    #When there is a ring and measure date, make tarsus and mass NA at the ring date
+    dplyr::mutate(dplyr::across(.cols = c("Mass", "Tarsus"),
+                                .fns = ~{
+
+                                  dplyr::case_when(.data$n == 2 & .data$date_type == "ring_date" ~ NA_real_,
+                                                   TRUE ~ as.numeric(.x)/10)
+
+                                }),
+                  CapturePopID = "PIL",
                   ReleasePopID = "PIL",
                   BreedingSeason = as.integer(.data$year),
                   CapturePlot = .data$plot,
                   ReleasePlot = .data$plot,
-                  # Nestbox numbers are not unique across plots
+                  #Nestbox numbers are not unique across plots
                   LocationID = paste(.data$plot, .data$nestbox, sep = "_"),
                   Age_observed = 1L,
                   ObserverID = .data$nestling_measure_person,
-                  Tarsus = suppressWarnings(as.numeric(.data$Tarsus))/10,
-                  Mass = suppressWarnings(as.numeric(.data$Mass))/10,
                   Sex_observed = NA_character_,
                   IndvID = toupper(.data$IndvID))
 
   # Combine data
-  Capture_data <- dplyr::bind_rows(female_capture_data, male_capture_data, chick_capture_data) %>%
+  Capture_data <- dplyr::bind_rows(female_capture_data,
+                                   male_capture_data,
+                                   chick_capture_data) %>%
     dplyr::mutate(CaptureTime = NA_character_,
                   WingLength = NA_real_,
                   OriginalTarsusMethod = NA_character_,
@@ -385,7 +398,7 @@ create_capture_PIL <- function(PIL_data, species_filter){
     # Arrange by IndvID and CaptureDate and add unique CaptureID
     dplyr::arrange(.data$IndvID, .data$CaptureDate) %>%
     dplyr::group_by(.data$IndvID) %>%
-    dplyr::mutate(CaptureID = paste(.data$IndvID, 1:n(), sep = "_")) %>%
+    dplyr::mutate(CaptureID = paste(.data$IndvID, 1:dplyr::n(), sep = "_")) %>%
     dplyr::ungroup()
 
   return(Capture_data)
@@ -404,14 +417,15 @@ create_individual_PIL <- function(Capture_data){
 
   # Take capture data and determine summary data for each individual
   Indv_info <- Capture_data %>%
-    dplyr::arrange(.data$IndvID, .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
+    dplyr::arrange(.data$IndvID, .data$BreedingSeason,
+                   .data$CaptureDate, .data$CaptureTime) %>%
     dplyr::group_by(.data$IndvID) %>%
     dplyr::summarise(Species = dplyr::case_when(length(unique(.data$Species)) == 2 ~ "CCCCCC",
                                                 TRUE ~ dplyr::first(.data$Species)),
                      PopID = "PIL",
-                     BroodIDLaid = first(.data$BroodID),
+                     BroodIDLaid = dplyr::first(.data$BroodID),
                      BroodIDFledged = .data$BroodIDLaid,
-                     RingSeason = first(.data$BreedingSeason),
+                     RingSeason = dplyr::first(.data$BreedingSeason),
                      RingAge = ifelse(all(is.na(.data$Age_observed)), "adult", "chick")) %>%
     dplyr::arrange(.data$RingSeason, .data$IndvID)
 
@@ -425,12 +439,13 @@ create_individual_PIL <- function(Capture_data){
     dplyr::mutate(Sex_calculated = dplyr::case_when(.data$length_sex > 1 ~ "C",
                                                     TRUE ~ .data$unique_sex[[1]])) %>%
     dplyr::ungroup() %>%
-    dplyr::select(.data$IndvID, .data$Sex_calculated)
+    dplyr::select("IndvID", "Sex_calculated")
 
   Indv_data <- Indv_info %>%
-    dplyr::left_join(Sex_calc, by = "IndvID") %>%
+    dplyr::left_join(Sex_calc,
+                     by = "IndvID") %>%
     # Keep only necessary columns
-    dplyr::select(dplyr::contains(names(individual_data_template))) %>%
+    dplyr::select(tidyselect::contains(names(individual_data_template))) %>%
     # Add missing columns
     dplyr::bind_cols(individual_data_template[1, !(names(individual_data_template) %in% names(.))]) %>%
     # Reorder columns

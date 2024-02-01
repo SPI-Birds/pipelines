@@ -27,8 +27,6 @@
 #' @inheritParams checks_location_params
 #'
 #' @inherit checks_return return
-#' @importFrom rlang sym `:=`
-#' @importFrom progress progress_bar
 #' @export
 
 brood_check <- function(Brood_data, Individual_data, Capture_data, Location_data, approved_list, output, skip){
@@ -661,7 +659,7 @@ check_values_brood <- function(Brood_data, var, approved_list, output, skip) {
                      .groups = "drop")
 
   var_not_recorded <- var_recorded %>%
-    dplyr::filter(recorded == FALSE)
+    dplyr::filter(.data$recorded == FALSE)
 
 
   # Create reference values from data
@@ -968,7 +966,7 @@ compare_broodsize_chicknumber <- function(Brood_data, Individual_data, approved_
     chicks_captured <- Individual_data %>%
       dplyr::select("IndvID", "BroodIDLaid") %>%
       dplyr::group_by(.data$BroodIDLaid) %>%
-      dplyr::summarise(Chicks = n_distinct(.data$IndvID)) %>%
+      dplyr::summarise(Chicks = dplyr::n_distinct(.data$IndvID)) %>%
       dplyr::ungroup()
 
   }
@@ -1129,7 +1127,7 @@ check_unique_BroodID <- function(Brood_data, approved_list, output, skip){
     # Select records that are duplicated within populations
     duplicated <- Brood_data %>%
       dplyr::group_by(.data$PopID, .data$BroodID) %>%
-      dplyr::filter(n() > 1) %>%
+      dplyr::filter(dplyr::n() > 1) %>%
       dplyr::ungroup()
 
     # If potential errors, add to report
@@ -1655,7 +1653,7 @@ compare_species_brood_chicks <- function(Brood_data, Individual_data, approved_l
       dplyr::semi_join(common_hybrids, by = c("Species" = "Species1", "IndvSpecies" = "Species2")) %>%
       dplyr::group_by(.data$PopID, .data$BroodID, .data$Row) %>%
       dplyr::summarise(OtherSpeciesChicks = sum(.data$SpeciesComp),
-                       Chicks = n(),
+                       Chicks = dplyr::n(),
                        .groups = "drop") %>%
       dplyr::filter(.data$OtherSpeciesChicks > 0)
 
@@ -1697,7 +1695,7 @@ compare_species_brood_chicks <- function(Brood_data, Individual_data, approved_l
       dplyr::anti_join(common_hybrids, by = c("Species" = "Species1", "IndvSpecies" = "Species2")) %>%
       dplyr::group_by(.data$PopID, .data$BroodID, .data$Row) %>%
       dplyr::summarise(OtherSpeciesChicks = sum(.data$SpeciesComp),
-                       Chicks = n(),
+                       Chicks = dplyr::n(),
                        .groups = "drop") %>%
       dplyr::filter(.data$OtherSpeciesChicks > 0)
 

@@ -18,19 +18,24 @@
 #'
 #' @export
 #' @return
+#' \subsection{List}{
+#'    \describe{
+#'    A list of:
+#'      \item{CheckList}{A summary data frame of check warnings and potentials errors, with the following columns: (1)   \code{CheckID}: {identifier of the individual quality check}, (2) \code{CheckDescription}: {a short description of the individual check}, (3) \code{Warning}: {TRUE/FALSE. Did this check flag any records as warning?}, (4) \code{Error}: {TRUE/FALSE. Did this check flag any records as error?}, (5) \code{WarningRecords}: {number of records flagged as warning by this check}, (6) \code{ErrorRecords}: {number of records flagged as error by this check.}, and (7) \code{Skipped}: {TRUE/FALSE. Was this check skipped?}.}
+#'      \item{NumberChecks}{Number of checks performed.}
+#'      \item{SkippedChecks}{Number of checks manually skipped.}
+#'      \item{WarningChecks}{Number of checks resulted in warnings.}
+#'      \item{ErrorChecks}{Number of checks resulted in potential errors.}
+#'      \item{ElapsedTime}{Elapsed time in seconds.}
+#'      \item{R_data}{Pipeline output (a list of 4 dataframes) with Warning & Error columns marking the rows with warnings and errors.}
+#'   }
+#'}
 #'
-#' \subsection{List}
-#' A list of:
-#' \item{CheckList}{A summary data frame of check warnings and potentials errors, with the following columns: (1) \code{CheckID}: {identifier of the individual quality check}, (2) \code{CheckDescription}: {a short description of the individual check}, (3) \code{Warning}: {TRUE/FALSE. Did this check flag any records as warning?}, (4) \code{Error}: {TRUE/FALSE. Did this check flag any records as error?}, (5) \code{WarningRecords}: {number of records flagged as warning by this check}, (6) \code{ErrorRecords}: {number of records flagged as error by this check.}, and (7) \code{Skipped}: {TRUE/FALSE. Was this check skipped?}.}
-#' \item{NumberChecks}{Number of checks performed.}
-#' \item{SkippedChecks}{Number of checks manually skipped.}
-#' \item{WarningChecks}{Number of checks resulted in warnings.}
-#' \item{ErrorChecks}{Number of checks resulted in potential errors.}
-#' \item{ElapsedTime}{Elapsed time in seconds.}
-#' \item{R_data}{Pipeline output (a list of 4 dataframes) with Warning & Error columns marking the rows with warnings and errors.}
-#'
-#' \subsection{Reports (optional)}
-#' Quality check reports (pdf, html or both) of potential errors and/or warnings if \code{report = TRUE}.
+#' \subsection{Reports (optional)}{
+#'   \describe{
+#'     Quality check reports (pdf, html or both) of potential errors and/or warnings if \code{report = TRUE}.
+#'   }
+#' }
 #'
 #' @export
 #' @examples
@@ -154,19 +159,19 @@ quality_check <- function(R_data,
 
   # Subset approved list items
   Brood_approved_list <- approved_list$Brood_approved_list %>%
-    dplyr::filter(PopID %in% unique(R_data$Brood_data$PopID)) %>%
+    dplyr::filter(.data$PopID %in% unique(R_data$Brood_data$PopID)) %>%
     dplyr::arrange(.data$PopID, .data$BroodID, .data$CheckID)
 
   Capture_approved_list <- approved_list$Capture_approved_list %>%
-    dplyr::filter(PopID %in% unique(R_data$Brood_data$PopID)) %>%
+    dplyr::filter(.data$PopID %in% unique(R_data$Brood_data$PopID)) %>%
     dplyr::arrange(.data$PopID, .data$CaptureID, .data$CheckID)
 
   Individual_approved_list <- approved_list$Individual_approved_list %>%
-    dplyr::filter(PopID %in% unique(R_data$Brood_data$PopID)) %>%
+    dplyr::filter(.data$PopID %in% unique(R_data$Brood_data$PopID)) %>%
     dplyr::arrange(.data$PopID, .data$IndvID, .data$CheckID)
 
   Location_approved_list <- approved_list$Location_approved_list %>%
-    dplyr::filter(PopID %in% unique(R_data$Brood_data$PopID)) %>%
+    dplyr::filter(.data$PopID %in% unique(R_data$Brood_data$PopID)) %>%
     dplyr::arrange(.data$PopID, .data$LocationID, .data$CheckID)
 
 
@@ -181,9 +186,13 @@ quality_check <- function(R_data,
 
   checks_skipped <- sum(check_list$Skipped == TRUE, na.rm = TRUE) # Total number of checks skipped
 
-  skipped_errors <- check_list %>% dplyr::filter(!is.na(.data$Error), .data$Skipped == TRUE) %>% nrow() # Number of potential error checks skipped
+  skipped_errors <- check_list %>%
+    dplyr::filter(!is.na(.data$Error), .data$Skipped == TRUE) %>%
+    nrow() # Number of potential error checks skipped
 
-  skipped_warnings <- check_list %>% dplyr::filter(!is.na(.data$Warning), .data$Skipped == TRUE) %>% nrow() # Number of warning checks skipped
+  skipped_warnings <- check_list %>%
+    dplyr::filter(!is.na(.data$Warning), .data$Skipped == TRUE) %>%
+    nrow() # Number of warning checks skipped
 
   if(output %in% c("warnings", "both")) {
 
@@ -306,14 +315,14 @@ quality_check <- function(R_data,
                    '',
                    '```{r, echo = FALSE, fig.cap = "", results = "asis", out.width="100%"}',
                    'invisible(
-                      iwalk(.x = Location_checks$Maps,
+                      purrr::iwalk(.x = Location_checks$Maps,
                             .f = ~{
                               htmlwidgets::saveWidget(widget = .x, file = paste0("figure/", .y, ".html"))
                             })
                     )
 
                     invisible(
-                      map(.x = names(Location_checks$Maps),
+                      purrr::map(.x = names(Location_checks$Maps),
                           .f = ~{
                             webshot::webshot(url = paste0("figure/", .x, ".html"),
                                              file = paste0("figure/", .x, ".png"))
@@ -629,8 +638,5 @@ quality_check <- function(R_data,
                             Capture_data = Capture_data,
                             Individual_data = Individual_data,
                             Location_data = Location_data)))
-
-  # Satisfy RCMD checks
-  approved_list <- CheckID <- NULL
 
 }

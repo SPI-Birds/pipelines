@@ -314,31 +314,31 @@ test_category_columns <- function(pipeline_output,
   if (table == "Brood") {
 
     category_columns <- brood_data_template %>%
-      dplyr::select_if(~dplyr::n_distinct(.) > 1) %>%
-      dplyr::select(-BroodID)
+      dplyr::select(tidyselect::where(~dplyr::n_distinct(.) > 1))  %>%
+      dplyr::select(-"BroodID")
 
   }
 
   else if (table == "Capture") {
 
     category_columns <- capture_data_template %>%
-      dplyr::select_if(~dplyr::n_distinct(.) > 1) %>%
-      dplyr::select(-CaptureID)
+      dplyr::select(tidyselect::where(~dplyr::n_distinct(.) > 1))  %>%
+      dplyr::select(-"CaptureID")
 
   }
 
   else if (table == "Individual") {
 
     category_columns <- individual_data_template %>%
-      dplyr::select_if(~dplyr::n_distinct(.) > 1) %>%
-      dplyr::select(-IndvID)
+      dplyr::select(tidyselect::where(~dplyr::n_distinct(.) > 1)) %>%
+      dplyr::select(-"IndvID")
 
   }
 
   else if (table == "Location") {
 
     category_columns <- location_data_template %>%
-      dplyr::select_if(~dplyr::n_distinct(.) > 1)
+      dplyr::select(tidyselect::where(~dplyr::n_distinct(.) > 1))
 
   }
 

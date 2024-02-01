@@ -6,7 +6,6 @@
 #'
 #' @return A data frame
 #' @export
-#' @import reticulate
 
 extract_paradox_db <- function(path, file_name){
 
@@ -22,7 +21,7 @@ extract_paradox_db <- function(path, file_name){
   # When running on Mac OS, the path in extract_paradox_db may not contain "~"
   path_full <- normalizePath(path)
 
-  output_file <- py$extract_paradox(path = path_full, file_name = file_name)
+  output_file <- reticulate::py$extract_paradox(path = path_full, file_name = file_name)
 
   pb <- progress::progress_bar$new(total = length(output_file))
 

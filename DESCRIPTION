@@ -1,52 +1,68 @@
 Package: pipelines
-Title: Create bird data following SPI-Birds data standard
+Title: SPI-Birds data standardisation pipelines
 Version: 0.0.1
 Authors@R: 
-    c(person(given = "Liam",
-             family = "Bailey",
-             role = c("aut", "cre"),
-             email = "liam.bailey@liamdbailey.com"),
-      person(given = "Stefan",
-             family = "Vriend",
-             role = "aut",
-             email = "stefan.vriend@ntnu.no"))
-Description: What the package does (one paragraph).
+  c(person(given = "Liam",
+           family = "Bailey",
+           role = c("aut"),
+           email = "liam.bailey@liamdbailey.com",
+           comment = c(ORCID = "0000-0002-8226-9454")),
+    person(given = "Stefan",
+           family = "Vriend",
+           role = c("aut", "cre"),
+           email = "svriend@gmail.com",
+           comment = c(ORCID = "0000-0002-9006-5988")),
+    person(given = "Chloé",
+           family = "Nater",
+           role = "aut",
+           email = "chloe.nater@nina.no",
+           comment = c(ORCID = "0000-0002-7975-0108")),
+    person(given = "Zuzana",
+           family = "Zajková",
+           role = "aut",
+           email = "zajkova@icm.csic.es",
+           comment = c(ORCID = "0000-0002-7540-3651")),
+    person(given = "Chris",
+           family = "Tyson",
+           role = "aut",
+           email = "chris.tyson@wur.nl",
+           comment = c(ORCID = "0000-0002-2249-9143")))
+Description: Tailor-made pipelines that create bird data following SPI-Birds standard data format, and data quality checkp procedure to ensure data quality and integrity.
 Depends: R (>= 3.6.0)
 License: GPL-2
+URL: https://github.com/SPI-Birds/pipelines/
+BugReports: https://github.com/SPI-Birds/pipelines/issues
 Encoding: UTF-8
 LazyData: true
-Imports: dplyr,
-         devtools,
-         dbplyr,
-         DBI,
-         purrr,
-         stringr,
-         crayon,
-         lubridate,
-         odbc,
-         reticulate,
-         sf,
-         tibble,
-         tidyr,
-         readxl,
-         readr,
-         janitor,
-         here,
-         progress,
-         tcltk,
-         rlang,
-         rgeos,
-         rstudioapi,
-         sp,
-         usethis,
-         tidyselect,
-         ggmap
+Imports: 
+    crayon,
+    DBI,
+    devtools,
+    dplyr,
+    janitor,
+    leaflet,
+    lubridate,
+    magrittr,
+    odbc,
+    progress, 
+    purrr,
+    readr,
+    readxl,
+    reticulate,
+    rlang,
+    sf,
+    stringr,
+    tcltk,
+    tibble,
+    tidyr,
+    tidyselect
 RoxygenNote: 7.2.2
 Suggests: 
-    knitr,
-    rmarkdown,
-    testthat
-Enhances:
     ggplot2,
-    maps
+    here,
+    knitr,
+    maps,
+    rmarkdown,
+    testthat,
+    withr
 VignetteBuilder: knitr

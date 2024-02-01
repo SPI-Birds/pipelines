@@ -7,7 +7,7 @@
 create_brood_PEW(data)
 }
 \arguments{
-\item{data}{Data frame pew_data with primary data from Peerdsbos West, Belgium.}
+\item{data}{Data frame. Primary data from Peerdsbos West, Belgium.}
 }
 \value{
 A data frame.

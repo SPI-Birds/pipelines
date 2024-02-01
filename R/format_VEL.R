@@ -46,7 +46,6 @@
 #'
 #' @return Generates 4 .csv files with data in a standard format.
 #' @export
-#' @import stringr
 
 format_VEL <- function(db = choose_directory(),
                        species = NULL,
@@ -80,9 +79,10 @@ format_VEL <- function(db = choose_directory(),
                                                      col_types = c("skip", "numeric", "text",
                                                                    "text", "list",
                                                                    "text", "text",
+                                                                   "text", # FIXME new column added in data update 2022
                                                                    "text", "text",
                                                                    "list", "text",
-                                                                   rep("text", 8),
+                                                                   rep("text", 9), # FIXME new column added in data update 2022
                                                                    rep(c(rep("numeric", 4), "skip"), 8),
                                                                    "text", "list", "numeric",
                                                                    "numeric", "numeric",
@@ -99,33 +99,36 @@ format_VEL <- function(db = choose_directory(),
     ## Instead we parse each one separately, based on the best guess of readxl.
     ## This returns dates for dd/mm/yyyy, but character for dd.mm.yyyy.
     ## Then we just have to go through and make these few character strings into dates.
-    dplyr::mutate_at(.vars = dplyr::vars(contains("date")),
-                     function(date){
+    dplyr::mutate(dplyr::across(.cols = tidyselect::contains("date"),
+                                .fns = function(date){
 
-                       purrr::map(.x = date,
-                                  .f = ~{
+                                  purrr::map(.x = date,
+                                             .f = ~{
 
-                                    if(is.character(.x)){
+                                               if(is.character(.x)){
 
-                                      return(as.Date(.x, format = "%d.%m.%Y"))
+                                                 return(as.Date(.x, format = "%d.%m.%Y"))
 
-                                    } else {
+                                               } else {
 
-                                      return(as.Date(.x))
+                                                 return(as.Date(.x))
 
-                                    }
+                                               }
 
-                                  })
+                                             })
 
-                     }) %>%
-    tidyr::unnest(cols = c(.data$laying_date, .data$hatching_date, .data$date_of_capture_52, .data$date_of_capture_57)) %>%
+                                })) %>%
+    tidyr::unnest(cols = c("laying_date", "hatching_date",
+                           "date_of_capture_54", "date_of_capture_59")) %>%
     ## CHANGE COL NAMES TO MATCH STANDARD FORMAT
     dplyr::mutate(PopID = "VEL",
-                  BreedingSeason = as.integer(.data$year),
-                  Species = species_codes[which(species_codes$SpeciesID == 13480), ]$Species,
+                  BreedingSeason =
+                    as.integer(.data$year),
+                  Species = species_codes[species_codes$SpeciesID == 13480, ]$Species,
                   Plot = .data$plot,
                   LocationID = paste0(toupper(stringr::str_sub(.data$plot, end = 1)), .data$nest),
-                  BroodID = paste(.data$BreedingSeason, .data$plot, stringr::str_pad(string = .data$nest, width = 2, pad = "0"),
+                  BroodID = paste(.data$BreedingSeason, .data$plot,
+                                  stringr::str_pad(string = .data$nest, width = 2, pad = "0"),
                                   stringr::str_pad(string = lubridate::day(.data$laying_date),
                                                    width = 2,
                                                    pad = "0"),
@@ -141,7 +144,8 @@ format_VEL <- function(db = choose_directory(),
                   ## We assume that "+", "-", or "?" in ClutchSize, BroodSize, NumberFledged
                   ## is a measure of uncertainty,
                   ##TODO but we need to check this with data owner
-                  ClutchSize_observed = as.integer(gsub(pattern = "\\+|\\?", replacement = "", .data$clutch_size)),
+                  ClutchSize_observed = as.integer(gsub(pattern = "\\+|\\?",
+                                                        replacement = "", .data$clutch_size)),
                   ClutchSize_min = dplyr::case_when(stringr::str_detect(.data$clutch_size, "\\?") ~ 1,
                                                     TRUE ~ as.numeric(.data$ClutchSize_observed)),
                   ClutchSize_max = dplyr::case_when(stringr::str_detect(.data$clutch_size, "\\+|\\?") ~ Inf,
@@ -172,7 +176,7 @@ format_VEL <- function(db = choose_directory(),
   ## Dates are dealt with the same way as flycatchers
   ## We only use data on GT and BT. There is a small number of clutches
   ## for other species, but all < 40.
-  TIT_data <- readxl::read_excel(paste0(db, "/VEL_PrimaryData_tits.xls"),
+  TIT_data <- readxl::read_excel(paste0(db, "/VEL_PrimaryData_tits.xlsx"),
                                  col_types = c("skip", "numeric", "text", "text",
                                                "text", "text", "list",
                                                "list", "list", "text",
@@ -180,26 +184,26 @@ format_VEL <- function(db = choose_directory(),
                                                "text", "text", "text", "text",
                                                "skip")) %>%
     janitor::clean_names() %>%
-    dplyr::mutate_at(.vars = dplyr::vars(contains("date")),
-                     function(date){
+    dplyr::mutate(dplyr::across(.cols = tidyselect::contains("date"),
+                                .fns = function(date){
 
-                       purrr::map(.x = date,
-                                  .f = ~{
+                                  purrr::map(.x = date,
+                                             .f = ~{
 
-                                    if(is.character(.x)){
+                                               if(is.character(.x)){
 
-                                      return(as.Date(.x, format = "%d.%m.%Y"))
+                                                 return(as.Date(.x, format = "%d.%m.%Y"))
 
-                                    } else {
+                                               } else {
 
-                                      return(as.Date(.x))
+                                                 return(as.Date(.x))
 
-                                    }
+                                               }
 
-                                  })
+                                             })
 
-                     }) %>%
-    tidyr::unnest(cols = c(laying_date, laying_date_minimum, laying_date_maximum))
+                                })) %>%
+    tidyr::unnest(cols = c("laying_date", "laying_date_minimum", "laying_date_maximum"))
 
   ## Determine laying date for every nest, accounting for error in nests
   TIT_LD_error <- purrr::pmap_dfr(.l = list(TIT_data$laying_date,
@@ -214,11 +218,12 @@ format_VEL <- function(db = choose_directory(),
 
   TIT_data <- TIT_data %>%
     dplyr::mutate(BreedingSeason = as.integer(.data$year),
-                  Species = dplyr::case_when(.data$species == "blue tit" ~ species_codes[which(species_codes$SpeciesID == 14620), ]$Species,
-                                             .data$species == "great tit" ~ species_codes[which(species_codes$SpeciesID == 14640), ]$Species),
+                  Species = dplyr::case_when(.data$species == "blue tit" ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
+                                             .data$species == "great tit" ~ species_codes[species_codes$SpeciesID == 14640, ]$Species),
                   PopID = "VEL",
                   Plot = .data$plot,
-                  LocationID = paste0(toupper(stringr::str_sub(.data$plot, end = 1)), .data$nest_box),
+                  LocationID = paste0(toupper(stringr::str_sub(.data$plot, end = 1)),
+                                      .data$nest_box),
                   FemaleID = .data$female_ring,
                   MaleID = NA_character_,
                   ClutchType_observed = NA_character_,
@@ -228,7 +233,8 @@ format_VEL <- function(db = choose_directory(),
                   ## We assume that "+", "-", or "?" in ClutchSize, BroodSize, NumberFledged
                   ## is a measure of uncertainty,
                   ##TODO but we need to check this with data owner
-                  ClutchSize_observed = as.integer(gsub(pattern = "\\+|\\?", replacement = "", .data$clutch_size)),
+                  ClutchSize_observed = as.integer(gsub(pattern = "\\+|\\?",
+                                                        replacement = "", .data$clutch_size)),
                   ClutchSize_min = dplyr::case_when(stringr::str_detect(.data$clutch_size, "\\?") ~ 1,
                                                     TRUE ~ as.numeric(.data$ClutchSize_observed)),
                   ClutchSize_max = dplyr::case_when(stringr::str_detect(.data$clutch_size, "\\+|\\?") ~ Inf,
@@ -236,7 +242,8 @@ format_VEL <- function(db = choose_directory(),
                   HatchDate_observed = as.Date(NA),
                   HatchDate_min = as.Date(NA),
                   HatchDate_max = as.Date(NA),
-                  BroodSize_observed = as.integer(gsub(pattern = "\\+|\\?", replacement = "", .data$number_hatched)),
+                  BroodSize_observed = as.integer(gsub(pattern = "\\+|\\?",
+                                                       replacement = "", .data$number_hatched)),
                   BroodSize_min = dplyr::case_when(stringr::str_detect(.data$number_hatched, "\\?") ~ 1,
                                                    TRUE ~ as.numeric(.data$BroodSize_observed)),
                   BroodSize_max = dplyr::case_when(stringr::str_detect(.data$number_hatched, "\\+|\\?") ~ Inf,
@@ -244,7 +251,8 @@ format_VEL <- function(db = choose_directory(),
                   FledgeDate_observed = as.Date(NA),
                   FledgeDate_min = as.Date(NA),
                   FledgeDate_max = as.Date(NA),
-                  NumberFledged_observed = as.integer(gsub(pattern = "\\+|\\-|\\?", replacement = "", .data$number_fledged)),
+                  NumberFledged_observed = as.integer(gsub(pattern = "\\+|\\-|\\?",
+                                                           replacement = "", .data$number_fledged)),
                   NumberFledged_min = dplyr::case_when(stringr::str_detect(.data$number_fledged, "\\-|.\\?") ~ 1,
                                                        stringr::str_detect(.data$number_fledged, "^\\?") ~ NA_real_,
                                                        TRUE ~ as.numeric(.data$NumberFledged_observed)),
@@ -272,7 +280,7 @@ format_VEL <- function(db = choose_directory(),
   message("Compiling brood information...")
 
   Brood_data <- create_brood_VEL(FICALB_data, TIT_data) %>%
-    dplyr::filter(Species %in% species)
+    dplyr::filter(.data$Species %in% species)
 
   # CAPTURE DATA
 
@@ -281,14 +289,14 @@ format_VEL <- function(db = choose_directory(),
   Capture_data <- dplyr::bind_rows(create_capture_VEL_FICALB(FICALB_data),
                                    create_capture_VEL_TIT(TIT_data)) %>%
     dplyr::ungroup() %>%
-    dplyr::filter(Species %in% species)
+    dplyr::filter(.data$Species %in% species)
 
   # INDIVIDUAL DATA
 
   message("Compiling individual information...")
 
   Individual_data <- create_individual_VEL(Capture_data) %>%
-    dplyr::filter(Species %in% species)
+    dplyr::filter(.data$Species %in% species)
 
   # LOCATION DATA
 
@@ -304,31 +312,31 @@ format_VEL <- function(db = choose_directory(),
     ## Filter just 13 day old chicks
     dplyr::filter(.data$ChickAge == 13L) %>%
     dplyr::group_by(.data$BroodID) %>%
-    dplyr::summarise(AvgChickMass       = mean(.data$Mass, na.rm = TRUE),
-                     NumberChicksMass   = length(stats::na.omit(.data$Mass)),
-                     AvgTarsus          = mean(.data$Tarsus, na.rm = TRUE),
+    dplyr::summarise(AvgChickMass = mean(.data$Mass, na.rm = TRUE),
+                     NumberChicksMass = length(stats::na.omit(.data$Mass)),
+                     AvgTarsus = mean(.data$Tarsus, na.rm = TRUE),
                      NumberChicksTarsus = length(stats::na.omit(.data$Tarsus)))
 
   Brood_data <- Brood_data %>%
     dplyr::left_join(avg_measures, by = "BroodID") %>%
-    dplyr::mutate(NumberChicksMass   = na_if(.data$NumberChicksMass, 0),
-                  NumberChicksTarsus = na_if(.data$NumberChicksTarsus, 0),
+    dplyr::mutate(NumberChicksMass = dplyr::na_if(.data$NumberChicksMass, 0),
+                  NumberChicksTarsus = dplyr::na_if(.data$NumberChicksTarsus, 0),
                   OriginalTarsusMethod = dplyr::case_when(!is.na(.data$AvgTarsus) ~ "Oxford")) %>%
-    dplyr::select(.data$BroodID:.data$NumberEggs,
-                  .data$AvgChickMass:.data$NumberChicksTarsus,
-                  .data$OriginalTarsusMethod, .data$ExperimentID)
+    dplyr::select("BroodID":"NumberEggs",
+                  "AvgChickMass":"NumberChicksTarsus",
+                  "OriginalTarsusMethod", "ExperimentID")
 
   Capture_data <- Capture_data %>%
-    dplyr::select(.data$IndvID, .data$Species, Sex_observed = .data$Sex, .data$BreedingSeason,
-                  .data$CaptureDate, .data$CaptureTime, .data$ObserverID, .data$LocationID,
-                  .data$CaptureAlive, .data$ReleaseAlive,
-                  .data$CapturePopID:.data$Tarsus, .data$OriginalTarsusMethod,
-                  .data$WingLength, .data$Age_observed, .data$Age_calculated, .data$ChickAge,
-                  .data$ExperimentID) %>%
+    dplyr::select("IndvID", "Species", "Sex_observed" = "Sex", 'BreedingSeason',
+                  "CaptureDate", "CaptureTime", "ObserverID", "LocationID",
+                  "CaptureAlive", "ReleaseAlive",
+                  'CapturePopID':"Tarsus", "OriginalTarsusMethod",
+                  "WingLength", "Age_observed", "Age_calculated", 'ChickAge',
+                  "ExperimentID") %>%
     dplyr::group_by(.data$IndvID) %>%
-    dplyr::mutate(CaptureID = paste(.data$IndvID, 1:n(), sep = "_")) %>%
+    dplyr::mutate(CaptureID = paste(.data$IndvID, 1:dplyr::n(), sep = "_")) %>%
     dplyr::ungroup() %>%
-    dplyr::select(.data$CaptureID, everything())
+    dplyr::select("CaptureID", tidyselect::everything())
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
@@ -380,19 +388,19 @@ create_brood_VEL <- function(FICALB_data, TIT_data) {
     dplyr::arrange(.data$BreedingSeason, .data$Species, .data$FemaleID, .data$LayDate_observed) %>%
     #Calculate clutchtype
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.1")) %>%
-    dplyr::select(.data$BroodID, .data$PopID, .data$BreedingSeason,
-                  .data$Species, .data$Plot, .data$LocationID, .data$FemaleID, .data$MaleID,
-                  .data$ClutchType_observed, .data$ClutchType_calculated,
-                  .data$LayDate_observed:.data$ExperimentID)
+    dplyr::select("BroodID", "PopID", "BreedingSeason",
+                  "Species", "Plot", "LocationID", "FemaleID", "MaleID",
+                  "ClutchType_observed", "ClutchType_calculated",
+                  "LayDate_observed":"ExperimentID")
 
   TIT_broods <- TIT_data %>%
     dplyr::arrange(.data$BreedingSeason, .data$Species, .data$FemaleID, .data$LayDate_observed) %>%
     #Calculate clutchtype
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.1")) %>%
-    dplyr::select(.data$BroodID, .data$PopID, .data$BreedingSeason,
-                  .data$Species, .data$Plot, .data$LocationID, .data$FemaleID, .data$MaleID,
-                  .data$ClutchType_observed, .data$ClutchType_calculated,
-                  .data$LayDate_observed:.data$ExperimentID)
+    dplyr::select("BroodID", "PopID", "BreedingSeason",
+                  "Species", "Plot", "LocationID", "FemaleID", "MaleID",
+                  "ClutchType_observed", "ClutchType_calculated",
+                  "LayDate_observed":"ExperimentID")
 
   return(dplyr::bind_rows(FICALB_broods, TIT_broods))
 
@@ -408,158 +416,98 @@ create_brood_VEL <- function(FICALB_data, TIT_data) {
 
 create_capture_VEL_FICALB <- function(FICALB_data) {
 
-  ## First create a table for flycatcher chick captures on the nest
+  # Extract data from flycatcher chick captures on the nest
   FICALB_chicks <- FICALB_data %>%
-    dplyr::select(.data$BreedingSeason, .data$Species, .data$Plot, .data$BroodID, .data$LocationID,
-                  .data$LayDate_observed, .data$ClutchSize_observed, .data$HatchDate_observed,
-                  .data$x1_young_ring:.data$x8y_wing, .data$ExperimentID) %>%
-    tidyr::pivot_longer(cols = c("x1_young_ring", "x2_young_ring",
-                                 "x3_young_ring", "x4_young_ring",
-                                 "x5_young_ring", "x6_young_ring",
-                                 "x7_young_ring", "x8_young_ring"),
-                        values_to = "IndvID", names_to = "ChickNr") %>%
-    dplyr::filter(!is.na(.data$IndvID))
+    dplyr::select("BreedingSeason", "Species", "Plot", "BroodID", "LocationID",
+                  "LayDate_observed", "ClutchSize_observed", "HatchDate_observed",
+                  "x1_young_ring":"x8y_wing", "ExperimentID") %>%
+    # Pivot information stored in columns to rows
+    tidyr::pivot_longer(cols = tidyselect::starts_with("x"),
+                        names_to = c("id", ".value"),
+                        names_pattern = "^x([[:digit:]]{1})[[:alpha:]]{0,1}\\_(.*)$") %>%
+    dplyr::rename("IndvID" = "young_ring",
+                  "Mass6" = "mass6",
+                  "Mass13" = "mass13",
+                  "Tarsus" = "tarsus",
+                  "WingLength" = "wing") %>%
+    dplyr::filter(!is.na(.data$IndvID)) %>%
+    # Mass is measured on day 6 and 13, split this in two rows
+    tidyr::pivot_longer(cols = c("Mass6", "Mass13"),
+                        names_to = c(".value", "ChickAge"),
+                        names_pattern = "^(Mass)([[:digit:]]{1,2})$") %>%
+    dplyr::mutate(ChickAge = as.integer(.data$ChickAge),
+                  # Tarsus and Wing Length are only measured on day 13
+                  dplyr::across(.cols = c("Tarsus", "WingLength"),
+                                .fns = ~{
 
-  ## Make progress bar. Needs to be twice as long as rows because chicks are
-  ## captured at 6 and 13 days
-  pb <- progress::progress_bar$new(total = nrow(FICALB_chicks)*2)
+                                  dplyr::case_when(.data$ChickAge == 6 ~ NA_real_,
+                                                   .data$ChickAge == 13 ~ .x)
 
-  FICALB_chicks <- FICALB_chicks %>%
-    dplyr::group_by(.data$ChickNr) %>%
-    tidyr::nest() %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(ChickNr = substr(.data$ChickNr, 1, 2)) %>%
-    dplyr::mutate(data = purrr::pmap(.l = list(.data$ChickNr, data),
-                                     .f = ~{
+                                })) %>%
+    # Calculate CaptureDate
+    # If no hatch date is known then use laying date + clutch size + incubation + chick age
+    # TODO We assume incubation of 15 days, but need to check with Milos.
+    # If there is no hatch date OR laying date then just use NA
+    dplyr::mutate(CaptureDate = dplyr::case_when(!is.na(.data$HatchDate_observed) ~ .data$HatchDate_observed + lubridate::days(.data$ChickAge),
+                                                 !is.na(.data$LayDate_observed) ~ .data$LayDate_observed + lubridate::days(.data$ClutchSize_observed + 15 + .data$ChickAge),
+                                                 TRUE ~ as.Date(NA)),
+                  CaptureTime = NA_character_,
+                  CapturePopID = "VEL",
+                  CapturePlot = .data$Plot,
+                  ReleasePopID = "VEL",
+                  ReleasePlot = .data$Plot,
+                  # All chick records were 6 or 13 days, so all are listed as EURING age 1
+                  Age_observed = 1L,
+                  Age_calculated = NA_integer_,
+                  # Convert tarsus to Svennson's alternative
+                  Tarsus = convert_tarsus(.data$Tarsus, method = "Oxford"),
+                  OriginalTarsusMethod = dplyr::case_when(!is.na(.data$Tarsus) ~ "Oxford"),
+                  ObserverID = NA_character_) %>%
+    # For records at 13 days, if there was no mass/tarsus we assume that it was not caught at 13 days
+    dplyr::filter(.data$ChickAge == 6 | (.data$ChickAge == 13 & (!is.na(.data$Tarsus) | !is.na(.data$WingLength) | !is.na(.data$Mass)))) %>%
+    dplyr::select("IndvID", "Species", "BreedingSeason", "LocationID", "CaptureDate", "CaptureTime",
+                  "CapturePopID", "CapturePlot", "ReleasePopID", "ReleasePlot", "Mass", "Tarsus", "WingLength",
+                  "Age_observed", "Age_calculated", "ChickAge", "BroodID", "ObserverID", "OriginalTarsusMethod")
 
-                                       output <- ..2 %>%
-                                         dplyr::select(.data$BreedingSeason:.data$HatchDate_observed, .data$IndvID, contains(..1)) %>%
-                                         tidyr::pivot_longer(cols = contains("_mass"), values_to = "Mass", names_to = "variable") %>%
-                                         ## Rename tarsus and wing to remove name of chick
-                                         dplyr::rename_at(.vars = dplyr::vars(contains("tarsus")), .funs = ~{"Tarsus"}) %>%
-                                         dplyr::rename_at(.vars = dplyr::vars(contains("wing")), .funs = ~{"WingLength"}) %>%
-                                         ## Add chick age based on the variable name
-                                         dplyr::mutate(ChickAge = as.integer(stringr::str_sub(.data$variable, 9, -1)),
-                                                       ## Capture date is hatchdate + chick age
-                                                       ## If no hatch date is known then use laying date + clutch size + incubation + chick age
-                                                       ##TODO We assume incubation of 15 days, but need to check with Milos.
-                                                       ## If there is no hatch date OR laying date then just use NA
-                                                       CaptureDate = purrr::pmap(.l = list(.data$LayDate_observed,
-                                                                                           .data$ClutchSize_observed,
-                                                                                           .data$HatchDate_observed,
-                                                                                           .data$ChickAge),
-                                                                                 .f = ~{
-
-                                                                                   pb$tick()
-
-                                                                                   if(!is.na(..3)){
-
-                                                                                     return(..3 + lubridate::days(..4))
-
-                                                                                   } else if(!is.na(..1)) {
-
-                                                                                     return(..1 + lubridate::days(..2 + 15 + ..4))
-
-                                                                                   } else {
-
-                                                                                     return(NA)
-
-                                                                                   }
-
-                                                                                 }),
-                                                       CaptureTime = NA_character_,
-                                                       CapturePopID = "VEL",
-                                                       CapturePlot = .data$Plot,
-                                                       ## All chick records were 6 or 13 days, so all are listed as EURING age 1
-                                                       ReleasePopID = "VEL",
-                                                       ReleasePlot = .data$Plot,
-                                                       Age_observed = 1L,
-                                                       Age_calculated = NA_integer_,
-                                                       #Convert tarsus to Svennson's alternative
-                                                       Tarsus = convert_tarsus(.data$Tarsus, method = "Oxford")) %>%
-                                         #dplyr::filter(!all(is.na(Tarsus) & is.na(WingLength) & is.na(Mass))) %>%
-                                         tidyr::unnest(.data$CaptureDate) %>%
-                                         dplyr::select(.data$IndvID, .data$Species, .data$BreedingSeason, .data$LocationID,
-                                                       .data$CaptureDate, .data$CaptureTime, .data$CapturePopID, .data$CapturePlot,
-                                                       .data$ReleasePopID, .data$ReleasePlot, .data$Mass, .data$Tarsus,
-                                                       .data$WingLength, .data$Age_observed,
-                                                       .data$Age_calculated, .data$ChickAge, .data$BroodID)
-
-                                       ## When the chick is 6 days old, then tarsus and wing length are not used
-                                       ## They were only collected at 13 days old
-                                       output[output$ChickAge == 6, ]$Tarsus <- NA
-                                       output[output$ChickAge == 6, ]$WingLength <- NA
-
-                                       return(output)
-
-                                     })) %>%
-    tidyr::unnest(data) %>%
-    dplyr::mutate(ObserverID = NA_character_,
-                  OriginalTarsusMethod = dplyr::case_when(!is.na(.data$Tarsus) ~ "Oxford")) %>%
-    dplyr::select(-.data$ChickNr) %>%
-    #For records at 13 days, if there was no mass/tarsus we assume that it was not caught at 13 days
-    dplyr::filter(.data$ChickAge == 6 | (.data$ChickAge == 13 & (!is.na(.data$Tarsus) | !is.na(.data$WingLength) | !is.na(.data$Mass))))
-
-  #Then create capture info for every adult
+  # Extract data from adult captures
   FICALB_adults <- FICALB_data %>%
-    dplyr::select(.data$BreedingSeason, .data$Species, .data$Plot, .data$LocationID, .data$LayDate_observed,
-                  .data$BroodID, .data$FemaleID, .data$date_of_capture_52, .data$tarsus_53:.data$wing_55,
-                  .data$MaleID, .data$date_of_capture_57, .data$age:.data$wing_61,
-                  .data$ExperimentID) %>%
-    tidyr::pivot_longer(cols = c("FemaleID", "MaleID"), values_to = "IndvID", names_to = "Sex") %>%
+    dplyr::select("BreedingSeason", "Species", "Plot", "LocationID", "LayDate_observed",
+                  "BroodID", "FemaleID", "date_of_capture_54", "tarsus_55":"wing_57",
+                  "MaleID", "date_of_capture_59", "age":"wing_63",
+                  "ExperimentID") %>%
+    tidyr::pivot_longer(cols = c("FemaleID", "MaleID"),
+                        values_to = "IndvID",
+                        names_to = "Sex") %>%
     dplyr::filter(!is.na(.data$IndvID))
 
   FICALB_adults <- FICALB_adults %>%
     ## Give individuals a sex, we will use this in our Individual_data table
     dplyr::mutate(Sex = stringr::str_sub(.data$Sex, 0, 1),
-                  Tarsus = purrr::pmap_dbl(.l = list(.data$Sex, .data$tarsus_53, .data$tarsus_59),
-                                           .f = ~{if(..1 == "F") ..2 else ..3}),
-                  WingLength = purrr::pmap_dbl(.l = list(.data$Sex, .data$wing_55, .data$wing_61),
-                                               .f = ~{if(..1 == "F") ..2 else ..3}),
-                  Mass = purrr::pmap_dbl(.l = list(.data$Sex, .data$mass_54, .data$mass_60),
-                                         .f = ~{if(..1 == "F") ..2 else ..3}),
-                  ##Determine age of males based on 'age' column
-                  Age_observed = purrr::pmap_int(.l = list(.data$Sex, .data$age),
-                                                 .f = ~{
-
-                                                   if(..1 == "M"){
-
-                                                     return(dplyr::case_when(..2 == "old" ~ 6L,
-                                                                             ..2 == "young" ~ 5L))
-
-                                                   } else {
-
-                                                     return(NA_integer_)
-
-                                                   }
-
-                                                 }),
+                  Tarsus = dplyr::case_when(.data$Sex == "F" ~ .data$tarsus_55,
+                                            .data$Sex == "M" ~ .data$tarsus_61),
+                  WingLength = dplyr::case_when(.data$Sex == "F" ~ .data$wing_57,
+                                                .data$Sex == "M" ~ .data$wing_63),
+                  Mass = dplyr::case_when(.data$Sex == "F" ~ .data$mass_56,
+                                          .data$Sex == "M" ~ .data$mass_62),
+                  # Determine age of males based on 'age' column
+                  Age_observed = dplyr::case_when(.data$Sex == "M" & .data$age == "old" ~ 6L,
+                                                  .data$Sex == "M" & .data$age == "young" ~ 5L,
+                                                  TRUE ~ NA_integer_),
                   CapturePopID = "VEL",
                   ReleasePopID = "VEL",
                   CapturePlot = .data$Plot,
                   ReleasePlot = .data$Plot,
                   ObserverID = NA_character_,
-                  CaptureDate = purrr::pmap(.l = list(.data$Sex, .data$date_of_capture_52, .data$date_of_capture_57),
-                                            .f = ~{
-
-                                              if(..1 == "F"){
-
-                                                return(..2)
-
-                                              } else {
-
-                                                return(..3)
-
-                                              }
-
-                                            })) %>%
-    tidyr::unnest(cols = c(.data$CaptureDate)) %>%
-    dplyr::mutate(OriginalTarsusMethod = dplyr::case_when(!is.na(.data$Tarsus) ~ "Oxford")) %>%
-    dplyr::select(.data$Species, .data$BreedingSeason, .data$LocationID, .data$BroodID,
-                  .data$Sex:.data$CaptureDate, .data$ExperimentID)
+                  CaptureDate = dplyr::case_when(.data$Sex == "F" ~ .data$date_of_capture_54,
+                                                 .data$Sex == "M" ~ .data$date_of_capture_59)) %>%
+    dplyr::mutate(Tarsus = convert_tarsus(.data$Tarsus, method = "Oxford"),
+                  OriginalTarsusMethod = dplyr::case_when(!is.na(.data$Tarsus) ~ "Oxford")) %>%
+    dplyr::select("Species", "BreedingSeason", "LocationID", "BroodID",
+                  "Sex":"CaptureDate", "ExperimentID")
 
   FICALB_alldat <- dplyr::bind_rows(FICALB_chicks, FICALB_adults) %>%
-    calc_age(ID = .data$IndvID, Age = .data$Age_observed, Date = .data$CaptureDate, Year = .data$BreedingSeason, showpb = TRUE) %>%
+    calc_age(ID = .data$IndvID, Age = .data$Age_observed,
+             Date = .data$CaptureDate, Year = .data$BreedingSeason, showpb = TRUE) %>%
     # We have no information on status of captures/releases, so we assume all individuals were captured/released alive
     dplyr::mutate(CaptureAlive = TRUE,
                   ReleaseAlive = TRUE)
@@ -583,13 +531,15 @@ create_capture_VEL_TIT    <- function(TIT_data) {
   ## Assume that an individual was caught at the start of incubation.
   TIT_capture <- TIT_data %>%
     dplyr::filter(!is.na(.data$FemaleID)) %>%
-    dplyr::mutate(Species = dplyr::case_when(.data$species == "blue tit" ~ species_codes[which(species_codes$SpeciesID == 14620), ]$Species,
-                                             .data$species == "great tit" ~ species_codes[which(species_codes$SpeciesID == 14640), ]$Species),
+    dplyr::mutate(Species = dplyr::case_when(.data$species == "blue tit" ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
+                                             .data$species == "great tit" ~ species_codes[species_codes$SpeciesID == 14640, ]$Species),
                   ## Make the capture date the date that incubation would start (laying date + clutch size)
                   CaptureDate = .data$LayDate_observed + .data$ClutchSize_observed,
                   IndvID = .data$FemaleID,
-                  CapturePopID = .data$PopID, CapturePlot = .data$Plot,
-                  ReleasePopID = .data$PopID, ReleasePlot = .data$Plot,
+                  CapturePopID = .data$PopID,
+                  CapturePlot = .data$Plot,
+                  ReleasePopID = .data$PopID,
+                  ReleasePlot = .data$Plot,
                   ## There is no explicit info about age.
                   ## They must all be adults, so just give them all EURING 4
                   ## "Hatched before this calendar year"
@@ -598,13 +548,14 @@ create_capture_VEL_TIT    <- function(TIT_data) {
                   LocationID = paste(.data$Plot, .data$nest_box, sep = "_"),
                   OriginalTarsusMethod = NA_character_,
                   Sex = "F") %>%
-    calc_age(ID = .data$IndvID, Age = .data$Age_observed, Date = .data$CaptureDate, Year = .data$BreedingSeason) %>%
+    calc_age(ID = .data$IndvID, Age = .data$Age_observed,
+             Date = .data$CaptureDate, Year = .data$BreedingSeason) %>%
     # We have no information on status of captures/releases, so we assume all individuals were captured/released alive
     dplyr::mutate(CaptureAlive = TRUE,
                   ReleaseAlive = TRUE) %>%
-    dplyr::select(.data$IndvID, .data$Species, .data$BreedingSeason, .data$CaptureDate, .data$ObserverID,
-                  .data$LocationID, .data$CapturePopID:.data$ReleasePlot, .data$Age_observed, .data$Age_calculated, .data$Sex,
-                  .data$CaptureAlive, .data$ReleaseAlive, .data$ExperimentID)
+    dplyr::select("IndvID", "Species", "BreedingSeason", "CaptureDate", "ObserverID",
+                  "LocationID", "CapturePopID":'ReleasePlot', "Age_observed", "Age_calculated", "Sex",
+                  "CaptureAlive", "ReleaseAlive", "ExperimentID")
 
   return(TIT_capture)
 
@@ -622,7 +573,7 @@ create_capture_VEL_TIT    <- function(TIT_data) {
 
 create_individual_VEL <- function(Capture_data){
 
-  pb <- progress::progress_bar$new(total = length(unique(Capture_data$IndvID)) * 2)
+  pb <- progress::progress_bar$new(total = length(unique(Capture_data$IndvID)) * 1)
 
   Indvidual_data <- Capture_data %>%
     dplyr::group_by(.data$IndvID) %>%
@@ -657,26 +608,13 @@ create_individual_VEL <- function(Capture_data){
 
                                                      }),
                      FirstBroodID = dplyr::first(.data$BroodID)) %>%
-    dplyr::mutate(BroodIDLaid = purrr::pmap_chr(.l = list(.data$RingAge, .data$FirstBroodID),
-                                                .f = ~{
-
-                                                  pb$tick()
-
-                                                  if(is.na(..1) | (..1 == "adult")){
-
-                                                    return(NA)
-
-                                                  } else {
-
-                                                    return(..2)
-
-                                                  }
-
-                                                }),
+    dplyr::mutate(BroodIDLaid = dplyr::case_when(is.na(.data$RingAge) ~ NA_character_,
+                                                 .data$RingAge == "adult" ~ NA_character_,
+                                                 TRUE ~ .data$FirstBroodID),
                   BroodIDFledged = .data$BroodIDLaid,
                   Sex_genetic = NA_character_) %>%
-    dplyr::select(.data$IndvID, .data$Species, .data$PopID, .data$BroodIDLaid, .data$BroodIDFledged,
-                  .data$RingSeason, .data$RingAge, .data$Sex_calculated, .data$Sex_genetic) %>%
+    dplyr::select("IndvID", "Species", "PopID", "BroodIDLaid", "BroodIDFledged",
+                  "RingSeason", "RingAge", "Sex_calculated", "Sex_genetic") %>%
     dplyr::ungroup()
 
   return(Indvidual_data)
@@ -701,23 +639,26 @@ create_location_VEL <- function(db, Brood_data, TIT_data){
     janitor::clean_names() %>%
     #There is date time info in here. I assume this is date of measurement of XYZ
     #Not relevant for Start/EndSeason
-    dplyr::rename(LocationID = .data$budka,
-                  Coordinates = .data$sirka_delka_hddd_mm_mmm,
-                  Altitude = .data$nadmorska_vyska) %>%
+    dplyr::rename("LocationID" = "budka",
+                  "Coordinates" = "sirka_delka_hddd_mm_mmm",
+                  "Altitude" = "nadmorska_vyska") %>%
     #Separate coordinates into lat and long
     #Currently in degrees, minutes, seconds. Needs to be converted to decimal degrees.
     dplyr::mutate(Latitude = as.numeric(stringr::str_sub(.data$Coordinates, start = 2, end = 3)) + as.numeric(stringr::str_sub(.data$Coordinates, start = 5, end = 10))/60,
                   Longitude = as.numeric(stringr::str_sub(.data$Coordinates, start = 13, end = 14)) + as.numeric(stringr::str_sub(.data$Coordinates, start = 16, end = 21))/60,
-                  NestboxID = .data$LocationID, LocationType = "NB", PopID = "VEL",
-                  StartSeason = 1997L, EndSeason = NA_integer_) %>%
+                  NestboxID = .data$LocationID,
+                  LocationType = "NB",
+                  PopID = "VEL",
+                  StartSeason = 1997L,
+                  EndSeason = NA_integer_) %>%
     ## Join in habitat data from TIT_data table
     dplyr::left_join({
       TIT_data %>%
         dplyr::group_by(.data$LocationID) %>%
         dplyr::summarise(HabitatType = dplyr::first(.data$HabitatType))},
       by = "LocationID") %>%
-    dplyr::select(.data$LocationID, .data$NestboxID, .data$LocationType, .data$PopID,
-                  .data$Latitude, .data$Longitude, .data$StartSeason, .data$EndSeason, .data$HabitatType)
+    dplyr::select("LocationID", "NestboxID", "LocationType", "PopID",
+                  "Latitude", "Longitude", "StartSeason", "EndSeason", "HabitatType")
 
   #Some nest locations were not recorded in the Location data excel file. We still include these locations
   #but they will have no lat/long info
@@ -727,7 +668,8 @@ create_location_VEL <- function(db, Brood_data, TIT_data){
                                            PopID = "VEL",
                                            Latitude = NA_real_,
                                            Longitude = NA_real_,
-                                           StartSeason = 1997L, EndSeason = NA_integer_) %>%
+                                           StartSeason = 1997L,
+                                           EndSeason = NA_integer_) %>%
     ## Join in habitat data from TIT_data table
     dplyr::left_join({
       TIT_data %>%
