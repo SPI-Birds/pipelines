@@ -327,7 +327,7 @@ test_that("Measurement_data returns an expected outcome...", {
   #mass should be 16.40 g recorded by obs_1
   expect_equal(subset(STR_data, recordID == "7971665_1")$measurementValue[5], 16.4)
   expect_equal(subset(STR_data, recordID == "7971665_1")$measurementUnit[5], "g")
-  expect_equal(subset(STR_data, recordID == "7971665_1")$measurementMethod[5], NA_character_)
+  expect_equal(subset(STR_data, recordID == "7971665_1")$measurementMethod[5], "no unit")
   expect_equal(subset(STR_data, recordID == "7971665_1")$recordedBy[5], "obs_1")
   expect_equal(subset(STR_data, recordID == "7971665_1")$measurementType[5], "mass")
 
@@ -340,14 +340,14 @@ test_that("Measurement_data returns an expected outcome...", {
 
   #fat score should be 1 recorded by obs_1
   expect_equal(subset(STR_data, recordID == "7971665_1")$measurementValue[4], 1)
-  expect_equal(subset(STR_data, recordID == "7971665_1")$measurementUnit[4], NA_character_)
+  expect_equal(subset(STR_data, recordID == "7971665_1")$measurementUnit[4], "no unit")
   expect_equal(subset(STR_data, recordID == "7971665_1")$measurementMethod[4], "fat score from ESF guidelines")
   expect_equal(subset(STR_data, recordID == "7971665_1")$recordedBy[4], "obs_1")
   expect_equal(subset(STR_data, recordID == "7971665_1")$measurementType[4], "fat score")
 
   #handling docility should be 0 recorded by obs_1
   expect_equal(subset(STR_data, recordID == "7971665_1")$measurementValue[6], 0)
-  expect_equal(subset(STR_data, recordID == "7971665_1")$measurementUnit[6], NA_character_)
+  expect_equal(subset(STR_data, recordID == "7971665_1")$measurementUnit[6], "no unit")
   expect_equal(subset(STR_data, recordID == "7971665_1")$measurementMethod[6], "behavioral score (0 to 3) of docility in hand")
   expect_equal(subset(STR_data, recordID == "7971665_1")$recordedBy[6], "obs_1")
   expect_equal(subset(STR_data, recordID == "7971665_1")$measurementType[6], "handling docility")
@@ -369,7 +369,7 @@ test_that("Measurement_data returns an expected outcome...", {
   #mass should be 16.2g recorded by obs_9
   expect_equal(subset(STR_data, recordID == "V017121_1")$measurementValue[5], 16.2)
   expect_equal(subset(STR_data, recordID == "V017121_1")$measurementUnit[5], "g")
-  expect_equal(subset(STR_data, recordID == "V017121_1")$measurementMethod[5], NA_character_)
+  expect_equal(subset(STR_data, recordID == "V017121_1")$measurementMethod[5], "no unit")
   expect_equal(subset(STR_data, recordID == "V017121_1")$recordedBy[5], "obs_9")
   expect_equal(subset(STR_data, recordID == "V017121_1")$measurementType[5], "mass")
 
@@ -382,7 +382,7 @@ test_that("Measurement_data returns an expected outcome...", {
 
   #fat score should be 3.0 recorded by obs_9
   expect_equal(subset(STR_data, recordID == "V017121_1")$measurementValue[4], 3.0)
-  expect_equal(subset(STR_data, recordID == "V017121_1")$measurementUnit[4], NA_character_)
+  expect_equal(subset(STR_data, recordID == "V017121_1")$measurementUnit[4], "no unit")
   expect_equal(subset(STR_data, recordID == "V017121_1")$measurementMethod[4], "fat score from ESF guidelines")
   expect_equal(subset(STR_data, recordID == "V017121_1")$recordedBy[4], "obs_9")
   expect_equal(subset(STR_data, recordID == "V017121_1")$measurementType[4], "fat score")
