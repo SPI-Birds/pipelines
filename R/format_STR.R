@@ -641,7 +641,7 @@ create_measurement_STR <- function(Capture_data) {
                   measurementSubject = "capture",
                   measurementAccuracy = NA_real_,
                   measurementUnit = dplyr::case_when(.data$measurementType == "Mass" ~ "g",
-                                                     .data$measurementType %in% c("Handling_Docility", "Fat_Score") ~ NA_character_,
+                                                     .data$measurementType %in% c("Handling_Docility", "Fat_Score") ~ "no unit",
                                                      TRUE ~ "mm"),
                   measurementMethod = dplyr::case_when(.data$measurementType == "Tarsus" ~ "alternative",
                                                        .data$measurementType == "Head_Beak_Length" ~ "length from the back of the head to the tip of the beak",
