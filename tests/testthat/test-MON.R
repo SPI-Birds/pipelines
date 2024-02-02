@@ -1,6 +1,6 @@
 testthat::skip_if(!exists("data_path"))
 
-pipeline_output <- format_MON(db = paste0(data_path, "/MON_Montpellier_France"),
+pipeline_output <- format_MON(db = paste0(data_path, "/Montpellier"),
                               optional_variables = "all")
 
 test_that("MON outputs all files...", {
