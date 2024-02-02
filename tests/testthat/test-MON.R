@@ -31,7 +31,7 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(MON_data, broodID == "1984_pir_35_NB_1")$nestAttemptNumber, 1)
 
   #Test 2: Brood where clutch type = replacement (because first is known to have failed)
-  expect_equal(subset(MON_data, broodID == "1980_pir_36_NB_1")$speciesID, "CYACAE") #problem (if replacement because first has faile, then it should be "NB_2")
+  expect_equal(subset(MON_data, broodID == "1980_pir_36_NB_1")$speciesID, "CYACAE") #problem (if replacement because first has failed, then it should be "NB_2")
   expect_equal(subset(MON_data, broodID == "1980_pir_36_NB_1")$calculatedClutchType, "replacement")
   expect_equal(subset(MON_data, broodID == "1980_pir_36_NB_1")$observedLayYear, 1980)
   expect_equal(subset(MON_data, broodID == "1980_pir_36_NB_1")$observedClutchSize, 5)
