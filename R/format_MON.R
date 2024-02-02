@@ -324,9 +324,9 @@ create_capture_MON <- function(db, species_filter, pop_filter, optional_variable
                                                  TRUE ~ as.integer(lubridate::year(.data$captureDate))),
                   captureMonth = as.integer(lubridate::month(.data$captureDate)),
                   captureDay = as.integer(lubridate::day(.data$captureDate)),
-                  captureTime = suppressWarnings(format(as.POSIXlt(strptime(.data$heure, "%H:%M", tz = "CEST"),
-                                                                   format = "%H:%M:%OS", tz = "CEST"),
-                                                        format = "%H:%M", tz = "CEST")), #timezone is set to Paris time zone for summer time (CEST)
+                  captureTime = suppressWarnings(format(as.POSIXlt(strptime(.data$heure, "%H:%M", tz = "CET"),
+                                                                   format = "%H:%M:%OS", tz = "CET"),
+                                                        format = "%H:%M", tz = "CET")), #timezone is set to Paris time zone for summer time (CEST)
                   individualID =  purrr::pmap_chr(.l = list(bague),
                                                   .f = ~{
 
@@ -537,9 +537,9 @@ create_capture_MON <- function(db, species_filter, pop_filter, optional_variable
                                                  TRUE ~ as.integer(lubridate::year(.data$captureDate))),
                   captureMonth = as.integer(lubridate::month(.data$captureDate)),
                   captureDay = as.integer(lubridate::day(.data$captureDate)),
-                  captureTime = format(as.POSIXlt(strptime(.data$heure, "%H:%M", tz = "CEST"),
-                                                  format = "%H:%M:%OS", tz = "CEST"),
-                                       format = "%H:%M", tz = "CEST"), #timezone is set to Paris time zone for summer time (CEST)
+                  captureTime = format(as.POSIXlt(strptime(.data$heure, "%H:%M", tz = "CET"),
+                                                  format = "%H:%M:%OS", tz = "CET"),
+                                       format = "%H:%M", tz = "CET"), #timezone is set to Paris time zone for summer time (CEST)
                   individualID = purrr::pmap_chr(.l = list(bague),
                                                  .f = ~{
 
@@ -768,7 +768,7 @@ create_capture_MON <- function(db, species_filter, pop_filter, optional_variable
 
 create_brood_MON <- function(db, species_filter, pop_filter, optional_variables){
 
-  Brood_data <- readr::read_delim(paste0(path, "/MON_PrimaryData_DEMO.csv"), col_types = my_cols(.default = 'c',
+  Brood_data <- readr::read_delim(paste0(db, "/MON_PrimaryData_DEMO.csv"), col_types = my_cols(.default = 'c',
                                                                                                  i = c(an, expou, proto, np, grpo, pulecl, pulenv),
                                                                                                  n = c(latitude, longitude)
   )
