@@ -704,6 +704,9 @@ create_experiment_STR <- function(Brood_data) {
 }
 
 #Function to assign characters to columns when importing data as csv files
+#'@param class of variables for importing brood data and avoid logical classes for some columns
+#'@return right class
+
 my_cols <- function(..., .default = col_guess()) {
   dots <- dplyr::enexprs(...)
   colargs <- purrr::flatten_chr(unname(
