@@ -297,7 +297,7 @@ format_MON <- function(db = choose_directory(),
 
 create_capture_MON <- function(db, species_filter, pop_filter, optional_variables){
 
-  Full_capture_data <- readr::read_delim(paste0(db, "//MON_PrimaryData_MORPH.csv"), show_col_types = FALSE) %>%
+  Full_capture_data <- readr::read_delim(paste0(db, "/MON_PrimaryData_MORPH.csv"), show_col_types = FALSE) %>%
     #There is a potential issue in excel that numbers are stored as text in the excel sheets.
     #These can easily be coerced back to numerics, but this throws many warnings,
     #which will masks any real problematic coercion issues (e.g. NA introduced by coercion)
@@ -513,7 +513,7 @@ create_capture_MON <- function(db, species_filter, pop_filter, optional_variable
 
   #Do the same for the chick capture data
   #As above, we read all in as text and then coerce afterwards
-  Chick_capture_data <- readr::read_delim(paste0(db, "//MON_PrimaryData_POUS.csv"), show_col_types = FALSE) %>%
+  Chick_capture_data <- readr::read_delim(paste0(db, "/MON_PrimaryData_POUS.csv"), show_col_types = FALSE) %>%
     dplyr::mutate(dplyr::across(c(3, 14, 16), as.integer)) %>%
     dplyr::mutate(dplyr::across(c(5, 6, 12, 17, 19:21, 34, 36), as.numeric)) %>%
     dplyr::mutate(speciesID = dplyr::case_when(.data$espece == "ble" ~ species_codes$speciesID[which(species_codes$speciesCode == 10002)],
@@ -539,7 +539,7 @@ create_capture_MON <- function(db, species_filter, pop_filter, optional_variable
                   captureDay = as.integer(lubridate::day(.data$captureDate)),
                   captureTime = format(as.POSIXlt(strptime(.data$heure, "%H:%M", tz = "CEST"),
                                                   format = "%H:%M:%OS", tz = "CEST"),
-                                       format = "%H:%M", tz = "CEST")), #timezone is set to Paris time zone for summer time (CEST)
+                                       format = "%H:%M", tz = "CEST"), #timezone is set to Paris time zone for summer time (CEST)
                   individualID = purrr::pmap_chr(.l = list(bague),
                                                  .f = ~{
 
@@ -1170,7 +1170,7 @@ create_individual_MON <- function(Capture_data, Brood_data, optional_variables, 
 create_location_MON <- function(db, Capture_data, Brood_data){
 
   #Load lat/long for nest boxes
-  nestbox_latlong <- readr::read_delim(paste0(db, "//MON_PrimaryData_NestBoxLocation.csv"), show_col_types = FALSE) %>%
+  nestbox_latlong <- readr::read_delim(paste0(db, "/MON_PrimaryData_NestBoxLocation.csv"), show_col_types = FALSE) %>%
     dplyr::filter(!is.na(.data$latitude)) %>%
     dplyr::mutate(LocationID_join = paste(.data$abr_station, .data$nichoir, sep = "_"),
                   startYear = dplyr::case_when(!is.na(.data$an_installation) ~ as.integer(.data$an_installation),
@@ -1371,7 +1371,7 @@ create_measurement_MON <- function(Capture_data) {
                                                      .data$measurementType == "Handling_Docility" ~ "no unit",
                                                      TRUE ~ "mm"),
                   measurementMethod = dplyr::case_when(.data$measurementType == "Tarsus" ~ "alternative",
-                                                       .data$measurementType == "Wing_Lentgth" ~ "flattened, maximum chord, following ESF guidelines"
+                                                       .data$measurementType == "Wing_Lentgth" ~ "flattened, maximum chord, following ESF guidelines",
                                                        .data$measurementType == "Beak_Length" ~ "beak length from nostril to tip of beak",
                                                        .data$measurementType == "Culmen" ~ "beak length from skull base to tip of beak",
                                                        .data$measurementType == "Handling_Docility" ~ "behavioral score (0 to 3) of docility in hand",
