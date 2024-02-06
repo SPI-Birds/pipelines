@@ -31,7 +31,7 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(MON_data, broodID == "1984_pir_35_NB_1")$nestAttemptNumber, 1)
 
   #Test 2: Brood where clutch type = replacement (because first is known to have failed)
-  expect_equal(subset(MON_data, broodID == "1980_pir_36_NB_1")$speciesID, "CYACAE") #problem (if replacement because first has failed, then it should be "NB_2")
+  expect_equal(subset(MON_data, broodID == "1980_pir_36_NB_1")$speciesID, "CYACAE")
   expect_equal(subset(MON_data, broodID == "1980_pir_36_NB_1")$calculatedClutchType, "replacement")
   expect_equal(subset(MON_data, broodID == "1980_pir_36_NB_1")$observedLayYear, 1980)
   expect_equal(subset(MON_data, broodID == "1980_pir_36_NB_1")$observedClutchSize, 5)
@@ -111,8 +111,8 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(subset(MON_data, individualID == "8189538")$speciesID, "PARMAJ")
   #Check that broodIDLaid/Fledged are as expected
   #This individual was not cross-fostered, so they should be the same
-  expect_equal(subset(MON_data, individualID == "8189538")$broodIDLaid, "2017_rou_28") #problem
-  expect_equal(subset(MON_data, individualID == "8189538")$broodIDFledged, "2017_rou_28")
+  expect_equal(subset(MON_data, individualID == "8189538")$broodIDLaid, "2017_rou_28_NB_1")
+  expect_equal(subset(MON_data, individualID == "8189538")$broodIDFledged, "2017_rou_28_NB_1")
   #tag Year should be 2017 with a tagstage of 'chick'
   expect_equal(subset(MON_data, individualID == "8189538")$tagYear, 2017)
   expect_equal(subset(MON_data, individualID == "8189538")$tagStage, "chick")
@@ -123,8 +123,8 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(subset(MON_data, individualID == "2221172")$calculatedSex, NA_character_)
   expect_equal(subset(MON_data, individualID == "2221172")$speciesID, "CYACAE")
   #Check that broodIDLaid/Fledged are as expected
-  expect_equal(subset(MON_data, individualID == "2221172")$broodIDLaid, "1991_pir_103")
-  expect_equal(subset(MON_data, individualID == "2221172")$broodIDFledged, "1991_pir_89")
+  expect_equal(subset(MON_data, individualID == "2221172")$broodIDLaid, "1991_pir_103_NB_1")
+  expect_equal(subset(MON_data, individualID == "2221172")$broodIDFledged, "1991_pir_89_NB_1")
   #tag year and stage are as expected
   expect_equal(subset(MON_data, individualID == "2221172")$tagYear, 1991)
   expect_equal(subset(MON_data, individualID == "2221172")$tagStage, "chick")
@@ -134,8 +134,8 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(subset(MON_data, individualID == "7207569")$calculatedSex, NA_character_)
   expect_equal(subset(MON_data, individualID == "7207569")$speciesID, "CYACAE")
   #Check that broodIDLaid/Fledged are as expected
-  expect_equal(subset(MON_data, individualID == "7207569")$broodIDLaid, "2014_fil_11")
-  expect_equal(subset(MON_data, individualID == "7207569")$broodIDFledged, "2014_ava_13")
+  expect_equal(subset(MON_data, individualID == "7207569")$broodIDLaid, "2014_fil_11_NB_1")
+  expect_equal(subset(MON_data, individualID == "7207569")$broodIDFledged, "2014_ava_13_NB_1")
   #tag year and stage are as expected
   expect_equal(subset(MON_data, individualID == "7207569")$tagYear, 2014)
   expect_equal(subset(MON_data, individualID == "7207569")$tagStage, "chick")
@@ -168,11 +168,11 @@ test_that("Capture data returns an expected outcome...", {
   expect_equal(subset(MON_data, individualID == "2709339")$captureMonth[6], 6)
   expect_equal(subset(MON_data, individualID == "2709339")$captureDay[6], 8)
 
-  #Test that exact and minimum age calculated are correct on first capture and last capture
-  expect_equal(subset(MON_data, individualID == "2709339")$minimumAge[1], 0L)
-  expect_equal(subset(MON_data, individualID == "2709339")$minimumAge[6], 5L)
-  expect_equal(subset(MON_data, individualID == "2709339")$exactAge[1], 0L)
-  expect_equal(subset(MON_data, individualID == "2709339")$exactAge[6], 5L)
+  #Test that exact and minimum age are not defined as there is no date associated with the day the chick was tagged
+  expect_equal(subset(MON_data, individualID == "2709339")$minimumAge[1], NA_integer_)
+  expect_equal(subset(MON_data, individualID == "2709339")$minimumAge[6], NA_integer_)
+  expect_equal(subset(MON_data, individualID == "2709339")$exactAge[1], NA_integer_)
+  expect_equal(subset(MON_data, individualID == "2709339")$exactAge[6], NA_integer_)
 
   #Test 2: Female caught only as adult
   #Test it has the correct number of capture records
@@ -218,7 +218,7 @@ test_that("Capture data returns an expected outcome...", {
 
   #Test that first and last exact age  is set to NA and minimul age is as expected
   expect_equal(subset(MON_data, individualID == "4208517")$minimumAge[1], 1L)
-  expect_equal(subset(MON_data, individualID == "4208517")$minimumAge[15], 6L)
+  expect_equal(subset(MON_data, individualID == "4208517")$minimumAge[15], 5L)
   expect_equal(subset(MON_data, individualID == "4208517")$exactAge[1], NA_integer_)
   expect_equal(subset(MON_data, individualID == "4208517")$exactAge[15], NA_integer_)
 
@@ -412,7 +412,7 @@ test_that("Measurement_data returns an expected outcome...", {
 
   #behavorial test of handling docility should be 3.00 recorded by AFA
   expect_equal(subset(MON_data, recordID == "8803886_1")$measurementValue[6], 3.00)
-  expect_equal(subset(MON_data, recordID == "8803886_1")$measurementUnit[6], NA_character_)
+  expect_equal(subset(MON_data, recordID == "8803886_1")$measurementUnit[6], "no unit")
   expect_equal(subset(MON_data, recordID == "8803886_1")$measurementMethod[6], "behavioral score (0 to 3) of docility in hand")
   expect_equal(subset(MON_data, recordID == "8803886_1")$recordedBy[6], "AFA")
   expect_equal(subset(MON_data, recordID == "8803886_1")$measurementType[6], "handling docility")
@@ -539,7 +539,7 @@ test_that("Column classes are as expected", {
   ## Experiment data: Test that all column classes are expected
   test_col_classes(pipeline_output, "Experiment")
 
-}) #Errors in Capture and Experiment
+}) #Test passed
 
 test_that("Key columns only contain unique values", {
 
