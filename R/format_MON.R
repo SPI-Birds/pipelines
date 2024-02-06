@@ -899,10 +899,9 @@ create_brood_MON <- function(db, species_filter, pop_filter, optional_variables)
                                                   .data$mort == "NCT" ~ "Fledging event not checked")) %>%
     dplyr::arrange(.data$observedLayYear, .data$observedLayMonth, .data$observedLayDay) %>%
     dplyr::group_by(.data$observedLayYear, .data$locationID) %>%
-    dplyr::mutate(broodID2 = paste(.data$observedLayYear, .data$plotID, .data$BoxNumber, sep = "_"),
-                  broodID = paste(.data$observedLayYear, .data$locationID, 1:dplyr::n(), sep = "_")) %>%
+    dplyr::mutate(broodID = paste(.data$observedLayYear, .data$locationID, 1:dplyr::n(), sep = "_")) %>%
     dplyr::ungroup() %>%
-    dplyr::select(broodID, broodID2,  speciesID, studyID, siteID, plotID, locationID, femaleID, maleID, observedClutchType, observedLayDate, observedLayYear,
+    dplyr::select(broodID, speciesID, studyID, siteID, plotID, locationID, femaleID, maleID, observedClutchType, observedLayDate, observedLayYear,
                   observedLayMonth, observedLayDay, observedClutchSize, observedHatchYear, observedHatchMonth, observedHatchDay, observedBroodSize,
                   observedFledgeYear, observedNumberFledged, experimentID, experimentType, treatmentDetails, treatmentID, treatmentStage, pulbag1:pulbag14, BoxNumber) %>%
     ## The normal number of characters in an individualID is 7
@@ -931,7 +930,7 @@ create_brood_MON <- function(db, species_filter, pop_filter, optional_variables)
 create_individual_MON <- function(Capture_data, Brood_data, optional_variables, verbose){
 
   broodAssignment <- Brood_data %>%
-    dplyr::select(broodIDLaid = broodID2, pulbag1:pulbag14) %>%
+    dplyr::select(broodIDLaid = broodID, pulbag1:pulbag14) %>%
     tidyr::pivot_longer(cols = pulbag1:pulbag14, names_to = "ChickNr", values_to = "individualID") %>%
     dplyr::select(-"ChickNr") %>%
     #Remove broods where there were no ringed chicks
@@ -982,7 +981,7 @@ create_individual_MON <- function(Capture_data, Brood_data, optional_variables, 
 
         if(nrow(possible_nest) == 1){
 
-          return(tibble::tibble(individualID = x["individualID"], broodIDFledged = possible_nest$broodID2))
+          return(tibble::tibble(individualID = x["individualID"], broodIDFledged = possible_nest$broodID))
 
         } else if(nrow(possible_nest) > 1 & length(unique(possible_nest$BoxNumber)) == 1){
 
@@ -1177,7 +1176,7 @@ create_location_MON <- function(db, Capture_data, Brood_data){
                                                TRUE ~ NA_integer_),
                   endYear = dplyr::case_when(!is.na(.$an_retrait) ~ as.integer(.data$an_retrait),
                                              TRUE ~ NA_integer_),
-                  locationDetails1 = dplyr::case_when(str_detect(LocationID_join, "_0") ~ "Missing information about nestbox, location corresponds to the centroid of the site",
+                  locationDetails1 = dplyr::case_when(stringr::str_detect(LocationID_join, "_0") ~ "Missing information about nestbox, location corresponds to the centroid of the site",
                                                       TRUE ~ NA_character_),
                   locationDetails = dplyr::case_when(.$comment == "suivi_discontinu" ~ "Occasional monitoring",
                                                      .$comment == "disparu" ~ "Stolen or lost",
@@ -1222,7 +1221,7 @@ create_location_MON <- function(db, Capture_data, Brood_data){
     outside_locations <- Capture_data %>%
       dplyr::filter(!is.na(.data$longitude)) %>%
       dplyr::select("captureYear", "captureLocationID", "latitude", "longitude") %>%
-      dplyr::filter(!(str_detect(captureLocationID, "NB"))) %>% #avoids duplicates for nestboxes considered "outside" (hs) but identified and with GPS coordinates (already covered in "all_nestbox_latlong")
+      dplyr::filter(!(stringr::str_detect(captureLocationID, "NB"))) %>% #avoids duplicates for nestboxes considered "outside" (hs) but identified and with GPS coordinates (already covered in "all_nestbox_latlong")
       dplyr::group_by(.data$latitude, .data$longitude) %>%
       dplyr::summarise(startYear = as.integer(min(.data$captureYear)),
                        endYear = as.integer(max(.data$captureYear)), #mist net captures are usually occasional
@@ -1429,19 +1428,23 @@ create_experiment_data_MON <- function(Capture_data, Brood_data){
                                      treatmentEndYear = "captureYear",
                                      "treatmentDetails",
                                      "treatmentStage")) %>%
-    dplyr::mutate(treatmentStartMonth = dplyr::case_when(.data$experimentID == "br_7" ~ 02, #I have started to complete information for recent and easy experiments
+    dplyr::mutate(treatmentStartMonth = dplyr::case_when(.data$experimentID == "br_7" ~ 2, #I have started to complete information for recent and easy experiments
                                                          TRUE ~ NA_integer_),
                   treatmentStartDay = dplyr::case_when(.data$experimentID == "br_7" & .data$treatmentStartYear == 2022 ~ 24,
                                                        .data$experimentID == "br_7" & .data$treatmentStartYear == 2023 ~ 22,
                                                        TRUE ~ NA_integer_),
                   treatmentStartTime = NA_character_,
-                  treatmentEndMonth = dplyr::case_when(.data$experimentID == "br_7" ~ 04,
+                  treatmentEndMonth = dplyr::case_when(.data$experimentID == "br_7" ~ 4,
                                                        TRUE ~ NA_integer_),
                   treatmentEndDay = dplyr::case_when(.data$experimentID == "br_7" ~ 11,
                                                      TRUE ~ NA_integer_),
                   treatmentEndTime = NA_character_,
                   recordedBy = dplyr::case_when(.data$experimentID == "br_7" ~ "AG",
                                                 TRUE ~ NA_character_),
+                  treatmentStartDay = as.integer(treatmentStartDay),
+                  treatmentStartMonth = as.integer(treatmentStartMonth),
+                  treatmentEndDay = as.integer(treatmentEndDay),
+                  treatmentEndMonth = as.integer(treatmentEndMonth),
                   reference = NA_character_) %>%
     dplyr::filter(!is.na(.data$treatmentID)) %>%
     # Remove duplicates
