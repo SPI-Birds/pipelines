@@ -494,6 +494,7 @@ create_capture_MON <- function(db, species_filter, pop_filter, optional_variable
                                                     TRUE ~ NA_character_),
                   treatmentID = dplyr::case_when(!(is.na(.data$exp_ad)) ~ paste(captureYear, captureSiteID, experimentID, sep = "_"),
                                                  TRUE ~ NA_character_)) %>%
+    dplyr::filter(.data$captureSiteID %in% pop_filter) %>%
     dplyr::select(individualID, captureTagID, releaseTagID, speciesID, observedSex, captureDate, captureYear, captureMonth, captureDay, captureTime,
                   recordedBy, Age, geneticSex, capturePhysical, captureAlive, releaseAlive, captureLocationID, releaseLocationID, studyID, captureSiteID,
                   releaseSiteID, capturePlotID, releasePlotID, treatmentID, experimentID, experimentType, treatmentDetails, treatmentStage, latitude, longitude, Tarsus,
@@ -728,6 +729,7 @@ create_capture_MON <- function(db, species_filter, pop_filter, optional_variable
                                                     TRUE ~ NA_character_),
                   treatmentID = dplyr::case_when(.data$expou == "1" ~ paste(captureYear, captureSiteID, experimentID, sep = "_"),
                                                  TRUE ~ NA_character_)) %>%
+    dplyr::filter(.data$captureSiteID %in% pop_filter) %>%
     dplyr::select(individualID, captureTagID, releaseTagID, speciesID, observedSex, captureDate, captureYear, captureMonth, captureDay, captureTime,
                   recordedBy, captureSiteID, releaseSiteID, capturePlotID, releasePlotID, LocationID, captureLocationID, releaseLocationID, capturePhysical,
                   captureAlive, releaseAlive, Age, chickAge, treatmentID, Tarsus, OriginalTarsusMethod, Wing_Length, Mass, geneticSex, broodIDLaid, broodIDFledged,
@@ -897,6 +899,7 @@ create_brood_MON <- function(db, species_filter, pop_filter, optional_variables)
                                                   .data$mort == "CLI" ~ "Climatic event (e.g. storm)",
                                                   .data$mort == "MAL" ~ "Sickness",
                                                   .data$mort == "NCT" ~ "Fledging event not checked")) %>%
+    dplyr::filter(.data$siteID %in% pop_filter) %>%
     dplyr::arrange(.data$observedLayYear, .data$observedLayMonth, .data$observedLayDay) %>%
     dplyr::group_by(.data$observedLayYear, .data$locationID) %>%
     dplyr::mutate(broodID = paste(.data$observedLayYear, .data$locationID, 1:dplyr::n(), sep = "_")) %>%
