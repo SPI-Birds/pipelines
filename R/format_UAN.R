@@ -92,27 +92,22 @@ format_UAN <- function(db = choose_directory(),
 
   message("\nLoading all files")
 
-  all_files <- list.files(path = db, pattern = ".xlsx", full.names = TRUE)
-
-  BOX_info <- readxl::read_excel(all_files[grepl("BOX", all_files)],
+  BOX_info <- readxl::read_excel(paste0(db, "\\", "UAN_PrimaryData_BOX.xlsx"),
                                  col_types = c("text", "numeric", "numeric",
                                                "numeric", "numeric", "text",
                                                "text", "text", "text", "numeric",
-                                               "numeric"))
+                                               "numeric", "numeric"))
 
-  BROOD_info <- readxl::read_excel(all_files[grepl("BR", all_files)],
-                                   col_types = c("text", "text", "text",
-                                                 "text", "text", "text",
-                                                 "numeric", "numeric",
-                                                 "numeric", "numeric",
-                                                 "numeric", "numeric",
-                                                 "text", "text", "text",
-                                                 "text", "text", "numeric", "text",
-                                                 "numeric", "numeric", "numeric",
-                                                 "numeric", "text", "text", "text",
-                                                 "text", "text", "text", "text", "text",
-                                                 "numeric", "numeric", "text", "numeric",
-                                                 "text")) %>%
+  BROOD_info <- readxl::read_excel(paste0(db, "\\", "UAN_PrimaryData_BR.xlsx"),
+                                  col_types = c(rep("text", 6),
+                                                rep("numeric", 6),
+                                                rep("text", 5),
+                                                "numeric", "text",
+                                                rep("numeric", 4),
+                                                rep("text", 7),
+                                                "numeric", "numeric",
+                                                "text", "numeric",
+                                                rep("text", 5))) %>%
     dplyr::mutate(dplyr::across(.cols = c("LD", "WD"),
                                 .fns = ~{
 
@@ -120,14 +115,14 @@ format_UAN <- function(db = choose_directory(),
 
                                 }))
 
-  INDV_info <- readxl::read_excel(all_files[grepl("IND", all_files)],
+  INDV_info <- readxl::read_excel(paste0(db, "\\", "UAN_PrimaryData_IND.xlsx"),
                                   col_types = c("text", "text", "text",
                                                 "numeric", "text", "text",
                                                 "text", "text", "text",
                                                 "numeric", rep("text", 3),
                                                 "list", "text", "list", "text",
                                                 "list", "text", "list", "text",
-                                                rep("numeric", 8), "text")) %>%
+                                                rep("numeric", 8), "text", "text")) %>%
     dplyr::mutate(dplyr::across(.cols = c("vd", "klr1date", "klr2date",
                                   "klr3date", "klr4date"),
                                 .fns = ~{
@@ -137,12 +132,12 @@ format_UAN <- function(db = choose_directory(),
                                 }))
 
   ## TODO: Should PLOT_info be loaded and used?
-  PLOT_info <- readxl::read_excel(all_files[grepl("PL", all_files)],
+  PLOT_info <- readxl::read_excel(paste0(db, "\\", "UAN_PrimaryData_PLOT.xlsx"),
                                   col_types = c(rep("text", 4),
                                                 rep("numeric", 6),
                                                 rep("text", 3)))
 
-  CAPTURE_info <- readxl::read_excel(all_files[grepl("VG", all_files)],
+  CAPTURE_info <- readxl::read_excel(paste0(db, "\\", "UAN_PrimaryData_vG.xlsx"),
                                      col_types = c(rep("text", 11),
                                                    "numeric", "text",
                                                    rep("text", 3),
@@ -150,7 +145,7 @@ format_UAN <- function(db = choose_directory(),
                                                    rep("text", 6),
                                                    rep("numeric", 3),
                                                    "text", "numeric",
-                                                   rep("text", 3))) %>%
+                                                   rep("text", 6))) %>%
     dplyr::mutate(VD = janitor::excel_numeric_to_date(as.numeric(.data$VD)))
 
   # Rename columns
@@ -185,13 +180,16 @@ format_UAN <- function(db = choose_directory(),
                   "NestNumberBigamousMale" = "NNBI",
                   "NestNumberTrigamousMale" = "NNTRI",
                   "StageAbandoned" = "VERL",
-                  # TODO: Ask Frank Adriaensen what the experiment codes mean
-                  "ExperimentID" = "exp",
                   "Longitude" = "coorx",
                   "Latitude" = "coory",
                   "Comments" = "comm",
                   "BreedingSeason" = "year",
-                  "LocationID" = "gbpl") %>%
+                  "LocationID" = "gbpl",
+                  # TODO: For now we ignore the "exp_" columns, but when we update UAN pipeline to v2.0, these become relevant
+                  "ExperimentID" = "exp",
+                  "ExperimentMan" = "exp_man",
+                  "ExperimentDat" = "exp_dat",
+                  "ExperimentObs" = "exp_obs") %>%
     dplyr::mutate(ClutchSize_observed = as.integer(.data$ClutchSize_observed),
                   BroodSize_observed = as.integer(.data$BroodSize_observed),
                   NumberFledged_observed = as.integer(.data$NumberFledged_observed),
@@ -233,10 +231,15 @@ format_UAN <- function(db = choose_directory(),
                   "Latitude" = "COORY",
                   "CapturePopID" = "SA",
                   "Ticks" = "TEEK",
-                  # TODO: Ask Frank Adriaensen what the experiment codes mean
-                  "ExperimentID" = "exp",
                   "OldColourRing" = "klr_old",
-                  "LocationID" = "gbpl") %>%
+                  "LocationID" = "gbpl",
+                  # TODO: For now we ignore the "exp" columns, but when we update UAN pipeline to v2.0, these become relevant
+                  "ExperimentID" = "exp",
+                  "ExperimentRem" = "exp_rem",
+                  "ExperimentCap" = "exp_cap",
+                  # TODO: This column refers to how the bird was found; released alive, hurt, dead, died during capture, etc.
+                  # Codes might be shared with us in the future.
+                  "Status" = "VRSTAT") %>%
     dplyr::mutate(Age_observed = as.integer(.data$Age_observed))
 
   INDV_info <- INDV_info %>%
@@ -269,7 +272,8 @@ format_UAN <- function(db = choose_directory(),
                   "NrTarsusAltObservations" = "ctanew_n",
                   "MedianAllTarsus" = "tarsus_med",
                   "AllTarsusObservations" = "tarsus_n",
-                  "TarsusMethod" = "tarsus_ty")
+                  "TarsusMethod" = "tarsus_ty",
+                  "PopID" = "SA")
 
   # BROOD DATA
 

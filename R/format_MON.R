@@ -114,7 +114,7 @@ format_MON <- function(db = choose_directory(),
 
   if(is.null(pop)){
 
-    pop <- c("MUR", "PIR", "ROU", "MON", "MTV", "MIS", "aviary")
+    pop <- c("MUR", "PIR", "ROU", "MON", "MTV", "MIS")
 
   }
 
@@ -213,14 +213,13 @@ format_MON <- function(db = choose_directory(),
 
 create_capture_MON <- function(db, species_filter, pop_filter){
 
-  Full_capture_data <- readxl::read_excel(paste0(db, "//MON_PrimaryData_MORPH.xlsx"),
-                                     col_types = c("text")) %>%
+  Full_capture_data <- read.csv(paste0(db, "\\", "MON_PrimaryData_MORPH.csv"), na.strings = "") %>%
     #There is a potential issue in excel that numbers are stored as text in the excel sheets.
     #These can easily be coerced back to numerics, but this throws many warnings,
     #which will masks any real problematic coercion issues (e.g. NA introduced by coercion)
     #Therefore, we read everything as text and coerce individually
-    dplyr::mutate(dplyr::across(c(3, 7, 16, 37), as.integer)) %>%
-    dplyr::mutate(dplyr::across(c(5, 6, 14, 18:24, 26, 27, 35), as.numeric)) %>%
+    dplyr::mutate(dplyr::across(c(4, 8, 17, 38), as.integer)) %>%
+    dplyr::mutate(dplyr::across(c(6, 7, 15, 19:25, 27, 28, 36), as.numeric)) %>%
     dplyr::mutate(Species = dplyr::case_when(.data$espece == "ble" ~ species_codes$Species[species_codes$SpeciesID == 14620],
                                              .data$espece == "noi" ~ species_codes$Species[species_codes$SpeciesID == 14610],
                                              .data$espece == "cha" ~ species_codes$Species[species_codes$SpeciesID == 14640],
@@ -236,14 +235,27 @@ create_capture_MON <- function(db, species_filter, pop_filter){
                                              .data$espece == "non" ~ species_codes$Species[species_codes$SpeciesID == 14400])) %>%
     #Filter by species
     dplyr::filter(.data$Species %in% species_filter) %>%
-    dplyr::mutate(CaptureDate = suppressWarnings(janitor::excel_numeric_to_date(as.numeric(.data$date_mesure))),
+    dplyr::mutate(CaptureDate = suppressWarnings(as.Date(.data$date_mesure, format = "%d/%m/%Y")),
                   CaptureTime = suppressWarnings(
                     dplyr::na_if(paste(stringr::str_pad((24*as.numeric(.data$heure)) %/% 1, width = 2, pad = "0"),
                                        stringr::str_pad(round(((24*as.numeric(.data$heure)) %% 1) * 60), width = 2, pad = "0"),
                                        sep = ":"), "NA:NA")
                   ),
                   BreedingSeason = .data$an,
-                  IndvID = .data$bague,
+                  IndvID = purrr::pmap_chr(.l = list(.data$bague),
+                                           .f = ~{
+
+                                             if(grepl(pattern = "non-ident", x = ..1)){
+
+                                               return(NA_character_)
+
+                                             } else {
+
+                                               return(..1)
+
+                                             }
+
+                                           }),
                   WingLength = .data$aile,
                   BeakLength = .data$becna,
                   Mass = .data$poids,
@@ -364,10 +376,9 @@ create_capture_MON <- function(db, species_filter, pop_filter){
 
   #Do the same for the chick capture data
   #As above, we read all in as text and then coerce afterwards
-  Chick_capture_data <- readxl::read_excel(paste0(db, "//MON_PrimaryData_POUS.xlsx"),
-                                           col_types = "text") %>%
-    dplyr::mutate(dplyr::across(c(2, 15), as.integer)) %>%
-    dplyr::mutate(dplyr::across(c(16, 18:20), as.numeric)) %>%
+  Chick_capture_data <- readr::read_delim(paste0(db, "/MON_PrimaryData_POUS.csv"), show_col_types = FALSE) %>%
+    dplyr::mutate(dplyr::across(c(3, 14, 16), as.integer)) %>%
+    dplyr::mutate(dplyr::across(c(5, 6, 12, 17, 19:21, 34, 36), as.numeric)) %>%
     dplyr::mutate(Species = dplyr::case_when(.data$espece == "ble" ~ species_codes$Species[species_codes$SpeciesID == 14620],
                                              .data$espece == "noi" ~ species_codes$Species[species_codes$SpeciesID == 14610],
                                              .data$espece == "cha" ~ species_codes$Species[species_codes$SpeciesID == 14640],
@@ -384,7 +395,7 @@ create_capture_MON <- function(db, species_filter, pop_filter){
     #Filter by species
     #Also remove only the pops we know
     dplyr::filter(.data$Species %in% species_filter) %>%
-    dplyr::mutate(CaptureDate = suppressWarnings(janitor::excel_numeric_to_date(as.numeric(.data$date_mesure))),
+    dplyr::mutate(CaptureDate = suppressWarnings(as.Date(.data$date_mesure, format = "%d/%m/%Y")),
                   CaptureTime = suppressWarnings(
                     dplyr::na_if(paste(stringr::str_pad((24*as.numeric(.data$heure)) %/% 1, width = 2, pad = "0"),
                                        stringr::str_pad(round(((24*as.numeric(.data$heure)) %% 1) * 60),
@@ -535,8 +546,8 @@ create_capture_MON <- function(db, species_filter, pop_filter){
 
 create_brood_MON <- function(db, species_filter, pop_filter){
 
-  Brood_data <- readxl::read_excel(paste0(db, "//MON_PrimaryData_DEMO.xlsx"),
-                                   col_types = "text") %>%
+  Brood_data <- read.csv(paste0(db, "\\", "MON_PrimaryData_DEMO.csv"), na.strings = "") %>%
+    dplyr::mutate(dplyr::across(c(21:36), as.character)) %>%
     dplyr::mutate(Species = dplyr::case_when(.data$espece == "ble" ~ species_codes$Species[which(species_codes$SpeciesID == 14620)],
                                              .data$espece == "noi" ~ species_codes$Species[which(species_codes$SpeciesID == 14610)],
                                              .data$espece == "cha" ~ species_codes$Species[which(species_codes$SpeciesID == 14640)],
@@ -554,14 +565,14 @@ create_brood_MON <- function(db, species_filter, pop_filter){
                   BoxNumber = .data$nic,
                   LocationID = paste(.data$Plot, .data$BoxNumber, "NB", sep = "_"),
                   BreedingSeason = as.integer(.data$an),
-                  LayDate = janitor::excel_numeric_to_date(as.numeric(.data$date_ponte)),
+                  LayDate = suppressWarnings(as.Date(.data$date_ponte, format = "%d/%m/%Y")),
                   BroodID = paste(.data$BreedingSeason, .data$Plot, .data$BoxNumber, .data$np,
                                   sep = "_"),
                   ClutchType_observed = dplyr::case_when(.data$np == "1" ~ "first",
                                                          .data$np == "2" ~ "second",
                                                          .data$np == "3" ~ "replacement"),
                   ClutchSize = as.integer(.data$grpo),
-                  HatchDate = janitor::excel_numeric_to_date(as.numeric(.data$date_eclo)),
+                  HatchDate = suppressWarnings(as.Date(.data$date_eclo, format = "%d/%m/%Y")),
                   BroodSize = as.integer(.data$pulecl),
                   NumberFledged = as.integer(.data$pulenv),
                   CauseFailure = .data$mort,
@@ -875,18 +886,16 @@ create_individual_MON <- function(Capture_data, Brood_data, verbose){
 create_location_MON <- function(db, Capture_data, Brood_data){
 
   #Load lat/long for nest boxes
-  nestbox_latlong <- readxl::read_excel(paste0(db, "//MON_PrimaryData_NestBoxLocation.xlsx"),
-                                        sheet = "dico_station") %>%
+  nestbox_latlong <- read.csv(paste0(db, "\\", "MON_PrimaryData_NestBoxLocation.csv"), na.strings = "") %>%
     dplyr::filter(!is.na(.data$latitude)) %>%
     dplyr::mutate(LocationID_join = paste(.data$abr_station, .data$nichoir, sep = "_")) %>%
     dplyr::select("LocationID_join", "latitude", "longitude") %>%
     dplyr::mutate(dplyr::across(c("latitude":"longitude"), as.numeric))
 
   #There are some nestboxes outside the study area
-  nestbox_latlong_outside <- readxl::read_excel(paste0(db, "//MON_PrimaryData_NestBoxLocation.xlsx"),
-                                                sheet = "Feuil1") %>%
+  nestbox_latlong_outside <- read.csv(paste0(db, "\\", "MON_PrimaryData_OffSiteLocation.csv"), na.strings = "") %>%
     dplyr::filter(!is.na(.data$la)) %>%
-    dplyr::mutate(LocationID_join = paste(.data$st, .data$ni, sep = "_"),
+    dplyr::mutate(LocationID_join = paste(.data$st, .data$ni_localisation, sep = "_"),
                   latitude = .data$la,
                   longitude = .data$lo) %>%
     dplyr::select("LocationID_join", "latitude", "longitude") %>%
