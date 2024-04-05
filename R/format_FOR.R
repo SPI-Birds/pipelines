@@ -1,3 +1,5 @@
+library(pipelines)
+library(tidyverse)
 #'Construct standard format for data from Forstenrieder park, Germany
 #'
 #'A pipeline to produce the standard format for the nest box population in Forstenrieder park,
@@ -21,7 +23,7 @@
 #'NumberFledged_max is the number of chicks measured on d14(PARMAJ)/15(CYACAE)
 #'
 #'#'\strong{FledgeDate}: Use NumberFledged to determine observed number of fledglings.
-#'FledgeDate_min is equal to FledgeDate_observed - FledgedCheckInterval (time since the last fledge check, this has not been done properly in 2023 and therefore values are NA for that year until we check everything manually)
+#'FledgeDate_min is equal to FledgeDate_observed - FledgedCheckInterval (time since the last fledge check, this has not been done properly in 2023 and therefore values are set to NA for that year until we check everything manually)
 #'FledgeDate_max is equal to FledgeDate_observed
 #'
 #'
@@ -38,6 +40,9 @@ format_FOR <- function(db = choose_directory(),
 
   #Force choose_directory() if used
   force(db)
+
+  #db="D:/Class/Documents/GitHub/pipelines/data/FOR_NielsDingemanse_Germany"# for some reason choose_directory() only returns NA
+  #species_codes <- read.csv("~/GitHub/pipelines/inst/extdata/species_codes.csv")
 
   #Assign to database location
   db <- paste0(gsub("\\\\", "/", db), "\\FOR_PrimaryData.accdb")
@@ -62,7 +67,7 @@ format_FOR <- function(db = choose_directory(),
   #Connect to the FOR database backend.
   connection <- DBI::dbConnect(drv = odbc::odbc(),
                                .connection_string = paste0("Driver={Microsoft Access Driver (*.mdb, *.accdb)};Dbq=", db, ";Uid=Admin;Pwd=;"))
-
+  #DBI::dbDisconnect(connection)
   # BROOD DATA
 
   message("Compiling brood information...")
@@ -208,7 +213,6 @@ create_brood_FOR   <- function(connection) {
 
                                 })) %>%
 
-###We need to remove  the BroodIDS for nests in which nothing happened (generated automatically by the db). In these nests CS is 0 and LD is unknown, no clutch type or species either, no data
     dplyr::mutate(BroodID = as.character(.data$BroodID),
                   BreedingSeason = .data$BroodYear,
                   PopID = "FOR",
@@ -245,7 +249,17 @@ create_brood_FOR   <- function(connection) {
                   ClutchType_observed = dplyr::case_when(.data$ClutchNumber == 1L ~ "first",
                                                          .data$ClutchNumber %in% c(2L, 4L) ~ "second",
                                                          .data$ClutchNumber %in% c(3L, 5L, 6L) ~ "replacement")) %>%
+
+    ###We need to remove  the BroodIDS for nests in which nothing happened (generated automatically by the db). In these nests CS is 0 and LD is unknown, no clutch type or species either, no data
+
+    dplyr::filter(!is.na(Species),
+           ClutchSize_observed>0,
+           !is.na(LayDate_observed),
+           !is.na(ClutchType_observed))%>%
+
+
     # Arrange columns
+
     dplyr::select("BroodID", "PopID", "BreedingSeason",
                   "Species", "Plot", "LocationID" = "NestBox", "FemaleID", "MaleID",
                   "ClutchType_observed", "ClutchType_calculated",
@@ -270,9 +284,9 @@ create_brood_FOR   <- function(connection) {
 
 }
 
-#' Create capture data table for Ammersee, Germany
+#' Create capture data table for Forstenrieder park, Germany
 #'
-#' Create capture data table in standard format for data from Ammersee, Germany.
+#' Create capture data table in standard format for data from Forstenrieder park, Germany.
 #'
 #' @param Brood_data Data frame. Output from \code{\link{create_brood_FOR}}.
 #' @param connection Connection the SQL database.
@@ -286,54 +300,43 @@ create_capture_FOR <- function(Brood_data, connection) {
   Chick_catch_tables <- dplyr::tbl(connection, "Chicks")
 
   Nestbox_capture <- dplyr::tbl(connection, "NestBoxes") %>%
-    dplyr::select("NestBox", "CapturePlot" = "Plot")
-
-  Nestbox_release <- dplyr::tbl(connection, "NestBoxes") %>%
-    dplyr::select("NestBox", "ReleasePlot" = "Plot")
+    dplyr::select("NestBox"= "NestBoxID", "CapturePlot" = "Plot")
 
   #Adult captures
   Adult_capture <- Catches_table %>%
     dplyr::left_join(Nestbox_capture, by = "NestBox") %>%
     dplyr::collapse() %>%
     dplyr::collect() %>%
-    dplyr::mutate(Species = dplyr::case_when(.data$CatchSpecies == 1L ~ !!species_codes$Species[species_codes$SpeciesID == "14640"],
-                                             .data$CatchSpecies == 2L ~ !!species_codes$Species[species_codes$SpeciesID == "14620"],
-                                             .data$CatchSpecies == 3L ~ !!species_codes$Species[species_codes$SpeciesID == "14610"],
-                                             .data$CatchSpecies == 4L ~ !!species_codes$Species[species_codes$SpeciesID == "14790"]),
-                  CaptureTime = dplyr::na_if(paste(lubridate::hour(.data$CatchTimeField),
-                                                   lubridate::minute(.data$CatchTimeField), sep = ":"), "NA:NA"),
-                  IndvID = as.character(.data$BirdID),
+    dplyr::filter(CatchYear<2024)%>%#empty rows were created for 2024 to prepare for the field season. remove these.
+    dplyr::mutate(Species = dplyr::case_when(.data$Species == 1L ~ !!species_codes$Species[species_codes$SpeciesID == "14640"],
+                                             .data$Species == 2L ~ !!species_codes$Species[species_codes$SpeciesID == "14620"],
+                                             .data$Species == 3L ~ !!species_codes$Species[species_codes$SpeciesID == "14610"],
+                                             .data$Species == 4L ~ !!species_codes$Species[species_codes$SpeciesID == "14790"]),
+                  CaptureTime = dplyr::na_if(paste(lubridate::hour(.data$CatchTime),
+                                                   lubridate::minute(.data$CatchTime), sep = ":"), "NA:NA"),
+                  IndvID = as.character(.data$RingNumber),#use ring number for now as there is a bug with BirdID
                   BreedingSeason = .data$CatchYear,
                   CaptureDate = as.Date(.data$CatchDate),
                   CapturePopID = "FOR",
                   ReleasePopID = "FOR",
-                  CapturePlot = as.character(.data$CapturePlot),
+                  CapturePlot = as.character(.data$Plot),
                   ReleasePlot = .data$CapturePlot,
                   LocationID = as.character(.data$NestBox),
                   OriginalTarsusMethod = "Alternative",
-                  ## These age categories match our EURING codes exactly
-                  Age_observed = dplyr::case_match(.data$AgeObserved,
+                  Age_observed = dplyr::case_match(.data$AgeObserved,## These age categories match our EURING codes exactly
                                                    7 ~ NA_integer_,
                                                    0 ~ NA_integer_,
                                                    .default = .data$AgeObserved),
                   ChickAge = NA_integer_,
-                  ObserverID = as.character(dplyr::na_if(.data$FieldObserver, -99L)),
+                  ObserverID = as.character(dplyr::na_if(.data$MorphologyObserver, -99L)),
                   BroodID = as.character(.data$BroodID),
-                  Sex_observed = dplyr::case_when(.data$SexObserved == 1L ~ "F",
-                                                  .data$SexObserved == 2L ~ "M",
+                  Sex_observed = dplyr::case_when(.data$Sex == 1L ~ "F",
+                                                  .data$Sex == 2L ~ "M",
                                                   TRUE ~ NA_character_),
-                  #If taken to the lab for personality tests this could affect survival
-                  #Attaching a transponder could also affect survival
-                  ExperimentID = dplyr::case_when(.data$ToLab == 1L ~ "SURVIVAL",
-                                                  .data$Transponder == 1L ~ "SURVIVAL",
-                                                  TRUE ~ NA_character_),
-                  CaptureAlive = dplyr::case_when(.data$CatchType %in% 13L:15L ~ FALSE,
-                                                  TRUE ~ TRUE),
-                  ReleaseAlive = dplyr::case_when(.data$CatchType %in% 13L:15L ~ FALSE,
-                                                  .data$DeadOrAlive == 0L ~ FALSE,
-                                                  TRUE ~ TRUE)) %>%
-    dplyr::mutate(dplyr::across(.cols = c("BodyMassField", "Tarsus", "WingP3"),
-                                .fns = ~ifelse(. <= 0, NA_real_, .))) %>%
+                  ExperimentID = NA_integer_,
+                  Mass=.data$BodyMass,
+                  Tarsus=.data$Tarsus,
+                  WingLength=.data$WingLength) %>%
     dplyr::select("IndvID",
                   "Species",
                   "Sex_observed",
@@ -346,71 +349,63 @@ create_capture_FOR <- function(Brood_data, connection) {
                   "CapturePlot",
                   "ReleasePopID",
                   "ReleasePlot",
-                  "Mass" = "BodyMassField",
+                  "Mass",
                   "Tarsus",
-                  "WingLength" = "WingP3",
+                  "WingLength",
                   "Age_observed",
                   "ChickAge",
                   "ExperimentID",
                   "BroodID")
-
+  #Chick captures
   Chick_capture <- Chick_catch_tables %>%
-    dplyr::filter(.data$Egg %in% c(-99L, 0L, 2L)) %>%
-    dplyr::left_join(Nestbox_capture, by = "NestBox") %>%
-    dplyr::collapse() %>%
-    dplyr::left_join(Nestbox_release, by = c("SwapToNestBox" = "NestBox")) %>%
-    dplyr::collapse() %>%
+    dplyr::filter(ChickYear<2024)%>%
+    dplyr::collect()  %>%
+  #empty rows were created for 2024 to prepare for the field season. remove these.
     dplyr::mutate(EndMarch = as.Date(paste(.data$ChickYear, "03", "31", sep = "-")),
-                  CapturePopID = "FOR", ReleasePopID = "FOR") %>%
-    dplyr::collect() %>%
-    #Hatchday >500 and <0 should be NA
-    dplyr::mutate(HatchDay = dplyr::case_when((.data$HatchDay >= 500 | .data$HatchDay < 0) ~ NA_integer_,
-                                              TRUE ~ .data$HatchDay),
-                  # All chicks are GT
-                  Species = species_codes$Species[species_codes$SpeciesID == 14640],
-                  Sex_observed = NA_character_) %>%
-    dplyr::select("Species", "Sex_observed", "BirdID", "ChickYear", "EndMarch", "NestBox", "BroodID",
-                  "CapturePlot", "ReleasePlot",
-                  "CapturePopID", "ReleasePopID",
-                  "HatchDay", "Day2BodyMass", "Day2BodyMassTime",
-                  "Day2Observer" = "SwapObserver",
-                  "Day6BodyMass", "Day6BodyMassTime", "Day6Observer",
-                  "Day14P3", "Day14Tarsus", "Day14BodyMass", "Day14BodyMassTime",
-                  "Day14Observer", "Day18BodyMass" = "Day18Bodymass", "Day18BodyMassTime", "Day18Observer") %>%
-    dplyr::mutate(dplyr::across(tidyselect::everything(),
-                                ~dplyr::na_if(as.character(.), "-99"))) %>% #Needed because pivot functions expect coercable classes when making value col
-    dplyr::mutate(dplyr::across(tidyselect::contains("BodyMassTime"),
-                                ~stringr::str_extract(., "[0-9]{2}:[0-9]{2}"))) %>%
-    tidyr::pivot_longer(cols = "Day2BodyMass":"Day18Observer",
-                        names_to = "column", values_to = "value") %>%
-    dplyr::mutate(Day = stringr::str_extract(.data$column, "[0-9]{1,}"),
+                  CapturePopID = "FOR",
+                  ReleasePopID = "FOR",
+                  IndvID=as.character(.data$RingNumber),
+                  Species =  dplyr::case_when(.data$Species == 1L ~ !!species_codes$Species[species_codes$SpeciesID == "14640"],
+                                              .data$Species == 2L ~ !!species_codes$Species[species_codes$SpeciesID == "14620"]))%>%
+    dplyr::collect()  %>%
+    dplyr::mutate(Sex_observed = NA_character_,
+                  ExperimentID = NA_integer_,
+                  BreedingSeason = .data$ChickYear,
+                  CaptureDate=as.Date(.data$RingingDate),
+                  CaptureTime = dplyr::na_if(paste(lubridate::hour(.data$Day14BodyMassTime),
+                                                   lubridate::minute(.data$Day14BodyMassTime), sep = ":"), "NA:NA"),)%>%
+  dplyr::collect()   %>%
+  dplyr::mutate(ObserverID = as.character(dplyr::na_if(.data$Day14Observer, -99L)),
+                  LocationID = .data$NestBox,
+                  CapturePlot=as.character(.data$Plot),
+                  ReleasePlot=as.character(.data$Plot),
+                  Mass = .data$Day14BodyMass,
+                  Tarsus=.data$Day14Tarsus,
+                  WingLength = .data$Day14Wing,
                   OriginalTarsusMethod = "Alternative",
-                  Age_observed = 1L) %>%
-    tidyr::separate(.data$column, into = c(NA, "Variable"), sep = "^Day[0-9]{1,}") %>%
-    tidyr::pivot_wider(names_from = "Variable", values_from = "value") %>%
-    #Mutate columns back to correct type
-    dplyr::mutate(dplyr::across(c("ChickYear", "HatchDay", "Day"), as.integer)) %>%
-    dplyr::mutate(dplyr::across(c("BodyMass", "P3", "Tarsus"),
-                                ~ifelse(as.numeric(.) <= 0, NA_real_, as.numeric(.)))) %>%
-    dplyr::filter(!(is.na(.data$BodyMass) & is.na(.data$P3) & is.na(.data$Tarsus))) %>%
-    dplyr::mutate(CaptureDate = as.Date(.data$EndMarch) + .data$HatchDay + .data$Day) %>%
-    dplyr::select("IndvID" = "BirdID",
+                  Age_observed=1L,
+                  ChickAge = .data$ChickRingingDay-.data$HatchDay,
+                  BroodID=as.character(.data$BroodID))%>%
+    dplyr::collapse() %>%
+    dplyr::collect() %>%
+    dplyr::select("IndvID",
                   "Species",
                   "Sex_observed",
-                  "BreedingSeason" = "ChickYear",
+                  "BreedingSeason",
                   "CaptureDate",
-                  "CaptureTime" = "BodyMassTime",
-                  "ObserverID" = "Observer",
-                  "LocationID" = "NestBox",
+                  "CaptureTime",
+                  "ObserverID",
+                  "LocationID",
                   "CapturePopID",
                   "CapturePlot",
                   "ReleasePopID",
                   "ReleasePlot",
-                  "Mass" = "BodyMass",
+                  "Mass",
                   "Tarsus",
-                  "WingLength" = "P3",
+                  "WingLength",
                   "Age_observed",
-                  "ChickAge" = "Day",
+                  "ChickAge",
+                  "ExperimentID",
                   "BroodID")
 
   Capture_data <- dplyr::bind_rows(Adult_capture, Chick_capture) %>%
