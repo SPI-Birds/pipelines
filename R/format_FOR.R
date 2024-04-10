@@ -1,5 +1,6 @@
 library(pipelines)
 library(tidyverse)
+library(dplyr)
 #'Construct standard format for data from Forstenrieder park, Germany
 #'
 #'A pipeline to produce the standard format for the nest box population in Forstenrieder park,
@@ -308,13 +309,14 @@ create_capture_FOR <- function(Brood_data, connection) {
     dplyr::collapse() %>%
     dplyr::collect() %>%
     dplyr::filter(CatchYear<2024)%>%#empty rows were created for 2024 to prepare for the field season. remove these.
+    dplyr::filter(!is.na(BirdID))%>%#remove individuals without bird ids (escaped before the ring was read)
     dplyr::mutate(Species = dplyr::case_when(.data$Species == 1L ~ !!species_codes$Species[species_codes$SpeciesID == "14640"],
                                              .data$Species == 2L ~ !!species_codes$Species[species_codes$SpeciesID == "14620"],
                                              .data$Species == 3L ~ !!species_codes$Species[species_codes$SpeciesID == "14610"],
                                              .data$Species == 4L ~ !!species_codes$Species[species_codes$SpeciesID == "14790"]),
                   CaptureTime = dplyr::na_if(paste(lubridate::hour(.data$CatchTime),
                                                    lubridate::minute(.data$CatchTime), sep = ":"), "NA:NA"),
-                  IndvID = as.character(.data$RingNumber),#use ring number for now as there is a bug with BirdID
+                  IndvID = as.character(.data$BirdID),
                   BreedingSeason = .data$CatchYear,
                   CaptureDate = as.Date(.data$CatchDate),
                   CapturePopID = "FOR",
@@ -364,7 +366,7 @@ create_capture_FOR <- function(Brood_data, connection) {
     dplyr::mutate(EndMarch = as.Date(paste(.data$ChickYear, "03", "31", sep = "-")),
                   CapturePopID = "FOR",
                   ReleasePopID = "FOR",
-                  IndvID=as.character(.data$RingNumber),
+                  IndvID=as.character(.data$BirdID),
                   Species =  dplyr::case_when(.data$Species == 1L ~ !!species_codes$Species[species_codes$SpeciesID == "14640"],
                                               .data$Species == 2L ~ !!species_codes$Species[species_codes$SpeciesID == "14620"]))%>%
     dplyr::collect()  %>%
@@ -421,9 +423,9 @@ create_capture_FOR <- function(Brood_data, connection) {
 
 }
 
-#' Create individual data table for Ammersee, Germany
+#' Create individual data table for Forstenrieder Park, Germany
 #'
-#' Create individual data table in standard format for data from Ammersee, Germany.
+#' Create individual data table in standard format for data from Forstenrieder Park, Germany.
 #'
 #' @param Capture_data Data frame. Output from \code{\link{create_capture_FOR}}.
 #' @param Brood_data Data frame. Output from \code{\link{create_brood_FOR}}.
@@ -433,20 +435,6 @@ create_capture_FOR <- function(Brood_data, connection) {
 
 create_individual_FOR <- function(Capture_data, Brood_data, connection) {
 
-  Sex_genetic <- dplyr::tbl(connection, "GenotypesAllYears") %>%
-    dplyr::select("IndvID" = "BirdID", "SexGenetic") %>%
-    dplyr::filter(!is.na(.data$IndvID) & !is.na(.data$SexGenetic) & .data$SexGenetic > 0) %>%
-    dplyr::collect() %>%
-    dplyr::group_by(.data$IndvID) %>%
-    dplyr::summarise(length_sex = length(unique(.data$SexGenetic)),
-                     unique_sex = list(unique(.data$SexGenetic))) %>%
-    dplyr::rowwise() %>%
-    dplyr::mutate(IndvID = as.character(.data$IndvID),
-                  Sex_genetic = dplyr::case_when(.data$length_sex > 1 ~ "C",
-                                                 .data$unique_sex[[1]] == 1L ~ "F",
-                                                 .data$unique_sex[[1]] == 2L ~ "M")) %>%
-    dplyr::ungroup() %>%
-    dplyr::select("IndvID", "Sex_genetic")
 
   Sex_calc <- Capture_data %>%
     dplyr::filter(!is.na(.data$Sex_observed)) %>%
@@ -459,8 +447,8 @@ create_individual_FOR <- function(Capture_data, Brood_data, connection) {
     dplyr::ungroup() %>%
     dplyr::select("IndvID", "Sex_calculated")
 
-  Brood_swap_info <- dplyr::tbl(connection, "Chicks") %>%
-    dplyr::select("IndvID" = "BirdID", "BroodIDLaid" = "BroodID", "BroodIDFledged" = "SwapToBroodID") %>%
+  Brood_info <- dplyr::tbl(connection, "Chicks") %>%
+    dplyr::select("IndvID" = "BirdID", "BroodIDLaid" = "BroodID", "BroodIDFledged" = "BroodID") %>%
     dplyr::collect() %>%
     dplyr::mutate(dplyr::across(tidyselect::everything(), as.character))
 
@@ -489,8 +477,8 @@ create_individual_FOR <- function(Capture_data, Brood_data, connection) {
                      RingAge = ifelse(min(.data$Age_observed) != 1L | is.na(min(.data$Age_observed)),
                                       "adult", "chick")) %>%
     dplyr::left_join(Sex_calc, by = "IndvID") %>%
-    dplyr::left_join(Sex_genetic, by = "IndvID") %>%
-    dplyr::left_join(Brood_swap_info, by = "IndvID") %>%
+    dplyr::left_join(Brood_info, by = "IndvID") %>%
+    dplyr::mutate(Sex_genetic=NA_character_)%>%
     dplyr::select("IndvID", "Species", "PopID",
                   "BroodIDLaid", "BroodIDFledged",
                   "RingSeason", "RingAge",
@@ -500,9 +488,9 @@ create_individual_FOR <- function(Capture_data, Brood_data, connection) {
 
 }
 
-#' Create location data table for Ammersee, Germany.
+#' Create location data table for Forstenrieder Park, Germany.
 #'
-#' Create location data table in standard format for data from Ammersee, Germany.
+#' Create location data table in standard format for data from Forstenrieder Park, Germany.
 #'
 #' @param Capture_data Data frame. Output from \code{\link{create_capture_FOR}}.
 #' @param connection Connection the SQL database.
@@ -511,23 +499,21 @@ create_individual_FOR <- function(Capture_data, Brood_data, connection) {
 
 create_location_FOR <- function(Capture_data, connection) {
 
-  Habitat_data <- dplyr::tbl(connection, "HabitatDescription") %>%
-    dplyr::select("NestBox", "Beech":"OtherTree") %>%
-    dplyr::collect() %>%
-    dplyr::group_by(.data$NestBox) %>%
-    dplyr::summarise(dplyr::across(tidyselect::everything(), ~sum(.x, na.rm = TRUE)), .groups = "keep") %>%
-    dplyr::summarise(DEC = sum(c(.data$Beech, .data$Larch, .data$Maple, .data$Birch, .data$Oak, .data$Willow, .data$Poplar, .data$Alder, .data$AshTree)),
-                     EVE = sum(c(.data$Spruce, .data$Pine))) %>%
-    dplyr::mutate(perc_dec = .data$DEC/(.data$DEC + .data$EVE),
-                  dominant_sp = dplyr::case_when(.data$perc_dec >= 0.66 ~ "DEC",
-                                                 .data$perc_dec < 0.33 ~ "EVE",
-                                                 TRUE ~ "MIX"))
-
+#Habitat_data <- dplyr::tbl(connection, "HabitatDescription") %>%
+#  dplyr::select("NestBox", "Beech":"OtherTree") %>%
+#  dplyr::collect() %>%
+#  dplyr::group_by(.data$NestBox) %>%
+#  dplyr::summarise(dplyr::across(tidyselect::everything(), ~sum(.x, na.rm = TRUE)), .groups = "keep") %>%
+#  dplyr::summarise(DEC = sum(c(.data$Beech, .data$Larch, .data$Maple, .data$Birch, .data$Oak, .data$Willow, .data$Poplar, .data$Alder, .data$AshTree)),
+#                   EVE = sum(c(.data$Spruce, .data$Pine))) %>%
+#  dplyr::mutate(perc_dec = .data$DEC/(.data$DEC + .data$EVE),
+#                dominant_sp = dplyr::case_when(.data$perc_dec >= 0.66 ~ "DEC",
+#                                               .data$perc_dec < 0.33 ~ "EVE",
+#                                               TRUE ~ "MIX"))
+#
   #The vast majority of nestboxes (90%) of nestboxes are surrounded by deciduous or mixed stands. Therefore,
   #we use the 'DEC' category to describe the population.
-  #In the future, we could include a nest-box specific habitat type, but that would require us to decide
-  #the range over which habitat is sampled (the nestbox vicinity, the plot?). To do later.
-  table(Habitat_data$dominant_sp)
+  #table(Habitat_data$dominant_sp)
 
   start_year <- min(Capture_data$BreedingSeason)
 
