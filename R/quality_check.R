@@ -119,6 +119,27 @@ quality_check <- function(R_data,
   Individual_data <- R_data$Individual_data
   Location_data <- R_data$Location_data
 
+  # Add temporary row to each table, if absent
+  if(!("Row" %in% names(Brood_data))) {
+
+    Brood_data <- Brood_data %>%
+      dplyr::mutate(Row = 1:dplyr::n()) %>%
+      dplyr::select("Row", tidyselect::everything())
+
+    Capture_data <- Capture_data %>%
+      dplyr::mutate(Row = 1:dplyr::n()) %>%
+      dplyr::select("Row", tidyselect::everything())
+
+    Individual_data <- Individual_data %>%
+      dplyr::mutate(Row = 1:dplyr::n()) %>%
+      dplyr::select("Row", tidyselect::everything())
+
+    Location_data <- Location_data %>%
+      dplyr::mutate(Row = 1:dplyr::n()) %>%
+      dplyr::select("Row", tidyselect::everything())
+
+  }
+
   # Add temporary empty CaptureID column to allow procedure to approve previously flagged records
   if(!("CaptureID" %in% colnames(Capture_data))) Capture_data$CaptureID <- NA_character_
   # FIXME remove after CaptureID column has been added to ALL pipelines
