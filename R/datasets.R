@@ -19,6 +19,10 @@ species_codes <- utils::read.csv(system.file("extdata", "species_codes.csv", pac
 #'  \item{PopID}{Three-letter population code.}
 #'  \item{PopName}{Name of population.}
 #'  \item{Country}{Name of country where population is situated.}
+#'  \item{CountryCode}{Standard code for the country, using \href{https://www.iso.org/iso-3166-country-codes.html}{ISO 3166-1 alpha-2}.}
+#'  \item{Latitude}{Geographic latitude of the geographic center of the population in decimal degrees.}
+#'  \item{Longitude}{Geographic longitude of the geographic center of the population in decimal degrees.}
+#'  \item{LocationAccordingTo}{Source of location information. Either "metadataProvider" or "data".}
 #'  \item{Owner}{Letter code for data owner. Note, multiple populations can have
 #'  the same data owner.}
 #'  \item{OwnerName}{Name of owner.}}

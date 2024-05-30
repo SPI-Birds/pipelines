@@ -15,7 +15,7 @@
 #'
 #'\strong{Populations}: This pipeline extracts data for 8 populations managed by
 #'NIOO-KNAW: Buunderkamp, Lichtenbeek, Westerheide, Hoge Veluwe, Warnsborn,
-#'Vlieland, Oosterhout, and Liesbosch.
+#'Vlieland, Oosterhout, and Liesbos.
 #'
 #'\strong{Sex}: We condense sex information to only include groups M, F, and C
 #'(conflicting). Uncertainty in sex was ignored (e.g.
@@ -83,7 +83,7 @@ format_NIOO <- function(db = choose_directory(),
 
   # List the main study sites.
   main_sites <- c("Buunderkamp", "Lichtenbeek", "Westerheide", "Hoge Veluwe",
-                  "Warnsborn", "Vlieland", "Oosterhout", "Liesbosch")
+                  "Warnsborn", "Vlieland", "Oosterhout", "Liesbos")
 
   # Extract the corresponding areas from the AreaGroup table
   Locations <- dplyr::tbl(connection, "dbo_tl_AreaGroup") %>%
