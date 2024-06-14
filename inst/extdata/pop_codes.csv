@@ -1,86 +1,127 @@
-PopID,PopName,Country,Owner,OwnerName
-AMM,Ammersee,Germany,AMM,Ammersee
-BAN,Bandon Valley,Ireland,BAN,Bandon Valley
-CHO,Choupal,Portugal,CHO,Choupal
-HAR,Harjavalta,Finland,HAR,Harjavalta
-HOC,Hochstadt,Germany,HOC,Hochstadt
-KEV,Kevo,Finland,KEV,Kevo
-MIS,Miscellaneous populations,France,MON,Montpellier
-MON,Montpellier city,France,MON,Montpellier
-MTV,Mont Ventoux,France,MON,Montpellier
-MUR,Muro,France,MON,Montpellier
-PIR,Pirio,France,MON,Montpellier
-ROU,Rouviere,France,MON,Montpellier
-BUU,Buunderkamp,Netherlands,NIOO,NIOO
-HOG,Hoge Veluwe,Netherlands,NIOO,NIOO
-LIE,Liesbos,Netherlands,NIOO,NIOO
-OOS,Oosterhout,Netherlands,NIOO,NIOO
-VLI,Vlieland,Netherlands,NIOO,NIOO
-WAR,Warnsborn,Netherlands,NIOO,NIOO
-WES,Westerheide,Netherlands,NIOO,NIOO
-EDM,East Dartmoor,UK,PFN,PiedFlyNet
-PIL,Pilis-Visegrad Mountains,Hungary,PIL,Pilis-Visegrad Mountains
-SSQ,Santo Stefano Quisquina,Italy,SSQ,Santo Stefano Quisquina
-BOS,Boshoek,Belgium,UAN,University of Antwerp
-PEE,Peerdsbos,Belgium,UAN,University of Antwerp
-VEL,Velky Kosir,Czechia,VEL,Velky Kosir
-WYT,Wytham Woods,UK,WYT,Wytham Woods
-ASK,Askainen,Finland,ASK,Askainen
-BER,Berkenheuvel,Netherlands,RUG,Rijksuniversiteit Groningen
-BRG,Bergen,Norway,BRG,Bergen
-CAN,Canada de los Pajaros,Spain,CAN,Canada de los Pajaros
-CAC,Can Cata,Spain,CAC,Can Cata
-DAE,Daeli,Norway,DAE,Daeli
-DAL,Dalmeny,UK,DAL,Dalmeny
-DAZ,Dazinj,Croatia,DAZ,Dazinj
-DLO,Dlouha Loucka,Czechia,DLO,Dlouha Loucka
-DON,Donana,Spain,DON,Donana
-DUN,Dunedin,New Zealand,DUN,Dunedin
-FOR,Forstenrieder Park,Germany,FOR,Forstenrieder Park
-GAR,Garscube campus,UK,GLA,Glasgow
-CAS,Cashel farm forest,UK,GLA,Glasgow
-SAL,Sallochy,UK,GLA,Glasgow
-KEL,Kelvingrove park,UK,GLA,Glasgow
-SCE,Scene,UK,GLA,Glasgow
-GLI,Glimmen,Netherlands,GLI,Glimmen
-GRO,Grobla - Niepolomice Forest,Poland,GRO,Grobla - Niepolomice Forest
-LAH,La Hiruela,Spain,LAH,La Hiruela
-KIL,Kilingi-Nomme,Estonia,KIL,Kilingi-Nomme
-KUU,Kuusamo,Finland,KUU,Kuusamo
-LAK,Lakselvdalen Troms,Norway,LAK,Lakselvdalen Troms
-LAN,Lancaster,UK,LAN,Lancaster
-LAS,Lasy Szwalewskie,Poland,LAS,Lasy Szwalewskie
-LUN,Lundy Island,UK,LUN,Lundy Island
-MAL,Malmo,Sweden,MAL,Malmo
-MAR,Mariola,Spain,MAR,Mariola
-MAY,Mayachino,Russia,MAY,Mayachino
-MET,Metu,Turkey,MET,Metu
-MIE,Mierzeja Wislana,Poland,MIE,Mierzeja Wislana
-MOU,Moulis,France,MOU,Moulis
-MTA,MTA-PE Evolutionary Ecology Group,Hungary,MTA,MTA-PE Evolutionary Ecology Group
-MRC,Murcia,Spain,MRC,Murcia
-OUL,Oulu,Finland,OUL,Oulu
-PET,Petrozevodsk,Russia,PET,Petrozevodsk
-PEW,Peerdsbos West,Belgium,PEW,Peerdsbos West
-RAD,Radofzell,Germany,RAD,Radofzell
-REV,Revinge,Sweden,REV,Revinge
-SAG,Sagunto,Spain,SAG,Sagunto
-SFL,Schopfl,Austria,SFL,Schopfl
-SKG,Schiermonnikoog,Netherlands,SKG,Schiermonnikoog
-SIL,Silwood,UK,SIL,Silwood
-STR,Strasbourg,France,STR,Strasbourg
-TOM,Tomakomai,Japan,TOM,Tomakomai
-VAL,Valsein,Spain,VAL,Valsein
-VOM,Vomb Fure,Sweden,VOM,Vomb Fure
-VOS,Vosbergen,Netherlands,VOS,Vosbergen
-WRS,Warsaw,Poland,WRS,Warshav
-WHV,Wilhelmshaven,Germany,WHV,Wilhelmshaven
-WHZ,Westerholtz,Germany,WHZ,Westerholtz
-WIL,Wilrijk,Belgium,WIL,Wilrijk
-ZVE,Zvenigorod,Russia,ZVE,Zvenigorod
-GOT,Gotland,Sweden,GOT,Gotland
-DIN,Dinas,UK,PFN,PiedFlyNet
-KAT,Loch Katrine,UK,PFN,PiedFlyNet
-NAG,Forest of Dean,UK,PFN,PiedFlyNet
-OKE,Okehampton,UK,PFN,PiedFlyNet
-TEI,Teign Valley,UK,PFN,PiedFlyNet
+"PopID","PopName","Country","CountryCode","Latitude","Longitude","LocationAccordingTo","Owner","OwnerName"
+"AMM","Ammersee-Starnbergersee","Germany","DE",47.966667,11.233333,"metadataProvider","AMM","Ammersee"
+"BAN","Bandon Valley","Ireland","IE",51.74869,-8.723583,"metadataProvider","BAN","Bandon Valley"
+"CHO","Choupal","Portugal","PT",40.222,-8.44963889,"metadataProvider","CHO","Choupal"
+"HAR","Harjavalta","Finland","FI",61.31666667,22.11666667,"metadataProvider","HAR","Harjavalta"
+"HOC","Hochstadt","Germany","DE",48.058824,11.255755,"metadataProvider","HOC","Hochstadt"
+"KEV","Kevo","Finland","FI",69.75,27.01667,"metadataProvider","KEV","Kevo"
+"MIS","Miscellaneous populations","France","FR",42.56886,8.943566,"data","MON","Montpellier"
+"MON","Montpellier city","France","FR",43.606694,3.876889,"metadataProvider","MON","Montpellier"
+"MTV","Mont Ventoux","France","FR",44.17444,5.278889,"data","MON","Montpellier"
+"MUR","Muro","France","FR",42.55149,8.925644,"data","MON","Montpellier"
+"PIR","Pirio","France","FR",42.373888,8.747781,"metadataProvider","MON","Montpellier"
+"ROU","Rouviere","France","FR",43.664075,3.669504,"metadataProvider","MON","Montpellier"
+"BUU","Buunderkamp","Netherlands","NL",52.01907,5.75744,"metadataProvider","NIOO","NIOO"
+"HOG","Hoge Veluwe","Netherlands","NL",52.04073,5.85573,"metadataProvider","NIOO","NIOO"
+"LIE","Liesbos","Netherlands","NL",51.58225,4.70028,"metadataProvider","NIOO","NIOO"
+"LIC","Lichtenbeek","Netherlands","NL",52.00375,5.847859,"metadataProvider","NIOO","NIOO"
+"OOS","Oosterhout","Netherlands","NL",51.87366,5.84057,"metadataProvider","NIOO","NIOO"
+"VLI","Vlieland","Netherlands","NL",53.27917,5.011980,"metadataProvider","NIOO","NIOO"
+"WAR","Warnsborn","Netherlands","NL",52.01079,5.868160,"metadataProvider","NIOO","NIOO"
+"WES","Westerheide","Netherlands","NL",52.01552,5.83692,"metadataProvider","NIOO","NIOO"
+"EDM","East Dartmoor","United Kingdom","GB",50.6,-3.71666667,"metadataProvider","PFN","PiedFlyNet"
+"PIL","Pilis-Visegrad Mountains","Hungary","HU",47.71667,19.01667,"metadataProvider","PIL","Pilis-Visegrad Mountains"
+"SSQ","Santo Stefano Quisquina","Italy","IT",37.6,13.5333333,"metadataProvider","SSQ","Santo Stefano Quisquina"
+"BOS","Boshoek","Belgium","BE",51.13333333,4.516666667,"metadataProvider","UAN","University of Antwerp"
+"PEE","Peerdsbos","Belgium","BE",51.272333,4.488333,"metadataProvider","UAN","University of Antwerp"
+"VEL","Velky Kosir","Czechia","CZ",49.53333333,17.06666667,"metadataProvider","VEL","Velky Kosir"
+"WYT","Wytham Woods","United Kingdom","GB",51.76667,-1.333333,"metadataProvider","WYT","Wytham Woods"
+"ASK","Askainen","Finland","FI",60.483333,21.75,"metadataProvider","ASK","Askainen"
+"BER","Berkenheuvel","Netherlands","NL",52.876111,6.276389,"metadataProvider","RUG","University of Groningen"
+"TOR","Torenlaan","Netherlands","NL",52.880833,6.3025,"metadataProvider","RUG","University of Groningen"
+"MZR","Midzomer","Netherlands","NL",52.871111,6.304444,"metadataProvider","RUG","University of Groningen"
+"DVZ","Dieverzand","Netherlands","NL",52.871944,6.328889,"metadataProvider","RUG","University of Groningen"
+"OWM","Oude Willem","Netherlands","NL",52.907222,6.314167,"metadataProvider","RUG","University of Groningen"
+"APP","Appelscha","Netherlands","NL",52.945278,6.302222,"metadataProvider","RUG","University of Groningen"
+"LBZ","Lheebroekerzand","Netherlands","NL",52.836944,6.444722,"metadataProvider","RUG","University of Groningen"
+"DWI","Dwingeloo","Netherlands","NL",52.818056,6.432778,"metadataProvider","RUG","University of Groningen"
+"RUI","Ruinen","Netherlands","NL",52.725278,6.398611,"metadataProvider","RUG","University of Groningen"
+"DWZ","Dwingelderzand","Netherlands","NL",52.815278,6.361944,"metadataProvider","RUG","University of Groningen"
+"ANS","Anserdennen","Netherlands","NL",52.79,6.352778,"metadataProvider","RUG","University of Groningen"
+"MIA","Maria","Netherlands","NL",52.819722,6.387778,"metadataProvider","RUG","University of Groningen"
+"BRG","Bergen's Arboretum","Norway","NO",60.2575,5.27,"metadataProvider","BRG","Bergen"
+"CAN","Canada de los Pajaros","Spain","ES",37.2387,-6.1315,"metadataProvider","CAN","Canada de los Pajaros"
+"CAC","Can Cata","Spain","ES",41.45,2.133333,"metadataProvider","CAC","Can Cata"
+"DAE","Daeli","Norway","NO",59.933333,10.55,"metadataProvider","DAE","Daeli"
+"DAL","Dalmeny","United Kingdom","GB",55.973339,-3.355746,"metadataProvider","DAL","Dalmeny"
+"DAZ","Dazlina-Ivinj","Croatia","HR",43.833333,15.733333,"metadataProvider","DAZ","Dazinj"
+"DLO","Dlouha Loucka","Czechia","CZ",49.82,17.21,"metadataProvider","DLO","Dlouha Loucka"
+"DON","Donana","Spain","ES",36.933333,-6.35,"metadataProvider","DON","Donana"
+"DUN","Dunedin Botanic Garden","New Zealand","NZ",-45.86,170.52,"metadataProvider","DUN","Dunedin"
+"FOR","Forstenrieder Park","Germany","DE",48.066667,11.45,"metadataProvider","FOR","Forstenrieder Park"
+"GAR","Garscube campus","United Kingdom","GB",55.9048,-4.3199,"metadataProvider","GLA","Glasgow"
+"CAS","Cashel farm forest","United Kingdom","GB",56.10888,-4.57823,"metadataProvider","GLA","Glasgow"
+"SAL","Sallochy","United Kingdom","GB",56.1232,-4.5993,"metadataProvider","GLA","Glasgow"
+"KEL","Kelvingrove park","United Kingdom","GB",55.8692216,-4.2818993,"metadataProvider","GLA","Glasgow"
+"SCE","Scene","United Kingdom","GB",56.1291,-4.61478,"metadataProvider","GLA","Glasgow"
+"GLI","Glimmen","Netherlands","NL",53.133333,6.633333,"metadataProvider","RUG","University of Groningen"
+"GRO","Grobla-Niepolomice Forest","Poland","PL",50.1,20.41666667,"metadataProvider","GRO","Grobla - Niepolomice Forest"
+"LAH","La Hiruela","Spain","ES",41.06667,-3.45,"metadataProvider","LAH","La Hiruela"
+"MSC","Montesclaros","Spain","ES",41.083333,-3.433333,"metadataProvider","MSC","Montesclaros"
+"KIL","Kilingi-Nomme","Estonia","EE",58.116667,25.083333,"metadataProvider","KIL","Kilingi-Nomme"
+"KUU","Kuusamo","Finland","FI",66.033333,29.05,"metadataProvider","KUU","Kuusamo"
+"LAK","Lakselvdalen","Norway","NO",69.333333,19.566667,"metadataProvider","LAK","Lakselvdalen Troms"
+"LAN","Lancaster","United Kingdom","GB",54,-2.783333,"metadataProvider","LAN","Lancaster"
+"LAS","Lasy Szwalewskie","Poland","PL",53.716667,19.533333,"metadataProvider","LAS","Lasy Szwalewskie"
+"LUN","Lundy Island","United Kingdom","GB",51.173222,-4.667861,"metadataProvider","LUN","Lundy Island"
+"MAL","Malmo","Sweden","SE",55.6,13.033333,"metadataProvider","MAL","Malmo"
+"MAR","Mariola","Spain","ES",38.733333,-0.55,"metadataProvider","MAR","Mariola"
+"MAY","Mayachino","Russia","RU",60.766667,32.816667,"metadataProvider","MAY","Mayachino"
+"MET","Metu","Turkey","TR",39.9,32.8,"metadataProvider","MET","Metu"
+"MIE","Mierzeja Wislana","Poland","PL",54.366667,19.35,"metadataProvider","MIE","Mierzeja Wislana"
+"MOU","Moulis","France","FR",42.967722,1.091306,"metadataProvider","MOU","Moulis"
+"BAL","Balatonfured","Hungary","HU",47.958561,17.892908,"metadataProvider","MTA","MTA-PE Evolutionary Ecology Group, University of Pannonia"
+"GUL","Gulya-domb","Hungary","HU",47.091056,17.883222,"metadataProvider","MTA","MTA-PE Evolutionary Ecology Group, University of Pannonia"
+"SZE","Szentgal","Hungary","HU",47.111042,17.688317,"metadataProvider","MTA","MTA-PE Evolutionary Ecology Group, University of Pannonia"
+"VES","Veszprem","Hungary","HU",47.088136,17.908239,"metadataProvider","MTA","MTA-PE Evolutionary Ecology Group, University of Pannonia"
+"VIL","Vilma-puszta","Hungary","HU",47.085194,17.864278,"metadataProvider","MTA","MTA-PE Evolutionary Ecology Group, University of Pannonia"
+"MRC","Murcia","Spain","ES",37.75,-0.95,"metadataProvider","MRC","Murcia"
+"OUL","Oulu","Finland","FI",65.083333,25.883333,"metadataProvider","OUL","Oulu"
+"PET","Petrozavodsk","Russia","RU",61.842778,34.381667,"metadataProvider","PET","Petrozevodsk"
+"PEW","Peerdsbos West","Belgium","BE",51.271667,4.48,"metadataProvider","PEW","Peerdsbos West"
+"RAD","Radolfzell","Germany","DE",47.766667,8.983333,"metadataProvider","RAD","Radofzell"
+"REV","Revinge","Sweden","SE",55.7,13.466667,"metadataProvider","REV","Revinge"
+"REV","Revinge","Sweden","SE",55.7,13.466667,"metadataProvider","REV","Revinge"
+"SAG","Sagunto","Spain","ES",39.7,-0.25,"metadataProvider","SAG","Sagunto"
+"SFL","Schopfl","Austria","AT",48.084167,15.923333,"metadataProvider","SFL","Schopfl"
+"SKG","Schiermonnikoog","Netherlands","NL",53.483333,6.216667,"metadataProvider","SKG","Schiermonnikoog"
+"SIL","Silwood Park","United Kingdom","GB",51.4091,-0.6392,"metadataProvider","SIL","Silwood"
+"STR","Strasbourg","France","FR",48.579081,7.765491,"metadataProvider","STR","Strasbourg"
+"ROB","Robertsau","France","FR",48.610522,7.802476,"metadataProvider","STR","Strasbourg"
+"WAN","Wantzenau","France","FR",48.647904,7.833611,"metadataProvider","STR","Strasbourg"
+"TOM","Tomakomai","Japan","JP",42.666667,141.6,"metadataProvider","TOM","Tomakomai"
+"VAL","Valsain","Spain","ES",40.886,-4.031,"metadataProvider","VAL","Valsein"
+"VOM","Vomb Fure","Sweden","SE",55.67,13.55,"metadataProvider","VOM","Vomb Fure"
+"VOS","Vosbergen","Netherlands","NL",53.133333,6.583333,"metadataProvider","RUG","University of Groningen"
+"WRS","Warsaw","Poland","PL",52.229694,21.012194,"metadataProvider","WRS","Warshav"
+"BAS","Banter See","Germany","DE",53.6,8.1,"metadataProvider","IAR","Institute of Avian Research"
+"WHZ","Westerholz","Germany","DE",48.133333,10.883333,"metadataProvider","WHZ","Westerholtz"
+"WIL","Wilrijk","Belgium","BE",51.160214,4.407561,"metadataProvider","WIL","Wilrijk"
+"ZVE","Zvenigorod","Russia","RU",55.683333,36.716667,"metadataProvider","ZVE","Zvenigorod"
+"GOT","Gotland","Sweden","SE",57.033333,18.283333,"metadataProvider","GOT","Gotland"
+"GOT","Gotland","Sweden","SE",57.033333,18.283333,"metadataProvider","GOT","Gotland"
+"DIN","Dinas","United Kingdom","GB",52.097,-3.788,"metadataProvider","PFN","PiedFlyNet"
+"KAT","Loch Katrine","United Kingdom","GB",56.242,-4.458,"metadataProvider","PFN","PiedFlyNet"
+"NAG","Forest of Dean","United Kingdom","GB",51.774,-2.576,"metadataProvider","PFN","PiedFlyNet"
+"OKE","Okehampton","United Kingdom","GB",50.729,-4.008,"metadataProvider","PFN","PiedFlyNet"
+"TEI","Teign Valley","United Kingdom","GB",50.694,-3.728,"metadataProvider","PFN","PiedFlyNet"
+"STO","Stogi","Poland","PL",54.372983,18.716833,"metadataProvider","OSPAS","Ornithological Station, Museum and Institute of Zoology, Polish Academy of Sciences"
+"SOB","Sobieszewo","Poland","PL",54.3526,18.7962,"metadataProvider","OSPAS","Ornithological Station, Museum and Institute of Zoology, Polish Academy of Sciences"
+"BIR","Bird Island","United States of America","US",41.669239,-70.717018,"metadataProvider","NIS","Ian Nisbet"
+"RAM","Ram Island","United States of America","US",41.618024,-70.804273,"metadataProvider","NIS","Ian Nisbet"
+"NMI","North Monomoy Island","United States of America","US",41.634623,-69.975088,"metadataProvider","NIS","Ian Nisbet"
+"GOU","Gough Island","United Kingdom","GB",-40.316667,-9.933333,"metadataProvider","RSPB","RSPB"
+"ARV","Arvidsjaur","Sweden","SE",65.666667,19,"metadataProvider","KON","University of Konstanz"
+"MIR","Miraflores","Spain","ES",40.811408,-3.782683,"metadataProvider","NMNSM","National Museum of Natural Sciences, Madrid"
+"BOW","Bowdoin Scientific Station","Canada","CA",44.5819,-66.7559,"metadataProvider","BOW","Bowdoin Scientific Station"
+"SEK","Sekocin Forest","Poland","PL",52.099,20.875,"metadataProvider","MIZPAS","Museum and Institute of Zoology, Polish Academy of Sciences"
+"HSF","Hochstetter Forland","Greenland","GL",75.15,-19.75,"metadataProvider","UFC","Universite de Franche Comte"
+"BAG","Bagley Wood","United Kingdom","GB",51.7,-1.25,"metadataProvider","BAG","Bagley Wood"
+"GTM","Greater Manchester","United Kingdom","GB",53.47781,-2.25237,"metadataProvider","GTM","Greater Manchester"
+"UPP","Uppsala","Sweden","SE",59.795,17.83,"metadataProvider","SLU","Department of Ecology, SLU Swedish University of Agricultural Sciences"
+"ZER","Zeromski Park","Poland","PL",53.433,14.562,"metadataProvider","SZCZ","University of Szczecin"
+"BAH","Bahia de Ceuta","Mexico","MX",23.91,-106.96,"metadataProvider","MPIBI","Max Planck Institute for Biological Intelligence"
+"BRZ","Berzciems","Latvia","LV",57.2448,23.1738,"metadataProvider","LVA","University of Latvia"
+"KRI","Krievrags","Latvia","LV",57.2835,23.0578,"metadataProvider","LVA","University of Latvia"
+"ZEL","Zeltaleja","Latvia","LV",57.1872,26.8582,"metadataProvider","LVA","University of Latvia"
+"STK","Stora Karlso","Sweden","SE",57.29,17.97,"metadataProvider","SLUA","Swedish University of Agricultural Sciences"
