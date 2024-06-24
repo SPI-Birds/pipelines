@@ -226,13 +226,13 @@ test_that("Location_data returns an expected outcome...", {
   FOR_data <- dplyr::filter(pipeline_output$Location_data, PopID %in% "FOR")
 
   # All should have the same latitude equal to 50.06
-  expect_equal(unique(subset(FOR_data, LocationID == "C12")$Latitude), 48.08268302)
+  expect_equal(unique(subset(FOR_data, LocationID == "C12_2019")$Latitude), 48.08268302)
 
   # All should have the same longitude equal to 20.25
-  expect_equal(unique(subset(FOR_data, LocationID == "C12")$Longitude), 11.46394498)
+  expect_equal(unique(subset(FOR_data, LocationID == "C12_2019")$Longitude), 11.46394498)
 
   # StartSeason for nestbox C12 is 2019
-  expect_equal(subset(FOR_data, LocationID == "C12")$StartSeason, 2019)
+  expect_equal(subset(FOR_data, LocationID == "C12_2019")$StartSeason, 2019)
 
 })
 

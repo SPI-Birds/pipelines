@@ -515,8 +515,8 @@ create_location_FOR <- function(Capture_data, connection) {
                   Longitude = as.numeric(.data$Longitude), ## named vectors, not regular numeric vectors
                   LocationType = "NB",
                   PopID = "FOR",
-                  StartSeason = as.character(.data$Year),
-                  EndSeason = as.character(.data$Year),
+                  StartSeason = as.numeric(.data$Year),
+                  EndSeason = as.numeric(.data$Year),
                   HabitatType = "deciduous") %>%
     dplyr::select("LocationID",
                   "NestboxID",
