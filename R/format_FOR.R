@@ -26,6 +26,7 @@ library(dplyr)
 #'FledgeDate_min is equal to FledgeDate_observed - FledgedCheckInterval (time since the last fledge check, this has not been done properly in 2023 and therefore values are set to NA for that year until we check everything manually)
 #'FledgeDate_max is equal to FledgeDate_observed
 #'
+#'#'#'\strong{Location data}: Due to an ongoing density manipulation experiment since 2020, nest boxes could have different coordinates between years and their entrance hole could change (GT, BT or closed). Therefore each location ID is unique every year
 #'
 #'@inheritParams pipeline_params
 #'
@@ -506,36 +507,17 @@ create_individual_FOR <- function(Capture_data, Brood_data, connection) {
 
 create_location_FOR <- function(Capture_data, connection) {
 
-#Habitat_data <- dplyr::tbl(connection, "HabitatDescription") %>%
-#  dplyr::select("NestBox", "Beech":"OtherTree") %>%
-#  dplyr::collect() %>%
-#  dplyr::group_by(.data$NestBox) %>%
-#  dplyr::summarise(dplyr::across(tidyselect::everything(), ~sum(.x, na.rm = TRUE)), .groups = "keep") %>%
-#  dplyr::summarise(DEC = sum(c(.data$Beech, .data$Larch, .data$Maple, .data$Birch, .data$Oak, .data$Willow, .data$Poplar, .data$Alder, .data$AshTree)),
-#                   EVE = sum(c(.data$Spruce, .data$Pine))) %>%
-#  dplyr::mutate(perc_dec = .data$DEC/(.data$DEC + .data$EVE),
-#                dominant_sp = dplyr::case_when(.data$perc_dec >= 0.66 ~ "DEC",
-#                                               .data$perc_dec < 0.33 ~ "EVE",
-#                                               TRUE ~ "MIX"))
-#
-  #The vast majority of nestboxes (90%) of nestboxes are surrounded by deciduous or mixed stands. Therefore,
-  #we use the 'DEC' category to describe the population.
-  #table(Habitat_data$dominant_sp)
-
-  start_year <- min(Capture_data$BreedingSeason)
-
-  Location_data <- dplyr::tbl(connection, "NestBoxes") %>%
+  Location_data <- dplyr::tbl(connection, "Coordinates_19_24") %>%
     dplyr::collect() %>%
     dplyr::filter(.data$NestBoxID != -99L) %>%
-    dplyr::mutate(LocationID = as.character(.data$NestBoxID),
-                  NestboxID = as.character(.data$NestBoxID),
-                  Latitude = as.numeric(.data$NBLatitude), ## Needed because these variables are stored as
-                  Longitude = as.numeric(.data$NBLongitude), ## named vectors, not regular numeric vectors
+    dplyr::mutate(LocationID = as.character(.data$BoxIDYear),
+                  NestboxID = as.character(.data$BoxIDYear),
+                  Latitude = as.numeric(.data$Latitude), ## Needed because these variables are stored as
+                  Longitude = as.numeric(.data$Longitude), ## named vectors, not regular numeric vectors
                   LocationType = "NB",
                   PopID = "FOR",
-                  StartSeason = start_year,
-                  EndSeason = dplyr::case_when(nchar(.data$NestboxID) == 4 & stringr::str_sub(.data$NestboxID, 1, 2) == "16" ~ 2016L,
-                                               TRUE ~ 2019L),
+                  StartSeason = as.character(.data$Year),
+                  EndSeason = as.character(.data$Year),
                   HabitatType = "deciduous") %>%
     dplyr::select("LocationID",
                   "NestboxID",
