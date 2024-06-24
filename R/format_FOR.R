@@ -33,7 +33,7 @@ library(dplyr)
 #'@return Generates either 4 .csv files or 4 data frames in the standard format.
 #'@export
 
-format_FOR <- function(db = choose_directory(),
+format_FOR <- function(db = "D:\\Class\\Documents\\FOR_NielsDingemanse_Germany",#choose_directory(),
                        path = ".",
                        species = NULL,
                        pop = NULL,
@@ -509,7 +509,6 @@ create_location_FOR <- function(Capture_data, connection) {
 
   Location_data <- dplyr::tbl(connection, "Coordinates_19_24") %>%
     dplyr::collect() %>%
-    dplyr::filter(.data$NestBoxID != -99L) %>%
     dplyr::mutate(LocationID = as.character(.data$BoxIDYear),
                   NestboxID = as.character(.data$BoxIDYear),
                   Latitude = as.numeric(.data$Latitude), ## Needed because these variables are stored as
