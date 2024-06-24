@@ -1,6 +1,6 @@
 testthat::skip_if(!exists("data_path"))
 
-pipeline_output <- format_FOR()#(db = paste0(data_path, "/FOR_ForstenriederPark_Germany"))
+pipeline_output <- format_FOR(db = paste0(data_path, "/FOR_ForstenriederPark_Germany"))
 
 test_that("FOR outputs all files...", {
 
@@ -313,10 +313,10 @@ test_that("Key columns in each table do not have NAs", {
   test_NA_columns(pipeline_output, "Brood")
 
   ## Capture
-  test_NA_columns(pipeline_output, "Capture")#fails
+  test_NA_columns(pipeline_output, "Capture")
 
   ## Individual
-  test_NA_columns(pipeline_output, "Individual")#fails
+  test_NA_columns(pipeline_output, "Individual")
 
   ## Location
   test_NA_columns(pipeline_output, "Location")
@@ -338,6 +338,3 @@ test_that("Categorical columns do not have unexpected values", {
   test_category_columns(pipeline_output, "Location")
 
 })
-
-test_pipeline(filter="FOR")
-

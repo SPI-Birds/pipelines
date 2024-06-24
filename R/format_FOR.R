@@ -26,14 +26,14 @@ library(dplyr)
 #'FledgeDate_min is equal to FledgeDate_observed - FledgedCheckInterval (time since the last fledge check, this has not been done properly in 2023 and therefore values are set to NA for that year until we check everything manually)
 #'FledgeDate_max is equal to FledgeDate_observed
 #'
-#'#'#'\strong{Location data}: Due to an ongoing density manipulation experiment since 2020, nest boxes could have different coordinates between years and their entrance hole could change (GT, BT or closed). Therefore each location ID is unique every year
+#'#'#'\strong{LocationID}: Due to an ongoing density manipulation experiment (since 2020), nest box coordinates and entrance sizes can change (GT, BT or closed) between years. Therefore each location ID is unique every year.
 #'
 #'@inheritParams pipeline_params
 #'
 #'@return Generates either 4 .csv files or 4 data frames in the standard format.
 #'@export
 
-format_FOR <- function(db = "D:\\Class\\Documents\\FOR_NielsDingemanse_Germany",#choose_directory(),
+format_FOR <- function(db = choose_directory(),
                        path = ".",
                        species = NULL,
                        pop = NULL,
@@ -248,10 +248,10 @@ create_brood_FOR   <- function(connection) {
 
     ###We need to remove  the BroodIDS for nests in which nothing happened (generated automatically by the db). In these nests CS is 0 and LD is unknown, no clutch type or species either, no data
 
-    dplyr::filter(!is.na(Species),
-           ClutchSize_observed>0,
-           !is.na(LayDate_observed),
-           !is.na(ClutchType_observed))%>%
+    dplyr::filter(!is.na(.data$Species),
+                  .data$ClutchSize_observed>0,
+           !is.na(.data$LayDate_observed),
+           !is.na(.data$ClutchType_observed))%>%
 
 
     # Arrange columns
@@ -303,8 +303,8 @@ create_capture_FOR <- function(Brood_data, connection) {
     dplyr::left_join(Nestbox_capture, by = "NestBox") %>%
     dplyr::collapse() %>%
     dplyr::collect() %>%
-    dplyr::filter(CatchYear<2024)%>%#empty rows were created for 2024 to prepare for the field season. remove these.
-    dplyr::filter(!is.na(RingNumber))%>%#remove individuals without bird ids (escaped before the ring was read)
+    dplyr::filter(.data$CatchYear<2024)%>%#empty rows were created for 2024 to prepare for the field season. remove these.
+    dplyr::filter(!is.na(.data$RingNumber))%>%#remove individuals without bird ids (escaped before the ring was read)
     dplyr::mutate(Species = dplyr::case_when(.data$Species == 1L ~ !!species_codes$Species[species_codes$SpeciesID == "14640"],
                                              .data$Species == 2L ~ !!species_codes$Species[species_codes$SpeciesID == "14620"],
                                              .data$Species == 3L ~ !!species_codes$Species[species_codes$SpeciesID == "14610"],
@@ -320,8 +320,8 @@ create_capture_FOR <- function(Brood_data, connection) {
                   ReleasePlot = .data$CapturePlot,
                   LocationID = as.character(.data$NestBox),
                   CaptureAlive=TRUE,
-                  ReleaseAlive=dplyr::if_else(.data$Adultdeath==1 & as.Date(.data$DateAdultdeath) == CaptureDate, FALSE,TRUE),
-                  ReleaseAlive=dplyr::if_else(is.na(ReleaseAlive),TRUE,ReleaseAlive),
+                  ReleaseAlive=dplyr::if_else(.data$Adultdeath==1 & as.Date(.data$DateAdultdeath) == .data$CaptureDate, FALSE,TRUE),
+                  ReleaseAlive=dplyr::if_else(is.na(.data$ReleaseAlive),TRUE,.data$ReleaseAlive),
                   OriginalTarsusMethod = "Alternative",
                   Age_observed = dplyr::case_match(.data$AgeObserved,## These age categories match our EURING codes exactly
                                                    7 ~ NA_integer_,
@@ -363,7 +363,7 @@ create_capture_FOR <- function(Brood_data, connection) {
   Chick_capture <- Chick_catch_tables %>%
     #dplyr::filter(ChickYear<2024)%>%
     dplyr::collect()  %>%
-    dplyr::filter(!is.na(RingNumber))%>%#remove individuals without bird ids (escaped before the ring was read)
+    dplyr::filter(!is.na(.data$RingNumber))%>%#remove individuals without bird ids (escaped before the ring was read)
 
   #empty rows were created for 2024 to prepare for the field season. remove these.
     dplyr::mutate(EndMarch = as.Date(paste(.data$ChickYear, "03", "31", sep = "-")),
@@ -515,8 +515,8 @@ create_location_FOR <- function(Capture_data, connection) {
                   Longitude = as.numeric(.data$Longitude), ## named vectors, not regular numeric vectors
                   LocationType = "NB",
                   PopID = "FOR",
-                  StartSeason = as.numeric(.data$Year),
-                  EndSeason = as.numeric(.data$Year),
+                  StartSeason = as.integer(.data$Year),
+                  EndSeason = as.integer(.data$Year),
                   HabitatType = "deciduous") %>%
     dplyr::select("LocationID",
                   "NestboxID",
