@@ -10,11 +10,11 @@
 #'\strong{Species}: By default the pipeline will include great tit \emph{Parus
 #'major}; blue tit \emph{Cyanistes caeruleus}; pied flycatcher \emph{Ficedula
 #'hypoleuca}; Eurasian nuthatch \emph{Sitta europaea}; coal tit \emph{Periparus
-#'ater}; and tree sparrow \emph{Passer montanus}. Other minority species are
+#'ater}; tree sparrow \emph{Passer montanus}; and redstart \emph{Phoenicurus phoenicurus}. Other minority species are
 #'excluded.
 #'
-#'\strong{Populations}: This pipeline extracts data for 8 populations managed by
-#'NIOO-KNAW: Buunderkamp, Lichtenbeek, Westerheide, Hoge Veluwe, Warnsborn,
+#'\strong{Populations}: This pipeline extracts data for 7 populations managed by
+#'NIOO-KNAW: Buunderkamp, Westerheide, Hoge Veluwe, Warnsborn,
 #'Vlieland, Oosterhout, and Liesbos.
 #'
 #'\strong{Sex}: We condense sex information to only include groups M, F, and C
@@ -82,7 +82,7 @@ format_NIOO <- function(db = choose_directory(),
   # We first need to compile location information (and area names) as this will be included with all data tables.
 
   # List the main study sites.
-  main_sites <- c("Buunderkamp", "Lichtenbeek", "Westerheide", "Hoge Veluwe",
+  main_sites <- c("Buunderkamp", "Westerheide", "Hoge Veluwe",
                   "Warnsborn", "Vlieland", "Oosterhout", "Liesbos")
 
   # Extract the corresponding areas from the AreaGroup table
