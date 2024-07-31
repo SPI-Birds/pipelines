@@ -277,8 +277,7 @@ create_brood_NIOO <- function(database, location_data, species_filter, pop_filte
   Brood_types <- dplyr::tbl(database, "dbo_tl_BroodType") %>%
     dplyr::select("BroodType" = "ID", "Description")
 
-  ##FIXME BroodID 69290, 70603, 71812 are duplicated, duplicates differ in assigned female
-  ##FIXME BroodID 69862 is duplicated, each with different Male assigned
+  ##FIXME There are 36 BroodIDs duplicated
   Brood_data <- dplyr::tbl(database, "dbo_tbl_Brood") %>%
     #Subset only broods of designated species in designated population
     dplyr::filter(.data$BroodSpecies %in% species_filter & .data$BroodLocationID %in% !!target_locations$ID) %>%
@@ -443,9 +442,13 @@ create_capture_NIOO <- function(database, Brood_data, location_data, species_fil
   Capture_data <- Capture_data %>%
     dplyr::left_join(Brood_data %>%
                        dplyr::select("BroodID", "HatchDate_observed"),
-                     by = "BroodID") %>%
+                     by = "BroodID",
+                     # FIXME Because of duplicate BroodIDs, single capture records link to multiple brood records
+                     # Here we ensure that we join the first record
+                     relationship = "many-to-one",
+                     multiple = "first") %>%
     #Determine difference between hatch and capture date for all individuals
-    #that were ~before fledging (we'll say up until 30 days because this covers all possibilites)
+    #that were ~before fledging (we'll say up until 30 days because this covers all possibilities)
     dplyr::mutate(diff = as.integer(lubridate::ymd(.data$CaptureDate) - .data$HatchDate_observed),
                   ChickAge = dplyr::case_when(!is.na(.data$diff) & dplyr::between(.data$diff, 0, 30) ~ .data$diff,
                                               TRUE ~ NA_integer_),
