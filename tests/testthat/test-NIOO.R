@@ -306,8 +306,7 @@ test_that("Column classes are as expected", {
 test_that("Key columns only contain unique values", {
 
   # ## BroodID has only unique values
-  #test_unique_values(pipeline_output, "BroodID")
-  ## FIXME: There are 4 duplicated BroodIDs
+  test_unique_values(pipeline_output, "BroodID")
 
   ## CaptureID has only unique values
   test_unique_values(pipeline_output, "CaptureID")
@@ -326,8 +325,7 @@ test_that("Key columns in each table do not have NAs", {
   test_NA_columns(pipeline_output, "Capture")
 
   ## Individual
-  #test_NA_columns(pipeline_output, "Individual")
-  ##FIXME: missing RingSeason
+  test_NA_columns(pipeline_output, "Individual")
 
   ## Location
   test_NA_columns(pipeline_output, "Location")
