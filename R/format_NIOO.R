@@ -10,11 +10,11 @@
 #'\strong{Species}: By default the pipeline will include great tit \emph{Parus
 #'major}; blue tit \emph{Cyanistes caeruleus}; pied flycatcher \emph{Ficedula
 #'hypoleuca}; Eurasian nuthatch \emph{Sitta europaea}; coal tit \emph{Periparus
-#'ater}; and tree sparrow \emph{Passer montanus}. Other minority species are
+#'ater}; tree sparrow \emph{Passer montanus}; and redstart \emph{Phoenicurus phoenicurus}. Other minority species are
 #'excluded.
 #'
-#'\strong{Populations}: This pipeline extracts data for 8 populations managed by
-#'NIOO-KNAW: Buunderkamp, Lichtenbeek, Westerheide, Hoge Veluwe, Warnsborn,
+#'\strong{Populations}: This pipeline extracts data for 7 populations managed by
+#'NIOO-KNAW: Buunderkamp, Westerheide, Hoge Veluwe, Warnsborn,
 #'Vlieland, Oosterhout, and Liesbos.
 #'
 #'\strong{Sex}: We condense sex information to only include groups M, F, and C
@@ -82,7 +82,7 @@ format_NIOO <- function(db = choose_directory(),
   # We first need to compile location information (and area names) as this will be included with all data tables.
 
   # List the main study sites.
-  main_sites <- c("Buunderkamp", "Lichtenbeek", "Westerheide", "Hoge Veluwe",
+  main_sites <- c("Buunderkamp", "Westerheide", "Hoge Veluwe",
                   "Warnsborn", "Vlieland", "Oosterhout", "Liesbos")
 
   # Extract the corresponding areas from the AreaGroup table
@@ -277,8 +277,7 @@ create_brood_NIOO <- function(database, location_data, species_filter, pop_filte
   Brood_types <- dplyr::tbl(database, "dbo_tl_BroodType") %>%
     dplyr::select("BroodType" = "ID", "Description")
 
-  ##FIXME BroodID 69290, 70603, 71812 are duplicated, duplicates differ in assigned female
-  ##FIXME BroodID 69862 is duplicated, each with different Male assigned
+  ##FIXME There are 36 BroodIDs duplicated
   Brood_data <- dplyr::tbl(database, "dbo_tbl_Brood") %>%
     #Subset only broods of designated species in designated population
     dplyr::filter(.data$BroodSpecies %in% species_filter & .data$BroodLocationID %in% !!target_locations$ID) %>%
@@ -300,18 +299,18 @@ create_brood_NIOO <- function(database, location_data, species_filter, pop_filte
                   HatchDate_observed = lubridate::ymd(.data$HatchDate),
                   ##FIXME: Translate HatchDateAccuracy into min & max
                   LayDate_observed = lubridate::ymd(.data$LayDate),
-                  LayDate_min = .data$LayDate_observed - .data$LayDateDeviation,
-                  LayDate_max = .data$LayDate_observed + .data$LayDateDeviation,
+                  LayDate_min = .data$LayDate_observed - (.data$LayDateDeviation / 2),
+                  LayDate_max = .data$LayDate_observed + (.data$LayDateDeviation / 2),
                   FledgeDate_observed = lubridate::ymd(.data$FledgeDate),
                   ##FIXME: Translate HatchDateAccuracy into min & max
                   ClutchSize_observed = .data$ClutchSize,
                   ClutchSize_min = .data$ClutchSizeMinimum,
                   BroodSize_observed = .data$NumberHatched,
-                  BroodSize_min = .data$NumberHatched - .data$NumberHatchedDeviation,
-                  BroodSize_max = .data$NumberHatched + .data$NumberHatchedDeviation,
+                  BroodSize_min = .data$NumberHatched - (.data$NumberHatchedDeviation / 2),
+                  BroodSize_max = .data$NumberHatched + (.data$NumberHatchedDeviation / 2),
                   NumberFledged_observed = .data$NumberFledged,
-                  NumberFledged_min = .data$NumberFledged - .data$NumberFledgedDeviation,
-                  NumberFledged_max = .data$NumberFledged + .data$NumberFledgedDeviation,
+                  NumberFledged_min = .data$NumberFledged - (.data$NumberFledgedDeviation / 2),
+                  NumberFledged_max = .data$NumberFledged + (.data$NumberFledgedDeviation / 2),
                   ClutchType_observed = .data$Description,
                   BreedingSeason = .data$BroodYear,
                   BroodID = as.character(.data$ID),
@@ -443,9 +442,13 @@ create_capture_NIOO <- function(database, Brood_data, location_data, species_fil
   Capture_data <- Capture_data %>%
     dplyr::left_join(Brood_data %>%
                        dplyr::select("BroodID", "HatchDate_observed"),
-                     by = "BroodID") %>%
+                     by = "BroodID",
+                     # FIXME Because of duplicate BroodIDs, single capture records link to multiple brood records
+                     # Here we ensure that we join the first record
+                     relationship = "many-to-one",
+                     multiple = "first") %>%
     #Determine difference between hatch and capture date for all individuals
-    #that were ~before fledging (we'll say up until 30 days because this covers all possibilites)
+    #that were ~before fledging (we'll say up until 30 days because this covers all possibilities)
     dplyr::mutate(diff = as.integer(lubridate::ymd(.data$CaptureDate) - .data$HatchDate_observed),
                   ChickAge = dplyr::case_when(!is.na(.data$diff) & dplyr::between(.data$diff, 0, 30) ~ .data$diff,
                                               TRUE ~ NA_integer_),
