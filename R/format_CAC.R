@@ -73,6 +73,8 @@ format_CAC <- function(db = choose_directory(),
 
   ## 1- Get brood information from primary data
   ##Notes: duplicate box-year but each time it is for a different species. Incorporate species in BroodID.
+  ##Some boxes have an a or b but it is unclear why
+  ##parent ring number column sometimes contains other things
   ## 1-A) Read in brood data blue tits
   brood_data_CC <- readxl::read_xlsx(path = db, guess = 5000,sheet= "Data base breeding Cc") %>%
     tibble::as_tibble() %>%
@@ -86,7 +88,6 @@ format_CAC <- function(db = choose_directory(),
     dplyr::transmute(PopID = "CAC",
                      Species = species_codes[species_codes$SpeciesID == 14620,]$Species,
                      BreedingSeason = .data$Year,
-                     Plot= NA_character_,
                      LocationID = .data$NestBox,
                      ClutchType_observed = dplyr::case_when(.data$Brood == "1a" ~ "first",
                                                             .data$Brood == "2a" ~ "second",
@@ -94,8 +95,8 @@ format_CAC <- function(db = choose_directory(),
                                                             .data$Brood == "2a?" ~ NA_character_,
                                                             TRUE ~ NA_character_),
                      BroodID = paste(.data$NestBox,.data$Year,.data$Species,sep="_"),
-                     FemaleID= .data$Female,
-                     MaleID=.data$Male,
+                     FemaleID= .data$Female,#TODO: delete extra things when "ring number +...", delete text
+                     MaleID=.data$Male,#TODO: delete extra things when "ring number +...", delete text
                      AvgEggMass = NA_real_,
                      NumberEggs = NA_real_,
                      LayDate_observed =as.Date(as.numeric(.data$LayingDate), origin = "1899-12-30"),
@@ -129,7 +130,6 @@ format_CAC <- function(db = choose_directory(),
     dplyr::transmute(PopID = "CAC",
                      Species = species_codes[species_codes$SpeciesID == 14640,]$Species,
                      BreedingSeason = .data$Year,
-                     Plot= NA_character_,
                      LocationID = .data$NestBox,
                      ClutchType_observed = dplyr::case_when(.data$Brood == "1a" ~ "first",
                                                             .data$Brood == "2a" ~ "second",
@@ -137,8 +137,8 @@ format_CAC <- function(db = choose_directory(),
                                                             .data$Brood == "2a?" ~ NA_character_,
                                                             TRUE ~ NA_character_),
                      BroodID = paste(.data$NestBox,.data$Year,.data$Species,sep="_"),
-                     FemaleID= .data$Female,
-                     MaleID=.data$Male,
+                     FemaleID= .data$Female,#TODO: delete extra things when "ring number +...", delete text
+                     MaleID=.data$Male,#TODO: delete extra things when "ring number +...", delete text
                      AvgEggMass = NA_real_,
                      NumberEggs = NA_real_,
                      LayDate_observed =as.Date(as.numeric(.data$LayingDate), origin = "1899-12-30"),
@@ -185,7 +185,6 @@ format_CAC <- function(db = choose_directory(),
                      Species = species_codes[species_codes$SpeciesID == 14620,]$Species,
                      IndvID = toupper(dplyr::case_when(stringr::str_detect(.data$Ring,  "^[:alnum:]{6,8}$") ~ .data$Ring,
                                                        TRUE ~ NA_character_)),
-                     Plot= NA_character_,
                      Sex_observed = dplyr::case_when(.data$Sx == "M" ~ "M",
                                                      .data$Sx == "M?" ~ "M",#Need to check with the data custodian
                                                      .data$Sx == "F" ~ "F",
@@ -226,7 +225,6 @@ format_CAC <- function(db = choose_directory(),
                      Species = species_codes[species_codes$SpeciesID == 14640,]$Species,
                      IndvID = toupper(dplyr::case_when(stringr::str_detect(.data$RingNumber,  "^[:alnum:]{6,8}$") ~ .data$RingNumber,
                                                        TRUE ~ NA_character_)),
-                     Plot= NA_character_,
                      Sex_observed = dplyr::case_when(.data$Sx == "M" ~ "M",
                                                      .data$Sx == "M?" ~ "M",#Need to check with the data custodian
                                                      .data$Sx == "F" ~ "F",
@@ -273,7 +271,6 @@ format_CAC <- function(db = choose_directory(),
                      Species = species_codes[species_codes$SpeciesID == 14620,]$Species,
                      IndvID = toupper(dplyr::case_when(stringr::str_detect(.data$Ring,  "^[:alnum:]{6,8}$") ~ .data$Ring,
                                                        TRUE ~ NA_character_)),
-                     Plot= NA_character_,
                      Sex_observed = NA_character_,
                      CaptureDate = format(as.Date(.data$Data), "%Y-%m-%d"),
                      BreedingSeason = as.integer(format(.data$Data, "%Y")),
@@ -305,7 +302,6 @@ format_CAC <- function(db = choose_directory(),
                      Species = species_codes[species_codes$SpeciesID == 14640,]$Species,
                      IndvID = toupper(dplyr::case_when(stringr::str_detect(.data$RingNumber,  "^[:alnum:]{6,8}$") ~ .data$RingNumber,
                                                        TRUE ~ NA_character_)),
-                     Plot= NA_character_,
                      Sex_observed = NA_character_,
                      CaptureDate = format(as.Date(.data$Date), "%Y-%m-%d"),
                      BreedingSeason = as.integer(format(.data$Date, "%Y")),
@@ -370,10 +366,15 @@ format_CAC <- function(db = choose_directory(),
   create_brood_CAC   <- function(brood_data,chick_data) {
     ## Create brood data
     Brood_data_temp <- brood_data %>%
-      dplyr::mutate(OriginalTarsusMethod = "Alternative") %>%
+      dplyr::mutate(OriginalTarsusMethod = "Alternative",
+                    LocationID=as.numeric(gsub("[A-Z_ ]*", "",.data$LocationID)))%>%#remove the a and b =same coordinate
+
+      ##Add plot information
+      dplyr::left_join(location_data %>%
+                         dplyr::select(LocationID,
+                                       Plot),by="LocationID")%>%
 
       ## Get chick summary stats
-
       dplyr::left_join(chick_data %>%
                          dplyr::select(BroodID,
                                        IndvID,
@@ -408,6 +409,11 @@ format_CAC <- function(db = choose_directory(),
 
     ## Captures from ringing data
     Capture_data_temp <- all_cap_data %>%
+
+      ##Add plot information
+      dplyr::left_join(location_data %>%
+                         dplyr::select(LocationID,
+                                       Plot),by="LocationID")%>%
 
       ## Rename variables
       dplyr::rename(CapturePopID = .data$PopID,
