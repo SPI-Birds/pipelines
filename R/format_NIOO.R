@@ -10,11 +10,11 @@
 #'\strong{Species}: By default the pipeline will include great tit \emph{Parus
 #'major}; blue tit \emph{Cyanistes caeruleus}; pied flycatcher \emph{Ficedula
 #'hypoleuca}; Eurasian nuthatch \emph{Sitta europaea}; coal tit \emph{Periparus
-#'ater}; and tree sparrow \emph{Passer montanus}. Other minority species are
+#'ater}; tree sparrow \emph{Passer montanus}; and redstart \emph{Phoenicurus phoenicurus}. Other minority species are
 #'excluded.
 #'
-#'\strong{Populations}: This pipeline extracts data for 8 populations managed by
-#'NIOO-KNAW: Buunderkamp, Lichtenbeek, Westerheide, Hoge Veluwe, Warnsborn,
+#'\strong{Populations}: This pipeline extracts data for 7 populations managed by
+#'NIOO-KNAW: Buunderkamp, Westerheide, Hoge Veluwe, Warnsborn,
 #'Vlieland, Oosterhout, and Liesbos.
 #'
 #'\strong{Sex}: We condense sex information to only include groups M, F, and C
@@ -82,7 +82,7 @@ format_NIOO <- function(db = choose_directory(),
   # We first need to compile location information (and area names) as this will be included with all data tables.
 
   # List the main study sites.
-  main_sites <- c("Buunderkamp", "Lichtenbeek", "Westerheide", "Hoge Veluwe",
+  main_sites <- c("Buunderkamp", "Westerheide", "Hoge Veluwe",
                   "Warnsborn", "Vlieland", "Oosterhout", "Liesbos")
 
   # Extract the corresponding areas from the AreaGroup table
@@ -268,17 +268,26 @@ create_brood_NIOO <- function(database, location_data, species_filter, pop_filte
   target_locations <- location_data %>%
     dplyr::filter(.data$PopID %in% pop_filter)
 
+  # FIXME fix multiple ring number assignments
+  # There are multiple cases where 1 ring number is assigned to multiple individual IDs
+  # To avoid this leading to brood duplicates, we ignore them for now
+  duplicated_rings <- dplyr::tbl(database, "dbo_tbl_Individual") %>%
+    dplyr::filter(.data$RingNumber != "", !is.na(.data$RingNumber)) %>%
+    dplyr::collect() %>%
+    dplyr::filter(duplicated(.data$RingNumber)) %>%
+    dplyr::pull(.data$RingNumber)
+
   Male_rings <- dplyr::tbl(database, "dbo_tbl_Individual") %>%
-    dplyr::select("MaleID" = "ID", "Male_ring" = "RingNumber")
+    dplyr::select("MaleID" = "ID", "Male_ring" = "RingNumber") %>%
+    dplyr::filter(.data$RingNumber != "", !is.na(.data$RingNumber), !(.data$RingNumber %in% !!duplicated_rings))
 
   Female_rings <- dplyr::tbl(database, "dbo_tbl_Individual") %>%
-    dplyr::select("FemaleID" = "ID", "Female_ring" = "RingNumber")
+    dplyr::select("FemaleID" = "ID", "Female_ring" = "RingNumber") %>%
+    dplyr::filter(.data$RingNumber != "", !is.na(.data$RingNumber), !(.data$RingNumber %in% !!duplicated_rings))
 
   Brood_types <- dplyr::tbl(database, "dbo_tl_BroodType") %>%
     dplyr::select("BroodType" = "ID", "Description")
 
-  ##FIXME BroodID 69290, 70603, 71812 are duplicated, duplicates differ in assigned female
-  ##FIXME BroodID 69862 is duplicated, each with different Male assigned
   Brood_data <- dplyr::tbl(database, "dbo_tbl_Brood") %>%
     #Subset only broods of designated species in designated population
     dplyr::filter(.data$BroodSpecies %in% species_filter & .data$BroodLocationID %in% !!target_locations$ID) %>%
@@ -295,22 +304,23 @@ create_brood_NIOO <- function(database, location_data, species_filter, pop_filte
     dplyr::left_join(Female_rings,
                      by = "Female_ring") %>%
     dplyr::collect() %>%
+    # Breeding values (LayDate, NumberHatched, NumberFledged) in the original data come with an observed value and a deviation value
+    # The observed value is the *minimum* observed value,
+    # The deviation value indicates the interval from observed value to maximum value
+    # e.g., if NumberFledged = 6 and NumberFledgedDeviation = 2, the maximum number of fledged individuals is 6 + 2 = 8.
+    # There is no explicit information about minimum values (except for ClutchSizeMinimum)
+    ##FIXME: Translate HatchDateAccuracy into min & max
     ##FIXME: Translate ExperimentID to the standard format
     dplyr::mutate(ExperimentID = dplyr::na_if(.data$ExperimentCode, c("")),
                   HatchDate_observed = lubridate::ymd(.data$HatchDate),
-                  ##FIXME: Translate HatchDateAccuracy into min & max
                   LayDate_observed = lubridate::ymd(.data$LayDate),
-                  LayDate_min = .data$LayDate_observed - .data$LayDateDeviation,
                   LayDate_max = .data$LayDate_observed + .data$LayDateDeviation,
                   FledgeDate_observed = lubridate::ymd(.data$FledgeDate),
-                  ##FIXME: Translate HatchDateAccuracy into min & max
                   ClutchSize_observed = .data$ClutchSize,
                   ClutchSize_min = .data$ClutchSizeMinimum,
                   BroodSize_observed = .data$NumberHatched,
-                  BroodSize_min = .data$NumberHatched - .data$NumberHatchedDeviation,
                   BroodSize_max = .data$NumberHatched + .data$NumberHatchedDeviation,
                   NumberFledged_observed = .data$NumberFledged,
-                  NumberFledged_min = .data$NumberFledged - .data$NumberFledgedDeviation,
                   NumberFledged_max = .data$NumberFledged + .data$NumberFledgedDeviation,
                   ClutchType_observed = .data$Description,
                   BreedingSeason = .data$BroodYear,
@@ -429,7 +439,6 @@ create_capture_NIOO <- function(database, Brood_data, location_data, species_fil
     ## TODO: There are 7 other individuals (480602-8) that have a CaptureLocation = 432
     #In individual data (i.e. Hoge Veluwe)
     #But in capture data, their capture location is 8681, which corresponds to Heikamp.
-    #Is Heikamp inside HOG? Is it a different location? If so, are these mistakes?
     dplyr::filter(.data$CapturePopID %in% pop_filter) %>%
     #Make mass in g, and tarsus and wing length in mm
     dplyr::mutate(BroodID = as.character(.data$BroodID),
@@ -445,7 +454,7 @@ create_capture_NIOO <- function(database, Brood_data, location_data, species_fil
                        dplyr::select("BroodID", "HatchDate_observed"),
                      by = "BroodID") %>%
     #Determine difference between hatch and capture date for all individuals
-    #that were ~before fledging (we'll say up until 30 days because this covers all possibilites)
+    #that were ~before fledging (we'll say up until 30 days because this covers all possibilities)
     dplyr::mutate(diff = as.integer(lubridate::ymd(.data$CaptureDate) - .data$HatchDate_observed),
                   ChickAge = dplyr::case_when(!is.na(.data$diff) & dplyr::between(.data$diff, 0, 30) ~ .data$diff,
                                               TRUE ~ NA_integer_),
@@ -480,6 +489,7 @@ create_individual_NIOO <- function(database, Capture_data, location_data, specie
     #Filter only required species
     #Remove individual records that are from tissue samples (i.e. ring number is TS)
     dplyr::filter(.data$SpeciesID %in% species_filter & dplyr::sql("RingNumber NOT LIKE 'TS*'")) %>%
+    dplyr::filter(.data$RingNumber != "", !is.na(.data$RingNumber)) %>%
     #Translate Sexe into F or M
     ## FIXME: Which sex should this be grouped as?
     #Convert ring age to adult or chick
@@ -495,7 +505,9 @@ create_individual_NIOO <- function(database, Capture_data, location_data, specie
   first_captures <- dplyr::tbl(database, "dbo_tbl_Capture") %>%
     dplyr::filter(.data$CaptureType == 1L | .data$CaptureType == 2L) %>%
     dplyr::group_by(.data$Individual) %>%
-    dplyr::summarise(FirstCaptureLocation = dplyr::sql("First(CaptureLocation)")) %>%
+    # Add first capture dates for 9 individuals with ring number but no RingYear in the original individual data table
+    dplyr::summarise(FirstCaptureLocation = dplyr::sql("First(CaptureLocation)"),
+                     FirstCaptureDate = dplyr::sql("First(CaptureDate)")) %>%
     dplyr::rename(IndvID = "Individual") %>%
     dplyr::collect()
 
@@ -519,7 +531,9 @@ create_individual_NIOO <- function(database, Capture_data, location_data, specie
                                              .data$SpeciesID == 14610 ~ species_codes[species_codes$SpeciesID == 14610, ]$Species,
                                              .data$SpeciesID == 11220 ~ species_codes[species_codes$SpeciesID == 11220, ]$Species),
                   RingAge = .data$RingAge_category,
-                  RingSeason = .data$RingYear,
+                  # If RingYear is empty, use first capture date
+                  RingSeason = dplyr::case_when(is.na(.data$RingYear) ~ as.integer(lubridate::year(.data$FirstCaptureDate)),
+                                                TRUE ~ as.integer(.data$RingYear)),
                   BroodIDLaid = as.character(.data$BroodIDLaid),
                   BroodIDFledged = as.character(.data$BroodIDFledged)) %>%
     ## Keep only necessary columns
