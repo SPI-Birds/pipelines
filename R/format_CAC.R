@@ -1,9 +1,3 @@
-library(tidyverse)
-library(dplyr)
-library(pipelines)
-library(readr)
-library(readxl)
-library(writexl)
 #'Construct standard format for data from Can Cata, Spain
 #'
 #'A pipeline to produce the standard format for the nest box population in Can Cata, Spain, administered by Juan Carlos Senar
@@ -12,7 +6,14 @@ library(writexl)
 #'this data. For a general description of the standard format please see
 #'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 #'
-#'\strong{CaptureDate}:
+#'\strong{BroodID}: Unique combination of nest box (LocationID), breeding season and species.
+#' \strong{Capture Time}:Not available for now.Time data exists but could not be read properly (even as text) as it contains either "." or ":" as separator in excel file. This needs to be fixed in the original file.
+#'\strong{ChickAge}: This is calculated as date of measurement- date of hatching. Due to errors in either of these dates it can sometimes differ greatly from 14-15 days old
+#'\strong{Sex}: Errors in sexing were ignored so that "M?" was read as "M.
+#'\strong{ClutchType_observed}: Brood types 1a, 2a and REP were coded as "First", "Second" and "Replacement", respectively
+#'\strong{ExperimentID}: "PARENTAGE" includes cross-fostering
+#'\strong{LocationID}: In the capture file "CN" means the location is a nest box for which coordinates are available. Some adults were mist-netted, hence "TP" in the location ID
+#'\string{Age_observed}: In the field, birds were described as "Adult", "Yearling" or "Juvenile." Following EURING conventions, adults were hence coded as 6, Yearlings as 5 and Juveniles as 3 or 4 depending on the month observed (3 if captured in the same year it hatched, 4 otherwise)
 #'
 #'@inheritParams pipeline_params
 #'
@@ -20,16 +21,11 @@ library(writexl)
 #'@export
 #'
 
-
 format_CAC <- function(db = choose_directory(),
                        path = ".",
                        species = NULL,
                        pop = NULL,
                        output_type = 'R'){
-
-  pop_codes <- read.csv("~/GitHub/pipelines/inst/extdata/pop_codes.csv")
-  db="D:/Class/Documents/CAC_Senar_Spain"
-  species_codes <- read.csv("~/GitHub/pipelines/inst/extdata/species_codes.csv")
 
   #Force choose_directory() if used
   #force(db)
@@ -74,7 +70,7 @@ format_CAC <- function(db = choose_directory(),
   ## 1- Get brood information from primary data
   ##Notes: duplicate box-year but each time it is for a different species. Incorporate species in BroodID.
   ##Some boxes have an a or b but it is unclear why
-  ##parent ring number column sometimes contains other things
+  ##parent ring number column sometimes contains other things: fixed
   ## 1-A) Read in brood data blue tits
   brood_data_CC <- readxl::read_xlsx(path = db, guess = 5000,sheet= "Data base breeding Cc") %>%
     tibble::as_tibble() %>%
@@ -95,8 +91,20 @@ format_CAC <- function(db = choose_directory(),
                                                             .data$Brood == "2a?" ~ NA_character_,
                                                             TRUE ~ NA_character_),
                      BroodID = paste(.data$NestBox,.data$Year,.data$Species,sep="_"),
-                     FemaleID= .data$Female,#TODO: delete extra things when "ring number +...", delete text
-                     MaleID=.data$Male,#TODO: delete extra things when "ring number +...", delete text
+                     FemaleID= dplyr::case_when(grepl("no",.data$Female, ignore.case = TRUE) ~ NA_character_,
+                                                grepl("anella",.data$Female, ignore.case = TRUE) ~ NA_character_,
+                                                grepl("anilla",.data$Female, ignore.case = TRUE) ~ NA_character_,
+                                                grepl("si",.data$Female, ignore.case = TRUE) ~ NA_character_,
+                                                grepl("Sn A",.data$Female, ignore.case = TRUE) ~ NA_character_,
+                                                grepl("!",.data$Female, ignore.case = TRUE) ~ NA_character_,
+                                                grepl("pvc",.data$Female, ignore.case = TRUE) ~ NA_character_,
+                                                grepl("/",.data$Female) ~ NA_character_,
+                                                TRUE ~ .data$Female),
+                     MaleID=dplyr::case_when(grepl("no",.data$Male, ignore.case = TRUE) ~ NA_character_,
+                                             grepl("anella",.data$Male, ignore.case = TRUE) ~ NA_character_,
+                                             grepl("pvc",.data$Male, ignore.case = TRUE) ~ NA_character_,
+                                             grepl("/",.data$Male) ~ NA_character_,
+                                             TRUE ~ .data$Male),
                      AvgEggMass = NA_real_,
                      NumberEggs = NA_real_,
                      LayDate_observed =as.Date(as.numeric(.data$LayingDate), origin = "1899-12-30"),
@@ -112,7 +120,7 @@ format_CAC <- function(db = choose_directory(),
                       is.na(.data$LayDate_observed)&
                       is.na(.data$HatchDate_observed)&
                       is.na(NumberFledged_observed)))%>%
-
+    dplyr::mutate(FemaleID=gsub("+Bl","",FemaleID,fixed=TRUE))%>%
     dplyr::arrange(.data$BreedingSeason, .data$LocationID)
 
 
@@ -137,8 +145,21 @@ format_CAC <- function(db = choose_directory(),
                                                             .data$Brood == "2a?" ~ NA_character_,
                                                             TRUE ~ NA_character_),
                      BroodID = paste(.data$NestBox,.data$Year,.data$Species,sep="_"),
-                     FemaleID= .data$Female,#TODO: delete extra things when "ring number +...", delete text
-                     MaleID=.data$Male,#TODO: delete extra things when "ring number +...", delete text
+                     FemaleID=dplyr::case_when(grepl("no",.data$Female, ignore.case = TRUE) ~ NA_character_,
+                                                          grepl("anella",.data$Female, ignore.case = TRUE) ~ NA_character_,
+                                                          grepl("anilla",.data$Female, ignore.case = TRUE) ~ NA_character_,
+                                                          grepl("si",.data$Female, ignore.case = TRUE) ~ NA_character_,
+                                                          grepl("?",.data$Female, fixed = TRUE) ~ NA_character_,
+                                                          grepl("!",.data$Female, ignore.case = TRUE) ~ NA_character_,
+                                                          grepl("pvc",.data$Female, ignore.case = TRUE) ~ NA_character_,
+                                                          grepl("/",.data$Female) ~ NA_character_,
+                                                          TRUE ~ .data$Female),
+                     MaleID=dplyr::case_when(grepl("no",.data$Male, ignore.case = TRUE) ~ NA_character_,
+                                             grepl("anella",.data$Male, ignore.case = TRUE) ~ NA_character_,
+                                             grepl("pvc",.data$Male, ignore.case = TRUE) ~ NA_character_,
+                                             grepl("ó",.data$Male, ignore.case = TRUE) ~ NA_character_,
+                                             grepl("/",.data$Male) ~ NA_character_,
+                                             TRUE ~ .data$Male),
                      AvgEggMass = NA_real_,
                      NumberEggs = NA_real_,
                      LayDate_observed =as.Date(as.numeric(.data$LayingDate), origin = "1899-12-30"),
@@ -180,13 +201,13 @@ format_CAC <- function(db = choose_directory(),
                                    to = 'ASCII//TRANSLIT')),
                        .cols = tidyselect::everything()) %>%
     janitor::clean_names(case = "upper_camel")%>%
-    dplyr::filter(grepl("CN",.data$Loc)) %>%#keep only nest box catches. TPs don't seem to be in nest boxes
+    #dplyr::filter(grepl("CN",.data$Loc)) %>%#keep only nest box catches. TPs don't seem to be in nest boxes
     dplyr::transmute(PopID = "CAC",
                      Species = species_codes[species_codes$SpeciesID == 14620,]$Species,
                      IndvID = toupper(dplyr::case_when(stringr::str_detect(.data$Ring,  "^[:alnum:]{6,8}$") ~ .data$Ring,
                                                        TRUE ~ NA_character_)),
                      Sex_observed = dplyr::case_when(.data$Sx == "M" ~ "M",
-                                                     .data$Sx == "M?" ~ "M",#Need to check with the data custodian
+                                                     .data$Sx == "M?" ~ "M",
                                                      .data$Sx == "F" ~ "F",
                                                      .data$Sx == "F?" ~ "F",
                                                      TRUE ~ NA_character_),
@@ -195,10 +216,10 @@ format_CAC <- function(db = choose_directory(),
                      CaptureMonth = as.integer(format(.data$Date, "%m")),
                      Age_observed = dplyr::case_when(.data$Age == "Y" ~ 5L,#Need to check with the data custodian
                                                      .data$Age == "A" ~ 6L,
-                                                     .data$Age == "J"~ case_when(.data$CaptureMonth %in% c(1,2,3,4) ~ 4L,
+                                                     .data$Age == "J"~ dplyr::case_when(.data$CaptureMonth %in% c(1,2,3,4) ~ 4L,
                                                                                  .data$CaptureMonth %in% c(5:12 )~ 3L),
                                                      TRUE ~ NA_real_),
-                     LocationID = as.numeric(gsub("[A-Z_ ]*", "",.data$Loc)),
+                     LocationID = .data$Loc,#as.numeric(gsub("[A-Z_ ]*", "",.data$Loc)),#remove CN from nest boxes
                      Mass = round(as.numeric(.data$Mass),1),
                      WingLength = round(as.numeric(.data$WingLength),1),
                      Tarsus = round(as.numeric(.data$Tarsus),1),
@@ -218,34 +239,34 @@ format_CAC <- function(db = choose_directory(),
                                    to = 'ASCII//TRANSLIT')),
                        .cols = tidyselect::everything()) %>%
     janitor::clean_names(case = "upper_camel")%>%
-    dplyr::filter(grepl("CN",.data$LocCnTp)) %>%#keep only nest box catches
-    dplyr::mutate(Pes=case_when ( as.character(.data$Pes) %in% .data$Pvc ~ NA_character_,#fix obvious errors in the Pes column
+    #dplyr::filter(grepl("CN",.data$LocCnTp)) %>%#keep only nest box catches
+    dplyr::mutate(Pes=dplyr::case_when ( as.character(.data$Pes) %in% .data$Pvc ~ NA_character_,#fix errors in the Pes column
                                   TRUE~ as.character(.data$Pes))) %>%
     dplyr::transmute(PopID = "CAC",
                      Species = species_codes[species_codes$SpeciesID == 14640,]$Species,
                      IndvID = toupper(dplyr::case_when(stringr::str_detect(.data$RingNumber,  "^[:alnum:]{6,8}$") ~ .data$RingNumber,
                                                        TRUE ~ NA_character_)),
                      Sex_observed = dplyr::case_when(.data$Sx == "M" ~ "M",
-                                                     .data$Sx == "M?" ~ "M",#Need to check with the data custodian
+                                                     .data$Sx == "M?" ~ "M",
                                                      .data$Sx == "F" ~ "F",
                                                      .data$Sx == "F?" ~ "F",
                                                      TRUE ~ NA_character_),
                      CaptureDate = format(as.Date(.data$Date), "%Y-%m-%d"),
                      BreedingSeason = as.integer(format(.data$Date, "%Y")),
                      CaptureMonth = as.integer(format(.data$Date, "%m")),
-                     Age_observed = dplyr::case_when(.data$Age == "Y" ~ 5L,#Need to check with the data custodian
+                     Age_observed = dplyr::case_when(.data$Age == "Y" ~ 5L,
                                                      .data$Age == "A" ~ 6L,
-                                                     .data$Age == "J"~ case_when(.data$CaptureMonth %in% c(1,2,3,4) ~ 4L,
+                                                     .data$Age == "J"~ dplyr::case_when(.data$CaptureMonth %in% c(1,2,3,4) ~ 4L,
                                                                                  .data$CaptureMonth %in% c(5:12 )~ 3L),
                                                      TRUE ~ NA_real_),
-                     LocationID = as.numeric(gsub("[A-Z_ ]*", "",.data$LocCnTp)),#some of these were just character strings, not box numbers-->NA
+                     LocationID = .data$LocCnTp,#as.numeric(gsub("[A-Z_ ]*", "",.data$LocCnTp)),#some of these were just character strings, not box numbers-->NA
                      Mass = round(as.numeric(.data$Pes),1),
                      WingLength = round(as.numeric(.data$Ala),1),
                      Tarsus = round(as.numeric(.data$Tars),1),
                      CaptureAlive=NA_character_,
                      ReleaseAlive=NA_character_,
                      BroodID=NA_character_,
-                     ExperimentID = NA_character_)#Need to check with the data custodian
+                     ExperimentID = NA_character_)
 
   ## 2-C) Combine capture data from both species
 
@@ -276,7 +297,7 @@ format_CAC <- function(db = choose_directory(),
                      BreedingSeason = as.integer(format(.data$Data, "%Y")),
                      CaptureMonth = as.integer(format(.data$Data, "%m")),
                      Age_observed = 1L,
-                     LocationID = as.numeric(gsub("[A-Z_ ]*", "",.data$Loc)),
+                     LocationID = .data$Loc,
                      Mass = round(as.numeric(.data$Mass),1),
                      WingLength = NA_real_,
                      Tarsus = round(as.numeric(.data$Tarsus),1),
@@ -307,7 +328,7 @@ format_CAC <- function(db = choose_directory(),
                      BreedingSeason = as.integer(format(.data$Date, "%Y")),
                      CaptureMonth = as.integer(format(.data$Date, "%m")),
                      Age_observed = 1L,
-                     LocationID = as.numeric(gsub("[A-Z_ ]*", "",.data$LocCnTp)),
+                     LocationID = .data$LocCnTp,
                      Mass = round(as.numeric(.data$Mass),1),
                      WingLength = NA_real_,
                      Tarsus = round(as.numeric(.data$Tarsus),1),
@@ -345,7 +366,7 @@ format_CAC <- function(db = choose_directory(),
                   Plot=CodeArea,
                   Latitude=Lat,
                   Longitude=Long) %>%
-    dplyr::mutate(StartSeason = case_when(
+    dplyr::mutate(StartSeason = dplyr::case_when(
       LocationID < 172 ~ 1998,
       LocationID >= 172 & LocationID <= 182 ~ 2008,
       LocationID > 182 ~ 2013))%>%
@@ -441,7 +462,7 @@ format_CAC <- function(db = choose_directory(),
       dplyr::left_join(brood_data %>%
                          dplyr::mutate(HatchDate_observed=as.Date(.data$HatchDate_observed))%>%
                          dplyr::select(HatchDate_observed,BroodID))%>%
-      dplyr::mutate(ChickAge=case_when(Age_observed ==1 ~ as.integer(difftime(.data$CaptureDate,.data$HatchDate_observed,units="days")),
+      dplyr::mutate(ChickAge=dplyr::case_when(Age_observed ==1 ~ as.integer(difftime(.data$CaptureDate,.data$HatchDate_observed,units="days")),
                                        TRUE~NA_integer_))%>%#some values are negative or >21 days
       #Add age_calculated
       calc_age(ID = .data$IndvID, Age = .data$Age_observed,
@@ -494,9 +515,9 @@ format_CAC <- function(db = choose_directory(),
                                                   return("adult")
                                                 }
                                               }),
-                    BroodIDLaid = case_when(.data$ExperimentID=="PARENTAGE"~ NA_character_,
+                    BroodIDLaid = dplyr::case_when(.data$ExperimentID=="PARENTAGE"~ NA_character_,
                                             TRUE ~ .data$BroodID),
-                    BroodIDFledged = case_when(.data$ExperimentID=="PARENTAGE"~ NA_character_,
+                    BroodIDFledged = dplyr::case_when(.data$ExperimentID=="PARENTAGE"~ NA_character_,
                                                TRUE ~ .data$BroodID)) %>%
 
       ## Keep distinct records by PopID and InvdID
@@ -518,8 +539,6 @@ format_CAC <- function(db = choose_directory(),
   #' @return A data frame.
 
   create_location_CAC <- function(location_data) {
-    ##TODO: To finish
-    ## Create location data from brood data and nest coordinates
 
     Location_data_temp <- location_data%>%
       dplyr::select(LocationID,Latitude,Longitude,StartSeason)%>%
@@ -565,7 +584,7 @@ format_CAC <- function(db = choose_directory(),
 
   message("Compiling location information...")
 
-  Location_data_temp <- create_location_CAC(Brood_data_temp)
+  Location_data_temp <- create_location_CAC(Location_data_temp)
 
   #Disconnect from database
   DBI::dbDisconnect(connection)
@@ -678,4 +697,7 @@ format_CAC <- function(db = choose_directory(),
   }
 
 }
+
+
+
 
