@@ -7,12 +7,12 @@
 #'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 #'
 #'\strong{BroodID}: Unique combination of nest box (LocationID), breeding season and species.
-#' \strong{Capture Time}:Not available for now.Time data exists but could not be read properly (even as text) as it contains either "." or ":" as separator in excel file. This needs to be fixed in the original file.
+#'\strong{Capture Time}:Not available for now.Time data exists but could not be read properly (even as text) as it contains either "." or ":" as separator in excel file. This needs to be fixed in the original file.
 #'\strong{ChickAge}: This is calculated as date of measurement- date of hatching. Due to errors in either of these dates it can sometimes differ greatly from 14-15 days old
 #'\strong{Sex}: Errors in sexing were ignored so that "M?" was read as "M.
 #'\strong{ClutchType_observed}: Brood types 1a, 2a and REP were coded as "First", "Second" and "Replacement", respectively
 #'\strong{ExperimentID}: "PARENTAGE" includes cross-fostering
-#'\strong{LocationID}: In the capture file "CN" means the location is a nest box for which coordinates are available. Some adults were mist-netted, hence "TP" in the location ID
+#'\strong{LocationID}: NA for captures not done in nest boxes
 #'\string{Age_observed}: In the field, birds were described as "Adult", "Yearling" or "Juvenile." Following EURING conventions, adults were hence coded as 6, Yearlings as 5 and Juveniles as 3 or 4 depending on the month observed (3 if captured in the same year it hatched, 4 otherwise)
 #'
 #'@inheritParams pipeline_params
@@ -21,7 +21,7 @@
 #'@export
 #'
 
-format_CAC <- function(db = choose_directory(),
+format_CAC <- function(db = choose.dir(),#choose_directory(),
                        path = ".",
                        species = NULL,
                        pop = NULL,
@@ -201,7 +201,6 @@ format_CAC <- function(db = choose_directory(),
                                    to = 'ASCII//TRANSLIT')),
                        .cols = tidyselect::everything()) %>%
     janitor::clean_names(case = "upper_camel")%>%
-    #dplyr::filter(grepl("CN",.data$Loc)) %>%#keep only nest box catches. TPs don't seem to be in nest boxes
     dplyr::transmute(PopID = "CAC",
                      Species = species_codes[species_codes$SpeciesID == 14620,]$Species,
                      IndvID = toupper(dplyr::case_when(stringr::str_detect(.data$Ring,  "^[:alnum:]{6,8}$") ~ .data$Ring,
@@ -219,14 +218,16 @@ format_CAC <- function(db = choose_directory(),
                                                      .data$Age == "J"~ dplyr::case_when(.data$CaptureMonth %in% c(1,2,3,4) ~ 4L,
                                                                                  .data$CaptureMonth %in% c(5:12 )~ 3L),
                                                      TRUE ~ NA_real_),
-                     LocationID = .data$Loc,#as.numeric(gsub("[A-Z_ ]*", "",.data$Loc)),#remove CN from nest boxes
+                     LocationID = dplyr::case_when(grepl("CN",.data$Loc)~as.numeric(gsub("[A-Z_ ]*", "",.data$Loc)),
+                                                   TRUE~ NA_integer_),#captures that are not done in nest boxes (CN)= location is NA
                      Mass = round(as.numeric(.data$Mass),1),
                      WingLength = round(as.numeric(.data$WingLength),1),
                      Tarsus = round(as.numeric(.data$Tarsus),1),
                      CaptureAlive=NA_character_,
                      ReleaseAlive=NA_character_,
                      BroodID=NA_character_,
-                     ExperimentID = NA_character_)#Need to check with the data custodian
+                     ExperimentID = NA_character_)%>%#Need to check with the data custodian
+    dplyr::mutate(LocationID= gsub("CN","",LocationID))
 
   ## 2-B) Read in capture data great tits
 
@@ -239,7 +240,6 @@ format_CAC <- function(db = choose_directory(),
                                    to = 'ASCII//TRANSLIT')),
                        .cols = tidyselect::everything()) %>%
     janitor::clean_names(case = "upper_camel")%>%
-    #dplyr::filter(grepl("CN",.data$LocCnTp)) %>%#keep only nest box catches
     dplyr::mutate(Pes=dplyr::case_when ( as.character(.data$Pes) %in% .data$Pvc ~ NA_character_,#fix errors in the Pes column
                                   TRUE~ as.character(.data$Pes))) %>%
     dplyr::transmute(PopID = "CAC",
@@ -259,14 +259,17 @@ format_CAC <- function(db = choose_directory(),
                                                      .data$Age == "J"~ dplyr::case_when(.data$CaptureMonth %in% c(1,2,3,4) ~ 4L,
                                                                                  .data$CaptureMonth %in% c(5:12 )~ 3L),
                                                      TRUE ~ NA_real_),
-                     LocationID = .data$LocCnTp,#as.numeric(gsub("[A-Z_ ]*", "",.data$LocCnTp)),#some of these were just character strings, not box numbers-->NA
+                     LocationID = dplyr::case_when(grepl("CN",.data$LocCnTp)~as.numeric(gsub("[A-Z_ ]*", "",.data$LocCnTp)),
+                                                   TRUE~ NA_integer_),#captures that are not done in nest boxes (CN)= location is NA
                      Mass = round(as.numeric(.data$Pes),1),
                      WingLength = round(as.numeric(.data$Ala),1),
                      Tarsus = round(as.numeric(.data$Tars),1),
                      CaptureAlive=NA_character_,
                      ReleaseAlive=NA_character_,
                      BroodID=NA_character_,
-                     ExperimentID = NA_character_)
+                     ExperimentID = NA_character_) %>%
+    dplyr::mutate(LocationID= gsub("CN","",LocationID))
+
 
   ## 2-C) Combine capture data from both species
 
@@ -297,7 +300,7 @@ format_CAC <- function(db = choose_directory(),
                      BreedingSeason = as.integer(format(.data$Data, "%Y")),
                      CaptureMonth = as.integer(format(.data$Data, "%m")),
                      Age_observed = 1L,
-                     LocationID = .data$Loc,
+                     LocationID = as.numeric(gsub("[A-Z_ ]*", "",.data$Loc)),
                      Mass = round(as.numeric(.data$Mass),1),
                      WingLength = NA_real_,
                      Tarsus = round(as.numeric(.data$Tarsus),1),
@@ -306,7 +309,8 @@ format_CAC <- function(db = choose_directory(),
                      BroodID=paste(.data$LocationID,.data$BreedingSeason,.data$Species,sep="_")) %>%
     dplyr::left_join(brood_data  %>%
                        dplyr::select(BroodID, ExperimentID),
-                     by = "BroodID")
+                     by = "BroodID") %>%
+    dplyr::mutate(LocationID= gsub("CN","",LocationID))
 
   ## 3-B) Read in chick data great tits
 
@@ -328,7 +332,7 @@ format_CAC <- function(db = choose_directory(),
                      BreedingSeason = as.integer(format(.data$Date, "%Y")),
                      CaptureMonth = as.integer(format(.data$Date, "%m")),
                      Age_observed = 1L,
-                     LocationID = .data$LocCnTp,
+                     LocationID = as.numeric(gsub("[A-Z_ ]*", "",.data$LocCnTp)),
                      Mass = round(as.numeric(.data$Mass),1),
                      WingLength = NA_real_,
                      Tarsus = round(as.numeric(.data$Tarsus),1),
@@ -337,7 +341,8 @@ format_CAC <- function(db = choose_directory(),
                      BroodID=paste(.data$LocationID,.data$BreedingSeason,.data$Species,sep="_"))%>%
     dplyr::left_join(brood_data  %>%
                        dplyr::select(BroodID, ExperimentID),
-                     by = "BroodID")
+                     by = "BroodID") %>%
+    dplyr::mutate(LocationID= gsub("CN","",LocationID))
 
   ## 3-C) Combine chick data from both species
 
@@ -349,8 +354,8 @@ format_CAC <- function(db = choose_directory(),
 
   all_cap_data <- dplyr::bind_rows(chick_data,
                                    cap_data) %>%
-    dplyr::arrange(.data$BreedingSeason, .data$LocationID)%>%
-    dplyr::filter(!is.na(.data$LocationID))
+    dplyr::arrange(.data$BreedingSeason, .data$LocationID)#%>%
+    #dplyr::filter(!is.na(.data$LocationID))
 
   ### 5- Get location information from primary data
   location_data <- readxl::read_xlsx(path = db, guess = 2000,sheet= "GPS nest boxes") %>%
@@ -426,10 +431,12 @@ format_CAC <- function(db = choose_directory(),
   #'
   #' @return A data frame.
 
-  create_capture_CAC <- function(all_cap_data,brood_data) {
+  create_capture_CAC <- function(all_cap_data,Brood_data_temp) {
 
     ## Captures from ringing data
     Capture_data_temp <- all_cap_data %>%
+
+      dplyr::mutate(LocationID=as.numeric(.data$LocationID))%>%
 
       ##Add plot information
       dplyr::left_join(location_data %>%
@@ -584,7 +591,7 @@ format_CAC <- function(db = choose_directory(),
 
   message("Compiling location information...")
 
-  Location_data_temp <- create_location_CAC(Location_data_temp)
+  Location_data_temp <- create_location_CAC(location_data)
 
   #Disconnect from database
   DBI::dbDisconnect(connection)
