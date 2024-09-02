@@ -593,8 +593,6 @@ format_CAC <- function(db = choose.dir(),#choose_directory(),
 
   Location_data_temp <- create_location_CAC(location_data)
 
-  #Disconnect from database
-  DBI::dbDisconnect(connection)
 
   #### PROCESSING FINAL DATA TO EXPORT
 

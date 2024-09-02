@@ -2,7 +2,7 @@ testthat::skip_if(!exists("data_path"))
 #first step: get format_CAC in the environment (either run full script or import function using dget)
 
 #pipeline_output <- format_CAC(db = paste0(data_path, "/CAC_Senar_Spain"))
-pipeline_output <- format_CAC()#warnings:  Use of .data in tidyselect expressions was deprecated in tidyselect 1.2.0.
+pipeline_output <- format_CAC(db=choose.dir())#warnings:  Use of .data in tidyselect expressions was deprecated in tidyselect 1.2.0.
 
 test_that("CAC outputs all files...", {
 
@@ -15,6 +15,7 @@ test_that("CAC outputs all files...", {
 
 
 ### Test Capture data
+##TODO: adapt the script to CAC
 
 test_that("Individual data returns an expected outcome...", {
 
