@@ -21,7 +21,7 @@
 #'@export
 #'
 
-format_CAC <- function(db = choose.dir(),#choose_directory(),
+format_CAC <- function(db = choose_directory(),
                        path = ".",
                        species = NULL,
                        pop = NULL,
@@ -83,7 +83,7 @@ format_CAC <- function(db = choose.dir(),#choose_directory(),
     janitor::clean_names(case = "upper_camel")  %>%
     dplyr::transmute(PopID = "CAC",
                      Species = species_codes[species_codes$SpeciesID == 14620,]$Species,
-                     BreedingSeason = .data$Year,
+                     BreedingSeason = as.integer(.data$Year),
                      LocationID = .data$NestBox,
                      ClutchType_observed = dplyr::case_when(.data$Brood == "1a" ~ "first",
                                                             .data$Brood == "2a" ~ "second",
@@ -107,12 +107,19 @@ format_CAC <- function(db = choose.dir(),#choose_directory(),
                                              TRUE ~ .data$Male),
                      AvgEggMass = NA_real_,
                      NumberEggs = NA_real_,
-                     LayDate_observed =as.Date(as.numeric(.data$LayingDate), origin = "1899-12-30"),
-                     ClutchSize_observed =as.integer(.data$ClutchSize),
-                     HatchDate_observed = as.Date(as.numeric(.data$HatchingDate), origin = "1899-12-30"),
-                     FledgeDate_observed = as.Date(as.numeric(.data$FledglingDate), origin = "1899-12-30"),
+                     LayDate_observed =as.Date(as.numeric(dplyr::case_when (grepl("?",fixed=TRUE,.data$LayingDate)~NA_character_,
+                                                         TRUE~.data$LayingDate)), origin = "1899-12-30"),
+                     ClutchSize_observed = as.integer(dplyr::case_when(grepl("(",fixed=TRUE,.data$ClutchSize)~NA_character_,#uncertainty is not allowed
+                                                            grepl("?",fixed=TRUE,.data$ClutchSize)~NA_character_,
+                                                                      TRUE~.data$ClutchSize)),
+                     HatchDate_observed = as.Date(as.numeric(dplyr::case_when (grepl("-maig",ignore.case = TRUE,.data$HatchingDate)~NA_character_,#needs to be fixed in original document
+                                                                               TRUE~.data$HatchingDate)), origin = "1899-12-30"),
+                     FledgeDate_observed = as.Date(as.numeric(dplyr::case_when (grepl("Predat",ignore.case = TRUE,.data$FledglingDate)~NA_character_,
+                                                                                grepl("Morts",ignore.case = TRUE,.data$FledglingDate)~NA_character_,
+                                                                                TRUE~.data$FledglingDate)), origin = "1899-12-30"),
                      BroodSize_observed = NA_integer_,
-                     NumberFledged_observed = as.integer(.data$NumberFledglings),
+                     NumberFledged_observed = as.integer(dplyr::case_when(grepl("1+",fixed=TRUE,.data$NumberFledglings)~NA_character_,
+                                                                          TRUE~.data$NumberFledglings)),
                      ExperimentID = dplyr::case_when(!is.na(.data$Crossfostering) ~"PARENTAGE",
                                                      TRUE ~ NA_character_))%>%
     dplyr::filter(is.na(ClutchSize_observed) |ClutchSize_observed>0)%>%
@@ -137,7 +144,7 @@ format_CAC <- function(db = choose.dir(),#choose_directory(),
     janitor::clean_names(case = "upper_camel")  %>%
     dplyr::transmute(PopID = "CAC",
                      Species = species_codes[species_codes$SpeciesID == 14640,]$Species,
-                     BreedingSeason = .data$Year,
+                     BreedingSeason = as.integer(.data$Year),
                      LocationID = .data$NestBox,
                      ClutchType_observed = dplyr::case_when(.data$Brood == "1a" ~ "first",
                                                             .data$Brood == "2a" ~ "second",
@@ -162,10 +169,25 @@ format_CAC <- function(db = choose.dir(),#choose_directory(),
                                              TRUE ~ .data$Male),
                      AvgEggMass = NA_real_,
                      NumberEggs = NA_real_,
-                     LayDate_observed =as.Date(as.numeric(.data$LayingDate), origin = "1899-12-30"),
-                     ClutchSize_observed =as.integer(.data$ClutchSize),
-                     HatchDate_observed = as.Date(as.numeric(.data$HatchingDate), origin = "1899-12-30"),
-                     FledgeDate_observed = as.Date(as.numeric(.data$FledglingDate), origin = "1899-12-30"),
+                     LayDate_observed =as.Date(as.numeric(dplyr::case_when (grepl("abandona",ignore.case = TRUE,.data$LayingDate)~NA_character_,
+                                                                            grepl("predat",ignore.case = TRUE,.data$LayingDate)~NA_character_,
+                                                                            grepl("?",fixed=TRUE,.data$LayingDate)~NA_character_,
+                                                                            TRUE~.data$LayingDate)), origin = "1899-12-30"),
+                     ClutchSize_observed =as.integer(dplyr::case_when(grepl("(",fixed=TRUE,.data$ClutchSize)~NA_character_,
+                                                                      grepl("?",fixed=TRUE,.data$ClutchSize)~NA_character_,
+                                                                      TRUE~.data$ClutchSize)),
+                     HatchDate_observed = as.Date(as.numeric(dplyr::case_when (grepl("-maig",fixed = TRUE,.data$HatchingDate)~NA_character_,#needs to be fixed in original document
+                                                                               grepl("?",fixed = TRUE,.data$HatchingDate)~NA_character_,
+                                                                               TRUE~.data$HatchingDate)), origin = "1899-12-30"),
+                     FledgeDate_observed = as.Date(as.numeric(dplyr::case_when (grepl("abandona",ignore.case = TRUE,.data$FledglingDate)~NA_character_,#needs to be fixed in original document
+                                                                                grepl("?",fixed = TRUE,.data$FledglingDate)~NA_character_,
+                                                                                grepl("preda",ignore.case = TRUE,.data$FledglingDate)~NA_character_,
+                                                                                grepl("sortits",ignore.case = TRUE,.data$FledglingDate)~NA_character_,
+                                                                                grepl("morts",ignore.case = TRUE,.data$FledglingDate)~NA_character_,
+                                                                                grepl("27-28/05/2009",fixed = TRUE,.data$FledglingDate)~NA_character_,
+                                                                                grepl("/",fixed = TRUE,.data$FledglingDate)~NA_character_,
+                                                                                grepl("-",fixed = TRUE,.data$FledglingDate)~NA_character_,
+                                                                                TRUE~.data$FledglingDate)), origin = "1899-12-30"),
                      BroodSize_observed = NA_integer_,
                      NumberFledged_observed = as.integer(.data$NumberFledglings),
                      ExperimentID = dplyr::case_when(!is.na(.data$Crossfostering) ~"PARENTAGE",
@@ -218,11 +240,13 @@ format_CAC <- function(db = choose.dir(),#choose_directory(),
                                                      .data$Age == "J"~ dplyr::case_when(.data$CaptureMonth %in% c(1,2,3,4) ~ 4L,
                                                                                  .data$CaptureMonth %in% c(5:12 )~ 3L),
                                                      TRUE ~ NA_real_),
-                     LocationID = dplyr::case_when(grepl("CN",.data$Loc)~as.numeric(gsub("[A-Z_ ]*", "",.data$Loc)),
-                                                   TRUE~ NA_integer_),#captures that are not done in nest boxes (CN)= location is NA
-                     Mass = round(as.numeric(.data$Mass),1),
+                     LocationID = as.numeric(dplyr::case_when(grepl("CN",.data$Loc)~gsub("[A-Z_ ]*", "",.data$Loc),
+                                                              TRUE~ NA_character_)),#captures that are not done in nest boxes (CN)= location is NA
+                     Mass = round(as.numeric(dplyr::case_when(grepl("R",.data$Mass)~NA_character_,#remove some characters that were entered there
+                       TRUE~.data$Mass)),1),
                      WingLength = round(as.numeric(.data$WingLength),1),
-                     Tarsus = round(as.numeric(.data$Tarsus),1),
+                     Tarsus = round(as.numeric(dplyr::case_when(grepl("-",fixed=TRUE,.data$Tarsus)~NA_character_,#remove some characters that were entered there
+                                                                TRUE~.data$Tarsus)),1),
                      CaptureAlive=NA_character_,
                      ReleaseAlive=NA_character_,
                      BroodID=NA_character_,
@@ -259,8 +283,8 @@ format_CAC <- function(db = choose.dir(),#choose_directory(),
                                                      .data$Age == "J"~ dplyr::case_when(.data$CaptureMonth %in% c(1,2,3,4) ~ 4L,
                                                                                  .data$CaptureMonth %in% c(5:12 )~ 3L),
                                                      TRUE ~ NA_real_),
-                     LocationID = dplyr::case_when(grepl("CN",.data$LocCnTp)~as.numeric(gsub("[A-Z_ ]*", "",.data$LocCnTp)),
-                                                   TRUE~ NA_integer_),#captures that are not done in nest boxes (CN)= location is NA
+                     LocationID = as.numeric(dplyr::case_when(grepl("CN",.data$LocCnTp)~gsub("[A-Z_ ]*", "",.data$LocCnTp),
+                                                   TRUE~ NA_character_)),#captures that are not done in nest boxes (CN)= location is NA
                      Mass = round(as.numeric(.data$Pes),1),
                      WingLength = round(as.numeric(.data$Ala),1),
                      Tarsus = round(as.numeric(.data$Tars),1),
@@ -279,7 +303,7 @@ format_CAC <- function(db = choose.dir(),#choose_directory(),
 
   ## 3- Get chick information from primary data
   ##Notes: There is no data on brood of origin for individual chicks and it is unclear whether the box nr. is the nest of rearing or origin (one has 14 chicks)
-
+  #This inconsistent hour format in the original file triggers warnings e.g. Expecting numeric in E343 / R343C5: got a date
   ## 3-A) Read in chick data blue tits
 
   chick_data_CC <- readxl::read_xlsx(path = db, guess = 2000,sheet= "Ring # Fledged chicks Cc") %>%
@@ -354,8 +378,7 @@ format_CAC <- function(db = choose.dir(),#choose_directory(),
 
   all_cap_data <- dplyr::bind_rows(chick_data,
                                    cap_data) %>%
-    dplyr::arrange(.data$BreedingSeason, .data$LocationID)#%>%
-    #dplyr::filter(!is.na(.data$LocationID))
+    dplyr::arrange(.data$BreedingSeason, .data$LocationID)
 
   ### 5- Get location information from primary data
   location_data <- readxl::read_xlsx(path = db, guess = 2000,sheet= "GPS nest boxes") %>%
@@ -372,9 +395,10 @@ format_CAC <- function(db = choose.dir(),#choose_directory(),
                   Latitude=Lat,
                   Longitude=Long) %>%
     dplyr::mutate(StartSeason = dplyr::case_when(
-      LocationID < 172 ~ 1998,
+      LocationID < 172 ~ 1998,#based on information communicated by JC.Senar
       LocationID >= 172 & LocationID <= 182 ~ 2008,
       LocationID > 182 ~ 2013))%>%
+    dplyr::mutate(LocationID =as.numeric(LocationID))%>%
     dplyr::select(LocationID,Plot,Latitude,Longitude,StartSeason)
 
   ###########################################
@@ -389,11 +413,11 @@ format_CAC <- function(db = choose.dir(),#choose_directory(),
   #'
   #' @return A data frame.
 
-  create_brood_CAC   <- function(brood_data,chick_data) {
+  create_brood_CAC   <- function(brood_data,chick_data,location_data) {
     ## Create brood data
     Brood_data_temp <- brood_data %>%
       dplyr::mutate(OriginalTarsusMethod = "Alternative",
-                    LocationID=as.numeric(gsub("[A-Z_ ]*", "",.data$LocationID)))%>%#remove the a and b =same coordinate
+                    LocationID=as.numeric(gsub("[A-Z_ ]*", "",ignore.case=TRUE,.data$LocationID)))%>%#remove the a and b =same coordinate
 
       ##Add plot information
       dplyr::left_join(location_data %>%
@@ -431,21 +455,24 @@ format_CAC <- function(db = choose.dir(),#choose_directory(),
   #'
   #' @return A data frame.
 
-  create_capture_CAC <- function(all_cap_data,Brood_data_temp) {
+  create_capture_CAC <- function(all_cap_data,Brood_data_temp,location_data) {
 
     ## Captures from ringing data
     Capture_data_temp <- all_cap_data %>%
 
-      dplyr::mutate(LocationID=as.numeric(.data$LocationID))%>%
-
+      dplyr::mutate(CaptureDate=as.Date(.data$CaptureDate),
+                    Age_observed=as.integer(.data$Age_observed),
+                    CaptureAlive=as.logical(.data$CaptureAlive),
+                    ReleaseAlive=as.logical(.data$ReleaseAlive),
+                    LocationID=as.numeric(.data$LocationID))%>%
       ##Add plot information
       dplyr::left_join(location_data %>%
                          dplyr::select(LocationID,
                                        Plot),by="LocationID")%>%
 
       ## Rename variables
-      dplyr::rename(CapturePopID = .data$PopID,
-                    CapturePlot=.data$Plot) %>%
+      dplyr::rename(CapturePopID = PopID,
+                    CapturePlot= Plot) %>%
 
       ## Remove NAs from key columns
       dplyr::filter_at(dplyr::vars( CapturePopID,
@@ -499,7 +526,7 @@ format_CAC <- function(db = choose.dir(),#choose_directory(),
       dplyr::group_by(.data$IndvID, .data$CapturePopID) %>%
       dplyr::mutate(PopID = .data$CapturePopID) %>%
       dplyr::group_by(.data$IndvID) %>%
-      dplyr::mutate(Species = species_codes[species_codes$SpeciesID == 14640,]$Species,
+      dplyr::mutate(Species = .data$Species,#species_codes[species_codes$SpeciesID == 14640,]$Species,
                     Sex_calculated = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Sex_observed))),
                                                     .f = ~{
                                                       if(length(..1) == 0){
@@ -570,14 +597,14 @@ format_CAC <- function(db = choose.dir(),#choose_directory(),
 
   message("Compiling brood information...")
 
-  Brood_data_temp <- create_brood_CAC(brood_data, chick_data)
+  Brood_data_temp <- create_brood_CAC(brood_data, chick_data,location_data)
 
 
   # CAPTURE DATA
 
   message("Compiling capture information...")
 
-  Capture_data_temp <- create_capture_CAC(all_cap_data,brood_data)
+  Capture_data_temp <- create_capture_CAC(all_cap_data,brood_data,location_data)
 
 
   # INDIVIDUAL DATA
@@ -608,7 +635,9 @@ format_CAC <- function(db = choose.dir(),#choose_directory(),
 
     ## Reorder columns
     dplyr::select(names(brood_data_template)) %>%
+    dplyr::mutate(LocationID=as.character(.data$LocationID))%>%
     dplyr::ungroup()
+
 
   # ## Check column classes
   # purrr::map_df(brood_data_template, class) == purrr::map_df(Brood_data, class)
@@ -626,6 +655,8 @@ format_CAC <- function(db = choose.dir(),#choose_directory(),
 
     ## Reorder columns
     dplyr::select(names(capture_data_template)) %>%
+    dplyr::mutate(LocationID=as.character(.data$LocationID))%>%
+
     dplyr::ungroup()
 
   # ## Check column classes
@@ -662,6 +693,9 @@ format_CAC <- function(db = choose.dir(),#choose_directory(),
 
     ## Reorder columns
     dplyr::select(names(location_data_template))  %>%
+    dplyr::mutate(LocationID=as.character(.data$LocationID))%>%
+    dplyr::mutate(StartSeason=as.integer(.data$StartSeason))%>%
+
     dplyr::ungroup()
 
   # ## Check column classes
