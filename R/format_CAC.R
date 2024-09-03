@@ -577,7 +577,7 @@ format_CAC <- function(db = choose_directory(),
     Location_data_temp <- location_data%>%
       dplyr::select(LocationID,Latitude,Longitude,StartSeason)%>%
       dplyr::mutate(PopID = "CAC",
-                    NestBoxID=.data$LocationID,
+                    NestboxID=.data$LocationID,
                     LocationType = "NB",
                     EndSeason = NA_integer_,
                     HabitatType = "mixed")
@@ -694,6 +694,7 @@ format_CAC <- function(db = choose_directory(),
     ## Reorder columns
     dplyr::select(names(location_data_template))  %>%
     dplyr::mutate(LocationID=as.character(.data$LocationID))%>%
+    dplyr::mutate(NestboxID=as.character(.data$NestboxID))%>%
     dplyr::mutate(StartSeason=as.integer(.data$StartSeason))%>%
 
     dplyr::ungroup()
