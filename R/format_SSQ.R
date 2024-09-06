@@ -73,7 +73,7 @@ format_SSQ <- function(db = choose_directory(),
                   BroodSize_observed = as.integer(.data$Hs),
                   NumberFledged_observed = as.integer(.data$Fs),
                   FemaleID = .data$FId,
-                  MaleID = .data$MId,
+                  MaleID = as.character(.data$MId),
                   LocationID = .data$NestId,
                   Plot = .data$HabitatOfRinging,
                   Latitude = .data$YCoord,
@@ -82,7 +82,8 @@ format_SSQ <- function(db = choose_directory(),
     dplyr::mutate(Species = dplyr::case_when(.data$Species == "Parus major" ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
                                              .data$Species == "Cyanistes caeruleus" ~ species_codes[species_codes$SpeciesID == 14620, ]$Species)) %>%
     #Filter species
-    dplyr::filter(.data$Species %in% species) %>%
+    # TODO: check with data owner about missing BreedingSeason for BT nest (Row 553)
+    dplyr::filter(.data$Species %in% species, !is.na(BreedingSeason)) %>%
     #Add other missing data:
     #- PopID
     #- BroodID (Year_LocationID_LayDate)
