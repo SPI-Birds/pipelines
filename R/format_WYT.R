@@ -152,9 +152,7 @@ format_WYT <- function(db = choose_directory(),
 
     utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_WYT.csv"), row.names = F)
 
-    utils::write.csv(x = Capture_data %>%
-                       dplyr::select(-"Sex", -"BroodID"),
-                     file = paste0(path, "\\Capture_data_WYT.csv"), row.names = F)
+    utils::write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_WYT.csv"), row.names = F)
 
     utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_WYT.csv"), row.names = F)
 
