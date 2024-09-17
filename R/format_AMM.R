@@ -75,13 +75,13 @@ format_AMM <- function(db = choose_directory(),
 
   message("Compiling brood information...")
 
-  Brood_data <- create_brood_AMM(connection)
+  Brood_data <- create_brood_AMM(connection, species_filter)
 
   # CAPTURE DATA
 
   message("Compiling capture information...")
 
-  Capture_data <- create_capture_AMM(Brood_data, connection)
+  Capture_data <- create_capture_AMM(Brood_data, connection, species_filter)
 
   # INDIVIDUAL DATA
 
@@ -163,10 +163,11 @@ format_AMM <- function(db = choose_directory(),
 #' Create brood data table in standard format for data from Ammersee, Germany.
 #'
 #' @param connection Connection the SQL database.
+#' @param species_filter Species six-letter codes from the standard protocol. Used to filter the data.
 #'
 #' @return A data frame.
 
-create_brood_AMM   <- function(connection) {
+create_brood_AMM   <- function(connection, species_filter) {
 
   Catches_M <- dplyr::tbl(connection, "Catches") %>%
     dplyr::select("BroodID", "MaleID" = "BirdID", "SexConclusion") %>%
@@ -277,7 +278,9 @@ create_brood_AMM   <- function(connection) {
     dplyr::mutate(dplyr::across(c("Plot":"MaleID"),
                                 as.character)) %>%
     dplyr::mutate(dplyr::across(c("LayDate_observed", "HatchDate_observed", "FledgeDate_observed"),
-                                as.Date))
+                                as.Date)) %>%
+    # Filter species
+    dplyr::filter(.data$Species %in% species_filter)
 
   return(Brood_data)
 
@@ -289,10 +292,11 @@ create_brood_AMM   <- function(connection) {
 #'
 #' @param Brood_data Data frame. Output from \code{\link{create_brood_AMM}}.
 #' @param connection Connection the SQL database.
+#' @param species_filter Species six-letter codes from the standard protocol. Used to filter the data.
 #'
 #' @return A data frame.
 
-create_capture_AMM <- function(Brood_data, connection) {
+create_capture_AMM <- function(Brood_data, connection, species_filter) {
 
   Catches_table <- dplyr::tbl(connection, "Catches")
 
@@ -429,6 +433,8 @@ create_capture_AMM <- function(Brood_data, connection) {
   Capture_data <- dplyr::bind_rows(Adult_capture, Chick_capture) %>%
     calc_age(ID = .data$IndvID, Age = .data$Age_observed,
              Date = .data$CaptureDate, Year = .data$BreedingSeason) %>%
+    # Filter species
+    dplyr::filter(.data$Species %in% species_filter) %>%
     #Arrange by ID/Date and add unique capture ID
     dplyr::arrange(.data$IndvID, .data$CaptureDate) %>%
     dplyr::group_by(.data$IndvID) %>%

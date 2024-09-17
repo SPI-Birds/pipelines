@@ -80,13 +80,6 @@ format_PFN <- function(db = choose_directory(),
   # Force user to select directory
   force(db)
 
-  # Determine species codes for filtering
-  if(is.null(species)){
-
-    species <- species_codes$Species
-
-  }
-
   # Record start time to estimate processing time.
   start_time <- Sys.time()
 
@@ -143,6 +136,19 @@ format_PFN <- function(db = choose_directory(),
                                 Nest_OKE#,
                                 #Nest_NWA
   )
+
+  # Determine species codes & pop codes for filtering
+  if(is.null(species)){
+
+    species <- species_codes$Species
+
+  }
+
+  if(is.null(pop)){
+
+    pop <- c("EDM", "NAG", "KAT", "DIN", "TEI", "OKE")
+
+  }
 
   #----------------------------#
   # IPMR PRIMARY DATA ASSEMBLY #
@@ -300,6 +306,8 @@ format_PFN <- function(db = choose_directory(),
 
   Brood_data <- create_brood_PFN(Nest_data = Nest_data,
                                  ReRingTable = ReRingTable,
+                                 species_filter = species,
+                                 pop_filter = pop,
                                  badIDs = badIDs)
 
   #---------------------------------------#
@@ -311,6 +319,8 @@ format_PFN <- function(db = choose_directory(),
   Capture_data <- create_capture_PFN(Nest_data = Nest_data,
                                      IPMR_data = IPMR_data,
                                      ReRingTable = ReRingTable,
+                                     species_filter = species,
+                                     pop_filter = pop,
                                      badIDs = badIDs)
 
   #------------------------------------------#
@@ -319,7 +329,9 @@ format_PFN <- function(db = choose_directory(),
 
   message("Compiling individual data...")
 
-  Individual_data <- create_individual_PFN(Capture_data = Capture_data)
+  Individual_data <- create_individual_PFN(Capture_data = Capture_data,
+                                           species_filter = species,
+                                           pop_filter = pop)
 
   #----------------------------------------#
   # CREATING STANDARD FORMAT LOCATION DATA #
@@ -329,7 +341,8 @@ format_PFN <- function(db = choose_directory(),
 
   Location_data <- create_location_PFN(Brood_data = Brood_data,
                                        Capture_data = Capture_data,
-                                       Location_details = Location_details)
+                                       Location_details = Location_details,
+                                       pop_filter = pop)
 
   #-------------------------------------------#
   # STANDARD FORMAT DATA WRANGLING FOR EXPORT #
@@ -413,11 +426,13 @@ format_PFN <- function(db = choose_directory(),
 #'
 #' @param Nest_data Collated Nest primary data from PiedFlyNet populations
 #' @param ReRingTable Table containing ring numbers and unique identifiers for all individuals
+#' @param species_filter Species six-letter codes from the standard protocol. Used to filter the data.
+#' @param pop_filter Population three-letter codes from the standard protocol. Used to filter the data.
 #' @param badIDs Vector containing non-conclusive IDs (extracted from Nest data)
 #' @return A data frame with Brood data
 
 
-create_brood_PFN <- function(Nest_data, ReRingTable, badIDs){
+create_brood_PFN <- function(Nest_data, ReRingTable, species_filter, pop_filter, badIDs){
 
   # 1) Rename columns that are equivalent (content and format) to columns in the standard format
   Brood_data <- Nest_data %>%
@@ -526,8 +541,8 @@ create_brood_PFN <- function(Nest_data, ReRingTable, badIDs){
                     OriginalTarsusMethod = dplyr::case_when(!is.na(.data$AvgTarsus) ~ "Alternative"),
                     ExperimentID = NA_character_) %>%
 
-    # 5) Remove broods from species not included in Species_codes
-    dplyr::filter(.data$Species %in% species_codes$Species) %>%
+    # 5) Remove broods from species & pops not included in filter
+    dplyr::filter(.data$Species %in% species_filter & .data$PopID %in% pop_filter) %>%
 
     # 6) Replace non-conclusive male and female IDs with NA
     dplyr::mutate(FemaleID = dplyr::case_when(!(.data$FemaleID %in% badIDs) ~ .data$FemaleID,
@@ -593,11 +608,13 @@ create_brood_PFN <- function(Nest_data, ReRingTable, badIDs){
 #' @param Nest_data Collated Nest primary data from PiedFlyNet populations
 #' @param IPMR_data Collated IPMR primary data from PiedFlyNet populations
 #' @param ReRingTable Table containing ring numbers and unique identifiers for all individuals
+#' @param species_filter Species six-letter codes from the standard protocol. Used to filter the data.
+#' @param pop_filter Population three-letter codes from the standard protocol. Used to filter the data.
 #' @param badIDs Vector containing non-conslusive IDs (extracted from Nest data)
 
 #' @return A data frame with Capture data
 
-create_capture_PFN <- function(Nest_data, IPMR_data, ReRingTable, badIDs){
+create_capture_PFN <- function(Nest_data, IPMR_data, ReRingTable, species_filter, pop_filter, badIDs){
 
   # 1) Extract capture data from both nest and IPMR files
   Capture_data_Nest <- create_capture_Nest_PFN(Nest_data = Nest_data, ReRingTable = ReRingTable, badIDs = badIDs)
@@ -934,8 +951,8 @@ create_capture_PFN <- function(Nest_data, IPMR_data, ReRingTable, badIDs){
              Date = .data$CaptureDate, Year = .data$BreedingSeason) %>%
 
 
-    ## 5) Remove captures from individuals not part of any included populations
-    dplyr::filter(!is.na(.data$CapturePopID)) %>%
+    ## 5) Remove captures from individuals not part of any included populations and remove species
+    dplyr::filter(!is.na(.data$CapturePopID), .data$CapturePopID %in% pop_filter, .data$Species %in% species_filter) %>%
 
     ## 6) Make CaptureID
 
@@ -1191,10 +1208,12 @@ create_capture_IPMR_PFN <- function(IPMR_data, Nest_data, ReRingTable){
 #' Create individual data table for PiedFlyNet populations
 #'
 #' @param Capture_data Capture data table generated by `create_capture_PFN`
+#' @param species_filter Species six-letter codes from the standard protocol. Used to filter the data.
+#' @param pop_filter Population three-letter codes from the standard protocol. Used to filter the data.
 #'
 #' @return A data frame with Individual data
 
-create_individual_PFN <- function(Capture_data){
+create_individual_PFN <- function(Capture_data, species_filter, pop_filter){
 
   # 1) Take capture data and determine basic summary data for each individual (within population)
   IndvPop_data <- Capture_data %>%
@@ -1275,6 +1294,8 @@ create_individual_PFN <- function(Capture_data){
   # 3) Merge information and format
   Individual_data <- dplyr::left_join(IndvPop_data, Indv_data,
                                       by = c('IndvID')) %>%
+    # Filter species & pops
+    dplyr::filter(.data$Species %in% species_filter, .data$PopID %in% pop_filter) %>%
 
     # Add a column for genetic sex (not available here)
     dplyr::mutate(Sex_genetic = NA_character_) %>%
@@ -1297,10 +1318,11 @@ create_individual_PFN <- function(Capture_data){
 #' @param Location_details Table containing detailed information on nest boxes.
 #' Currently only contains information for EDM. Information for other populations
 #' will be added later.
+#' @param pop_filter Population three-letter codes from the standard protocol. Used to filter the data.
 #'
 #' @return A data frame with Location data
 
-create_location_PFN <- function(Brood_data, Capture_data, Location_details){
+create_location_PFN <- function(Brood_data, Capture_data, Location_details, pop_filter){
 
   # 1) Format additional data on nest boxes
   #    NOTE: At present, additional nest box data is only available for East Dartmoor (EDM)
@@ -1349,6 +1371,7 @@ create_location_PFN <- function(Brood_data, Capture_data, Location_details){
   Location_data <- Location_data %>%
     dplyr::full_join(CapLocations,
                      by = c('PopID', 'LocationID')) %>%
+    dplyr::filter(.data$PopID %in% pop_filter) %>%
     dplyr::mutate(HabitatType = 'deciduous') %>%
     dplyr::select("LocationID", "NestboxID",
                   "LocationType", "PopID",

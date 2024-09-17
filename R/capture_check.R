@@ -150,7 +150,7 @@ check_values_capture <- function(Capture_data, var, approved_list, output, skip)
 
   # Create reference values from data
   # Tarsus
-  if(var == "Tarsus" & skip_check == FALSE & output %in% c("both", "errors")) {
+  if(var == "Tarsus" & skip_check == FALSE & output %in% c("both", "errors") & any(var_recorded$recorded == TRUE)) {
 
     # Create reference values for adults & chicks
     ref <- Capture_data %>%
@@ -191,7 +191,7 @@ check_values_capture <- function(Capture_data, var, approved_list, output, skip)
   }
 
   # Mass reference values
-  if(var == "Mass" & skip_check == FALSE & output %in% c("both", "errors")) {
+  if(var == "Mass" & skip_check == FALSE & output %in% c("both", "errors") & any(var_recorded$recorded == TRUE)) {
 
     # Create reference values for adults from data
     ref_adults <- Capture_data %>%
@@ -340,7 +340,7 @@ check_values_capture <- function(Capture_data, var, approved_list, output, skip)
   error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  if(output %in% c("both", "errors") & skip_check == FALSE & exists("ref")) {
+  if(output %in% c("both", "errors") & skip_check == FALSE & exists("ref") & any(var_recorded$recorded == TRUE)) {
 
     if(nrow(ref) > 0 && !all(is.na(Capture_data[,var]))) {
 
@@ -503,7 +503,7 @@ check_values_capture <- function(Capture_data, var, approved_list, output, skip)
   #warning_records <- tibble::tibble(Row = NA_character_)
   warning_output <- NULL
 
-  if(output %in% c("both", "warnings") & skip_check == FALSE) {
+  if(output %in% c("both", "warnings") & skip_check == FALSE & any(var_recorded$recorded == TRUE)) {
 
     # Add messages about skipped population-species combinations to warning outputs & with no records for {var}
     if(var == "Tarsus") {
