@@ -51,107 +51,107 @@ test_that("Brood_data returns an expected outcome...", {
 
   ## PARMAJ nest B53 in 2019
   expect_equal(subset(FOR_data,
-                      LocationID == "B53" &
+                      LocationID == "B53_2019" &
                         BreedingSeason == 2019 &
                         ClutchType_observed=="second")$FemaleID, "C3F7169")
   expect_equal(subset(FOR_data,
-                      LocationID == "B53" &
+                      LocationID == "B53_2019" &
                         BreedingSeason == 2019 &
                         ClutchType_observed=="second")$MaleID, "C3F6823")
   expect_equal(subset(FOR_data,
-                      LocationID == "B53" &
+                      LocationID == "B53_2019" &
                         BreedingSeason == 2019 &
                         ClutchType_observed=="second")$LayDate_observed, as.Date("2019-05-31"))
   expect_equal(subset(FOR_data,
-                      LocationID == "B53" &
+                      LocationID == "B53_2019" &
                         BreedingSeason == 2019 &
                         ClutchType_observed=="second")$HatchDate_observed, as.Date("2019-06-17"))
   expect_equal(subset(FOR_data,
-                      LocationID == "B53" &
+                      LocationID == "B53_2019" &
                         BreedingSeason == 2019 &
                         ClutchType_observed=="second")$ClutchSize_observed, 6)
   expect_equal(subset(FOR_data,
-                      LocationID == "B53" &
+                      LocationID == "B53_2019" &
                         BreedingSeason == 2019 &
                         ClutchType_observed=="second")$BroodSize_observed, 4)
   expect_equal(subset(FOR_data,
-                      LocationID == "B53" &
+                      LocationID == "B53_2019" &
                         BreedingSeason == 2019 &
                         ClutchType_observed=="second")$NumberFledged_observed, 3)
 
   ## CYACAE nest E15 in 2021
   expect_equal(subset(FOR_data,
-                      LocationID == "E15" &
+                      LocationID == "E15_2021" &
                         BreedingSeason == 2021)$FemaleID, "B4P1449")
   expect_equal(subset(FOR_data,
-                      LocationID == "E15" &
+                      LocationID == "E15_2021" &
                         BreedingSeason == 2021)$MaleID, "B4P1450")
   expect_equal(subset(FOR_data,
-                      LocationID == "E15" &
+                      LocationID == "E15_2021" &
                         BreedingSeason == 2021)$LayDate_observed, as.Date("2021-04-15"))
   expect_equal(subset(FOR_data,
-                      LocationID == "E15" &
+                      LocationID == "E15_2021" &
                         BreedingSeason == 2021)$HatchDate_observed, as.Date("2021-05-11"))
   expect_equal(subset(FOR_data,
-                      LocationID == "E15" &
+                      LocationID == "E15_2021" &
                         BreedingSeason == 2021)$ClutchSize_observed, 9)
   expect_equal(subset(FOR_data,
-                      LocationID == "E15" &
+                      LocationID == "E15_2021" &
                         BreedingSeason == 2021)$BroodSize_observed, 8)
   expect_equal(subset(FOR_data,
-                      LocationID == "E15" &
+                      LocationID == "E15_2021" &
                         BreedingSeason == 2021)$NumberFledged_observed, 8)
   ## PARMAJ nest D50 in 2022
   expect_equal(subset(FOR_data,
-                      LocationID == "D50" &
+                      LocationID == "D50_2022" &
                         BreedingSeason == 2022 &
                         Species=="PARMAJ")$FemaleID, NA_character_)
   expect_equal(subset(FOR_data,
-                      LocationID == "D50" &
+                      LocationID == "D50_2022" &
                         BreedingSeason == 2022 &
                         Species=="PARMAJ")$MaleID, NA_character_)
   expect_equal(subset(FOR_data,
-                      LocationID == "D50" &
+                      LocationID == "D50_2022" &
                         BreedingSeason == 2022 &
                         Species=="PARMAJ")$LayDate_observed, as.Date("2022-04-30"))
   expect_equal(subset(FOR_data,
-                      LocationID == "D50" &
+                      LocationID == "D50_2022" &
                         BreedingSeason == 2022 &
                         Species=="PARMAJ")$HatchDate_observed, as.Date(NA))
   expect_equal(subset(FOR_data,
-                      LocationID == "D50" &
+                      LocationID == "D50_2022" &
                         BreedingSeason == 2022 &
                         Species=="PARMAJ")$ClutchSize_observed, 9)
   expect_equal(subset(FOR_data,
-                      LocationID == "D50" &
+                      LocationID == "D50_2022" &
                         BreedingSeason == 2022 &
                         Species=="PARMAJ")$BroodSize_observed, 0)
   expect_equal(subset(FOR_data,
-                      LocationID == "D50" &
+                      LocationID == "D50_2022" &
                         BreedingSeason == 2022 &
                         Species=="PARMAJ")$NumberFledged_observed, 0)
 
   ## CYACAE nest  C44 in 2023
   expect_equal(subset(FOR_data,
-                      LocationID == "C44" &
+                      LocationID == "C44_2023" &
                         BreedingSeason == 2023)$FemaleID, NA_character_)
   expect_equal(subset(FOR_data,
-                      LocationID == "C44" &
+                      LocationID == "C44_2023" &
                         BreedingSeason == 2023)$MaleID, NA_character_)
   expect_equal(subset(FOR_data,
-                      LocationID == "C44" &
+                      LocationID == "C44_2023" &
                         BreedingSeason == 2023)$LayDate_observed, as.Date("2023-04-20"))
   expect_equal(subset(FOR_data,
-                      LocationID == "C44" &
+                      LocationID == "C44_2023" &
                         BreedingSeason == 2023)$HatchDate_observed, as.Date("2023-05-16"))
   expect_equal(subset(FOR_data,
-                      LocationID == "C44" &
+                      LocationID == "C44_2023" &
                         BreedingSeason == 2023)$ClutchSize_observed, 12)
   expect_equal(subset(FOR_data,
-                      LocationID == "C44" &
+                      LocationID == "C44_2023" &
                         BreedingSeason == 2023)$BroodSize_observed, 9)
   expect_equal(subset(FOR_data,
-                      LocationID == "C44" &
+                      LocationID == "C44_2023" &
                         BreedingSeason == 2023)$NumberFledged_observed, 0)
 })
 
@@ -167,7 +167,7 @@ test_that("Capture_data returns an expected outcome...", {
   expect_equal(subset(FOR_data,
                       IndvID == "C3F7095")$Sex_observed, c(NA,"F", "M"))
   expect_equal(subset(FOR_data,
-                      IndvID == "C3F7095")$LocationID, c("C20","B62", "C27"))
+                      IndvID == "C3F7095")$LocationID, c("C20_2019","B62_2020", "C27_2023"))
   expect_equal(nrow(subset(FOR_data,
                       IndvID == "C3F7095")), 3)
 
@@ -179,7 +179,7 @@ test_that("Capture_data returns an expected outcome...", {
   expect_equal(unique(subset(FOR_data,
                              IndvID == "C5H7348")$Sex_observed), "M")
   expect_equal(unique(subset(FOR_data,
-                             IndvID == "C5H7348")$LocationID), "C69")
+                             IndvID == "C5H7348")$LocationID), "C69_2023")
   expect_equal(nrow(subset(FOR_data,
                            IndvID == "C5H7348")), 2)
 
@@ -199,7 +199,7 @@ test_that("Capture_data returns an expected outcome...", {
   expect_equal(subset(FOR_data,
                       IndvID == "C5A0710")$Species, "PARMAJ")
   expect_equal(subset(FOR_data,
-                      IndvID == "C5A0710")$LocationID, "B53")
+                      IndvID == "C5A0710")$LocationID, "B53_2020")
 
 
   ## CYACAE individual 33471
@@ -210,7 +210,7 @@ test_that("Capture_data returns an expected outcome...", {
   expect_equal(subset(FOR_data,
                       IndvID == "B5K1466")$Species, "CYACAE")
   expect_equal(subset(FOR_data,
-                      IndvID == "B5K1466")$LocationID, "F47a")
+                      IndvID == "B5K1466")$LocationID, "F47a_2023")
   expect_equal(subset(FOR_data,
                       IndvID == "B5K1466")$CaptureDate, as.Date("2023-06-09"))
   expect_equal(subset(FOR_data,
@@ -338,3 +338,4 @@ test_that("Categorical columns do not have unexpected values", {
   test_category_columns(pipeline_output, "Location")
 
 })
+

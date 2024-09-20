@@ -23,7 +23,7 @@ library(dplyr)
 #'NumberFledged_max is the number of chicks measured on d14(PARMAJ)/15(CYACAE)
 #'
 #'#'\strong{FledgeDate}: Use NumberFledged to determine observed number of fledglings.
-#'FledgeDate_min is equal to FledgeDate_observed - FledgedCheckInterval (time since the last fledge check, this has not been done properly in 2023 and therefore values are set to NA for that year until we check everything manually)
+#'FledgeDate_min is equal to FledgeDate_observed - FledgedCheckInterval (time since the last fledge check)
 #'FledgeDate_max is equal to FledgeDate_observed
 #'
 #'#'#'\strong{LocationID}: Due to an ongoing density manipulation experiment (since 2020), nest box coordinates and entrance sizes can change (GT, BT or closed) between years. Therefore each location ID is unique every year.
@@ -200,16 +200,9 @@ create_brood_FOR   <- function(connection) {
                                                    TRUE ~ .)
 
                                 })) %>%
-    # For FledgeCheckInterval, put the 2023 values as NA
-    dplyr::mutate(dplyr::across(.cols = c("FledgeCheckInterval"),
-                                .fns = ~{
-
-                                  dplyr::case_when(.data$BroodYear ==2023 ~ NA_integer_,
-                                                   TRUE ~ .)
-
-                                })) %>%
 
     dplyr::mutate(BroodID = as.character(.data$BroodID),
+                  LocationID=paste(.data$NestBox, .data$BroodYear,sep="_"),
                   BreedingSeason = .data$BroodYear,
                   PopID = "FOR",
                   EndMarch = as.Date(paste(.data$BroodYear, "03", "31", sep = "-")),
@@ -257,7 +250,7 @@ create_brood_FOR   <- function(connection) {
     # Arrange columns
 
     dplyr::select("BroodID", "PopID", "BreedingSeason",
-                  "Species", "Plot", "LocationID" = "NestBox", "FemaleID", "MaleID",
+                  "Species", "Plot", "LocationID" , "FemaleID", "MaleID",
                   "ClutchType_observed", "ClutchType_calculated",
                   "LayDate_observed", "LayDate_min", "LayDate_max",
                   "ClutchSize_observed", "ClutchSize_min", "ClutchSize_max",
@@ -318,7 +311,7 @@ create_capture_FOR <- function(Brood_data, connection) {
                   ReleasePopID = "FOR",
                   CapturePlot = as.character(.data$Plot),
                   ReleasePlot = .data$CapturePlot,
-                  LocationID = as.character(.data$NestBox),
+                  LocationID = paste(.data$NestBox,.data$CatchYear,sep="_"),
                   CaptureAlive=TRUE,
                   ReleaseAlive=dplyr::if_else(.data$Adultdeath==1 & as.Date(.data$DateAdultdeath) == .data$CaptureDate, FALSE,TRUE),
                   ReleaseAlive=dplyr::if_else(is.na(.data$ReleaseAlive),TRUE,.data$ReleaseAlive),
@@ -381,7 +374,7 @@ create_capture_FOR <- function(Brood_data, connection) {
                                                    lubridate::minute(.data$Day14BodyMassTime), sep = ":"), "NA:NA"),)%>%
   dplyr::collect()   %>%
   dplyr::mutate(ObserverID = as.character(dplyr::na_if(.data$Day14Observer, -99L)),
-                  LocationID = .data$NestBox,
+                  LocationID = paste(.data$NestBox,.data$ChickYear,sep="_") ,
                   CaptureAlive=TRUE,
                   ReleaseAlive=TRUE,
                   CapturePlot=as.character(.data$Plot),
