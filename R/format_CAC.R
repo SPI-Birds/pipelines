@@ -235,7 +235,7 @@ format_CAC <- function(db = choose_directory(),
                      CaptureDate = format(as.Date(.data$Date), "%Y-%m-%d"),
                      BreedingSeason = as.integer(format(.data$Date, "%Y")),
                      CaptureMonth = as.integer(format(.data$Date, "%m")),
-                     Age_observed = dplyr::case_when(.data$Age == "Y" ~ 5L,#Need to check with the data custodian
+                     Age_observed = dplyr::case_when(.data$Age == "Y" ~ 5L,
                                                      .data$Age == "A" ~ 6L,
                                                      .data$Age == "J"~ dplyr::case_when(.data$CaptureMonth %in% c(1,2,3,4) ~ 4L,
                                                                                  .data$CaptureMonth %in% c(5:12 )~ 3L),
@@ -250,7 +250,7 @@ format_CAC <- function(db = choose_directory(),
                      CaptureAlive=NA_character_,
                      ReleaseAlive=NA_character_,
                      BroodID=NA_character_,
-                     ExperimentID = NA_character_)%>%#Need to check with the data custodian
+                     ExperimentID = NA_character_)%>%
     dplyr::mutate(LocationID= gsub("CN","",LocationID))
 
   ## 2-B) Read in capture data great tits
@@ -611,7 +611,7 @@ format_CAC <- function(db = choose_directory(),
 
   message("Compiling individual information...")
 
-  Individual_data_temp <- create_individual_CAC(Capture_data_temp)#this is taking a long time
+  Individual_data_temp <- create_individual_CAC(Capture_data_temp)
 
 
   # LOCATION DATA
