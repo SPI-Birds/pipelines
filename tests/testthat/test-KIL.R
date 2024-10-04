@@ -3,10 +3,13 @@ testthat::skip_if(!exists("data_path"))
 pipeline_output <- format_KIL(db = paste0(data_path, "/KIL_KilingiNomme_Estonia"))
 
 test_that("KIL outputs all files...", {
+
   expect_true("KIL" %in% pipeline_output$Brood_data$PopID)
   expect_true("KIL" %in% pipeline_output$Capture_data$CapturePopID)
   expect_true("KIL" %in% pipeline_output$Individual_data$PopID)
   expect_true("KIL" %in% pipeline_output$Location_data$PopID)
+  expect_true(pipeline_output$protocol_version == "1.1.0")
+
 })
 
 

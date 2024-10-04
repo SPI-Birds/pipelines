@@ -8,6 +8,7 @@ test_that("WYT outputs all files...", {
   expect_true(all("WYT" %in% pipeline_output$Capture_data$CapturePopID))
   expect_true(all("WYT" %in% pipeline_output$Individual_data$PopID))
   expect_true(all("WYT" %in% pipeline_output$Location_data$PopID))
+  expect_true(pipeline_output$protocol_version == "1.1.0")
 
 })
 

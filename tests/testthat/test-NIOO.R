@@ -9,6 +9,7 @@ test_that("NIOO outputs all files...", {
   expect_true(all(c("HOG", "OOS", "VLI", "BUU", "LIE", "WAR", "WES") %in% pipeline_output$Capture_data$CapturePopID))
   expect_true(all(c("HOG", "OOS", "VLI", "BUU", "LIE", "WAR", "WES") %in% pipeline_output$Individual_data$PopID))
   expect_true(all(c("HOG", "OOS", "VLI", "BUU", "LIE", "WAR", "WES") %in% pipeline_output$Location_data$PopID))
+  expect_true(pipeline_output$protocol_version == "1.1.0")
 
 })
 
