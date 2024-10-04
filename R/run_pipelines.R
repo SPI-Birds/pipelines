@@ -51,7 +51,7 @@ run_pipelines <- function(path = choose_directory(),
 
     save_path <- paste(path, "standard_format", sep = "/")
 
-    if(!any(grepl(pattern = "standard_format", x = list.dirs(path)))){
+    if(!any(grepl(pattern = "^standard_format", x = list.dirs(path)))){
 
       dir.create(save_path)
 
@@ -193,13 +193,25 @@ run_pipelines <- function(path = choose_directory(),
     dplyr::mutate(Row = seq(1, dplyr::n())) %>%
     dplyr::select("Row", dplyr::everything())
 
+  protocol_version <- purrr::map_chr(.x = R_objects,
+                                     .f = "protocol_version") %>%
+    unique()
+
+  if(length(protocol_version) > 1) {
+
+    stop(paste0('Selected pipelines are based on different protocol versions. Only include pipelines of the same protocol version.'))
+
+  }
+
+
   #If we want an R output, return a list with the 4 different data frames
   if(output_type == "R"){
 
     output_object <- list(Brood_data = Brood_data,
                           Capture_data = Capture_data,
                           Individual_data = Individual_data,
-                          Location_data = Location_data)
+                          Location_data = Location_data,
+                          protocol_version = protocol_version)
 
     if(save){
 
@@ -213,13 +225,16 @@ run_pipelines <- function(path = choose_directory(),
 
     message("Saving combined .csv files...")
 
-    utils::write.csv(x = Brood_data, file = paste0(save_path, "/", filename, "_Brood_data.csv"), row.names = F)
+    utils::write.csv(x = Brood_data, file = paste0(save_path, "/", filename, "_Brood_data.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Capture_data, file = paste0(save_path, "/", filename, "_Capture_data.csv"), row.names = F)
+    utils::write.csv(x = Capture_data, file = paste0(save_path, "/", filename, "_Capture_data.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Individual_data, file = paste0(save_path, "/", filename, "_Individual_data.csv"), row.names = F)
+    utils::write.csv(x = Individual_data, file = paste0(save_path, "/", filename, "_Individual_data.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Location_data, file = paste0(save_path, "/", filename, "_Location_data.csv"), row.names = F)
+    utils::write.csv(x = Location_data, file = paste0(save_path, "/", filename, "_Location_data.csv"), row.names = FALSE)
+
+    utils::write.table(x = protocol_version, file = paste0(save_path, "/", filename, "_protocol_version.txt"),
+                       quote = FALSE, row.names = FALSE, col.names = FALSE)
 
     invisible(NULL)
 

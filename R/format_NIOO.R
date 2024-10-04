@@ -52,7 +52,7 @@
 #'
 #'@inheritParams pipeline_params
 #'
-#'@return Generates 4 .csv files or R data frames in the SPI-Birds standard format.
+#'@return 4 data tables in the standard format (version 1.1.0). When `output_type = "R"`, a list of 4 data frames corresponding to the 4 standard data tables and 1 character vector indicating the protocol version on which the pipeline is based. When `output_type = "csv"`, 4 .csv files corresponding to the 4 standard data tables and 1 text file indicating the protocol version on which the pipeline is based.
 #'@export
 #'@import rlang
 #'@importFrom dplyr `%>%`
@@ -62,6 +62,9 @@ format_NIOO <- function(db = choose_directory(),
                         pop = NULL,
                         path = ".",
                         output_type = "R"){
+
+  # The version of the standard protocol on which this pipeline is based
+  protocol_version <- "1.1.0"
 
   #Force user to select directory
   force(db)
@@ -233,6 +236,9 @@ format_NIOO <- function(db = choose_directory(),
 
     utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_NIOO.csv"), row.names = F)
 
+    utils::write.table(x = protocol_version, file = paste0(path, "\\protocol_version_NIOO.txt"),
+                       quote = FALSE, row.names = FALSE, col.names = FALSE)
+
     invisible(NULL)
 
   }
@@ -244,7 +250,8 @@ format_NIOO <- function(db = choose_directory(),
     return(list(Brood_data = Brood_data,
                 Capture_data = Capture_data,
                 Individual_data = Individual_data,
-                Location_data = Location_data))
+                Location_data = Location_data,
+                protocol_version = protocol_version))
 
   }
 
