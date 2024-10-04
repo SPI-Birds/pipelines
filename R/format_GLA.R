@@ -18,14 +18,17 @@
 #'
 #'@inheritParams pipeline_params
 #'
-#'@return Generates either 4 .csv files or 4 data frames in the standard format.
+#'@return 4 data tables in the standard format (version 1.1.0). When `output_type = "R"`, a list of 4 data frames corresponding to the 4 standard data tables and 1 character vector indicating the protocol version on which the pipeline is based. When `output_type = "csv"`, 4 .csv files corresponding to the 4 standard data tables and 1 text file indicating the protocol version on which the pipeline is based.
 #'@export
 
 format_GLA <- function(db = choose_directory(),
                        path = ".",
                        species = NULL,
                        pop = NULL,
-                       output_type = 'R'){
+                       output_type = "R"){
+
+  # The version of the standard protocol on which this pipeline is based
+  protocol_version <- "1.1.0"
 
   # Force choose_directory() if used
   force(db)
@@ -269,6 +272,9 @@ format_GLA <- function(db = choose_directory(),
 
     utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_GLA.csv"), row.names = FALSE)
 
+    utils::write.table(x = protocol_version, file = paste0(path, "\\protocol_version_GLA.txt"),
+                       quote = FALSE, row.names = FALSE, col.names = FALSE)
+
     invisible(NULL)
 
   }
@@ -280,7 +286,8 @@ format_GLA <- function(db = choose_directory(),
     return(list(Brood_data = Brood_data,
                 Capture_data = Capture_data,
                 Individual_data = Individual_data,
-                Location_data = Location_data))
+                Location_data = Location_data,
+                protocol_version = protocol_version))
 
   }
 

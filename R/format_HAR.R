@@ -112,7 +112,7 @@
 #'@param return_errors Logical (TRUE/FALSE). If true, return all records of
 #'nestling with no corresponding ringing data.
 #'
-#'@return Generates either 4 .csv files or 4 data frames in the standard format.
+#'@return 4 data tables in the standard format (version 1.0.0). When `output_type = "R"`, a list of 4 data frames corresponding to the 4 standard data tables and 1 character vector indicating the protocol version on which the pipeline is based. When `output_type = "csv"`, 4 .csv files corresponding to the 4 standard data tables and 1 text file indicating the protocol version on which the pipeline is based.
 #'@export
 
 format_HAR <- function(db = choose_directory(),
@@ -121,6 +121,9 @@ format_HAR <- function(db = choose_directory(),
                        path = ".",
                        output_type = "R",
                        return_errors = FALSE){
+
+  # The version of the standard protocol on which this pipeline is based
+  protocol_version <- "1.0.0"
 
   #Force user to select directory
   force(db)
@@ -216,6 +219,9 @@ format_HAR <- function(db = choose_directory(),
 
     utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_HAR.csv"), row.names = FALSE)
 
+    utils::write.table(x = protocol_version, file = paste0(path, "\\protocol_version_HAR.txt"),
+                       quote = FALSE, row.names = FALSE, col.names = FALSE)
+
     invisible(NULL)
 
   }
@@ -227,7 +233,8 @@ format_HAR <- function(db = choose_directory(),
     return(list(Brood_data = Brood_data,
                 Capture_data = Capture_data,
                 Individual_data = Individual_data,
-                Location_data = Location_data))
+                Location_data = Location_data,
+                protocol_version = protocol_version))
 
   }
 

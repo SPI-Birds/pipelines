@@ -1,5 +1,5 @@
 from pypxlib import Table
-from pandas import DataFrame
+#from pandas import DataFrame
 
 def extract_paradox(path, file_name):
   paradox_db = Table(path + "/" + file_name)

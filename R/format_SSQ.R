@@ -34,7 +34,7 @@
 #'
 #' @inheritParams pipeline_params
 #'
-#' @return Generates either 4 .csv files or 4 data frames in the standard format.
+#'@return 4 data tables in the standard format (version 1.1.0). When `output_type = "R"`, a list of 4 data frames corresponding to the 4 standard data tables and 1 character vector indicating the protocol version on which the pipeline is based. When `output_type = "csv"`, 4 .csv files corresponding to the 4 standard data tables and 1 text file indicating the protocol version on which the pipeline is based.
 #' @export
 
 format_SSQ <- function(db = choose_directory(),
@@ -42,6 +42,9 @@ format_SSQ <- function(db = choose_directory(),
                        pop = NULL,
                        path = ".",
                        output_type = "R"){
+
+  # The version of the standard protocol on which this pipeline is based
+  protocol_version <- "1.1.0"
 
   #Force user to select directory
   force(db)
@@ -141,13 +144,16 @@ format_SSQ <- function(db = choose_directory(),
 
     message("Saving .csv files...")
 
-    utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_SSQ.csv"), row.names = F)
+    utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_SSQ.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_SSQ.csv"), row.names = F)
+    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_SSQ.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_SSQ.csv"), row.names = F)
+    utils::write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_SSQ.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_SSQ.csv"), row.names = F)
+    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_SSQ.csv"), row.names = FALSE)
+
+    utils::write.table(x = protocol_version, file = paste0(path, "\\protocol_version_SSQ.txt"),
+                       quote = FALSE, row.names = FALSE, col.names = FALSE)
 
     invisible(NULL)
 
@@ -160,7 +166,8 @@ format_SSQ <- function(db = choose_directory(),
     return(list(Brood_data = Brood_data,
                 Capture_data = Capture_data,
                 Individual_data = Individual_data,
-                Location_data = Location_data))
+                Location_data = Location_data,
+                protocol_version = protocol_version))
 
   }
 

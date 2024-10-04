@@ -4,10 +4,12 @@
 \alias{create_brood_AMM}
 \title{Create brood data table for Ammersee, Germany.}
 \usage{
-create_brood_AMM(connection)
+create_brood_AMM(connection, species_filter)
 }
 \arguments{
 \item{connection}{Connection the SQL database.}
+
+\item{species_filter}{Species six-letter codes from the standard protocol. Used to filter the data.}
 }
 \value{
 A data frame.

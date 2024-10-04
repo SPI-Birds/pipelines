@@ -10,6 +10,7 @@ test_that("format_PFN outputs all tables...", {
   expect_true(all(PFN_PopIDs %in% pipeline_output$Capture_data$CapturePopID))
   expect_true(all(PFN_PopIDs %in% pipeline_output$Individual_data$PopID))
   expect_true(all(PFN_PopIDs %in% pipeline_output$Location_data$PopID))
+  expect_true(pipeline_output$protocol_version == "1.1.0")
 
 })
 

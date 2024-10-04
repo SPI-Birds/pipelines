@@ -34,7 +34,7 @@ this argument can be ignored.}
 \item{verbose}{Should messages be printed during the pipeline?}
 }
 \value{
-Generates either 4 .csv files or 4 data frames in the standard format.
+4 data tables in the standard format (version 1.0.0). When `output_type = "R"`, a list of 4 data frames corresponding to the 4 standard data tables and 1 character vector indicating the protocol version on which the pipeline is based. When `output_type = "csv"`, 4 .csv files corresponding to the 4 standard data tables and 1 text file indicating the protocol version on which the pipeline is based.
 }
 \description{
 A pipeline to produce the standard format for the hole nesting bird

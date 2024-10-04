@@ -7,22 +7,21 @@
 #'   folders for each data owner must include the unique code of the data owner
 #'   as seen in pop_codes.
 #' @param PopID The three-letter code of populations to format as listed in the
-#'   \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{standard
+#'   \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v2.0.0.pdf}{standard
 #'    protocol}.
 #' @param Species The six-letter code of species to include as listed in the
-#'   \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{standard
+#'   \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v2.0.0.pdf}{standard
 #'    protocol}. Note, this argument takes precedence over argument PopID (i.e.
 #'   if a population doesn't have the requested species it will not be
 #'   formatted.)
 #' @param output_type Should the pipeline generate .csv files ('csv') or R objects ('R'). Default: R.
 #' @param save TRUE/FALSE. Should the output be saved locally? This is only relevant where
-#' `output_type` is 'R'. If output_type is 'csv'
-#' 4 .csv files will be created in the save path (specified by `save_path` argument). If output_type is 'R'
+#' `output_type` is 'R'. If output_type is 'csv' 4 (in case of protocol version 1.0.0 and 1.1.0) or 6 (in case of protocol version 2.0.0) .csv files will be created in the save path (specified by `save_path` argument). If output_type is 'R'
 #' and `save` is TRUE, an .RDS file will be created in the save path.
 #' @param save_path Path where files will be saved if `save` is TRUE. By default, the save
 #' path will be path/standard_format.
-#' @param filename The filename of the saved file. No file extension is
-#' needed, as this will differ depending on `output_type`. By default, filename is
+#' @param filename The file name of the saved file. No file extension is
+#' needed, as this will differ depending on `output_type`. By default, file name is
 #' "standard_format".
 #'
 #' @return Generate .csv files or return an R list object with 4 items
@@ -51,7 +50,7 @@ run_pipelines <- function(path = choose_directory(),
 
     save_path <- paste(path, "standard_format", sep = "/")
 
-    if(!any(grepl(pattern = "standard_format", x = list.dirs(path)))){
+    if(!any(grepl(pattern = "^standard_format", x = list.dirs(path)))){
 
       dir.create(save_path)
 
@@ -193,13 +192,25 @@ run_pipelines <- function(path = choose_directory(),
     dplyr::mutate(Row = seq(1, dplyr::n())) %>%
     dplyr::select("Row", dplyr::everything())
 
+  protocol_version <- purrr::map_chr(.x = R_objects,
+                                     .f = "protocol_version") %>%
+    unique()
+
+  if(length(protocol_version) > 1) {
+
+    stop(paste0('Selected pipelines are based on different protocol versions. Only include pipelines of the same protocol version.'))
+
+  }
+
+
   #If we want an R output, return a list with the 4 different data frames
   if(output_type == "R"){
 
     output_object <- list(Brood_data = Brood_data,
                           Capture_data = Capture_data,
                           Individual_data = Individual_data,
-                          Location_data = Location_data)
+                          Location_data = Location_data,
+                          protocol_version = protocol_version)
 
     if(save){
 
@@ -213,13 +224,16 @@ run_pipelines <- function(path = choose_directory(),
 
     message("Saving combined .csv files...")
 
-    utils::write.csv(x = Brood_data, file = paste0(save_path, "/", filename, "_Brood_data.csv"), row.names = F)
+    utils::write.csv(x = Brood_data, file = paste0(save_path, "/", filename, "_Brood_data.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Capture_data, file = paste0(save_path, "/", filename, "_Capture_data.csv"), row.names = F)
+    utils::write.csv(x = Capture_data, file = paste0(save_path, "/", filename, "_Capture_data.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Individual_data, file = paste0(save_path, "/", filename, "_Individual_data.csv"), row.names = F)
+    utils::write.csv(x = Individual_data, file = paste0(save_path, "/", filename, "_Individual_data.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Location_data, file = paste0(save_path, "/", filename, "_Location_data.csv"), row.names = F)
+    utils::write.csv(x = Location_data, file = paste0(save_path, "/", filename, "_Location_data.csv"), row.names = FALSE)
+
+    utils::write.table(x = protocol_version, file = paste0(save_path, "/", filename, "_protocol_version.txt"),
+                       quote = FALSE, row.names = FALSE, col.names = FALSE)
 
     invisible(NULL)
 
