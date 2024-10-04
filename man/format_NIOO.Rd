@@ -31,7 +31,7 @@ this argument can be ignored.}
 \item{output_type}{Should the pipeline generate .csv files ('csv') or R objects ('R').}
 }
 \value{
-Generates 4 .csv files or R data frames in the SPI-Birds standard format.
+4 data tables in the standard format (version 1.1.0). When `output_type = "R"`, a list of 4 data frames corresponding to the 4 standard data tables and 1 character vector indicating the protocol version on which the pipeline is based. When `output_type = "csv"`, 4 .csv files corresponding to the 4 standard data tables and 1 text file indicating the protocol version on which the pipeline is based.
 }
 \description{
 A pipeline to produce the standard format for 8 hole-nesting bird study
@@ -45,12 +45,12 @@ the NIOO database. For a general description of the standard format please see
 \strong{Species}: By default the pipeline will include great tit \emph{Parus
 major}; blue tit \emph{Cyanistes caeruleus}; pied flycatcher \emph{Ficedula
 hypoleuca}; Eurasian nuthatch \emph{Sitta europaea}; coal tit \emph{Periparus
-ater}; and tree sparrow \emph{Passer montanus}. Other minority species are
+ater}; tree sparrow \emph{Passer montanus}; and redstart \emph{Phoenicurus phoenicurus}. Other minority species are
 excluded.
 
-\strong{Populations}: This pipeline extracts data for 8 populations managed by
-NIOO-KNAW: Buunderkamp, Lichtenbeek, Westerheide, Hoge Veluwe, Warnsborn,
-Vlieland, Oosterhout, and Liesbosch.
+\strong{Populations}: This pipeline extracts data for 7 populations managed by
+NIOO-KNAW: Buunderkamp, Westerheide, Hoge Veluwe, Warnsborn,
+Vlieland, Oosterhout, and Liesbos.
 
 \strong{Sex}: We condense sex information to only include groups M, F, and C
 (conflicting). Uncertainty in sex was ignored (e.g.

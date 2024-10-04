@@ -4,12 +4,14 @@
 \alias{create_capture_AMM}
 \title{Create capture data table for Ammersee, Germany}
 \usage{
-create_capture_AMM(Brood_data, connection)
+create_capture_AMM(Brood_data, connection, species_filter)
 }
 \arguments{
 \item{Brood_data}{Data frame. Output from \code{\link{create_brood_AMM}}.}
 
 \item{connection}{Connection the SQL database.}
+
+\item{species_filter}{Species six-letter codes from the standard protocol. Used to filter the data.}
 }
 \value{
 A data frame.

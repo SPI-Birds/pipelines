@@ -4,12 +4,16 @@
 \alias{create_brood_PFN}
 \title{Create brood data table for PiedFlyNet populations.}
 \usage{
-create_brood_PFN(Nest_data, ReRingTable, badIDs)
+create_brood_PFN(Nest_data, ReRingTable, species_filter, pop_filter, badIDs)
 }
 \arguments{
 \item{Nest_data}{Collated Nest primary data from PiedFlyNet populations}
 
 \item{ReRingTable}{Table containing ring numbers and unique identifiers for all individuals}
+
+\item{species_filter}{Species six-letter codes from the standard protocol. Used to filter the data.}
+
+\item{pop_filter}{Population three-letter codes from the standard protocol. Used to filter the data.}
 
 \item{badIDs}{Vector containing non-conclusive IDs (extracted from Nest data)}
 }

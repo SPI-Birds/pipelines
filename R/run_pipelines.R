@@ -7,22 +7,21 @@
 #'   folders for each data owner must include the unique code of the data owner
 #'   as seen in pop_codes.
 #' @param PopID The three-letter code of populations to format as listed in the
-#'   \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{standard
+#'   \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v2.0.0.pdf}{standard
 #'    protocol}.
 #' @param Species The six-letter code of species to include as listed in the
-#'   \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{standard
+#'   \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v2.0.0.pdf}{standard
 #'    protocol}. Note, this argument takes precedence over argument PopID (i.e.
 #'   if a population doesn't have the requested species it will not be
 #'   formatted.)
 #' @param output_type Should the pipeline generate .csv files ('csv') or R objects ('R'). Default: R.
 #' @param save TRUE/FALSE. Should the output be saved locally? This is only relevant where
-#' `output_type` is 'R'. If output_type is 'csv'
-#' 4 .csv files will be created in the save path (specified by `save_path` argument). If output_type is 'R'
+#' `output_type` is 'R'. If output_type is 'csv' 4 (in case of protocol version 1.0.0 and 1.1.0) or 6 (in case of protocol version 2.0.0) .csv files will be created in the save path (specified by `save_path` argument). If output_type is 'R'
 #' and `save` is TRUE, an .RDS file will be created in the save path.
 #' @param save_path Path where files will be saved if `save` is TRUE. By default, the save
 #' path will be path/standard_format.
-#' @param filename The filename of the saved file. No file extension is
-#' needed, as this will differ depending on `output_type`. By default, filename is
+#' @param filename The file name of the saved file. No file extension is
+#' needed, as this will differ depending on `output_type`. By default, file name is
 #' "standard_format".
 #'
 #' @return Generate .csv files or return an R list object with 4 items

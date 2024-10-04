@@ -5,7 +5,14 @@
 \title{Create capture data table for PiedFlyNet populations from
 consolidated Nest and IPMR primary data sources.}
 \usage{
-create_capture_PFN(Nest_data, IPMR_data, ReRingTable, badIDs)
+create_capture_PFN(
+  Nest_data,
+  IPMR_data,
+  ReRingTable,
+  species_filter,
+  pop_filter,
+  badIDs
+)
 }
 \arguments{
 \item{Nest_data}{Collated Nest primary data from PiedFlyNet populations}
@@ -13,6 +20,10 @@ create_capture_PFN(Nest_data, IPMR_data, ReRingTable, badIDs)
 \item{IPMR_data}{Collated IPMR primary data from PiedFlyNet populations}
 
 \item{ReRingTable}{Table containing ring numbers and unique identifiers for all individuals}
+
+\item{species_filter}{Species six-letter codes from the standard protocol. Used to filter the data.}
+
+\item{pop_filter}{Population three-letter codes from the standard protocol. Used to filter the data.}
 
 \item{badIDs}{Vector containing non-conslusive IDs (extracted from Nest data)}
 }
