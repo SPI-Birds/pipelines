@@ -1,18 +1,18 @@
-#' Export selected tables from Access database to csv through Jackcess
+#' Export selected tables from Access database to csv files through Jackcess
 #'
-#' Connect to MS Access database via Jackcess (a Java library) to export a selection of tables as csv files.
+#' Connect to MS Access database via Jackcess (a Java library) to export a selected tables as a  csv files.
 #'
 #' Jackcess is a Java library for reading from and writing to MS Access databases.
 #' Previously, we used ODBC (Open Database Connectivity) to connect to MS Access databases,
 #' but this does not work on MacOS and Linux as straightforwardly as it does on Windows.
 #'
 #' @param dsn Character. File path to MS Access database source name.
-#' @param table Character. Name(s) of table(s) to export.
+#' @param table Character. Names of tables to export.
 #' @param output_dir Character. File path to directory where the new files will be created.
 #' @param header Logical. Include the column names in the header? Default: \code{TRUE}.
 #' @param delim Character. The column delimiter in the output file. Default: ",".
 #' @param quote Character. The quote character in the output file. Default: '"'.
-#' @param filter a com.healthmarketscience.jackcess.util.ExportFilter object to filter columns or rows in the export. Default: \code{rjackcess::SimpleExportFilter()$INSTANCE}, which is the full, unfiltered instance (table).
+#' @param filter a Jackcess ExportFilter object to filter columns or rows in the export. Default: \code{rjackcess::SimpleExportFilter()$INSTANCE}, which is the full, unfiltered instance (table).
 #'
 #' @returns csv files of selected tables from Access database
 #'
@@ -30,7 +30,7 @@ export_access_db <- function(dsn,
 
   if(!grepl("\\\\|\\/", output_dir)) {
 
-    stop("`output_dir` should be a character file path to a directory")
+    stop("`output_dir` should be a character vector giving the path to a directory")
 
   }
 
@@ -47,11 +47,10 @@ export_access_db <- function(dsn,
   # Retrieve non-exported ExportUtilBuilder from rjackcess
   ExportUtilBuilder <- utils::getFromNamespace("ExportUtilBuilder", "rjackcess")
 
-  # Export tables to csv
   purrr::walk(.x = table,
               .f = ~{
 
-                out_file = paste0(output_dir, "/", .x, ".csv")
+                out_file <- paste0(output_dir, "/", .x, ".csv")
 
                 # Call the Jackcess exportFile utility class to export table .x to csv
                 ExportUtilBuilder()$exportFile(db,
@@ -63,6 +62,10 @@ export_access_db <- function(dsn,
                                                filter)
 
               })
+
+
+  # Close connection to database
+  db$close()
 
   invisible(NULL)
 
