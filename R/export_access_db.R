@@ -17,7 +17,7 @@
 #' @returns csv files of selected tables from Access database
 #'
 #' @importFrom rJava .jnew .jchar
-#' @importFrom rJackcess SimpleExportFilter Database
+#' @importFrom rjackcess SimpleExportFilter Database
 #' @export
 
 export_access_db <- function(dsn,

@@ -5,7 +5,7 @@
 \title{Create individual data table for NIOO pipeline.}
 \usage{
 create_individual_NIOO(
-  database,
+  dir,
   Capture_data,
   location_data,
   species_filter,
@@ -13,7 +13,7 @@ create_individual_NIOO(
 )
 }
 \arguments{
-\item{database}{Connection to NIOO Access database.}
+\item{dir}{Path to directory containing the relevant table exports from the NIOO Access database.}
 
 \item{Capture_data}{Data frame. Capture data output from pipeline.}
 

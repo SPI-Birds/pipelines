@@ -4,12 +4,12 @@
 \alias{create_location_AMM}
 \title{Create location data table for Ammersee, Germany.}
 \usage{
-create_location_AMM(Capture_data, connection)
+create_location_AMM(Capture_data, dir)
 }
 \arguments{
 \item{Capture_data}{Data frame. Output from \code{\link{create_capture_AMM}}.}
 
-\item{connection}{Connection the SQL database.}
+\item{dir}{Path to directory containing the relevant table exports from the AMM Access database.}
 }
 \value{
 A data frame.
