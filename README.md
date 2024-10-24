@@ -83,51 +83,24 @@ To process each set of primary data into the structure described in the [SPI-Bir
 
 ## Run the pipelines for yourself
 
-Each set of primary data is in a slightly different format. Therefore, to run all pipelines successfully, your system will require additional software and drivers (in addition to R).
+Each set of primary data is in a slightly different format. Therefore, to run all pipelines successfully, your system will require additional software and libraries (in addition to R).
 
 ### Setup your computer to run pipelines
 
 Pipelines for some populations require additional software and drivers. Setup instructions describe how to install the required software for both a Windows 10 64-bit operating system and Mac OSX. The setup procedure should be similar for other Windows 64-bit systems. If you are unsure which version of Windows is running on your computer, check 'System Type' in 'System Information'. To run the pipelines for all populations a users system must have:
 
-- Microsoft Access Driver (/*.mdb, /*.accdb) (Windows only)
+- Java
 - Python 3
 - Python libraries *pandas* and *pypxlib*
-
-*Note* Users running Mac OSX will not be able to run pipelines with primary data stored in Microsoft Access format without purchasing paid drivers.
 
 ---
 
 #### Windows 10 64-bit
 
-##### Microsoft Access Driver
+##### Java
 
-Firstly, you must check that you are running a 64-bit version of R. Open an R session and see whether you have 64-bit or 32-bit installation.
-
-<img src="https://github.com/LiamDBailey/SPIbirds/blob/master/inst/extdata/README_imgs/R_version.jpg" width="400" height="400">
-
-If you do not have a 64-bit version you will need to install one [here](https://www.r-project.org/).
-
----
-
-Once you have a 64-bit version of R, search for 'ODBC' in the Windows taskbar. There will be two version (32-bit and 64-bit) ***select the 64-bit version***. This will open the 'ODBC Data Source Administrator (64-bit)' window.
-
-In the new window check for 'Microsoft Access Driver'. If this already exists you can skip to the Python stage.
-
-If 'Microsoft Access Driver' does not exist click 'Add' to install a new driver on your system.
-
-![](https://github.com/LiamDBailey/SPIbirds/blob/master/inst/extdata/README_imgs/ODBC_driver.jpg)
-
----
-
-Select 'Microsoft Access Driver (/*.mdb, /*.accdb)' and click finish.
-
-***If 'Microsoft Access Driver (/*.mdb, /*.accdb)' does not appear, you will need to download the 64-bit driver [here](https://www.microsoft.com/en-US/download/details.aspx?id=13255)***
-
-In the next window, you ***must*** add a 'Data Source Name'. Everything else can be left blank.
-
-![](https://github.com/LiamDBailey/SPIbirds/blob/master/inst/extdata/README_imgs/Add_name.jpg)
-
-Check if this driver is installed and recognised by R using the function `odbcListDrivers()` from the `odbc` package. Note that you will need to open a new session of R before the driver will appear.
+Please make sure you install Java that matches your R architecture, so make sure to use the 64-bit version of Java when you use the 64-bit version of R.
+`rJava`, the package that allows us to use Java from R, determines the Java location from the registry, so make sure you use the official [Oracle installer](https://www.java.com/en/) so that your Java installation can be found. 
 
 ##### Python 3
 
@@ -149,11 +122,13 @@ An alternative LaTeX distribution that works well in R is [`TinyTeX`](https://yi
 
 #### Mac
 
-##### Microsoft Access Driver
+##### Java
 
-At present, no free Microsoft Access Driver is available for Mac. 
+Modern MacOS versions no longer supply Java, so it must be downloaded from third parties. The most commonly used distributions are [adoptium.net](https://adoptium.net/) and [Azul Zulu](https://www.azul.com/downloads/).
 
-As a consequence, the `pipelines` package currently does not run pipelines requiring a Microsoft Access Driver on Mac OSX (the affected pipelines are skipped and a information message displayed when attempting to run on Mac). 
+When installing from a zip or tar ball, put your Java installation in `/Library/Java/JavaVirtualMachines`. For example, if installing Zulu, unpack/move it such that it results in `/Library/Java/JavaVirtualMachines/zulu-11.jdk`.
+
+`rJava`, the package that allows us to use Java from R, will try to automatically detect the Java location and load it dynamically. You can also check the version selected by your settings via `/usr/libexec/java_home` in the Terminal.
 
 ##### Python 3 for Mac
 
