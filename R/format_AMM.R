@@ -183,24 +183,24 @@ format_AMM <- function(db = choose_directory(),
 
 create_brood_AMM   <- function(dir, species_filter) {
 
-  Catches_M <- read.csv(paste0(dir, "/", "Catches", ".csv")) %>%
+  Catches_M <- utils::read.csv(paste0(dir, "/", "Catches", ".csv")) %>%
     dplyr::select("BroodID", "MaleID" = "BirdID", "SexConclusion") %>%
     dplyr::filter(!is.na(.data$BroodID)) %>%
     dplyr::distinct() %>%
     dplyr::filter(.data$SexConclusion == 2L) %>%
     dplyr::select(-"SexConclusion")
 
-  Catches_F <- read.csv(paste0(dir, "/", "Catches", ".csv")) %>%
+  Catches_F <- utils::read.csv(paste0(dir, "/", "Catches", ".csv")) %>%
     dplyr::select("BroodID", "FemaleID" = "BirdID", "SexConclusion") %>%
     dplyr::filter(!is.na(.data$BroodID)) %>%
     dplyr::distinct() %>%
     dplyr::filter(.data$SexConclusion == 1L) %>%
     dplyr::select(-"SexConclusion")
 
-  Nest_boxes <- read.csv(paste0(dir, "/", "NestBoxes", ".csv")) %>%
+  Nest_boxes <- utils::read.csv(paste0(dir, "/", "NestBoxes", ".csv")) %>%
     dplyr::select("NestBox", "Plot")
 
-  Brood_data <- read.csv(paste0(dir, "/", "Broods", ".csv")) %>%
+  Brood_data <- utils::read.csv(paste0(dir, "/", "Broods", ".csv")) %>%
     dplyr::left_join(Catches_F,
                      by = c("BroodID")) %>%
     dplyr::left_join(Catches_M,
@@ -309,14 +309,14 @@ create_brood_AMM   <- function(dir, species_filter) {
 
 create_capture_AMM <- function(Brood_data, dir, species_filter) {
 
-  Catches_table <- read.csv(paste0(dir, "/", "Catches", ".csv"))
+  Catches_table <- utils::read.csv(paste0(dir, "/", "Catches", ".csv"))
 
-  Chick_catch_tables <- read.csv(paste0(dir, "/", "Chicks", ".csv"))
+  Chick_catch_tables <- utils::read.csv(paste0(dir, "/", "Chicks", ".csv"))
 
-  Nestbox_capture <- read.csv(paste0(dir, "/", "NestBoxes", ".csv")) %>%
+  Nestbox_capture <- utils::read.csv(paste0(dir, "/", "NestBoxes", ".csv")) %>%
     dplyr::select("NestBox", "CapturePlot" = "Plot")
 
-  Nestbox_release <- read.csv(paste0(dir, "/", "NestBoxes", ".csv")) %>%
+  Nestbox_release <- utils::read.csv(paste0(dir, "/", "NestBoxes", ".csv")) %>%
     dplyr::select("NestBox", "ReleasePlot" = "Plot")
 
   #Adult captures
@@ -464,7 +464,7 @@ create_capture_AMM <- function(Brood_data, dir, species_filter) {
 
 create_individual_AMM <- function(Capture_data, Brood_data, dir) {
 
-  Sex_genetic <- read.csv(paste0(dir, "/", "GenotypesAllYears", ".csv")) %>%
+  Sex_genetic <- utils::read.csv(paste0(dir, "/", "GenotypesAllYears", ".csv")) %>%
     dplyr::select("IndvID" = "BirdID", "SexGenetic") %>%
     dplyr::filter(!is.na(.data$IndvID) & !is.na(.data$SexGenetic) & .data$SexGenetic > 0) %>%
     dplyr::group_by(.data$IndvID) %>%
@@ -489,7 +489,7 @@ create_individual_AMM <- function(Capture_data, Brood_data, dir) {
     dplyr::ungroup() %>%
     dplyr::select("IndvID", "Sex_calculated")
 
-  Brood_swap_info <- read.csv(paste0(dir, "/", "Chicks", ".csv")) %>%
+  Brood_swap_info <- utils::read.csv(paste0(dir, "/", "Chicks", ".csv")) %>%
     dplyr::select("IndvID" = "BirdID", "BroodIDLaid" = "BroodID", "BroodIDFledged" = "SwapToBroodID") %>%
     dplyr::mutate(dplyr::across(tidyselect::everything(), as.character))
 
@@ -540,7 +540,7 @@ create_individual_AMM <- function(Capture_data, Brood_data, dir) {
 
 create_location_AMM <- function(Capture_data, dir) {
 
-  Habitat_data <- read.csv(paste0(dir, "/", "HabitatDescription", ".csv")) %>%
+  Habitat_data <- utils::read.csv(paste0(dir, "/", "HabitatDescription", ".csv")) %>%
     dplyr::select("NestBox", "Beech":"OtherTree") %>%
     dplyr::group_by(.data$NestBox) %>%
     dplyr::summarise(dplyr::across(tidyselect::everything(), ~sum(.x, na.rm = TRUE)), .groups = "keep") %>%
@@ -560,7 +560,7 @@ create_location_AMM <- function(Capture_data, dir) {
 
   start_year <- min(Capture_data$BreedingSeason)
 
-  Location_data <- read.csv(paste0(dir, "/", "NestBoxes", ".csv")) %>%
+  Location_data <- utils::read.csv(paste0(dir, "/", "NestBoxes", ".csv")) %>%
     dplyr::filter(.data$NestBox != -99L) %>%
     dplyr::mutate(LocationID = as.character(.data$NestBox),
                   NestboxID = as.character(.data$NestBox),

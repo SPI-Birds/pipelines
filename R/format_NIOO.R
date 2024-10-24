@@ -56,7 +56,7 @@
 #'@export
 #'@import rlang
 #'@importFrom dplyr `%>%`
-#'@importFrom utils `read.csv`
+#'@importFrom utils read.csv
 
 format_NIOO <- function(db = choose_directory(),
                         species = NULL,
@@ -283,7 +283,7 @@ create_brood_NIOO <- function(dir, location_data, species_filter, pop_filter){
     dplyr::filter(.data$PopID %in% pop_filter)
 
   # Individual data for ring numbers
-  individuals <- read.csv(paste0(dir, "/", "dbo_tbl_Individual", ".csv")) %>%
+  individuals <- utils::read.csv(paste0(dir, "/", "dbo_tbl_Individual", ".csv")) %>%
     # Replace "\x85" (which is the Windows-1252 code point for the ellipsis '...') by three distinct points,
     # which arises when we use Jackcess (which uses the UTF-16LE encoding scheme) to export the Access tables to csv
     dplyr::mutate(dplyr::across(.cols = c("RingNumber", "IndividualNumber"),
@@ -309,10 +309,10 @@ create_brood_NIOO <- function(dir, location_data, species_filter, pop_filter){
     dplyr::select("FemaleID" = "ID", "Female_ring" = "RingNumber") %>%
     dplyr::filter(.data$Female_ring != "", !is.na(.data$Female_ring), !(.data$Female_ring %in% !!duplicated_rings))
 
-  Brood_types <- read.csv(paste0(dir, "/", "dbo_tl_BroodType", ".csv")) %>%
+  Brood_types <- utils::read.csv(paste0(dir, "/", "dbo_tl_BroodType", ".csv")) %>%
     dplyr::select("BroodType" = "ID", "Description")
 
-  Brood_data <- read.csv(paste0(dir, "/", "dbo_tbl_Brood", ".csv"), na.strings = c("", "NA")) %>%
+  Brood_data <- utils::read.csv(paste0(dir, "/", "dbo_tbl_Brood", ".csv"), na.strings = c("", "NA")) %>%
     #Subset only broods of designated species in designated population
     dplyr::filter(.data$BroodSpecies %in% species_filter & .data$BroodLocationID %in% !!target_locations$ID) %>%
     #Set unknown ring numbers to NA
@@ -394,7 +394,7 @@ create_brood_NIOO <- function(dir, location_data, species_filter, pop_filter){
 create_capture_NIOO <- function(dir, Brood_data, location_data, species_filter, pop_filter){
 
   # Individual data for associated broods
-  individuals <- read.csv(paste0(dir, "/", "dbo_tbl_Individual", ".csv")) %>%
+  individuals <- utils::read.csv(paste0(dir, "/", "dbo_tbl_Individual", ".csv")) %>%
     # Replace "\x85" (which is the Windows-1252 code point for the ellipsis '...') by three distinct points,
     # which arises when we use Jackcess (which uses the UTF-16LE encoding scheme) to export the Access tables to csv
     dplyr::mutate(dplyr::across(.cols = c("RingNumber", "IndividualNumber"),
@@ -404,7 +404,7 @@ create_capture_NIOO <- function(dir, Brood_data, location_data, species_filter, 
 
                                 }))
 
-  RawCaptures <- read.csv(paste0(dir, "/", "dbo_tbl_Capture", ".csv")) %>%
+  RawCaptures <- utils::read.csv(paste0(dir, "/", "dbo_tbl_Capture", ".csv")) %>%
     #Filter out egg captures. Reduce records early
     dplyr::filter(.data$CaptureType %in% c(1, 2)) %>%
     #Reduce to only necessary columns
@@ -412,7 +412,7 @@ create_capture_NIOO <- function(dir, Brood_data, location_data, species_filter, 
                   "CaptureTime", "IndvID" = "Individual",
                   "CaptureLocation", "ReleaseLocation") %>%
     #Join in weight, tarsus and p3 from secondary capture data table.
-    dplyr::left_join(read.csv(paste0(dir, "/", "dbo_vw_MI_CaptureCaptureData", ".csv")) %>%
+    dplyr::left_join(utils::read.csv(paste0(dir, "/", "dbo_vw_MI_CaptureCaptureData", ".csv")) %>%
                        dplyr::select("CaptureID", "SpeciesID", "Observer",
                                      "Weight", "Tarsus",
                                      "P3_Length", "Age"),
@@ -515,7 +515,7 @@ create_individual_NIOO <- function(dir, Capture_data, location_data, species_fil
 
   #This is a summary of each individual and general lifetime information (e.g. sex, resident/immigrant).
 
-  individuals <- read.csv(paste0(dir, "/", "dbo_tbl_Individual", ".csv")) %>%
+  individuals <- utils::read.csv(paste0(dir, "/", "dbo_tbl_Individual", ".csv")) %>%
     # Replace "\x85" (which is the Windows-1252 code point for the ellipsis '...') by three distinct points,
     # which arises when we use Jackcess (which uses the UTF-16LE encoding scheme) to export the Access tables to csv
     dplyr::mutate(dplyr::across(.cols = c("RingNumber", "IndividualNumber"),
@@ -539,11 +539,11 @@ create_individual_NIOO <- function(dir, Capture_data, location_data, species_fil
                                                       .data$RingAge > 3 ~ "adult",
                                                       TRUE ~ NA_character_),
                   BroodIDLaid = dplyr::if_else(is.na(.data$GeneticBroodID), .data$BroodID, .data$GeneticBroodID),
-                  BroodIDFledged = dplyr::if_else(is.na(BroodID), .data$GeneticBroodID, .data$BroodID),
+                  BroodIDFledged = dplyr::if_else(is.na(.data$BroodID), .data$GeneticBroodID, .data$BroodID),
                   IndvID = .data$ID)
 
   # Determine first captures (after removing eggs)
-  first_captures <- read.csv(paste0(dir, "/", "dbo_tbl_Capture", ".csv")) %>%
+  first_captures <- utils::read.csv(paste0(dir, "/", "dbo_tbl_Capture", ".csv")) %>%
     dplyr::filter(.data$CaptureType == 1L | .data$CaptureType == 2L) %>%
     dplyr::group_by(.data$Individual) %>%
     # Add first capture dates for 9 individuals with ring number but no RingYear in the original individual data table
@@ -604,7 +604,7 @@ create_individual_NIOO <- function(dir, Capture_data, location_data, species_fil
 create_location_NIOO <- function(dir, location_data, species_filter, pop_filter){
 
   #Extract information on nestbox locations
-  Location_data <- read.csv(paste0(dir, "/", "dbo_tbl_NestboxAppearance", ".csv")) %>%
+  Location_data <- utils::read.csv(paste0(dir, "/", "dbo_tbl_NestboxAppearance", ".csv")) %>%
     #Join together information on the nestbox locations (e.g. latitude, longitude, nestbox name) and information on each nestbox that was there (e.g. how long before it was replaced).
     #This is necessary because one nestbox location could have multiple nestboxes erected at it over the study period.
     dplyr::right_join(location_data %>%
