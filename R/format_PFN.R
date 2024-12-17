@@ -77,6 +77,9 @@ format_PFN <- function(db = choose_directory(),
   # SETUP #
   #-------#
 
+  # The version of the standard protocol on which this pipeline is based
+  protocol_version <- "1.1.0"
+
   # Force user to select directory
   force(db)
 
