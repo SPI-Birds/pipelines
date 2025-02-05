@@ -4,14 +4,14 @@
 \alias{create_individual_AMM}
 \title{Create individual data table for Ammersee, Germany}
 \usage{
-create_individual_AMM(Capture_data, Brood_data, connection)
+create_individual_AMM(Capture_data, Brood_data, dir)
 }
 \arguments{
 \item{Capture_data}{Data frame. Output from \code{\link{create_capture_AMM}}.}
 
 \item{Brood_data}{Data frame. Output from \code{\link{create_brood_AMM}}.}
 
-\item{connection}{Connection the SQL database.}
+\item{dir}{Path to directory containing the relevant table exports from the AMM Access database.}
 }
 \value{
 A data frame.

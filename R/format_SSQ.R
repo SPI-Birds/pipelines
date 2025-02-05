@@ -86,7 +86,7 @@ format_SSQ <- function(db = choose_directory(),
                                              .data$Species == "Cyanistes caeruleus" ~ species_codes[species_codes$SpeciesID == 14620, ]$Species)) %>%
     #Filter species
     # TODO: check with data owner about missing BreedingSeason for BT nest (Row 553)
-    dplyr::filter(.data$Species %in% species, !is.na(BreedingSeason)) %>%
+    dplyr::filter(.data$Species %in% species, !is.na(.data$BreedingSeason)) %>%
     #Add other missing data:
     #- PopID
     #- BroodID (Year_LocationID_LayDate)

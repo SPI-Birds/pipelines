@@ -47,14 +47,14 @@ format_AMM <- function(db = choose_directory(),
   # The version of the standard protocol on which this pipeline is based
   protocol_version <- "1.1.0"
 
-  #Force choose_directory() if used
+  # Force choose_directory() if used
   force(db)
 
-  #Assign to database location
-  db <- paste0(gsub("\\\\", "/", db), "\\AMM_PrimaryData.accdb")
+  # Assign to database location
+  dsn <- paste0(gsub("\\\\", "/", db), "\\AMM_PrimaryData.accdb")
 
-  #Assign species for filtering
-  #If no species are specified, all species are included
+  # Assign species for filtering
+  # If no species are specified, all species are included
   if(is.null(species)){
 
     species_filter <- species_codes$Species
@@ -67,24 +67,32 @@ format_AMM <- function(db = choose_directory(),
 
   start_time <- Sys.time()
 
-  message("Importing primary data...")
+  message("Extracting Access tables...")
 
-  ###N.B. IF THE ACCESS DRIVER AND VERSION OF R ARE NOT 64 BIT THIS WILL RETURN AN ERROR
-  #Connect to the AMM database backend.
-  connection <- DBI::dbConnect(drv = odbc::odbc(),
-                               .connection_string = paste0("Driver={Microsoft Access Driver (*.mdb, *.accdb)};Dbq=", db, ";Uid=Admin;Pwd=;"))
+  # Connect to Access database and export relevant tables to a selected output directory
+  access_tables <- c("Catches", "NestBoxes", "Broods",
+                     "Chicks", "GenotypesAllYears", "HabitatDescription")
+
+  table_dir <- paste0(db, "/AMM_PrimaryData_tables")
+
+  export_access_db(dsn,
+                   table = access_tables,
+                   output_dir = table_dir)
 
   # BROOD DATA
 
   message("Compiling brood information...")
 
-  Brood_data <- create_brood_AMM(connection, species_filter)
+  Brood_data <- create_brood_AMM(dir = table_dir,
+                                 species_filter = species_filter)
 
   # CAPTURE DATA
 
   message("Compiling capture information...")
 
-  Capture_data <- create_capture_AMM(Brood_data, connection, species_filter)
+  Capture_data <- create_capture_AMM(Brood_data = Brood_data,
+                                     dir = table_dir,
+                                     species_filter = species_filter)
 
   # INDIVIDUAL DATA
 
@@ -92,13 +100,14 @@ format_AMM <- function(db = choose_directory(),
 
   Individual_data <- create_individual_AMM(Capture_data = Capture_data,
                                            Brood_data = Brood_data,
-                                           connection = connection)
+                                           dir = table_dir)
 
   # LOCATION DATA
 
   message("Compiling location information...")
 
-  Location_data <- create_location_AMM(Capture_data, connection)
+  Location_data <- create_location_AMM(Capture_data = Capture_data,
+                                       dir = table_dir)
 
   # WRANGLE DATA FOR EXPORT
 
@@ -122,9 +131,6 @@ format_AMM <- function(db = choose_directory(),
   #Remove BroodID, no longer needed
   Capture_data <- Capture_data %>%
     dplyr::select("CaptureID":"Age_observed", "Age_calculated", "ChickAge", "ExperimentID")
-
-  #Disconnect from database
-  DBI::dbDisconnect(connection)
 
   # EXPORT DATA
 
@@ -170,40 +176,37 @@ format_AMM <- function(db = choose_directory(),
 #'
 #' Create brood data table in standard format for data from Ammersee, Germany.
 #'
-#' @param connection Connection the SQL database.
+#' @param dir Path to directory containing the relevant table exports from the AMM Access database.
 #' @param species_filter Species six-letter codes from the standard protocol. Used to filter the data.
 #'
 #' @return A data frame.
 
-create_brood_AMM   <- function(connection, species_filter) {
+create_brood_AMM   <- function(dir, species_filter) {
 
-  Catches_M <- dplyr::tbl(connection, "Catches") %>%
+  Catches_M <- utils::read.csv(paste0(dir, "/", "Catches", ".csv")) %>%
     dplyr::select("BroodID", "MaleID" = "BirdID", "SexConclusion") %>%
     dplyr::filter(!is.na(.data$BroodID)) %>%
     dplyr::distinct() %>%
     dplyr::filter(.data$SexConclusion == 2L) %>%
     dplyr::select(-"SexConclusion")
 
-  Catches_F <- dplyr::tbl(connection, "Catches") %>%
+  Catches_F <- utils::read.csv(paste0(dir, "/", "Catches", ".csv")) %>%
     dplyr::select("BroodID", "FemaleID" = "BirdID", "SexConclusion") %>%
     dplyr::filter(!is.na(.data$BroodID)) %>%
     dplyr::distinct() %>%
     dplyr::filter(.data$SexConclusion == 1L) %>%
     dplyr::select(-"SexConclusion")
 
-  Nest_boxes <- dplyr::tbl(connection, "NestBoxes") %>%
+  Nest_boxes <- utils::read.csv(paste0(dir, "/", "NestBoxes", ".csv")) %>%
     dplyr::select("NestBox", "Plot")
 
-  Brood_data <- dplyr::tbl(connection, "Broods") %>%
+  Brood_data <- utils::read.csv(paste0(dir, "/", "Broods", ".csv")) %>%
     dplyr::left_join(Catches_F,
                      by = c("BroodID")) %>%
-    dplyr::collapse() %>%
     dplyr::left_join(Catches_M,
                      by = c("BroodID")) %>%
-    dplyr::collapse() %>%
     dplyr::left_join(Nest_boxes,
                      by = c("NestBox" = "NestBox")) %>%
-    dplyr::collect() %>%
     # Remove -99 and replace with NA
     dplyr::mutate(dplyr::across(.cols = tidyselect::where(~is.numeric(.)),
                                 .fns = ~dplyr::na_if(., -99))) %>%
@@ -299,34 +302,32 @@ create_brood_AMM   <- function(connection, species_filter) {
 #' Create capture data table in standard format for data from Ammersee, Germany.
 #'
 #' @param Brood_data Data frame. Output from \code{\link{create_brood_AMM}}.
-#' @param connection Connection the SQL database.
+#' @param dir Path to directory containing the relevant table exports from the AMM Access database.
 #' @param species_filter Species six-letter codes from the standard protocol. Used to filter the data.
 #'
 #' @return A data frame.
 
-create_capture_AMM <- function(Brood_data, connection, species_filter) {
+create_capture_AMM <- function(Brood_data, dir, species_filter) {
 
-  Catches_table <- dplyr::tbl(connection, "Catches")
+  Catches_table <- utils::read.csv(paste0(dir, "/", "Catches", ".csv"))
 
-  Chick_catch_tables <- dplyr::tbl(connection, "Chicks")
+  Chick_catch_tables <- utils::read.csv(paste0(dir, "/", "Chicks", ".csv"))
 
-  Nestbox_capture <- dplyr::tbl(connection, "NestBoxes") %>%
+  Nestbox_capture <- utils::read.csv(paste0(dir, "/", "NestBoxes", ".csv")) %>%
     dplyr::select("NestBox", "CapturePlot" = "Plot")
 
-  Nestbox_release <- dplyr::tbl(connection, "NestBoxes") %>%
+  Nestbox_release <- utils::read.csv(paste0(dir, "/", "NestBoxes", ".csv")) %>%
     dplyr::select("NestBox", "ReleasePlot" = "Plot")
 
   #Adult captures
   Adult_capture <- Catches_table %>%
     dplyr::left_join(Nestbox_capture, by = "NestBox") %>%
-    dplyr::collapse() %>%
-    dplyr::collect() %>%
     dplyr::mutate(Species = dplyr::case_when(.data$CatchSpecies == 1L ~ !!species_codes$Species[species_codes$SpeciesID == "14640"],
                                              .data$CatchSpecies == 2L ~ !!species_codes$Species[species_codes$SpeciesID == "14620"],
                                              .data$CatchSpecies == 3L ~ !!species_codes$Species[species_codes$SpeciesID == "14610"],
                                              .data$CatchSpecies == 4L ~ !!species_codes$Species[species_codes$SpeciesID == "14790"]),
-                  CaptureTime = dplyr::na_if(paste(lubridate::hour(.data$CatchTimeField),
-                                                   lubridate::minute(.data$CatchTimeField), sep = ":"), "NA:NA"),
+                  CaptureTimeField = lubridate::as_datetime(.data$CatchTimeField, format = "%Y-%m-%dT%H:%M"),
+                  CaptureTime = format(.data$CaptureTimeField, "%H:%M"),
                   IndvID = as.character(.data$BirdID),
                   BreedingSeason = .data$CatchYear,
                   CaptureDate = as.Date(.data$CatchDate),
@@ -382,12 +383,9 @@ create_capture_AMM <- function(Brood_data, connection, species_filter) {
   Chick_capture <- Chick_catch_tables %>%
     dplyr::filter(.data$Egg %in% c(-99L, 0L, 2L)) %>%
     dplyr::left_join(Nestbox_capture, by = "NestBox") %>%
-    dplyr::collapse() %>%
     dplyr::left_join(Nestbox_release, by = c("SwapToNestBox" = "NestBox")) %>%
-    dplyr::collapse() %>%
     dplyr::mutate(EndMarch = as.Date(paste(.data$ChickYear, "03", "31", sep = "-")),
                   CapturePopID = "AMM", ReleasePopID = "AMM") %>%
-    dplyr::collect() %>%
     #Hatchday >500 and <0 should be NA
     dplyr::mutate(HatchDay = dplyr::case_when((.data$HatchDay >= 500 | .data$HatchDay < 0) ~ NA_integer_,
                                               TRUE ~ .data$HatchDay),
@@ -407,7 +405,8 @@ create_capture_AMM <- function(Brood_data, connection, species_filter) {
     dplyr::mutate(dplyr::across(tidyselect::contains("BodyMassTime"),
                                 ~stringr::str_extract(., "[0-9]{2}:[0-9]{2}"))) %>%
     tidyr::pivot_longer(cols = "Day2BodyMass":"Day18Observer",
-                        names_to = "column", values_to = "value") %>%
+                        names_to = "column",
+                        values_to = "value") %>%
     dplyr::mutate(Day = stringr::str_extract(.data$column, "[0-9]{1,}"),
                   OriginalTarsusMethod = "Alternative",
                   Age_observed = 1L) %>%
@@ -459,16 +458,15 @@ create_capture_AMM <- function(Brood_data, connection, species_filter) {
 #'
 #' @param Capture_data Data frame. Output from \code{\link{create_capture_AMM}}.
 #' @param Brood_data Data frame. Output from \code{\link{create_brood_AMM}}.
-#' @param connection Connection the SQL database.
+#' @param dir Path to directory containing the relevant table exports from the AMM Access database.
 #'
 #' @return A data frame.
 
-create_individual_AMM <- function(Capture_data, Brood_data, connection) {
+create_individual_AMM <- function(Capture_data, Brood_data, dir) {
 
-  Sex_genetic <- dplyr::tbl(connection, "GenotypesAllYears") %>%
+  Sex_genetic <- utils::read.csv(paste0(dir, "/", "GenotypesAllYears", ".csv")) %>%
     dplyr::select("IndvID" = "BirdID", "SexGenetic") %>%
     dplyr::filter(!is.na(.data$IndvID) & !is.na(.data$SexGenetic) & .data$SexGenetic > 0) %>%
-    dplyr::collect() %>%
     dplyr::group_by(.data$IndvID) %>%
     dplyr::summarise(length_sex = length(unique(.data$SexGenetic)),
                      unique_sex = list(unique(.data$SexGenetic))) %>%
@@ -491,9 +489,8 @@ create_individual_AMM <- function(Capture_data, Brood_data, connection) {
     dplyr::ungroup() %>%
     dplyr::select("IndvID", "Sex_calculated")
 
-  Brood_swap_info <- dplyr::tbl(connection, "Chicks") %>%
+  Brood_swap_info <- utils::read.csv(paste0(dir, "/", "Chicks", ".csv")) %>%
     dplyr::select("IndvID" = "BirdID", "BroodIDLaid" = "BroodID", "BroodIDFledged" = "SwapToBroodID") %>%
-    dplyr::collect() %>%
     dplyr::mutate(dplyr::across(tidyselect::everything(), as.character))
 
   Individual_data <- Capture_data %>%
@@ -537,39 +534,38 @@ create_individual_AMM <- function(Capture_data, Brood_data, connection) {
 #' Create location data table in standard format for data from Ammersee, Germany.
 #'
 #' @param Capture_data Data frame. Output from \code{\link{create_capture_AMM}}.
-#' @param connection Connection the SQL database.
+#' @param dir Path to directory containing the relevant table exports from the AMM Access database.
 #'
 #' @return A data frame.
 
-create_location_AMM <- function(Capture_data, connection) {
+create_location_AMM <- function(Capture_data, dir) {
 
-  Habitat_data <- dplyr::tbl(connection, "HabitatDescription") %>%
+  Habitat_data <- utils::read.csv(paste0(dir, "/", "HabitatDescription", ".csv")) %>%
     dplyr::select("NestBox", "Beech":"OtherTree") %>%
-    dplyr::collect() %>%
     dplyr::group_by(.data$NestBox) %>%
     dplyr::summarise(dplyr::across(tidyselect::everything(), ~sum(.x, na.rm = TRUE)), .groups = "keep") %>%
-    dplyr::summarise(DEC = sum(c(.data$Beech, .data$Larch, .data$Maple, .data$Birch, .data$Oak, .data$Willow, .data$Poplar, .data$Alder, .data$AshTree)),
+    dplyr::summarise(DEC = sum(c(.data$Beech, .data$Larch, .data$Maple, .data$Birch,
+                                 .data$Oak, .data$Willow, .data$Poplar, .data$Alder, .data$AshTree)),
                      EVE = sum(c(.data$Spruce, .data$Pine))) %>%
     dplyr::mutate(perc_dec = .data$DEC/(.data$DEC + .data$EVE),
                   dominant_sp = dplyr::case_when(.data$perc_dec >= 0.66 ~ "DEC",
                                                  .data$perc_dec < 0.33 ~ "EVE",
                                                  TRUE ~ "MIX"))
 
-  #The vast majority of nestboxes (90%) of nestboxes are surrounded by deciduous or mixed stands. Therefore,
+  #The vast majority (90%) of nest boxes are surrounded by deciduous or mixed stands. Therefore,
   #we use the 'DEC' category to describe the population.
   #In the future, we could include a nest-box specific habitat type, but that would require us to decide
-  #the range over which habitat is sampled (the nestbox vicinity, the plot?). To do later.
+  #the range over which habitat is sampled (the nest box vicinity, the plot?). To do later.
   table(Habitat_data$dominant_sp)
 
   start_year <- min(Capture_data$BreedingSeason)
 
-  Location_data <- dplyr::tbl(connection, "NestBoxes") %>%
-    dplyr::collect() %>%
+  Location_data <- utils::read.csv(paste0(dir, "/", "NestBoxes", ".csv")) %>%
     dplyr::filter(.data$NestBox != -99L) %>%
     dplyr::mutate(LocationID = as.character(.data$NestBox),
                   NestboxID = as.character(.data$NestBox),
-                  Latitude = as.numeric(.data$CoordinateLatitude2013), ## Needed because these variables are stored as
-                  Longitude = as.numeric(.data$CoordinateLongitude2013), ## named vectors, not regular numeric vectors
+                  Latitude = round(as.numeric(.data$CoordinateLatitude2013), digits = 5), ## Needed because these variables are stored as
+                  Longitude = round(as.numeric(.data$CoordinateLongitude2013), digits = 5), ## named vectors, not regular numeric vectors
                   LocationType = "NB",
                   PopID = "AMM",
                   StartSeason = start_year,

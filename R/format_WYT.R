@@ -346,7 +346,7 @@ create_capture_WYT <- function(db, Brood_data, species_filter){
                   WingLength = as.numeric(.data$wing_length),
                   # Currently just treat ages as is (assume they are EURING codes)
                   Age_observed = as.integer(.data$age)) %>%
-    dplyr::filter(Species %in% species_filter) %>%
+    dplyr::filter(.data$Species %in% species_filter) %>%
     # Add tarsus. We are assuming that when tarsus method is "S" this is Svensson's Alternative and doesn't need conversion
     # Otherwise (NA or "M") assume it's Oxford.
     # TODO: Need to check this with Ella.
