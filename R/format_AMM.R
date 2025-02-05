@@ -552,7 +552,7 @@ create_location_AMM <- function(Capture_data, dir) {
                                                  .data$perc_dec < 0.33 ~ "EVE",
                                                  TRUE ~ "MIX"))
 
-  #The vast majority of nest boxes (90%) of nest boxes are surrounded by deciduous or mixed stands. Therefore,
+  #The vast majority (90%) of nest boxes are surrounded by deciduous or mixed stands. Therefore,
   #we use the 'DEC' category to describe the population.
   #In the future, we could include a nest-box specific habitat type, but that would require us to decide
   #the range over which habitat is sampled (the nest box vicinity, the plot?). To do later.
