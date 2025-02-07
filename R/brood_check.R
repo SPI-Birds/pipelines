@@ -34,11 +34,9 @@ brood_check <- function(Brood_data, Individual_data, Capture_data, Location_data
   # Perform brood checks
   message("Checking brood data...")
 
-  # Select correct variable names, dependent on version of the standard format
   var_ext <- ifelse("ClutchSize" %in% colnames(Brood_data),
                     ifelse(all(is.na(Brood_data$ClutchSize)), "_observed", ""), "_observed")
 
-  # Run checks and create list of check outputs
   check_outputs <- list(B1 = compare_clutch_brood(Brood_data, approved_list, output, skip), # B1: Compare clutch and brood sizes
                         B2 = compare_brood_fledglings(Brood_data, approved_list, output, skip), # B2: Compare brood sizes and fledgling numbers
                         B3 = compare_laying_hatching(Brood_data, approved_list, output, skip), # B3: Compare lay and hatch dates
