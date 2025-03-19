@@ -83,6 +83,17 @@ format_NIOO <- function(db = choose_directory(),
                      "dbo_tbl_Individual", "dbo_tl_BroodType", "dbo_tbl_Brood", "dbo_tbl_Capture",
                      "dbo_vw_MI_CaptureCaptureData", "dbo_tbl_NestboxAppearance")
 
+
+  # Check if any of the relevant tables is missing in the Access database file
+  missing_tables <- access_tables[!(access_tables %in% rjackcess::getTableNames(rjackcess::Database(dsn)))]
+
+  if(any(!(access_tables %in% rjackcess::getTableNames(rjackcess::Database(dsn))))) {
+
+    stop(paste("The Access database does not contain these primary tables: ",
+               paste0("'", missing_tables, "'", collapse = ", ")))
+
+  }
+
   table_dir <- paste0(db, "/NIOO_PrimaryData_tables")
 
   export_access_db(dsn,
