@@ -12,3 +12,4 @@ debug_report
 *.rmd
 figure/
 Hackathon*
+*.RData
