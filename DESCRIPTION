@@ -1,6 +1,6 @@
 Package: pipelines
 Title: SPI-Birds data standardisation pipelines
-Version: 0.0.1
+Version: 0.1.0
 Authors@R: 
   c(person(given = "Liam",
            family = "Bailey",
@@ -26,7 +26,12 @@ Authors@R:
            family = "Tyson",
            role = "aut",
            email = "chris.tyson@wur.nl",
-           comment = c(ORCID = "0000-0002-2249-9143")))
+           comment = c(ORCID = "0000-0002-2249-9143")),
+    person(given = "Joey",
+           family = "Burant",
+           role = "aut",
+           email = "j.burant@nioo.knaw.nl",
+           comment = c(ORCID = "0000-0002-0713-3100")))
 Description: Tailor-made pipelines that create bird data following SPI-Birds standard data format, and data quality checkp procedure to ensure data quality and integrity.
 Depends: R (>= 3.6.0)
 License: GPL-2
