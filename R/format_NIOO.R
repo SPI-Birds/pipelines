@@ -57,6 +57,7 @@
 #'@import rlang
 #'@importFrom dplyr `%>%`
 #'@importFrom utils read.csv
+#'@importFrom rjackcess getTableNames
 
 format_NIOO <- function(db = choose_directory(),
                         species = NULL,
@@ -89,7 +90,7 @@ format_NIOO <- function(db = choose_directory(),
 
   if(any(!(access_tables %in% rjackcess::getTableNames(rjackcess::Database(dsn))))) {
 
-    stop(paste("The Access database does not contain these primary tables: ",
+    stop(paste("The Access database does not contain these primary tables:\n",
                paste0("'", missing_tables, "'", collapse = ", ")))
 
   }
