@@ -1,15 +1,12 @@
-#' Species codes and taxonomy
+#' Species EURING codes and letter codes
 #'
-#' Table on the species included in SPI-Birds pipelines with information on internal codes, external codes (EURING and ITIS TSN), and common and scientific names.
-#'
-#' @format A data frame with 10 rows and 6 variables
+#' Letter codes to easily identify species (English names)
+#' @format A data frame with 10 rows and 4 variables
 #' \describe{
-#'   \item{id}{Internal species identifier.}
-#'   \item{scientificName}{Scientific name (genus + specific epithet) following the taxonomy of the \href{https://itis.gov}{Integrated Taxonomic Information System (ITIS)}.}
-#'   \item{vernacularName}{English common name.}
-#'   \item{speciesTSN}{Taxonomic serial number (TSN) used by the \href{https://itis.gov}{ITIS}.}
-#'   \item{speciesEURINGCode}{Code used by \href{https://euring.org/}{EURING}. NA for species not included in EURING.}
-#'   \item{speciesCode}{(Formerly used 6-letter species identifier. The first three letters indicate the genus, the last three letters indicate the specific epithet.}
+#'   \item{SpeciesID}{Species EUring code.}
+#'   \item{Species}{Species letter code.}
+#'   \item{CommonName}{Common English name.}
+#'   \item{BinomialName}{Genus and species name.}
 #'   }
 #'@name species_codes
 species_codes <- utils::read.csv(system.file("extdata", "species_codes.csv", package = "pipelines", mustWork = TRUE))
