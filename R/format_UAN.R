@@ -603,10 +603,9 @@ create_location_UAN <- function(BOX_info){
 
   Location_data <- BOX_info %>%
     dplyr::mutate(LocationID = .data$GBPL,
-                  LocationType = dplyr::case_when(.data$TYPE %in% c("pc", "pm", "cb") ~ "NB",
+                  LocationType = dplyr::case_when(.data$TYPE %in% c("pc", "pm", "cb", "se") ~ "NB",
                                                   is.na(.data$TYPE) ~ "NB",
-                                                  .data$TYPE == "FPT" ~ "FD",
-                                                  .data$TYPE %in% c("PMO", "&") ~ "MN"),
+                                                  .data$TYPE %in% c("PMO", "&", "FPT") ~ "MN"),
                   NestboxID = dplyr::case_when(.data$LocationType == "NB" ~ .data$LocationID,
                                                TRUE ~ NA_character_),
                   PopID = dplyr::case_when(.data$SA == "FR" ~ "BOS",
