@@ -81,7 +81,7 @@ format_KIL <- function(db = choose_directory(),
     readxl::read_excel(path = paste0(db, "/KIL_PrimaryData_to1992.xlsx"), sheet = "BroodData") %>%
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
-    dplyr::mutate(Species = species_codes[which(species_codes$SpeciesID == 14640), ]$Species,
+    dplyr::mutate(Species = species_codes[which(species_codes$speciesEURINGCode == 14640), ]$Species,
                   PopID = "KIL",
                   BreedingSeason = as.integer(.data$Year),
                   LocationID = tolower(.data$NestboxId)) %>%
@@ -97,7 +97,7 @@ format_KIL <- function(db = choose_directory(),
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
     dplyr::mutate(IndvID  = as.character(.data$AdultId),
-                  Species = species_codes[which(species_codes$SpeciesID == 14640), ]$Species,
+                  Species = species_codes[which(species_codes$speciesEURINGCode == 14640), ]$Species,
                   PopID = "KIL",
                   BreedingSeason = .data$RingDate,
                   Age = tolower(.data$Age)) %>%
@@ -113,7 +113,7 @@ format_KIL <- function(db = choose_directory(),
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
     dplyr::mutate(IndvID  = as.character(.data$NestlingRingNumber),
-                  Species = species_codes[which(species_codes$SpeciesID == 14640), ]$Species,
+                  Species = species_codes[which(species_codes$speciesEURINGCode == 14640), ]$Species,
                   PopID = "KIL",
                   BreedingSeason = .data$RingDate) %>%
     dplyr::select(-"NestlingRingNumber",
@@ -127,7 +127,7 @@ format_KIL <- function(db = choose_directory(),
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
     #### Convert to corresponding format and rename
-    dplyr::mutate(Species = species_codes[which(species_codes$SpeciesID == 14640), ]$Species,
+    dplyr::mutate(Species = species_codes[which(species_codes$speciesEURINGCode == 14640), ]$Species,
                   PopID = "KIL",
                   BreedingSeason = as.integer(.data$Year),
                   NestboxID = tolower(.data$NestId),
@@ -200,7 +200,7 @@ format_KIL <- function(db = choose_directory(),
                                                            pattern = ",",
                                                            replacement = ".")) %>%
     #### Convert to corresponding format and rename
-    dplyr::mutate(Species = species_codes[which(species_codes$SpeciesID == 14640), ]$Species,
+    dplyr::mutate(Species = species_codes[which(species_codes$speciesEURINGCode == 14640), ]$Species,
                   PopID   = "KIL",
                   BreedingSeason = as.integer(.data$Year),
                   NestboxID = tolower(.data$NestId),

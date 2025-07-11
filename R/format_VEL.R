@@ -127,7 +127,7 @@ format_VEL <- function(db = choose_directory(),
     dplyr::mutate(PopID = "VEL",
                   BreedingSeason =
                     as.integer(.data$year),
-                  Species = species_codes[species_codes$SpeciesID == 13480, ]$Species,
+                  Species = species_codes[species_codes$speciesEURINGCode == 13480, ]$Species,
                   Plot = .data$plot,
                   LocationID = paste0(toupper(stringr::str_sub(.data$plot, end = 1)), .data$nest),
                   BroodID = paste(.data$BreedingSeason, .data$plot,
@@ -221,8 +221,8 @@ format_VEL <- function(db = choose_directory(),
 
   TIT_data <- TIT_data %>%
     dplyr::mutate(BreedingSeason = as.integer(.data$year),
-                  Species = dplyr::case_when(.data$species == "blue tit" ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
-                                             .data$species == "great tit" ~ species_codes[species_codes$SpeciesID == 14640, ]$Species),
+                  Species = dplyr::case_when(.data$species == "blue tit" ~ species_codes[species_codes$speciesEURINGCode == 14620, ]$Species,
+                                             .data$species == "great tit" ~ species_codes[species_codes$speciesEURINGCode == 14640, ]$Species),
                   PopID = "VEL",
                   Plot = .data$plot,
                   LocationID = paste0(toupper(stringr::str_sub(.data$plot, end = 1)),
@@ -538,8 +538,8 @@ create_capture_VEL_TIT    <- function(TIT_data) {
   ## Assume that an individual was caught at the start of incubation.
   TIT_capture <- TIT_data %>%
     dplyr::filter(!is.na(.data$FemaleID)) %>%
-    dplyr::mutate(Species = dplyr::case_when(.data$species == "blue tit" ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
-                                             .data$species == "great tit" ~ species_codes[species_codes$SpeciesID == 14640, ]$Species),
+    dplyr::mutate(Species = dplyr::case_when(.data$species == "blue tit" ~ species_codes[species_codes$speciesEURINGCode == 14620, ]$Species,
+                                             .data$species == "great tit" ~ species_codes[species_codes$speciesEURINGCode == 14640, ]$Species),
                   ## Make the capture date the date that incubation would start (laying date + clutch size)
                   CaptureDate = .data$LayDate_observed + .data$ClutchSize_observed,
                   IndvID = .data$FemaleID,
