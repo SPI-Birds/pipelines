@@ -961,7 +961,7 @@ create_location_MON <- function(db, Capture_data, Brood_data){
                                                         pattern = "NB") ~ unique(.data$LocationID),
                                                   TRUE ~ NA_character_),
                      LocationType = stringr::str_split_1(unique(.data$LocationID),
-                                                         pattern = "_") |> dplyr::last(),
+                                                         pattern = "_") %>% dplyr::last(),
                      PopID = unique(.data$PopID),
                      Latitude = dplyr::first(.data$latitude),
                      Longitude = dplyr::first(.data$longitude),
