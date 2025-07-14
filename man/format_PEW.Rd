@@ -41,7 +41,7 @@ at the Peerdsbos West, Belgium, administered by Wendt Müller
 \details{
 This section provides details on data management choices that are unique to
 this data. For a general description of the standard format please see see
-\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
+\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 
 \strong{IndvID}: Generally, the unique ID is an 8-character digit number reflecting
 the metal ring number. In 4 cases, this information was not provided (NA), therefore
