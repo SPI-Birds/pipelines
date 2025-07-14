@@ -6,7 +6,7 @@
 #'
 #' This section provides details on data management choices that are unique to
 #' this data. For a general description of the standard format please see see
-#' \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.0.0.pdf}{here}.
+#' \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 #'
 #' \strong{IndvID}: Generally, the unique ID is an 8-character digit number reflecting
 #' the metal ring number. In 4 cases, this information was not provided (NA), therefore
@@ -143,7 +143,7 @@ format_PEW <- function(db = choose_directory(),
                   BroodMassD3  = as.numeric(dplyr::case_when(.data$BroodMassD3 == "dead" ~ NA_character_,
                                                              TRUE ~ .data$BroodMassD3)),
                   NewRing = toupper(.data$NewRing),
-                  Species = species_codes[which(species_codes$SpeciesID == 14620), ]$Species,
+                  Species = species_codes[which(species_codes$speciesEURINGCode == 14620), ]$Species,
                   PopID = "PEW",
                   NestboxID = tolower(.data$Nest),
                   BroodID = ifelse(.data$Method %in% c("Catch adults nestbox", "ChickRinging",

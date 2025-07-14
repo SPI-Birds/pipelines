@@ -395,8 +395,8 @@ create_brood_UAN <- function(BROOD_info, CAPTURE_info, species_filter, pop_filte
     # Convert columns to expected values
     dplyr::mutate(PopID = dplyr::case_when(.data$PopID == "FR" ~ "BOS",
                                            .data$PopID == "PB" ~ "PEE"),
-                  Species = dplyr::case_when(.data$Species == "pm" ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
-                                             .data$Species == "pc" ~ species_codes[species_codes$SpeciesID == 14620, ]$Species),
+                  Species = dplyr::case_when(.data$Species == "pm" ~ species_codes[species_codes$speciesEURINGCode == 14640, ]$Species,
+                                             .data$Species == "pc" ~ species_codes[species_codes$speciesEURINGCode == 14620, ]$Species),
                   ClutchType_observed = dplyr::case_when(.data$ClutchType_observed %in% c(1, 9) ~ "first",
                                                          .data$ClutchType_observed %in% c(2, 6, 7) ~ "second",
                                                          .data$ClutchType_observed %in% c(3, 4, 5, 8) ~ "replacement"),
@@ -446,8 +446,8 @@ create_capture_UAN <- function(CAPTURE_info, species_filter, pop_filter){
     # Adjust species and PopID
     dplyr::mutate(CapturePopID = dplyr::case_when(.data$CapturePopID == "FR" ~ "BOS",
                                                   .data$CapturePopID == "PB" ~ "PEE"),
-                  Species = dplyr::case_when(.data$Species == "pm" ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
-                                             .data$Species == "pc" ~ species_codes[species_codes$SpeciesID == 14620, ]$Species)) %>%
+                  Species = dplyr::case_when(.data$Species == "pm" ~ species_codes[species_codes$speciesEURINGCode == 14640, ]$Species,
+                                             .data$Species == "pc" ~ species_codes[species_codes$speciesEURINGCode == 14620, ]$Species)) %>%
     # Keep filtered species
     dplyr::filter(.data$Species %in% species_filter) %>%
     # Make tarsus length into standard method (Svensson Alt)
@@ -603,10 +603,9 @@ create_location_UAN <- function(BOX_info){
 
   Location_data <- BOX_info %>%
     dplyr::mutate(LocationID = .data$GBPL,
-                  LocationType = dplyr::case_when(.data$TYPE %in% c("pc", "pm", "cb") ~ "NB",
+                  LocationType = dplyr::case_when(.data$TYPE %in% c("pc", "pm", "cb", "se") ~ "NB",
                                                   is.na(.data$TYPE) ~ "NB",
-                                                  .data$TYPE == "FPT" ~ "FD",
-                                                  .data$TYPE %in% c("PMO", "&") ~ "MN"),
+                                                  .data$TYPE %in% c("PMO", "&", "FPT") ~ "MN"),
                   NestboxID = dplyr::case_when(.data$LocationType == "NB" ~ .data$LocationID,
                                                TRUE ~ NA_character_),
                   PopID = dplyr::case_when(.data$SA == "FR" ~ "BOS",

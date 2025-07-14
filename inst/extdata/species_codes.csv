@@ -1,11 +1,11 @@
-SpeciesID,Species,CommonName,BinomialName
-14640,PARMAJ,Great tit,Parus major
-14620,CYACAE,Blue tit,Cyanistes caeruleus
-13490,FICHYP,Pied flycatcher,Ficedula hypoleuca
-14790,SITEUR,Eurasian nuthatch,Sitta europaea
-14610,PERATE,Coal tit,Periparus ater
-15980,PASMON,Eurasian tree sparrow,Passer montanus
-13480,FICALB,Collared flycatcher,Ficedula albicollis
-14400,POEPAL,Marsh tit,Poecile palustris
-14480,POECIN,Siberian tit,Poecile cinctus
-11220,PHOPHO,Common redstart,Phoenicurus phoenicurus
+"id","scientificName","vernacularName","speciesTSN","speciesEURINGCode","Species"
+10001,"Parus major","Great tit",561864,14640,"PARMAJ"
+10002,"Cyanistes caeruleus","Blue tit",559612,14620,"CYACAE"
+10003,"Ficedula hypoleuca","Pied flycatcher",560081,13490,"FICHYP"
+10004,"Sitta europaea","Eurasian nuthatch",563018,14790,"SITEUR"
+10005,"Periparus ater","Coal tit",561927,14610,"PERATE"
+10006,"Passer montanus","Eurasian tree sparrow",179630,15980,"PASMON"
+10007,"Ficedula albicollis","Collared flycatcher",560071,13480,"FICALB"
+10008,"Poecile palustris","Marsh tit",562354,14400,"POEPAL"
+10009,"Poecile cinctus","Siberian tit",554384,14480,"POECIN"
+10010,"Phoenicurus phoenicurus","Common redstart",562037,11220,"PHOPHO"

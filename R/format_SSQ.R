@@ -82,8 +82,8 @@ format_SSQ <- function(db = choose_directory(),
                   Latitude = .data$YCoord,
                   Longitude = .data$XCoord) %>%
     #Add species codes
-    dplyr::mutate(Species = dplyr::case_when(.data$Species == "Parus major" ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
-                                             .data$Species == "Cyanistes caeruleus" ~ species_codes[species_codes$SpeciesID == 14620, ]$Species)) %>%
+    dplyr::mutate(Species = dplyr::case_when(.data$Species == "Parus major" ~ species_codes[species_codes$speciesEURINGCode == 14640, ]$Species,
+                                             .data$Species == "Cyanistes caeruleus" ~ species_codes[species_codes$speciesEURINGCode == 14620, ]$Species)) %>%
     #Filter species
     # TODO: check with data owner about missing BreedingSeason for BT nest (Row 553)
     dplyr::filter(.data$Species %in% species, !is.na(.data$BreedingSeason)) %>%

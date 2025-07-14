@@ -449,13 +449,13 @@ create_brood_PFN <- function(Nest_data, ReRingTable, species_filter, pop_filter,
     # 2) Add unique BroodID and reformat columns with equivalent content but different format
     dplyr::mutate(BroodID = paste0(.data$PopID, "-", .data$BroodID),
                   BreedingSeason = as.integer(.data$Year),
-                  Species = dplyr::case_when(.data$Species %in% c("BLUTI", "BLUTI ") ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
-                                             .data$Species == "PIEFL" ~ species_codes[species_codes$SpeciesID == 13490, ]$Species,
-                                             .data$Species %in% c("GRETI", "GRETI ") ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
-                                             .data$Species == "REDST" ~ species_codes[species_codes$SpeciesID == 11220, ]$Species,
-                                             .data$Species == "MARTI" ~ species_codes[species_codes$SpeciesID == 14400, ]$Species,
-                                             .data$Species == "NUTHA" ~ species_codes[species_codes$SpeciesID == 14790, ]$Species,
-                                             .data$Species == "COATI" ~ species_codes[species_codes$SpeciesID == 14610, ]$Species,
+                  Species = dplyr::case_when(.data$Species %in% c("BLUTI", "BLUTI ") ~ species_codes[species_codes$speciesEURINGCode == 14620, ]$Species,
+                                             .data$Species == "PIEFL" ~ species_codes[species_codes$speciesEURINGCode == 13490, ]$Species,
+                                             .data$Species %in% c("GRETI", "GRETI ") ~ species_codes[species_codes$speciesEURINGCode == 14640, ]$Species,
+                                             .data$Species == "REDST" ~ species_codes[species_codes$speciesEURINGCode == 11220, ]$Species,
+                                             .data$Species == "MARTI" ~ species_codes[species_codes$speciesEURINGCode == 14400, ]$Species,
+                                             .data$Species == "NUTHA" ~ species_codes[species_codes$speciesEURINGCode == 14790, ]$Species,
+                                             .data$Species == "COATI" ~ species_codes[species_codes$speciesEURINGCode == 14610, ]$Species,
                                              .data$Species == "WREN" ~ NA_character_, # Not currently included, 1 observation only
                                              .data$Species == "TREEC" ~ NA_character_), # Not currently, 1 observation only
                   ClutchType_observed = dplyr::case_when(.data$CltCd == "1" ~ "first",
@@ -997,13 +997,13 @@ create_capture_Nest_PFN <- function(Nest_data, ReRingTable, badIDs){
   # 1) Extract male capture data
   Male_Capture_data <- tibble::tibble(IndvID = Capture_data$MaleID,
                                       BroodID = NA_character_, # Will be removed later
-                                      Species_Nest = dplyr::case_when(Capture_data$Species %in% c("BLUTI", "BLUTI ") ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
-                                                                      Capture_data$Species == "PIEFL" ~ species_codes[species_codes$SpeciesID == 13490, ]$Species,
-                                                                      Capture_data$Species %in% c("GRETI", "GRETI ") ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
-                                                                      Capture_data$Species == "REDST" ~ species_codes[species_codes$SpeciesID == 11220, ]$Species,
-                                                                      Capture_data$Species == "MARTI" ~ species_codes[species_codes$SpeciesID == 14400, ]$Species,
-                                                                      Capture_data$Species == "NUTHA" ~ species_codes[species_codes$SpeciesID == 14790, ]$Species,
-                                                                      Capture_data$Species == "COATI" ~ species_codes[species_codes$SpeciesID == 14610, ]$Species,
+                                      Species_Nest = dplyr::case_when(Capture_data$Species %in% c("BLUTI", "BLUTI ") ~ species_codes[species_codes$speciesEURINGCode == 14620, ]$Species,
+                                                                      Capture_data$Species == "PIEFL" ~ species_codes[species_codes$speciesEURINGCode == 13490, ]$Species,
+                                                                      Capture_data$Species %in% c("GRETI", "GRETI ") ~ species_codes[species_codes$speciesEURINGCode == 14640, ]$Species,
+                                                                      Capture_data$Species == "REDST" ~ species_codes[species_codes$speciesEURINGCode == 11220, ]$Species,
+                                                                      Capture_data$Species == "MARTI" ~ species_codes[species_codes$speciesEURINGCode == 14400, ]$Species,
+                                                                      Capture_data$Species == "NUTHA" ~ species_codes[species_codes$speciesEURINGCode == 14790, ]$Species,
+                                                                      Capture_data$Species == "COATI" ~ species_codes[species_codes$speciesEURINGCode == 14610, ]$Species,
                                                                       Capture_data$Species == "WREN" ~ NA_character_, # Not currently included, 1 observation only
                                                                       Capture_data$Species == "TREEC" ~ NA_character_), # Not currently, 1 observation only
                                       BreedingSeason = as.integer(Capture_data$Year),
@@ -1027,13 +1027,13 @@ create_capture_Nest_PFN <- function(Nest_data, ReRingTable, badIDs){
   # 2) Extract female capture data
   Female_Capture_data <- tibble::tibble(IndvID = Capture_data$FemaleID,
                                         BroodID = NA_character_, # Will be removed later
-                                        Species_Nest = dplyr::case_when(Capture_data$Species %in% c("BLUTI", "BLUTI ") ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
-                                                                        Capture_data$Species == "PIEFL" ~ species_codes[species_codes$SpeciesID == 13490, ]$Species,
-                                                                        Capture_data$Species %in% c("GRETI", "GRETI ") ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
-                                                                        Capture_data$Species == "REDST" ~ species_codes[species_codes$SpeciesID == 11220, ]$Species,
-                                                                        Capture_data$Species == "MARTI" ~ species_codes[species_codes$SpeciesID == 14400, ]$Species,
-                                                                        Capture_data$Species == "NUTHA" ~ species_codes[species_codes$SpeciesID == 14790, ]$Species,
-                                                                        Capture_data$Species == "COATI" ~ species_codes[species_codes$SpeciesID == 14610, ]$Species,
+                                        Species_Nest = dplyr::case_when(Capture_data$Species %in% c("BLUTI", "BLUTI ") ~ species_codes[species_codes$speciesEURINGCode == 14620, ]$Species,
+                                                                        Capture_data$Species == "PIEFL" ~ species_codes[species_codes$speciesEURINGCode == 13490, ]$Species,
+                                                                        Capture_data$Species %in% c("GRETI", "GRETI ") ~ species_codes[species_codes$speciesEURINGCode == 14640, ]$Species,
+                                                                        Capture_data$Species == "REDST" ~ species_codes[species_codes$speciesEURINGCode == 11220, ]$Species,
+                                                                        Capture_data$Species == "MARTI" ~ species_codes[species_codes$speciesEURINGCode == 14400, ]$Species,
+                                                                        Capture_data$Species == "NUTHA" ~ species_codes[species_codes$speciesEURINGCode == 14790, ]$Species,
+                                                                        Capture_data$Species == "COATI" ~ species_codes[species_codes$speciesEURINGCode == 14610, ]$Species,
                                                                         Capture_data$Species == "WREN" ~ NA_character_, # Not currently included, 1 observation only
                                                                         Capture_data$Species == "TREEC" ~ NA_character_), # Not currently, 1 observation only
                                         BreedingSeason = as.integer(Capture_data$Year),
@@ -1063,13 +1063,13 @@ create_capture_Nest_PFN <- function(Nest_data, ReRingTable, badIDs){
                         names_pattern = "^([[:alpha:]]+).*([[:digit:]]{1,2})$") %>%
     dplyr::rename("IndvID" = "Young") %>%
     dplyr::mutate(BroodID = paste(.data$PopID, .data$BroodID, sep = "-"),
-                  Species_Nest = dplyr::case_when(.data$Species %in% c("BLUTI", "BLUTI ") ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
-                                                  .data$Species == "PIEFL" ~ species_codes[species_codes$SpeciesID == 13490, ]$Species,
-                                                  .data$Species %in% c("GRETI", "GRETI ") ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
-                                                  .data$Species == "REDST" ~ species_codes[species_codes$SpeciesID == 11220, ]$Species,
-                                                  .data$Species == "MARTI" ~ species_codes[species_codes$SpeciesID == 14400, ]$Species,
-                                                  .data$Species == "NUTHA" ~ species_codes[species_codes$SpeciesID == 14790, ]$Species,
-                                                  .data$Species == "COATI" ~ species_codes[species_codes$SpeciesID == 14610, ]$Species,
+                  Species_Nest = dplyr::case_when(.data$Species %in% c("BLUTI", "BLUTI ") ~ species_codes[species_codes$speciesEURINGCode == 14620, ]$Species,
+                                                  .data$Species == "PIEFL" ~ species_codes[species_codes$speciesEURINGCode == 13490, ]$Species,
+                                                  .data$Species %in% c("GRETI", "GRETI ") ~ species_codes[species_codes$speciesEURINGCode == 14640, ]$Species,
+                                                  .data$Species == "REDST" ~ species_codes[species_codes$speciesEURINGCode == 11220, ]$Species,
+                                                  .data$Species == "MARTI" ~ species_codes[species_codes$speciesEURINGCode == 14400, ]$Species,
+                                                  .data$Species == "NUTHA" ~ species_codes[species_codes$speciesEURINGCode == 14790, ]$Species,
+                                                  .data$Species == "COATI" ~ species_codes[species_codes$speciesEURINGCode == 14610, ]$Species,
                                                   .data$Species == "WREN" ~ NA_character_, # Not currently included, 1 observation only
                                                   .data$Species == "TREEC" ~ NA_character_),
                   BreedingSeason = as.integer(.data$Year),
@@ -1135,13 +1135,13 @@ create_capture_IPMR_PFN <- function(IPMR_data, Nest_data, ReRingTable){
                                            .data$CapturePlot_IPMR %in% c("BRWD", "STEPS", "HITCH") ~ "TEI",
                                            .data$CapturePlot_IPMR %in% c("OKECAS", "MELD", "MELDON", "OKEHAM", "FATOKE", "EASOKE", "BELSTO") ~ "OKE"),
 
-                  Species_IPMR = dplyr::case_when(.data$SPEC == "BLUTI" ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
-                                                  .data$SPEC %in% c("PIEFL", "Pied Flycatcher") ~ species_codes[species_codes$SpeciesID == 13490, ]$Species,
-                                                  .data$SPEC == "GRETI" ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
-                                                  .data$SPEC %in% c("REDST", "Redstart") ~ species_codes[species_codes$SpeciesID == 11220, ]$Species,
-                                                  .data$SPEC == "MARTI" ~ species_codes[species_codes$SpeciesID == 14400, ]$Species,
-                                                  .data$SPEC == "NUTHA" ~ species_codes[species_codes$SpeciesID == 14790, ]$Species,
-                                                  .data$SPEC == "COATI" ~ species_codes[species_codes$SpeciesID == 14610, ]$Species),
+                  Species_IPMR = dplyr::case_when(.data$SPEC == "BLUTI" ~ species_codes[species_codes$speciesEURINGCode == 14620, ]$Species,
+                                                  .data$SPEC %in% c("PIEFL", "Pied Flycatcher") ~ species_codes[species_codes$speciesEURINGCode == 13490, ]$Species,
+                                                  .data$SPEC == "GRETI" ~ species_codes[species_codes$speciesEURINGCode == 14640, ]$Species,
+                                                  .data$SPEC %in% c("REDST", "Redstart") ~ species_codes[species_codes$speciesEURINGCode == 11220, ]$Species,
+                                                  .data$SPEC == "MARTI" ~ species_codes[species_codes$speciesEURINGCode == 14400, ]$Species,
+                                                  .data$SPEC == "NUTHA" ~ species_codes[species_codes$speciesEURINGCode == 14790, ]$Species,
+                                                  .data$SPEC == "COATI" ~ species_codes[species_codes$speciesEURINGCode == 14610, ]$Species),
 
                   LocationID_IPMR = dplyr::case_when(.data$SITE == "MILL" ~ "Foxworthy Mill", # Specific EDM location
                                                      .data$SITE == "HIDE2" ~ "HIDE1D", # Specific EDM location

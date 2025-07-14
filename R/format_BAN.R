@@ -101,9 +101,9 @@ format_BAN <- function(db = choose_directory(),
                                                                                    pad = "0"), sep = "_"),
                                                #Ignore uncertainty in species (e.g. GRETI?)
                                                #TODO Need to check with data owners
-                                               Species = dplyr::case_when(grepl(pattern = "GRETI", x = .data$species) ~ species_codes[species_codes$SpeciesID == 14640, ]$Species,
-                                                                          grepl(pattern = "BLUTI", x = .data$species) ~ species_codes[species_codes$SpeciesID == 14620, ]$Species,
-                                                                          grepl(pattern = "COATI", x = .data$species) ~ species_codes[species_codes$SpeciesID == 14610, ]$Species),
+                                               Species = dplyr::case_when(grepl(pattern = "GRETI", x = .data$species) ~ species_codes[species_codes$speciesEURINGCode == 14640, ]$Species,
+                                                                          grepl(pattern = "BLUTI", x = .data$species) ~ species_codes[species_codes$speciesEURINGCode == 14620, ]$Species,
+                                                                          grepl(pattern = "COATI", x = .data$species) ~ species_codes[species_codes$speciesEURINGCode == 14610, ]$Species),
                                                #Ignore uncertainty in clutch type (e.g. 2(MAYBE))
                                                ClutchType_observed = dplyr::case_when(grepl(pattern = 1, x = .data$nest_attempt) ~ "first",
                                                                                       grepl(pattern = 2, x = .data$nest_attempt) ~ "second"),

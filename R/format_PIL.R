@@ -242,10 +242,10 @@ create_brood_PIL <- function(PIL_data, species_filter){
                   #Note, we still use our species_codes table even though they use the same 6 letter codes
                   #This is because it will be easier to change if e.g. species are renamed
                   #because we can just update the species_codes table once.
-                  Species = dplyr::case_when(.data$species == "CYACAE" ~ species_codes$Species[species_codes$SpeciesID == 14620],
-                                             .data$species == "PARMAJ" ~ species_codes$Species[species_codes$SpeciesID == 14640],
-                                             .data$species == "FICALB" ~ species_codes$Species[species_codes$SpeciesID == 13480],
-                                             .data$species == "SITEUR" ~ species_codes$Species[species_codes$SpeciesID == 14790]),
+                  Species = dplyr::case_when(.data$species == "CYACAE" ~ species_codes$Species[species_codes$speciesEURINGCode == 14620],
+                                             .data$species == "PARMAJ" ~ species_codes$Species[species_codes$speciesEURINGCode == 14640],
+                                             .data$species == "FICALB" ~ species_codes$Species[species_codes$speciesEURINGCode == 13480],
+                                             .data$species == "SITEUR" ~ species_codes$Species[species_codes$speciesEURINGCode == 14790]),
                   ExperimentID = dplyr::case_when(.data$exp == "0" ~ NA_character_,
                                                   .data$exp == "1" ~ "COHORT",
                                                   .data$exp == "2" ~ "COHORT;PHENOLOGY",
@@ -298,11 +298,11 @@ create_capture_PIL <- function(PIL_data, species_filter){
                   WingLength = suppressWarnings(as.numeric(.data$f_wing)),
                   Mass = suppressWarnings(as.numeric(.data$f_mass))/10,
                   Sex_observed = "F",
-                  Species = dplyr::case_when(.data$species == "CYACAE" ~ species_codes$Species[species_codes$SpeciesID == 14620],
-                                             .data$species == "PARMAJ" ~ species_codes$Species[species_codes$SpeciesID == 14640],
-                                             .data$species == "FICALB" ~ species_codes$Species[species_codes$SpeciesID == 13480],
-                                             .data$species == "SITEUR" ~ species_codes$Species[species_codes$SpeciesID == 14790],
-                                             .data$species == "FICHIB" ~ species_codes$Species[species_codes$SpeciesID == 13480]))
+                  Species = dplyr::case_when(.data$species == "CYACAE" ~ species_codes$Species[species_codes$speciesEURINGCode == 14620],
+                                             .data$species == "PARMAJ" ~ species_codes$Species[species_codes$speciesEURINGCode == 14640],
+                                             .data$species == "FICALB" ~ species_codes$Species[species_codes$speciesEURINGCode == 13480],
+                                             .data$species == "SITEUR" ~ species_codes$Species[species_codes$speciesEURINGCode == 14790],
+                                             .data$species == "FICHIB" ~ species_codes$Species[species_codes$speciesEURINGCode == 13480]))
 
   # Male captures
   male_capture_data <- PIL_data %>%
@@ -324,19 +324,19 @@ create_capture_PIL <- function(PIL_data, species_filter){
                   WingLength = suppressWarnings(as.numeric(.data$m_wing)),
                   Mass = suppressWarnings(as.numeric(.data$m_mass))/10,
                   Sex_observed = "M",
-                  Species = dplyr::case_when(.data$species == "CYACAE" ~ species_codes$Species[species_codes$SpeciesID == 14620],
-                                             .data$species == "PARMAJ" ~ species_codes$Species[species_codes$SpeciesID == 14640],
-                                             .data$species == "FICALB" ~ species_codes$Species[species_codes$SpeciesID == 13480],
-                                             .data$species == "SITEUR" ~ species_codes$Species[species_codes$SpeciesID == 14790],
-                                             .data$species == "FICHIB" ~ species_codes$Species[species_codes$SpeciesID == 13490]))
+                  Species = dplyr::case_when(.data$species == "CYACAE" ~ species_codes$Species[species_codes$speciesEURINGCode == 14620],
+                                             .data$species == "PARMAJ" ~ species_codes$Species[species_codes$speciesEURINGCode == 14640],
+                                             .data$species == "FICALB" ~ species_codes$Species[species_codes$speciesEURINGCode == 13480],
+                                             .data$species == "SITEUR" ~ species_codes$Species[species_codes$speciesEURINGCode == 14790],
+                                             .data$species == "FICHIB" ~ species_codes$Species[species_codes$speciesEURINGCode == 13490]))
 
   # Chick captures
   chick_capture_data <- PIL_data %>%
     #Remove unwanted species
-    dplyr::mutate(Species = dplyr::case_when(.data$species == "CYACAE" ~ species_codes$Species[species_codes$SpeciesID == 14620],
-                                             .data$species == "PARMAJ" ~ species_codes$Species[species_codes$SpeciesID == 14640],
-                                             .data$species == "FICALB" ~ species_codes$Species[species_codes$SpeciesID == 13480],
-                                             .data$species == "SITEUR" ~ species_codes$Species[species_codes$SpeciesID == 14790])) %>%
+    dplyr::mutate(Species = dplyr::case_when(.data$species == "CYACAE" ~ species_codes$Species[species_codes$speciesEURINGCode == 14620],
+                                             .data$species == "PARMAJ" ~ species_codes$Species[species_codes$speciesEURINGCode == 14640],
+                                             .data$species == "FICALB" ~ species_codes$Species[species_codes$speciesEURINGCode == 13480],
+                                             .data$species == "SITEUR" ~ species_codes$Species[species_codes$speciesEURINGCode == 14790])) %>%
     dplyr::filter(.data$Species %in% species_filter) %>%
     #Remove cases where no chicks were ever ringed
     dplyr::filter(!dplyr::if_all(.cols = tidyselect::contains("nestling_ring"),

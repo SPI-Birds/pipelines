@@ -240,10 +240,10 @@ create_brood_AMM   <- function(dir, species_filter) {
                   NumberFledged_observed = .data$NumberFledged,
                   NumberFledged_minimum = .data$NumberFledged,
                   NumberFledged_maximum = .data$NumberFledged + .data$FledgedError,
-                  Species = dplyr::case_when(.data$Species == 1L ~ !!species_codes$Species[species_codes$SpeciesID == "14640"],
-                                             .data$Species == 2L ~ !!species_codes$Species[species_codes$SpeciesID == "14620"],
-                                             .data$Species == 3L ~ !!species_codes$Species[species_codes$SpeciesID == "14610"],
-                                             .data$Species == 4L ~ !!species_codes$Species[species_codes$SpeciesID == "14790"]),
+                  Species = dplyr::case_when(.data$Species == 1L ~ !!species_codes$Species[species_codes$speciesEURINGCode == "14640"],
+                                             .data$Species == 2L ~ !!species_codes$Species[species_codes$speciesEURINGCode == "14620"],
+                                             .data$Species == 3L ~ !!species_codes$Species[species_codes$speciesEURINGCode == "14610"],
+                                             .data$Species == 4L ~ !!species_codes$Species[species_codes$speciesEURINGCode == "14790"]),
                   AvgEggMass = NA_real_,
                   NumberEggs = NA_integer_,
                   AvgChickMass = NA_integer_,
@@ -322,10 +322,10 @@ create_capture_AMM <- function(Brood_data, dir, species_filter) {
   #Adult captures
   Adult_capture <- Catches_table %>%
     dplyr::left_join(Nestbox_capture, by = "NestBox") %>%
-    dplyr::mutate(Species = dplyr::case_when(.data$CatchSpecies == 1L ~ !!species_codes$Species[species_codes$SpeciesID == "14640"],
-                                             .data$CatchSpecies == 2L ~ !!species_codes$Species[species_codes$SpeciesID == "14620"],
-                                             .data$CatchSpecies == 3L ~ !!species_codes$Species[species_codes$SpeciesID == "14610"],
-                                             .data$CatchSpecies == 4L ~ !!species_codes$Species[species_codes$SpeciesID == "14790"]),
+    dplyr::mutate(Species = dplyr::case_when(.data$CatchSpecies == 1L ~ !!species_codes$Species[species_codes$speciesEURINGCode == "14640"],
+                                             .data$CatchSpecies == 2L ~ !!species_codes$Species[species_codes$speciesEURINGCode == "14620"],
+                                             .data$CatchSpecies == 3L ~ !!species_codes$Species[species_codes$speciesEURINGCode == "14610"],
+                                             .data$CatchSpecies == 4L ~ !!species_codes$Species[species_codes$speciesEURINGCode == "14790"]),
                   CaptureTimeField = lubridate::as_datetime(.data$CatchTimeField, format = "%Y-%m-%dT%H:%M"),
                   CaptureTime = format(.data$CaptureTimeField, "%H:%M"),
                   IndvID = as.character(.data$BirdID),
@@ -390,7 +390,7 @@ create_capture_AMM <- function(Brood_data, dir, species_filter) {
     dplyr::mutate(HatchDay = dplyr::case_when((.data$HatchDay >= 500 | .data$HatchDay < 0) ~ NA_integer_,
                                               TRUE ~ .data$HatchDay),
                   # All chicks are GT
-                  Species = species_codes$Species[species_codes$SpeciesID == 14640],
+                  Species = species_codes$Species[species_codes$speciesEURINGCode == 14640],
                   Sex_observed = NA_character_) %>%
     dplyr::select("Species", "Sex_observed", "BirdID", "ChickYear", "EndMarch", "NestBox", "BroodID",
                   "CapturePlot", "ReleasePlot",
