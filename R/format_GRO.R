@@ -286,7 +286,7 @@ create_capture_GRO <- function(gro_data, protocol_version) {
     dplyr::ungroup() %>%
 
     ## Calculate age
-    dplyr::mutate(Age_observed = NA_real_) %>%
+    dplyr::mutate(Age_observed = NA_integer_) %>%
     calc_age(ID = .data$IndvID,
              Age = .data$Age_observed,
              Date = .data$CaptureDate,
@@ -360,6 +360,8 @@ create_individual_GRO <- function(Capture_data, protocol_version){
                                                 return("adult")
                                               }
                                             })) %>%
+
+    dplyr::ungroup() %>%
 
     ## Keep distinct records by PopID and InvdID
     dplyr::distinct(.data$PopID, .data$IndvID, .keep_all = TRUE) %>%

@@ -626,6 +626,8 @@ create_location_NIOO <- function(dir, location_data, species_filter, pop_filter,
                                                   .data$LocationType %in% c(90, 101) ~ "MN"),
                   HabitatType = dplyr::case_when(.data$PopID %in% c("VLI", "HOG", "WES", "BUU") ~ "mixed",
                                                  .data$PopID %in% c("OOS", "LIE", "WAR") ~ "deciduous")) %>%
+    # Drop locations that are not a nest box or mistnet location
+    dplyr::filter(!is.na(LocationType)) %>%
     dplyr::arrange(.data$LocationID, .data$StartSeason) %>%
     ## Add missing columns
     dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Location_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Location_data) %in% names(.))]) %>%

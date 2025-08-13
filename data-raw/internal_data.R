@@ -170,9 +170,9 @@ v1.1.0 <- tibble::lst(
     Tarsus = NA_real_,
     OriginalTarsusMethod = NA_character_,
     WingLength = NA_real_,
-    Age_observed = NA_real_,
-    Age_calculated = NA_real_,
-    ChickAge = NA_real_,
+    Age_observed = NA_integer_,
+    Age_calculated = NA_integer_,
+    ChickAge = NA_integer_,
     ExperimentID = NA_character_
   ),
 
