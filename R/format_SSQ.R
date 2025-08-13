@@ -192,12 +192,10 @@ create_brood_SSQ <- function(data){
     #Calculate clutch type
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.1"),
                   OriginalTarsusMethod = NA_character_) %>%
-    ## Keep only necessary columns
-    dplyr::select(tidyselect::contains(names(brood_data_template))) %>%
     ## Add missing columns
-    dplyr::bind_cols(brood_data_template[1, !(names(brood_data_template) %in% names(.))]) %>%
-    ## Reorder columns
-    dplyr::select(names(brood_data_template))
+    dplyr::bind_cols(data_templates$v1.1$Brood_data[1, !(names(data_templates$v1.1$Brood_data) %in% names(.))]) %>%
+    ## Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates$v1.1$Brood_data))
 
   return(Brood_data)
 
@@ -277,12 +275,10 @@ create_capture_SSQ <- function(data){
                   ObserverID = NA_character_) %>%
     calc_age(ID = .data$IndvID, Age = .data$Age,
              Date = .data$CaptureDate, Year = .data$BreedingSeason) %>%
-    ## Keep only necessary columns
-    dplyr::select(tidyselect::contains(names(capture_data_template))) %>%
     ## Add missing columns
-    dplyr::bind_cols(capture_data_template[1, !(names(capture_data_template) %in% names(.))]) %>%
-    ## Reorder columns
-    dplyr::select(names(capture_data_template))
+    dplyr::bind_cols(data_templates$v1.1$Capture_data[1, !(names(data_templates$v1.1$Capture_data) %in% names(.))]) %>%
+    ## Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates$v1.1$Capture_data))
 
   return(Capture_data)
 
@@ -326,12 +322,10 @@ create_individual_SSQ <- function(data, Capture_data, Brood_data){
                      by = "IndvID") %>%
     dplyr::mutate(BroodIDFledged = .data$BroodIDLaid,
                   PopID = "SSQ") %>%
-    ## Keep only necessary columns
-    dplyr::select(tidyselect::contains(names(individual_data_template))) %>%
     ## Add missing columns
-    dplyr::bind_cols(individual_data_template[1, !(names(individual_data_template) %in% names(.))]) %>%
-    ## Reorder columns
-    dplyr::select(names(individual_data_template))
+    dplyr::bind_cols(data_templates$v1.1$Individual_data[1, !(names(data_templates$v1.1$Individual_data) %in% names(.))]) %>%
+    ## Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates$v1.1$Individual_data))
 
 }
 
@@ -358,11 +352,9 @@ create_location_SSQ <- function(data){
                        dplyr::slice(1) %>%
                        dplyr::select("LocationID", "Latitude", "Longitude"),
                      by = "LocationID") %>%
-    ## Keep only necessary columns
-    dplyr::select(tidyselect::contains(names(location_data_template))) %>%
     ## Add missing columns
-    dplyr::bind_cols(location_data_template[1, !(names(location_data_template) %in% names(.))]) %>%
-    ## Reorder columns
-    dplyr::select(names(location_data_template))
+    dplyr::bind_cols(data_templates$v1.1$Location_data[1, !(names(data_templates$v1.1$Location_data) %in% names(.))]) %>%
+    ## Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates$v1.1$Location_data))
 
 }

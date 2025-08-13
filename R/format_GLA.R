@@ -387,16 +387,6 @@ create_brood_GLA <- function(nest_data, rr_data) {
                               .fns = ~dplyr::case_when(stringr::str_detect(., "^[[:digit:][:alpha:]]{7}$") ~ .,
                                                        TRUE ~ NA_character_))) %>%
 
-    ## Keep only necessary columns
-    dplyr::select(dplyr::contains(names(brood_data_template))) %>%
-
-    ## Add missing columns
-    dplyr::bind_cols(brood_data_template[0, !(names(brood_data_template) %in% names(.))]   %>%
-                       dplyr::add_row()) %>%
-
-    ## Reorder columns
-    dplyr::select(names(brood_data_template)) %>%
-
     ## Remove any NAs from essential columns
     dplyr::filter(!is.na(.data$BroodID),
                   !is.na(.data$PopID),
@@ -406,10 +396,13 @@ create_brood_GLA <- function(nest_data, rr_data) {
     ## Calculate clutch type
     dplyr::arrange(.data$PopID, .data$BreedingSeason, .data$Species, .data$FemaleID, .data$LayDate_observed) %>%
     dplyr::ungroup() %>%
-    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data =. , protocol_version = "1.1", na.rm = FALSE))
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data =. , protocol_version = "1.1", na.rm = FALSE)) %>%
 
-  # ## Check column classes
-  # purrr::map_df(brood_data_template, class) == purrr::map_df(Brood_data, class)
+    ## Add missing columns
+    dplyr::bind_cols(data_templates$v1.1$Brood_data[1, !(names(data_templates$v1.1$Brood_data) %in% names(.))]) %>%
+
+    ## Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates$v1.1$Brood_data))
 
   return(Brood_data)
 
@@ -462,15 +455,11 @@ create_capture_GLA <- function(nest_data, rr_data, Brood_data) {
                   ReleasePopID = dplyr::case_when(.data$ReleaseAlive == FALSE ~ NA_character_,
                                                   TRUE ~ as.character(.data$CapturePopID))) %>%  ## Set ReleasePopID to NA if ReleaseAlive is FALSE, otherwise same as CapturePopID
 
-    ## Keep only necessary columns
-    dplyr::select(dplyr::contains(names(capture_data_template))) %>%
-
     ## Add missing columns
-    dplyr::bind_cols(capture_data_template[0, !(names(capture_data_template) %in% names(.))]   %>%
-                       dplyr::add_row()) %>%
+    dplyr::bind_cols(data_templates$v1.1$Capture_data[1, !(names(data_templates$v1.1$Capture_data) %in% names(.))]) %>%
 
-    ## Reorder columns
-    dplyr::select(names(capture_data_template))
+    ## Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates$v1.1$Capture_data))
 
 
   ## Create capture data from nest data.
@@ -499,15 +488,11 @@ create_capture_GLA <- function(nest_data, rr_data, Brood_data) {
 
     dplyr::ungroup() %>%
 
-    ## Keep only necessary columns
-    dplyr::select(dplyr::contains(names(capture_data_template))) %>%
-
     ## Add missing columns
-    dplyr::bind_cols(capture_data_template[0, !(names(capture_data_template) %in% names(.))]   %>%
-                       dplyr::add_row()) %>%
+    dplyr::bind_cols(data_templates$v1.1$Capture_data[1, !(names(data_templates$v1.1$Capture_data) %in% names(.))]) %>%
 
-    ## Reorder columns
-    dplyr::select(names(capture_data_template))
+    ## Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates$v1.1$Capture_data))
 
 
   ## Get records of individuals that were reported in the nest data, but not in the ringing records
@@ -539,10 +524,14 @@ create_capture_GLA <- function(nest_data, rr_data, Brood_data) {
     ## Arrange
     dplyr::arrange(.data$BreedingSeason, .data$CapturePopID, .data$IndvID, .data$CaptureDate) %>%
 
-    dplyr::mutate(CaptureID = paste(.data$IndvID, dplyr::row_number(), sep = "_"))  ## Create CaptureID based on IndvID and the record number
+    ## Create CaptureID based on IndvID and the record number
+    dplyr::mutate(CaptureID = paste(.data$IndvID, dplyr::row_number(), sep = "_")) %>%
 
-  # ## Check column classes
-  # purrr::map_df(capture_data_template, class) == purrr::map_df(Capture_data, class)
+    ## Add missing columns
+    dplyr::bind_cols(data_templates$v1.1$Capture_data[1, !(names(data_templates$v1.1$Capture_data) %in% names(.))]) %>%
+
+    ## Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates$v1.1$Capture_data))
 
   return(Capture_data)
 
@@ -644,18 +633,11 @@ create_individual_GLA <- function(Capture_data, Brood_data){
     dplyr::arrange(.data$CaptureID) %>%
     dplyr::ungroup() %>%
 
-    ## Keep only necessary columns
-    dplyr::select(dplyr::contains(names(individual_data_template))) %>%
-
     ## Add missing columns
-    dplyr::bind_cols(individual_data_template[0 ,!(names(individual_data_template) %in% names(.))] %>%
-                                                dplyr::add_row()) %>%
+    dplyr::bind_cols(data_templates$v1.1$Individual_data[1, !(names(data_templates$v1.1$Individual_data) %in% names(.))]) %>%
 
-    ## Reorder columns
-    dplyr::select(names(individual_data_template))
-
-  # ## Check column classes
-  # purrr::map_df(individual_data_template, class) == purrr::map_df(Individual_data, class)
+    ## Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates$v1.1$Individual_data))
 
   return(Individual_data)
 
@@ -713,18 +695,11 @@ create_location_GLA <- function(nest_data, rr_data) {
                                                .data$PopID == "SCE" ~ -4.61478,
                                                .data$PopID == "SAL" ~ -4.5993)) %>%
 
-    ## Keep only necessary columns
-    dplyr::select(dplyr::contains(names(location_data_template))) %>%
-
     ## Add missing columns
-    dplyr::bind_cols(location_data_template[0, !(names(location_data_template) %in% names(.))]  %>%
-                       dplyr::add_row()) %>%
+    dplyr::bind_cols(data_templates$v1.1$Location_data[1, !(names(data_templates$v1.1$Location_data) %in% names(.))]) %>%
 
-    ## Reorder columns
-    dplyr::select(names(location_data_template))
-
-  # ## Check column classes
-  # purrr::map_df(location_data_template, class) == purrr::map_df(Location_data, class)
+    ## Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates$v1.1$Location_data))
 
   return(Location_data)
 

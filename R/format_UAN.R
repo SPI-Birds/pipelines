@@ -317,13 +317,17 @@ format_UAN <- function(db = choose_directory(),
     dplyr::rowwise() %>%
     dplyr::mutate(AvgChickMass = ifelse(!is.na(.data$AvgChickMass_capture), .data$AvgChickMass_capture, .data$AvgChickMass),
                   AvgTarsus = ifelse(!is.na(.data$AvgTarsus_capture), .data$AvgTarsus_capture, .data$AvgTarsus)) %>%
-    dplyr::select(-"AvgChickMass_capture",
-                  -"AvgTarsus_capture") %>%
-    dplyr::select(names(brood_data_template)) %>%
-    dplyr::ungroup()
+    dplyr::ungroup() %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates$v1.1$Brood_data[1, !(names(data_templates$v1.1$Brood_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates$v1.1$Brood_data))
 
   Capture_data <- Capture_data %>%
-    dplyr::select(-"BroodID")
+    # Add missing columns
+    dplyr::bind_cols(data_templates$v1.1$Capture_data[1, !(names(data_templates$v1.1$Capture_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates$v1.1$Capture_data))
 
   # EXPORT DATA
 
@@ -415,12 +419,10 @@ create_brood_UAN <- function(BROOD_info, CAPTURE_info, species_filter, pop_filte
     dplyr::left_join(Tarsus_method,
                      by = "BroodID") %>%
     dplyr::filter(.data$PopID %in% pop_filter) %>%
-    # Keep only necessary columns
-    dplyr::select(dplyr::contains(names(brood_data_template))) %>%
     # Add missing columns
-    dplyr::bind_cols(brood_data_template[1, !(names(brood_data_template) %in% names(.))]) %>%
-    # Reorder columns
-    dplyr::select(names(brood_data_template))
+    dplyr::bind_cols(data_templates$v1.1$Brood_data[1, !(names(data_templates$v1.1$Brood_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates$v1.1$Brood_data))
 
   return(Brood_data)
 
@@ -502,14 +504,7 @@ create_capture_UAN <- function(CAPTURE_info, species_filter, pop_filter){
     dplyr::arrange(.data$IndvID, .data$CaptureDate) %>%
     dplyr::group_by(.data$IndvID) %>%
     dplyr::mutate(CaptureID = paste(.data$IndvID, 1:dplyr::n(), sep = "_")) %>%
-    dplyr::ungroup() %>%
-    # Arrange columns
-    # Keep only necessary columns, and BroodID (to be used when creating the individual table)
-    dplyr::select(tidyselect::contains(c(names(capture_data_template), "BroodID"))) %>%
-    # Add missing columns
-    dplyr::bind_cols(capture_data_template[1, !(names(capture_data_template) %in% names(.))]) %>%
-    # Reorder columns
-    dplyr::select(names(capture_data_template), "BroodID")
+    dplyr::ungroup()
 
   return(Capture_data)
 
@@ -579,12 +574,10 @@ create_individual_UAN <- function(INDV_info, Capture_data, species_filter){
     dplyr::left_join(Sex_calc,
                      by = "IndvID") %>%
     dplyr::filter(.data$Species %in% species_filter) %>%
-    # Keep only necessary columns
-    dplyr::select(tidyselect::contains(names(individual_data_template))) %>%
     # Add missing columns
-    dplyr::bind_cols(individual_data_template[1, !(names(individual_data_template) %in% names(.))]) %>%
-    # Reorder columns
-    dplyr::select(names(individual_data_template))
+    dplyr::bind_cols(data_templates$v1.1$Individual_data[1, !(names(data_templates$v1.1$Individual_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates$v1.1$Individual_data))
 
   return(Indv_data)
 
@@ -633,12 +626,10 @@ create_location_UAN <- function(BOX_info){
   Location_data$'TRUE'$Latitude <- true_coords[, 2]
 
   Location_data <- dplyr::bind_rows(Location_data) %>%
-    # Keep only necessary columns
-    dplyr::select(tidyselect::contains(names(location_data_template))) %>%
     # Add missing columns
-    dplyr::bind_cols(location_data_template[1, !(names(location_data_template) %in% names(.))]) %>%
-    # Reorder columns
-    dplyr::select(names(location_data_template))
+    dplyr::bind_cols(data_templates$v1.1$Location_data[1, !(names(data_templates$v1.1$Location_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates$v1.1$Location_data))
 
   return(Location_data)
 

@@ -18,38 +18,16 @@ create_dummy_data <- function() {
 
   # Create skeletons for each pipeline data frame
   # Brood data
-  Brood_data <- brood_data_template[1,] %>%
-    dplyr::mutate(dplyr::across(.cols = tidyselect::where(is.character), .fns = ~ NA_character_),
-                  dplyr::across(.cols = tidyselect::where(is.integer), .fns = ~ NA_integer_),
-                  dplyr::across(.cols = tidyselect::where(~ class(.x) == "Date"), .fns = ~ as.Date(NA_character_)),
-                  Row = NA_integer_) %>%
-    dplyr::select("Row", tidyselect::everything())
-
+  Brood_data <- data_templates$v1.1$Brood_data
 
   # Capture data
-  Capture_data <- capture_data_template[1,] %>%
-    dplyr::mutate(dplyr::across(.cols = tidyselect::where(is.character), .fns = ~ NA_character_),
-                  dplyr::across(.cols = tidyselect::where(is.integer), .fns = ~ NA_integer_),
-                  dplyr::across(.cols = tidyselect::where(~ class(.x) == "Date"), .fns = ~ as.Date(NA_character_)),
-                  Row = NA_integer_) %>%
-    dplyr::select("Row", tidyselect::everything())
-
+  Capture_data <- data_templates$v1.1$Capture_data
 
   # Individual data
-  Individual_data <- individual_data_template[1,] %>%
-    dplyr::mutate(dplyr::across(.cols = tidyselect::where(is.character), .fns = ~ NA_character_),
-                  dplyr::across(.cols = tidyselect::where(is.integer), .fns = ~ NA_integer_),
-                  Row = NA_integer_) %>%
-    dplyr::select("Row", tidyselect::everything())
-
+  Individual_data <- data_templates$v1.1$Individual_data
 
   # Location data
-  Location_data <- location_data_template[1,] %>%
-    dplyr::mutate(dplyr::across(.cols = tidyselect::where(is.character), .fns = ~ NA_character_),
-                  dplyr::across(.cols = tidyselect::where(is.integer), .fns = ~ NA_integer_),
-                  dplyr::across(.cols = tidyselect::where(is.numeric), .fns = ~ NA_real_),
-                  Row = NA_integer_) %>%
-    dplyr::select("Row", tidyselect::everything())
+  Location_data <- data_templates$v1.1$Location_data
 
 
   # Add rows in which single checks can be validated

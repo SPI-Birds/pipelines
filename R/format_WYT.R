@@ -123,23 +123,17 @@ format_WYT <- function(db = choose_directory(),
   Brood_data <- Brood_data %>%
     dplyr::left_join(avg_chick_mass, by = c("BroodID" = "BroodIDLaid")) %>%
     dplyr::left_join(avg_chick_tarsus, by = c("BroodID" = "BroodIDLaid")) %>%
-    # Keep only necessary columns
-    dplyr::select(tidyselect::contains(names(brood_data_template))) %>%
     # Add missing columns
-    dplyr::bind_cols(brood_data_template[0, !(names(brood_data_template) %in% names(.))] %>%
-                       dplyr::add_row()) %>%
-    # Reorder columns
-    dplyr::select(names(brood_data_template))
+    dplyr::bind_cols(data_templates$v1.1$Brood_data[1, !(names(data_templates$v1.1$Brood_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates$v1.1$Brood_data))
 
   # Remove unneeded columns in Capture data
   Capture_data <- Capture_data %>%
-    # Keep only necessary columns
-    dplyr::select(tidyselect::contains(names(capture_data_template))) %>%
     # Add missing columns
-    dplyr::bind_cols(capture_data_template[0, !(names(capture_data_template) %in% names(.))] %>%
-                       dplyr::add_row()) %>%
-    # Reorder columns
-    dplyr::select(names(capture_data_template))
+    dplyr::bind_cols(data_templates$v1.1$Capture_data[1, !(names(data_templates$v1.1$Capture_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates$v1.1$Capture_data))
 
   # EXPORT DATA
 
@@ -424,13 +418,10 @@ create_individual_WYT <- function(Capture_data){
                      Sex_calculated = dplyr::case_when(length(unique(stats::na.omit(.data$Sex_observed))) == 2 ~ "C",
                                                        TRUE ~ dplyr::first(stats::na.omit(.data$Sex_observed))),
                      .groups = "drop") %>%
-    # Keep only necessary columns
-    dplyr::select(tidyselect::contains(names(individual_data_template))) %>%
     # Add missing columns
-    dplyr::bind_cols(individual_data_template[0, !(names(individual_data_template) %in% names(.))] %>%
-                       dplyr::add_row()) %>%
-    # Reorder columns
-    dplyr::select(names(individual_data_template))
+    dplyr::bind_cols(data_templates$v1.1$Individual_data[1, !(names(data_templates$v1.1$Individual_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates$v1.1$Individual_data))
 
   return(Individual_data)
 
@@ -453,7 +444,11 @@ create_location_WYT <- function(Brood_data, Capture_data){
                                   Longitude = NA_real_,
                                   StartSeason = 1947L,
                                   EndSeason = NA_integer_,
-                                  HabitatType = "deciduous")
+                                  HabitatType = "deciduous") %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates$v1.1$Location_data[1, !(names(data_templates$v1.1$Location_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates$v1.1$Location_data))
 
   return(Location_data)
 

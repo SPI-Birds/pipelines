@@ -209,12 +209,10 @@ format_NIOO <- function(db = choose_directory(),
   Brood_data <- Brood_data %>%
     dplyr::left_join(avg_mass,
                      by = "BroodID") %>%
-    ## Keep only necessary columns
-    dplyr::select(tidyselect::contains(names(brood_data_template))) %>%
     ## Add missing columns
-    dplyr::bind_cols(brood_data_template[1, !(names(brood_data_template) %in% names(.))]) %>%
-    ## Reorder columns
-    dplyr::select(names(brood_data_template))
+    dplyr::bind_cols(data_templates$v1.1$Brood_data[1, !(names(data_templates$v1.1$Brood_data) %in% names(.))]) %>%
+    ## Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates$v1.1$Brood_data))
 
   # REMOVE UNWANTED COLUMNS AND CHANGE FORMATS
   Individual_data <- Individual_data %>%
@@ -226,13 +224,10 @@ format_NIOO <- function(db = choose_directory(),
                   CapturePlot = as.character(.data$CapturePlot),
                   ReleasePlot = as.character(.data$ReleasePlot),
                   CaptureDate = lubridate::ymd(.data$CaptureDate)) %>%
-    ## Keep only necessary columns
-    dplyr::select(tidyselect::contains(names(capture_data_template))) %>%
     ## Add missing columns
-    dplyr::bind_cols(capture_data_template[0, !(names(capture_data_template) %in% names(.))] %>%
-                       dplyr::add_row()) %>%
-    ## Reorder columns
-    dplyr::select(names(capture_data_template))
+    dplyr::bind_cols(data_templates$v1.1$Capture_data[1, !(names(data_templates$v1.1$Capture_data) %in% names(.))]) %>%
+    ## Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates$v1.1$Capture_data))
 
   Brood_data <- Brood_data %>%
     dplyr::mutate(dplyr::across(.cols = tidyselect::ends_with("ID"), .fns = ~as.character(.)))
@@ -588,13 +583,10 @@ create_individual_NIOO <- function(dir, Capture_data, location_data, species_fil
                                                 TRUE ~ as.integer(.data$RingYear)),
                   BroodIDLaid = as.character(.data$BroodIDLaid),
                   BroodIDFledged = as.character(.data$BroodIDFledged)) %>%
-    ## Keep only necessary columns
-    dplyr::select(dplyr::contains(names(individual_data_template))) %>%
     ## Add missing columns
-    dplyr::bind_cols(individual_data_template[0, !(names(individual_data_template) %in% names(.))] %>%
-                       dplyr::add_row()) %>%
-    ## Reorder columns
-    dplyr::select(names(individual_data_template))
+    dplyr::bind_cols(data_templates$v1.1$Individual_data[1, !(names(data_templates$v1.1$Individual_data) %in% names(.))]) %>%
+    ## Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates$v1.1$Individual_data))
 
   return(Individual_data)
 
@@ -633,13 +625,10 @@ create_location_NIOO <- function(dir, location_data, species_filter, pop_filter)
                   HabitatType = dplyr::case_when(.data$PopID %in% c("VLI", "HOG", "WES", "BUU") ~ "mixed",
                                                  .data$PopID %in% c("OOS", "LIE", "WAR") ~ "deciduous")) %>%
     dplyr::arrange(.data$LocationID, .data$StartSeason) %>%
-    ## Keep only necessary columns
-    dplyr::select(dplyr::contains(names(location_data_template))) %>%
     ## Add missing columns
-    dplyr::bind_cols(location_data_template[0, !(names(location_data_template) %in% names(.))] %>%
-                       dplyr::add_row()) %>%
-    ## Reorder columns
-    dplyr::select(names(location_data_template))
+    dplyr::bind_cols(data_templates$v1.1$Location_data[1, !(names(data_templates$v1.1$Location_data) %in% names(.))]) %>%
+    ## Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates$v1.1$Location_data))
 
 
   return(Location_data)

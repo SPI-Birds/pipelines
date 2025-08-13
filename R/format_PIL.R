@@ -161,20 +161,16 @@ format_PIL <- function(db = choose_directory(),
 
   # Remove unneccesary columns in Brood and Capture data
   Brood_data <- Brood_data %>%
-    # Keep only necessary columns
-    dplyr::select(tidyselect::contains(names(brood_data_template))) %>%
     # Add missing columns
-    dplyr::bind_cols(brood_data_template[1, !(names(brood_data_template) %in% names(.))]) %>%
-    # Reorder columns
-    dplyr::select(names(brood_data_template))
+    dplyr::bind_cols(data_templates$v1.1$Brood_data[1, !(names(data_templates$v1.1$Brood_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates$v1.1$Brood_data))
 
   Capture_data <- Capture_data %>%
-    # Keep only necessary columns
-    dplyr::select(tidyselect::contains(names(capture_data_template))) %>%
     # Add missing columns
-    dplyr::bind_cols(capture_data_template[1, !(names(capture_data_template) %in% names(.))]) %>%
-    # Reorder columns
-    dplyr::select(names(capture_data_template))
+    dplyr::bind_cols(data_templates$v1.1$Capture_data[1, !(names(data_templates$v1.1$Capture_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates$v1.1$Capture_data))
 
   # EXPORT DATA
 
@@ -451,12 +447,10 @@ create_individual_PIL <- function(Capture_data){
   Indv_data <- Indv_info %>%
     dplyr::left_join(Sex_calc,
                      by = "IndvID") %>%
-    # Keep only necessary columns
-    dplyr::select(tidyselect::contains(names(individual_data_template))) %>%
     # Add missing columns
-    dplyr::bind_cols(individual_data_template[1, !(names(individual_data_template) %in% names(.))]) %>%
-    # Reorder columns
-    dplyr::select(names(individual_data_template))
+    dplyr::bind_cols(data_templates$v1.1$Individual_data[1, !(names(data_templates$v1.1$Individual_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates$v1.1$Individual_data))
 
   return(Indv_data)
 
@@ -480,7 +474,11 @@ create_location_PIL <- function(PIL_data){
                                   Longitude = NA_real_,
                                   StartSeason = min(as.integer(PIL_data$year)),
                                   EndSeason = NA_integer_,
-                                  HabitatType = "deciduous")
+                                  HabitatType = "deciduous") %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates$v1.1$Location_data[1, !(names(data_templates$v1.1$Location_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates$v1.1$Location_data))
 
   return(Location_data)
 
