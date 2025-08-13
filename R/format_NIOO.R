@@ -210,9 +210,9 @@ format_NIOO <- function(db = choose_directory(),
     dplyr::left_join(avg_mass,
                      by = "BroodID") %>%
     ## Add missing columns
-    dplyr::bind_cols(data_templates$v1.1$Brood_data[1, !(names(data_templates$v1.1$Brood_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Brood_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Brood_data) %in% names(.))]) %>%
     ## Keep only columns that are in the standard format and order correctly
-    dplyr::select(names(data_templates$v1.1$Brood_data))
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Brood_data))
 
   # REMOVE UNWANTED COLUMNS AND CHANGE FORMATS
   Individual_data <- Individual_data %>%
@@ -225,9 +225,9 @@ format_NIOO <- function(db = choose_directory(),
                   ReleasePlot = as.character(.data$ReleasePlot),
                   CaptureDate = lubridate::ymd(.data$CaptureDate)) %>%
     ## Add missing columns
-    dplyr::bind_cols(data_templates$v1.1$Capture_data[1, !(names(data_templates$v1.1$Capture_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Capture_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Capture_data) %in% names(.))]) %>%
     ## Keep only columns that are in the standard format and order correctly
-    dplyr::select(names(data_templates$v1.1$Capture_data))
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Capture_data))
 
   Brood_data <- Brood_data %>%
     dplyr::mutate(dplyr::across(.cols = tidyselect::ends_with("ID"), .fns = ~as.character(.)))
@@ -509,16 +509,17 @@ create_capture_NIOO <- function(dir, Brood_data, location_data, species_filter, 
 #' Create individual data table in standard format for data from NIOO.
 #'
 #' @param dir Path to directory containing the relevant table exports from the NIOO Access database.
+#' @param Capture_data Data frame. Capture data output from pipeline.
 #' @param location_data Data frame with location codes and corresponding PopID.
 #' @param species_filter Species six letter codes from the standard protocol.
 #'   Used to filter the data.
 #' @param pop_filter Population three letter codes from the standard protocol.
 #'   Used to filter the data.
-#' @param Capture_data Data frame. Capture data output from pipeline.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_individual_NIOO <- function(dir, Capture_data, location_data, species_filter, pop_filter){
+create_individual_NIOO <- function(dir, Capture_data, location_data, species_filter, pop_filter, protocol_version){
 
   #This is a summary of each individual and general lifetime information (e.g. sex, resident/immigrant).
 
@@ -584,9 +585,9 @@ create_individual_NIOO <- function(dir, Capture_data, location_data, species_fil
                   BroodIDLaid = as.character(.data$BroodIDLaid),
                   BroodIDFledged = as.character(.data$BroodIDFledged)) %>%
     ## Add missing columns
-    dplyr::bind_cols(data_templates$v1.1$Individual_data[1, !(names(data_templates$v1.1$Individual_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Individual_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Individual_data) %in% names(.))]) %>%
     ## Keep only columns that are in the standard format and order correctly
-    dplyr::select(names(data_templates$v1.1$Individual_data))
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Individual_data))
 
   return(Individual_data)
 
@@ -602,10 +603,11 @@ create_individual_NIOO <- function(dir, Capture_data, location_data, species_fil
 #'   Used to filter the data.
 #' @param pop_filter Population three letter codes from the standard protocol.
 #'   Used to filter the data.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_location_NIOO <- function(dir, location_data, species_filter, pop_filter){
+create_location_NIOO <- function(dir, location_data, species_filter, pop_filter, protocol_version){
 
   #Extract information on nestbox locations
   Location_data <- utils::read.csv(paste0(dir, "/", "dbo_tbl_NestboxAppearance", ".csv")) %>%
@@ -626,10 +628,9 @@ create_location_NIOO <- function(dir, location_data, species_filter, pop_filter)
                                                  .data$PopID %in% c("OOS", "LIE", "WAR") ~ "deciduous")) %>%
     dplyr::arrange(.data$LocationID, .data$StartSeason) %>%
     ## Add missing columns
-    dplyr::bind_cols(data_templates$v1.1$Location_data[1, !(names(data_templates$v1.1$Location_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Location_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Location_data) %in% names(.))]) %>%
     ## Keep only columns that are in the standard format and order correctly
-    dplyr::select(names(data_templates$v1.1$Location_data))
-
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Location_data))
 
   return(Location_data)
 

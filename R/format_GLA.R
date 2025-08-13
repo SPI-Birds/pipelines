@@ -240,19 +240,19 @@ format_GLA <- function(db = choose_directory(),
 
   #### BROOD DATA
   message("Compiling brood information...")
-  Brood_data <- create_brood_GLA(nest_data, rr_data)
+  Brood_data <- create_brood_GLA(nest_data, rr_data, protocol_version)
 
   #### CAPTURE DATA
   message("Compiling capture information...")
-  Capture_data <- create_capture_GLA(nest_data, rr_data, Brood_data)
+  Capture_data <- create_capture_GLA(nest_data, rr_data, Brood_data, protocol_version)
 
   #### INDIVIDUAL DATA
   message("Compiling individual information...")
-  Individual_data <- create_individual_GLA(Capture_data, Brood_data)
+  Individual_data <- create_individual_GLA(Capture_data, Brood_data, protocol_version)
 
   #### LOCATION DATA
   message("Compiling location information...")
-  Location_data <- create_location_GLA(nest_data, rr_data)
+  Location_data <- create_location_GLA(nest_data, rr_data, protocol_version)
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
@@ -304,9 +304,11 @@ format_GLA <- function(db = choose_directory(),
 #'
 #' @param rr_data Data frame of ringing records from Glasgow, Scotland.
 #'
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
+#'
 #' @return A data frame.
 
-create_brood_GLA <- function(nest_data, rr_data) {
+create_brood_GLA <- function(nest_data, rr_data, protocol_version) {
 
   ## Get brood data from ringing records
   rr_data_brood_sum <- rr_data %>%
@@ -399,10 +401,10 @@ create_brood_GLA <- function(nest_data, rr_data) {
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data =. , protocol_version = "1.1", na.rm = FALSE)) %>%
 
     ## Add missing columns
-    dplyr::bind_cols(data_templates$v1.1$Brood_data[1, !(names(data_templates$v1.1$Brood_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Brood_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Brood_data) %in% names(.))]) %>%
 
     ## Keep only columns that are in the standard format and order correctly
-    dplyr::select(names(data_templates$v1.1$Brood_data))
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Brood_data))
 
   return(Brood_data)
 
@@ -416,9 +418,11 @@ create_brood_GLA <- function(nest_data, rr_data) {
 #'
 #' @param Brood_data Data frame of Brood data in standard format from Glasgow, Scotland.
 #'
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
+#'
 #' @return A data frame.
 
-create_capture_GLA <- function(nest_data, rr_data, Brood_data) {
+create_capture_GLA <- function(nest_data, rr_data, Brood_data, protocol_version) {
 
   ## Capture data from ringing records
   ## TODO: Check on tarsus method
@@ -456,10 +460,10 @@ create_capture_GLA <- function(nest_data, rr_data, Brood_data) {
                                                   TRUE ~ as.character(.data$CapturePopID))) %>%  ## Set ReleasePopID to NA if ReleaseAlive is FALSE, otherwise same as CapturePopID
 
     ## Add missing columns
-    dplyr::bind_cols(data_templates$v1.1$Capture_data[1, !(names(data_templates$v1.1$Capture_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Capture_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Capture_data) %in% names(.))]) %>%
 
     ## Keep only columns that are in the standard format and order correctly
-    dplyr::select(names(data_templates$v1.1$Capture_data))
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Capture_data))
 
 
   ## Create capture data from nest data.
@@ -489,10 +493,10 @@ create_capture_GLA <- function(nest_data, rr_data, Brood_data) {
     dplyr::ungroup() %>%
 
     ## Add missing columns
-    dplyr::bind_cols(data_templates$v1.1$Capture_data[1, !(names(data_templates$v1.1$Capture_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Capture_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Capture_data) %in% names(.))]) %>%
 
     ## Keep only columns that are in the standard format and order correctly
-    dplyr::select(names(data_templates$v1.1$Capture_data))
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Capture_data))
 
 
   ## Get records of individuals that were reported in the nest data, but not in the ringing records
@@ -528,10 +532,10 @@ create_capture_GLA <- function(nest_data, rr_data, Brood_data) {
     dplyr::mutate(CaptureID = paste(.data$IndvID, dplyr::row_number(), sep = "_")) %>%
 
     ## Add missing columns
-    dplyr::bind_cols(data_templates$v1.1$Capture_data[1, !(names(data_templates$v1.1$Capture_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Capture_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Capture_data) %in% names(.))]) %>%
 
     ## Keep only columns that are in the standard format and order correctly
-    dplyr::select(names(data_templates$v1.1$Capture_data))
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Capture_data))
 
   return(Capture_data)
 
@@ -539,13 +543,15 @@ create_capture_GLA <- function(nest_data, rr_data, Brood_data) {
 
 #' Create individual table for great tits and blue tits in Glasgow, Scotland.
 #'
-#' @param Capture_data Capture data output from Glasgow, Scotland
+#' @param Capture_data Capture data output from Glasgow, Scotland.
 #'
-#' @param Brood_data Brood data output from Glasgow, Scotland
+#' @param Brood_data Brood data output from Glasgow, Scotland.
+#'
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_individual_GLA <- function(Capture_data, Brood_data){
+create_individual_GLA <- function(Capture_data, Brood_data, protocol_version){
 
   Individual_data_temp <- Capture_data %>%
 
@@ -634,10 +640,10 @@ create_individual_GLA <- function(Capture_data, Brood_data){
     dplyr::ungroup() %>%
 
     ## Add missing columns
-    dplyr::bind_cols(data_templates$v1.1$Individual_data[1, !(names(data_templates$v1.1$Individual_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Individual_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Individual_data) %in% names(.))]) %>%
 
     ## Keep only columns that are in the standard format and order correctly
-    dplyr::select(names(data_templates$v1.1$Individual_data))
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Individual_data))
 
   return(Individual_data)
 
@@ -650,9 +656,11 @@ create_individual_GLA <- function(Capture_data, Brood_data){
 #'
 #' @param rr_data Data frame of ringing records from Glasgow, Scotland.
 #'
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
+#'
 #' @return A data frame.
 
-create_location_GLA <- function(nest_data, rr_data) {
+create_location_GLA <- function(nest_data, rr_data, protocol_version) {
 
   ## Build location data based on ringing recovery data first
   ## Then join nest data
@@ -696,10 +704,10 @@ create_location_GLA <- function(nest_data, rr_data) {
                                                .data$PopID == "SAL" ~ -4.5993)) %>%
 
     ## Add missing columns
-    dplyr::bind_cols(data_templates$v1.1$Location_data[1, !(names(data_templates$v1.1$Location_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Location_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Location_data) %in% names(.))]) %>%
 
     ## Keep only columns that are in the standard format and order correctly
-    dplyr::select(names(data_templates$v1.1$Location_data))
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Location_data))
 
   return(Location_data)
 

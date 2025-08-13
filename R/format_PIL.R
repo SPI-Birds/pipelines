@@ -117,13 +117,13 @@ format_PIL <- function(db = choose_directory(),
 
   message("Compiling individual data...")
 
-  Individual_data <- create_individual_PIL(Capture_data = Capture_data)
+  Individual_data <- create_individual_PIL(Capture_data = Capture_data, protocol_version = protocol_version)
 
   # LOCATION DATA
 
   message("Compiling location data...")
 
-  Location_data <- create_location_PIL(PIL_data = PIL_data)
+  Location_data <- create_location_PIL(PIL_data = PIL_data, protocol_version = protocol_version)
 
   # WRANGLE DATA FOR EXPORT
 
@@ -162,15 +162,15 @@ format_PIL <- function(db = choose_directory(),
   # Remove unneccesary columns in Brood and Capture data
   Brood_data <- Brood_data %>%
     # Add missing columns
-    dplyr::bind_cols(data_templates$v1.1$Brood_data[1, !(names(data_templates$v1.1$Brood_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Brood_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Brood_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format and order correctly
-    dplyr::select(names(data_templates$v1.1$Brood_data))
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Brood_data))
 
   Capture_data <- Capture_data %>%
     # Add missing columns
-    dplyr::bind_cols(data_templates$v1.1$Capture_data[1, !(names(data_templates$v1.1$Capture_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Capture_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Capture_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format and order correctly
-    dplyr::select(names(data_templates$v1.1$Capture_data))
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Capture_data))
 
   # EXPORT DATA
 
@@ -413,10 +413,11 @@ create_capture_PIL <- function(PIL_data, species_filter){
 #' Create full individual data table in standard format for data from Pilis-Visegrád Mountains, Hungary.
 #'
 #' @param Capture_data Output of \code{\link{create_capture_PIL}}.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_individual_PIL <- function(Capture_data){
+create_individual_PIL <- function(Capture_data, protocol_version){
 
   # Take capture data and determine summary data for each individual
   Indv_info <- Capture_data %>%
@@ -448,9 +449,9 @@ create_individual_PIL <- function(Capture_data){
     dplyr::left_join(Sex_calc,
                      by = "IndvID") %>%
     # Add missing columns
-    dplyr::bind_cols(data_templates$v1.1$Individual_data[1, !(names(data_templates$v1.1$Individual_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Individual_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Individual_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format and order correctly
-    dplyr::select(names(data_templates$v1.1$Individual_data))
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Individual_data))
 
   return(Indv_data)
 
@@ -461,10 +462,11 @@ create_individual_PIL <- function(Capture_data){
 #' Create location data table in standard format for data from Pilis-Visegrád Mountains, Hungary.
 #'
 #' @param PIL_data Data frame with primary data from Pilis-Visegrád Mountains
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_location_PIL <- function(PIL_data){
+create_location_PIL <- function(PIL_data, protocol_version){
 
   Location_data <- tibble::tibble(LocationID = unique(PIL_data$LocationID),
                                   NestboxID = unique(PIL_data$LocationID),
@@ -476,9 +478,9 @@ create_location_PIL <- function(PIL_data){
                                   EndSeason = NA_integer_,
                                   HabitatType = "deciduous") %>%
     # Add missing columns
-    dplyr::bind_cols(data_templates$v1.1$Location_data[1, !(names(data_templates$v1.1$Location_data) %in% names(.))]) %>%
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Location_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Location_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format and order correctly
-    dplyr::select(names(data_templates$v1.1$Location_data))
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Location_data))
 
   return(Location_data)
 
