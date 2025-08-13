@@ -172,13 +172,13 @@ format_NIOO <- function(db = choose_directory(),
 
   message("Compiling individual information...")
   individual_start_new <- Sys.time()
-  Individual_data <- create_individual_NIOO(table_dir, Capture_data, Locations, species_filter, pop_filter)
+  Individual_data <- create_individual_NIOO(table_dir, Capture_data, Locations, species_filter, pop_filter, protocol_version)
   (individual_duration_new <- Sys.time() - individual_start_new)
   # NESTBOX DATA
 
   message("Compiling nestbox information...")
   location_start_new <- Sys.time()
-  Location_data <- create_location_NIOO(table_dir, Locations, species_filter, pop_filter)
+  Location_data <- create_location_NIOO(table_dir, Locations, species_filter, pop_filter, protocol_version)
   (location_duration_new <- Sys.time() - location_start_new)
   # WRANGLE DATA FOR SAVING
 
