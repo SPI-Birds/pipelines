@@ -184,8 +184,8 @@ format_HAR <- function(db = choose_directory(),
     dplyr::mutate(Mass = dplyr::na_if(.data$Mass, 0),
                   Tarsus = dplyr::na_if(.data$Tarsus, 0)) %>%
     dplyr::group_by(.data$BroodID) %>%
-    dplyr::summarise(AvgEggMass = NA,
-                     NumberEggs = NA,
+    dplyr::summarise(AvgEggMass = NA_real_,
+                     NumberEggs = NA_integer_,
                      AvgChickMass = mean(.data$Mass, na.rm = TRUE),
                      NumberChicksMass = dplyr::n(),
                      AvgTarsus = mean(.data$Tarsus, na.rm = TRUE),
@@ -282,7 +282,8 @@ create_brood_HAR <- function(db, species_filter){
     #Remove unwanted columns
     dplyr::select(-"ReasonFailed":-"MalePresent", -"ExpData1":-"TempCode2") %>%
     #Create unique BroodID with year_locationID_BroodID
-    dplyr::mutate(BroodID = paste(.data$BreedingSeason, .data$LocationID, .data$BroodID, sep = "_")) %>%
+    dplyr::mutate(BreedingSeason = as.numeric(.data$BreedingSeason),
+                  BroodID = paste(.data$BreedingSeason, .data$LocationID, .data$BroodID, sep = "_")) %>%
     #Convert species codes to letter codes
     dplyr::mutate(Species = dplyr::case_when(.data$Species == "FICHYP" ~ species_codes$Species[which(species_codes$speciesEURINGCode == 13490)],
                                              .data$Species == "PARCAE" ~ species_codes$Species[which(species_codes$speciesEURINGCode == 14620)],
@@ -313,10 +314,10 @@ create_brood_HAR <- function(db, species_filter){
                                                     .data$HatchDateError == "3" ~ 3L,
                                                     .data$HatchDateError == "4" ~ 7L),
                   FledgeDate = as.Date(NA),
-                  ClutchSizeError = NA_real_,
-                  BroodSizeError = NA_real_,
-                  FledgeDateError = NA_real_,
-                  NumberFledgedError = NA_real_,
+                  ClutchSizeError = NA_integer_,
+                  BroodSizeError = NA_integer_,
+                  FledgeDateError = NA_integer_,
+                  NumberFledgedError = NA_integer_,
                   BroodSize = as.integer(.data$BroodSize)) %>%
     #Arrange columns correctly
     dplyr::select("BroodID", "PopID", "BreedingSeason", "Species", "Plot", "LocationID",
@@ -381,7 +382,7 @@ create_nestling_HAR <- function(db, Brood_data){
                        dplyr::select("BroodID", "HatchDate"),
                      by = "BroodID") %>%
     #Determine age at capture
-    dplyr::mutate(ChickAge = as.integer(.data$CaptureDate - .data$HatchDate))
+    dplyr::mutate(ChickAge = as.numeric(.data$CaptureDate - .data$HatchDate))
 
   return(Nestling_data)
 
@@ -401,7 +402,7 @@ create_nestling_HAR <- function(db, Brood_data){
 #'
 #' @return A data frame.
 
-create_capture_HAR    <- function(db, Brood_data, species_filter, return_errors){
+create_capture_HAR <- function(db, Brood_data, species_filter, return_errors){
 
   Nestling_data <- create_nestling_HAR(db = db, Brood_data = Brood_data)
 
@@ -433,7 +434,8 @@ create_capture_HAR    <- function(db, Brood_data, species_filter, return_errors)
 
   Capture_data <- Capture_data %>%
     #Create unique broodID
-    dplyr::mutate(BroodID = paste(.data$BreedingSeason, .data$LocationID, .data$BroodID, sep = "_"),
+    dplyr::mutate(BreedingSeason = as.numeric(.data$BreedingSeason),
+                  BroodID = paste(.data$BreedingSeason, .data$LocationID, .data$BroodID, sep = "_"),
                   CaptureDate = as.Date(paste(.data$Day, .data$Month, .data$BreedingSeason, sep = "/"),
                                         format = "%d/%m/%Y"),
                   CaptureTime = dplyr::na_if(paste0(.data$Time, ":00"), "NA:00")) %>%
@@ -459,7 +461,7 @@ create_capture_HAR    <- function(db, Brood_data, species_filter, return_errors)
     dplyr::filter(!.data$Age %in% c("PP", "PM") | is.na(.data$Age)) %>%
     dplyr::mutate(Capture_type = "Adult",
                   Last2DigitsRingNr = NA,
-                  ChickAge = NA,
+                  ChickAge = NA_real_,
                   IndvID = paste(.data$RingSeries, .data$RingNumber, sep = "-")) %>%
     dplyr::select("IndvID", "BreedingSeason", "CaptureDate", "CaptureTime",
                   "ObserverID", "LocationID", "BroodID", "Species", "Sex", "Age",
@@ -487,7 +489,7 @@ create_capture_HAR    <- function(db, Brood_data, species_filter, return_errors)
     #Join in Brood_data (with HatchDate) so we can determine ChickAge
     dplyr::mutate(Capture_type = "Chick",
                   Last2DigitsRingNr = NA,
-                  ChickAge = as.integer(.data$CaptureDate - .data$HatchDate),
+                  ChickAge = as.numeric(.data$CaptureDate - .data$HatchDate),
                   IndvID = paste(.data$RingSeries, .data$RingNumber, sep = "-")) %>%
     dplyr::select("IndvID", "BreedingSeason", "CaptureDate", "CaptureTime",
                   "ObserverID", "LocationID", "BroodID", "Species", "Sex", "Age",
@@ -520,7 +522,7 @@ create_capture_HAR    <- function(db, Brood_data, species_filter, return_errors)
                      by = c("BroodID", "Last2DigitsRingNr", "CaptureDate")) %>%
     dplyr::left_join(Brood_data %>%
                        dplyr::select("BroodID", "HatchDate"), by = "BroodID") %>%
-    dplyr::mutate(ChickAge = as.integer(.data$CaptureDate - .data$HatchDate)) %>%
+    dplyr::mutate(ChickAge = as.numeric(.data$CaptureDate - .data$HatchDate)) %>%
     dplyr::select("IndvID", "BreedingSeason", "CaptureDate", "CaptureTime",
                   "ObserverID", "LocationID", "BroodID", "Species", "Sex", "Age",
                   "WingLength", "Mass", "CaptureType", "BirdStatus", "Last2DigitsRingNr", "ChickAge")
@@ -727,12 +729,12 @@ create_capture_HAR    <- function(db, Brood_data, species_filter, return_errors)
                   CapturePlot = NA_character_,
                   ReleasePopID = "HAR",
                   ReleasePlot = NA_character_,
-                  Age_observed = dplyr::case_when(.data$Age %in% c("PM", "PP") ~ 1L,
-                                                  .data$Age == "FL" ~ 2L,
-                                                  .data$Age == "1" ~ 3L,
-                                                  .data$Age == "+1" ~ 4L,
-                                                  .data$Age == "2" ~ 5L,
-                                                  .data$Age == "+2" ~ 6L)) %>%
+                  Age_observed = dplyr::case_when(.data$Age %in% c("PM", "PP") ~ 1,
+                                                  .data$Age == "FL" ~ 2,
+                                                  .data$Age == "1" ~ 3,
+                                                  .data$Age == "+1" ~ 4,
+                                                  .data$Age == "2" ~ 5,
+                                                  .data$Age == "+2" ~ 6)) %>%
     #Determine age at first capture for every individual
     #First arrange the data chronologically within each individual
     dplyr::arrange(.data$IndvID, .data$CaptureDate, .data$CaptureTime) %>%
