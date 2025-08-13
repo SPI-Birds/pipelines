@@ -424,7 +424,7 @@ categorical_variables <- tibble::lst(
 
   # Individual data
   Individual_data = tibble::lst(
-    Species = c(species_codes$speciesID, "FICHIB", "CCCCCC"), # v1.0 & v1.1
+    Species = c(species_codes$Species, "FICHIB", "CCCCCC"), # v1.0 & v1.1
     PopID = pop_codes$PopID, # v1.0 & v1.1
     RingAge = c("chick", "adult", NA), # v1.0 & v1.1
     Sex = c("F", "M", "C", NA), # v1.0
@@ -440,7 +440,7 @@ categorical_variables <- tibble::lst(
 
   # Brood data
   Brood_data = tibble::lst(
-    Species = species_codes$speciesID, # v1.0 & v1.1
+    Species = species_codes$Species, # v1.0 & v1.1
     PopID = pop_codes$PopID, # v1.0 & v1.1
     ClutchType_observed = c("first", "second", "replacement", NA), # v1.0 & v1.1
     ClutchType_calculated = c("first", "second", "replacement", NA), # v1.0 & v1.1
@@ -454,7 +454,7 @@ categorical_variables <- tibble::lst(
 
   # Capture data
   Capture_data = tibble::lst(
-    Species = species_codes$speciesID, # v1.0 & v1.1
+    Species = species_codes$Species, # v1.0 & v1.1
     CapturePopID = pop_codes$PopID, # v1.0 & v1.1
     ReleasePopID = c(pop_codes$PopID, NA), # v1.0 & v1.1
     OriginalTarsusMethod = c("Alternative", "Standard", "Oxford", NA), # v1.0 & v1.1
