@@ -163,13 +163,13 @@ format_HAR <- function(db = choose_directory(),
 
   message("Compiling individual data...")
 
-  Individual_data <- create_individual_HAR(Capture_data = Capture_data)
+  Individual_data <- create_individual_HAR(Capture_data = Capture_data, protocol_version = protocol_version)
 
   # LOCATION DATA
 
   message("Compiling location data...")
 
-  Location_data <- create_location_HAR(db = db)
+  Location_data <- create_location_HAR(db = db, protocol_version = protocol_version)
 
   #CURRENTLY ASSUMING THAT EACH LOCATION AND NEST BOX ARE IDENTICAL
   #GO THROUGH AND CHECK MORE THOROUGHLY
@@ -195,10 +195,16 @@ format_HAR <- function(db = choose_directory(),
   #Join these into Brood_data
   #Only existing broods will be used.
   Brood_data <- dplyr::left_join(Brood_data, Chick_avg, by = "BroodID") %>%
-    dplyr::select("BroodID":"NumberFledgedError", "AvgEggMass":"OriginalTarsusMethod", "ExperimentID")
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Brood_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Brood_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Brood_data))
 
   Capture_data <- Capture_data %>%
-    dplyr::select(-"Sex", -"BroodID")
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Capture_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Capture_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Capture_data))
 
   # EXPORT DATA
 
@@ -755,10 +761,11 @@ create_capture_HAR    <- function(db, Brood_data, species_filter, return_errors)
 #' Create full individual data table in standard format for data from Harjavalta, Finland.
 #'
 #' @param Capture_data Output of \code{\link{create_capture_HAR}}.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_individual_HAR <- function(Capture_data){
+create_individual_HAR <- function(Capture_data, protocol_version){
 
   #Take capture data and determine summary data for each individual
   Indv_data <- Capture_data %>%
@@ -814,7 +821,12 @@ create_individual_HAR <- function(Capture_data){
                   BroodIDFledged = .data$BroodIDLaid) %>%
     #Ungroup to prevent warnings in debug report
     dplyr::ungroup() %>%
-    dplyr::arrange(.data$RingSeason, .data$IndvID)
+    dplyr::arrange(.data$RingSeason, .data$IndvID) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Individual_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Individual_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Individual_data))
+
 
   return(Indv_data)
 
@@ -825,11 +837,12 @@ create_individual_HAR <- function(Capture_data){
 #' Create full location data table in standard format for data from Harjavalta, Finland.
 #'
 #' @param db Location of primary data from Harjavalta.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 #' @export
 
-create_location_HAR <- function(db){
+create_location_HAR <- function(db, protocol_version){
 
   message("Extracting location data from paradox database")
 
@@ -885,8 +898,10 @@ create_location_HAR <- function(db){
                      StartSeason = min(.data$BreedingSeason),
                      EndSeason = max(.data$BreedingSeason),
                      Habitat = "Evergreen") %>%
-    dplyr::select("LocationID", "NestboxID", "LocationType", "PopID",
-                  "Latitude", "Longitude", "StartSeason", "EndSeason", "Habitat")
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Location_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Location_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Location_data))
 
   return(Location_data)
 
