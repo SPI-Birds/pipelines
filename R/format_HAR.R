@@ -752,7 +752,16 @@ create_capture_HAR <- function(db, Brood_data, species_filter, return_errors){
                   "WingLength", "Age_observed", "Age_calculated", "ChickAge",
                   "Sex", "BroodID", "CaptureType", "BirdStatus") %>%
     #Remove duplicates that can arise from cases when CaptureDate is the same in Capture and Nestling
-    dplyr::distinct()
+    dplyr::distinct() %>%
+    # Drop records with NAs in Species, CaptureDate or IndvID
+    ###TODO: When updating to v2.0.0, individuals with missing ring numbers can be dealt with by creating new individualIDs not based on ring number
+    ### (and ring numbers are stored in captureTagID/releaseTagID columns)
+    ###TODO: When updating to v2.0.0, some records with missing CaptureDate can be dealt with if year is known
+    tidyr::drop_na(tidyselect::any_of(c("Species", "CaptureDate", "IndvID"))) %>%
+    # Set records with ChickAge < 0 & > 100 to NA
+    ###TODO: Check with data owner
+    dplyr::mutate(ChickAge = dplyr::case_when(dplyr::between(.data$ChickAge, 0, 99) ~ .data$ChickAge,
+                                              TRUE ~ NA_real_))
 
   return(Capture_data_output)
 
@@ -787,7 +796,7 @@ create_individual_HAR <- function(Capture_data, protocol_version){
 
                                                 } else {
 
-                                                  return("CONFLICTED")
+                                                  return("CCCCCC")
 
                                                 }
 
@@ -899,7 +908,7 @@ create_location_HAR <- function(db, protocol_version){
                      LocationType = "NB",
                      StartSeason = min(.data$BreedingSeason),
                      EndSeason = max(.data$BreedingSeason),
-                     Habitat = "Evergreen") %>%
+                     Habitat = "evergreen") %>%
     # Add missing columns
     dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Location_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Location_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format and order correctly
