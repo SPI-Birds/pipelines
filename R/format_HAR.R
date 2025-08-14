@@ -21,7 +21,7 @@
 #'FL is unknown. We can't even attribute it to chick or adult.
 #'For this we use EURING 2 (able to fly freely but otherwise unknown).
 #'
-#'\strong{LayDateError & HatchDateError}: Accuracy of laying and hatch date
+#'\strong{LayingDateError & HatchDateError}: Accuracy of laying and hatch date
 #'are given as categories: 0-1; 1-2; 2-3; 'inaccurate'. Where error is a range,
 #'the more conservative error is used (i.e. 0-1 is recorded as 1).
 #'Cases listed as 'inaccurate' have an error of at least a week.
@@ -270,7 +270,7 @@ create_brood_HAR <- function(db, species_filter){
     dplyr::rename("BreedingSeason" = "Vuos", "LocationID" = "Nuro",
                   "BroodID" = "Anro", "Species" = "Laji",
                   "ClutchType_observed" = "Pesa", "FemaleID" = "Naaras", "MaleID" = "Koiras",
-                  "LayDate_day" = "Mpv", "LayDate_month" = "Mkk", "LayDateError" = "Mtar",
+                  "LayingDate_day" = "Mpv", "LayingDate_month" = "Mkk", "LayingDateError" = "Mtar",
                   "HatchDate_day" = "Kpv", "HatchDate_month" = "Kkk", "HatchDateError" = "Ktar",
                   "Incubation" = "Halku", "ClutchSize" = "Mulu", "BroodSize" = "Kuor",
                   "NumberFledged" = "Lent", "ReasonFailed" = "Tsyy",
@@ -298,17 +298,17 @@ create_brood_HAR <- function(db, species_filter){
                                                          .data$ClutchType_observed %in% c(2, 3, 6) ~ "replacement",
                                                          .data$ClutchType_observed == 5 ~ "second")) %>%
     #Create calendar date for laying date and hatch date
-    dplyr::mutate(LayDate = as.Date(paste(.data$LayDate_day, .data$LayDate_month, .data$BreedingSeason, sep = "/"),
-                                    format = "%d/%m/%Y"),
+    dplyr::mutate(LayingDate = as.Date(paste(.data$LayingDate_day, .data$LayingDate_month, .data$BreedingSeason, sep = "/"),
+                                       format = "%d/%m/%Y"),
                   HatchDate  = as.Date(paste(.data$HatchDate_day, .data$HatchDate_month, .data$BreedingSeason, sep = "/"),
                                        format = "%d/%m/%Y")) %>%
-    dplyr::arrange(.data$BreedingSeason, .data$Species, .data$FemaleID, .data$LayDate) %>%
+    dplyr::arrange(.data$BreedingSeason, .data$Species, .data$FemaleID, .data$LayingDate) %>%
     #Calculate clutchtype
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
-    dplyr::mutate(LayDateError = dplyr::case_when(.data$LayDateError == "1" ~ 1L,
-                                                  .data$LayDateError == "2" ~ 2L,
-                                                  .data$LayDateError == "3" ~ 3L,
-                                                  .data$LayDateError == "4" ~ 7L),
+    dplyr::mutate(LayingDateError = dplyr::case_when(.data$LayingDateError == "1" ~ 1L,
+                                                     .data$LayingDateError == "2" ~ 2L,
+                                                     .data$LayingDateError == "3" ~ 3L,
+                                                     .data$LayingDateError == "4" ~ 7L),
                   HatchDateError = dplyr::case_when(.data$HatchDateError == "1" ~ 1L,
                                                     .data$HatchDateError == "2" ~ 2L,
                                                     .data$HatchDateError == "3" ~ 3L,
@@ -325,7 +325,7 @@ create_brood_HAR <- function(db, species_filter){
     #Arrange columns correctly
     dplyr::select("BroodID", "PopID", "BreedingSeason", "Species", "Plot", "LocationID",
                   "FemaleID", "MaleID", "ClutchType_observed", "ClutchType_calculated",
-                  "LayDate", "LayDateError", "ClutchSize", "ClutchSizeError",
+                  "LayingDate", "LayingDateError", "ClutchSize", "ClutchSizeError",
                   "HatchDate", "HatchDateError", "BroodSize", "BroodSizeError",
                   "FledgeDate", "FledgeDateError", "NumberFledged", "NumberFledgedError",
                   "ExperimentID")
@@ -447,7 +447,7 @@ create_capture_HAR <- function(db, Brood_data, species_filter, return_errors){
                                              .data$Species == "PARCAE" ~ species_codes$Species[which(species_codes$speciesEURINGCode == 14620)],
                                              .data$Species == "PARMAJ" ~ species_codes$Species[which(species_codes$speciesEURINGCode == 14640)],
                                              .data$Species == "PARATE" ~ species_codes$Species[which(species_codes$speciesEURINGCode == 14610)]),
-                  ) %>%
+    ) %>%
     dplyr::filter(!is.na(.data$Species) & .data$Species %in% species_filter) %>%
     dplyr::mutate(Sex = dplyr::case_when(.data$Sex %in% c("N", "O") ~ "F",
                                          .data$Sex %in% c("K", "L") ~ "M"),
@@ -501,7 +501,7 @@ create_capture_HAR <- function(db, Brood_data, species_filter, return_errors){
   ####
 
   #3 - 4. Individual chick captures with that also have records in Nestling data
-  #These can be 3) where the records were at different dates. In thise case, both records are used
+  #These can be 3) where the records were at different dates. In this case, both records are used
   # or 4) where the records are on the same date. In this case, nestling record is used
   #unless data are missing
 
@@ -618,9 +618,10 @@ create_capture_HAR <- function(db, Brood_data, species_filter, return_errors){
 
                                            })) %>%
     tidyr::unnest(cols = "RingNumber") %>%
+    tidyr::drop_na("RingNumber") %>%
     dplyr::select("LocationID", "BroodID", "RingSeries", "RingNumber",
                   "BreedingSeason", "Species", "Sex", "Age",
-                  "ObserverID", "CaptureType", "BirdStatus") %>%
+                  "ObserverID", "CaptureType", "BirdStatus", "CaptureDate", "CaptureTime") %>%
     dplyr::distinct()
 
 
@@ -638,13 +639,19 @@ create_capture_HAR <- function(db, Brood_data, species_filter, return_errors){
     #N.B. We do left_join with BroodID and Last2Digits, so we can get multiple
     #records for each chick when they were captured more than once
     dplyr::left_join(Nestling_data %>%
-                       dplyr::select("BroodID", "CaptureDate", "CaptureTime",
+                       dplyr::select("BroodID",
                                      "Last2DigitsRingNr", "WingLength",
                                      "Mass", "ChickAge"),
                      by = c("BroodID", "Last2DigitsRingNr"),
                      ## TODO: Check BroodID 2005_0210_1 with data custodian
                      # 1 record with LastRing 707300 & 1 record with LastRing 707699
                      relationship = "many-to-many") %>%
+    #Calculate ChickAge for records with a corresponding record in Nestling data
+    dplyr::left_join(Brood_data %>%
+                       dplyr::select("BroodID", "HatchDate"),
+                     by = "BroodID") %>%
+    dplyr::mutate(ChickAge = dplyr::case_when(!is.na(.data$ChickAge) ~ .data$ChickAge,
+                                              TRUE ~ as.numeric(.data$CaptureDate - .data$HatchDate))) %>%
     dplyr::mutate(IndvID = paste(.data$RingSeries, .data$RingNumber, sep = "-")) %>%
     dplyr::select("IndvID", "BreedingSeason", "CaptureDate", "CaptureTime",
                   "ObserverID", "LocationID", "BroodID", "Species", "Sex", "Age",
@@ -721,12 +728,24 @@ create_capture_HAR <- function(db, Brood_data, species_filter, return_errors){
   message("Calculating age at each capture...")
 
   Capture_data_output <- Capture_data_expanded %>%
-    #Make Age_observed, that doesn't require any calculation, just uses observations at the time of capture
-    #PP and PM = 1, these are chicks in nest and chicks outside the nest but not yet able to fly
-    #1 = 3 (able to fly but in first year),
-    #1+ = 4 (hatched atleast 1 year ago), 2 = 5 (known to have hatched last year),
-    #2+ = 6 (hatched at least 2 years ago)
-    #FL is 2. We cannot even distinguish it as adult or chick. We just know it's fully grown.
+    # Set non-conforming IDs to NA
+    dplyr::mutate(IndvID = dplyr::case_when(stringr::str_detect(.data$IndvID, "^[:alpha:]{1,2}[-][:digit:]{5,6}$") ~ .data$IndvID,
+                                            TRUE ~ NA_character_)) %>%
+    # Drop records with NAs in Species, CaptureDate or IndvID
+    ### TODO: When updating to v2.0.0, individuals with missing ring numbers can be dealt with by creating new individualIDs not based on ring number
+    ### (and ring numbers are stored in captureTagID/releaseTagID columns)
+    ### TODO: When updating to v2.0.0, some records with missing CaptureDate can be dealt with if year is known
+    tidyr::drop_na(tidyselect::any_of(c("Species", "CaptureDate", "IndvID"))) %>%
+    # Set records with ChickAge < 0 & > 100 to NA
+    ### TODO: Check with data owner
+    dplyr::mutate(ChickAge = dplyr::case_when(dplyr::between(.data$ChickAge, 0, 99) ~ .data$ChickAge,
+                                              TRUE ~ NA_real_)) %>%
+    # Make Age_observed, that doesn't require any calculation, just uses observations at the time of capture
+    # PP and PM = 1, these are chicks in nest and chicks outside the nest but not yet able to fly
+    # 1 = 3 (able to fly but in first year),
+    # 1+ = 4 (hatched atleast 1 year ago), 2 = 5 (known to have hatched last year),
+    # 2+ = 6 (hatched at least 2 years ago)
+    # FL is 2. We cannot even distinguish it as adult or chick. We just know it's fully grown.
     dplyr::mutate(Mass = .data$Mass/10,
                   CapturePopID = "HAR",
                   CapturePlot = NA_character_,
@@ -738,33 +757,21 @@ create_capture_HAR <- function(db, Brood_data, species_filter, return_errors){
                                                   .data$Age == "+1" ~ 4,
                                                   .data$Age == "2" ~ 5,
                                                   .data$Age == "+2" ~ 6)) %>%
-    #Determine age at first capture for every individual
-    #First arrange the data chronologically within each individual
+    # Determine age at first capture for every individual
+    # First arrange the data chronologically within each individual
     dplyr::arrange(.data$IndvID, .data$CaptureDate, .data$CaptureTime) %>%
-    #Calculate age at each capture based on first capture
+     #Calculate age at each capture based on first capture
     calc_age(ID = .data$IndvID, Age = .data$Age_observed,
              Date = .data$CaptureDate, Year = .data$BreedingSeason) %>%
     dplyr::mutate(Tarsus = NA_real_,
-                  OriginalTarsusMethod = NA_character_,
-                  ## Set non-conforming IDs to NA
-                  IndvID = dplyr::case_when(stringr::str_detect(.data$IndvID, "^[:alpha:]{1,2}[-][:digit:]{5,6}$") ~ .data$IndvID,
-                                            TRUE ~ NA_character_)) %>%
+                  OriginalTarsusMethod = NA_character_) %>%
     dplyr::select("IndvID", "Species", "BreedingSeason", "CaptureDate", "CaptureTime",
                   "ObserverID", "LocationID", "CapturePopID", "CapturePlot",
                   "ReleasePopID", "ReleasePlot", "Mass", "Tarsus", "OriginalTarsusMethod",
                   "WingLength", "Age_observed", "Age_calculated", "ChickAge",
                   "Sex", "BroodID", "CaptureType", "BirdStatus") %>%
-    #Remove duplicates that can arise from cases when CaptureDate is the same in Capture and Nestling
-    dplyr::distinct() %>%
-    # Drop records with NAs in Species, CaptureDate or IndvID
-    ###TODO: When updating to v2.0.0, individuals with missing ring numbers can be dealt with by creating new individualIDs not based on ring number
-    ### (and ring numbers are stored in captureTagID/releaseTagID columns)
-    ###TODO: When updating to v2.0.0, some records with missing CaptureDate can be dealt with if year is known
-    tidyr::drop_na(tidyselect::any_of(c("Species", "CaptureDate", "IndvID"))) %>%
-    # Set records with ChickAge < 0 & > 100 to NA
-    ###TODO: Check with data owner
-    dplyr::mutate(ChickAge = dplyr::case_when(dplyr::between(.data$ChickAge, 0, 99) ~ .data$ChickAge,
-                                              TRUE ~ NA_real_))
+    # Remove duplicates that can arise from cases when CaptureDate is the same in Capture and Nestling
+    dplyr::distinct()
 
   return(Capture_data_output)
 

@@ -22,7 +22,7 @@ test_that("Brood_data returns an expected outcome...", {
   #Test 1: Brood where clutch type = first
   expect_equal(subset(HAR_data, BroodID == "2018_0101_1")$Species, "PARMAJ")
   expect_equal(subset(HAR_data, BroodID == "2018_0101_1")$ClutchType_calculated, "first")
-  expect_equal(subset(HAR_data, BroodID == "2018_0101_1")$LayDate, as.Date("2018-05-08"))
+  expect_equal(subset(HAR_data, BroodID == "2018_0101_1")$LayingDate, as.Date("2018-05-08"))
   expect_equal(subset(HAR_data, BroodID == "2018_0101_1")$ClutchSize, 8)
   expect_equal(subset(HAR_data, BroodID == "2018_0101_1")$BroodSize, 4)
   expect_equal(subset(HAR_data, BroodID == "2018_0101_1")$NumberFledged, 4)
@@ -33,7 +33,7 @@ test_that("Brood_data returns an expected outcome...", {
   #Test 2: Brood where clutch type = replacement (because first is known to have failed)
   expect_equal(subset(HAR_data, BroodID == "1991_0842_1")$Species, "FICHYP")
   expect_equal(subset(HAR_data, BroodID == "1991_0842_1")$ClutchType_calculated, "replacement")
-  expect_equal(subset(HAR_data, BroodID == "1991_0842_1")$LayDate, as.Date("1991-06-10"))
+  expect_equal(subset(HAR_data, BroodID == "1991_0842_1")$LayingDate, as.Date("1991-06-10"))
   expect_equal(subset(HAR_data, BroodID == "1991_0842_1")$ClutchSize, 7)
   expect_equal(subset(HAR_data, BroodID == "1991_0842_1")$BroodSize, 7)
   expect_equal(subset(HAR_data, BroodID == "1991_0842_1")$NumberFledged, 5)
@@ -44,7 +44,7 @@ test_that("Brood_data returns an expected outcome...", {
   #Test 3: Brood where clutch type = replacement (past the cutoff)
   expect_equal(subset(HAR_data, BroodID == "2018_0159_1")$Species, "PARMAJ")
   expect_equal(subset(HAR_data, BroodID == "2018_0159_1")$ClutchType_calculated, "replacement")
-  expect_equal(subset(HAR_data, BroodID == "2018_0159_1")$LayDate, as.Date("2018-06-17"))
+  expect_equal(subset(HAR_data, BroodID == "2018_0159_1")$LayingDate, as.Date("2018-06-17"))
   expect_equal(subset(HAR_data, BroodID == "2018_0159_1")$ClutchSize, 8)
   expect_equal(subset(HAR_data, BroodID == "2018_0159_1")$BroodSize, 8)
   expect_equal(subset(HAR_data, BroodID == "2018_0159_1")$NumberFledged, 4)
@@ -54,7 +54,7 @@ test_that("Brood_data returns an expected outcome...", {
   #Test 4: Brood where clutch type = second
   expect_equal(subset(HAR_data, BroodID == "1991_0113_1")$Species, "CYACAE")
   expect_equal(subset(HAR_data, BroodID == "1991_0113_1")$ClutchType_calculated, "second")
-  expect_equal(subset(HAR_data, BroodID == "1991_0113_1")$LayDate, as.Date("1991-06-17"))
+  expect_equal(subset(HAR_data, BroodID == "1991_0113_1")$LayingDate, as.Date("1991-06-17"))
   expect_equal(subset(HAR_data, BroodID == "1991_0113_1")$ClutchSize, 10)
   expect_equal(subset(HAR_data, BroodID == "1991_0113_1")$BroodSize, 10)
   expect_equal(subset(HAR_data, BroodID == "1991_0113_1")$NumberFledged, 5)
@@ -167,8 +167,7 @@ test_that("Capture data returns an expected outcome...", {
   #Test for the expected number of captures
   expect_equal(nrow(subset(HAR_data, IndvID == "HL-010189")), 3)
   #Test that the first capture is as expected
-  #This should be NA because no CaptureDate was listed. However, should have correct BreedingSeason
-  expect_equal(subset(HAR_data, IndvID == "HL-010189")$CaptureDate[1], as.Date(NA))
+  expect_equal(subset(HAR_data, IndvID == "HL-010189")$CaptureDate[1], as.Date("2005-06-15"))
   expect_equal(subset(HAR_data, IndvID == "HL-010189")$BreedingSeason[1], 2005L)
   #Test that the 3rd capture is as expected
   expect_equal(subset(HAR_data, IndvID == "HL-010189")$CaptureDate[3], as.Date("2008-06-11"))
