@@ -318,7 +318,10 @@ create_brood_HAR <- function(db, species_filter){
                   BroodSizeError = NA_integer_,
                   FledgeDateError = NA_integer_,
                   NumberFledgedError = NA_integer_,
-                  BroodSize = as.integer(.data$BroodSize)) %>%
+                  BroodSize = as.integer(.data$BroodSize),
+                  ###TODO: When updating to v2.0.0, check with data custodian what the codes 0-9 mean
+                  ExperimentID = dplyr::case_when(!is.na(.data$ExperimentID) ~ "OTHER",
+                                                  TRUE ~ NA_character_)) %>%
     #Arrange columns correctly
     dplyr::select("BroodID", "PopID", "BreedingSeason", "Species", "Plot", "LocationID",
                   "FemaleID", "MaleID", "ClutchType_observed", "ClutchType_calculated",
