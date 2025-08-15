@@ -31,10 +31,10 @@ FemaleID = sample(LETTERS[1:7], size = 100, replace = TRUE),
 NumberFledged = rpois(n = 100, lambda = 1),
 #Create 100 fake broods
 BreedingSeason = sample(c(seq(2000, 2012, 1)), size = 100, replace = TRUE),
-LayDate = as.Date(paste(BreedingSeason,
+LayingDate = as.Date(paste(BreedingSeason,
                            sample(c(4, 5, 6), size = 100, replace = TRUE),
                            sample(seq(1, 31, 1), size = 100, replace = TRUE), sep = "-"),
                            format = "\%Y-\%m-\%d"),
-LayDate_observed = LayDate)
+LayDate_observed = LayingDate)
 calc_clutchtype(data = dat, na.rm = FALSE)
 }

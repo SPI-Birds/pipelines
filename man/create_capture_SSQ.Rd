@@ -4,10 +4,12 @@
 \alias{create_capture_SSQ}
 \title{Create capture data table for Santo Stefano Quisquina, Italy.}
 \usage{
-create_capture_SSQ(data)
+create_capture_SSQ(data, protocol_version)
 }
 \arguments{
 \item{data}{Data frame. Primary data from Santo Stefano Quisquina.}
+
+\item{protocol_version}{Character string. The version of the standard protocol on which this pipeline is based.}
 }
 \value{
 A data frame.

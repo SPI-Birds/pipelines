@@ -4,7 +4,7 @@
 \alias{create_individual_SSQ}
 \title{Create individual data table for Santo Stefano Quisquina, Italy.}
 \usage{
-create_individual_SSQ(data, Capture_data, Brood_data)
+create_individual_SSQ(data, Capture_data, Brood_data, protocol_version)
 }
 \arguments{
 \item{data}{Data frame. Primary data from Santo Stefano Quisquina.}
@@ -12,6 +12,8 @@ create_individual_SSQ(data, Capture_data, Brood_data)
 \item{Capture_data}{Data frame. Generate by \code{\link{create_capture_SSQ}}.}
 
 \item{Brood_data}{Data frame. Generate by \code{\link{create_brood_SSQ}}.}
+
+\item{protocol_version}{Character string. The version of the standard protocol on which this pipeline is based.}
 }
 \value{
 A data frame.

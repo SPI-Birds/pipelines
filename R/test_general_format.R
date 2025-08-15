@@ -305,7 +305,7 @@ test_NA_columns <- function(pipeline_output,
 #'
 #' @param pipeline_output A list of data frames returned from format_X, where X is the pipeline code.
 #' @param table Which table should be checked? One of: "Brood", "Capture", "Individual", "Location", "Measurement", or "Experiment".
-#' @param debug Logical (TRUE/FALSE) for whether the function returns the test output (FALSE) or a vector of columns that failed this test (TRUE).
+#' @param debug Logical (TRUE/FALSE) for whether the function returns the test output (FALSE) or a list of columns (and the unexpected values in them) that failed this test (TRUE).
 #'
 #' @return See `debug`.
 #' @export

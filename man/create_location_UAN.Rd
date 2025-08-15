@@ -4,10 +4,12 @@
 \alias{create_location_UAN}
 \title{Create location data table for data from University of Antwerp, Belgium.}
 \usage{
-create_location_UAN(BOX_info)
+create_location_UAN(BOX_info, protocol_version)
 }
 \arguments{
 \item{BOX_info}{Data frame. Primary location data from University of Antwerp.}
+
+\item{protocol_version}{Character string. The version of the standard protocol on which this pipeline is based.}
 }
 \value{
 A data frame.

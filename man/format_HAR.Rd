@@ -60,7 +60,7 @@ hand (i.e. still not able to fly). 1 = 3 (i.e. fully grown in first year).
 FL is unknown. We can't even attribute it to chick or adult.
 For this we use EURING 2 (able to fly freely but otherwise unknown).
 
-\strong{LayDateError & HatchDateError}: Accuracy of laying and hatch date
+\strong{LayingDateError & HatchDateError}: Accuracy of laying and hatch date
 are given as categories: 0-1; 1-2; 2-3; 'inaccurate'. Where error is a range,
 the more conservative error is used (i.e. 0-1 is recorded as 1).
 Cases listed as 'inaccurate' have an error of at least a week.

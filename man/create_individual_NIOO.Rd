@@ -9,7 +9,8 @@ create_individual_NIOO(
   Capture_data,
   location_data,
   species_filter,
-  pop_filter
+  pop_filter,
+  protocol_version
 )
 }
 \arguments{
@@ -24,6 +25,8 @@ Used to filter the data.}
 
 \item{pop_filter}{Population three letter codes from the standard protocol.
 Used to filter the data.}
+
+\item{protocol_version}{Character string. The version of the standard protocol on which this pipeline is based.}
 }
 \value{
 A data frame.
