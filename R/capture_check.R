@@ -74,28 +74,28 @@ capture_check <- function(Capture_data, Location_data, Brood_data, Individual_da
 #'
 #' Check variable values against population-species-specific reference values in capture data. Reference values are based on the data if the number of observations is sufficiently large. Records for population-species combinations that are too low in number are only compared to reference values that are not data generated (see Details below).
 #'
-#' \strong{Mass} \cr
-#' Check ID: C1a \cr
-#' \itemize{
-#' \item{Adults}
-#' \itemize{
-#' \item{\emph{n >= 100}\cr}{Records are considered impossible if they are negative or larger than 2 times the 99th percentile, and will be flagged as a potential error.}
-#' \item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as a potential error.}
-#' }
-#' \item{Chicks}
-#' \itemize{
-#' \item{Reference values for chicks are calculated for each age (in days). This function tries to fit a logistic growth model to determine reference values to each day. If this model fails, reference values are determined per age if the number of observations is sufficiently large (n >= 100). Records are considered impossible if they are negative or larger than 2 times the 99th percentile, and will be flagged as a potential error.}
-#' \item{In case the logistic growth model fails and the number of observations for an age are too low (n < 100), records are considered impossible if they are negative, and will be flagged as a potential error.}
-#' }
-#' }
+#' \strong{Mass}
 #'
+#' Check ID: C1a
 #'
-#' \strong{Tarsus} \cr
-#' Check ID: C1b \cr
-#' \itemize{
-#' \item{\emph{n >= 100}\cr}{Records are considered impossible if they are negative or larger than 2 times the 99th percentile, and will be flagged as a potential error.}
-#' \item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as a potential error.}
-#' }
+#' * Adults
+#'    * \emph{n >= 100}\cr
+#' Records are considered impossible if they are negative or larger than 2 times the 99th percentile, and will be flagged as a potential error.
+#'    * \emph{n < 100}\cr
+#' Records are considered impossible if they are negative, and will be flagged as a potential error.
+#'
+#' * Chicks
+#'    * Reference values for chicks are calculated for each age (in days). This function tries to fit a logistic growth model to determine reference values to each day. If this model fails, reference values are determined per age if the number of observations is sufficiently large (n >= 100). Records are considered impossible if they are negative or larger than 2 times the 99th percentile, and will be flagged as a potential error.
+#'    * In case the logistic growth model fails and the number of observations for an age are too low (n < 100), records are considered impossible if they are negative, and will be flagged as a potential error.
+#'
+#' \strong{Tarsus}
+#'
+#' Check ID: C1b
+#'
+#' * \emph{n >= 100}\cr
+#' Records are considered impossible if they are negative or larger than 2 times the 99th percentile, and will be flagged as a potential error.
+#' * \emph{n < 100}\cr
+#' Records are considered impossible if they are negative, and will be flagged as a potential error.
 #'
 #' Note: when the number of observations is too low to generate reference values, a message is added to the list of warnings.
 #'
@@ -103,7 +103,7 @@ capture_check <- function(Capture_data, Location_data, Brood_data, Individual_da
 #' @param var Character. Variable to check against reference values.
 #'
 #' @inherit checks_return return
-#'
+#' @md
 #' @export
 
 check_values_capture <- function(Capture_data, var, approved_list, output, skip) {

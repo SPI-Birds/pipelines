@@ -31,17 +31,21 @@ Check variable values against population-species-specific reference values in br
 }
 \details{
 \strong{ClutchSize_observed, BroodSize_observed, NumberFledged_observed} \cr
-Check IDs: B5a-c \cr
+Check IDs: B5a-c
 \itemize{
-\item{\emph{n >= 100}\cr}{Records are considered impossible if they are negative or larger than 2 times the 99th percentile, and will be flagged as a potential error.}
-\item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as a potential error.}
+\item \emph{n >= 100}\cr
+Records are considered impossible if they are negative or larger than 2 times the 99th percentile, and will be flagged as a potential error.
+\item \emph{n < 100}\cr
+Records are considered impossible if they are negative, and will be flagged as a potential error.
 }
 
 \strong{LayDate_observed, HatchDate_observed, FledgeDate_observed} \cr
-Check ID: B5d-f \cr
+Check ID: B5d-f
 \itemize{
-\item{\emph{n >= 100}\cr}{Date columns are transformed to Julian days to calculate percentiles. Records are considered impossible if they are earlier than January 1st or later than December 31st of the current breeding season, and will be flagged as a potential error.}
-\item{\emph{n < 100}\cr}{Date columns are transformed to Julian days to calculate percentiles. Records are considered impossible if they are earlier than January 1st or later than December 31st of the current breeding season, and will be flagged as a potential error.}
+\item \emph{n >= 100}\cr
+Date columns are transformed to Julian days to calculate percentiles. Records are considered impossible if they are earlier than January 1st or later than December 31st of the current breeding season, and will be flagged as a potential error.
+\item \emph{n < 100}\cr
+Date columns are transformed to Julian days to calculate percentiles. Records are considered impossible if they are earlier than January 1st or later than December 31st of the current breeding season, and will be flagged as a potential error.
 }
 
 Note: when the number of observations is too low to generate reference values, a message is added to the list of warnings.
