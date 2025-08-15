@@ -21,11 +21,11 @@
 #' NumberFledged = rpois(n = 100, lambda = 1),
 #' #Create 100 fake broods
 #' BreedingSeason = sample(c(seq(2000, 2012, 1)), size = 100, replace = TRUE),
-#' LayDate = as.Date(paste(BreedingSeason,
+#' LayingDate = as.Date(paste(BreedingSeason,
 #'                            sample(c(4, 5, 6), size = 100, replace = TRUE),
 #'                            sample(seq(1, 31, 1), size = 100, replace = TRUE), sep = "-"),
 #'                            format = "%Y-%m-%d"),
-#' LayDate_observed = LayDate)
+#' LayDate_observed = LayingDate)
 #' calc_clutchtype(data = dat, na.rm = FALSE)
 calc_clutchtype <- function(data,
                             protocol_version = "1.0",
@@ -35,7 +35,7 @@ calc_clutchtype <- function(data,
   if (protocol_version == "1.0"){
     cutoff_dat <- data %>%
       dplyr::group_by(.data$PopID, .data$BreedingSeason, .data$Species) %>%
-      dplyr::mutate(cutoff = tryCatch(expr = min(.data$LayDate, na.rm = TRUE) + lubridate::days(30),
+      dplyr::mutate(cutoff = tryCatch(expr = min(.data$LayingDate, na.rm = TRUE) + lubridate::days(30),
                                       warning = function(...) return(NA))) %>%
       # Determine brood type for each nest based on female ID
       dplyr::group_by(.data$BreedingSeason, .data$Species, .data$FemaleID)
@@ -51,7 +51,7 @@ calc_clutchtype <- function(data,
                                                                         femID = .data$FemaleID,
                                                                         cutoff_date = .data$cutoff,
                                                                         nr_fledge_before = .data$total_fledge,
-                                                                        LD = .data$LayDate),
+                                                                        LD = .data$LayingDate),
                                                               .f = function(rows, femID, cutoff_date,
                                                                             nr_fledge_before,
                                                                             LD){
@@ -137,7 +137,7 @@ calc_clutchtype <- function(data,
                                                                         cutoff_date = .data$cutoff,
                                                                         nr_fledge_before = .data$total_fledge,
                                                                         na_fledge_before = .data$total_fledge_na,
-                                                                        LD = .data$LayDate),
+                                                                        LD = .data$LayingDate),
                                                               .f = function(rows, femID, cutoff_date,
                                                                             nr_fledge_before, na_fledge_before,
                                                                             LD){
