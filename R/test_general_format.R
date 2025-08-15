@@ -326,34 +326,37 @@ test_category_columns <- function(pipeline_output,
   categories <- categories[names(categories) %in% names(data_table)]
 
   # Check for each variable whether unique values are possible categories
-  lgl <- purrr::imap_lgl(.x = categories,
-                         .f = ~{
+  unexpected_cat <- purrr::map2(.x = categories,
+                                .y = names(categories),
+                                .f = ~{
 
-                           # Get unique variable values
-                           column_vals <- data_table %>%
-                             dplyr::select({{.y}}) %>%
-                             dplyr::pull() %>%
-                             unique %>%
-                             strsplit(split = "; ") %>% # Split if multiple categories are concatenated
-                             unlist() %>%
-                             as.character()
+                                  # Get unique variable values
+                                  column_vals <- data_table %>%
+                                    dplyr::select({{.y}}) %>%
+                                    dplyr::pull() %>%
+                                    unique %>%
+                                    strsplit(split = "; ") %>% # Split if multiple categories are concatenated
+                                    unlist() %>%
+                                    as.character()
 
-                           all(column_vals %in% .x)
+                                  column_vals[!(column_vals %in% .x)]
 
-                         })
+                                })
 
   # Test
   if(debug == FALSE) {
 
     eval(bquote(testthat::expect_true(
 
-      all(lgl)
+      all(purrr::map_lgl(.x = unexpected_cat,
+                         .f = ~length(.x) == 0))
 
     )))
 
   } else {
 
-    names(lgl)[lgl == FALSE]
+    unexpected_cat %>%
+      purrr::keep(~length(.x) != 0)
 
   }
 
