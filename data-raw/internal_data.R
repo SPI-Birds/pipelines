@@ -454,7 +454,7 @@ categorical_variables <- tibble::lst(
 
   # Capture data
   Capture_data = tibble::lst(
-    Species = species_codes$Species, # v1.0 & v1.1
+    Species = c(species_codes$Species, "FICHIB", "CCCCCC"), # v1.0 & v1.1
     CapturePopID = pop_codes$PopID, # v1.0 & v1.1
     ReleasePopID = c(pop_codes$PopID, NA), # v1.0 & v1.1
     OriginalTarsusMethod = c("Alternative", "Standard", "Oxford", NA), # v1.0 & v1.1
