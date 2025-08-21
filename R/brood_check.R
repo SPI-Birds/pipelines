@@ -38,6 +38,9 @@ brood_check <- function(Brood_data, Individual_data, Capture_data, Location_data
   var_ext <- ifelse("ClutchSize" %in% colnames(Brood_data),
                     ifelse(all(is.na(Brood_data$ClutchSize)), "_observed", ""), "_observed")
 
+  # Make exemption for LayingDate (v1.0.0) and LayDate (v1.1.0), which do not follow above naming convention
+  ld_var <- ifelse("LayingDate" %in% colnames(Brood_data), "LayingDate", "LayDate_observed")
+
   # Run checks and create list of check outputs
   check_outputs <- list(B1 = compare_clutch_brood(Brood_data, approved_list, output, skip), # B1: Compare clutch and brood sizes
                         B2 = compare_brood_fledglings(Brood_data, approved_list, output, skip), # B2: Compare brood sizes and fledgling numbers
@@ -49,7 +52,7 @@ brood_check <- function(Brood_data, Individual_data, Capture_data, Location_data
                                                  approved_list, output, skip), # B5b: Check brood size values against reference values
                         B5c = check_values_brood(Brood_data, paste0("NumberFledged", var_ext),
                                                  approved_list, output, skip), # B5c: Check fledgling number values against reference values
-                        B5d = check_values_brood(Brood_data, paste0("LayDate", var_ext),
+                        B5d = check_values_brood(Brood_data, ld_var,
                                                  approved_list, output, skip), # B5d: Check lay date values against reference values
                         B5e = check_values_brood(Brood_data, paste0("HatchDate", var_ext),
                                                  approved_list, output, skip), # B5e: Check hatch date values against reference values
@@ -410,7 +413,7 @@ compare_laying_hatching <- function(Brood_data, approved_list, output, skip){
   ## PERHAPS THIS WILL BE DETERMINED AND CHECKED IN ANOTHER CHECK (NOT NOW)
 
   # Brood_data_late <- Brood_data %>%
-  #   filter(LayDate < HatchDate & (HatchDate-LayDate) >= )
+  #   filter(LayingDate < HatchDate & (HatchDate-LayingDate) >= )
 
   # Check for potential errors
   err <- FALSE
@@ -422,7 +425,7 @@ compare_laying_hatching <- function(Brood_data, approved_list, output, skip){
     # Broods with laying date later than hatching date
     # NB: allows v1.0 & v1.1 variable names of the standard format
     brood_data_late <- Brood_data %>%
-      {if(all(c("LayDate", "HatchDate") %in% colnames(.))) dplyr::filter(., .data$LayDate >= .data$HatchDate)
+      {if(all(c("LayingDate", "HatchDate") %in% colnames(.))) dplyr::filter(., .data$LayingDate >= .data$HatchDate)
         else dplyr::filter(., .data$LayDate_observed >= .data$HatchDate_observed)}
 
     # If potential errors, add to report
@@ -434,7 +437,7 @@ compare_laying_hatching <- function(Brood_data, approved_list, output, skip){
       error_records <- brood_data_late %>%
         dplyr::mutate(CheckID = "B3") %>%
         dplyr::anti_join(approved_list$Brood_approved_list, by=c("PopID", "CheckID", "BroodID")) %>%
-        {if(all(c("LayDate", "HatchDate") %in% colnames(.))) dplyr::select(., "Row", "PopID", "BroodID", "LayDate", "HatchDate")
+        {if(all(c("LayingDate", "HatchDate") %in% colnames(.))) dplyr::select(., "Row", "PopID", "BroodID", "LayingDate", "HatchDate")
           else dplyr::select(., "Row", "PopID", "BroodID", "LayDate_observed", "HatchDate_observed")}
 
       # Create quality check report statements
@@ -585,18 +588,18 @@ compare_hatching_fledging <- function(Brood_data, approved_list, output, skip){
 #' Check variable values against population-species-specific reference values in brood data. Reference values are based on the data if the number of observations is sufficiently large. Records for population-species combinations that are too low in number are only compared to reference values that are not data generated (see Details below).
 #'
 #' \strong{ClutchSize_observed, BroodSize_observed, NumberFledged_observed} \cr
-#' Check IDs: B5a-c \cr
-#' \itemize{
-#' \item{\emph{n >= 100}\cr}{Records are considered impossible if they are negative or larger than 2 times the 99th percentile, and will be flagged as a potential error.}
-#' \item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as a potential error.}
-#' }
+#' Check IDs: B5a-c
+#' * \emph{n >= 100}\cr
+#' Records are considered impossible if they are negative or larger than 2 times the 99th percentile, and will be flagged as a potential error.
+#' * \emph{n < 100}\cr
+#' Records are considered impossible if they are negative, and will be flagged as a potential error.
 #'
 #' \strong{LayDate_observed, HatchDate_observed, FledgeDate_observed} \cr
-#' Check ID: B5d-f \cr
-#' \itemize{
-#' \item{\emph{n >= 100}\cr}{Date columns are transformed to Julian days to calculate percentiles. Records are considered impossible if they are earlier than January 1st or later than December 31st of the current breeding season, and will be flagged as a potential error.}
-#' \item{\emph{n < 100}\cr}{Date columns are transformed to Julian days to calculate percentiles. Records are considered impossible if they are earlier than January 1st or later than December 31st of the current breeding season, and will be flagged as a potential error.}
-#' }
+#' Check ID: B5d-f
+#' * \emph{n >= 100}\cr
+#' Date columns are transformed to Julian days to calculate percentiles. Records are considered impossible if they are earlier than January 1st or later than December 31st of the current breeding season, and will be flagged as a potential error.
+#' * \emph{n < 100}\cr
+#' Date columns are transformed to Julian days to calculate percentiles. Records are considered impossible if they are earlier than January 1st or later than December 31st of the current breeding season, and will be flagged as a potential error.
 #'
 #' Note: when the number of observations is too low to generate reference values, a message is added to the list of warnings.
 #'
@@ -604,7 +607,7 @@ compare_hatching_fledging <- function(Brood_data, approved_list, output, skip){
 #' @param var Character. Variable to check against reference values.
 #'
 #' @inherit checks_return return
-#'
+#' @md
 #' @export
 
 check_values_brood <- function(Brood_data, var, approved_list, output, skip) {
@@ -620,7 +623,7 @@ check_values_brood <- function(Brood_data, var, approved_list, output, skip) {
   skip_check <- dplyr::case_when(var %in% c("ClutchSize", "ClutchSize_observed") & "B5a" %in% skip ~ TRUE,
                                  var %in% c("BroodSize", "BroodSize_observed") & "B5b" %in% skip ~ TRUE,
                                  var %in% c("NumberFledged", "NumberFledged_observed") & "B5c" %in% skip ~ TRUE,
-                                 var %in% c("LayDate", "LayDate_observed") & "B5d" %in% skip ~ TRUE,
+                                 var %in% c("LayingDate", "LayDate_observed") & "B5d" %in% skip ~ TRUE,
                                  var %in% c("HatchDate", "HatchDate_observed") & "B5e" %in% skip ~ TRUE,
                                  var %in% c("FledgeDate", "FledgeDate_observed") & "B5f" %in% skip ~ TRUE,
                                  "B5" %in% skip ~ TRUE,
@@ -632,7 +635,7 @@ check_values_brood <- function(Brood_data, var, approved_list, output, skip) {
     check_message <- dplyr::case_when(var %in% c("ClutchSize", "ClutchSize_observed") ~ c("B5a", "clutch size"),
                                       var %in% c("BroodSize", "BroodSize_observed") ~ c("B5b", "brood size"),
                                       var %in% c("NumberFledged", "NumberFledged_observed") ~ c("B5c", "fledgling number"),
-                                      var %in% c("LayDate", "LayDate_observed") ~ c("B5d", "lay date"),
+                                      var %in% c("LayingDate", "LayDate_observed") ~ c("B5d", "lay date"),
                                       var %in% c("HatchDate", "HatchDate_observed") ~ c("B5e", "hatch date"),
                                       var %in% c("FledgeDate", "FledgeDate_observed") ~ c("B5f", "fledge date"))
 
@@ -643,7 +646,7 @@ check_values_brood <- function(Brood_data, var, approved_list, output, skip) {
     id_message <- dplyr::case_when(var %in% c("ClutchSize", "ClutchSize_observed") ~ "B5a",
                                    var %in% c("BroodSize", "BroodSize_observed") ~ "B5b",
                                    var %in% c("NumberFledged", "NumberFledged_observed") ~ "B5c",
-                                   var %in% c("LayDate", "LayDate_observed") ~ "B5d",
+                                   var %in% c("LayingDate", "LayDate_observed") ~ "B5d",
                                    var %in% c("HatchDate", "HatchDate_observed") ~ "B5e",
                                    var %in% c("FledgeDate", "FledgeDate_observed") ~ "B5f")
 
@@ -678,7 +681,7 @@ check_values_brood <- function(Brood_data, var, approved_list, output, skip) {
       dplyr::arrange(.data$PopID, .data$Species)
 
     # Date {vars}
-  } else if(var %in% c("LayDate", "HatchDate", "FledgeDate",
+  } else if(var %in% c("LayingDate", "HatchDate", "FledgeDate",
                        "LayDate_observed", "HatchDate_observed", "FledgeDate_observed") & skip_check == FALSE & any(var_recorded$recorded == TRUE)) {
 
     ref <- Brood_data %>%
@@ -790,7 +793,7 @@ check_values_brood <- function(Brood_data, var, approved_list, output, skip) {
 
                                  }
 
-                               } else if(var %in% c("LayDate", "HatchDate", "FledgeDate",
+                               } else if(var %in% c("LayingDate", "HatchDate", "FledgeDate",
                                                     "LayDate_observed", "HatchDate_observed", "FledgeDate_observed")) {
 
                                  # Brood records below lower error threshold
@@ -850,7 +853,7 @@ check_values_brood <- function(Brood_data, var, approved_list, output, skip) {
                                              ..6, " (", ..4, ") than the ", ifelse(..7 == "U", "upper", "lower"),
                                              " reference value (", ..8, "), which is considered impossible.")
 
-                                    } else if(..6 %in% c("LayDate", "HatchDate", "FledgeDate",
+                                    } else if(..6 %in% c("LayingDate", "HatchDate", "FledgeDate",
                                                          "LayDate_observed", "HatchDate_observed", "FledgeDate_observed")) {
 
                                       paste0("Record on row ", ..1,
@@ -1226,7 +1229,7 @@ check_clutch_type_order <- function(Brood_data, approved_list, output, skip){
 
     # Select breeding females with ClutchType_calculated == "first" not as first clutch in a particular breeding season
     brood_err <- Brood_data %>%
-      {if("LayDate" %in% colnames(.)) dplyr::arrange(., .data$LayDate)
+      {if("LayingDate" %in% colnames(.)) dplyr::arrange(., .data$LayingDate)
         else dplyr::arrange(., .data$LayDate_observed)} %>%
       dplyr::filter(!is.na(.data$FemaleID) & !is.na(.data$ClutchType_calculated)) %>%
       dplyr::group_by(.data$PopID, .data$BreedingSeason, .data$FemaleID) %>%

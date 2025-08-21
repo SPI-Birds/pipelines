@@ -4,10 +4,12 @@
 \alias{create_location_PIL}
 \title{Create location data table for Pilis-Visegrád Mountains, Hungary.}
 \usage{
-create_location_PIL(PIL_data)
+create_location_PIL(PIL_data, protocol_version)
 }
 \arguments{
 \item{PIL_data}{Data frame with primary data from Pilis-Visegrád Mountains}
+
+\item{protocol_version}{Character string. The version of the standard protocol on which this pipeline is based.}
 }
 \value{
 A data frame.

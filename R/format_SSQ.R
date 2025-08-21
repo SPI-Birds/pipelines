@@ -114,25 +114,25 @@ format_SSQ <- function(db = choose_directory(),
 
   message("Compiling brood information...")
 
-  Brood_data <- create_brood_SSQ(all_data)
+  Brood_data <- create_brood_SSQ(all_data, protocol_version)
 
   # CAPTURE DATA
 
   message("Compiling capture information...")
 
-  Capture_data <- create_capture_SSQ(all_data)
+  Capture_data <- create_capture_SSQ(all_data, protocol_version)
 
   # INDIVIDUAL DATA
 
   message("Compiling individual information...")
 
-  Individual_data <- create_individual_SSQ(all_data, Capture_data, Brood_data)
+  Individual_data <- create_individual_SSQ(all_data, Capture_data, Brood_data, protocol_version)
 
   # LOCATION DATA
 
   message("Compiling nestbox information...")
 
-  Location_data <- create_location_SSQ(all_data)
+  Location_data <- create_location_SSQ(all_data, protocol_version)
 
   # EXPORT DATA
 
@@ -178,10 +178,11 @@ format_SSQ <- function(db = choose_directory(),
 #' Create brood data table in standard format for data from Santo Stefano
 #' Quisquina, Italy
 #' @param data Data frame. Primary data from Santo Stefano Quisquina.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_brood_SSQ <- function(data){
+create_brood_SSQ <- function(data, protocol_version){
 
   #Determine ClutchType_calculated
   clutchtype <- progress::progress_bar$new(total = nrow(data))
@@ -192,12 +193,10 @@ create_brood_SSQ <- function(data){
     #Calculate clutch type
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.1"),
                   OriginalTarsusMethod = NA_character_) %>%
-    ## Keep only necessary columns
-    dplyr::select(tidyselect::contains(names(brood_data_template))) %>%
     ## Add missing columns
-    dplyr::bind_cols(brood_data_template[1, !(names(brood_data_template) %in% names(.))]) %>%
-    ## Reorder columns
-    dplyr::select(names(brood_data_template))
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Brood_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Brood_data) %in% names(.))]) %>%
+    ## Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Brood_data))
 
   return(Brood_data)
 
@@ -208,10 +207,11 @@ create_brood_SSQ <- function(data){
 #' Create capture data table in standard format for data from Santo Stefano
 #' Quisquina, Italy
 #' @param data Data frame. Primary data from Santo Stefano Quisquina.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_capture_SSQ <- function(data){
+create_capture_SSQ <- function(data, protocol_version){
 
   Adult_captures <- data %>%
     dplyr::select("BreedingSeason", "PopID", "Plot", "LocationID",
@@ -277,12 +277,10 @@ create_capture_SSQ <- function(data){
                   ObserverID = NA_character_) %>%
     calc_age(ID = .data$IndvID, Age = .data$Age,
              Date = .data$CaptureDate, Year = .data$BreedingSeason) %>%
-    ## Keep only necessary columns
-    dplyr::select(tidyselect::contains(names(capture_data_template))) %>%
     ## Add missing columns
-    dplyr::bind_cols(capture_data_template[1, !(names(capture_data_template) %in% names(.))]) %>%
-    ## Reorder columns
-    dplyr::select(names(capture_data_template))
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Capture_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Capture_data) %in% names(.))]) %>%
+    ## Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Capture_data))
 
   return(Capture_data)
 
@@ -295,10 +293,11 @@ create_capture_SSQ <- function(data){
 #' @param data Data frame. Primary data from Santo Stefano Quisquina.
 #' @param Capture_data Data frame. Generate by \code{\link{create_capture_SSQ}}.
 #' @param Brood_data Data frame. Generate by \code{\link{create_brood_SSQ}}.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_individual_SSQ <- function(data, Capture_data, Brood_data){
+create_individual_SSQ <- function(data, Capture_data, Brood_data, protocol_version){
 
   #Create a list of all chicks
   Chick_IDs <- data %>%
@@ -326,12 +325,10 @@ create_individual_SSQ <- function(data, Capture_data, Brood_data){
                      by = "IndvID") %>%
     dplyr::mutate(BroodIDFledged = .data$BroodIDLaid,
                   PopID = "SSQ") %>%
-    ## Keep only necessary columns
-    dplyr::select(tidyselect::contains(names(individual_data_template))) %>%
     ## Add missing columns
-    dplyr::bind_cols(individual_data_template[1, !(names(individual_data_template) %in% names(.))]) %>%
-    ## Reorder columns
-    dplyr::select(names(individual_data_template))
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Individual_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Individual_data) %in% names(.))]) %>%
+    ## Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Individual_data))
 
 }
 
@@ -340,10 +337,11 @@ create_individual_SSQ <- function(data, Capture_data, Brood_data){
 #' Create location data table in standard format for data from Santo Stefano
 #' Quisquina, Italy
 #' @param data Data frame. Primary data from Santo Stefano Quisquina.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_location_SSQ <- function(data){
+create_location_SSQ <- function(data, protocol_version){
 
   Location_data <- data %>%
     dplyr::group_by(.data$LocationID) %>%
@@ -358,11 +356,9 @@ create_location_SSQ <- function(data){
                        dplyr::slice(1) %>%
                        dplyr::select("LocationID", "Latitude", "Longitude"),
                      by = "LocationID") %>%
-    ## Keep only necessary columns
-    dplyr::select(tidyselect::contains(names(location_data_template))) %>%
     ## Add missing columns
-    dplyr::bind_cols(location_data_template[1, !(names(location_data_template) %in% names(.))]) %>%
-    ## Reorder columns
-    dplyr::select(names(location_data_template))
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Location_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Location_data) %in% names(.))]) %>%
+    ## Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Location_data))
 
 }

@@ -4,10 +4,12 @@
 \alias{create_brood_GRO}
 \title{Create brood data table for great tits and blue tits in Grobla, Poland.}
 \usage{
-create_brood_GRO(gro_data)
+create_brood_GRO(gro_data, protocol_version)
 }
 \arguments{
 \item{gro_data}{Data frame of modified primary data from Grobla, Poland.}
+
+\item{protocol_version}{Character string. The version of the standard protocol on which this pipeline is based.}
 }
 \value{
 A data frame.

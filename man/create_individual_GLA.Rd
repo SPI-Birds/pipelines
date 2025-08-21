@@ -4,12 +4,14 @@
 \alias{create_individual_GLA}
 \title{Create individual table for great tits and blue tits in Glasgow, Scotland.}
 \usage{
-create_individual_GLA(Capture_data, Brood_data)
+create_individual_GLA(Capture_data, Brood_data, protocol_version)
 }
 \arguments{
-\item{Capture_data}{Capture data output from Glasgow, Scotland}
+\item{Capture_data}{Capture data output from Glasgow, Scotland.}
 
-\item{Brood_data}{Brood data output from Glasgow, Scotland}
+\item{Brood_data}{Brood data output from Glasgow, Scotland.}
+
+\item{protocol_version}{Character string. The version of the standard protocol on which this pipeline is based.}
 }
 \value{
 A data frame.

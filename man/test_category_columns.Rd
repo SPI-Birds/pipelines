@@ -4,19 +4,20 @@
 \alias{test_category_columns}
 \title{Test category columns}
 \usage{
-test_category_columns(pipeline_output, table)
+test_category_columns(pipeline_output, table, debug = FALSE)
 }
 \arguments{
-\item{pipeline_output}{A list of the 4 data frames returned from format_X
-(where X is the three letter population code).}
+\item{pipeline_output}{A list of data frames returned from format_X, where X is the pipeline code.}
 
-\item{table}{Which table should be checked? One of: "Brood", "Capture", "Individual", or "Location"}
+\item{table}{Which table should be checked? One of: "Brood", "Capture", "Individual", "Location", "Measurement", or "Experiment".}
+
+\item{debug}{Logical (TRUE/FALSE) for whether the function returns the test output (FALSE) or a list of columns (and the unexpected values in them) that failed this test (TRUE).}
 }
 \value{
-Logical (TRUE/FALSE) for whether there are non-standard categories in the data frame.
+See `debug`.
 }
 \description{
 Some columns should only include particular categorical values.
-For example, 'ExperimentID' should only include some combination of "PHENOLOGY","COHORT", "PARENTAGE", "SURVIVAL", or "OTHER".
+For example, 'observedClutchType' should only include any of "first", "second", "replacement" or NA.
 This test makes sure that there are no unexpected values in these different category columns.
 }

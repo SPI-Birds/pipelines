@@ -74,28 +74,28 @@ capture_check <- function(Capture_data, Location_data, Brood_data, Individual_da
 #'
 #' Check variable values against population-species-specific reference values in capture data. Reference values are based on the data if the number of observations is sufficiently large. Records for population-species combinations that are too low in number are only compared to reference values that are not data generated (see Details below).
 #'
-#' \strong{Mass} \cr
-#' Check ID: C1a \cr
-#' \itemize{
-#' \item{Adults}
-#' \itemize{
-#' \item{\emph{n >= 100}\cr}{Records are considered impossible if they are negative or larger than 2 times the 99th percentile, and will be flagged as a potential error.}
-#' \item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as a potential error.}
-#' }
-#' \item{Chicks}
-#' \itemize{
-#' \item{Reference values for chicks are calculated for each age (in days). This function tries to fit a logistic growth model to determine reference values to each day. If this model fails, reference values are determined per age if the number of observations is sufficiently large (n >= 100). Records are considered impossible if they are negative or larger than 2 times the 99th percentile, and will be flagged as a potential error.}
-#' \item{In case the logistic growth model fails and the number of observations for an age are too low (n < 100), records are considered impossible if they are negative, and will be flagged as a potential error.}
-#' }
-#' }
+#' \strong{Mass}
 #'
+#' Check ID: C1a
 #'
-#' \strong{Tarsus} \cr
-#' Check ID: C1b \cr
-#' \itemize{
-#' \item{\emph{n >= 100}\cr}{Records are considered impossible if they are negative or larger than 2 times the 99th percentile, and will be flagged as a potential error.}
-#' \item{\emph{n < 100}\cr}{Records are considered impossible if they are negative, and will be flagged as a potential error.}
-#' }
+#' * Adults
+#'    * \emph{n >= 100}\cr
+#' Records are considered impossible if they are negative or larger than 2 times the 99th percentile, and will be flagged as a potential error.
+#'    * \emph{n < 100}\cr
+#' Records are considered impossible if they are negative, and will be flagged as a potential error.
+#'
+#' * Chicks
+#'    * Reference values for chicks are calculated for each age (in days). This function tries to fit a logistic growth model to determine reference values to each day. If this model fails, reference values are determined per age if the number of observations is sufficiently large (n >= 100). Records are considered impossible if they are negative or larger than 2 times the 99th percentile, and will be flagged as a potential error.
+#'    * In case the logistic growth model fails and the number of observations for an age are too low (n < 100), records are considered impossible if they are negative, and will be flagged as a potential error.
+#'
+#' \strong{Tarsus}
+#'
+#' Check ID: C1b
+#'
+#' * \emph{n >= 100}\cr
+#' Records are considered impossible if they are negative or larger than 2 times the 99th percentile, and will be flagged as a potential error.
+#' * \emph{n < 100}\cr
+#' Records are considered impossible if they are negative, and will be flagged as a potential error.
 #'
 #' Note: when the number of observations is too low to generate reference values, a message is added to the list of warnings.
 #'
@@ -103,7 +103,7 @@ capture_check <- function(Capture_data, Location_data, Brood_data, Individual_da
 #' @param var Character. Variable to check against reference values.
 #'
 #' @inherit checks_return return
-#'
+#' @md
 #' @export
 
 check_values_capture <- function(Capture_data, var, approved_list, output, skip) {
@@ -739,16 +739,16 @@ check_adult_parent_nest <- function(Capture_data, Location_data, Brood_data, app
     # Here we define a population's breeding season annually, which, for now, runs from the minimum lay date in Brood_data,
     # to the maximum fledge date in Brood_data (both in Julian day/day of the year)
     # TODO: Note that errors in either lay date or fledge date permeate here.
-    # FIXME: Work-around when *ALL* FledgeDate or LayDate are NA
+    # FIXME: Work-around when *ALL* FledgeDate or LayingDate are NA
     # TODO: Update breeding season definition for birds breeding in winter, in the tropics, or the Southern Hemisphere
-    if(all(c("LayDate", "FledgeDate") %in% colnames(Brood_data))) {
+    if(all(c("LayingDate", "FledgeDate") %in% colnames(Brood_data))) {
 
       breeding_season <- Brood_data %>%
         dplyr::group_by(.data$PopID, .data$BreedingSeason) %>%
         # If all Lay dates are NA, the start of the breeding season is set to March 1st
         # If all Fledge dates are NA, the end of the breeding season is set to August 31st
-        dplyr::summarise(StartBreeding = ifelse(all(is.na(.data$LayDate)), lubridate::yday(paste0(unique(.data$BreedingSeason), "-03-01")),
-                                                lubridate::yday(min(.data$LayDate, na.rm = TRUE))),
+        dplyr::summarise(StartBreeding = ifelse(all(is.na(.data$LayingDate)), lubridate::yday(paste0(unique(.data$BreedingSeason), "-03-01")),
+                                                lubridate::yday(min(.data$LayingDate, na.rm = TRUE))),
                          EndBreeding = ifelse(all(is.na(.data$FledgeDate)), lubridate::yday(paste0(unique(.data$BreedingSeason), "-08-31")),
                                               lubridate::yday(max(.data$FledgeDate, na.rm = TRUE))),
                          .groups = "drop") %>%

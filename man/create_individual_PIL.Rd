@@ -4,10 +4,12 @@
 \alias{create_individual_PIL}
 \title{Create individual table for Pilis-Visegrád Mountains, Hungary.}
 \usage{
-create_individual_PIL(Capture_data)
+create_individual_PIL(Capture_data, protocol_version)
 }
 \arguments{
 \item{Capture_data}{Output of \code{\link{create_capture_PIL}}.}
+
+\item{protocol_version}{Character string. The version of the standard protocol on which this pipeline is based.}
 }
 \value{
 A data frame.
