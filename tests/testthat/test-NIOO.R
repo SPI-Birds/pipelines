@@ -248,23 +248,23 @@ test_that("Location_data returns an expected outcome...", {
 
 })
 
-## General tests (for pipelines formatted to standard protocol version 1.1.0)
+## General tests
 
 test_that("Expected columns are present", {
 
   ## Will fail if not all the expected columns are present
 
   ## Brood data: Test that all columns are present
-  test_col_present(pipeline_output, "Brood")
+  test_col_present(pipeline_output, "Brood", pipeline_output$protocol_version)
 
   ## Capture data: Test that all columns are present
-  test_col_present(pipeline_output, "Capture")
+  test_col_present(pipeline_output, "Capture", pipeline_output$protocol_version)
 
   ## Individual data: Test that all columns are present
-  test_col_present(pipeline_output, "Individual")
+  test_col_present(pipeline_output, "Individual", pipeline_output$protocol_version)
 
   ## Location data: Test that all columns are present
-  test_col_present(pipeline_output, "Location")
+  test_col_present(pipeline_output, "Location", pipeline_output$protocol_version)
 
 })
 
@@ -273,16 +273,16 @@ test_that("Column classes are as expected", {
   ## Will fail if columns that are shared by the output and the templates have different classes.
 
   # ## Brood data: Test that all column classes are expected
-  test_col_classes(pipeline_output, "Brood")
+  test_col_classes(pipeline_output, "Brood", pipeline_output$protocol_version)
 
   ## Capture data: Test that all column classes are expected
-  test_col_classes(pipeline_output, "Capture")
+  test_col_classes(pipeline_output, "Capture", pipeline_output$protocol_version)
 
   ## Individual data: Test that all column classes are expected
-  test_col_classes(pipeline_output, "Individual")
+  test_col_classes(pipeline_output, "Individual", pipeline_output$protocol_version)
 
   ## Location data: Test that all column classes are expected
-  test_col_classes(pipeline_output, "Location")
+  test_col_classes(pipeline_output, "Location", pipeline_output$protocol_version)
 
 })
 
@@ -313,7 +313,7 @@ test_that("Key columns only contain unique values", {
   test_unique_values(pipeline_output, "CaptureID")
 
   ## PopID-IndvID has only unique values
-  test_unique_values(pipeline_output, "PopID-IndvID")
+  test_unique_values(pipeline_output, "IndvID")
 
 })
 

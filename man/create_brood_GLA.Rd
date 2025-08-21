@@ -4,12 +4,14 @@
 \alias{create_brood_GLA}
 \title{Create brood data table for great tits and blue tits in Glasgow, Scotland.}
 \usage{
-create_brood_GLA(nest_data, rr_data)
+create_brood_GLA(nest_data, rr_data, protocol_version)
 }
 \arguments{
 \item{nest_data}{Data frame of nest data from Glasgow, Scotland.}
 
 \item{rr_data}{Data frame of ringing records from Glasgow, Scotland.}
+
+\item{protocol_version}{Character string. The version of the standard protocol on which this pipeline is based.}
 }
 \value{
 A data frame.

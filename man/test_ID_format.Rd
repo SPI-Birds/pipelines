@@ -4,24 +4,23 @@
 \alias{test_ID_format}
 \title{Test ID format}
 \usage{
-test_ID_format(pipeline_output, ID_col, ID_format)
+test_ID_format(pipeline_output, column, table = NULL, format)
 }
 \arguments{
-\item{pipeline_output}{A list of the 4 data frames returned from format_X
-(where X is the three letter population code).}
+\item{pipeline_output}{A list of data frames returned from format_X, where X is the pipeline code.}
 
-\item{ID_col}{Character string. Which ID column should be tested? ("FemaleID", "MaleID", "C-IndvID", "I-IndvID").
-The C and I in the final two options stand for Capture and Individual data, respectively. So, to test IndvID in the Capture
-data, ID_col should be set to "C-IndvID".}
+\item{column}{Character string. Which ID column should be tested? For v1.0.0 and v1.1.0, one of: "FemaleID", "MaleID", "IndvID". For v2.0.0, one of: "femaleID", "maleID", "individualID".}
 
-\item{ID_format}{Character string. Regular expression corresponding to the proper ID format.}
+\item{table}{Character string. If testing "IndvID"/"individualID", the table in which the column is tested. Either, "Individual" or "Capture". NULL (default) for all other IDs in `ID_col`.}
+
+\item{format}{Character string. Regular expression corresponding to the expected ID format.}
 }
 \value{
 Logical (TRUE/FALSE) for whether all of IDs are formatted as expected.
 }
 \description{
-Test that ID formats for each column are expected. There are 4 ID columns. "IndvID" in the Capture and
-Individual data, and "FemaleID" and "MaleID" in the Brood data. This function will take the regular expression that matches
+Test that ID formats for each column are expected. There are 4 ID columns. "IndvID"/"individualID" in the Capture and
+Individual data, and "FemaleID"/"femaleID" and "MaleID"/"maleID" in the Brood data. This function will take the regular expression that matches
 the expected ID format for the pipeline and will make sure that the ID column does not have entries that do not match the expected format.
 }
 \details{

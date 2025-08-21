@@ -4,16 +4,17 @@
 \alias{test_NA_columns}
 \title{Test for NAs in key columns}
 \usage{
-test_NA_columns(pipeline_output, table)
+test_NA_columns(pipeline_output, table, debug = FALSE)
 }
 \arguments{
-\item{pipeline_output}{A list of the 4 data frames returned from format_X
-(where X is the three letter population code).}
+\item{pipeline_output}{A list of data frames returned from format_X, where X is the pipeline code.}
 
-\item{table}{Which data table should be checked for NAs in the key columns? One of: "Brood", "Capture", "Individual", or "Location"}
+\item{table}{Which data table should be checked for NAs in the key columns? One of: "Brood", "Capture", "Individual", "Measurement, "Location", or "Experiment".}
+
+\item{debug}{Logical (TRUE/FALSE) for whether the function returns the test output (FALSE) or a vector of columns that failed this test (TRUE).}
 }
 \value{
-Logical (TRUE/FALSE) for whether there are any NAs in the key columns for the specified table.
+See `debug`.
 }
 \description{
 Some key columns are not allowed to have NAs. The data templates for each table have dummy values entered when the column cannot contain any NAs.

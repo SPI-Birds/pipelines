@@ -145,19 +145,19 @@ format_GRO <- function(db = choose_directory(),
 
   #### BROOD DATA
   message("Compiling brood information...")
-  Brood_data <- create_brood_GRO(gro_data)
+  Brood_data <- create_brood_GRO(gro_data, protocol_version)
 
   #### CAPTURE DATA
   message("Compiling capture information...")
-  Capture_data <- create_capture_GRO(gro_data)
+  Capture_data <- create_capture_GRO(gro_data, protocol_version)
 
   #### INDIVIDUAL DATA
   message("Compiling individual information...")
-  Individual_data <- create_individual_GRO(Capture_data)
+  Individual_data <- create_individual_GRO(Capture_data, protocol_version)
 
   #### LOCATION DATA
   message("Compiling location information...")
-  Location_data <- create_location_GRO(gro_data)
+  Location_data <- create_location_GRO(gro_data, protocol_version)
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
@@ -206,10 +206,11 @@ format_GRO <- function(db = choose_directory(),
 #' Create brood data table for great tits and blue tits in Grobla, Poland.
 #'
 #' @param gro_data Data frame of modified primary data from Grobla, Poland.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_brood_GRO <- function(gro_data) {
+create_brood_GRO <- function(gro_data, protocol_version) {
 
   ## Get brood data
   Brood_data <- gro_data %>%
@@ -222,16 +223,6 @@ create_brood_GRO <- function(gro_data) {
                   MaleID = .data$MaleID,
                   dplyr::across(c("ClutchSize_observed", "BroodSize_observed", "NumberFledged_observed"),
                                 as.integer))  %>%
-
-    ## Keep only necessary columns
-    dplyr::select(tidyselect::contains(names(brood_data_template))) %>%
-
-    ## Add missing columns
-    dplyr::bind_cols(brood_data_template[0, !(names(brood_data_template) %in% names(.))]  %>%
-                       tibble::add_row()) %>%
-
-    ## Reorder columns
-    dplyr::select(names(brood_data_template)) %>%
 
     ## Remove any NAs from essential columns
     dplyr::filter(!is.na(.data$PopID),
@@ -247,7 +238,13 @@ create_brood_GRO <- function(gro_data) {
     dplyr::mutate(BroodID = dplyr::case_when(!is.na(Species) ~ paste(.data$PopID, dplyr::row_number(), sep ="-"))) %>%
 
     ## Remove any cases without a BroodID
-    dplyr::filter(!is.na(.data$BroodID))
+    dplyr::filter(!is.na(.data$BroodID)) %>%
+
+    ## Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Brood_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Brood_data) %in% names(.))]) %>%
+
+    ## Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Brood_data))
 
   return(Brood_data)
 
@@ -256,10 +253,11 @@ create_brood_GRO <- function(gro_data) {
 #' Create capture data table for great tits and blue tits in Grobla, Poland.
 #'
 #' @param gro_data Data frame of modified primary data from Grobla, Poland.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_capture_GRO <- function(gro_data) {
+create_capture_GRO <- function(gro_data, protocol_version) {
 
 
   ## Capture data from nest data
@@ -287,17 +285,8 @@ create_capture_GRO <- function(gro_data) {
 
     dplyr::ungroup() %>%
 
-    ## Keep only necessary columns
-    dplyr::select(tidyselect::contains(names(capture_data_template))) %>%
-
-    ## Add missing columns
-    dplyr::bind_cols(capture_data_template[0, !(names(capture_data_template) %in% names(.))]  %>%
-                       tibble::add_row()) %>%
-
-    ## Reorder columns
-    dplyr::select(names(capture_data_template)) %>%
-
     ## Calculate age
+    dplyr::mutate(Age_observed = NA_integer_) %>%
     calc_age(ID = .data$IndvID,
              Age = .data$Age_observed,
              Date = .data$CaptureDate,
@@ -308,7 +297,13 @@ create_capture_GRO <- function(gro_data) {
     dplyr::arrange(.data$BreedingSeason, .data$CapturePopID, .data$IndvID, .data$CaptureDate) %>%
 
     ## Add CaptureID
-    dplyr::mutate(CaptureID = paste(.data$IndvID, dplyr::row_number(), sep = "_"))
+    dplyr::mutate(CaptureID = paste(.data$IndvID, dplyr::row_number(), sep = "_")) %>%
+
+    ## Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Capture_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Capture_data) %in% names(.))]) %>%
+
+    ## Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Capture_data))
 
   return(Capture_data)
 
@@ -316,11 +311,12 @@ create_capture_GRO <- function(gro_data) {
 
 #' Create individual table for great tits and blue tits in Grobla, Poland.
 #'
-#' @param Capture_data Capture data output based on modified primary data from Grobla, Poland
+#' @param Capture_data Capture data output based on modified primary data from Grobla, Poland.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_individual_GRO <- function(Capture_data){
+create_individual_GRO <- function(Capture_data, protocol_version){
 
   Individual_data <- Capture_data %>%
 
@@ -365,25 +361,19 @@ create_individual_GRO <- function(Capture_data){
                                               }
                                             })) %>%
 
+    dplyr::ungroup() %>%
+
     ## Keep distinct records by PopID and InvdID
     dplyr::distinct(.data$PopID, .data$IndvID, .keep_all = TRUE) %>%
 
     ## Arrange
     dplyr::arrange(.data$CaptureID) %>%
 
-    ## Keep only necessary columns
-    dplyr::select(tidyselect::contains(names(individual_data_template))) %>%
-
     ## Add missing columns
-    dplyr::bind_cols(individual_data_template[0, !(names(individual_data_template) %in% names(.))]  %>%
-                       tibble::add_row()) %>%
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Individual_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Individual_data) %in% names(.))]) %>%
 
-    ## Reorder columns
-    dplyr::select(names(individual_data_template))
-
-
-  # ## Check column classes
-  # purrr::map_df(individual_data_template, class) == purrr::map_df(Individual_data, class)
+    ## Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Individual_data))
 
   return(Individual_data)
 
@@ -393,10 +383,11 @@ create_individual_GRO <- function(Capture_data){
 #' Create location data table for great tits and blue tits in Grobla, Poland.
 #'
 #' @param gro_data Data frame of modified primary data from Grobla, Poland.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_location_GRO <- function(gro_data) {
+create_location_GRO <- function(gro_data, protocol_version) {
 
   ## Build location data based on nest data
   ## Some boxes were removed in the early years of the study, but there is no information about which boxes or when
@@ -421,15 +412,11 @@ create_location_GRO <- function(gro_data) {
                   Latitude  = 50.06,
                   Longitude = 20.25) %>%
 
-    ## Keep only necessary columns
-    dplyr::select(tidyselect::contains(names(location_data_template))) %>%
-
     ## Add missing columns
-    dplyr::bind_cols(location_data_template[0, !(names(location_data_template) %in% names(.))] %>%
-                       tibble::add_row()) %>%
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Location_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Location_data) %in% names(.))]) %>%
 
-    ## Reorder columns
-    dplyr::select(names(location_data_template))
+    ## Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Location_data))
 
   return(Location_data)
 

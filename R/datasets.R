@@ -182,21 +182,6 @@ NULL
 #' @name checkID_variable_combos
 checkID_variable_combos <- utils::read.csv(system.file("extdata", "checkID_variable_combos.csv", package = "pipelines", mustWork = TRUE))
 
-
-#' List of cutoffs used to define errors and warnings for chick mass
-#'
-#'
-#' @format Data frame with 4 variables and 248 rows:
-#' \describe{
-#' \item{Species}{6 letter code to identify species}
-#' \item{ChickAge}{Age at which cutoff is applied}
-#' \item{Reference}{In what context should the cutoff be used (e.g. warning, error)}
-#' \item{Value}{Value of the cutoff}
-#' }
-#'
-#' @name chick_mass_cutoffs
-NULL
-
 #' Common hybrids
 #'
 #' Data frame with common hybrid broods. Can be used in quality checks to compare species across parents, between parents and brood, and between brood and nestlings.
@@ -209,80 +194,3 @@ NULL
 #'
 #' @name common_hybrids
 common_hybrids <- utils::read.csv(system.file("extdata", "common_hybrids.csv", package = "pipelines", mustWork = TRUE))
-
-#'capture_data_template template
-#'
-#'Tibble giving names and associated classes for all the columns in the Capture data for the standard protocol v1.1.0
-#'@format Tibble
-#'@name capture_data_template
-NULL
-
-#'individual_data_template template
-#'
-#'Tibble giving names and associated classes for all the columns in the Individual data for the standard protocol v1.1.0
-#'@format Tibble
-#'@name individual_data_template
-NULL
-
-#'brood_data_template template
-#'
-#'Tibble giving names and associated classes for all the columns in the Brood data for the standard protocol v1.1.0
-#'@format Tibble
-#'@name brood_data_template
-NULL
-
-#'location_data_template template
-#'
-#'Tibble giving names and associated classes for all the columns in the Location data for the standard protocol v1.1.0
-#'@format Tibble
-#'@name location_data_template
-NULL
-
-#' List of standard format column names (protocol version 1.1)
-#'
-#' All columns names appearing in the 4 tables of the standard format, organized
-#' in a list.
-#' @format A list with 4 elements. Each element is a character vector.
-#' \describe{
-#'   \item{Brood}{Column names in `Brood_data`.}
-#'   \item{Capture}{Column names in `Capture_data`.}
-#'   \item{Individual}{Column names in `Individual_data`.}
-#'   \item{Location}{Column names in `Location_data`.}
-#'   }
-#'@name column_names_v1.1
-column_names_df_v1.1 <- utils::read.csv(system.file("extdata", "column_names_v1.1.csv", package = "pipelines", mustWork = TRUE), na.strings = "")
-column_names_v1.1 <- list(
-  Brood = column_names_df_v1.1$Brood[which(!is.na(column_names_df_v1.1$Brood))],
-  Capture = column_names_df_v1.1$Capture[which(!is.na(column_names_df_v1.1$Capture))],
-  Individual = column_names_df_v1.1$Individual[which(!is.na(column_names_df_v1.1$Individual))],
-  Location = column_names_df_v1.1$Location[which(!is.na(column_names_df_v1.1$Location))]
-)
-rm(column_names_df_v1.1)
-
-#' Brood data template in standard format (version 1.1.0)
-#'
-#' @format Data frame with 1 row and 36 variables:
-#'
-#' @name brood_data_template
-NULL
-
-#' Capture data template in standard format (version 1.1.0)
-#'
-#' @format Data frame with 1 row and 23 variables:
-#'
-#' @name capture_data_template
-NULL
-
-#' Individual data template in standard format (version 1.1.0)
-#'
-#' @format Data frame with 1 row and 9 variables:
-#'
-#' @name individual_data_template
-NULL
-
-#' Location data template in standard format (version 1.1.0)
-#'
-#' @format Data frame with 1 row and 9 variables:
-#'
-#' @name location_data_template
-NULL
