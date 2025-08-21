@@ -739,16 +739,16 @@ check_adult_parent_nest <- function(Capture_data, Location_data, Brood_data, app
     # Here we define a population's breeding season annually, which, for now, runs from the minimum lay date in Brood_data,
     # to the maximum fledge date in Brood_data (both in Julian day/day of the year)
     # TODO: Note that errors in either lay date or fledge date permeate here.
-    # FIXME: Work-around when *ALL* FledgeDate or LayDate are NA
+    # FIXME: Work-around when *ALL* FledgeDate or LayingDate are NA
     # TODO: Update breeding season definition for birds breeding in winter, in the tropics, or the Southern Hemisphere
-    if(all(c("LayDate", "FledgeDate") %in% colnames(Brood_data))) {
+    if(all(c("LayingDate", "FledgeDate") %in% colnames(Brood_data))) {
 
       breeding_season <- Brood_data %>%
         dplyr::group_by(.data$PopID, .data$BreedingSeason) %>%
         # If all Lay dates are NA, the start of the breeding season is set to March 1st
         # If all Fledge dates are NA, the end of the breeding season is set to August 31st
-        dplyr::summarise(StartBreeding = ifelse(all(is.na(.data$LayDate)), lubridate::yday(paste0(unique(.data$BreedingSeason), "-03-01")),
-                                                lubridate::yday(min(.data$LayDate, na.rm = TRUE))),
+        dplyr::summarise(StartBreeding = ifelse(all(is.na(.data$LayingDate)), lubridate::yday(paste0(unique(.data$BreedingSeason), "-03-01")),
+                                                lubridate::yday(min(.data$LayingDate, na.rm = TRUE))),
                          EndBreeding = ifelse(all(is.na(.data$FledgeDate)), lubridate::yday(paste0(unique(.data$BreedingSeason), "-08-31")),
                                               lubridate::yday(max(.data$FledgeDate, na.rm = TRUE))),
                          .groups = "drop") %>%
