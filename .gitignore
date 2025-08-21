@@ -12,3 +12,5 @@ debug_report
 *.rmd
 figure/
 Hackathon*
+*.code-workspace
+test/
