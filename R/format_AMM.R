@@ -276,19 +276,23 @@ create_brood_AMM   <- function(dir, species_filter) {
                   ClutchType_observed = dplyr::case_when(.data$ClutchNumber == 1L ~ "first",
                                                          .data$ClutchNumber %in% c(2L, 4L) ~ "second",
                                                          .data$ClutchNumber %in% c(3L, 5L, 6L) ~ "replacement")) %>%
-  # Arrange columns
-  dplyr::select("BroodID", "PopID", "BreedingSeason",
-                "Species", "Plot", "LocationID" = "NestBox", "FemaleID", "MaleID",
-                "ClutchType_observed", "ClutchType_calculated",
-                "LayDate_observed", "LayDate_min", "LayDate_max",
-                "ClutchSize_observed", "ClutchSize_min", "ClutchSize_max",
-                "HatchDate_observed", "HatchDate_min", "HatchDate_max",
-                "BroodSize_observed", "BroodSize_min", "BroodSize_max",
-                "FledgeDate_observed", "FledgeDate_min", "FledgeDate_max",
-                "NumberFledged_observed", "NumberFledged_min", "NumberFledged_max",
-                "AvgEggMass", "NumberEggs",
-                "AvgChickMass", "NumberChicksMass",
-                "ExperimentID") %>%
+    # Tests flagged 3 duplicated BroodIDs. 4288, 4916, 6237. The only difference between duplicates is the assignment of FemaleID
+    # For now the second record of each is ignored
+    # FIXME: check with data owner
+    dplyr::distinct(.data$BroodID, .keep_all = TRUE) %>%
+    # Arrange columns
+    dplyr::select("BroodID", "PopID", "BreedingSeason",
+                  "Species", "Plot", "LocationID" = "NestBox", "FemaleID", "MaleID",
+                  "ClutchType_observed", "ClutchType_calculated",
+                  "LayDate_observed", "LayDate_min", "LayDate_max",
+                  "ClutchSize_observed", "ClutchSize_min", "ClutchSize_max",
+                  "HatchDate_observed", "HatchDate_min", "HatchDate_max",
+                  "BroodSize_observed", "BroodSize_min", "BroodSize_max",
+                  "FledgeDate_observed", "FledgeDate_min", "FledgeDate_max",
+                  "NumberFledged_observed", "NumberFledged_min", "NumberFledged_max",
+                  "AvgEggMass", "NumberEggs",
+                  "AvgChickMass", "NumberChicksMass",
+                  "ExperimentID") %>%
     # Convert to correct formats
     dplyr::mutate(dplyr::across(c("Plot":"MaleID"),
                                 as.character)) %>%
