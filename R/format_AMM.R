@@ -378,8 +378,10 @@ create_capture_AMM <- function(Brood_data, dir, species_filter) {
                   "LocationID",
                   "CapturePopID",
                   "CapturePlot",
+                  "CaptureAlive",
                   "ReleasePopID",
                   "ReleasePlot",
+                  "ReleaseAlive",
                   "Mass" = "BodyMassField",
                   "Tarsus",
                   "WingLength" = "WingP3",
@@ -417,7 +419,9 @@ create_capture_AMM <- function(Brood_data, dir, species_filter) {
                         values_to = "value") %>%
     dplyr::mutate(Day = stringr::str_extract(.data$column, "[0-9]{1,}"),
                   OriginalTarsusMethod = "Alternative",
-                  Age_observed = 1L) %>%
+                  Age_observed = 1L,
+                  CaptureAlive = TRUE,
+                  ReleaseAlive = TRUE) %>%
     tidyr::separate(.data$column, into = c(NA, "Variable"), sep = "^Day[0-9]{1,}") %>%
     tidyr::pivot_wider(names_from = "Variable", values_from = "value") %>%
     #Mutate columns back to correct type
@@ -436,8 +440,10 @@ create_capture_AMM <- function(Brood_data, dir, species_filter) {
                   "LocationID" = "NestBox",
                   "CapturePopID",
                   "CapturePlot",
+                  "CaptureAlive",
                   "ReleasePopID",
                   "ReleasePlot",
+                  "ReleaseAlive",
                   "Mass" = "BodyMass",
                   "Tarsus",
                   "WingLength" = "P3",
@@ -450,10 +456,13 @@ create_capture_AMM <- function(Brood_data, dir, species_filter) {
              Date = .data$CaptureDate, Year = .data$BreedingSeason) %>%
     # Filter species
     dplyr::filter(.data$Species %in% species_filter) %>%
+    # Remove individuals without ID
+    dplyr::filter(!is.na(.data$IndvID)) %>%
     #Arrange by ID/Date and add unique capture ID
     dplyr::arrange(.data$IndvID, .data$CaptureDate) %>%
     dplyr::group_by(.data$IndvID) %>%
     dplyr::mutate(CaptureID = paste(.data$IndvID, 1:dplyr::n(), sep = "_")) %>%
+    dplyr::ungroup() %>%
     dplyr::select("CaptureID", tidyselect::everything())
 
   return(Capture_data)
