@@ -253,7 +253,7 @@ create_brood_AMM   <- function(dir, species_filter) {
                                              .data$Species == 4L ~ !!species_codes$Species[species_codes$speciesEURINGCode == "14790"]),
                   AvgEggMass = NA_real_,
                   NumberEggs = NA_integer_,
-                  AvgChickMass = NA_integer_,
+                  AvgChickMass = NA_real_,
                   NumberChicksMass = NA_integer_,
                   BroodSwap_ExperimentID = ifelse(.data$BroodSwap > 0L, list(c("PARENTAGE", "COHORT")), list(NA_character_)),
                   BroodOther_ExperimentID = dplyr::case_when(.data$BroodOtherTreatment %in% c(1L, 2L, 3L, 4L, 5L) ~ list("SURVIVAL"),
@@ -499,6 +499,7 @@ create_individual_AMM <- function(Capture_data, Brood_data, dir, protocol_versio
     dplyr::mutate(dplyr::across(tidyselect::everything(), as.character))
 
   Individual_data <- Capture_data %>%
+    dplyr::filter(!is.na(.data$IndvID)) %>%
     dplyr::group_by(.data$IndvID) %>%
     dplyr::summarise(Species = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Species))),
                                               .f = ~{
