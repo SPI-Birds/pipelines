@@ -22,13 +22,13 @@
 #'In this case, we are giving the clutch size as the number of eggs of both species. We are thinking
 #'about ways to more effectively deal with multi-species clutches.
 #'
-#'\strong{BroodSize}: Use NumberHatched to determine observed BroodSize. BroodSize_minimum is equal to BroodSize
-#'observed. BroodSize_maximum is NumberHatched + ErrorHatched (i.e. number of eggs never observed either alive
+#'\strong{BroodSize}: Use NumberHatched to determine observed BroodSize. BroodSize_min is equal to BroodSize
+#'observed. BroodSize_max is NumberHatched + ErrorHatched (i.e. number of eggs never observed either alive
 #'or dead, so status was unknown).
 #'
 #'\strong{NumberFledged}: Use NumberFledged to determine observed number of fledglings.
-#'NumberFledged_minimum is equal to BroodSize_observed.
-#'BroodSize_maximum is NumberFledged + ErrorFledged (i.e. number of chicks never observed either alive
+#'NumberFledged_min is equal to BroodSize_observed.
+#'NumberFledged_max is NumberFledged + ErrorFledged (i.e. number of chicks never observed either alive
 #'or dead, so status was unknown).
 #'
 #'\strong{HatchDate}: The day a clutch hatched.
@@ -230,23 +230,23 @@ create_brood_AMM   <- function(dir, species_filter) {
                   PopID = "AMM",
                   EndMarch = as.Date(paste(.data$BroodYear, "03", "31", sep = "-")),
                   LayDate_observed = .data$EndMarch + .data$FirstEggDay,
-                  LayDate_maximum = .data$LayDate_observed,
-                  LayDate_minimum = .data$EndMarch + (.data$FirstEggDay - .data$FirstEggDayError),
+                  LayDate_max = .data$LayDate_observed,
+                  LayDate_min = .data$EndMarch + (.data$FirstEggDay - .data$FirstEggDayError),
                   ClutchSize_observed = .data$ClutchSize,
-                  ClutchSize_minimum = .data$ClutchSize_observed,
-                  ClutchSize_maximum = .data$ClutchSize_observed,
+                  ClutchSize_min = .data$ClutchSize_observed,
+                  ClutchSize_max = .data$ClutchSize_observed,
                   HatchDate_observed = .data$EndMarch + .data$HatchDay,
-                  HatchDate_maximum = .data$HatchDate_observed,
-                  HatchDate_minimum = .data$EndMarch + (.data$HatchDay - .data$HatchDayError),
+                  HatchDate_max = .data$HatchDate_observed,
+                  HatchDate_min= .data$EndMarch + (.data$HatchDay - .data$HatchDayError),
                   BroodSize_observed = .data$NumberHatched,
-                  BroodSize_minimum = .data$NumberHatched,
-                  BroodSize_maximum = .data$NumberHatched + .data$ErrorHatched,
+                  BroodSize_min = .data$NumberHatched,
+                  BroodSize_max = .data$NumberHatched + .data$ErrorHatched,
                   FledgeDate_observed = .data$EndMarch + .data$FledgeDay,
-                  FledgeDate_minimum = .data$EndMarch + .data$FledgeDay,
-                  FledgeDate_maximum = .data$EndMarch + .data$FledgeDay,
+                  FledgeDate_min = .data$EndMarch + .data$FledgeDay,
+                  FledgeDate_max = .data$EndMarch + .data$FledgeDay,
                   NumberFledged_observed = .data$NumberFledged,
-                  NumberFledged_minimum = .data$NumberFledged,
-                  NumberFledged_maximum = .data$NumberFledged + .data$FledgedError,
+                  NumberFledged_min = .data$NumberFledged,
+                  NumberFledged_max = .data$NumberFledged + .data$FledgedError,
                   Species = dplyr::case_when(.data$Species == 1L ~ !!species_codes$Species[species_codes$speciesEURINGCode == "14640"],
                                              .data$Species == 2L ~ !!species_codes$Species[species_codes$speciesEURINGCode == "14620"],
                                              .data$Species == 3L ~ !!species_codes$Species[species_codes$speciesEURINGCode == "14610"],
@@ -280,15 +280,12 @@ create_brood_AMM   <- function(dir, species_filter) {
   dplyr::select("BroodID", "PopID", "BreedingSeason",
                 "Species", "Plot", "LocationID" = "NestBox", "FemaleID", "MaleID",
                 "ClutchType_observed", "ClutchType_calculated",
-                "LayDate_observed", "LayDate_minimum", "LayDate_maximum",
-                "ClutchSize_observed", "ClutchSize_minimum", "ClutchSize_maximum",
-                "HatchDate_observed", "HatchDate_minimum", "HatchDate_maximum",
-                "BroodSize_observed", "BroodSize_minimum",
-                "BroodSize_maximum",
-                "FledgeDate_observed", "FledgeDate_minimum",
-                "FledgeDate_maximum",
-                "NumberFledged_observed", "NumberFledged_minimum",
-                "NumberFledged_maximum",
+                "LayDate_observed", "LayDate_min", "LayDate_max",
+                "ClutchSize_observed", "ClutchSize_min", "ClutchSize_max",
+                "HatchDate_observed", "HatchDate_min", "HatchDate_max",
+                "BroodSize_observed", "BroodSize_min", "BroodSize_max",
+                "FledgeDate_observed", "FledgeDate_min", "FledgeDate_max",
+                "NumberFledged_observed", "NumberFledged_min", "NumberFledged_max",
                 "AvgEggMass", "NumberEggs",
                 "AvgChickMass", "NumberChicksMass",
                 "ExperimentID") %>%
