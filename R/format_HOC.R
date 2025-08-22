@@ -109,7 +109,7 @@ format_HOC <- function(db = choose_directory(),
     dplyr::select("BroodID", "PopID", "BreedingSeason",
                   "Species", "Plot", "LocationID", "FemaleID", "MaleID",
                   "ClutchType_observed", "ClutchType_calculated",
-                  "LayDate", "LayDateError",
+                  "LayingDate", "LayingDateError",
                   "ClutchSize", "ClutchSizeError",
                   "HatchDate", "HatchDateError",
                   "BroodSize", "BroodSizeError",
@@ -188,8 +188,8 @@ create_brood_HOC <- function(db){
                   BreedingSeason = as.integer(.data$year),
                   MaleID = .data$social_male_bird_id,
                   FemaleID = .data$social_female_bird_id,
-                  LayDate = janitor::excel_numeric_to_date(as.numeric(.data$x1st_egg_lay_date)),
-                  LayDateError = as.numeric(.data$lay_date_error),
+                  LayingDate = janitor::excel_numeric_to_date(as.numeric(.data$x1st_egg_lay_date)),
+                  LayingDateError = as.numeric(.data$lay_date_error),
                   ClutchSize = as.integer(.data$clutch_size),
                   ClutchSizeError = as.numeric(.data$clutch_size_error),
                   HatchDate = janitor::excel_numeric_to_date(as.numeric(.data$hatch_date)),
@@ -202,7 +202,7 @@ create_brood_HOC <- function(db){
                   FledgeDateError = as.numeric(.data$fledge_date_error),
                   AvgEggMass = NA_real_,
                   NumberEggs = NA_integer_) %>%
-    dplyr::arrange("BreedingSeason", "FemaleID", "LayDate") %>%
+    dplyr::arrange("BreedingSeason", "FemaleID", "LayingDate") %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
     #No need to order cols yet because we still need to add AvgChickMass etc.
     dplyr::select("BroodID":"NumberEggs", "ClutchType_calculated")
