@@ -269,7 +269,7 @@ create_brood_AMM   <- function(dir, species_filter) {
                                        collapse = ";")) %>%
     dplyr::ungroup() %>%
     # Remove NAs from the experiment list
-    dplyr::mutate(ExperimentID = stringr::str_remove_all(.data$ExperimentID, pattern = "NA[;]*|;NA^")) %>%
+    dplyr::mutate(ExperimentID = dplyr::na_if(stringr::str_remove_all(.data$ExperimentID, pattern = "NA;?|;NA|"), "")) %>%
     # Determine clutch type
     dplyr::arrange(.data$BreedingSeason, .data$FemaleID, .data$LayDate_observed) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.1"),
@@ -591,7 +591,7 @@ create_location_AMM <- function(Capture_data, dir, protocol_version) {
                   StartSeason = start_year,
                   EndSeason = dplyr::case_when(nchar(.data$NestboxID) == 4 & stringr::str_sub(.data$NestboxID, 1, 2) == "16" ~ 2016L,
                                                TRUE ~ 2019L),
-                  HabitatType = "DEC") %>%
+                  HabitatType = "deciduous") %>%
     # Add missing columns
     dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Location_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Location_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format and order correctly
