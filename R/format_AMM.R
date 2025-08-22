@@ -100,14 +100,16 @@ format_AMM <- function(db = choose_directory(),
 
   Individual_data <- create_individual_AMM(Capture_data = Capture_data,
                                            Brood_data = Brood_data,
-                                           dir = table_dir)
+                                           dir = table_dir,
+                                           protocol_version = protocol_version)
 
   # LOCATION DATA
 
   message("Compiling location information...")
 
   Location_data <- create_location_AMM(Capture_data = Capture_data,
-                                       dir = table_dir)
+                                       dir = table_dir,
+                                       protocol_version = protocol_version)
 
   # WRANGLE DATA FOR EXPORT
 
@@ -125,12 +127,17 @@ format_AMM <- function(db = choose_directory(),
   #Add average tarsus
   Brood_data <- Brood_data %>%
     dplyr::left_join(AvgTarsus, by = "BroodID") %>%
-    dplyr::select("BroodID":"NumberChicksMass", "AvgTarsus",
-                  "NumberChicksTarsus", "OriginalTarsusMethod", "ExperimentID")
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Brood_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Brood_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Brood_data))
 
   #Remove BroodID, no longer needed
   Capture_data <- Capture_data %>%
-    dplyr::select("CaptureID":"Age_observed", "Age_calculated", "ChickAge", "ExperimentID")
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Capture_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Capture_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Capture_data))
 
   # EXPORT DATA
 
@@ -459,10 +466,11 @@ create_capture_AMM <- function(Brood_data, dir, species_filter) {
 #' @param Capture_data Data frame. Output from \code{\link{create_capture_AMM}}.
 #' @param Brood_data Data frame. Output from \code{\link{create_brood_AMM}}.
 #' @param dir Path to directory containing the relevant table exports from the AMM Access database.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_individual_AMM <- function(Capture_data, Brood_data, dir) {
+create_individual_AMM <- function(Capture_data, Brood_data, dir, protocol_version) {
 
   Sex_genetic <- utils::read.csv(paste0(dir, "/", "GenotypesAllYears", ".csv")) %>%
     dplyr::select("IndvID" = "BirdID", "SexGenetic") %>%
@@ -520,10 +528,10 @@ create_individual_AMM <- function(Capture_data, Brood_data, dir) {
     dplyr::left_join(Sex_calc, by = "IndvID") %>%
     dplyr::left_join(Sex_genetic, by = "IndvID") %>%
     dplyr::left_join(Brood_swap_info, by = "IndvID") %>%
-    dplyr::select("IndvID", "Species", "PopID",
-                  "BroodIDLaid", "BroodIDFledged",
-                  "RingSeason", "RingAge",
-                  "Sex_calculated", "Sex_genetic")
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Individual_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Individual_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Individual_data))
 
   return(Individual_data)
 
@@ -535,10 +543,11 @@ create_individual_AMM <- function(Capture_data, Brood_data, dir) {
 #'
 #' @param Capture_data Data frame. Output from \code{\link{create_capture_AMM}}.
 #' @param dir Path to directory containing the relevant table exports from the AMM Access database.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_location_AMM <- function(Capture_data, dir) {
+create_location_AMM <- function(Capture_data, dir, protocol_version) {
 
   Habitat_data <- utils::read.csv(paste0(dir, "/", "HabitatDescription", ".csv")) %>%
     dplyr::select("NestBox", "Beech":"OtherTree") %>%
@@ -572,15 +581,10 @@ create_location_AMM <- function(Capture_data, dir) {
                   EndSeason = dplyr::case_when(nchar(.data$NestboxID) == 4 & stringr::str_sub(.data$NestboxID, 1, 2) == "16" ~ 2016L,
                                                TRUE ~ 2019L),
                   HabitatType = "DEC") %>%
-    dplyr::select("LocationID",
-                  "NestboxID",
-                  "LocationType",
-                  "PopID",
-                  "Latitude",
-                  "Longitude",
-                  "StartSeason",
-                  "EndSeason",
-                  "HabitatType")
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Location_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Location_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Location_data))
 
   return(Location_data)
 
