@@ -564,7 +564,7 @@ create_brood_MON <- function(db, species_filter, pop_filter){
                   BoxNumber = .data$nic,
                   LocationID = paste(.data$Plot, .data$BoxNumber, "NB", sep = "_"),
                   BreedingSeason = as.integer(.data$an),
-                  LayDate = suppressWarnings(as.Date(.data$date_ponte, format = "%d/%m/%Y")),
+                  LayingDate = suppressWarnings(as.Date(.data$date_ponte, format = "%d/%m/%Y")),
                   BroodID = paste(.data$BreedingSeason, .data$Plot, .data$BoxNumber, .data$np,
                                   sep = "_"),
                   ClutchType_observed = dplyr::case_when(.data$np == "1" ~ "first",
@@ -590,7 +590,7 @@ create_brood_MON <- function(db, species_filter, pop_filter){
                                                   .data$mort == "CLI" ~ "Climatic event (e.g. storm)",
                                                   .data$mort == "MAL" ~ "Sickness",
                                                   .data$mort == "NCT" ~ "Not checked??"),
-                  LayDateError = NA_integer_,
+                  LayingDateError = NA_integer_,
                   ClutchSizeError = NA_integer_,
                   HatchDateError = NA_integer_,
                   BroodSizeError = NA_integer_,
@@ -600,7 +600,7 @@ create_brood_MON <- function(db, species_filter, pop_filter){
     dplyr::filter(.data$Species %in% species_filter) %>%
     #Only include capture pop and plot for now, until we work out how to code translocations
     dplyr::mutate(PopID = identify_PopID_MON(.data$lieu)) %>%
-    dplyr::arrange(.data$BreedingSeason, .data$Species, .data$FemaleID, .data$LayDate) %>%
+    dplyr::arrange(.data$BreedingSeason, .data$Species, .data$FemaleID, .data$LayingDate) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
     dplyr::mutate(ExperimentID = dplyr::case_when((!is.na(.data$Crossfostering_treatment) | !is.na(.data$Brood_ExperimentDescription2) | .data$ParasiteTreatment == "Treated" | .data$expou == "2") ~ "TRUE",
                                                   (is.na(.data$Crossfostering_treatment) & is.na(.data$Brood_ExperimentDescription2) & .data$ParasiteTreatment != "Treated" & .data$expou != "2") ~ "FALSE")) %>%
@@ -609,7 +609,7 @@ create_brood_MON <- function(db, species_filter, pop_filter){
     #Keep box number to link to Capture data
     dplyr::select("BroodID", "PopID", "BreedingSeason", "Species", "Plot",
                   "LocationID", "FemaleID", "MaleID", "ClutchType_observed",
-                  "ClutchType_calculated", "LayDate", "LayDateError",
+                  "ClutchType_calculated", "LayingDate", "LayingDateError",
                   "ClutchSize", "ClutchSizeError", "HatchDate", "HatchDateError",
                   "BroodSize", "BroodSizeError", "FledgeDate", "FledgeDateError",
                   "NumberFledged", "NumberFledgedError", "ExperimentID",
@@ -683,7 +683,7 @@ create_individual_MON <- function(Capture_data, Brood_data, verbose){
           dplyr::filter(.data$BreedingSeason == split_info[1],
                         .data$Plot == split_info[2],
                         .data$BoxNumber == split_info[3],
-                        .data$LayDate < CaptureDate)
+                        .data$LayingDate < CaptureDate)
 
         if(nrow(possible_nest) == 1){
 
@@ -722,7 +722,7 @@ create_individual_MON <- function(Capture_data, Brood_data, verbose){
           dplyr::filter(.data$BreedingSeason == lubridate::year(CaptureDate),
                         .data$Plot == split_info[1],
                         .data$BoxNumber == split_info[2],
-                        .data$LayDate < CaptureDate)
+                        .data$LayingDate < CaptureDate)
 
         if(nrow(possible_nest) > 1){
 

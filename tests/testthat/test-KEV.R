@@ -24,7 +24,7 @@ test_that("Brood_data returns an expected outcome...", {
   #Test 1: Brood where clutch type = first
   expect_equal(subset(KEV_data, BroodID == "1984_0007_1")$Species, "PARMAJ")
   expect_equal(subset(KEV_data, BroodID == "1984_0007_1")$ClutchType_calculated, "first")
-  expect_equal(subset(KEV_data, BroodID == "1984_0007_1")$LayDate, as.Date("1984-5-21"))
+  expect_equal(subset(KEV_data, BroodID == "1984_0007_1")$LayingDate, as.Date("1984-5-21"))
   expect_equal(subset(KEV_data, BroodID == "1984_0007_1")$ClutchSize, 10)
   expect_equal(subset(KEV_data, BroodID == "1984_0007_1")$BroodSize, 7)
   expect_equal(subset(KEV_data, BroodID == "1984_0007_1")$NumberFledged, 7)
@@ -34,7 +34,7 @@ test_that("Brood_data returns an expected outcome...", {
   #Test 2: Brood where clutch type = replacement (past the cutoff)
   expect_equal(subset(KEV_data, BroodID == "1984_0111_1")$Species, "PARMAJ")
   expect_equal(subset(KEV_data, BroodID == "1984_0111_1")$ClutchType_calculated, "replacement")
-  expect_equal(subset(KEV_data, BroodID == "1984_0111_1")$LayDate, as.Date("1984-7-5"))
+  expect_equal(subset(KEV_data, BroodID == "1984_0111_1")$LayingDate, as.Date("1984-7-5"))
   expect_equal(subset(KEV_data, BroodID == "1984_0111_1")$ClutchSize, NA_integer_)
   expect_equal(subset(KEV_data, BroodID == "1984_0111_1")$BroodSize, 6)
   expect_equal(subset(KEV_data, BroodID == "1984_0111_1")$NumberFledged, 6)
@@ -180,7 +180,7 @@ test_that("Location_data returns an expected outcome...", {
   expect_true(subset(KEV_data, LocationID == "0001")$NestboxID == "0001")
   #Expect Start and EndSeason is as expected
   expect_equal(subset(KEV_data, LocationID == "0001")$StartSeason, 1981L)
-  expect_equal(subset(KEV_data, LocationID == "0001")$EndSeason, 2019L)
+  expect_equal(subset(KEV_data, LocationID == "0001")$EndSeason, 2023L)
   #Check that LocationID is in the expected PopID
   expect_equal(subset(KEV_data, LocationID == "0001")$PopID, "KEV")
   #Check that latitude and longitude are as expected
