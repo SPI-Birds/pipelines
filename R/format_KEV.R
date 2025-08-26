@@ -23,7 +23,7 @@
 #'FL is unknown. We can't even attribute it to chick or adult.
 #'For this we use EURING 2 (able to fly freely but otherwise unknown).
 #'
-#'\strong{LayDateError & HatchDateError}: Accuracy of laying and hatch date
+#'\strong{LayingDateError & HatchDateError}: Accuracy of laying and hatch date
 #'are given as categories: 0-1; 1-2; 2-3; 'inaccurate'. Where error is a range,
 #'the more conservative error is used (i.e. 0-1 is recorded as 1).
 #'Cases listed as 'inaccurate' have an error of at least a week.
@@ -203,11 +203,11 @@ format_KEV <- function(db = choose_directory(),
   Brood_data <- dplyr::left_join(Brood_data, Chick_avg, by = "BroodID") %>%
     dplyr::left_join(Parents, by = "BroodID") %>%
     #Now we can do clutchtype_calculated (we couldn't do this until we have FemaleID)
-    dplyr::arrange(.data$BreedingSeason, .data$FemaleID, .data$LayDate) %>%
+    dplyr::arrange(.data$BreedingSeason, .data$FemaleID, .data$LayingDate) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
     dplyr::select("BroodID", "PopID", "BreedingSeason", "Species", "Plot", "LocationID",
                   "FemaleID", "MaleID", "ClutchType_observed", "ClutchType_calculated",
-                  "LayDate", "LayDateError", "ClutchSize", "ClutchSizeError",
+                  "LayingDate", "LayingDateError", "ClutchSize", "ClutchSizeError",
                   "HatchDate", "HatchDateError", "BroodSize", "BroodSizeError",
                   "FledgeDate", "FledgeDateError", "NumberFledged", "NumberFledgedError",
                   "AvgEggMass", "NumberEggs",
@@ -281,7 +281,7 @@ create_brood_KEV <- function(db, species_filter){
                   "ClutchType_observed" = "Pesa", "Habitat_Type_simple" = "Mety",
                   "Dist_to_humans" = "Dist", "Altitude" = "Mpy",
                   "Habitat_Type_detailed" = "Puut", "Habitat_Type_detailed2" = "Vart",
-                  "LayDate_day" = "Mpv", "LayDate_month" = "Mkk", "LayDateError" = "Mtar",
+                  "LayingDate_day" = "Mpv", "LayingDate_month" = "Mkk", "LayingDateError" = "Mtar",
                   "HatchDate_day" = "Kpv", "HatchDate_month" = "Kkk", "HatchDateError" = "Ktar",
                   "Incubation" = "Halku", "ClutchSize" = "Mulu", "BroodSize" = "Kuor",
                   "NumberRinged" = "Reng", "NumberFledged" = "Lent", "ReasonFailed" = "Tsyy")
@@ -303,14 +303,14 @@ create_brood_KEV <- function(db, species_filter){
                                                          .data$ClutchType_observed %in% c(2, 3, 6) ~ "replacement",
                                                          .data$ClutchType_observed == 5 ~ "second")) %>%
     #Create calendar date for laying date and hatch date
-    dplyr::mutate(LayDate = as.Date(paste(.data$LayDate_day, .data$LayDate_month, .data$BreedingSeason, sep = "/"),
+    dplyr::mutate(LayingDate = as.Date(paste(.data$LayingDate_day, .data$LayingDate_month, .data$BreedingSeason, sep = "/"),
                                     format = "%d/%m/%Y"),
                   HatchDate  = as.Date(paste(.data$HatchDate_day, .data$HatchDate_month, .data$BreedingSeason, sep = "/"),
                                        format = "%d/%m/%Y")) %>%
-    dplyr::mutate(LayDateError = dplyr::case_when(.data$LayDateError == "1" ~ 1L,
-                                                  .data$LayDateError == "2" ~ 2L,
-                                                  .data$LayDateError == "3" ~ 3L,
-                                                  .data$LayDateError == "4" ~ 7L),
+    dplyr::mutate(LayingDateError = dplyr::case_when(.data$LayingDateError == "1" ~ 1L,
+                                                     .data$LayingDateError == "2" ~ 2L,
+                                                     .data$LayingDateError == "3" ~ 3L,
+                                                     .data$LayingDateError == "4" ~ 7L),
                   HatchDateError = dplyr::case_when(.data$HatchDateError == "1" ~ 1L,
                                                     .data$HatchDateError == "2" ~ 2L,
                                                     .data$HatchDateError == "3" ~ 3L,
