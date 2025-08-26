@@ -97,8 +97,11 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
   error_records <- tibble::tibble(Row = NA_character_)
   error_output <- NULL
 
-  # Skip if coordinates were not recorded, or if only warnings are flagged
-  if(!any(!is.na(Location_data$Longitude) & !is.na(Location_data$Latitude)) | !(output %in% c("both", "errors")) | skip_check == TRUE) {
+  # Skip if
+  # - coordinates were not recorded
+  # - coordinates are all the same
+  # - only warnings should be  flagged
+  if(!any(!is.na(Location_data$Longitude) & !is.na(Location_data$Latitude)) | Location_data %>% dplyr::distinct(.data$Latitude, .data$Longitude) %>% nrow() == 1 | !(output %in% c("both", "errors")) | skip_check == TRUE) {
 
     remote_locations <- tibble::tibble(Row = integer())
 
@@ -216,7 +219,7 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
   }
 
   # Produce map of locations
-  if(map & any(!is.na(Location_data$Longitude) & !is.na(Location_data$Latitude)) & output %in% c("both", "errors") & skip_check == FALSE) {
+  if(map & exists("pops_w_longlat")) {
 
     suppressMessages({
 
