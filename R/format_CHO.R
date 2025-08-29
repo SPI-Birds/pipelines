@@ -112,25 +112,25 @@ format_CHO <- function(db = choose_directory(),
 
   message("Compiling capture information...")
 
-  Capture_data <- create_capture_CHO(all_data)
+  Capture_data <- create_capture_CHO(all_data, protocol_version)
 
   # BROOD DATA
 
   message("Compiling brood information...")
 
-  Brood_data <- create_brood_CHO(all_data)
+  Brood_data <- create_brood_CHO(all_data, protocol_version)
 
   # INDIVIDUAL DATA
 
   message("Compiling individual information...")
 
-  Individual_data <- create_individual_CHO(all_data, Capture_data = Capture_data)
+  Individual_data <- create_individual_CHO(all_data, Capture_data = Capture_data, protocol_version)
 
   # NESTBOX DATA
 
   message("Compiling nestbox information...")
 
-  Location_data <- create_location_CHO(all_data)
+  Location_data <- create_location_CHO(all_data, protocol_version)
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
@@ -176,10 +176,12 @@ format_CHO <- function(db = choose_directory(),
 #' Create brood data table in standard format for data from Choupal,
 #' Portugal.
 #' @param data Data frame. Primary data from Choupal.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_brood_CHO <- function(data){
+create_brood_CHO <- function(data,
+                             protocol_version){
 
   #The data is currently stored as capture data (i.e. each row is a capture)
   #This means there are multiple records for each brood, which we don't want.
@@ -267,20 +269,6 @@ create_brood_CHO <- function(data){
     #Arrange data chronologically for each female for clutchtype calculation
     dplyr::arrange(.data$Year, .data$FemaleID, .data$LayDate_observed) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.1")) %>%
-    #Select relevant columns and rename
-    dplyr::select("BroodID", "PopID",
-                  "BreedingSeason", "Species",
-                  "Plot", "LocationID",
-                  "FemaleID", "MaleID",
-                  "ClutchType_observed",
-                  "ClutchType_calculated",
-                  "LayDate_observed", "LayDate_min", "LayDate_max",
-                  "ClutchSize_observed", "ClutchSize_min", "ClutchSize_max",
-                  "HatchDate_observed", "HatchDate_min", "HatchDate_max",
-                  "BroodSize_observed", "BroodSize_min", "BroodSize_max",
-                  "FledgeDate_observed", "FledgeDate_min", "FledgeDate_max",
-                  "NumberFledged_observed", "NumberFledged_min", "NumberFledged_max",
-                  "AvgEggMass", "NumberEggs") %>%
     #Join in average chick measurements
     dplyr::left_join(avg_measure, by = "BroodID") %>%
     #Convert everything back to the right format after making everything character
@@ -291,7 +279,11 @@ create_brood_CHO <- function(data){
                                   "ClutchSize_observed":"ClutchSize_max",
                                   "BroodSize_observed":"BroodSize_max",
                                   "NumberFledged_observed":"NumberFledged_max",
-                                  "NumberEggs"), as.integer))
+                                  "NumberEggs"), as.integer)) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Brood_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Brood_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Brood_data))
 
   return(Brood_data)
 
@@ -302,10 +294,12 @@ create_brood_CHO <- function(data){
 #' Create capture data table in standard format for data from Choupal,
 #' Portugal.
 #' @param data Data frame. Primary data from Choupal.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_capture_CHO <- function(data){
+create_capture_CHO <- function(data,
+                               protocol_version){
 
   #Take all data and add population/plot info
   #There is only one population/plot
@@ -333,22 +327,15 @@ create_capture_CHO <- function(data){
                   CaptureAlive = TRUE,
                   ReleaseAlive = TRUE,
                   ExperimentID = NA_character_) %>%
-    #Select out only those columns we need
-    dplyr::select("IndvID", "Species",
-                  "Sex_observed", "BreedingSeason",
-                  "CaptureDate", "CaptureTime",
-                  "ObserverID", "LocationID",
-                  "CaptureAlive", "ReleaseAlive",
-                  "CapturePopID", "CapturePlot",
-                  "ReleasePopID", "ReleasePlot",
-                  "Mass" = "Weight", "Tarsus", "OriginalTarsusMethod",
-                  "WingLength" = "Wing",
-                  "Age_observed", "Age_calculated",
-                  "ChickAge", "ExperimentID") %>%
+    dplyr::rename("Mass" = "Weight",
+                  "WingLength" = "Wing") %>%
     dplyr::group_by(.data$IndvID) %>%
     dplyr::mutate(CaptureID = paste(.data$IndvID, 1:dplyr::n(), sep = "_")) %>%
     dplyr::ungroup() %>%
-    dplyr::select("CaptureID", tidyselect::everything())
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Capture_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Capture_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Capture_data))
 
   return(Capture_data)
 
@@ -361,10 +348,13 @@ create_capture_CHO <- function(data){
 #'
 #' @param data Data frame. Primary data from Choupal.
 #' @param Capture_data Data frame. Output from \code{\link{create_capture_CHO}}.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_individual_CHO <- function(data, Capture_data){
+create_individual_CHO <- function(data,
+                                  Capture_data,
+                                  protocol_version){
 
   # Calculate sex from observed sex in Capture data
   Sex_calc <- Capture_data %>%
@@ -413,11 +403,14 @@ create_individual_CHO <- function(data, Capture_data){
       RingAge = dplyr::case_when(.data$FirstAge == "C" ~ "chick",
                                  is.na(.data$FirstAge) ~ "adult",
                                  .data$FirstAge != "C" ~ "adult")) %>%
+    dplyr::rename("RingSeason" = "FirstYr") %>%
     dplyr::left_join(Sex_calc, by = "IndvID") %>%
-    dplyr::select("IndvID", "Species", "PopID", "BroodIDLaid", "BroodIDFledged",
-                  "RingSeason" = "FirstYr", "RingAge", "Sex_calculated") %>%
     dplyr::mutate(Sex_genetic = NA_character_) %>%
-    dplyr::ungroup()
+    dplyr::ungroup() %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Individual_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Individual_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Individual_data))
 
   return(Individual_data)
 
@@ -428,10 +421,12 @@ create_individual_CHO <- function(data, Capture_data){
 #' Create location data table in standard format for data from Choupal,
 #' Portugal.
 #' @param data Data frame. Primary data from Choupal.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_location_CHO <- function(data){
+create_location_CHO <- function(data,
+                                protocol_version){
 
   #There are no coordinates or box type information
   Location_data <- dplyr::tibble(LocationID = stats::na.omit(unique(data$LocationID)),
@@ -441,7 +436,11 @@ create_location_CHO <- function(data){
                   PopID = "CHO",
                   Latitude = NA_real_, Longitude = NA_real_,
                   StartSeason = 2003L, EndSeason = NA_integer_,
-                  HabitatType = "Deciduous")
+                  HabitatType = "Deciduous") %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Location_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Location_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Location_data))
 
   return(Location_data)
 
