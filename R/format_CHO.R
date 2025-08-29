@@ -84,7 +84,9 @@ format_CHO <- function(db = choose_directory(),
     #BroodIDs are not unique (they are repeated each year)
     #We need to create unique IDs for each year using Year_BroodID
     dplyr::mutate(BroodID = paste(.data$Year, stringr::str_pad(.data$BroodId, width = 3, pad = "0"), sep = "_"),
-                  IndvID = .data$Ring,
+                  # If IndvID differs from expected format, set to NA
+                  IndvID = dplyr::case_when(stringr::str_detect(.data$Ring, "^[C][:digit:]{6}$") ~ .data$Ring,
+                                            TRUE ~ NA_character_),
                   CaptureDate = lubridate::ymd(paste0(.data$Year, "-01-01")) + .data$JulianDate,
                   CaptureTime = format.POSIXct(.data$Time, format = "%H:%M:%S"),
                   ChickAge = as.integer(dplyr::na_if(.data$ChickAge, "na")),
@@ -240,6 +242,9 @@ create_brood_CHO <- function(data,
     #Turn all remaining columns to characters
     #melt/cast requires all values to be of the same type
     dplyr::mutate(dplyr::across(tidyselect::everything(), as.character)) %>%
+    # Remove duplicated BroodIDs
+    # TODO: Check with data owner: "2006_85b"
+    dplyr::distinct(.data$BroodID, .keep_all = TRUE) %>%
     #Melt and cast data so that we return the first value of relevant data for each brood
     #e.g. laying date, clutch size etc.
     #I've checked manually and the first value is always correct in each brood
@@ -304,6 +309,8 @@ create_capture_CHO <- function(data,
   #Take all data and add population/plot info
   #There is only one population/plot
   Capture_data <- data %>%
+    # Remove individuals without IndvID
+    dplyr::filter(!is.na(.data$IndvID)) %>%
     dplyr::mutate(CapturePopID = .data$PopID, ReleasePopID = .data$PopID,
                   CapturePlot = .data$Plot, ReleasePlot = .data$Plot) %>%
     #Arrange chronologically for each individual
@@ -370,6 +377,8 @@ create_individual_CHO <- function(data,
 
   #Determine first age, brood, and ring year of each individual
   Individual_data <- data %>%
+    # Remove individuals without IndvID
+    dplyr::filter(!is.na(.data$IndvID)) %>%
     #Arrange data for each individual chronologically
     dplyr::arrange(.data$IndvID, .data$CaptureDate, .data$CaptureTime) %>%
     #For every individual
@@ -436,7 +445,7 @@ create_location_CHO <- function(data,
                   PopID = "CHO",
                   Latitude = NA_real_, Longitude = NA_real_,
                   StartSeason = 2003L, EndSeason = NA_integer_,
-                  HabitatType = "Deciduous") %>%
+                  HabitatType = "deciduous") %>%
     # Add missing columns
     dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Location_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Location_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format and order correctly
