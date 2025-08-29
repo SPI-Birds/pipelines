@@ -4,10 +4,12 @@
 \alias{create_capture_CHO}
 \title{Create capture data table for Choupal, Portugal.}
 \usage{
-create_capture_CHO(data)
+create_capture_CHO(data, protocol_version)
 }
 \arguments{
 \item{data}{Data frame. Primary data from Choupal.}
+
+\item{protocol_version}{Character string. The version of the standard protocol on which this pipeline is based.}
 }
 \value{
 A data frame.
