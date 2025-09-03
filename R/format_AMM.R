@@ -22,13 +22,13 @@
 #'In this case, we are giving the clutch size as the number of eggs of both species. We are thinking
 #'about ways to more effectively deal with multi-species clutches.
 #'
-#'\strong{BroodSize}: Use NumberHatched to determine observed BroodSize. BroodSize_minimum is equal to BroodSize
-#'observed. BroodSize_maximum is NumberHatched + ErrorHatched (i.e. number of eggs never observed either alive
+#'\strong{BroodSize}: Use NumberHatched to determine observed BroodSize. BroodSize_min is equal to BroodSize
+#'observed. BroodSize_max is NumberHatched + ErrorHatched (i.e. number of eggs never observed either alive
 #'or dead, so status was unknown).
 #'
 #'\strong{NumberFledged}: Use NumberFledged to determine observed number of fledglings.
-#'NumberFledged_minimum is equal to BroodSize_observed.
-#'BroodSize_maximum is NumberFledged + ErrorFledged (i.e. number of chicks never observed either alive
+#'NumberFledged_min is equal to BroodSize_observed.
+#'NumberFledged_max is NumberFledged + ErrorFledged (i.e. number of chicks never observed either alive
 #'or dead, so status was unknown).
 #'
 #'\strong{HatchDate}: The day a clutch hatched.
@@ -100,14 +100,16 @@ format_AMM <- function(db = choose_directory(),
 
   Individual_data <- create_individual_AMM(Capture_data = Capture_data,
                                            Brood_data = Brood_data,
-                                           dir = table_dir)
+                                           dir = table_dir,
+                                           protocol_version = protocol_version)
 
   # LOCATION DATA
 
   message("Compiling location information...")
 
   Location_data <- create_location_AMM(Capture_data = Capture_data,
-                                       dir = table_dir)
+                                       dir = table_dir,
+                                       protocol_version = protocol_version)
 
   # WRANGLE DATA FOR EXPORT
 
@@ -125,12 +127,17 @@ format_AMM <- function(db = choose_directory(),
   #Add average tarsus
   Brood_data <- Brood_data %>%
     dplyr::left_join(AvgTarsus, by = "BroodID") %>%
-    dplyr::select("BroodID":"NumberChicksMass", "AvgTarsus",
-                  "NumberChicksTarsus", "OriginalTarsusMethod", "ExperimentID")
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Brood_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Brood_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Brood_data))
 
   #Remove BroodID, no longer needed
   Capture_data <- Capture_data %>%
-    dplyr::select("CaptureID":"Age_observed", "Age_calculated", "ChickAge", "ExperimentID")
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Capture_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Capture_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Capture_data))
 
   # EXPORT DATA
 
@@ -223,30 +230,30 @@ create_brood_AMM   <- function(dir, species_filter) {
                   PopID = "AMM",
                   EndMarch = as.Date(paste(.data$BroodYear, "03", "31", sep = "-")),
                   LayDate_observed = .data$EndMarch + .data$FirstEggDay,
-                  LayDate_maximum = .data$LayDate_observed,
-                  LayDate_minimum = .data$EndMarch + (.data$FirstEggDay - .data$FirstEggDayError),
+                  LayDate_max = .data$LayDate_observed,
+                  LayDate_min = .data$EndMarch + (.data$FirstEggDay - .data$FirstEggDayError),
                   ClutchSize_observed = .data$ClutchSize,
-                  ClutchSize_minimum = .data$ClutchSize_observed,
-                  ClutchSize_maximum = .data$ClutchSize_observed,
+                  ClutchSize_min = .data$ClutchSize_observed,
+                  ClutchSize_max = .data$ClutchSize_observed,
                   HatchDate_observed = .data$EndMarch + .data$HatchDay,
-                  HatchDate_maximum = .data$HatchDate_observed,
-                  HatchDate_minimum = .data$EndMarch + (.data$HatchDay - .data$HatchDayError),
+                  HatchDate_max = .data$HatchDate_observed,
+                  HatchDate_min= .data$EndMarch + (.data$HatchDay - .data$HatchDayError),
                   BroodSize_observed = .data$NumberHatched,
-                  BroodSize_minimum = .data$NumberHatched,
-                  BroodSize_maximum = .data$NumberHatched + .data$ErrorHatched,
+                  BroodSize_min = .data$NumberHatched,
+                  BroodSize_max = .data$NumberHatched + .data$ErrorHatched,
                   FledgeDate_observed = .data$EndMarch + .data$FledgeDay,
-                  FledgeDate_minimum = .data$EndMarch + .data$FledgeDay,
-                  FledgeDate_maximum = .data$EndMarch + .data$FledgeDay,
+                  FledgeDate_min = .data$EndMarch + .data$FledgeDay,
+                  FledgeDate_max = .data$EndMarch + .data$FledgeDay,
                   NumberFledged_observed = .data$NumberFledged,
-                  NumberFledged_minimum = .data$NumberFledged,
-                  NumberFledged_maximum = .data$NumberFledged + .data$FledgedError,
+                  NumberFledged_min = .data$NumberFledged,
+                  NumberFledged_max = .data$NumberFledged + .data$FledgedError,
                   Species = dplyr::case_when(.data$Species == 1L ~ !!species_codes$Species[species_codes$speciesEURINGCode == "14640"],
                                              .data$Species == 2L ~ !!species_codes$Species[species_codes$speciesEURINGCode == "14620"],
                                              .data$Species == 3L ~ !!species_codes$Species[species_codes$speciesEURINGCode == "14610"],
                                              .data$Species == 4L ~ !!species_codes$Species[species_codes$speciesEURINGCode == "14790"]),
                   AvgEggMass = NA_real_,
                   NumberEggs = NA_integer_,
-                  AvgChickMass = NA_integer_,
+                  AvgChickMass = NA_real_,
                   NumberChicksMass = NA_integer_,
                   BroodSwap_ExperimentID = ifelse(.data$BroodSwap > 0L, list(c("PARENTAGE", "COHORT")), list(NA_character_)),
                   BroodOther_ExperimentID = dplyr::case_when(.data$BroodOtherTreatment %in% c(1L, 2L, 3L, 4L, 5L) ~ list("SURVIVAL"),
@@ -262,29 +269,30 @@ create_brood_AMM   <- function(dir, species_filter) {
                                        collapse = ";")) %>%
     dplyr::ungroup() %>%
     # Remove NAs from the experiment list
-    dplyr::mutate(ExperimentID = stringr::str_remove_all(.data$ExperimentID, pattern = "NA[;]*|;NA^")) %>%
+    dplyr::mutate(ExperimentID = dplyr::na_if(stringr::str_remove_all(.data$ExperimentID, pattern = "NA;?|;NA|"), "")) %>%
     # Determine clutch type
     dplyr::arrange(.data$BreedingSeason, .data$FemaleID, .data$LayDate_observed) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.1"),
                   ClutchType_observed = dplyr::case_when(.data$ClutchNumber == 1L ~ "first",
                                                          .data$ClutchNumber %in% c(2L, 4L) ~ "second",
                                                          .data$ClutchNumber %in% c(3L, 5L, 6L) ~ "replacement")) %>%
-  # Arrange columns
-  dplyr::select("BroodID", "PopID", "BreedingSeason",
-                "Species", "Plot", "LocationID" = "NestBox", "FemaleID", "MaleID",
-                "ClutchType_observed", "ClutchType_calculated",
-                "LayDate_observed", "LayDate_minimum", "LayDate_maximum",
-                "ClutchSize_observed", "ClutchSize_minimum", "ClutchSize_maximum",
-                "HatchDate_observed", "HatchDate_minimum", "HatchDate_maximum",
-                "BroodSize_observed", "BroodSize_minimum",
-                "BroodSize_maximum",
-                "FledgeDate_observed", "FledgeDate_minimum",
-                "FledgeDate_maximum",
-                "NumberFledged_observed", "NumberFledged_minimum",
-                "NumberFledged_maximum",
-                "AvgEggMass", "NumberEggs",
-                "AvgChickMass", "NumberChicksMass",
-                "ExperimentID") %>%
+    # Tests flagged 3 duplicated BroodIDs. 4288, 4916, 6237. The only difference between duplicates is the assignment of FemaleID
+    # For now the second record of each is ignored
+    # FIXME: check with data owner
+    dplyr::distinct(.data$BroodID, .keep_all = TRUE) %>%
+    # Arrange columns
+    dplyr::select("BroodID", "PopID", "BreedingSeason",
+                  "Species", "Plot", "LocationID" = "NestBox", "FemaleID", "MaleID",
+                  "ClutchType_observed", "ClutchType_calculated",
+                  "LayDate_observed", "LayDate_min", "LayDate_max",
+                  "ClutchSize_observed", "ClutchSize_min", "ClutchSize_max",
+                  "HatchDate_observed", "HatchDate_min", "HatchDate_max",
+                  "BroodSize_observed", "BroodSize_min", "BroodSize_max",
+                  "FledgeDate_observed", "FledgeDate_min", "FledgeDate_max",
+                  "NumberFledged_observed", "NumberFledged_min", "NumberFledged_max",
+                  "AvgEggMass", "NumberEggs",
+                  "AvgChickMass", "NumberChicksMass",
+                  "ExperimentID") %>%
     # Convert to correct formats
     dplyr::mutate(dplyr::across(c("Plot":"MaleID"),
                                 as.character)) %>%
@@ -370,8 +378,10 @@ create_capture_AMM <- function(Brood_data, dir, species_filter) {
                   "LocationID",
                   "CapturePopID",
                   "CapturePlot",
+                  "CaptureAlive",
                   "ReleasePopID",
                   "ReleasePlot",
+                  "ReleaseAlive",
                   "Mass" = "BodyMassField",
                   "Tarsus",
                   "WingLength" = "WingP3",
@@ -409,7 +419,9 @@ create_capture_AMM <- function(Brood_data, dir, species_filter) {
                         values_to = "value") %>%
     dplyr::mutate(Day = stringr::str_extract(.data$column, "[0-9]{1,}"),
                   OriginalTarsusMethod = "Alternative",
-                  Age_observed = 1L) %>%
+                  Age_observed = 1L,
+                  CaptureAlive = TRUE,
+                  ReleaseAlive = TRUE) %>%
     tidyr::separate(.data$column, into = c(NA, "Variable"), sep = "^Day[0-9]{1,}") %>%
     tidyr::pivot_wider(names_from = "Variable", values_from = "value") %>%
     #Mutate columns back to correct type
@@ -428,8 +440,10 @@ create_capture_AMM <- function(Brood_data, dir, species_filter) {
                   "LocationID" = "NestBox",
                   "CapturePopID",
                   "CapturePlot",
+                  "CaptureAlive",
                   "ReleasePopID",
                   "ReleasePlot",
+                  "ReleaseAlive",
                   "Mass" = "BodyMass",
                   "Tarsus",
                   "WingLength" = "P3",
@@ -442,10 +456,13 @@ create_capture_AMM <- function(Brood_data, dir, species_filter) {
              Date = .data$CaptureDate, Year = .data$BreedingSeason) %>%
     # Filter species
     dplyr::filter(.data$Species %in% species_filter) %>%
+    # Remove individuals without ID
+    dplyr::filter(!is.na(.data$IndvID)) %>%
     #Arrange by ID/Date and add unique capture ID
     dplyr::arrange(.data$IndvID, .data$CaptureDate) %>%
     dplyr::group_by(.data$IndvID) %>%
     dplyr::mutate(CaptureID = paste(.data$IndvID, 1:dplyr::n(), sep = "_")) %>%
+    dplyr::ungroup() %>%
     dplyr::select("CaptureID", tidyselect::everything())
 
   return(Capture_data)
@@ -459,10 +476,11 @@ create_capture_AMM <- function(Brood_data, dir, species_filter) {
 #' @param Capture_data Data frame. Output from \code{\link{create_capture_AMM}}.
 #' @param Brood_data Data frame. Output from \code{\link{create_brood_AMM}}.
 #' @param dir Path to directory containing the relevant table exports from the AMM Access database.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_individual_AMM <- function(Capture_data, Brood_data, dir) {
+create_individual_AMM <- function(Capture_data, Brood_data, dir, protocol_version) {
 
   Sex_genetic <- utils::read.csv(paste0(dir, "/", "GenotypesAllYears", ".csv")) %>%
     dplyr::select("IndvID" = "BirdID", "SexGenetic") %>%
@@ -494,6 +512,7 @@ create_individual_AMM <- function(Capture_data, Brood_data, dir) {
     dplyr::mutate(dplyr::across(tidyselect::everything(), as.character))
 
   Individual_data <- Capture_data %>%
+    dplyr::filter(!is.na(.data$IndvID)) %>%
     dplyr::group_by(.data$IndvID) %>%
     dplyr::summarise(Species = purrr::map_chr(.x = list(unique(stats::na.omit(.data$Species))),
                                               .f = ~{
@@ -520,10 +539,10 @@ create_individual_AMM <- function(Capture_data, Brood_data, dir) {
     dplyr::left_join(Sex_calc, by = "IndvID") %>%
     dplyr::left_join(Sex_genetic, by = "IndvID") %>%
     dplyr::left_join(Brood_swap_info, by = "IndvID") %>%
-    dplyr::select("IndvID", "Species", "PopID",
-                  "BroodIDLaid", "BroodIDFledged",
-                  "RingSeason", "RingAge",
-                  "Sex_calculated", "Sex_genetic")
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Individual_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Individual_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Individual_data))
 
   return(Individual_data)
 
@@ -535,10 +554,11 @@ create_individual_AMM <- function(Capture_data, Brood_data, dir) {
 #'
 #' @param Capture_data Data frame. Output from \code{\link{create_capture_AMM}}.
 #' @param dir Path to directory containing the relevant table exports from the AMM Access database.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_location_AMM <- function(Capture_data, dir) {
+create_location_AMM <- function(Capture_data, dir, protocol_version) {
 
   Habitat_data <- utils::read.csv(paste0(dir, "/", "HabitatDescription", ".csv")) %>%
     dplyr::select("NestBox", "Beech":"OtherTree") %>%
@@ -571,16 +591,11 @@ create_location_AMM <- function(Capture_data, dir) {
                   StartSeason = start_year,
                   EndSeason = dplyr::case_when(nchar(.data$NestboxID) == 4 & stringr::str_sub(.data$NestboxID, 1, 2) == "16" ~ 2016L,
                                                TRUE ~ 2019L),
-                  HabitatType = "DEC") %>%
-    dplyr::select("LocationID",
-                  "NestboxID",
-                  "LocationType",
-                  "PopID",
-                  "Latitude",
-                  "Longitude",
-                  "StartSeason",
-                  "EndSeason",
-                  "HabitatType")
+                  HabitatType = "deciduous") %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Location_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Location_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Location_data))
 
   return(Location_data)
 

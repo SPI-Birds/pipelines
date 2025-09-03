@@ -25,16 +25,16 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(AMM_data, BroodID == "3642")$ClutchType_observed, "first")
   expect_equal(subset(AMM_data, BroodID == "3642")$ClutchType_calculated, "first")
   expect_equal(subset(AMM_data, BroodID == "3642")$LayDate_observed, as.Date("2015-04-21"))
-  expect_equal(subset(AMM_data, BroodID == "3642")$LayDate_minimum, as.Date("2015-04-21"))
-  expect_equal(subset(AMM_data, BroodID == "3642")$LayDate_maximum, as.Date("2015-04-21"))
+  expect_equal(subset(AMM_data, BroodID == "3642")$LayDate_min, as.Date("2015-04-21"))
+  expect_equal(subset(AMM_data, BroodID == "3642")$LayDate_max, as.Date("2015-04-21"))
   expect_equal(subset(AMM_data, BroodID == "3642")$ClutchSize_observed, 7L)
-  expect_equal(subset(AMM_data, BroodID == "3642")$ClutchSize_minimum, 7L)
-  expect_equal(subset(AMM_data, BroodID == "3642")$ClutchSize_maximum, 7L)
+  expect_equal(subset(AMM_data, BroodID == "3642")$ClutchSize_min, 7L)
+  expect_equal(subset(AMM_data, BroodID == "3642")$ClutchSize_max, 7L)
   expect_equal(subset(AMM_data, BroodID == "3642")$BroodSize_observed, NA_integer_)
-  expect_equal(subset(AMM_data, BroodID == "3642")$BroodSize_minimum, NA_integer_)
-  expect_equal(subset(AMM_data, BroodID == "3642")$BroodSize_maximum, NA_integer_)
+  expect_equal(subset(AMM_data, BroodID == "3642")$BroodSize_min, NA_integer_)
+  expect_equal(subset(AMM_data, BroodID == "3642")$BroodSize_max, NA_integer_)
   expect_equal(subset(AMM_data, BroodID == "3642")$NumberFledged_observed, 7L)
-  expect_equal(subset(AMM_data, BroodID == "3642")$NumberFledged_minimum, 7L)
+  expect_equal(subset(AMM_data, BroodID == "3642")$NumberFledged_min, 7L)
   expect_equal(subset(AMM_data, BroodID == "3642")$NumberFledged_observed, 7L)
   expect_equal(round(subset(AMM_data, BroodID == "3642")$AvgChickMass, 2), NA_real_)
   expect_equal(round(subset(AMM_data, BroodID == "3642")$AvgTarsus, 2), 20.46)
@@ -44,20 +44,20 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(AMM_data, BroodID == "4375")$ClutchType_observed, "replacement")
   expect_equal(subset(AMM_data, BroodID == "4375")$ClutchType_calculated, "replacement")
   expect_equal(subset(AMM_data, BroodID == "4375")$LayDate_observed, as.Date("2016-05-18"))
-  expect_equal(subset(AMM_data, BroodID == "4375")$LayDate_minimum, as.Date("2016-05-18"))
-  expect_equal(subset(AMM_data, BroodID == "4375")$LayDate_maximum, as.Date("2016-05-18"))
+  expect_equal(subset(AMM_data, BroodID == "4375")$LayDate_min, as.Date("2016-05-18"))
+  expect_equal(subset(AMM_data, BroodID == "4375")$LayDate_max, as.Date("2016-05-18"))
   expect_equal(subset(AMM_data, BroodID == "4375")$ClutchSize_observed, 8L)
-  expect_equal(subset(AMM_data, BroodID == "4375")$ClutchSize_minimum, 8L)
-  expect_equal(subset(AMM_data, BroodID == "4375")$ClutchSize_maximum, 8L)
+  expect_equal(subset(AMM_data, BroodID == "4375")$ClutchSize_min, 8L)
+  expect_equal(subset(AMM_data, BroodID == "4375")$ClutchSize_max, 8L)
   expect_equal(subset(AMM_data, BroodID == "4375")$BroodSize_observed, NA_integer_)
-  expect_equal(subset(AMM_data, BroodID == "4375")$BroodSize_minimum, NA_integer_)
-  expect_equal(subset(AMM_data, BroodID == "4375")$BroodSize_maximum, NA_integer_)
+  expect_equal(subset(AMM_data, BroodID == "4375")$BroodSize_min, NA_integer_)
+  expect_equal(subset(AMM_data, BroodID == "4375")$BroodSize_max, NA_integer_)
   expect_equal(subset(AMM_data, BroodID == "4375")$FledgeDate_observed, as.Date(NA))
-  expect_equal(subset(AMM_data, BroodID == "4375")$FledgeDate_minimum, as.Date(NA))
-  expect_equal(subset(AMM_data, BroodID == "4375")$FledgeDate_maximum, as.Date(NA))
+  expect_equal(subset(AMM_data, BroodID == "4375")$FledgeDate_min, as.Date(NA))
+  expect_equal(subset(AMM_data, BroodID == "4375")$FledgeDate_max, as.Date(NA))
   expect_equal(subset(AMM_data, BroodID == "4375")$NumberFledged_observed, 0L)
-  expect_equal(subset(AMM_data, BroodID == "4375")$NumberFledged_minimum, 0L)
-  expect_equal(subset(AMM_data, BroodID == "4375")$NumberFledged_maximum, 0L)
+  expect_equal(subset(AMM_data, BroodID == "4375")$NumberFledged_min, 0L)
+  expect_equal(subset(AMM_data, BroodID == "4375")$NumberFledged_max, 0L)
   #Measurements taken but not included in average because chick age was >16
   expect_equal(subset(AMM_data, BroodID == "4375")$AvgChickMass, NA_real_)
   expect_equal(subset(AMM_data, BroodID == "4375")$AvgTarsus, 20.25)
@@ -91,8 +91,8 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(AMM_data, BroodID == "1")$LayDate_observed, as.Date("2010-04-18"))
   expect_equal(subset(AMM_data, BroodID == "1")$ClutchSize_observed, 10L)
   expect_equal(subset(AMM_data, BroodID == "1")$BroodSize_observed, 6L)
-  expect_equal(subset(AMM_data, BroodID == "1")$BroodSize_minimum, 6L)
-  expect_equal(subset(AMM_data, BroodID == "1")$BroodSize_maximum, 8L)
+  expect_equal(subset(AMM_data, BroodID == "1")$BroodSize_min, 6L)
+  expect_equal(subset(AMM_data, BroodID == "1")$BroodSize_max, 8L)
   expect_equal(subset(AMM_data, BroodID == "1")$NumberFledged_observed, 6L)
   expect_equal(subset(AMM_data, BroodID == "1")$AvgChickMass, NA_real_)
   expect_equal(subset(AMM_data, BroodID == "1")$AvgTarsus, NA_real_)
@@ -102,8 +102,8 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(AMM_data, BroodID == "1241")$ClutchType_observed, "replacement")
   expect_equal(subset(AMM_data, BroodID == "1241")$ClutchType_calculated, "replacement")
   expect_equal(subset(AMM_data, BroodID == "1241")$LayDate_observed, as.Date("2012-05-13"))
-  expect_equal(subset(AMM_data, BroodID == "1241")$LayDate_minimum, as.Date("2012-05-08"))
-  expect_equal(subset(AMM_data, BroodID == "1241")$LayDate_maximum, as.Date("2012-05-13"))
+  expect_equal(subset(AMM_data, BroodID == "1241")$LayDate_min, as.Date("2012-05-08"))
+  expect_equal(subset(AMM_data, BroodID == "1241")$LayDate_max, as.Date("2012-05-13"))
   expect_equal(subset(AMM_data, BroodID == "1241")$ClutchSize_observed, 6L)
   expect_equal(subset(AMM_data, BroodID == "1241")$BroodSize_observed, 0L)
   expect_equal(subset(AMM_data, BroodID == "1241")$NumberFledged_observed, 0L)
@@ -188,5 +188,104 @@ test_that("Location_data returns an expected outcome...", {
   expect_equal(subset(AMM_data, LocationID == "1144")$PopID, "AMM")
   expect_equal(round(subset(AMM_data, LocationID == "1144")$Latitude, 2) %>% setNames(nm = NULL), 47.98)
   expect_equal(round(subset(AMM_data, LocationID == "1144")$Longitude, 2) %>% setNames(nm = NULL), 11.16)
+
+})
+
+## General tests
+
+test_that("Expected columns are present", {
+
+  ## Will fail if not all the expected columns are present
+
+  ## Brood data: Test that all columns are present
+  test_col_present(pipeline_output, "Brood", pipeline_output$protocol_version)
+
+  ## Capture data: Test that all columns are present
+  test_col_present(pipeline_output, "Capture", pipeline_output$protocol_version)
+
+  ## Individual data: Test that all columns are present
+  test_col_present(pipeline_output, "Individual", pipeline_output$protocol_version)
+
+  ## Location data: Test that all columns are present
+  test_col_present(pipeline_output, "Location", pipeline_output$protocol_version)
+
+})
+
+test_that("Column classes are as expected", {
+
+  ## Will fail if columns that are shared by the output and the templates have different classes.
+
+  ## Brood data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Brood", pipeline_output$protocol_version)
+
+  ## Capture data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Capture", pipeline_output$protocol_version)
+
+  ## Individual data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Individual", pipeline_output$protocol_version)
+
+  ## Location data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Location", pipeline_output$protocol_version)
+
+})
+
+test_that("ID columns match the expected format for the pipeline", {
+
+  ## FemaleID format is as expected
+  test_ID_format(pipeline_output, column = "FemaleID", format = "[:digit:]{3,5}$")
+
+  ## MaleID format is as expected
+  test_ID_format(pipeline_output, column = "MaleID", format = "[:digit:]{3,5}$")
+
+  ## IndvID format in Capture data  is as expected
+  test_ID_format(pipeline_output, column = "IndvID", table = "Capture", format = "[:digit:]{3,5}$")
+
+  ## IndvID format in Individual data is as expected
+  test_ID_format(pipeline_output, column = "IndvID", table = "Individual", format = "[:digit:]{3,5}$")
+
+})
+
+test_that("Key columns only contain unique values", {
+
+  ## BroodID has only unique values
+  test_unique_values(pipeline_output, "BroodID")
+
+  ## CaptureID has only unique values
+  test_unique_values(pipeline_output, "CaptureID")
+
+  ## PopID-IndvID has only unique values
+  test_unique_values(pipeline_output, "IndvID")
+
+})
+
+test_that("Key columns in each table do not have NAs", {
+
+  ## Brood
+  test_NA_columns(pipeline_output, "Brood")
+
+  ## Capture
+  test_NA_columns(pipeline_output, "Capture")
+
+  ## Individual
+  test_NA_columns(pipeline_output, "Individual")
+
+  ## Location
+  test_NA_columns(pipeline_output, "Location")
+
+})
+
+test_that("Categorical columns do not have unexpected values", {
+
+  ## Brood
+  test_category_columns(pipeline_output, "Brood")
+
+  ## Capture
+  test_category_columns(pipeline_output, "Capture")
+
+  ## Individual
+  test_category_columns(pipeline_output, "Individual")
+
+  ## Location
+  test_category_columns(pipeline_output, "Location")
 
 })

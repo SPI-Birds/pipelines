@@ -335,7 +335,7 @@ test_category_columns <- function(pipeline_output,
                                     dplyr::select({{.y}}) %>%
                                     dplyr::pull() %>%
                                     unique %>%
-                                    strsplit(split = "; ") %>% # Split if multiple categories are concatenated
+                                    strsplit(split = ";") %>% # Split if multiple categories are concatenated (e.g., in case of ExperimentID [v1.0.0/v1.1.0])
                                     unlist() %>%
                                     as.character()
 
