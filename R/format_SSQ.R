@@ -85,7 +85,7 @@ format_SSQ <- function(db = choose_directory(),
     # TODO: Check "G12409" with data owner
     dplyr::mutate(dplyr::across(.cols = c(.data$FemaleID,
                                           .data$MaleID),
-                                .fns = ~dplyr::case_when(stringr::str_detect(.x, "^[:alnum:]{3}[:digit:]{4}$") ~ .x,
+                                .fns = ~dplyr::case_when(stringr::str_detect(.x, "^[A-Za-z0-9]{3}[0-9]{4}$") ~ .x,
                                                          TRUE ~ NA_character_))) %>%
     #Add species codes
     dplyr::mutate(Species = dplyr::case_when(.data$Species == "Parus major" ~ species_codes[species_codes$speciesEURINGCode == 14640, ]$Species,

@@ -255,16 +255,16 @@ test_that("Column classes are as expected", {
 test_that("ID columns match the expected format for the pipeline", {
 
   ## FemaleID format is as expected
-  test_ID_format(pipeline_output, column = "FemaleID", format = "^[:alnum:]{3}[:digit:]{4}$")
+  test_ID_format(pipeline_output, column = "FemaleID", format = "^[A-Za-z0-9]{3}[0-9]{4}$")
 
   ## MaleID format is as expected
-  test_ID_format(pipeline_output, column = "MaleID", format = "^[:alnum:]{3}[:digit:]{4}$")
+  test_ID_format(pipeline_output, column = "MaleID", format = "^[A-Za-z0-9]{3}[0-9]{4}$")
 
   ## IndvID format in Capture data  is as expected
-  test_ID_format(pipeline_output, column = "IndvID", table = "Capture", format = "^[:alnum:]{3}[:digit:]{4}$")
+  test_ID_format(pipeline_output, column = "IndvID", table = "Capture", format = "^[A-Za-z0-9]{3}[0-9]{4}$")
 
   ## IndvID format in Individual data is as expected
-  test_ID_format(pipeline_output, column = "IndvID", table = "Individual", format = "^[:alnum:]{3}[:digit:]{4}$")
+  test_ID_format(pipeline_output, column = "IndvID", table = "Individual", format = "^[A-Za-z0-9]{3}[0-9]{4}$")
 
 })
 
