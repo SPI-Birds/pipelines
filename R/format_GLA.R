@@ -67,7 +67,7 @@ format_GLA <- function(db = choose_directory(),
   on.exit(options(original_options), add = TRUE, after = FALSE)
 
   ## Read experiment classification table
-  expID_tab <- utils::read.csv(file = paste0(db, "/GLA_experiment_groups.csv"))
+  expID_tab <- utils::read.csv(file = paste0(db, "/GLA_PrimaryData_ExperimentGroups.csv"))
 
   ## Read in primary data from brood records
   nest_data <- readxl::read_xlsx(path = paste0(db, "/GLA_PrimaryData_Nest.xlsx"),

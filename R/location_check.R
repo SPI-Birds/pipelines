@@ -99,9 +99,8 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
 
   # Skip if
   # - coordinates were not recorded
-  # - coordinates are all the same
   # - only warnings should be  flagged
-  if(!any(!is.na(Location_data$Longitude) & !is.na(Location_data$Latitude)) | Location_data %>% dplyr::distinct(.data$Latitude, .data$Longitude) %>% nrow() == 1 | !(output %in% c("both", "errors")) | skip_check == TRUE) {
+  if(!any(!is.na(Location_data$Longitude) & !is.na(Location_data$Latitude)) | !(output %in% c("both", "errors")) | skip_check == TRUE) {
 
     remote_locations <- tibble::tibble(Row = integer())
 
@@ -117,6 +116,13 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
                        n_unique_lat = length(unique(.data$Latitude)),
                        .groups = "drop")
 
+    # Skip if all coordinates for all populations are all the same
+    if(all(records_w_longlat$n_unique_lon < 2 | records_w_longlat$n_unique_lat < 2)) {
+
+      remote_locations <- tibble::tibble(Row = integer())
+
+    }
+
     # Print message for populations with too few known, unique coordinates
     if(any(records_w_longlat$n_unique_lon < 2 | records_w_longlat$n_unique_lat < 2)) {
 
@@ -128,52 +134,57 @@ check_coordinates <- function(Location_data, Brood_data, Capture_data, approved_
                   .f = ~{
 
                     message(paste0("Number of records for ", .x,
-                                   " is too low to calculate centre point."))
+                                   " is too low to calculate centre point.\n"))
 
                   })
 
     }
 
-    # Select PopIDs with at least 2 locations with known and unique coordinates
-    pops_w_longlat <- records_w_longlat %>%
-      dplyr::filter(.data$n_unique_lon >= 2 | .data$n_unique_lat >= 2) %>%
-      dplyr::pull("PopID")
+    # For populations with multiple known, unique coordinates, calculate centre point
+    if(any(records_w_longlat$n_unique_lon >= 2 | records_w_longlat$n_unique_lat >= 2)) {
 
-    # Determine centre point per PopID
-    centre_points <- Location_data %>%
-      # Filter out capture locations without coordinates
-      # TODO: Maybe in future only for LocationType NB (nestbox) & MN (mist net),
-      # not FD (dead recoveries)
-      # TODO: For populations with a lot of subplots, or for migratory species,
-      # determine centre points via k-clustering?
-      tidyr::drop_na(tidyselect::any_of(c("Longitude", "Latitude"))) %>%
-      # Filter location records that appear in Brood_data and/or Capture_data only
-      # And keep populations with at least 2 records with known coordinates
-      dplyr::filter((.data$LocationID %in% unique(Brood_data$LocationID) | .data$LocationID %in% unique(Capture_data$LocationID)) &
-                      .data$PopID %in% pops_w_longlat) %>%
-      dplyr::group_by(.data$PopID) %>%
-      # Centre points are determined by calculating the maximum kernel density for Longitude and Latitude
-      dplyr::summarise(Centre_lon = mean(stats::density(.data$Longitude)$x[which(stats::density(.data$Longitude)$y == max(stats::density(.data$Longitude)$y))]),
-                       Centre_lat = mean(stats::density(.data$Latitude)$x[which(stats::density(.data$Latitude)$y == max(stats::density(.data$Latitude)$y))]),
-                       .groups = "drop")
+      # Select PopIDs with at least 2 locations with known and unique coordinates
+      pops_w_longlat <- records_w_longlat %>%
+        dplyr::filter(.data$n_unique_lon >= 2 | .data$n_unique_lat >= 2) %>%
+        dplyr::pull("PopID")
 
-    # Add centre points to original data frame
-    locations <- Location_data %>%
-      tidyr::drop_na(dplyr::any_of(c("Longitude", "Latitude"))) %>%
-      dplyr::filter(.data$LocationID %in% unique(Brood_data$LocationID) | .data$LocationID %in% unique(Capture_data$LocationID)) %>%
-      dplyr::left_join(centre_points, by = "PopID") %>%
-      dplyr::filter(!is.na(.data$Centre_lon) & !is.na(.data$Centre_lat)) %>%
-      # Calculate distance from each capture location to population-specific centre points
-      dplyr::mutate(Coords = sf::st_as_sf(., coords = c("Longitude", "Latitude"),
-                                          crs = "EPSG:4326")$geometry,
-                    Centre = sf::st_as_sf(., coords = c("Centre_lon", "Centre_lat"),
-                                          crs = "EPSG:4326")$geometry,
-                    Distance = as.integer(sf::st_distance(.data$Coords, .data$Centre, by_element = TRUE)))
+      # Determine centre point per PopID
+      centre_points <- Location_data %>%
+        # Filter out capture locations without coordinates
+        # TODO: Maybe in future only for LocationType NB (nestbox) & MN (mist net),
+        # not FD (dead recoveries)
+        # TODO: For populations with a lot of subplots, or for migratory species,
+        # determine centre points via k-clustering?
+        tidyr::drop_na(tidyselect::any_of(c("Longitude", "Latitude"))) %>%
+        # Filter location records that appear in Brood_data and/or Capture_data only
+        # And keep populations with at least 2 records with known coordinates
+        dplyr::filter((.data$LocationID %in% unique(Brood_data$LocationID) | .data$LocationID %in% unique(Capture_data$LocationID)) &
+                        .data$PopID %in% pops_w_longlat) %>%
+        dplyr::group_by(.data$PopID) %>%
+        # Centre points are determined by calculating the maximum kernel density for Longitude and Latitude
+        dplyr::summarise(Centre_lon = mean(stats::density(.data$Longitude)$x[which(stats::density(.data$Longitude)$y == max(stats::density(.data$Longitude)$y))]),
+                         Centre_lat = mean(stats::density(.data$Latitude)$x[which(stats::density(.data$Latitude)$y == max(stats::density(.data$Latitude)$y))]),
+                         .groups = "drop")
 
-    # Filter very remote locations (20 km or farther)
-    remote_locations <- locations %>%
-      dplyr::filter(.data$Distance >= 20000) %>%
-      dplyr::select("Row", "LocationID", "PopID", "Distance")
+      # Add centre points to original data frame
+      locations <- Location_data %>%
+        tidyr::drop_na(dplyr::any_of(c("Longitude", "Latitude"))) %>%
+        dplyr::filter(.data$LocationID %in% unique(Brood_data$LocationID) | .data$LocationID %in% unique(Capture_data$LocationID)) %>%
+        dplyr::left_join(centre_points, by = "PopID") %>%
+        dplyr::filter(!is.na(.data$Centre_lon) & !is.na(.data$Centre_lat)) %>%
+        # Calculate distance from each capture location to population-specific centre points
+        dplyr::mutate(Coords = sf::st_as_sf(., coords = c("Longitude", "Latitude"),
+                                            crs = "EPSG:4326")$geometry,
+                      Centre = sf::st_as_sf(., coords = c("Centre_lon", "Centre_lat"),
+                                            crs = "EPSG:4326")$geometry,
+                      Distance = as.integer(sf::st_distance(.data$Coords, .data$Centre, by_element = TRUE)))
+
+      # Filter very remote locations (20 km or farther)
+      remote_locations <- locations %>%
+        dplyr::filter(.data$Distance >= 20000) %>%
+        dplyr::select("Row", "LocationID", "PopID", "Distance")
+
+    }
 
     # If potential errors, add to report
     if(nrow(remote_locations) > 0) {
