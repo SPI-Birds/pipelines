@@ -411,7 +411,8 @@ create_individual_WYT <- function(Capture_data, protocol_version){
                      BroodIDFledged = dplyr::case_when(length(unique(stats::na.omit(.data$BroodIDFledged))) == 1 ~ dplyr::first(stats::na.omit(.data$BroodIDFledged)),
                                                        length(unique(stats::na.omit(.data$BroodIDFledged))) > 1 ~ "CONFLICTED",
                                                        TRUE ~ NA_character_),
-                     RingSeason = dplyr::first(.data$BreedingSeason),
+                     # Force RingSeason to be an integer, as R defaults to numeric (double)                                  
+                     RingSeason = dplyr::first(.data$BreedingSeason) %>% as.integer(), 
                      RingAge = dplyr::case_when(all(is.na(.data$Age_calculated)) ~ NA_character_,
                                                 any(.data$Age_calculated %in% c(1, 3)) ~ "chick",
                                                 min(.data$Age_calculated) == 2 ~ NA_character_,
