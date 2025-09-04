@@ -2,7 +2,7 @@
 # Some code to run both the HOC and GRO pipelines
 # I can then compare the output of a 1.0 vs a 1.1 pipeline
 
-# First, load some usefull libraries:
+# First, load some useful libraries:
 library(here)
 library(dplyr)
 
@@ -17,21 +17,23 @@ dir <- here()
 # Strip the full path of "pipelines"
 dir <- dirname(dir)
 
-# Run the HOC pipeline
+print("Before format_HOC")
+print(getwd())
 HOC_data <- format_HOC(
     db = paste(dir, "/HOC_Hochstadt_Germany", sep = ""),
-    species = NULL, 
-    pop = NULL, 
-    path = ".", # Not needed, since we save to an R object 
+    species = NULL,
+    pop = NULL,
+    path = ".",
     output_type = "R"
 )
+print("After format_HOC")
 
 # Run the GRO pipeline
 GRO_data <- format_GRO(
     db = paste(dir, "/GRO_GroblaNiepolomice_Poland", sep = ""),
-    species = NULL, 
-    pop = NULL, 
-    path = ".", # Not needed, since we save to an R object 
+    species = NULL,
+    pop = NULL,
+    path = ".", # Not needed, since we save to an R object
     output_type = "R"
 )
 
@@ -72,6 +74,6 @@ mapping <- map_old_to_new(names(HOC_data$Brood_data), names(GRO_data$Brood_data)
 # Filter everything that is identical out of it
 filtered_mapping <- Filter(function(x) {
   !(length(x$new) == 1 && x$old == x$new)
-}, mapping) 
+}, mapping)
 
 filtered_mapping %>% View()

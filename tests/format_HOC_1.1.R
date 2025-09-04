@@ -300,9 +300,6 @@ format_HOC_1.1 <- function(db = choose_directory(),
 
 																			})) %>%
 			dplyr::rowwise() %>%
-			dplyr::mutate(ExperimentID = any(c(.data$physical_manipulation_present_at_time_of_catching,
-																				.data$physical_manipulation_present_at_time_of_release,
-																				.data$physiological_manipulation) %in% "manipulated")) %>%
 			dplyr::ungroup()
 
 		Death_captures <- readxl::read_excel(paste0(db, "/HOC_PrimaryData.xlsx"), sheet = "DeadBirds ID", na = c("", "na"),
