@@ -4,10 +4,12 @@
 \alias{create_capture_BAN}
 \title{Create capture data table for Bandon Valley, Ireland.}
 \usage{
-create_capture_BAN(data)
+create_capture_BAN(data, protocol_version)
 }
 \arguments{
 \item{data}{Data frame. Primary data from Bandon Valley.}
+
+\item{protocol_version}{Character string. The version of the standard protocol on which this pipeline is based.}
 }
 \value{
 A data frame.

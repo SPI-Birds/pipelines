@@ -142,6 +142,11 @@ format_BAN <- function(db = choose_directory(),
                                                NumberFledged_observed = as.integer(gsub(pattern = "\\?",
                                                                                         replacement = "",
                                                                                         .data$number_fledged))) %>%
+                                 ## Set non-conforming FemaleIDs and MaleIDs to NA
+                                 # TODO: check with data owner. FemaleID (D89525), MaleID (S1144928).
+                                 dplyr::mutate(dplyr::across(c("FemaleID", "MaleID"),
+                                                             ~dplyr::case_when(stringr::str_detect(., "^[A-Za-z0-9]{3}[0-9]{4}$") ~ .,
+                                                                               TRUE ~ NA_character_))) %>%
                                  #Filter only the species of interest
                                  dplyr::filter(.data$Species %in% species_filter))
 
@@ -149,25 +154,25 @@ format_BAN <- function(db = choose_directory(),
 
   message("Compiling brood information...")
 
-  Brood_data <- create_brood_BAN(all_data)
+  Brood_data <- create_brood_BAN(all_data, protocol_version)
 
   # CAPTURE DATA
 
   message("Compiling capture information...")
 
-  Capture_data <- create_capture_BAN(all_data)
+  Capture_data <- create_capture_BAN(all_data, protocol_version)
 
   # INDIVIDUAL DATA
 
   message("Compiling individual information...")
 
-  Individual_data <- create_individual_BAN(Capture_data)
+  Individual_data <- create_individual_BAN(Capture_data, protocol_version)
 
   # LOCATION DATA
 
   message("Compiling location information...")
 
-  Location_data <- create_location_BAN(all_data)
+  Location_data <- create_location_BAN(all_data, protocol_version)
 
   # WRANGLE DATA FOR EXPORT
 
@@ -215,10 +220,12 @@ format_BAN <- function(db = choose_directory(),
 #' Create brood data table in standard format for data from Bandon Valley,
 #' Ireland.
 #' @param data Data frame. Primary data from Bandon Valley.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_brood_BAN <- function(data) {
+create_brood_BAN <- function(data,
+                             protocol_version) {
 
   Brood_data <- data %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(., na.rm = FALSE, protocol_version = "1.1"),
@@ -240,25 +247,14 @@ create_brood_BAN <- function(data) {
                   AvgTarsus = NA_real_, NumberChicksTarsus = NA_integer_,
                   OriginalTarsusMethod = NA_character_,
                   ExperimentID = NA_character_) %>%
+
     ## Remove egg weights when the day of weighing is during incubation
     dplyr::mutate(AvgEggMass = purrr::map2_dbl(.x = .data$AvgEggMass, .y = .data$EggWasIncubated,
                                                .f = ~{ifelse(..2, NA_real_, as.numeric(..1))})) %>%
-    dplyr::select("BroodID", "PopID", "BreedingSeason",
-                  "Species", "Plot", "LocationID",
-                  "FemaleID", "MaleID",
-                  "ClutchType_observed",
-                  "ClutchType_calculated",
-                  "LayDate_observed", "LayDate_min", "LayDate_max",
-                  "ClutchSize_observed", "ClutchSize_min", "ClutchSize_max",
-                  "HatchDate_observed", "HatchDate_min", "HatchDate_max",
-                  "BroodSize_observed", "BroodSize_min", "BroodSize_max",
-                  "FledgeDate_observed", "FledgeDate_min", "FledgeDate_max",
-                  "NumberFledged_observed", "NumberFledged_min", "NumberFledged_max",
-                  "AvgEggMass", "NumberEggs",
-                  "AvgChickMass", "NumberChicksMass",
-                  "AvgTarsus", "NumberChicksTarsus",
-                  "OriginalTarsusMethod",
-                  "ExperimentID")
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Brood_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Brood_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Brood_data))
 
   return(Brood_data)
 
@@ -269,10 +265,12 @@ create_brood_BAN <- function(data) {
 #' Create capture data table in standard format for data from Bandon Valley,
 #' Ireland.
 #' @param data Data frame. Primary data from Bandon Valley.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_capture_BAN <- function(data) {
+create_capture_BAN <- function(data,
+                               protocol_version) {
 
   Capture_data <- data %>%
     dplyr::select("Species", "BreedingSeason", "LocationID", "Plot",
@@ -310,21 +308,18 @@ create_capture_BAN <- function(data) {
                   OriginalTarsusMethod = NA_character_,
                   CapturePlot = .data$Plot, ReleasePlot = .data$Plot,
                   ExperimentID = NA_character_) %>%
+    # Drop records with missing capture date
+    # NOTE: in v2.0.0, only captures without known capture year will be dropped
+    dplyr::filter(!is.na(.data$CaptureDate)) %>%
     calc_age(ID = .data$IndvID, Age = .data$Age_observed,
              Date = .data$CaptureDate, Year = .data$BreedingSeason) %>%
-    dplyr::select("IndvID", "Species", "Sex_observed",
-                  "BreedingSeason", "CaptureDate", "CaptureTime",
-                  "ObserverID", "LocationID",
-                  "CaptureAlive", "ReleaseAlive",
-                  "CapturePopID", "CapturePlot",
-                  "ReleasePopID", "ReleasePlot",
-                  "Mass", "Tarsus", "OriginalTarsusMethod",
-                  "WingLength", "Age_observed", "Age_calculated",
-                  "ChickAge", "ExperimentID") %>%
     dplyr::group_by(.data$IndvID) %>%
     dplyr::mutate(CaptureID = paste(.data$IndvID, 1:dplyr::n(), sep = "_")) %>%
     dplyr::ungroup() %>%
-    dplyr::select("CaptureID", tidyselect::everything())
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Capture_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Capture_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Capture_data))
 
   return(Capture_data)
 
@@ -336,10 +331,12 @@ create_capture_BAN <- function(data) {
 #' Ireland.
 #'
 #' @param Capture_data Data frame. Output from \code{\link{create_capture_BAN}}.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_individual_BAN <- function(Capture_data) {
+create_individual_BAN <- function(Capture_data,
+                                  protocol_version) {
 
   Individual_data <- Capture_data %>%
     dplyr::group_by(.data$IndvID) %>%
@@ -376,7 +373,11 @@ create_individual_BAN <- function(Capture_data) {
     dplyr::mutate(RingAge = dplyr::case_when(is.na(.data$RingAge) ~ "adult",
                                              .data$RingAge > 3 ~ "adult",
                                              .data$RingAge <= 3 ~ "chick")) %>%
-    dplyr::ungroup()
+    dplyr::ungroup() %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Individual_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Individual_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Individual_data))
 
   return(Individual_data)
 
@@ -387,18 +388,26 @@ create_individual_BAN <- function(Capture_data) {
 #' Create location data table in standard format for data from Bandon Valley,
 #' Ireland.
 #' @param data Data frame. Primary data from Bandon Valley.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_location_BAN <- function(data) {
+create_location_BAN <- function(data,
+                                protocol_version) {
 
   Location_data <- tibble::tibble(LocationID = unique(data$LocationID),
                                   NestboxID = .data$LocationID,
                                   LocationType = "NB",
                                   PopID = "BAN",
-                                  Latitude = NA_real_, Longitude = NA_real_,
+                                  Latitude = NA_real_,
+                                  Longitude = NA_real_,
                                   StartSeason = 2013L,
-                                  EndSeason = NA_integer_, HabitatType = NA_character_)
+                                  EndSeason = NA_integer_,
+                                  HabitatType = NA_character_) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Location_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Location_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Location_data))
 
   return(Location_data)
 
