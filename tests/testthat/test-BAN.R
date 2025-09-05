@@ -144,8 +144,8 @@ test_that("Capture_data returns an expected outcome...", {
   BAN_data <- dplyr::filter(pipeline_output$Capture_data, CapturePopID == "BAN")
 
   #Test 1: Female caught as adult
-  #Test the female has the correct number of capture records (6)
-  expect_equal(nrow(subset(BAN_data, IndvID == "D534573")), 6)
+  #Test the female has the correct number of capture records (5)
+  expect_equal(nrow(subset(BAN_data, IndvID == "D534573")), 5)
   #Test that the first capture of the female is as expected (02/06/2013)
   expect_equal(min(subset(BAN_data, IndvID == "D534573")$CaptureDate, na.rm = TRUE), as.Date("2013-06-02"))
   #Test that the 5th capture of the female is as expcted (2017-05-12) (6th one is NA so no good to test)
@@ -155,21 +155,21 @@ test_that("Capture_data returns an expected outcome...", {
   #Test that age calculated is correct on first capture (4 because it's an adult of unknown age)
   expect_equal(subset(BAN_data, IndvID == "D534573")$Age_calculated[1], 4L)
   #Test that age calculated is correct on 2017 capture (4 + 4*2 = 12 because it's an adult caught 4 years after its first capture)
-  expect_equal(subset(BAN_data, IndvID == "D534573")$Age_calculated[6], 12L)
+  expect_equal(subset(BAN_data, IndvID == "D534573")$Age_calculated[5], 12L)
 
   #Test 1: Male caught as adult
-  #Test the male has the correct number of capture records (6)
-  expect_equal(nrow(subset(BAN_data, IndvID == "D534574")), 6)
+  #Test the male has the correct number of capture records (5)
+  expect_equal(nrow(subset(BAN_data, IndvID == "D534574")), 5)
   #Test that the first capture of the male is as expected (2013-06-02)
   expect_equal(min(subset(BAN_data, IndvID == "D534574")$CaptureDate, na.rm = TRUE), as.Date("2013-06-02"))
-  #Test that the 6th capture of the male is as expcted (2018-06-08)
-  expect_equal(subset(BAN_data, IndvID == "D534574")$CaptureDate[6], as.Date("2018-06-08"))
+  #Test that the 5th capture of the male is as expcted (2018-06-08)
+  expect_equal(subset(BAN_data, IndvID == "D534574")$CaptureDate[5], as.Date("2018-06-08"))
   #Test that age observed is as expected (NA, because we just know it was caught as an adult, that's all)
   expect_equal(subset(BAN_data, IndvID == "D534574")$Age_observed[1], NA_integer_)
   #Test that age calculated is correct on first capture (4 because it's an adult of unknown age)
   expect_equal(subset(BAN_data, IndvID == "D534574")$Age_calculated[1], 4L)
   #Test that age calculated is correct on 2017 capture (4 + 5*2 = 14 because it's an adult caught 5 years after its first capture)
-  expect_equal(subset(BAN_data, IndvID == "D534574")$Age_calculated[6], 14L)
+  expect_equal(subset(BAN_data, IndvID == "D534574")$Age_calculated[5], 14L)
 
 })
 
@@ -185,5 +185,108 @@ test_that("Location_data returns an expected outcome...", {
   expect_equal(subset(BAN_data, LocationID == "BP_001")$LocationType, "NB")
   #Nest boxes are not moved during the study, so LocationID and NestboxID should be identical
   expect_equal(subset(BAN_data, LocationID == "BP_001")$LocationID, subset(BAN_data, LocationID == "BP_001")$NestboxID)
+
+})
+
+## General tests
+
+test_that("Expected columns are present", {
+
+  ## Will fail if not all the expected columns are present
+
+  ## Brood data: Test that all columns are present
+  test_col_present(pipeline_output, "Brood", pipeline_output$protocol_version)
+
+  ## Capture data: Test that all columns are present
+  test_col_present(pipeline_output, "Capture", pipeline_output$protocol_version)
+
+  ## Individual data: Test that all columns are present
+  test_col_present(pipeline_output, "Individual", pipeline_output$protocol_version)
+
+  ## Location data: Test that all columns are present
+  test_col_present(pipeline_output, "Location", pipeline_output$protocol_version)
+
+})
+
+test_that("Column classes are as expected", {
+
+  ## Will fail if columns that are shared by the output and the templates have different classes.
+
+  ## Brood data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Brood", pipeline_output$protocol_version)
+
+  ## Capture data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Capture", pipeline_output$protocol_version)
+
+  ## Individual data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Individual", pipeline_output$protocol_version)
+
+  ## Location data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Location", pipeline_output$protocol_version)
+
+})
+
+
+test_that("ID columns match the expected format for the pipeline", {
+
+  ## FemaleID format is as expected
+  test_ID_format(pipeline_output, column = "FemaleID", format = "^[A-Za-z0-9]{3}[0-9]{4}$")
+
+  ## MaleID format is as expected
+  test_ID_format(pipeline_output, column = "MaleID", format = "^[A-Za-z0-9]{3}[0-9]{4}$")
+
+  ## IndvID format in Capture data  is as expected
+  test_ID_format(pipeline_output, column = "IndvID", table = "Capture", format = "^[A-Za-z0-9]{3}[0-9]{4}$")
+
+  ## IndvID format in Individual data is as expected
+  test_ID_format(pipeline_output, column = "IndvID", table = "Individual", format = "^[A-Za-z0-9]{3}[0-9]{4}$")
+
+})
+
+
+test_that("Key columns only contain unique values", {
+
+  ## BroodID has only unique values
+  test_unique_values(pipeline_output, "BroodID")
+
+  ## CaptureID has only unique values
+  test_unique_values(pipeline_output, "CaptureID")
+
+  ## PopID-IndvID has only unique values
+  test_unique_values(pipeline_output, "IndvID")
+
+})
+
+
+test_that("Key columns in each table do not have NAs", {
+
+  ## Brood
+  test_NA_columns(pipeline_output, "Brood")
+
+  ## Capture
+  test_NA_columns(pipeline_output, "Capture")
+
+  ## Individual
+  test_NA_columns(pipeline_output, "Individual")
+
+  ## Location
+  test_NA_columns(pipeline_output, "Location")
+
+})
+
+
+test_that("Categorical columns do not have unexpected values", {
+
+  ## Brood
+  test_category_columns(pipeline_output, "Brood")
+
+  ## Capture
+  test_category_columns(pipeline_output, "Capture")
+
+  ## Individual
+  test_category_columns(pipeline_output, "Individual")
+
+  ## Location
+  test_category_columns(pipeline_output, "Location")
 
 })
