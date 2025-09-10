@@ -48,6 +48,8 @@ this data. For a general description of the standard format please see
 \strong{IndvID}: Should be a 7 digit alphanumeric string. IndvIDs with a different number of characters are likely errors.
 These are set to NA and removed.
 
+\strong{LocationID}: LocationIDs are formatted as <PopID>_<NestboxNumber> to avoid duplicates.
+
 \strong{CaptureDate}: Some individuals were not recorded in the ringing records, but were observed breeding at a monitored nest.
 For these individuals, the CaptureDate is set as May 15 of the breeding year.
 }
