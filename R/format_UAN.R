@@ -57,8 +57,11 @@
 #'
 #'\strong{ReleaseAlive}: Individuals who were captured alive are assumed to be released alive.
 #'
+#'\strong{LocationID}: LocationIDs are formatted as <PopID>_<original LocationID> to avoid duplicates.
+#'
 #'\strong{Latitude and Longitude}: Location data is stored in Lambert72 CRS.
 #'This has been converted to WGS84 to be standard with other systems.
+#'
 #'
 #'@inheritParams pipeline_params
 #'
@@ -400,6 +403,8 @@ create_brood_UAN <- function(BROOD_info, CAPTURE_info, species_filter, pop_filte
     # Convert columns to expected values
     dplyr::mutate(PopID = dplyr::case_when(.data$PopID == "FR" ~ "BOS",
                                            .data$PopID == "PB" ~ "PEE"),
+                  # Add PopID prefix to LocationID to avoid duplicated LocationIDs across sites
+                  LocationID = paste(.data$PopID, .data$LocationID, sep = "_"),
                   Species = dplyr::case_when(.data$Species == "pm" ~ species_codes[species_codes$speciesEURINGCode == 14640, ]$Species,
                                              .data$Species == "pc" ~ species_codes[species_codes$speciesEURINGCode == 14620, ]$Species),
                   ClutchType_observed = dplyr::case_when(.data$ClutchType_observed %in% c(1, 9) ~ "first",
@@ -464,6 +469,8 @@ create_capture_UAN <- function(CAPTURE_info, species_filter, pop_filter){
     # Adjust species and PopID
     dplyr::mutate(CapturePopID = dplyr::case_when(.data$CapturePopID == "FR" ~ "BOS",
                                                   .data$CapturePopID == "PB" ~ "PEE"),
+                  # Add PopID prefix to LocationID to avoid duplicated LocationIDs across sites
+                  LocationID = paste(.data$CapturePopID, .data$LocationID, sep = "_"),
                   Species = dplyr::case_when(.data$Species == "pm" ~ species_codes[species_codes$speciesEURINGCode == 14640, ]$Species,
                                              .data$Species == "pc" ~ species_codes[species_codes$speciesEURINGCode == 14620, ]$Species)) %>%
     # Keep filtered species
@@ -621,14 +628,14 @@ create_individual_UAN <- function(INDV_info, Capture_data, species_filter, proto
 create_location_UAN <- function(BOX_info, protocol_version){
 
   Location_data <- BOX_info %>%
-    dplyr::mutate(LocationID = .data$GBPL,
-                  LocationType = dplyr::case_when(.data$TYPE %in% c("pc", "pm", "cb", "se") ~ "NB",
+    dplyr::mutate(LocationType = dplyr::case_when(.data$TYPE %in% c("pc", "pm", "cb", "se") ~ "NB",
                                                   is.na(.data$TYPE) ~ "NB",
                                                   .data$TYPE %in% c("PMO", "&", "FPT") ~ "MN"),
                   NestboxID = dplyr::case_when(.data$LocationType == "NB" ~ .data$LocationID,
                                                TRUE ~ NA_character_),
                   PopID = dplyr::case_when(.data$SA == "FR" ~ "BOS",
                                            .data$SA == "PB" ~ "PEE"),
+                  LocationID = paste(.data$PopID, .data$GBPL, sep = "_"),
                   Latitude = .data$Y_deg,
                   Longitude = .data$X_deg,
                   Latitude_Lambert = .data$Y,
