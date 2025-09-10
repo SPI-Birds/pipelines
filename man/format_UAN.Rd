@@ -92,6 +92,8 @@ uncertain.
 
 \strong{ReleaseAlive}: Individuals who were captured alive are assumed to be released alive.
 
+\strong{LocationID}: LocationIDs are formatted as <PopID>_<original LocationID> to avoid duplicates.
+
 \strong{Latitude and Longitude}: Location data is stored in Lambert72 CRS.
 This has been converted to WGS84 to be standard with other systems.
 }
