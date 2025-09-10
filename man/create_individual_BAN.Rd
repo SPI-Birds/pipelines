@@ -4,10 +4,12 @@
 \alias{create_individual_BAN}
 \title{Create individual data table for Bandon Valley, Ireland.}
 \usage{
-create_individual_BAN(Capture_data)
+create_individual_BAN(Capture_data, protocol_version)
 }
 \arguments{
 \item{Capture_data}{Data frame. Output from \code{\link{create_capture_BAN}}.}
+
+\item{protocol_version}{Character string. The version of the standard protocol on which this pipeline is based.}
 }
 \value{
 A data frame.
