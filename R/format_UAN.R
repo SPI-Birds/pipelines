@@ -407,15 +407,25 @@ create_brood_UAN <- function(BROOD_info, CAPTURE_info, species_filter, pop_filte
                                                          .data$ClutchType_observed %in% c(3, 4, 5, 8) ~ "replacement"),
                   ClutchSizeError = dplyr::case_when(.data$ClutchSizeError == "J" ~ 0,
                                                      .data$ClutchSizeError == "N" ~ 2),
-                  ClutchSize_min = .data$ClutchSize_observed - .data$ClutchSizeError,
-                  ClutchSize_max = .data$ClutchSize_observed + .data$ClutchSizeError) %>%
+                  ClutchSize_min = dplyr::case_when((.data$ClutchSize_observed - .data$ClutchSizeError) < 0 ~ 0L,
+                                                    TRUE ~ as.integer(.data$ClutchSize_observed - .data$ClutchSizeError)),
+                  ClutchSize_max = as.integer(.data$ClutchSize_observed + .data$ClutchSizeError)) %>%
     # Keep filtered species
     dplyr::filter(.data$Species %in% species_filter) %>%
     # Coerce BroodID to be character, convert LayDate
     dplyr::mutate(BroodID = as.character(.data$BroodID),
                   LayDate_observed = lubridate::ymd(.data$LayDate_observed),
                   NumberChicksTarsus = .data$NumberChicksMass) %>%
+    ###TODO: When updating to v2.0.0, check with data custodian what the codes mean
+    dplyr::mutate(ExperimentID = dplyr::case_when(!is.na(.data$ExperimentID) ~ "OTHER",
+                                                  TRUE ~ NA_character_)) %>%
+    ## Set only-letter IDs to NA
+    ###TODO: Check with data custodian what the expected ID format is to improve this check
+    dplyr::mutate(dplyr::across(c("FemaleID", "MaleID"),
+                                ~dplyr::case_when(stringr::str_detect(., "^[a-zA-Z]+$") ~ NA_character_,
+                                                  TRUE ~ .))) %>%
     # Calculate clutchtype, assuming NAs are true unknowns
+    dplyr::arrange(LayDate_observed) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(., na.rm = FALSE, protocol_version = "1.1")) %>%
     dplyr::left_join(Tarsus_method,
                      by = "BroodID") %>%
@@ -446,6 +456,11 @@ create_capture_UAN <- function(CAPTURE_info, species_filter, pop_filter){
   # like mass, tarsus etc.). This will include first capture as nestling (for
   # residents) This means there will be multiple records for a single individual.
   Capture_data <- CAPTURE_info %>%
+    ## Set only-letter IDs to NA
+    ###TODO: Check with data custodian what the expected ID format is to improve this check
+    dplyr::mutate(IndvID = dplyr::case_when(stringr::str_detect(.data$IndvID, "^[a-zA-Z]+$") ~ NA_character_,
+                                                  TRUE ~ .data$IndvID)) %>%
+    dplyr::filter(!is.na(.data$IndvID)) %>%
     # Adjust species and PopID
     dplyr::mutate(CapturePopID = dplyr::case_when(.data$CapturePopID == "FR" ~ "BOS",
                                                   .data$CapturePopID == "PB" ~ "PEE"),
@@ -473,6 +488,9 @@ create_capture_UAN <- function(CAPTURE_info, species_filter, pop_filter){
                                                                     pad = "0"), sep = ":"), "NA:NA"),
                   ReleasePopID = .data$CapturePopID,
                   ReleasePlot = .data$CapturePlot) %>%
+    ###TODO: When updating to v2.0.0, check with data custodian what the codes mean
+    dplyr::mutate(ExperimentID = dplyr::case_when(!is.na(.data$ExperimentID) ~ "OTHER",
+                                                  TRUE ~ NA_character_)) %>%
     # TODO: Uncertainty in sex observations (M?, W?) is ignored
     dplyr::mutate(Sex_observed = dplyr::case_when(.data$Sex %in% c("M", "M?") ~ "M",
                                                   .data$Sex %in% c("W", "W?") ~ "F",
@@ -527,6 +545,11 @@ create_individual_UAN <- function(INDV_info, Capture_data, species_filter, proto
 
   # Take capture data and determine summary data for each individual
   individuals <- Capture_data %>%
+    ## Set only-letter IDs to NA
+    ###TODO: Check with data custodian what the expected ID format is to improve this check
+    dplyr::mutate(IndvID = dplyr::case_when(stringr::str_detect(.data$IndvID, "^[a-zA-Z]+$") ~ NA_character_,
+                                            TRUE ~ .data$IndvID)) %>%
+    dplyr::filter(!is.na(.data$IndvID)) %>%
     dplyr::arrange(.data$IndvID, .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
     dplyr::group_by(.data$IndvID) %>%
     dplyr::summarise(Species = dplyr::case_when(length(unique(.data$Species)) == 2 ~ "CCCCCC",
