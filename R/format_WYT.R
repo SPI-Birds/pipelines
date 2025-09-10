@@ -262,11 +262,17 @@ create_capture_WYT <- function(db, Brood_data, species_filter){
                                              toupper(.data$species_code) == "COATI" ~ species_codes[species_codes$speciesEURINGCode == 14610, ]$Species,
                                              toupper(.data$species_code) == "MARTI" ~ species_codes[species_codes$speciesEURINGCode == 14400, ]$Species)) %>%
     dplyr::filter(.data$Species %in% species_filter) %>%
-    dplyr::mutate(CaptureDate = janitor::excel_numeric_to_date(as.numeric(.data$date_time)),
+    dplyr::mutate(CaptureDate = dplyr::case_when(
+                    !is.na(.data$date_time) & .data$date_time != "" ~ janitor::excel_numeric_to_date(as.numeric(.data$date_time)),
+                    TRUE ~ as.Date(NA)
+                  ),
                   CaptureTime = NA_character_,
                   BreedingSeason = dplyr::case_when(is.na(.data$CaptureDate) ~ as.numeric(stringr::str_sub(.data$pnum, start = 1, end = 4)),
                                                     TRUE ~ lubridate::year(.data$CaptureDate))) %>%
-    dplyr::mutate(IndvID = toupper(.data$ring_number),
+    dplyr::mutate(IndvID = dplyr::case_when(
+                    !is.na(.data$ring_number) & .data$ring_number != "" ~ toupper(.data$ring_number),
+                    TRUE ~ NA_character_
+                  ),
                   CapturePopID = "WYT",
                   CapturePlot = stringr::str_remove_all(string = toupper(.data$pnum), pattern = "\\d"),
                   LocationID = stringr::str_sub(toupper(.data$pnum), start = 6),
@@ -321,14 +327,20 @@ create_capture_WYT <- function(db, Brood_data, species_filter){
                                              toupper(.data$bto_species_code) == "COATI" ~ species_codes[species_codes$speciesEURINGCode == 14610, ]$Species,
                                              toupper(.data$bto_species_code) == "MARTI" ~ species_codes[species_codes$speciesEURINGCode == 14400, ]$Species,
                                              toupper(.data$bto_species_code) == "NUTHA" ~ species_codes[species_codes$speciesEURINGCode == 14790, ]$Species),
-                  CaptureDate = janitor::excel_numeric_to_date(as.numeric(.data$date_time) %/% 1),
+                  CaptureDate = dplyr::case_when(
+                    !is.na(.data$date_time) & .data$date_time != "" ~ janitor::excel_numeric_to_date(as.numeric(.data$date_time) %/% 1),
+                    TRUE ~ as.Date(NA)
+                  ),
                   CaptureTime = paste(stringr::str_pad(string = ((as.numeric(.data$date_time) %% 1) * 24) %/% 1,
                                                        width = 2, pad = "0"),
                                       stringr::str_pad(string = round((((as.numeric(.data$date_time) %% 1) * 24) %% 1) * 60),
                                                        width = 2, pad = "0"), sep = ":"),
                   BreedingSeason = dplyr::case_when(is.na(.data$CaptureDate) ~ as.numeric(stringr::str_sub(.data$pnum, start = 1, end = 4)),
                                                     TRUE ~ lubridate::year(.data$CaptureDate))) %>%
-    dplyr::mutate(IndvID = toupper(.data$bto_ring),
+    dplyr::mutate(IndvID = dplyr::case_when(
+                    !is.na(.data$bto_ring) & .data$bto_ring != "" ~ toupper(.data$bto_ring),
+                    TRUE ~ NA_character_
+                    ),
                   CapturePopID = "WYT",
                   CapturePlot = stringr::str_remove_all(string = toupper(.data$pnum), pattern = "\\d"),
                   LocationID = stringr::str_sub(toupper(.data$pnum), start = 6),
