@@ -425,7 +425,7 @@ create_brood_UAN <- function(BROOD_info, CAPTURE_info, species_filter, pop_filte
                                 ~dplyr::case_when(stringr::str_detect(., "^[a-zA-Z]+$") ~ NA_character_,
                                                   TRUE ~ .))) %>%
     # Calculate clutchtype, assuming NAs are true unknowns
-    dplyr::arrange(LayDate_observed) %>%
+    dplyr::arrange(.data$LayDate_observed) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(., na.rm = FALSE, protocol_version = "1.1")) %>%
     dplyr::left_join(Tarsus_method,
                      by = "BroodID") %>%
