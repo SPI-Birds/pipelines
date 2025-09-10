@@ -199,45 +199,45 @@ test_that("Location_data returns an expected outcome...", {
   UAN_data <- dplyr::filter(pipeline_output$Location_data, PopID %in% c("PEE", "BOS"))
 
   #Test 1: Nestbox with coordinates only in Lambert system
-  expect_true(subset(UAN_data, LocationID == "BN10")$LocationType == "NB")
+  expect_true(subset(UAN_data, LocationID == "BOS_BN10")$LocationType == "NB")
   #Expect LocationID and NestboxID are the same
-  expect_true(subset(UAN_data, LocationID == "BN10")$NestboxID == "BN10")
+  expect_true(subset(UAN_data, LocationID == "BOS_BN10")$NestboxID == "BN10")
   #Expect Start and EndSeason is as expected
-  expect_equal(subset(UAN_data, LocationID == "BN10")$StartSeason, 2000L)
-  expect_equal(subset(UAN_data, LocationID == "BN10")$EndSeason, 2006L)
+  expect_equal(subset(UAN_data, LocationID == "BOS_BN10")$StartSeason, 2000L)
+  expect_equal(subset(UAN_data, LocationID == "BOS_BN10")$EndSeason, 2006L)
   #Check that LocationID is in the expected PopID
-  expect_equal(subset(UAN_data, LocationID == "BN10")$PopID, "BOS")
+  expect_equal(subset(UAN_data, LocationID == "BOS_BN10")$PopID, "BOS")
   #Check that latitude and longitude are as expected
-  expect_equal(round(subset(UAN_data, LocationID == "BN10")$Latitude, 2) %>% setNames(nm = NULL), 51.15)
-  expect_equal(round(subset(UAN_data, LocationID == "BN10")$Longitude, 2) %>% setNames(nm = NULL), 4.52)
+  expect_equal(round(subset(UAN_data, LocationID == "BOS_BN10")$Latitude, 2) %>% setNames(nm = NULL), 51.15)
+  expect_equal(round(subset(UAN_data, LocationID == "BOS_BN10")$Longitude, 2) %>% setNames(nm = NULL), 4.52)
 
   #Test 2: Nestbox with coordinates in both coordinates. Lambert should take precedence
   #LocationType is as expected
-  expect_true(subset(UAN_data, LocationID == "BW1")$LocationType == "NB")
+  expect_true(subset(UAN_data, LocationID == "BOS_BW1")$LocationType == "NB")
   #Expect no NestboxID
-  expect_equal(subset(UAN_data, LocationID == "BW1")$NestboxID, "BW1")
+  expect_equal(subset(UAN_data, LocationID == "BOS_BW1")$NestboxID, "BW1")
   #Expect Start and EndSeason is as expected
-  expect_equal(subset(UAN_data, LocationID == "BW1")$StartSeason, 2000L)
-  expect_equal(subset(UAN_data, LocationID == "BW1")$EndSeason, NA_integer_)
+  expect_equal(subset(UAN_data, LocationID == "BOS_BW1")$StartSeason, 2000L)
+  expect_equal(subset(UAN_data, LocationID == "BOS_BW1")$EndSeason, NA_integer_)
   #Check that LocationID is in the expected PopID
-  expect_equal(subset(UAN_data, LocationID == "BW1")$PopID, "BOS")
+  expect_equal(subset(UAN_data, LocationID == "BOS_BW1")$PopID, "BOS")
   #Check that latitude and longitude are as expected
-  expect_equal(round(subset(UAN_data, LocationID == "BW1")$Latitude, 2) %>% setNames(nm = NULL), 51.14)
-  expect_equal(round(subset(UAN_data, LocationID == "BW1")$Longitude, 2) %>% setNames(nm = NULL), 4.51)
+  expect_equal(round(subset(UAN_data, LocationID == "BOS_BW1")$Latitude, 2) %>% setNames(nm = NULL), 51.14)
+  expect_equal(round(subset(UAN_data, LocationID == "BOS_BW1")$Longitude, 2) %>% setNames(nm = NULL), 4.51)
 
   #Test 3: Nestbox where no type provided
   #LocationType is as expected
-  expect_true(subset(UAN_data, LocationID == "BW11BIS")$LocationType == "NB")
+  expect_true(subset(UAN_data, LocationID == "BOS_BW11BIS")$LocationType == "NB")
   #Expect no NestboxID
-  expect_equal(subset(UAN_data, LocationID == "BW11BIS")$NestboxID, "BW11BIS")
+  expect_equal(subset(UAN_data, LocationID == "BOS_BW11BIS")$NestboxID, "BW11BIS")
   #Expect Start and EndSeason is as expected
-  expect_equal(subset(UAN_data, LocationID == "BW11BIS")$StartSeason, 2007L)
-  expect_equal(subset(UAN_data, LocationID == "BW11BIS")$EndSeason, 2008L)
+  expect_equal(subset(UAN_data, LocationID == "BOS_BW11BIS")$StartSeason, 2007L)
+  expect_equal(subset(UAN_data, LocationID == "BOS_BW11BIS")$EndSeason, 2008L)
   #Check that LocationID is in the expected PopID
-  expect_equal(subset(UAN_data, LocationID == "BW11BIS")$PopID, "BOS")
+  expect_equal(subset(UAN_data, LocationID == "BOS_BW11BIS")$PopID, "BOS")
   #Check that latitude and longitude are as expected
-  expect_equal(round(subset(UAN_data, LocationID == "BW11BIS")$Latitude, 2) %>% setNames(nm = NULL), 51.14)
-  expect_equal(round(subset(UAN_data, LocationID == "BW11BIS")$Longitude, 2) %>% setNames(nm = NULL), 4.51)
+  expect_equal(round(subset(UAN_data, LocationID == "BOS_BW11BIS")$Latitude, 2) %>% setNames(nm = NULL), 51.14)
+  expect_equal(round(subset(UAN_data, LocationID == "BOS_BW11BIS")$Longitude, 2) %>% setNames(nm = NULL), 4.51)
 
 })
 
