@@ -4,10 +4,12 @@
 \alias{create_individual_KEV}
 \title{Create individual table for Kevo, Finland.}
 \usage{
-create_individual_KEV(Capture_data)
+create_individual_KEV(Capture_data, protocol_version)
 }
 \arguments{
 \item{Capture_data}{Output of \code{\link{create_capture_HAR}}.}
+
+\item{protocol_version}{Character string. The version of the standard protocol on which this pipeline is based.}
 }
 \value{
 A data frame.

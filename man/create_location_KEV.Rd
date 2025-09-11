@@ -4,10 +4,12 @@
 \alias{create_location_KEV}
 \title{Create location table for Kevo, Finland.}
 \usage{
-create_location_KEV(db)
+create_location_KEV(db, protocol_version)
 }
 \arguments{
 \item{db}{Location of primary data from Kevo.}
+
+\item{protocol_version}{Character string. The version of the standard protocol on which this pipeline is based.}
 }
 \value{
 A data frame.
