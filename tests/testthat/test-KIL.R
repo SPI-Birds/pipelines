@@ -144,12 +144,12 @@ test_that("Capture_data returns an expected outcome...", {
   KIL_data <- dplyr::filter(pipeline_output$Capture_data, CapturePopID == "KIL")
 
   #Test 1: Female caught as adult
-  #Test the female has the correct number of capture records (2)
-  expect_equal(nrow(subset(KIL_data, IndvID == "5991287")), 2)
+  #Test the female has the correct number of capture records (3)
+  expect_equal(nrow(subset(KIL_data, IndvID == "5802165")), 3)
   #Test the first capture of the female
-  expect_equal(subset(KIL_data, IndvID == "5991287")$Sex_observed[1], "F")
-  expect_equal(subset(KIL_data, IndvID == "5991287")$LocationID[1], "n71")
-  expect_equal(min(subset(KIL_data, IndvID == "5991287")$CaptureDate, na.rm = TRUE), as.Date("2000-07-10"))
+  expect_equal(subset(KIL_data, IndvID == "5802165")$Sex_observed[1], "F")
+  expect_equal(subset(KIL_data, IndvID == "5802165")$LocationID[1], "kn518")
+  expect_equal(min(subset(KIL_data, IndvID == "5802165")$CaptureDate, na.rm = TRUE), as.Date("1990-05-01"))
 
   #Test 2: Male caught as adult
   #Test the male has the correct number of capture records

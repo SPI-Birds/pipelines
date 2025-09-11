@@ -619,9 +619,10 @@ create_capture_KIL <- function(brood_data_til92,
 
   #### Join all capture data
   Capture_data <-
-    capture_til92 %>%
-    dplyr::bind_rows(capture_adults_95) %>%
-    dplyr::bind_rows(capture_chicks_95) %>%
+    dplyr::bind_rows(capture_til92, capture_adults_95, capture_chicks_95) %>%
+    # Drop records with NAs in CaptureDate
+    ### TODO: When updating to v2.0.0, records with missing CaptureDate can be dealt with if year is known
+    tidyr::drop_na(tidyselect::any_of(c("CaptureDate"))) %>%
     dplyr::group_by(.data$IndvID) %>%
     dplyr::arrange(.data$BreedingSeason, .data$CaptureDate, .by_group = TRUE) %>%
     dplyr::mutate(CaptureID = paste(.data$IndvID, dplyr::row_number(), sep = "_")) %>%
@@ -631,9 +632,6 @@ create_capture_KIL <- function(brood_data_til92,
              Date = .data$CaptureDate,
              Year = .data$BreedingSeason,
              showpb = TRUE) %>%
-    # Drop records with NAs in CaptureDate
-    ### TODO: When updating to v2.0.0, records with missing CaptureDate can be dealt with if year is known
-    tidyr::drop_na(tidyselect::any_of(c("CaptureDate"))) %>%
     # Add missing columns
     dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Capture_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Capture_data) %in% names(.))]) %>%
     # Keep only columns that are in the standard format and order correctly
