@@ -28,6 +28,8 @@
 #'
 #'\strong{Location_data}: Coordinates of nestboxes can be provided by the data owner, we do not have them at this point.
 #'
+#'\strong{LocationID}: Some nestboxes seem to have moved between habitat types. To make a distinction between these two, LocationIDs are formatted as <NestboxID><habitat> (e.g., LocationID: 'a13c', NestboxID: 'a13'), where <habitat> is 'c' for coniferous and 'd' for deciduous habitats.
+#'
 #' @inheritParams pipeline_params
 #'
 #'@return 4 data tables in the standard format (version 1.1.0). When `output_type = "R"`, a list of 4 data frames corresponding to the 4 standard data tables and 1 character vector indicating the protocol version on which the pipeline is based. When `output_type = "csv"`, 4 .csv files corresponding to the 4 standard data tables and 1 text file indicating the protocol version on which the pipeline is based.
