@@ -1,6 +1,7 @@
 testthat::skip_if(!exists("data_path"))
 
 pipeline_output <- format_PEW(db = paste0(data_path, "/PEW_PeerdsbosWest_Belgium"))
+
 test_that("PEW outputs all files...", {
 
   expect_true("PEW" %in% pipeline_output$Brood_data$PopID)
@@ -110,7 +111,7 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(PEW_data, BroodID == "2016_k72")$HatchDate_observed, as.Date("2016-05-14"))
   expect_equal(subset(PEW_data, BroodID == "2016_k72")$ClutchSize_observed, 8)
   expect_equal(subset(PEW_data, BroodID == "2016_k72")$ClutchSize_min, 8)
-  expect_equal(subset(PEW_data, BroodID == "2016_k72")$ClutchSize_max, Inf)
+  expect_equal(subset(PEW_data, BroodID == "2016_k72")$ClutchSize_max, NA_integer_)
   #AvgChickMass and AvgTarsus should be NA, there were no chicks measured
   expect_equal(subset(PEW_data, BroodID == "2016_k72")$AvgChickMass, NA_real_)
   expect_equal(subset(PEW_data, BroodID == "2016_k72")$AvgTarsus, NA_real_)
@@ -186,23 +187,23 @@ test_that("Location_data returns an expected outcome...", {
 })
 
 
-## General tests (for pipelines formatted to standard protocol version 1.1.0)
+## General tests
 
 test_that("Expected columns are present", {
 
   ## Will fail if not all the expected columns are present
 
   ## Brood data: Test that all columns are present
-  test_col_present(pipeline_output, "Brood")
+  test_col_present(pipeline_output, "Brood", pipeline_output$protocol_version)
 
   ## Capture data: Test that all columns are present
-  test_col_present(pipeline_output, "Capture")
+  test_col_present(pipeline_output, "Capture", pipeline_output$protocol_version)
 
   ## Individual data: Test that all columns are present
-  test_col_present(pipeline_output, "Individual")
+  test_col_present(pipeline_output, "Individual", pipeline_output$protocol_version)
 
   ## Location data: Test that all columns are present
-  test_col_present(pipeline_output, "Location")
+  test_col_present(pipeline_output, "Location", pipeline_output$protocol_version)
 
 })
 
@@ -210,57 +211,48 @@ test_that("Column classes are as expected", {
 
   ## Will fail if columns that are shared by the output and the templates have different classes.
 
-  # ## Brood data: Test that all column classes are expected
-  #test_col_classes(pipeline_output, "Brood")
-  ##FIXME fails because ClutchSize_max is numeric; this will be fixed when updating pipeline to v2.0.0
+  ## Brood data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Brood", pipeline_output$protocol_version)
 
   ## Capture data: Test that all column classes are expected
-  test_col_classes(pipeline_output, "Capture")
+  test_col_classes(pipeline_output, "Capture", pipeline_output$protocol_version)
 
   ## Individual data: Test that all column classes are expected
-  test_col_classes(pipeline_output, "Individual")
+  test_col_classes(pipeline_output, "Individual", pipeline_output$protocol_version)
 
   ## Location data: Test that all column classes are expected
-  test_col_classes(pipeline_output, "Location")
+  test_col_classes(pipeline_output, "Location", pipeline_output$protocol_version)
 
 })
 
 
 test_that("ID columns match the expected format for the pipeline", {
 
-  # ## FemaleID format is as expected
-  test_ID_format(pipeline_output, ID_col = "FemaleID", ID_format = "^[:digit:]+$")
+  ## FemaleID format is as expected
+  test_ID_format(pipeline_output, column = "FemaleID", format = "^[:digit:]{8}$")
 
-  # ## MaleID format is as expected
-  test_ID_format(pipeline_output, ID_col = "MaleID", ID_format = "^[:digit:]+$")
+  ## MaleID format is as expected
+  test_ID_format(pipeline_output, column = "MaleID", format = "^[:digit:]{8}$")
 
-  # ## IndvID format in Capture data  is as expected
-  test_ID_format(pipeline_output, ID_col = "C-IndvID", ID_format = "^[:digit:]+$")
+  ## IndvID format in Capture data  is as expected
+  test_ID_format(pipeline_output, column = "IndvID", table = "Capture", format = "^[:digit:]{8}$")
 
   ## IndvID format in Individual data is as expected
-  test_ID_format(pipeline_output, ID_col = "I-IndvID", ID_format = "^[:digit:]+$")
+  test_ID_format(pipeline_output, column = "IndvID", table = "Individual", format = "^[:digit:]{8}$")
 
 })
 
 
 test_that("Key columns only contain unique values", {
 
-  # ## BroodID has only unique values
-  ### THIS WILL FAIL DUE TO KNOWN ISSUES WITH:
-  # 2015_24
-  # 2016_60
-  # 2016_78
-  # 2017_49
-  # 2017_79
-  # 2017_109
-  ### Requires changes made by the data owner.
-  #test_unique_values(pipeline_output, "BroodID")
+  ## BroodID has only unique values
+  test_unique_values(pipeline_output, "BroodID")
 
   ## CaptureID has only unique values
   test_unique_values(pipeline_output, "CaptureID")
 
   ## PopID-IndvID has only unique values
-  test_unique_values(pipeline_output, "PopID-IndvID")
+  test_unique_values(pipeline_output, "IndvID")
 
 })
 

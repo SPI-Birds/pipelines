@@ -187,36 +187,14 @@ format_PEW <- function(db = choose_directory(),
     #### Change ID of unringed individuals to be NA
     dplyr::mutate(IndvID = ifelse(nchar(.data$IndvID) > 8, NA_character_, .data$IndvID),
                   PartnerId = ifelse(nchar(.data$PartnerId) > 8, NA_character_, .data$PartnerId)) %>%
-
-    # #### This part of the code can be removed after fixing the data from data owner
-    # #### Corrected information from data owner
-    # dplyr::mutate(Sex = ifelse(.data$IndvID == "11714676", "Male", .data$Sex),
-    #               PartnerId = ifelse(.data$PartnerId == "12706296" & .data$BroodID == "2016_60",
-    #                                  NA_character_, .data$PartnerId),
-    #               # Data owner: The only couple in 49 in 2017 was 13619466 (female) and  13617031 (male).
-    #               # partner 12706106 should be removed (or replaced by the true female 13619466).
-    #               PartnerId = ifelse(.data$PartnerId == "12706106" & .data$BroodID == "2017_49",
-    #                                  "13619466", .data$PartnerId),
-    #               # (2016_60) Data owner: FEMALE 12706296 in box 60 in 2016
-  #               # is erroneous and can be removed from the data.
-  #               # Female 13617052 was the only female in box 60 in 2016.
-  #               # She layed a complete clutch, which never hatched.
-  #               # The male was never caught and remains unknown.
-  #               rem = ifelse((.data$IndvID == "12706296" & .data$BroodID == "2016_60"),
-  #                            "yes", "no")) %>%
-  # dplyr::filter(.data$rem == "no" | is.na(.data$rem)) %>%
-  # dplyr::select(-.data$rem) %>%
-  # ### This part of the code can be removed after fixing the data from data owner
-
-
-  dplyr::mutate(DateEgg1 = janitor::excel_numeric_to_date(suppressWarnings(as.numeric(.data$DateEgg1)),
-                                                          date_system = "modern")) %>%
+    dplyr::mutate(DateEgg1 = janitor::excel_numeric_to_date(suppressWarnings(as.numeric(.data$DateEgg1)),
+                                                            date_system = "modern")) %>%
     dplyr::distinct()
 
 
   #### BROOD DATA
   message("Compiling brood information...")
-  Brood_data <- create_brood_PEW(data = pew_data)
+  Brood_data <- create_brood_PEW(pew_data)
 
 
   #### CAPTURE DATA
@@ -226,18 +204,28 @@ format_PEW <- function(db = choose_directory(),
 
   #### INDIVIDUAL DATA
   message("Compiling individual information...")
-  Individual_data <- create_individual_PEW(Capture_data)
+  Individual_data <- create_individual_PEW(Capture_data, protocol_version)
 
 
   #### LOCATION DATA
   message("Compiling location information...")
-  Location_data <- create_location_PEW(pew_data)
+  Location_data <- create_location_PEW(pew_data, protocol_version)
 
 
   #### FINAL ARRANGEMENT
-  Capture_data <-
-    Capture_data %>%
-    dplyr::filter(!is.na(.data$CaptureDate))
+  Brood_data <- Brood_data %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Brood_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Brood_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Brood_data))
+
+  Capture_data <- Capture_data %>%
+    dplyr::filter(!is.na(.data$CaptureDate)) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Capture_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Capture_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Capture_data))
+
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
@@ -288,13 +276,15 @@ format_PEW <- function(db = choose_directory(),
 
 create_brood_PEW <- function(data) {
 
-  sex_set <- c("Female", "Male")
-
+  # 6 duplicated BroodIDs - fix with data owner
   ##FIXME: Duplicated BroodID 2015_24, 2016_60: both parents female
   ##FIXME: Duplicated BroodID 2017_109: different clutch sizes
   ##FIXME: Duplicated BroodIDs 2016_78, 2017_79: different females
   ##FIXME: Duplicated BroodID 2017_49: different partner association
-  parent_info <- data %>%
+  primary_data <- data %>%
+    dplyr::distinct(.data$BroodID, .keep_all = TRUE)
+
+  parent_info <- primary_data %>%
     #### Exclude non-breeding data, exclude chicks
     dplyr::filter(.data$Method %in% c("Catch adults nestbox", "Catch incubation")) %>%
     dplyr::select("BroodID", "IndvID", "PartnerId", "Sex") %>%
@@ -309,17 +299,16 @@ create_brood_PEW <- function(data) {
     tidyr::unnest(cols = c("Female", "Male")) %>%
     dplyr::rename("FemaleID" = "Female", "MaleID" = "Male")
 
-  parents_brood_data <-
-    data %>%
+  parents_brood_data <- primary_data %>%
     #### Exclude non-breeding data, exclude chicks
     dplyr::filter(.data$Method %in% c("Catch adults nestbox", "Catch incubation")) %>%
     #### Rename variables
     dplyr::rename("LocationID" = "NestboxID") %>%
     dplyr::mutate(ExperimentID = dplyr::case_when(.data$Experiment == "BSM - Griffioen et al. 2019 PeerJ" ~
-                                                    "COHORT; PARENTAGE",
+                                                    "COHORT;PARENTAGE",
                                                   .data$Experiment == "2h Temp D4" ~ "SURVIVAL",
                                                   .data$Experiment == "2h Temp D4 + Handicaping Male: Griffioen et al. 2019 Front Ecol&Evol" ~
-                                                    "SURVIVAL; PARENTAGE")) %>%
+                                                    "SURVIVAL;PARENTAGE")) %>%
     #### Remove unnecessary variables which may cause duplicated rows
     #### Exclude also Date column, as for few broods, there may be
     #### several catches of parents, but the brood parameters are the same
@@ -333,14 +322,6 @@ create_brood_PEW <- function(data) {
     #Join in parentage data
     dplyr::left_join(parent_info,
                      by = "BroodID") %>%
-
-
-    ### This part of the code can be removed after fixing the data from data owner
-    ### Remove one specific case causing double register for the same BroodID
-    # dplyr::filter(!(.data$BroodID == "2017_109" & .data$Method == "Catch incubation")) %>%
-    ### This part of the code can be removed after fixing the data from data owner
-
-
     #### Create new variables
     dplyr::mutate(Plot = NA_character_,
                   LayDate_observed = .data$DateEgg1, ## for new version of calc_clutchtype
@@ -348,14 +329,13 @@ create_brood_PEW <- function(data) {
                   LayDate_max = as.Date(NA),
                   #If there is a ? in clutch size, ignore it for observed.
                   #Where there is ? we use No Chicks at D3 as the possible min
-                  #Max will be infinite (we only know the min through ringed chicks)
+                  #Max will be NA
                   ClutchSize_observed = as.integer(stringr::str_replace(string = .data$ClutchSize,
                                                                         pattern = "\\?",
                                                                         replace = "")),
                   ClutchSize_min = dplyr::case_when(stringr::str_detect(.data$ClutchSize, pattern = "\\?") ~ as.integer(.data$NoOfChicksD3),
                                                     TRUE ~ NA_integer_),
-                  ClutchSize_max = dplyr::case_when(stringr::str_detect(.data$ClutchSize, pattern = "\\?") ~ Inf,
-                                                    TRUE ~ NA_real_),
+                  ClutchSize_max = NA_integer_,
                   HatchDate_observed = .data$HatchDateD0,
                   HatchDate_min = as.Date(NA),
                   HatchDate_max = as.Date(NA),
@@ -379,8 +359,7 @@ create_brood_PEW <- function(data) {
 
 
   #### Get chick measurements per brood
-  chicks_measurements <-
-    data %>%
+  chicks_measurements <- primary_data %>%
     dplyr::filter(.data$Method == "ChickRinging") %>%
     dplyr::select("IndvID", "BroodID", "Tarsus", "Mass") %>%
     dplyr::group_by(.data$BroodID) %>%
@@ -397,10 +376,8 @@ create_brood_PEW <- function(data) {
 
 
   #### Join parents and chick data
-  Brood_data <-
-    parents_brood_data %>%
+  Brood_data <- parents_brood_data %>%
     dplyr::left_join(chicks_measurements, by = "BroodID") %>%
-
     #### Final arrangement
     dplyr::select("BroodID", "PopID", "BreedingSeason",
                   "Species", "Plot", "LocationID",
@@ -454,10 +431,10 @@ create_capture_PEW <- function(pew_data, Brood_data) {
                   OriginalTarsusMethod = ifelse(!is.na(.data$Tarsus), "Alternative", NA_character_),
                   WingLength = NA_real_,
                   ExperimentID = dplyr::case_when(.data$Experiment == "BSM - Griffioen et al. 2019 PeerJ" ~
-                                                    "COHORT; PARENTAGE",
+                                                    "COHORT;PARENTAGE",
                                                   .data$Experiment == "2h Temp D4" ~ "SURVIVAL",
                                                   .data$Experiment == "2h Temp D4 + Handicaping Male: Griffioen et al. 2019 Front Ecol&Evol" ~
-                                                    "SURVIVAL; PARENTAGE"),
+                                                    "SURVIVAL;PARENTAGE"),
                   Age_observed = dplyr::case_when(.data$Age == "0" & .data$Method == "ChickRinging" ~ 1L,
                                                   .data$Age == "1" ~ 5L,
                                                   .data$Age == ">=2" ~ 6L,
@@ -530,13 +507,14 @@ create_capture_PEW <- function(pew_data, Brood_data) {
 #' Create full individual data table in standard format for data from Peerdsbos West, Belgium.
 #'
 #' @param data Capture_data, output of create_capture_PEW function.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_individual_PEW <- function(data){
+create_individual_PEW <- function(data,
+                                  protocol_version){
 
-  Individual_data <-
-    data %>%
+  Individual_data <- data %>%
     #### Remove unringed individuals
     dplyr::filter(.data$IndvID != "unringed") %>%
     #### Format and create new data columns
@@ -561,10 +539,10 @@ create_individual_PEW <- function(data){
                                           NA_character_),
                      BroodIDFledged = .data$BroodIDLaid) %>%
     dplyr::ungroup() %>%
-    dplyr::select("IndvID", "Species", "PopID",
-                  "BroodIDLaid", "BroodIDFledged",
-                  "RingSeason", "RingAge",
-                  'Sex_calculated', "Sex_genetic")
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Individual_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Individual_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Individual_data))
 
   return(Individual_data)
 
@@ -576,10 +554,12 @@ create_individual_PEW <- function(data){
 #' Create location data table in standard format for data from Peerdsbos West, Belgium.
 #'
 #' @param data Data frame pew_data with primary data from Peerdsbos West, Belgium.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_location_PEW <- function(data) {
+create_location_PEW <- function(data,
+                                protocol_version) {
 
   Location_data <-
     data %>%
@@ -595,11 +575,10 @@ create_location_PEW <- function(data) {
                   HabitatType = "deciduous",
                   Latitude  = NA_real_,
                   Longitude = NA_real_) %>%
-    #### Final arrangement
-    dplyr::select("LocationID", "NestboxID",
-                  "LocationType", "PopID",
-                  "Latitude", "Longitude",
-                  "StartSeason", "EndSeason", "HabitatType")
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Location_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Location_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Location_data))
 
   return(Location_data)
 
