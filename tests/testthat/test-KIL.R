@@ -188,23 +188,23 @@ test_that("Location_data returns an expected outcome...", {
 
   #Test 1: Nestbox evergreen
   #LocationType is as expected
-  expect_equal(subset(KIL_data, LocationID == "r18")$LocationType, "NB")
+  expect_equal(subset(KIL_data, LocationID == "r18c")$LocationType, "NB")
   #Habitat is as expected
-  expect_equal(subset(KIL_data, LocationID == "r18")$HabitatType, "evergreen")
+  expect_equal(subset(KIL_data, LocationID == "r18c")$HabitatType, "evergreen")
   #Start season
-  expect_equal(subset(KIL_data, LocationID == "r18")$StartSeason, 1995L)
+  expect_equal(subset(KIL_data, LocationID == "r18c")$StartSeason, 1995L)
   #End season
-  expect_equal(subset(KIL_data, LocationID == "r18")$EndSeason, NA_integer_)
+  expect_equal(subset(KIL_data, LocationID == "r18c")$EndSeason, NA_integer_)
 
   #Test 2: Nestbox
   #LocationType is as expected
-  expect_equal(subset(KIL_data, LocationID == "b170")$LocationType, "NB")
+  expect_equal(subset(KIL_data, LocationID == "b170d")$LocationType, "NB")
   #Habitat is as expected
-  expect_equal(subset(KIL_data, LocationID == "b170")$HabitatType, "deciduous")
+  expect_equal(subset(KIL_data, LocationID == "b170d")$HabitatType, "deciduous")
   #Start season
-  expect_equal(subset(KIL_data, LocationID == "b170")$StartSeason, 2000L)
+  expect_equal(subset(KIL_data, LocationID == "b170d")$StartSeason, 2000L)
   #End season
-  expect_equal(subset(KIL_data, LocationID == "b170")$EndSeason, NA_integer_)
+  expect_equal(subset(KIL_data, LocationID == "b170d")$EndSeason, NA_integer_)
 
   #Test 3: Nestbox
   #LocationType is as expected
@@ -218,13 +218,15 @@ test_that("Location_data returns an expected outcome...", {
 
   #Test 4: Nestbox
   #LocationType is as expected
-  expect_equal(subset(KIL_data, LocationID == "a22")$LocationType, "NB")
+  expect_equal(subset(KIL_data, LocationID == "a22c")$LocationType, "NB")
   #Habitat is as expected
-  expect_equal(subset(KIL_data, LocationID == "a22")$HabitatType, "evergreen")
+  expect_equal(subset(KIL_data, LocationID == "a22c")$HabitatType, "evergreen")
   #Start season
-  expect_equal(subset(KIL_data, LocationID == "a22")$StartSeason, 2001L)
+  expect_equal(subset(KIL_data, LocationID == "a22c")$StartSeason, 2001L)
   #End season
-  expect_equal(subset(KIL_data, LocationID == "a22")$EndSeason, NA_integer_)
+  expect_equal(subset(KIL_data, LocationID == "a22c")$EndSeason, NA_integer_)
+  #NestboxID
+  expect_equal(subset(KIL_data, LocationID == "a22c")$NestboxID, "a22")
 
 })
 

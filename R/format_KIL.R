@@ -131,6 +131,11 @@ format_KIL <- function(db = choose_directory(),
                   PopID = "KIL",
                   BreedingSeason = as.integer(.data$Year),
                   NestboxID = tolower(.data$NestId),
+                  # There are nestboxes that seem to have moved from habitat type
+                  # i.e., in some years they are marked as deciduous, in other years as coniferous
+                  # These should get different LocationIDs
+                  # TODO: check with data owner
+                  LocationID = paste0(.data$NestboxID, tolower(stringr::str_sub(.data$Habitat, 1, 1))),
                   FemaleID = as.character(.data$FemaleRingNo),
                   MaleID = as.character(.data$MaleRingNo),
                   BreedingAttempt = dplyr::case_when(.data$Brood == "First" ~ 1L,
@@ -398,9 +403,7 @@ create_brood_KIL <- function(brood_data_til92, kil_data_95) {
   Brood_data_95 <-
     kil_data_95 %>%
     #### Convert to corresponding format and rename
-    dplyr::mutate(LocationID = .data$NestboxID,
-                  Plot = .data$LocationID,
-                  ClutchType_observed = as.character(tolower(.data$Brood)),
+    dplyr::mutate(ClutchType_observed = as.character(tolower(.data$Brood)),
                   #### Calculate laying date
                   ## for new version of calc_clutchtype
                   # LayDate_observed = as.Date(paste(.data$BreedingSeason, "04-01", sep = "-"),
@@ -441,8 +444,7 @@ create_brood_KIL <- function(brood_data_til92, kil_data_95) {
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.1")) %>%
 
     #### Final arrangement
-    dplyr::select("BroodID", "PopID", "BreedingSeason", "Species",
-                  "Plot" , "LocationID",
+    dplyr::select("BroodID", "PopID", "BreedingSeason", "Species", "LocationID",
                   "FemaleID", "MaleID",
                   "ClutchType_observed", "ClutchType_calculated",
                   "LayDate_observed", "LayDate_min", "LayDate_max",
@@ -785,10 +787,8 @@ create_location_KIL <- function(kil_data_95,
   #### Get habitat type for data after 1995
   loc_data_95 <-
     kil_data_95 %>%
-    dplyr::select("BreedingSeason", "Habitat", "NestboxID", "PopID") %>%
-    dplyr::mutate(NestboxID = tolower(.data$NestboxID),
-                  LocationID = .data$NestboxID,
-                  HabitatType = dplyr::case_when(.data$Habitat == "Deciduous forest" ~ "deciduous",
+    dplyr::select("BreedingSeason", "Habitat", "NestboxID", "LocationID", "PopID") %>%
+    dplyr::mutate(HabitatType = dplyr::case_when(.data$Habitat == "Deciduous forest" ~ "deciduous",
                                                  .data$Habitat == "Coniferous forest" ~ "evergreen")) %>%
     dplyr::select(-"Habitat")
 
@@ -796,19 +796,21 @@ create_location_KIL <- function(kil_data_95,
   Location_data <-
     Brood_data %>%
     dplyr::select("BreedingSeason", "LocationID", "PopID") %>%
-    dplyr::mutate(NestboxID = .data$LocationID) %>%
     dplyr::distinct() %>%
-    dplyr::full_join(loc_data_95, by = c("BreedingSeason", "LocationID", "NestboxID", "PopID")) %>%
+    dplyr::full_join(loc_data_95, by = c("BreedingSeason", "LocationID", "PopID")) %>%
     dplyr::group_by(.data$LocationID) %>%
     dplyr::arrange(.data$BreedingSeason, .by_group = TRUE) %>%
     dplyr::reframe(StartSeason = dplyr::first(.data$BreedingSeason),
-                   ###TODO Check with data owner
-                   # EndSeason = last(.data$BreedingSeason))
-                   EndSeason = NA_integer_,
-                   LocationID = unique(.data$LocationID),
                    NestboxID  = unique(.data$NestboxID),
                    HabitatType = unique(.data$HabitatType),
                    PopID = unique(.data$PopID)) %>%
+    dplyr::ungroup() %>%
+    dplyr::group_by(.data$NestboxID) %>%
+    dplyr::arrange(.data$StartSeason, .by_group = TRUE) %>%
+    dplyr::mutate(EndSeason = dplyr::case_when(is.na(.data$NestboxID) ~ NA_integer_,
+                                               .data$StartSeason == dplyr::last(.data$StartSeason) ~ NA_integer_,
+                                               dplyr::n() == 1 ~ NA_integer_,
+                                               TRUE ~ dplyr::lead(.data$StartSeason))) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(LocationType = "NB",
                   Latitude  = NA_real_,
