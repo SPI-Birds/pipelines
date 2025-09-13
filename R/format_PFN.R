@@ -60,12 +60,13 @@
 #'`EndSeason` are calculated as the first and last year in which birds were
 #'observed to be breeding within a box.
 #'
+#'\strong{LocationID}: LocationIDs are formatted as <PopID>_<NestboxNumber> to avoid duplicates across sites. Boxes that have moved inbetween years get a new ID (using an ordinal suffix; e.g., "_1", "_2").
+#'
 #'@inheritParams pipeline_params
 #'
 #'@return 4 data tables in the standard format (version 1.1.0). When `output_type = "R"`, a list of 4 data frames corresponding to the 4 standard data tables and 1 character vector indicating the protocol version on which the pipeline is based. When `output_type = "csv"`, 4 .csv files corresponding to the 4 standard data tables and 1 text file indicating the protocol version on which the pipeline is based.
 #' @export
 #'
-
 
 format_PFN <- function(db = choose_directory(),
                        species = NULL,
@@ -334,7 +335,8 @@ format_PFN <- function(db = choose_directory(),
 
   Individual_data <- create_individual_PFN(Capture_data = Capture_data,
                                            species_filter = species,
-                                           pop_filter = pop)
+                                           pop_filter = pop,
+                                           protocol_version = protocol_version)
 
   #----------------------------------------#
   # CREATING STANDARD FORMAT LOCATION DATA #
@@ -379,13 +381,49 @@ format_PFN <- function(db = choose_directory(),
 
   # Remove unnecessary columns
   Brood_data <- Brood_data %>%
-    dplyr::select(-"ChickAge", -"BroodSize_IPMR")
+    # Use new LocationID for moved boxes
+    dplyr::left_join(Location_data %>%
+                       # Expand IDs from StartSeason to EndSeason so that it is easier to join; set EndSeason to current year if NA
+                       dplyr::filter(!is.na(.data$NewLocationID)) %>%
+                       dplyr::mutate(EndSeason = dplyr::case_when(is.na(.data$EndSeason) ~ as.integer(format(Sys.Date(), "%Y")),
+                                                                      TRUE ~ .data$EndSeason)) %>%
+                       dplyr::group_by(.data$NewLocationID) %>%
+                       tidyr::expand(.data$LocationID, "Year" = .data$StartSeason:.data$EndSeason) %>%
+                       dplyr::ungroup(),
+                     by = c("LocationID", "BreedingSeason" = "Year")) %>%
+    dplyr::mutate(LocationID = dplyr::case_when(!is.na(.data$NewLocationID) ~ .data$NewLocationID,
+                                                TRUE ~ .data$LocationID)) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Brood_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Brood_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Brood_data))
 
   Capture_data <- Capture_data %>%
-    dplyr::select(-"BroodID", -"PULALIV") %>%
-    dplyr::relocate("ExperimentID",
-                    .after = "ChickAge")
+    # Use new LocationID for moved boxes
+    dplyr::left_join(Location_data %>%
+                       # Expand IDs from StartSeason to EndSeason so that it is easier to join; set EndSeason to current year if NA
+                       dplyr::filter(!is.na(.data$NewLocationID)) %>%
+                       dplyr::mutate(EndSeason = dplyr::case_when(is.na(.data$EndSeason) ~ as.integer(format(Sys.Date(), "%Y")),
+                                                                  TRUE ~ .data$EndSeason)) %>%
+                       dplyr::group_by(.data$NewLocationID) %>%
+                       tidyr::expand(.data$LocationID, "Year" = .data$StartSeason:.data$EndSeason) %>%
+                       dplyr::ungroup(),
+                     by = c("LocationID", "BreedingSeason" = "Year")) %>%
+    dplyr::mutate(LocationID = dplyr::case_when(!is.na(.data$NewLocationID) ~ .data$NewLocationID,
+                                                TRUE ~ .data$LocationID)) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Capture_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Capture_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Capture_data))
 
+  Location_data <- Location_data %>%
+    # Use new LocationID for moved boxes
+    dplyr::mutate(LocationID = dplyr::case_when(!is.na(.data$NewLocationID) ~ .data$NewLocationID,
+                                                TRUE ~ .data$LocationID)) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Location_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Location_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Location_data))
 
   #-----------------------------#
   # STANDARD FORMAT DATA EXPORT #
@@ -531,7 +569,7 @@ create_brood_PFN <- function(Nest_data, ReRingTable, species_filter, pop_filter,
                     LayDate_min = as.Date(NA),
                     LayDate_max = as.Date(NA),
                     ClutchSize_observed = .data$ClutchSize,
-                    ClutchSize_max = dplyr::case_when(!is.na(.data$ClutchSize_min) ~ Inf),
+                    ClutchSize_max = NA_integer_,
                     HatchDate_observed = .data$HatchDate,
                     HatchDate_min = as.Date(NA),
                     HatchDate_max = as.Date(NA),
@@ -548,16 +586,20 @@ create_brood_PFN <- function(Nest_data, ReRingTable, species_filter, pop_filter,
                     OriginalTarsusMethod = dplyr::case_when(!is.na(.data$AvgTarsus) ~ "Alternative"),
                     ExperimentID = NA_character_) %>%
 
-    # 5) Remove broods from species & pops not included in filter
+    # 5) Add PopID prefix to LocationID to avoid duplicates across sites within PFN
+    dplyr::mutate(LocationID = dplyr::case_when(!is.na(.data$LocationID) ~ paste(.data$PopID, .data$LocationID, sep = "_"),
+                                                TRUE ~ NA_character_)) %>%
+
+    # 6) Remove broods from species & pops not included in filter
     dplyr::filter(.data$Species %in% species_filter & .data$PopID %in% pop_filter) %>%
 
-    # 6) Replace non-conclusive male and female IDs with NA
+    # 7) Replace non-conclusive male and female IDs with NA
     dplyr::mutate(FemaleID = dplyr::case_when(!(.data$FemaleID %in% badIDs) ~ .data$FemaleID,
                                               .data$FemaleID %in% badIDs ~ NA_character_),
                   MaleID = dplyr::case_when(!(.data$MaleID %in% badIDs) ~ .data$MaleID,
                                             .data$MaleID %in% badIDs ~ NA_character_))
 
-  # 7) Convert ring numbers for re-ringed females and males
+  # 8) Convert ring numbers for re-ringed females and males
   ReRingTableF <- ReRingTable %>%
     dplyr::rename("FemaleID" = "RingNr",
                   "FemaleReRingID" = "ReRingID")
@@ -576,7 +618,7 @@ create_brood_PFN <- function(Nest_data, ReRingTable, species_filter, pop_filter,
                   MaleID = ifelse(is.na(.data$MaleReRingID),
                                   .data$MaleID, .data$MaleReRingID)) %>%
 
-    # 8) Select and arrange columns for output
+    # 9) Select and arrange columns for output
     dplyr::select("BroodID", "PopID", "BreedingSeason",
                   "Species", "Plot", "LocationID", "FemaleID", "MaleID",
                   "ClutchType_observed", "ClutchType_calculated",
@@ -592,7 +634,6 @@ create_brood_PFN <- function(Nest_data, ReRingTable, species_filter, pop_filter,
                   "OriginalTarsusMethod",
                   "ExperimentID", "ChickAge")
 
-  # 9) Return data
   return(Brood_data)
 }
 
@@ -926,7 +967,7 @@ create_capture_PFN <- function(Nest_data, IPMR_data, ReRingTable, species_filter
         is.na(.data$Sex_observed_Nest) ~ .data$Sex_observed_IPMR,
         is.na(.data$Sex_observed_IPMR) ~ .data$Sex_observed_Nest,
         .data$Sex_observed_Nest == .data$Sex_observed_IPMR  ~ .data$Sex_observed_Nest,
-        .data$Sex_observed_Nest != .data$Sex_observed_IPMR ~ 'C'
+        .data$Sex_observed_Nest != .data$Sex_observed_IPMR ~ NA_character_
       ),
 
       # 3.9) CaptureAlive & ReleaseAlive
@@ -961,14 +1002,22 @@ create_capture_PFN <- function(Nest_data, IPMR_data, ReRingTable, species_filter
     ## 5) Remove captures from individuals not part of any included populations and remove species
     dplyr::filter(!is.na(.data$CapturePopID), .data$CapturePopID %in% pop_filter, .data$Species %in% species_filter) %>%
 
-    ## 6) Make CaptureID
+    ## 6) Remove records without CaptureDate (mostly KAT)
+    # FIXME Can be resolved when updated to protocol v2.0.0
+    dplyr::filter(!is.na(CaptureDate)) %>%
+
+    ## 7) Add PopID prefix to LocationID to avoid duplicates across sites within PFN
+    dplyr::mutate(LocationID = dplyr::case_when(!is.na(.data$LocationID) ~ paste(.data$CapturePopID, .data$LocationID, sep = "_"),
+                                                TRUE ~ NA_character_)) %>%
+
+    ## 8) Make CaptureID
 
     # Write unique capture identifier as IndvID-CaptureNumber
     dplyr::group_by(.data$IndvID) %>%
     dplyr::mutate(CaptureID = paste0(.data$IndvID, '-', dplyr::row_number())) %>%
     dplyr::ungroup() %>%
 
-    ## 11) Select required columns
+    ## Select required columns
     dplyr::select("CaptureID", "IndvID", "Species", "Sex_observed",
                   "BreedingSeason", "CaptureDate", "CaptureTime", "ObserverID",
                   "LocationID", "CaptureAlive", "ReleaseAlive",
@@ -1007,7 +1056,11 @@ create_capture_Nest_PFN <- function(Nest_data, ReRingTable, badIDs){
                                                                       Capture_data$Species == "WREN" ~ NA_character_, # Not currently included, 1 observation only
                                                                       Capture_data$Species == "TREEC" ~ NA_character_), # Not currently, 1 observation only
                                       BreedingSeason = as.integer(Capture_data$Year),
-                                      CaptureDate = as.Date(Capture_data$MaleDate, format = "%d/%m/%Y"),
+                                      # If capture date is unknown, set date to Lay Date + Clutch Size
+                                      # If lay date is unknown, set to hatch date
+                                      CaptureDate = dplyr::case_when(is.na(Capture_data$MaleDate) & !is.na(Capture_data$DFE) ~ as.Date(paste('31/03/', .data$BreedingSeason, sep = ''), format = "%d/%m/%Y") + as.numeric(Capture_data$DFE) + as.numeric(Capture_data$CltSize),
+                                                                     is.na(Capture_data$MaleDate) & is.na(Capture_data$DFE) ~ as.Date(paste('31/03/', .data$BreedingSeason, sep = ''), format = "%d/%m/%Y") + as.numeric(Capture_data$DH),
+                                                                     TRUE ~ as.Date(Capture_data$MaleDate, format = "%d/%m/%Y")),
                                       LocationID_Nest = Capture_data$Box,
                                       CapturePopID_Nest = Capture_data$PopID,
                                       CapturePlot_Nest = Capture_data$Popn,
@@ -1037,7 +1090,11 @@ create_capture_Nest_PFN <- function(Nest_data, ReRingTable, badIDs){
                                                                         Capture_data$Species == "WREN" ~ NA_character_, # Not currently included, 1 observation only
                                                                         Capture_data$Species == "TREEC" ~ NA_character_), # Not currently, 1 observation only
                                         BreedingSeason = as.integer(Capture_data$Year),
-                                        CaptureDate = as.Date(Capture_data$FemaleDate, format = "%d/%m/%Y"),
+                                        # If capture data is unknown, set date to Lay Date + Clutch Size
+                                        # If Lay Date is unknown, set date to Hatch Date
+                                        CaptureDate = dplyr::case_when(is.na(Capture_data$FemaleDate) & !is.na(Capture_data$DFE) ~ as.Date(paste('31/03/', .data$BreedingSeason, sep = ''), format = "%d/%m/%Y") + as.numeric(Capture_data$DFE) + as.numeric(Capture_data$CltSize),
+                                                          is.na(Capture_data$FemaleDate) & is.na(Capture_data$DFE) ~ as.Date(paste('31/03/', .data$BreedingSeason, sep = ''), format = "%d/%m/%Y") + as.numeric(Capture_data$DH),
+                                                          TRUE ~ as.Date(Capture_data$FemaleDate, format = "%d/%m/%Y")),
                                         LocationID_Nest = Capture_data$Box,
                                         CapturePopID_Nest = Capture_data$PopID,
                                         CapturePlot_Nest = Capture_data$Popn,
@@ -1073,7 +1130,14 @@ create_capture_Nest_PFN <- function(Nest_data, ReRingTable, badIDs){
                                                   .data$Species == "WREN" ~ NA_character_, # Not currently included, 1 observation only
                                                   .data$Species == "TREEC" ~ NA_character_),
                   BreedingSeason = as.integer(.data$Year),
-                  CaptureDate = as.Date(.data$YoungDate, format = "%d/%m/%Y"),
+                  # If date of capture for chicks is unknown,
+                  # calculate as Lay Date + Clutch Size + 22 (based on median from records where both Lay Date and capture date are known)
+                  # If Lay Date is unknown, use Hatch Date + 11
+                  # TODO: When updating to v2.0.0, records with missing CaptureDate can be dealt with if year is known
+                  CaptureDate = dplyr::case_when(is.na(.data$YoungDate) & !is.na(.data$DFE) & !is.na(.data$CltSize) ~ as.Date(paste('31/03/', .data$BreedingSeason, sep = ''), format = "%d/%m/%Y") + as.numeric(.data$DFE) + as.numeric(.data$CltSize) + 22,
+                                                 is.na(.data$YoungDate) & !is.na(.data$DFE) & is.na(.data$CltSize) & !is.na(.data$MinEggs) ~ as.Date(paste('31/03/', .data$BreedingSeason, sep = ''), format = "%d/%m/%Y") + as.numeric(.data$DFE) + as.numeric(stringr::str_remove_all(.data$MinEggs, "\\?")) + 22,
+                                                 is.na(.data$YoungDate) & is.na(.data$DFE) ~ as.Date(paste('31/03/', .data$BreedingSeason, sep = ''), format = "%d/%m/%Y") + as.numeric(.data$DH) + 11,
+                                                 TRUE ~ as.Date(.data$YoungDate, format = "%d/%m/%Y")),
                   LocationID_Nest = .data$Box,
                   CapturePopID_Nest = .data$PopID,
                   CapturePlot_Nest = .data$Popn,
@@ -1220,7 +1284,7 @@ create_capture_IPMR_PFN <- function(IPMR_data, Nest_data, ReRingTable){
 #'
 #' @return A data frame with Individual data
 
-create_individual_PFN <- function(Capture_data, species_filter, pop_filter){
+create_individual_PFN <- function(Capture_data, species_filter, pop_filter, protocol_version){
 
   # 1) Take capture data and determine basic summary data for each individual (within population)
   IndvPop_data <- Capture_data %>%
@@ -1303,16 +1367,12 @@ create_individual_PFN <- function(Capture_data, species_filter, pop_filter){
                                       by = c('IndvID')) %>%
     # Filter species & pops
     dplyr::filter(.data$Species %in% species_filter, .data$PopID %in% pop_filter) %>%
-
-    # Add a column for genetic sex (not available here)
-    dplyr::mutate(Sex_genetic = NA_character_) %>%
-
-    # Order columns and sort
-    dplyr::select("IndvID", "Species", "PopID",
-                  "BroodIDLaid", "BroodIDFledged",
-                  "RingSeason", "RingAge",
-                  "Sex_calculated", "Sex_genetic") %>%
-    dplyr::arrange(.data$IndvID, .data$PopID, .data$RingSeason)
+    # Sort
+    dplyr::arrange(.data$IndvID, .data$PopID, .data$RingSeason) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Individual_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Individual_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Individual_data))
 
   return(Individual_data)
 
@@ -1346,27 +1406,45 @@ create_location_PFN <- function(Brood_data, Capture_data, Location_details, pop_
                   "EndSeason_ext" = "Last") %>%
 
     dplyr::mutate(PopID = 'EDM',
-                  Latitude = suppressWarnings(as.numeric(.data$Latitude)),
-                  Longitude = suppressWarnings(as.numeric(.data$Longitude)),
                   StartSeason_ext = suppressWarnings(as.integer(.data$StartSeason_ext)),
                   EndSeason_ext = suppressWarnings(as.integer(.data$EndSeason_ext)))
 
+  # Convert lat/long from United Kingdom Ordnance Survey (EPSG:27700) to EPSG:4326
+  Location_details_sf <- sf::st_as_sf(Location_details,
+                                      coords = c("Longitude", "Latitude"),
+                                      crs = 27700) %>%
+    sf::st_transform(crs = 4326)
+
+  Location_details <- Location_details %>%
+    dplyr::select(-"Latitude", -"Longitude") %>%
+    dplyr::bind_cols(tibble::tibble(Longitude = sf::st_coordinates(Location_details_sf)[, 1]),
+                     tibble::tibble(Latitude = sf::st_coordinates(Location_details_sf)[, 2])) %>%
+    # Create a new LocationID for those boxes that moved
+    dplyr::group_by(.data$NestboxID) %>%
+    dplyr::arrange(.data$StartSeason_ext, .by_group = TRUE) %>%
+    dplyr::mutate(NewLocationID = dplyr::case_when(dplyr::n() > 1 ~ paste(.data$PopID, .data$NestboxID, dplyr::row_number(), sep = "_"),
+                                                   TRUE ~ NA_character_),
+                  EndSeason_ext = dplyr::case_when(!is.na(EndSeason_ext) ~ as.integer(.data$EndSeason_ext),
+                                                   dplyr::row_number() == dplyr::n() ~ NA_integer_,
+                                                   TRUE ~ as.integer(dplyr::lead(.data$StartSeason_ext) - 1))) %>%
+    dplyr::ungroup()
+
   # 2) Start a dataframe with all unique LocationIDs / NestboxIDs from brood data
-  # NOTE: In this case, LocationIDs and NestboxIDs are identical.
 
   Location_data <- calc_birdNBuse(Brood_data) %>%
 
     # 3) Add additional columns
-    dplyr::mutate(NestboxID = .data$LocationID,
-                  LocationType = 'NB') %>%
+    # Remove PopID prefix to create NestboxID
+    dplyr::mutate(NestboxID = stringr::str_extract(.data$LocationID, "(?<=\\_).+")) %>%
 
     # 4) Merge in detailed information
     dplyr::left_join(Location_details,
                      by = c('PopID', 'NestboxID')) %>%
 
     # 5) Prioritize detailed information when available
-    dplyr::mutate(StartSeason = ifelse(!is.na(.data$StartSeason_ext), .data$StartSeason_ext, .data$StartSeason),
-                  EndSeason = ifelse(!is.na(.data$StartSeason_ext), .data$EndSeason_ext, .data$EndSeason)) %>%
+    dplyr::mutate(LocationType = 'NB',
+                  StartSeason = ifelse(!is.na(.data$StartSeason_ext), as.integer(.data$StartSeason_ext), as.integer(.data$StartSeason)),
+                  EndSeason = ifelse(!is.na(.data$StartSeason_ext), as.integer(.data$EndSeason_ext), as.integer(.data$EndSeason))) %>%
     dplyr::select(-"StartSeason_ext", -"EndSeason_ext")
 
   # 6) Collect information on additional capture locations (from capture data)
@@ -1378,13 +1456,8 @@ create_location_PFN <- function(Brood_data, Capture_data, Location_details, pop_
   Location_data <- Location_data %>%
     dplyr::full_join(CapLocations,
                      by = c('PopID', 'LocationID')) %>%
-    dplyr::filter(.data$PopID %in% pop_filter) %>%
+    dplyr::filter(.data$PopID %in% pop_filter, !is.na(.data$LocationID), !is.na(.data$LocationType)) %>%
     dplyr::mutate(HabitatType = 'deciduous') %>%
-    dplyr::select("LocationID", "NestboxID",
-                  "LocationType", "PopID",
-                  "Latitude", "Longitude",
-                  "StartSeason", "EndSeason",
-                  "HabitatType") %>%
     dplyr::arrange(.data$PopID, .data$StartSeason, .data$LocationID, .data$NestboxID)
 
   return(Location_data)
