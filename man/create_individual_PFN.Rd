@@ -17,6 +17,8 @@ create_individual_PFN(
 \item{species_filter}{Species six-letter codes from the standard protocol. Used to filter the data.}
 
 \item{pop_filter}{Population three-letter codes from the standard protocol. Used to filter the data.}
+
+\item{protocol_version}{Character string. The version of the standard protocol on which this pipeline is based.}
 }
 \value{
 A data frame with Individual data
