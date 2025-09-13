@@ -14,20 +14,6 @@ test_that("format_PFN outputs all tables...", {
 
 })
 
-
-# test_that("Tables contain all required columns in the correct order...", {
-#
-#   expect_true(all(colnames(pipeline_output$Brood_data) == column_names_v1.1$Brood))
-#   expect_true(all(colnames(pipeline_output$Capture_data) == column_names_v1.1$Capture))
-#   expect_true(all(colnames(pipeline_output$Individual_data) == column_names_v1.1$Individual))
-#   expect_true(all(colnames(pipeline_output$Location_data) == column_names_v1.1$Location))
-#
-# })
-# NOTE: I have disabled this for the moment. Right now, this test fails when run
-# on the output of run_pipelines() containing ANY other populations not
-# formatted according to standard protocol v1.1.
-
-
 test_that("Brood_data returns an expected outcome...", {
 
   #We want to run tests for all possible outcomes of ClutchType_calculated
@@ -294,7 +280,7 @@ test_that("Capture data returns an expected outcome...", {
   expect_equal(nrow(subset(PFN_data, IndvID == "R059131")), 2)
   #Test that the first and last capture are as expected
   expect_equal(subset(PFN_data, IndvID == "R059131")$CaptureDate[1], as.Date("2003-06-11"))
-  expect_equal(subset(PFN_data, IndvID == "R059131")$CaptureDate[2], as.Date(NA))
+  expect_equal(subset(PFN_data, IndvID == "R059131")$CaptureDate[2], as.Date("2008-06-04"))
   expect_equal(subset(PFN_data, IndvID == "R059131")$BreedingSeason[2], 2008)
   #Test that age observed is as expected on first and last capture
   expect_equal(subset(PFN_data, IndvID == "R059131")$Age_observed[1], 1L)
@@ -389,18 +375,121 @@ test_that("Location_data returns an expected outcome...", {
   PFN_data <- dplyr::filter(pipeline_output$Location_data, PopID %in% "EDM")
 
   #Test 1: Nestbox check
-  expect_true(subset(PFN_data, LocationID == "HIDE9")$LocationType == "NB")
+  expect_true(subset(PFN_data, LocationID == "EDM_HIDE9")$LocationType == "NB")
   #Expect LocationID and NestboxID are the same
-  expect_true(subset(PFN_data, LocationID == "HIDE9")$NestboxID == "HIDE9")
+  expect_true(subset(PFN_data, LocationID == "EDM_HIDE9")$NestboxID == "HIDE9")
   #Expect Start and EndSeason is as expected
-  expect_equal(subset(PFN_data, LocationID == "HIDE9")$StartSeason, 1987L)
-  expect_equal(subset(PFN_data, LocationID == "HIDE9")$EndSeason, 2019L)
+  expect_equal(subset(PFN_data, LocationID == "EDM_HIDE9")$StartSeason, 1987L)
+  expect_equal(subset(PFN_data, LocationID == "EDM_HIDE9")$EndSeason, 2019L)
   #Check that LocationID is in the expected PopID
-  expect_equal(subset(PFN_data, LocationID == "HIDE9")$PopID, "EDM")
+  expect_equal(subset(PFN_data, LocationID == "EDM_HIDE9")$PopID, "EDM")
   #Check that latitude and longitude are as expected
-  expect_equal(round(subset(PFN_data, LocationID == "HIDE9")$Latitude, 2) %>% setNames(nm = NULL), 278419)
-  expect_equal(round(subset(PFN_data, LocationID == "HIDE9")$Longitude, 2) %>% setNames(nm = NULL), 78643)
+  expect_equal(round(subset(PFN_data, LocationID == "EDM_HIDE9")$Latitude, 2), 52.31)
+  expect_equal(round(subset(PFN_data, LocationID == "EDM_HIDE9")$Longitude, 2), -6.72)
   #Check that habitat type is correct
-  expect_equal(subset(PFN_data, LocationID == "HIDE9")$HabitatType, "deciduous")
+  expect_equal(subset(PFN_data, LocationID == "EDM_HIDE9")$HabitatType, "deciduous")
+
+})
+
+## General tests
+
+test_that("Expected columns are present", {
+
+  ## Will fail if not all the expected columns are present
+
+  ## Brood data: Test that all columns are present
+  test_col_present(pipeline_output, "Brood", pipeline_output$protocol_version)
+
+  ## Capture data: Test that all columns are present
+  test_col_present(pipeline_output, "Capture", pipeline_output$protocol_version)
+
+  ## Individual data: Test that all columns are present
+  test_col_present(pipeline_output, "Individual", pipeline_output$protocol_version)
+
+  ## Location data: Test that all columns are present
+  test_col_present(pipeline_output, "Location", pipeline_output$protocol_version)
+
+})
+
+test_that("Column classes are as expected", {
+
+  ## Will fail if columns that are shared by the output and the templates have different classes.
+
+  ## Brood data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Brood", pipeline_output$protocol_version)
+
+  ## Capture data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Capture", pipeline_output$protocol_version)
+
+  ## Individual data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Individual", pipeline_output$protocol_version)
+
+  ## Location data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Location", pipeline_output$protocol_version)
+
+})
+
+
+test_that("ID columns match the expected format for the pipeline", {
+
+  ## FemaleID format is as expected
+  test_ID_format(pipeline_output, column = "FemaleID", format = "^[A-Z]{1,}[0-9]{1,}$")
+
+  ## MaleID format is as expected
+  test_ID_format(pipeline_output, column = "MaleID", format = "^[A-Z]{1,}[0-9]{1,}$")
+
+  ## IndvID format in Capture data  is as expected
+  test_ID_format(pipeline_output, column = "IndvID", table = "Capture", format = "^[A-Z]{1,}[0-9]{1,}$")
+
+  ## IndvID format in Individual data is as expected
+  test_ID_format(pipeline_output, column = "IndvID", table = "Individual", format = "^[A-Z]{1,}[0-9]{1,}$")
+
+})
+
+
+test_that("Key columns only contain unique values", {
+
+  ## BroodID has only unique values
+  test_unique_values(pipeline_output, "BroodID")
+
+  ## CaptureID has only unique values
+  test_unique_values(pipeline_output, "CaptureID")
+
+  ## PopID-IndvID has only unique values
+  test_unique_values(pipeline_output, "IndvID")
+
+})
+
+
+test_that("Key columns in each table do not have NAs", {
+
+  ## Brood
+  test_NA_columns(pipeline_output, "Brood")
+
+  ## Capture
+  test_NA_columns(pipeline_output, "Capture")
+
+  ## Individual
+  test_NA_columns(pipeline_output, "Individual")
+
+  ## Location
+  test_NA_columns(pipeline_output, "Location")
+
+})
+
+
+test_that("Categorical columns do not have unexpected values", {
+
+  ## Brood
+  test_category_columns(pipeline_output, "Brood")
+
+  ## Capture
+  test_category_columns(pipeline_output, "Capture")
+
+  ## Individual
+  test_category_columns(pipeline_output, "Individual")
+
+  ## Location
+  test_category_columns(pipeline_output, "Location")
 
 })
