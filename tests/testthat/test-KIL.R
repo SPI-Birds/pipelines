@@ -144,12 +144,12 @@ test_that("Capture_data returns an expected outcome...", {
   KIL_data <- dplyr::filter(pipeline_output$Capture_data, CapturePopID == "KIL")
 
   #Test 1: Female caught as adult
-  #Test the female has the correct number of capture records (2)
-  expect_equal(nrow(subset(KIL_data, IndvID == "5991287")), 2)
+  #Test the female has the correct number of capture records (3)
+  expect_equal(nrow(subset(KIL_data, IndvID == "5802165")), 3)
   #Test the first capture of the female
-  expect_equal(subset(KIL_data, IndvID == "5991287")$Sex_observed[1], "F")
-  expect_equal(subset(KIL_data, IndvID == "5991287")$LocationID[1], "n71")
-  expect_equal(min(subset(KIL_data, IndvID == "5991287")$CaptureDate, na.rm = TRUE), as.Date("2000-07-10"))
+  expect_equal(subset(KIL_data, IndvID == "5802165")$Sex_observed[1], "F")
+  expect_equal(subset(KIL_data, IndvID == "5802165")$LocationID[1], "kn518")
+  expect_equal(min(subset(KIL_data, IndvID == "5802165")$CaptureDate, na.rm = TRUE), as.Date("1990-05-01"))
 
   #Test 2: Male caught as adult
   #Test the male has the correct number of capture records
@@ -188,23 +188,23 @@ test_that("Location_data returns an expected outcome...", {
 
   #Test 1: Nestbox evergreen
   #LocationType is as expected
-  expect_equal(subset(KIL_data, LocationID == "r18")$LocationType, "NB")
+  expect_equal(subset(KIL_data, LocationID == "r18c")$LocationType, "NB")
   #Habitat is as expected
-  expect_equal(subset(KIL_data, LocationID == "r18")$HabitatType, "evergreen")
+  expect_equal(subset(KIL_data, LocationID == "r18c")$HabitatType, "evergreen")
   #Start season
-  expect_equal(subset(KIL_data, LocationID == "r18")$StartSeason, 1995L)
+  expect_equal(subset(KIL_data, LocationID == "r18c")$StartSeason, 1995L)
   #End season
-  expect_equal(subset(KIL_data, LocationID == "r18")$EndSeason, NA_integer_)
+  expect_equal(subset(KIL_data, LocationID == "r18c")$EndSeason, NA_integer_)
 
   #Test 2: Nestbox
   #LocationType is as expected
-  expect_equal(subset(KIL_data, LocationID == "b170")$LocationType, "NB")
+  expect_equal(subset(KIL_data, LocationID == "b170d")$LocationType, "NB")
   #Habitat is as expected
-  expect_equal(subset(KIL_data, LocationID == "b170")$HabitatType, "deciduous")
+  expect_equal(subset(KIL_data, LocationID == "b170d")$HabitatType, "deciduous")
   #Start season
-  expect_equal(subset(KIL_data, LocationID == "b170")$StartSeason, 2000L)
+  expect_equal(subset(KIL_data, LocationID == "b170d")$StartSeason, 2000L)
   #End season
-  expect_equal(subset(KIL_data, LocationID == "b170")$EndSeason, NA_integer_)
+  expect_equal(subset(KIL_data, LocationID == "b170d")$EndSeason, NA_integer_)
 
   #Test 3: Nestbox
   #LocationType is as expected
@@ -218,13 +218,117 @@ test_that("Location_data returns an expected outcome...", {
 
   #Test 4: Nestbox
   #LocationType is as expected
-  expect_equal(subset(KIL_data, LocationID == "a22")$LocationType, "NB")
+  expect_equal(subset(KIL_data, LocationID == "a22c")$LocationType, "NB")
   #Habitat is as expected
-  expect_equal(subset(KIL_data, LocationID == "a22")$HabitatType, "evergreen")
+  expect_equal(subset(KIL_data, LocationID == "a22c")$HabitatType, "evergreen")
   #Start season
-  expect_equal(subset(KIL_data, LocationID == "a22")$StartSeason, 2001L)
+  expect_equal(subset(KIL_data, LocationID == "a22c")$StartSeason, 2001L)
   #End season
-  expect_equal(subset(KIL_data, LocationID == "a22")$EndSeason, NA_integer_)
+  expect_equal(subset(KIL_data, LocationID == "a22c")$EndSeason, NA_integer_)
+  #NestboxID
+  expect_equal(subset(KIL_data, LocationID == "a22c")$NestboxID, "a22")
 
 })
 
+## General tests
+
+test_that("Expected columns are present", {
+
+  ## Will fail if not all the expected columns are present
+
+  ## Brood data: Test that all columns are present
+  test_col_present(pipeline_output, "Brood", pipeline_output$protocol_version)
+
+  ## Capture data: Test that all columns are present
+  test_col_present(pipeline_output, "Capture", pipeline_output$protocol_version)
+
+  ## Individual data: Test that all columns are present
+  test_col_present(pipeline_output, "Individual", pipeline_output$protocol_version)
+
+  ## Location data: Test that all columns are present
+  test_col_present(pipeline_output, "Location", pipeline_output$protocol_version)
+
+})
+
+test_that("Column classes are as expected", {
+
+  ## Will fail if columns that are shared by the output and the templates have different classes.
+
+  ## Brood data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Brood", pipeline_output$protocol_version)
+
+  ## Capture data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Capture", pipeline_output$protocol_version)
+
+  ## Individual data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Individual", pipeline_output$protocol_version)
+
+  ## Location data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Location", pipeline_output$protocol_version)
+
+})
+
+
+test_that("ID columns match the expected format for the pipeline", {
+
+  ## FemaleID format is as expected
+  test_ID_format(pipeline_output, column = "FemaleID", format = "^[:digit:]{3,7}$")
+
+  ## MaleID format is as expected
+  test_ID_format(pipeline_output, column = "MaleID", format = "^[:digit:]{3,7}$$")
+
+  ## IndvID format in Capture data  is as expected
+  test_ID_format(pipeline_output, column = "IndvID", table = "Capture", format = "^[:digit:]{3,7}$")
+
+  ## IndvID format in Individual data is as expected
+  test_ID_format(pipeline_output, column = "IndvID", table = "Individual", format = "^[:digit:]{3,7}$")
+
+})
+
+
+test_that("Key columns only contain unique values", {
+
+  ## BroodID has only unique values
+  test_unique_values(pipeline_output, "BroodID")
+
+  ## CaptureID has only unique values
+  test_unique_values(pipeline_output, "CaptureID")
+
+  ## PopID-IndvID has only unique values
+  test_unique_values(pipeline_output, "IndvID")
+
+})
+
+
+test_that("Key columns in each table do not have NAs", {
+
+  ## Brood
+  test_NA_columns(pipeline_output, "Brood")
+
+  ## Capture
+  test_NA_columns(pipeline_output, "Capture")
+
+  ## Individual
+  test_NA_columns(pipeline_output, "Individual")
+
+  ## Location
+  test_NA_columns(pipeline_output, "Location")
+
+})
+
+
+test_that("Categorical columns do not have unexpected values", {
+
+  ## Brood
+  test_category_columns(pipeline_output, "Brood")
+
+  ## Capture
+  test_category_columns(pipeline_output, "Capture")
+
+  ## Individual
+  test_category_columns(pipeline_output, "Individual")
+
+  ## Location
+  test_category_columns(pipeline_output, "Location")
+
+})

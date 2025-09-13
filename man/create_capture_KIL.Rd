@@ -9,7 +9,8 @@ create_capture_KIL(
   adults_data_til92,
   chicks_data_til92,
   adults_data_95,
-  chicks_data_95
+  chicks_data_95,
+  protocol_version
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ create_capture_KIL(
 \item{adults_data_95}{Data frame. Primary adult capture data from Kilingi Nomme, Estonia from 1995 onwards.}
 
 \item{chicks_data_95}{Data frame. Primary chick capture data from Kilingi Nomme, Estonia from 1995 onwards.}
+
+\item{protocol_version}{Character string. The version of the standard protocol on which this pipeline is based.}
 }
 \value{
 A data frame.

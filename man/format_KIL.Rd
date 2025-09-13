@@ -62,4 +62,6 @@ Expressed as days after 31st of March: 1 = April 1st, 31 = May 1st, etc.Use nega
 We used 8 days.
 
 \strong{Location_data}: Coordinates of nestboxes can be provided by the data owner, we do not have them at this point.
+
+\strong{LocationID}: Some nestboxes seem to have moved between habitat types. To make a distinction between these two, LocationIDs are formatted as <NestboxID><habitat> (e.g., LocationID: 'a13c', NestboxID: 'a13'), where <habitat> is 'c' for coniferous and 'd' for deciduous habitats.
 }
