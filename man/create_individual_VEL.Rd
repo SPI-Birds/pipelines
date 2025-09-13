@@ -4,12 +4,14 @@
 \alias{create_individual_VEL}
 \title{Create individual data table for Velky Kosir.}
 \usage{
-create_individual_VEL(Capture_data)
+create_individual_VEL(Capture_data, protocol_version)
 }
 \arguments{
 \item{Capture_data}{Data frame. Combined data from
 \code{\link{create_capture_VEL_FICALB}} and
 \code{\link{create_capture_VEL_TIT}}.}
+
+\item{protocol_version}{Character string. The version of the standard protocol on which this pipeline is based.}
 }
 \value{
 A data frame.

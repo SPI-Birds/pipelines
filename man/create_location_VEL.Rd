@@ -4,7 +4,7 @@
 \alias{create_location_VEL}
 \title{Create location data table for Velky Kosir.}
 \usage{
-create_location_VEL(db, Brood_data, TIT_data)
+create_location_VEL(db, Brood_data, TIT_data, protocol_version)
 }
 \arguments{
 \item{db}{Location of database file.}
@@ -13,6 +13,8 @@ create_location_VEL(db, Brood_data, TIT_data)
 
 \item{TIT_data}{Data frame. Data frame. Tit data from Velky Kosir. This is
 needed to include habitat type information.}
+
+\item{protocol_version}{Character string. The version of the standard protocol on which this pipeline is based.}
 }
 \value{
 A data frame.

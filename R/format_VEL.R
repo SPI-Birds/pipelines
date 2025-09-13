@@ -92,7 +92,7 @@ format_VEL <- function(db = choose_directory(),
                                                                    rep("skip", 6),
                                                                    "text", "list", "text",
                                                                    "numeric", "numeric",
-                                                                   "numeric", rep("skip", 13),
+                                                                   "text", rep("skip", 13),
                                                                    "text", rep("skip", 16)))) %>%
     janitor::clean_names() %>%
     ## Date info is sometimes recorded as dd/mm/yyyy and sometimes as dd.mm.yyyy.
@@ -123,6 +123,8 @@ format_VEL <- function(db = choose_directory(),
                                 })) %>%
     tidyr::unnest(cols = c("laying_date", "hatching_date",
                            "date_of_capture_54", "date_of_capture_59")) %>%
+    # TODO: check with data owner about few records without laying date
+    tidyr::drop_na("laying_date") %>%
     ## CHANGE COL NAMES TO MATCH STANDARD FORMAT
     dplyr::mutate(PopID = "VEL",
                   BreedingSeason =
@@ -149,30 +151,31 @@ format_VEL <- function(db = choose_directory(),
                   ##TODO but we need to check this with data owner
                   ClutchSize_observed = as.integer(gsub(pattern = "\\+|\\?",
                                                         replacement = "", .data$clutch_size)),
-                  ClutchSize_min = dplyr::case_when(stringr::str_detect(.data$clutch_size, "\\?") ~ 1,
-                                                    TRUE ~ as.numeric(.data$ClutchSize_observed)),
-                  ClutchSize_max = dplyr::case_when(stringr::str_detect(.data$clutch_size, "\\+|\\?") ~ Inf,
-                                                    TRUE ~ as.numeric(.data$ClutchSize_observed)),
+                  ClutchSize_min = dplyr::case_when(stringr::str_detect(.data$clutch_size, "\\?") ~ 1L,
+                                                    TRUE ~ as.integer(.data$ClutchSize_observed)),
+                  ClutchSize_max = dplyr::case_when(stringr::str_detect(.data$clutch_size, "\\+|\\?") ~ NA_integer_,
+                                                    TRUE ~ as.integer(.data$ClutchSize_observed)),
                   HatchDate_observed = .data$hatching_date,
                   HatchDate_min = as.Date(NA),
                   HatchDate_max = as.Date(NA),
                   BroodSize_observed = as.integer(gsub(pattern = "\\+|\\?", replacement = "", .data$number_hatched)),
-                  BroodSize_min = dplyr::case_when(stringr::str_detect(.data$number_hatched, "\\?") ~ 1,
-                                                   TRUE ~ as.numeric(.data$BroodSize_observed)),
-                  BroodSize_max = dplyr::case_when(stringr::str_detect(.data$number_hatched, "\\+|\\?") ~ Inf,
-                                                   TRUE ~ as.numeric(.data$BroodSize_observed)),
+                  BroodSize_min = dplyr::case_when(stringr::str_detect(.data$number_hatched, "\\?") ~ 1L,
+                                                   TRUE ~ as.integer(.data$BroodSize_observed)),
+                  BroodSize_max = dplyr::case_when(stringr::str_detect(.data$number_hatched, "\\+|\\?") ~ NA_integer_,
+                                                   TRUE ~ as.integer(.data$BroodSize_observed)),
                   FledgeDate_observed = as.Date(NA),
                   FledgeDate_min = .data$FledgeDate_observed,
                   FledgeDate_max = .data$FledgeDate_observed,
                   NumberFledged_observed = as.integer(gsub(pattern = "\\+|\\?", replacement = "", .data$number_fledged)),
-                  NumberFledged_min = dplyr::case_when(stringr::str_detect(.data$number_fledged, "\\?") ~ 1,
-                                                       TRUE ~ as.numeric(.data$NumberFledged_observed)),
-                  NumberFledged_max = dplyr::case_when(stringr::str_detect(.data$number_fledged, "\\+|\\?") ~ Inf,
-                                                       TRUE ~ as.numeric(.data$NumberFledged_observed)),
+                  NumberFledged_min = dplyr::case_when(stringr::str_detect(.data$number_fledged, "\\?") ~ 1L,
+                                                       TRUE ~ as.integer(.data$NumberFledged_observed)),
+                  NumberFledged_max = dplyr::case_when(stringr::str_detect(.data$number_fledged, "\\+|\\?") ~ NA_integer_,
+                                                       TRUE ~ as.integer(.data$NumberFledged_observed)),
                   ##ADD EMPTY EGG COLS. NO EGG DATA.
                   AvgEggMass = NA_real_,
                   NumberEggs = NA_integer_,
-                  ExperimentID = .data$treatment) ##TODO: Categorize experimental descriptions
+                  ExperimentID = dplyr::case_when(!is.na(.data$treatment) ~ "COHORT",
+                                                  TRUE ~ NA_character_))
 
   ## No columns are excluded except row number and final col.
   ## Final col has some data, but no column name
@@ -236,36 +239,43 @@ format_VEL <- function(db = choose_directory(),
                   ## We assume that "+", "-", or "?" in ClutchSize, BroodSize, NumberFledged
                   ## is a measure of uncertainty,
                   ##TODO but we need to check this with data owner
-                  ClutchSize_observed = as.integer(gsub(pattern = "\\+|\\?",
-                                                        replacement = "", .data$clutch_size)),
-                  ClutchSize_min = dplyr::case_when(stringr::str_detect(.data$clutch_size, "\\?") ~ 1,
-                                                    TRUE ~ as.numeric(.data$ClutchSize_observed)),
-                  ClutchSize_max = dplyr::case_when(stringr::str_detect(.data$clutch_size, "\\+|\\?") ~ Inf,
-                                                    TRUE ~ as.numeric(.data$ClutchSize_observed)),
+                  # Also there are a couple of instances where one value is followed
+                  # by another value in parentheses. The value in parantheses is now ignored.
+                  ClutchSize_observed = as.integer(stringr::str_extract(.data$clutch_size, "^[:digit:]{1,2}")),
+                  ClutchSize_min = dplyr::case_when(stringr::str_detect(.data$clutch_size, "\\?") ~ 1L,
+                                                    TRUE ~ as.integer(.data$ClutchSize_observed)),
+                  ClutchSize_max = dplyr::case_when(stringr::str_detect(.data$clutch_size, "\\+|\\?") ~ NA_integer_,
+                                                    TRUE ~ as.integer(.data$ClutchSize_observed)),
                   HatchDate_observed = as.Date(NA),
                   HatchDate_min = as.Date(NA),
                   HatchDate_max = as.Date(NA),
                   BroodSize_observed = as.integer(gsub(pattern = "\\+|\\?",
                                                        replacement = "", .data$number_hatched)),
-                  BroodSize_min = dplyr::case_when(stringr::str_detect(.data$number_hatched, "\\?") ~ 1,
-                                                   TRUE ~ as.numeric(.data$BroodSize_observed)),
-                  BroodSize_max = dplyr::case_when(stringr::str_detect(.data$number_hatched, "\\+|\\?") ~ Inf,
-                                                   TRUE ~ as.numeric(.data$BroodSize_observed)),
+                  BroodSize_min = dplyr::case_when(stringr::str_detect(.data$number_hatched, "\\?") ~ 1L,
+                                                   TRUE ~ as.integer(.data$BroodSize_observed)),
+                  BroodSize_max = dplyr::case_when(stringr::str_detect(.data$number_hatched, "\\+|\\?") ~ NA_integer_,
+                                                   TRUE ~ as.integer(.data$BroodSize_observed)),
                   FledgeDate_observed = as.Date(NA),
                   FledgeDate_min = as.Date(NA),
                   FledgeDate_max = as.Date(NA),
-                  NumberFledged_observed = as.integer(gsub(pattern = "\\+|\\-|\\?",
-                                                           replacement = "", .data$number_fledged)),
-                  NumberFledged_min = dplyr::case_when(stringr::str_detect(.data$number_fledged, "\\-|.\\?") ~ 1,
-                                                       stringr::str_detect(.data$number_fledged, "^\\?") ~ NA_real_,
-                                                       TRUE ~ as.numeric(.data$NumberFledged_observed)),
-                  NumberFledged_max = dplyr::case_when(stringr::str_detect(.data$number_fledged, "\\+|.\\?") ~ Inf,
-                                                       stringr::str_detect(.data$number_fledged, "^\\?") ~ NA_real_,
-                                                       TRUE ~ as.numeric(.data$NumberFledged_observed)),
+                  NumberFledged_observed = dplyr::case_when(.data$number_fledged == "o"  ~ 0L,
+                                                            TRUE ~ as.integer(stringr::str_extract(.data$number_fledged, "^[:digit:]{1,2}"))),
+                  NumberFledged_min = dplyr::case_when(stringr::str_detect(.data$number_fledged, "\\-|.\\?") ~ 1L,
+                                                       stringr::str_detect(.data$number_fledged, "^\\?") ~ NA_integer_,
+                                                       TRUE ~ as.integer(.data$NumberFledged_observed)),
+                  NumberFledged_max = dplyr::case_when(stringr::str_detect(.data$number_fledged, "\\+|.\\?") ~ NA_integer_,
+                                                       stringr::str_detect(.data$number_fledged, "^\\?") ~ NA_integer_,
+                                                       TRUE ~ as.integer(.data$NumberFledged_observed)),
                   ##ADD EMPTY EGG DATA COLS.
                   AvgEggMass = NA_real_,
                   NumberEggs = NA_integer_,
-                  ExperimentID = .data$experiment, ##TODO: Categorize experimental descriptions
+                  ExperimentID = dplyr::case_when(.data$experiment == "none" ~ NA_character_,
+                                                  .data$experiment %in% c("full cross-fostering", "egg cross-fostering") ~ "PARENTAGE",
+                                                  .data$experiment %in% c("clutch collection", "brood size-1") ~ "COHORT",
+                                                  .data$experiment == "handicapping" ~ "SURVIVAL",
+                                                  .data$experiment %in% c("supplemental feeding lutein", "supplemental feeding control") ~ "PHENOLOGY",
+                                                  .data$experiment %in% c("conspecific nest", "heterospecific nest") ~ "OTHER",
+                                                  TRUE ~ NA_character_),
                   ## Estimate broodID last because it requires us to estimate LayDate first
                   BroodID = paste(.data$year, .data$plot, stringr::str_pad(string =.data$ nest_box,
                                                                            width = 3, pad = "0"),
@@ -291,6 +301,11 @@ format_VEL <- function(db = choose_directory(),
 
   Capture_data <- dplyr::bind_rows(create_capture_VEL_FICALB(FICALB_data),
                                    create_capture_VEL_TIT(TIT_data)) %>%
+    # Set non-conforming IndvIDs to NA
+    # TODO: check with data owner what the expected format is
+    dplyr::mutate(IndvID = dplyr::case_when(stringr::str_detect(.data$IndvID, "^[:alpha:]{1,2}[:digit:]{3,6}$") ~ .data$IndvID,
+                                            TRUE ~ NA_character_)) %>%
+    tidyr::drop_na("IndvID") %>%
     dplyr::ungroup() %>%
     dplyr::filter(.data$Species %in% species)
 
@@ -298,14 +313,14 @@ format_VEL <- function(db = choose_directory(),
 
   message("Compiling individual information...")
 
-  Individual_data <- create_individual_VEL(Capture_data) %>%
+  Individual_data <- create_individual_VEL(Capture_data, protocol_version) %>%
     dplyr::filter(.data$Species %in% species)
 
   # LOCATION DATA
 
   message("Compiling location information...")
 
-  Location_data <- create_location_VEL(db, Brood_data, TIT_data)
+  Location_data <- create_location_VEL(db, Brood_data, TIT_data, protocol_version)
 
   # WRANGLE DATA FOR EXPORT
 
@@ -325,21 +340,19 @@ format_VEL <- function(db = choose_directory(),
     dplyr::mutate(NumberChicksMass = dplyr::na_if(.data$NumberChicksMass, 0),
                   NumberChicksTarsus = dplyr::na_if(.data$NumberChicksTarsus, 0),
                   OriginalTarsusMethod = dplyr::case_when(!is.na(.data$AvgTarsus) ~ "Oxford")) %>%
-    dplyr::select("BroodID":"NumberEggs",
-                  "AvgChickMass":"NumberChicksTarsus",
-                  "OriginalTarsusMethod", "ExperimentID")
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Brood_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Brood_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Brood_data))
 
   Capture_data <- Capture_data %>%
-    dplyr::select("IndvID", "Species", "Sex_observed" = "Sex", 'BreedingSeason',
-                  "CaptureDate", "CaptureTime", "ObserverID", "LocationID",
-                  "CaptureAlive", "ReleaseAlive",
-                  'CapturePopID':"Tarsus", "OriginalTarsusMethod",
-                  "WingLength", "Age_observed", "Age_calculated", 'ChickAge',
-                  "ExperimentID") %>%
     dplyr::group_by(.data$IndvID) %>%
     dplyr::mutate(CaptureID = paste(.data$IndvID, 1:dplyr::n(), sep = "_")) %>%
     dplyr::ungroup() %>%
-    dplyr::select("CaptureID", tidyselect::everything())
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Capture_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Capture_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Capture_data))
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
@@ -409,7 +422,13 @@ create_brood_VEL <- function(FICALB_data, TIT_data) {
                   "ClutchType_observed", "ClutchType_calculated",
                   "LayDate_observed":"ExperimentID")
 
-  return(dplyr::bind_rows(FICALB_broods, TIT_broods))
+  Brood_data <- dplyr::bind_rows(FICALB_broods, TIT_broods) %>%
+    # Set non-conforming IDs to NA
+    # TODO: Check with data owner
+    dplyr::mutate(dplyr::across(c("FemaleID", "MaleID"),
+                                ~dplyr::case_when(stringr::str_detect(., "^[:alpha:]{1,2}[:digit:]{3,6}$") ~ .,
+                                                  TRUE ~ NA_character_)))
+  return(Brood_data)
 
 }
 
@@ -457,8 +476,10 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
     # If there is no hatch date OR laying date then just use NA
     dplyr::mutate(CaptureDate = dplyr::case_when(!is.na(.data$HatchDate_observed) ~ .data$HatchDate_observed + lubridate::days(.data$ChickAge),
                                                  !is.na(.data$LayDate_observed) ~ .data$LayDate_observed + lubridate::days(.data$ClutchSize_observed + 15 + .data$ChickAge),
-                                                 TRUE ~ as.Date(NA)),
-                  CaptureTime = NA_character_,
+                                                 TRUE ~ as.Date(NA))) %>%
+    ### TODO: When updating to v2.0.0, some records with missing CaptureDate can be kept if year is known
+    tidyr::drop_na("CaptureDate") %>%
+    dplyr::mutate(CaptureTime = NA_character_,
                   CapturePopID = "VEL",
                   CapturePlot = .data$Plot,
                   ReleasePopID = "VEL",
@@ -492,8 +513,9 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
     dplyr::mutate(Sex = stringr::str_sub(.data$Sex, 0, 1),
                   Tarsus = dplyr::case_when(.data$Sex == "F" ~ .data$tarsus_55,
                                             .data$Sex == "M" ~ .data$tarsus_61),
+                  # Drop character values in wing length for males
                   WingLength = dplyr::case_when(.data$Sex == "F" ~ .data$wing_57,
-                                                .data$Sex == "M" ~ .data$wing_63),
+                                                .data$Sex == "M" ~ as.numeric(stringr::str_extract(.data$wing_63, "^[:digit:]{2}\\.{0,1}[:digit:]{0,1}$"))),
                   Mass = dplyr::case_when(.data$Sex == "F" ~ .data$mass_56,
                                           .data$Sex == "M" ~ .data$mass_62),
                   # Determine age of males based on 'age' column
@@ -507,6 +529,8 @@ create_capture_VEL_FICALB <- function(FICALB_data) {
                   ObserverID = NA_character_,
                   CaptureDate = dplyr::case_when(.data$Sex == "F" ~ .data$date_of_capture_54,
                                                  .data$Sex == "M" ~ .data$date_of_capture_59)) %>%
+    ### TODO: When updating to v2.0.0, some records with missing CaptureDate can be kept if year is known
+    tidyr::drop_na("CaptureDate") %>%
     dplyr::mutate(Tarsus = convert_tarsus(.data$Tarsus, method = "Oxford"),
                   OriginalTarsusMethod = dplyr::case_when(!is.na(.data$Tarsus) ~ "Oxford")) %>%
     dplyr::select("Species", "BreedingSeason", "LocationID", "BroodID",
@@ -538,10 +562,12 @@ create_capture_VEL_TIT    <- function(TIT_data) {
   ## Assume that an individual was caught at the start of incubation.
   TIT_capture <- TIT_data %>%
     dplyr::filter(!is.na(.data$FemaleID)) %>%
+    ## Make the capture date the date that incubation would start (laying date + clutch size)
+    dplyr::mutate(CaptureDate = .data$LayDate_observed + .data$ClutchSize_observed,) %>%
+    ### TODO: When updating to v2.0.0, some records with missing CaptureDate can be kept if year is known
+    tidyr::drop_na("CaptureDate") %>%
     dplyr::mutate(Species = dplyr::case_when(.data$species == "blue tit" ~ species_codes[species_codes$speciesEURINGCode == 14620, ]$Species,
                                              .data$species == "great tit" ~ species_codes[species_codes$speciesEURINGCode == 14640, ]$Species),
-                  ## Make the capture date the date that incubation would start (laying date + clutch size)
-                  CaptureDate = .data$LayDate_observed + .data$ClutchSize_observed,
                   IndvID = .data$FemaleID,
                   CapturePopID = .data$PopID,
                   CapturePlot = .data$Plot,
@@ -575,10 +601,11 @@ create_capture_VEL_TIT    <- function(TIT_data) {
 #' @param Capture_data Data frame. Combined data from
 #'   \code{\link{create_capture_VEL_FICALB}} and
 #'   \code{\link{create_capture_VEL_TIT}}.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_individual_VEL <- function(Capture_data){
+create_individual_VEL <- function(Capture_data, protocol_version){
 
   pb <- progress::progress_bar$new(total = length(unique(Capture_data$IndvID)) * 1)
 
@@ -615,14 +642,16 @@ create_individual_VEL <- function(Capture_data){
 
                                                      }),
                      FirstBroodID = dplyr::first(.data$BroodID)) %>%
+    dplyr::ungroup() %>%
     dplyr::mutate(BroodIDLaid = dplyr::case_when(is.na(.data$RingAge) ~ NA_character_,
                                                  .data$RingAge == "adult" ~ NA_character_,
                                                  TRUE ~ .data$FirstBroodID),
                   BroodIDFledged = .data$BroodIDLaid,
                   Sex_genetic = NA_character_) %>%
-    dplyr::select("IndvID", "Species", "PopID", "BroodIDLaid", "BroodIDFledged",
-                  "RingSeason", "RingAge", "Sex_calculated", "Sex_genetic") %>%
-    dplyr::ungroup()
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Individual_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Individual_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Individual_data))
 
   return(Indvidual_data)
 
@@ -636,10 +665,11 @@ create_individual_VEL <- function(Capture_data){
 #' @param TIT_data Data frame. Data frame. Tit data from Velky Kosir. This is
 #'   needed to include habitat type information.
 #' @param db Location of database file.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_location_VEL <- function(db, Brood_data, TIT_data){
+create_location_VEL <- function(db, Brood_data, TIT_data, protocol_version){
 
   location_data_excel <- readxl::read_excel(paste0(db, "/VEL_PrimaryData_locations.xls"),
                                             col_types = c("text")) %>%
@@ -686,6 +716,13 @@ create_location_VEL <- function(db, Brood_data, TIT_data){
     ## Exclude locations that were already in the location data excel file.
     dplyr::filter(!.data$LocationID %in% location_data_excel$LocationID)
 
-  return(dplyr::bind_rows(location_data_excel, location_data_nocoords))
+  Location_data <- dplyr::bind_rows(location_data_excel,
+                                    location_data_nocoords) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Location_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Location_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Location_data))
+
+  return(Location_data)
 
 }
