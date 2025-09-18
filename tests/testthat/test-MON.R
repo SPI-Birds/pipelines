@@ -20,58 +20,50 @@ test_that("Brood_data returns an expected outcome...", {
   MON_data <- dplyr::filter(pipeline_output$Brood_data, PopID %in% c("MUR", "PIR", "ROU", "MON", "MTV", "MIS"))
 
   #Test 1: Brood where clutch type = first
-  expect_equal(subset(MON_data, BroodID == "1984_pir_35_1")$Species, "CYACAE")
-  expect_equal(subset(MON_data, BroodID == "1984_pir_35_1")$ClutchType_calculated, "first")
-  expect_equal(subset(MON_data, BroodID == "1984_pir_35_1")$LayingDate, as.Date("1984-05-02"))
-  expect_equal(subset(MON_data, BroodID == "1984_pir_35_1")$ClutchSize, 5)
-  expect_equal(subset(MON_data, BroodID == "1984_pir_35_1")$BroodSize, 4)
-  expect_equal(subset(MON_data, BroodID == "1984_pir_35_1")$NumberFledged, 0)
-  expect_equal(subset(MON_data, BroodID == "1984_pir_35_1")$AvgChickMass, NA_real_)
-  expect_equal(subset(MON_data, BroodID == "1984_pir_35_1")$AvgTarsus, NA_real_)
+  expect_equal(subset(MON_data, BroodID == "1984_pir_35_123")$Species, "CYACAE")
+  expect_equal(subset(MON_data, BroodID == "1984_pir_35_123")$ClutchType_calculated, "first")
+  expect_equal(subset(MON_data, BroodID == "1984_pir_35_123")$LayingDate, as.Date("1984-05-02"))
+  expect_equal(subset(MON_data, BroodID == "1984_pir_35_123")$ClutchSize, 5)
+  expect_equal(subset(MON_data, BroodID == "1984_pir_35_123")$BroodSize, 4)
+  expect_equal(subset(MON_data, BroodID == "1984_pir_35_123")$NumberFledged, 0)
+  expect_equal(subset(MON_data, BroodID == "1984_pir_35_123")$AvgChickMass, NA_real_)
+  expect_equal(subset(MON_data, BroodID == "1984_pir_35_123")$AvgTarsus, NA_real_)
 
   #Test 2: Brood where clutch type = replacement (because first is known to have failed)
-  expect_equal(subset(MON_data, BroodID == "1980_pir_36_3")$Species, "CYACAE")
-  expect_equal(subset(MON_data, BroodID == "1980_pir_36_3")$ClutchType_calculated, "replacement")
-  expect_equal(subset(MON_data, BroodID == "1980_pir_36_3")$LayingDate, as.Date("1980-05-30"))
-  expect_equal(subset(MON_data, BroodID == "1980_pir_36_3")$ClutchSize, 5)
-  expect_equal(subset(MON_data, BroodID == "1980_pir_36_3")$BroodSize, 5)
-  expect_equal(subset(MON_data, BroodID == "1980_pir_36_3")$NumberFledged, 5)
-  expect_equal(subset(MON_data, BroodID == "1980_pir_36_3")$AvgChickMass, NA_real_)
-  expect_equal(subset(MON_data, BroodID == "1980_pir_36_3")$AvgTarsus, NA_real_)
+  expect_equal(subset(MON_data, BroodID == "1980_pir_36_151")$Species, "CYACAE")
+  expect_equal(subset(MON_data, BroodID == "1980_pir_36_151")$ClutchType_calculated, "replacement")
+  expect_equal(subset(MON_data, BroodID == "1980_pir_36_151")$LayingDate, as.Date("1980-05-30"))
+  expect_equal(subset(MON_data, BroodID == "1980_pir_36_151")$ClutchSize, 5)
+  expect_equal(subset(MON_data, BroodID == "1980_pir_36_151")$BroodSize, 5)
+  expect_equal(subset(MON_data, BroodID == "1980_pir_36_151")$NumberFledged, 5)
+  expect_equal(subset(MON_data, BroodID == "1980_pir_36_151")$AvgChickMass, NA_real_)
+  expect_equal(subset(MON_data, BroodID == "1980_pir_36_151")$AvgTarsus, NA_real_)
 
   #Test 3: Brood where clutch type = replacement (past the cutoff)
-  expect_equal(subset(MON_data, BroodID == "1984_pir_47_3")$Species, "CYACAE")
-  expect_equal(subset(MON_data, BroodID == "1984_pir_47_3")$ClutchType_calculated, "replacement")
-  expect_equal(subset(MON_data, BroodID == "1984_pir_47_3")$LayingDate, as.Date("1984-06-10"))
-  expect_equal(subset(MON_data, BroodID == "1984_pir_47_3")$ClutchSize, 7)
-  expect_equal(subset(MON_data, BroodID == "1984_pir_47_3")$BroodSize, 7)
-  expect_equal(subset(MON_data, BroodID == "1984_pir_47_3")$NumberFledged, 7)
-  expect_equal(subset(MON_data, BroodID == "1984_pir_47_3")$AvgChickMass, NA_real_)
-  expect_equal(subset(MON_data, BroodID == "1984_pir_47_3")$AvgTarsus, NA_real_)
+  expect_equal(subset(MON_data, BroodID == "1984_pir_47_162")$Species, "CYACAE")
+  expect_equal(subset(MON_data, BroodID == "1984_pir_47_162")$ClutchType_calculated, "replacement")
+  expect_equal(subset(MON_data, BroodID == "1984_pir_47_162")$LayingDate, as.Date("1984-06-10"))
+  expect_equal(subset(MON_data, BroodID == "1984_pir_47_162")$ClutchSize, 7)
+  expect_equal(subset(MON_data, BroodID == "1984_pir_47_162")$BroodSize, 7)
+  expect_equal(subset(MON_data, BroodID == "1984_pir_47_162")$NumberFledged, 7)
+  expect_equal(subset(MON_data, BroodID == "1984_pir_47_162")$AvgChickMass, NA_real_)
+  expect_equal(subset(MON_data, BroodID == "1984_pir_47_162")$AvgTarsus, NA_real_)
 
   #Test 4: Brood where clutch type = second
-  expect_equal(subset(MON_data, BroodID == "1992_rou_90_2")$Species, "PARMAJ")
-  expect_equal(subset(MON_data, BroodID == "1992_rou_90_2")$ClutchType_calculated, "second")
-  expect_equal(subset(MON_data, BroodID == "1992_rou_90_2")$LayingDate, as.Date("1992-05-20"))
-  expect_equal(subset(MON_data, BroodID == "1992_rou_90_2")$ClutchSize, 8)
-  expect_equal(subset(MON_data, BroodID == "1992_rou_90_2")$BroodSize, 2)
-  expect_equal(subset(MON_data, BroodID == "1992_rou_90_2")$NumberFledged, 1)
-  expect_equal(subset(MON_data, BroodID == "1992_rou_90_2")$AvgChickMass, NA_real_)
-  expect_equal(subset(MON_data, BroodID == "1992_rou_90_2")$AvgTarsus, NA_real_)
+  expect_equal(subset(MON_data, BroodID == "1992_rou_90_141")$Species, "PARMAJ")
+  expect_equal(subset(MON_data, BroodID == "1992_rou_90_141")$ClutchType_calculated, "second")
+  expect_equal(subset(MON_data, BroodID == "1992_rou_90_141")$LayingDate, as.Date("1992-05-20"))
+  expect_equal(subset(MON_data, BroodID == "1992_rou_90_141")$ClutchSize, 8)
+  expect_equal(subset(MON_data, BroodID == "1992_rou_90_141")$BroodSize, 2)
+  expect_equal(subset(MON_data, BroodID == "1992_rou_90_141")$NumberFledged, 1)
+  expect_equal(subset(MON_data, BroodID == "1992_rou_90_141")$AvgChickMass, NA_real_)
+  expect_equal(subset(MON_data, BroodID == "1992_rou_90_141")$AvgTarsus, NA_real_)
 
   #Test 5: BroodID has FemaleID that does not match proper ID format
-  expect_equal(subset(MON_data, BroodID == "2016_gram_39_1")$FemaleID, NA_character_)
+  expect_equal(subset(MON_data, BroodID == "2016_gram_39_104")$FemaleID, NA_character_)
 
   #Test 6: BroodID has MaleID that does not match proper ID format
-  expect_equal(subset(MON_data, BroodID == "2012_font_15_1")$MaleID, NA_character_)
-
-  #Test 7: FemaleIDs only contain numbers and all are 6-8 characters long
-  expect_true(all(nchar(MON_data$FemaleID[!is.na(MON_data$FemaleID)]) %in% c(6,7,8) &
-                    stringr::str_detect(MON_data$FemaleID[!is.na(MON_data$FemaleID)], "^[:digit:]+$")))
-
-  #Test 8: MaleIDs only contain numbers and all are 6-8 characters long
-  expect_true(all(nchar(MON_data$MaleID[!is.na(MON_data$MaleID)]) %in% c(6,7,8)
-                  & stringr::str_detect(MON_data$MaleID[!is.na(MON_data$MaleID)], "^[:digit:]+$")))
+  expect_equal(subset(MON_data, BroodID == "2012_font_15_93")$MaleID, NA_character_)
 
 })
 
@@ -110,8 +102,8 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(subset(MON_data, IndvID == "8189538")$Species, "PARMAJ")
   #Check that BroodIDLaid/Fledged are as expected
   #This individual was not cross-fostered, so they should be the same
-  expect_equal(subset(MON_data, IndvID == "8189538")$BroodIDLaid, "2017_rou_28_2")
-  expect_equal(subset(MON_data, IndvID == "8189538")$BroodIDFledged, "2017_rou_28_2")
+  expect_equal(subset(MON_data, IndvID == "8189538")$BroodIDLaid, "2017_rou_28_141")
+  expect_equal(subset(MON_data, IndvID == "8189538")$BroodIDFledged, "2017_rou_28_141")
   #Ring season should be 2017 with a RingAge of 'chick'
   expect_equal(subset(MON_data, IndvID == "8189538")$RingSeason, 2017)
   expect_equal(subset(MON_data, IndvID == "8189538")$RingAge, "chick")
@@ -122,8 +114,8 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(subset(MON_data, IndvID == "2221172")$Sex, NA_character_)
   expect_equal(subset(MON_data, IndvID == "2221172")$Species, "CYACAE")
   #Check that BroodIDLaid/Fledged are as expected
-  expect_equal(subset(MON_data, IndvID == "2221172")$BroodIDLaid, "1991_pir_103_1")
-  expect_equal(subset(MON_data, IndvID == "2221172")$BroodIDFledged, "1991_pir_89_1")
+  expect_equal(subset(MON_data, IndvID == "2221172")$BroodIDLaid, "1991_pir_103_135")
+  expect_equal(subset(MON_data, IndvID == "2221172")$BroodIDFledged, "1991_pir_89_134")
   #RingSeason and Age are as expected
   expect_equal(subset(MON_data, IndvID == "2221172")$RingSeason, 1991)
   expect_equal(subset(MON_data, IndvID == "2221172")$RingAge, "chick")
@@ -133,15 +125,11 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(subset(MON_data, IndvID == "7207569")$Sex, "M")
   expect_equal(subset(MON_data, IndvID == "7207569")$Species, "CYACAE")
   #Check that BroodIDLaid/Fledged are as expected
-  expect_equal(subset(MON_data, IndvID == "7207569")$BroodIDLaid, "2014_fil_11_1")
-  expect_equal(subset(MON_data, IndvID == "7207569")$BroodIDFledged, "2014_ava_13_1")
+  expect_equal(subset(MON_data, IndvID == "7207569")$BroodIDLaid, "2014_fil_11_101")
+  expect_equal(subset(MON_data, IndvID == "7207569")$BroodIDFledged, "2014_ava_13_101")
   #RingSeason and Age are as expected
   expect_equal(subset(MON_data, IndvID == "7207569")$RingSeason, 2014)
   expect_equal(subset(MON_data, IndvID == "7207569")$RingAge, "chick")
-
-  #Test 6: IndvIDs only contain numbers and all are 6-8 characters long
-  expect_true(all(nchar(MON_data$IndvID[!is.na(MON_data$IndvID)]) %in% c(6,7,8) &
-                    stringr::str_detect(MON_data$IndvID[!is.na(MON_data$IndvID)], "^[:digit:]+$")))
 
 })
 
@@ -154,20 +142,19 @@ test_that("Capture data returns an expected outcome...", {
   MON_data <- dplyr::filter(pipeline_output$Capture_data, CapturePopID %in% c("MUR", "PIR", "ROU", "MON", "MTV", "MIS"))
 
   #Test 1: Individual ringed as a chick
-  #Test the female has the correct number of capture records
-  expect_equal(nrow(subset(MON_data, IndvID == "2709339")), 6)
-  #Test that the first capture is as expected
-  #This should be NA because no date was recorded for first capture.
-  expect_equal(subset(MON_data, IndvID == "2709339")$CaptureDate[1], as.Date(NA))
-  #Test that the 6th capture of the female is as expcted (1987-06-08)
-  expect_equal(subset(MON_data, IndvID == "2709339")$CaptureDate[6], as.Date("1987-06-08"))
+  #Test the chick has the correct number of capture records
+  expect_equal(nrow(subset(MON_data, IndvID == "7531247")), 11)
+  #Test that the first capture is as expected (2015-05-27)
+  expect_equal(subset(MON_data, IndvID == "7531247")$CaptureDate[1], as.Date("2015-05-27"))
+  #Test that the last capture is as expected (1987-06-08)
+  expect_equal(subset(MON_data, IndvID == "7531247")$CaptureDate[11], as.Date("2022-06-10"))
   #Test that age observed is as expected on first capture
   #Test that age observed is as expected on 6th capture
-  expect_equal(subset(MON_data, IndvID == "2709339")$Age_observed[1], 1L)
-  expect_equal(subset(MON_data, IndvID == "2709339")$Age_observed[6], 13L)
+  expect_equal(subset(MON_data, IndvID == "7531247")$Age_observed[1], 1)
+  expect_equal(subset(MON_data, IndvID == "7531247")$Age_observed[11], 17)
   #Test that age calculated is correct on first capture and last capture
-  expect_equal(subset(MON_data, IndvID == "2709339")$Age_calculated[1], 1L)
-  expect_equal(subset(MON_data, IndvID == "2709339")$Age_calculated[6], 13L)
+  expect_equal(subset(MON_data, IndvID == "7531247")$Age_calculated[1], 1)
+  expect_equal(subset(MON_data, IndvID == "7531247")$Age_calculated[11], 17)
 
   #Test 2: Female caught only as adult
   #Test it has the correct number of capture records
@@ -213,9 +200,6 @@ test_that("Capture data returns an expected outcome...", {
   #Test that capture and release are different
   expect_equal(subset(MON_data, IndvID == "4486371")$CapturePlot[7], "mur")
   expect_equal(subset(MON_data, IndvID == "4486371")$ReleasePlot[7], "aul")
-
-  #Test 5: IndvIDs are all properly formatted
-  expect_true(all(nchar(MON_data$IndvID) %in% c(6,7,8) & stringr::str_detect(MON_data$IndvID, "^[:digit:]+$")))
 
 })
 
@@ -283,5 +267,108 @@ test_that("Location_data returns an expected outcome...", {
   #Check that latitude and longitude are as expected
   expect_equal(round(subset(MON_data, LocationID == "pir_14_MN")$Latitude, 2) %>% setNames(nm = NULL), 42.38)
   expect_equal(round(subset(MON_data, LocationID == "pir_14_MN")$Longitude, 2) %>% setNames(nm = NULL), 8.75)
+
+})
+
+## General tests
+
+test_that("Expected columns are present", {
+
+  ## Will fail if not all the expected columns are present
+
+  ## Brood data: Test that all columns are present
+  test_col_present(pipeline_output, "Brood", pipeline_output$protocol_version)
+
+  ## Capture data: Test that all columns are present
+  test_col_present(pipeline_output, "Capture", pipeline_output$protocol_version)
+
+  ## Individual data: Test that all columns are present
+  test_col_present(pipeline_output, "Individual", pipeline_output$protocol_version)
+
+  ## Location data: Test that all columns are present
+  test_col_present(pipeline_output, "Location", pipeline_output$protocol_version)
+
+})
+
+test_that("Column classes are as expected", {
+
+  ## Will fail if columns that are shared by the output and the templates have different classes.
+
+  ## Brood data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Brood", pipeline_output$protocol_version)
+
+  ## Capture data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Capture", pipeline_output$protocol_version)
+
+  ## Individual data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Individual", pipeline_output$protocol_version)
+
+  ## Location data: Test that all column classes are expected
+  test_col_classes(pipeline_output, "Location", pipeline_output$protocol_version)
+
+})
+
+
+test_that("ID columns match the expected format for the pipeline", {
+
+  ## FemaleID format is as expected
+  test_ID_format(pipeline_output, column = "FemaleID", format = "^[:digit:]{6,8}$")
+
+  ## MaleID format is as expected
+  test_ID_format(pipeline_output, column = "MaleID", format = "^[:digit:]{6,8}$")
+
+  ## IndvID format in Capture data  is as expected
+  test_ID_format(pipeline_output, column = "IndvID", table = "Capture", format = "^[:digit:]{6,8}$")
+
+  ## IndvID format in Individual data is as expected
+  test_ID_format(pipeline_output, column = "IndvID", table = "Individual", format = "^[:digit:]{6,8}$")
+
+})
+
+
+test_that("Key columns only contain unique values", {
+
+  ## BroodID has only unique values
+  test_unique_values(pipeline_output, "BroodID")
+
+  ## CaptureID has only unique values
+  test_unique_values(pipeline_output, "CaptureID")
+
+  ## PopID-IndvID has only unique values
+  test_unique_values(pipeline_output, "IndvID")
+
+})
+
+
+test_that("Key columns in each table do not have NAs", {
+
+  ## Brood
+  test_NA_columns(pipeline_output, "Brood")
+
+  ## Capture
+  test_NA_columns(pipeline_output, "Capture")
+
+  ## Individual
+  test_NA_columns(pipeline_output, "Individual")
+
+  ## Location
+  test_NA_columns(pipeline_output, "Location")
+
+})
+
+
+test_that("Categorical columns do not have unexpected values", {
+
+  ## Brood
+  test_category_columns(pipeline_output, "Brood")
+
+  ## Capture
+  test_category_columns(pipeline_output, "Capture")
+
+  ## Individual
+  test_category_columns(pipeline_output, "Individual")
+
+  ## Location
+  test_category_columns(pipeline_output, "Location")
 
 })
