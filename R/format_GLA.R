@@ -88,9 +88,7 @@ format_GLA <- function(db = choose_directory(),
 
     ## There are two formats for dates.
     ## The first can be handled with Lubridate, the second needs to be rearranged
-    dplyr::mutate(dplyr::across(.cols = c(.data$FirstEggDate,
-                                          .data$LayingComplete,
-                                          .data$ObservedHatch),
+    dplyr::mutate(dplyr::across(.cols = c("FirstEggDate", "LayingComplete", "ObservedHatch"),
                                 .fns = ~suppressWarnings(dplyr::case_when(grepl("/", .) ~ lubridate::dmy(., quiet = TRUE),
                                                                           TRUE ~ lubridate::ymd(paste(unlist(stringr::str_split(as.character(janitor::excel_numeric_to_date(as.numeric(.))),
                                                                                                                                 pattern = "-"))[c(1,3,2)],
@@ -391,8 +389,7 @@ create_brood_GLA <- function(nest_data, rr_data, protocol_version) {
                   "Species" = "Species_j") %>%
 
   ## If FemaleID or MaleID differs from expected format, set to NA
-  dplyr::mutate(dplyr::across(.cols = c(.data$FemaleID,
-                                        .data$MaleID),
+  dplyr::mutate(dplyr::across(.cols = c("FemaleID", "MaleID"),
                               .fns = ~dplyr::case_when(stringr::str_detect(., "^[[:digit:][:alpha:]]{7}$") ~ .,
                                                        TRUE ~ NA_character_))) %>%
 
@@ -604,7 +601,7 @@ create_individual_GLA <- function(Capture_data, Brood_data, protocol_version){
                        dplyr::group_by(.data$BreedingSeason, .data$PopID, .data$LocationID) %>%
                        dplyr::filter(.data$BroodID == dplyr::last(.data$BroodID)) %>%
                        dplyr::select("BreedingSeason", "PopID", "LocationID", "BroodID") %>%
-                       dplyr::rename(BroodIDLaid = .data$BroodID),
+                       dplyr::rename("BroodIDLaid" = "BroodID"),
                      by = c("BreedingSeason", "PopID", "LocationID")) %>%
 
     ## Add back in filtered records
