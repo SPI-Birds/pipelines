@@ -437,17 +437,15 @@ format_PFN <- function(db = choose_directory(),
 
     message("Saving .csv files...")
 
-    utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_PFN.csv"), row.names = FALSE)
+    utils::write.csv(x = Brood_data, file = paste0(path, "/Brood_data_PFN.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_PFN.csv"), row.names = FALSE)
+    utils::write.csv(x = Individual_data, file = paste0(path, "/Individual_data_PFN.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Capture_data %>%
-                       dplyr::select(-"Sex", -"BroodID"),
-                     file = paste0(path, "\\Capture_data_PFN.csv"), row.names = FALSE)
+    utils::write.csv(x = Capture_data, file = paste0(path, "/Capture_data_PFN.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_PFN.csv"), row.names = FALSE)
+    utils::write.csv(x = Location_data, file = paste0(path, "/Location_data_PFN.csv"), row.names = FALSE)
 
-    utils::write.table(x = protocol_version, file = paste0(path, "\\protocol_version_PFN.txt"),
+    utils::write.table(x = protocol_version, file = paste0(path, "/protocol_version_PFN.txt"),
                        quote = FALSE, row.names = FALSE, col.names = FALSE)
 
     invisible(NULL)
@@ -854,14 +852,14 @@ create_capture_PFN <- function(Nest_data, IPMR_data, ReRingTable, species_filter
       ),
 
       CaptureTime = dplyr::case_when(
-        is.na(CaptureDate) ~ NA_character_,
+        is.na(.data$CaptureDate) ~ NA_character_,
         .data$CaptureDate == .data$CaptureDate_IPMR ~ .data$CaptureTime,
         TRUE ~ NA_character_
       ),
       # NOTE: Think about having criteria for defining certain types of CaptureTimes as NA (e.g. 00:00)
 
       ObserverID = dplyr::case_when(
-        is.na(CaptureDate) ~ NA_character_,
+        is.na(.data$CaptureDate) ~ NA_character_,
         .data$CaptureDate == .data$CaptureDate_IPMR ~ .data$ObserverID,
         TRUE ~ NA_character_
       ),
@@ -1004,7 +1002,7 @@ create_capture_PFN <- function(Nest_data, IPMR_data, ReRingTable, species_filter
 
     ## 6) Remove records without CaptureDate (mostly KAT)
     # FIXME Can be resolved when updated to protocol v2.0.0
-    dplyr::filter(!is.na(CaptureDate)) %>%
+    dplyr::filter(!is.na(.data$CaptureDate)) %>%
 
     ## 7) Add PopID prefix to LocationID to avoid duplicates across sites within PFN
     dplyr::mutate(LocationID = dplyr::case_when(!is.na(.data$LocationID) ~ paste(.data$CapturePopID, .data$LocationID, sep = "_"),

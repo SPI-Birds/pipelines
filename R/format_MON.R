@@ -191,16 +191,15 @@ format_MON <- function(db = choose_directory(),
 
     message("Saving .csv files...")
 
-    utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_MON.csv"), row.names = FALSE)
+    utils::write.csv(x = Brood_data, file = paste0(path, "/Brood_data_MON.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_MON.csv"), row.names = FALSE)
+    utils::write.csv(x = Individual_data, file = paste0(path, "/Individual_data_MON.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Capture_data %>% dplyr::select(-"Sex", -"BroodID"),
-                     file = paste0(path, "\\Capture_data_MON.csv"), row.names = FALSE)
+    utils::write.csv(x = Capture_data, file = paste0(path, "/Capture_data_MON.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_MON.csv"), row.names = FALSE)
+    utils::write.csv(x = Location_data, file = paste0(path, "/Location_data_MON.csv"), row.names = FALSE)
 
-    utils::write.table(x = protocol_version, file = paste0(path, "\\protocol_version_MON.txt"),
+    utils::write.table(x = protocol_version, file = paste0(path, "/protocol_version_MON.txt"),
                        quote = FALSE, row.names = FALSE, col.names = FALSE)
 
     invisible(NULL)
@@ -235,7 +234,7 @@ format_MON <- function(db = choose_directory(),
 
 create_capture_MON <- function(db, species_filter, pop_filter){
 
-  Full_capture_data <- utils::read.csv(paste0(db, "\\", "MON_PrimaryData_MORPH.csv"), na.strings = "") %>%
+  Full_capture_data <- utils::read.csv(paste0(db, "/MON_PrimaryData_MORPH.csv"), na.strings = "") %>%
     #There is a potential issue in excel that numbers are stored as text in the excel sheets.
     #These can easily be coerced back to numerics, but this throws many warnings,
     #which will masks any real problematic coercion issues (e.g. NA introduced by coercion)
@@ -563,7 +562,7 @@ create_capture_MON <- function(db, species_filter, pop_filter){
 
 create_brood_MON <- function(db, species_filter, pop_filter){
 
-  Brood_data <- utils::read.csv(paste0(db, "\\", "MON_PrimaryData_DEMO.csv"), na.strings = "") %>%
+  Brood_data <- utils::read.csv(paste0(db, "/MON_PrimaryData_DEMO.csv"), na.strings = "") %>%
     dplyr::mutate(dplyr::across(c(21:36), as.character)) %>%
     dplyr::mutate(Species = dplyr::case_when(.data$espece == "ble" ~ species_codes$Species[which(species_codes$speciesEURINGCode == 14620)],
                                              .data$espece == "noi" ~ species_codes$Species[which(species_codes$speciesEURINGCode == 14610)],
@@ -923,14 +922,14 @@ create_individual_MON <- function(Capture_data, Brood_data, protocol_version, ve
 create_location_MON <- function(db, Capture_data, Brood_data, protocol_version){
 
   #Load lat/long for nest boxes
-  nestbox_latlong <- utils::read.csv(paste0(db, "\\", "MON_PrimaryData_NestBoxLocation.csv"), na.strings = "") %>%
+  nestbox_latlong <- utils::read.csv(paste0(db, "/MON_PrimaryData_NestBoxLocation.csv"), na.strings = "") %>%
     dplyr::filter(!is.na(.data$latitude)) %>%
     dplyr::mutate(LocationID_join = paste(.data$abr_station, .data$nichoir, sep = "_")) %>%
     dplyr::select("LocationID_join", "latitude", "longitude") %>%
     dplyr::mutate(dplyr::across(c("latitude":"longitude"), as.numeric))
 
   #There are some nestboxes outside the study area
-  nestbox_latlong_outside <- utils::read.csv(paste0(db, "\\", "MON_PrimaryData_OffSiteLocation.csv"), na.strings = "") %>%
+  nestbox_latlong_outside <- utils::read.csv(paste0(db, "/MON_PrimaryData_OffSiteLocation.csv"), na.strings = "") %>%
     dplyr::filter(!is.na(.data$la)) %>%
     dplyr::mutate(LocationID_join = paste(.data$st, .data$ni_localisation, sep = "_"),
                   latitude = .data$la,
