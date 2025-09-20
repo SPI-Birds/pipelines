@@ -51,7 +51,7 @@ format_AMM <- function(db = choose_directory(),
   force(db)
 
   # Assign to database location
-  dsn <- paste0(gsub("\\\\", "/", db), "\\AMM_PrimaryData.accdb")
+  dsn <- paste0(gsub("\\\\", "/", db), "/AMM_PrimaryData.accdb")
 
   # Assign species for filtering
   # If no species are specified, all species are included
@@ -149,15 +149,15 @@ format_AMM <- function(db = choose_directory(),
 
     message("Saving .csv files...")
 
-    utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_AMM.csv"), row.names = FALSE)
+    utils::write.csv(x = Brood_data, file = paste0(path, "/Brood_data_AMM.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_AMM.csv"), row.names = FALSE)
+    utils::write.csv(x = Capture_data, file = paste0(path, "/Capture_data_AMM.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_AMM.csv"), row.names = FALSE)
+    utils::write.csv(x = Individual_data, file = paste0(path, "/Individual_data_AMM.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_AMM.csv"), row.names = FALSE)
+    utils::write.csv(x = Location_data, file = paste0(path, "/Location_data_AMM.csv"), row.names = FALSE)
 
-    utils::write.table(x = protocol_version, file = paste0(path, "\\protocol_version_AMM.txt"),
+    utils::write.table(x = protocol_version, file = paste0(path, "/protocol_version_AMM.txt"),
                        quote = FALSE, row.names = FALSE, col.names = FALSE)
 
 

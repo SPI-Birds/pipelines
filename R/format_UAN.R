@@ -98,13 +98,13 @@ format_UAN <- function(db = choose_directory(),
 
   message("\nLoading all files")
 
-  BOX_info <- readxl::read_excel(paste0(db, "\\", "UAN_PrimaryData_BOX.xlsx"),
+  BOX_info <- readxl::read_excel(paste0(db, "/UAN_PrimaryData_BOX.xlsx"),
                                  col_types = c("text", "numeric", "numeric",
                                                "numeric", "numeric", "text",
                                                "text", "text", "text", "numeric",
                                                "numeric", "numeric"))
 
-  BROOD_info <- readxl::read_excel(paste0(db, "\\", "UAN_PrimaryData_BR.xlsx"),
+  BROOD_info <- readxl::read_excel(paste0(db, "/UAN_PrimaryData_BR.xlsx"),
                                   col_types = c(rep("text", 6),
                                                 rep("numeric", 6),
                                                 rep("text", 5),
@@ -121,7 +121,7 @@ format_UAN <- function(db = choose_directory(),
 
                                 }))
 
-  INDV_info <- readxl::read_excel(paste0(db, "\\", "UAN_PrimaryData_IND.xlsx"),
+  INDV_info <- readxl::read_excel(paste0(db, "/UAN_PrimaryData_IND.xlsx"),
                                   col_types = c("text", "text", "text",
                                                 "numeric", "text", "text",
                                                 "text", "text", "text",
@@ -138,12 +138,12 @@ format_UAN <- function(db = choose_directory(),
                                 }))
 
   ## TODO: Should PLOT_info be loaded and used?
-  PLOT_info <- readxl::read_excel(paste0(db, "\\", "UAN_PrimaryData_PLOT.xlsx"),
+  PLOT_info <- readxl::read_excel(paste0(db, "/UAN_PrimaryData_PLOT.xlsx"),
                                   col_types = c(rep("text", 4),
                                                 rep("numeric", 6),
                                                 rep("text", 3)))
 
-  CAPTURE_info <- readxl::read_excel(paste0(db, "\\", "UAN_PrimaryData_vG.xlsx"),
+  CAPTURE_info <- readxl::read_excel(paste0(db, "/UAN_PrimaryData_vG.xlsx"),
                                      col_types = c(rep("text", 11),
                                                    "numeric", "text",
                                                    rep("text", 3),
@@ -342,15 +342,15 @@ format_UAN <- function(db = choose_directory(),
 
     message("\nSaving .csv files...")
 
-    utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_UAN.csv"), row.names = FALSE)
+    utils::write.csv(x = Brood_data, file = paste0(path, "/Brood_data_UAN.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_UAN.csv"), row.names = FALSE)
+    utils::write.csv(x = Individual_data, file = paste0(path, "/Individual_data_UAN.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_UAN.csv"), row.names = FALSE)
+    utils::write.csv(x = Capture_data, file = paste0(path, "/Capture_data_UAN.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_UAN.csv"), row.names = FALSE)
+    utils::write.csv(x = Location_data, file = paste0(path, "/Location_data_UAN.csv"), row.names = FALSE)
 
-    utils::write.table(x = protocol_version, file = paste0(path, "\\protocol_version_UAN.txt"),
+    utils::write.table(x = protocol_version, file = paste0(path, "/protocol_version_UAN.txt"),
                        quote = FALSE, row.names = FALSE, col.names = FALSE)
 
     invisible(NULL)
