@@ -4,12 +4,14 @@
 \alias{create_location_AMM}
 \title{Create location data table for Ammersee, Germany.}
 \usage{
-create_location_AMM(Capture_data, dir)
+create_location_AMM(Capture_data, dir, protocol_version)
 }
 \arguments{
 \item{Capture_data}{Data frame. Output from \code{\link{create_capture_AMM}}.}
 
 \item{dir}{Path to directory containing the relevant table exports from the AMM Access database.}
+
+\item{protocol_version}{Character string. The version of the standard protocol on which this pipeline is based.}
 }
 \value{
 A data frame.

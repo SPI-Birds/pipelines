@@ -4,7 +4,7 @@
 \alias{create_individual_AMM}
 \title{Create individual data table for Ammersee, Germany}
 \usage{
-create_individual_AMM(Capture_data, Brood_data, dir)
+create_individual_AMM(Capture_data, Brood_data, dir, protocol_version)
 }
 \arguments{
 \item{Capture_data}{Data frame. Output from \code{\link{create_capture_AMM}}.}
@@ -12,6 +12,8 @@ create_individual_AMM(Capture_data, Brood_data, dir)
 \item{Brood_data}{Data frame. Output from \code{\link{create_brood_AMM}}.}
 
 \item{dir}{Path to directory containing the relevant table exports from the AMM Access database.}
+
+\item{protocol_version}{Character string. The version of the standard protocol on which this pipeline is based.}
 }
 \value{
 A data frame.
