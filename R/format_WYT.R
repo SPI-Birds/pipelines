@@ -232,7 +232,7 @@ format_WYT <- function(db = choose_directory(),
     )
 
   time <- difftime(
-    ys.time(), start_time,
+    Sys.time(), start_time,
     units = "sec"
   )
 
@@ -309,8 +309,17 @@ format_WYT <- function(db = choose_directory(),
   }
 }
 
+# Small function to find EURING species code
+get_species_by_euring <- function(code) {
+  if (missing(code) || is.null(code)) {
+    return(NA_character_)
+  }
+  tmp <- species_codes$Species[species_codes$speciesEURINGCode == code]
+  if (length(tmp) == 0) NA_character_ else tmp[1]
+}
+
 #------------------------------------------------------------------------------
-# FUNCTION TO CREATE THE 4 TABLES
+# FUNCTIONS TO CREATE THE 4 TABLES
 #------------------------------------------------------------------------------
 
 #' Create brood data table for Wytham Woods
@@ -324,45 +333,33 @@ format_WYT <- function(db = choose_directory(),
 #'
 #' @return A data frame with Brood data
 
-create_brood_WYT <- function(db, species_filter){
-
+create_brood_WYT <- function(db, species_filter) {
   Brood_data_raw <- utils::read.csv(
     paste0(
-        db,
-        "/WYT_PrimaryData_Brood.csv"
-      ),
-      header = T,
-      sep = ",",
-      stringsAsFactors = FALSE
-    ) %>%
+      db,
+      "/WYT_PrimaryData_Brood.csv"
+    ),
+    header = T,
+    sep = ",",
+    stringsAsFactors = FALSE
+  ) %>%
     janitor::clean_names()
 
   Brood_data <- Brood_data_raw %>%
-    #Rename columns to meet our standard format
+    # Rename columns to meet our standard format
     dplyr::mutate(
       BreedingSeason = .data$year,
       LocationID = toupper(.data$nestbox),
       PopID = "WYT",
       Plot = toupper(.data$section),
       Species = dplyr::case_when(
-        .data$species == "b" ~ species_codes[
-          species_codes$speciesEURINGCode == 14620
-        ]$Species,
-        .data$species == "g" ~ species_codes[
-          species_codes$speciesEURINGCode == 14640
-        ]$Species,
-        .data$species == "c" ~ species_codes[
-          species_codes$speciesEURINGCode == 14610
-        ]$Species,
-        .data$species == "n" ~ species_codes[
-          species_codes$speciesEURINGCode == 14790
-        ]$Species,
-        .data$species == "m" ~ species_codes[
-          species_codes$speciesEURINGCode == 14400
-        ]$Species
+        .data$species == "b" ~ get_species_by_euring(14620),
+        .data$species == "g" ~ get_species_by_euring(14640),
+        .data$species == "c" ~ get_species_by_euring(14610),
+        .data$species == "n" ~ get_species_by_euring(14790),
+        .data$species == "m" ~ get_species_by_euring(14400)
       )
-    )
-
+    ) %>%
     dplyr::filter(
       .data$Species %in% species_filter
     ) %>%
@@ -428,8 +425,10 @@ create_brood_WYT <- function(db, species_filter){
       )
     )
 
+  # Remove rows with empty LocationID
+  Brood_data <- Brood_data %>%
+    dplyr::filter(!is.na(.data$LocationID) & .data$LocationID != "")
   return(Brood_data)
-
 }
 
 #' Create capture data table for Wytham Woods
@@ -455,14 +454,10 @@ create_capture_WYT <- function(db, Brood_data, species_filter) {
   Chick_captures_old <- Chick_captures_old %>%
     dplyr::mutate(
       Species = dplyr::case_when(
-        toupper(.data$species_code) == "GRETI" ~ species_codes[
-          species_codes$speciesEURINGCode == 14640, ]$Species,
-        toupper(.data$species_code) == "BLUTI" ~ species_codes[
-          species_codes$speciesEURINGCode == 14620, ]$Species,
-        toupper(.data$species_code) == "COATI" ~ species_codes[
-          species_codes$speciesEURINGCode == 14610, ]$Species,
-        toupper(.data$species_code) == "MARTI" ~ species_codes[
-          species_codes$speciesEURINGCode == 14400, ]$Species
+        toupper(.data$species_code) == "GRETI" ~ get_species_by_euring(14640),
+        toupper(.data$species_code) == "BLUTI" ~ get_species_by_euring(14620),
+        toupper(.data$species_code) == "COATI" ~ get_species_by_euring(14610),
+        toupper(.data$species_code) == "MARTI" ~ get_species_by_euring(14400)
       )
     ) %>%
     dplyr::filter(
@@ -472,8 +467,8 @@ create_capture_WYT <- function(db, Brood_data, species_filter) {
       CaptureDate = dplyr::case_when(
         !is.na(.data$date_time) &
           .data$date_time != "" ~ janitor::excel_numeric_to_date(
-            as.numeric(
-              .data$date_time
+          as.numeric(
+            .data$date_time
           )
         ),
         TRUE ~ as.Date(NA)
@@ -519,10 +514,12 @@ create_capture_WYT <- function(db, Brood_data, species_filter) {
       Tarsus = dplyr::case_when(
         is.na(.data$tarsus_length) ~ NA_real_,
         is.na(.data$tarsus_length_method) ~ convert_tarsus(
-          as.numeric(.data$tarsus_length), method = "Oxford"
+          as.numeric(.data$tarsus_length),
+          method = "Oxford"
         ),
         .data$tarsus_length_method == "M" ~ convert_tarsus(
-          as.numeric(.data$tarsus_length), method = "Oxford"
+          as.numeric(.data$tarsus_length),
+          method = "Oxford"
         ),
         TRUE ~ as.numeric(.data$tarsus_length)
       ),
@@ -568,16 +565,11 @@ create_capture_WYT <- function(db, Brood_data, species_filter) {
   Chick_captures_new <- Chick_captures_new %>%
     dplyr::mutate(
       Species = dplyr::case_when(
-        toupper(.data$bto_species_code) == "GRETI" ~ species_codes[
-          species_codes$speciesEURINGCode == 14640, ]$Species,
-        toupper(.data$bto_species_code) == "BLUTI" ~ species_codes[
-          species_codes$speciesEURINGCode == 14620, ]$Species,
-        toupper(.data$bto_species_code) == "COATI" ~ species_codes[
-          species_codes$speciesEURINGCode == 14610, ]$Species,
-        toupper(.data$bto_species_code) == "MARTI" ~ species_codes[
-          species_codes$speciesEURINGCode == 14400, ]$Species,
-        toupper(.data$bto_species_code) == "NUTHA" ~ species_codes[
-          species_codes$speciesEURINGCode == 14790, ]$Species
+        toupper(.data$bto_species_code) == "GRETI" ~ get_species_by_euring(14640),
+        toupper(.data$bto_species_code) == "BLUTI" ~ get_species_by_euring(14620),
+        toupper(.data$bto_species_code) == "COATI" ~ get_species_by_euring(14610),
+        toupper(.data$bto_species_code) == "MARTI" ~ get_species_by_euring(14400),
+        toupper(.data$bto_species_code) == "NUTHA" ~ get_species_by_euring(14790)
       ),
       CaptureDate = dplyr::case_when(
         !is.na(.data$date_time) & .data$date_time != "" ~ janitor::excel_numeric_to_date(
@@ -627,10 +619,12 @@ create_capture_WYT <- function(db, Brood_data, species_filter) {
       Tarsus = dplyr::case_when(
         is.na(.data$tarsus_length) ~ NA_real_,
         is.na(.data$tarsus_length_method) ~ convert_tarsus(
-          as.numeric(.data$tarsus_length), method = "Oxford"
+          as.numeric(.data$tarsus_length),
+          method = "Oxford"
         ),
         toupper(.data$tarsus_length_method) == "M" ~ convert_tarsus(
-          as.numeric(.data$tarsus_length), method = "Oxford"
+          as.numeric(.data$tarsus_length),
+          method = "Oxford"
         ),
         TRUE ~ as.numeric(.data$tarsus_length)
       ),
@@ -657,10 +651,12 @@ create_capture_WYT <- function(db, Brood_data, species_filter) {
       Tarsus = dplyr::case_when(
         is.na(.data$tarsus_length) ~ NA_real_,
         is.na(.data$tarsus_length_method) ~ convert_tarsus(
-          as.numeric(.data$tarsus_length), method = "Oxford"
+          as.numeric(.data$tarsus_length),
+          method = "Oxford"
         ),
         toupper(.data$tarsus_length_method) == "M" ~ convert_tarsus(
-          as.numeric(.data$tarsus_length), method = "Oxford"
+          as.numeric(.data$tarsus_length),
+          method = "Oxford"
         ),
         TRUE ~ as.numeric(.data$tarsus_length)
       ),
@@ -709,9 +705,15 @@ create_capture_WYT <- function(db, Brood_data, species_filter) {
       by = c("BroodIDLaid" = "BroodID")
     ) %>%
     dplyr::mutate(
+      # Rewrote this to avoid negative chick ages
+      # ensure date diff is correct
       ChickAge = dplyr::case_when(
-        .data$Age_observed == 1 ~ as.integer(
-          .data$CaptureDate - .data$HatchDate_observed
+        Age_observed == 1 ~ pmax(
+          0L,
+          as.integer(difftime(CaptureDate,
+            HatchDate_observed,
+            units = "days"
+          ))
         ),
         TRUE ~ NA_integer_
       ),
@@ -726,11 +728,15 @@ create_capture_WYT <- function(db, Brood_data, species_filter) {
     ) %>%
     dplyr::mutate(
       CaptureID = paste(
-        .data$IndvID, 1:dplyr::n(), sep = "_"
+        .data$IndvID, 1:dplyr::n(),
+        sep = "_"
       )
     ) %>%
     dplyr::ungroup()
 
+  # Remove rows with empty LocationID
+  Capture_data <- Capture_data %>%
+    dplyr::filter(!is.na(.data$LocationID) & .data$LocationID != "")
   return(Capture_data)
 }
 
@@ -782,9 +788,10 @@ create_individual_WYT <- function(Capture_data, protocol_version) {
     ) %>%
     # Add missing columns
     dplyr::bind_cols(
-      data_templates[[paste0("v", protocol_version)]]$Individual_data[1,
+      data_templates[[paste0("v", protocol_version)]]$Individual_data[
+        1,
         !(names(data_templates[[paste0("v", protocol_version)]]$Individual_data)
-          %in% names(.))
+        %in% names(.))
       ]
     ) %>%
     # Keep only columns that are in the standard format and order correctly
@@ -815,11 +822,14 @@ create_location_WYT <- function(Brood_data, Capture_data, protocol_version) {
     EndSeason = NA_integer_,
     HabitatType = "deciduous"
   ) %>%
+    # Remove any empty or NA LocationID / NestboxID rows
+    dplyr::filter(!is.na(.data$LocationID) & .data$LocationID != "") %>%
     # Add missing columns
     dplyr::bind_cols(
-      data_templates[[paste0("v", protocol_version)]]$Location_data[1,
+      data_templates[[paste0("v", protocol_version)]]$Location_data[
+        1,
         !(names(data_templates[[paste0("v", protocol_version)]]$Location_data)
-          %in% names(.))
+        %in% names(.))
       ]
     ) %>%
     # Keep only columns that are in the standard format and order correctly
@@ -827,5 +837,10 @@ create_location_WYT <- function(Brood_data, Capture_data, protocol_version) {
       names(data_templates[[paste0("v", protocol_version)]]$Location_data)
     )
 
+  # Remove rows with empty LocationID
+  # They should have been removed from Capture_data and Brood_data already
+  # but just to be sure
+  Location_data <- Location_data %>%
+    dplyr::filter(!is.na(.data$LocationID) & .data$LocationID != "")
   return(Location_data)
 }
