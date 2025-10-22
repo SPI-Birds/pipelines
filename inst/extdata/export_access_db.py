@@ -56,7 +56,7 @@ def export_access_db(dsn, table, output_dir, header=True, delim=",", quote='"'):
             
             # Write to CSV file
             with open(out_file, 'w', newline='', encoding='utf-8') as csvfile:
-                # Get column names
+                # Get column names and store them in a list
                 columns = list(table_data.keys())
                 
                 # Run the csv_writer function with the input parameters
@@ -66,22 +66,29 @@ def export_access_db(dsn, table, output_dir, header=True, delim=",", quote='"'):
                 else:
                     csv_writer = csv.writer(csvfile, delimiter=delim, quoting=csv.QUOTE_NONE)
                 
-                # Write header if requested
+                # Write header if specified
                 if header and columns:
                     csv_writer.writerow(columns)
                 
                 # Write data rows
-                if columns:
-                    # Get the number of rows, assume all columns have the same length
-                    num_rows = len(table_data[columns[0]]) if columns else 0
+                if columns: # Run the following logic on all columns
+                    # We run on all columns to prevent manually specifying what columns we should transform
+                    # It should only transform columns with datetime, date, time or in string format that matches datetime patterns
+                    # Might need changes later
+
+                    # Get the number of rows
+                    num_rows = len(table_data[columns[0]]) if columns == True else 0
                     
                     for row_index in range(num_rows):
-                        # Build the row, converting datetime-like values to ISO format
+                        # Convert to the correct date format
                         row = []
                         for col in columns:
                             val = table_data[col][row_index]
 
                             # Format datetime to be consistent with rJackcess format
+                            # Constantly validate in what format the datetime is stored
+                            # Otherwise, errors with Dplyr and Lubridate in the R code might pop up
+
                             if isinstance(val, (datetime, date, time)):
                                 if isinstance(val, datetime):
                                     # Format as YYYY-MM-DDTHH:MM to match rJackcess
@@ -92,6 +99,8 @@ def export_access_db(dsn, table, output_dir, header=True, delim=",", quote='"'):
                                 elif isinstance(val, time):
                                     # Format as HH:MM to match rJackcess
                                     val = val.strftime('%H:%M')
+
+                            # If the value is a string, we can check if it with a regrex pattern
                             elif isinstance(val, str):
                                 # Convert datetime strings to consistent format
                                 # Check for full datetime pattern with optional seconds
