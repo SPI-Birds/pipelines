@@ -20,53 +20,49 @@
 #' @importFrom rjackcess SimpleExportFilter Database
 #' @export
 
-export_access_db <- function(dsn,
-                             table,
-                             output_dir,
-                             header = TRUE,
-                             delim = ",",
-                             quote = '"',
-                             filter = rjackcess::SimpleExportFilter()$INSTANCE) {
-
-  if(!grepl("\\\\|\\/", output_dir)) {
-
+export_access_db_rjackcess <- function(dsn,
+                                       table,
+                                       output_dir,
+                                       header = TRUE,
+                                       delim = ",",
+                                       quote = '"',
+                                       filter = rjackcess::SimpleExportFilter()$INSTANCE) {
+  if (!grepl("\\\\|\\/", output_dir)) {
     stop("`output_dir` should be a character vector giving the path to a directory")
-
   }
 
   # Initialise Jackcess object to interact with MS Access database
   db <- rjackcess::Database(dsn)
 
   # Create directory where new files will be created
-  if(!dir.exists(output_dir)) {
-
+  if (!dir.exists(output_dir)) {
     dir.create(output_dir, recursive = TRUE)
-
   }
 
   # Retrieve non-exported ExportUtilBuilder from rjackcess
   ExportUtilBuilder <- utils::getFromNamespace("ExportUtilBuilder", "rjackcess")
 
-  purrr::walk(.x = table,
-              .f = ~{
+  purrr::walk(
+    .x = table,
+    .f = ~ {
+      out_file <- paste0(output_dir, "/", .x, ".csv")
 
-                out_file <- paste0(output_dir, "/", .x, ".csv")
-
-                # Call the Jackcess exportFile utility class to export table .x to csv
-                ExportUtilBuilder()$exportFile(db,
-                                               .x,
-                                               rJava::.jnew("java/io/File", path.expand(out_file)),
-                                               header,
-                                               delim,
-                                               rJava::.jchar(quote),
-                                               filter)
-
-              })
+      # Call the Jackcess exportFile utility class to export table .x to csv
+      ExportUtilBuilder()$exportFile(
+        db,
+        .x,
+        rJava::.jnew("java/io/File", path.expand(out_file)),
+        header,
+        delim,
+        rJava::.jchar(quote),
+        filter
+      )
+    }
+  )
 
 
   # Close connection to database
   db$close()
 
   invisible(NULL)
-
 }
