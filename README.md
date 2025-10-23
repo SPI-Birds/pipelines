@@ -95,7 +95,7 @@ Pipelines for some populations require additional software and drivers. Setup in
 
 - Java
 - Python 3
-- Python libraries _pandas_ and _pypxlib_
+- Python libraries _pandas_, _pypxlib_ and _access-parser_
 
 ---
 
@@ -114,7 +114,9 @@ Once installed, open the 'Anaconda prompt' and type:
 
 `pip install pypxlib`
 
-This will install the _pypxlib_ library on your system.
+`pip install access-parser`
+
+This will install the _pypxlib_ and _access-parser_ libraries on your system.
 
 Restart your computer before running the pipelines.
 
@@ -159,11 +161,12 @@ The following notes detail how to set up the python environment on MacOS, includ
 - Install `pypxlib` library from within R: `py_install("pypxlib", pip = TRUE)`
   (Since this is an external library hosted on GitHub, you need to specify installation via pip)
 
-- Check that both libraries are now available:
+- Check that all libraries are now available:
 
 ```
 reticulate::py_module_available("pandas")
 reticulate::py_module_available("pypxlib")
+reticulate::py_module_available("access-parser")
 ```
 
 (Both commands should return TRUE)
