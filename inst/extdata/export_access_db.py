@@ -77,7 +77,7 @@ def export_access_db(dsn, table, output_dir, header=True, delim=",", quote='"'):
                     # Might need changes later
 
                     # Get the number of rows
-                    num_rows = len(table_data[columns[0]]) if columns == True else 0
+                    num_rows = len(table_data[columns[0]]) if columns else 0
                     
                     for row_index in range(num_rows):
                         # Convert to the correct date format

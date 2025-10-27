@@ -59,7 +59,7 @@
 #'@importFrom utils read.csv
 #'@importFrom rjackcess getTableNames
 
-format_NIOO <- function(db = choose_directory(),
+format_NIOO_python <- function(db = choose_directory(),
                         species = NULL,
                         pop = NULL,
                         path = ".",
@@ -97,7 +97,7 @@ format_NIOO <- function(db = choose_directory(),
 
   table_dir <- paste0(db, "/NIOO_PrimaryData_tables")
 
-  export_access_db(dsn,
+  export_access_db_python(dsn,
                    table = access_tables,
                    output_dir = table_dir)
 
