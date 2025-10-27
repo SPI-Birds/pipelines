@@ -6,6 +6,7 @@
 # First, load some usefull libraries:
 library(here)
 library(dplyr)
+library(reticulate)
 
 # Set the working directory
 if (basename(here()) != "pipelines") {

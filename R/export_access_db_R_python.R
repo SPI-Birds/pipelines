@@ -69,9 +69,6 @@ export_access_db_python <- function(dsn,
         stop("Package 'reticulate' is required but not installed.\nPlease install it with: install.packages('reticulate')")
     }
 
-    # Load reticulate
-    library(reticulate)
-
     # Check if Python script exists
     if (!file.exists(python_script)) {
         stop(paste("Python script not found:", python_script))
