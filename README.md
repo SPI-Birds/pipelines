@@ -101,11 +101,6 @@ Pipelines for some populations require additional software and drivers. Setup in
 
 #### Windows 10 64-bit
 
-##### Java
-
-Please make sure you install Java that matches your R architecture, so make sure to use the 64-bit version of Java when you use the 64-bit version of R.
-`rJava`, the package that allows us to use Java from R, determines the Java location from the registry, so make sure you use the official [Oracle installer](https://www.java.com/en/) so that your Java installation can be found.
-
 ##### Python 3
 
 To install Python, we recommend using the [Anaconda distribution](https://www.anaconda.com/distribution/). **_Make sure to download the 3.X version of Python_**. The Anaconda distribution comes with some libraries (including _pandas_) pre-loaded.
@@ -127,14 +122,6 @@ To generate the pdf quality check report on Windows you will need to have instal
 An alternative LaTeX distribution that works well in R is [`TinyTeX`](https://yihui.org/tinytex/).
 
 #### Mac
-
-##### Java
-
-Modern MacOS versions no longer supply Java, so it must be downloaded from third parties. The most commonly used distributions are [adoptium.net](https://adoptium.net/) and [Azul Zulu](https://www.azul.com/downloads/).
-
-When installing from a zip or tar ball, put your Java installation in `/Library/Java/JavaVirtualMachines`. For example, if installing Zulu, unpack/move it such that it results in `/Library/Java/JavaVirtualMachines/zulu-11.jdk`.
-
-`rJava`, the package that allows us to use Java from R, will try to automatically detect the Java location and load it dynamically. You can also check the version selected by your settings via `/usr/libexec/java_home` in the Terminal.
 
 ##### Python 3 for Mac
 

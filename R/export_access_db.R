@@ -57,7 +57,7 @@
 #'
 #' @importFrom reticulate source_python
 #' @export
-export_access_db_python <- function(dsn,
+export_access_db <- function(dsn,
                                     table,
                                     output_dir,
                                     header = TRUE,

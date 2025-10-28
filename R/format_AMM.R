@@ -38,11 +38,11 @@
 #' @return 4 data tables in the standard format (version 1.1.0). When `output_type = "R"`, a list of 4 data frames corresponding to the 4 standard data tables and 1 character vector indicating the protocol version on which the pipeline is based. When `output_type = "csv"`, 4 .csv files corresponding to the 4 standard data tables and 1 text file indicating the protocol version on which the pipeline is based.
 #' @export
 
-format_AMM_rjackcess <- function(db = choose_directory(),
-                                 path = ".",
-                                 species = NULL,
-                                 pop = NULL,
-                                 output_type = "R") {
+format_AMM <- function(db = choose_directory(),
+                       path = ".",
+                       species = NULL,
+                       pop = NULL,
+                       output_type = "R") {
   # The version of the standard protocol on which this pipeline is based
   protocol_version <- "1.1.0"
 
@@ -72,7 +72,7 @@ format_AMM_rjackcess <- function(db = choose_directory(),
 
   table_dir <- paste0(db, "/AMM_PrimaryData_tables")
 
-  export_access_db_rjackcess(dsn,
+  export_access_db(dsn,
     table = access_tables,
     output_dir = table_dir
   )

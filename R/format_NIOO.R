@@ -97,7 +97,7 @@ format_NIOO_python <- function(db = choose_directory(),
 
   table_dir <- paste0(db, "/NIOO_PrimaryData_tables")
 
-  export_access_db_python(dsn,
+  export_access_db(dsn,
                    table = access_tables,
                    output_dir = table_dir)
 
