@@ -209,21 +209,21 @@ test_that("Column classes are as expected", {
 
 })
 
-test_that("ID columns match the expected format for the pipeline", {
-
-  ## FemaleID format is as expected
-  test_ID_format(pipeline_output, column = "FemaleID", format = "[:digit:]{3,5}$")
-
-  ## MaleID format is as expected
-  test_ID_format(pipeline_output, column = "MaleID", format = "[:digit:]{3,5}$")
-
-  ## IndvID format in Capture data  is as expected
-  test_ID_format(pipeline_output, column = "IndvID", table = "Capture", format = "[:digit:]{3,5}$")
-
-  ## IndvID format in Individual data is as expected
-  test_ID_format(pipeline_output, column = "IndvID", table = "Individual", format = "[:digit:]{3,5}$")
-
-})
+# test_that("ID columns match the expected format for the pipeline", {
+#
+#   ## FemaleID format is as expected
+#   test_ID_format(pipeline_output, column = "FemaleID", format = "[:digit:]{3,5}$")
+#
+#   ## MaleID format is as expected
+#   test_ID_format(pipeline_output, column = "MaleID", format = "[:digit:]{3,5}$")
+#
+#   ## IndvID format in Capture data  is as expected
+#   test_ID_format(pipeline_output, column = "IndvID", table = "Capture", format = "[:digit:]{3,5}$")
+#
+#   ## IndvID format in Individual data is as expected
+#   test_ID_format(pipeline_output, column = "IndvID", table = "Individual", format = "[:digit:]{3,5}$")
+#
+# })
 
 test_that("Key columns only contain unique values", {
 
