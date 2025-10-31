@@ -28,21 +28,21 @@
 #' @examples
 #' \dontrun{
 #' # Export single table
-#' export_access_db_wrapper(
+#' export_access_db(
 #'     dsn = "AMM_Ammersee_Germany/AMM_PrimaryData.accdb",
 #'     table = "Broods",
 #'     output_dir = "exported_data"
 #' )
 #'
 #' # Export multiple tables
-#' export_access_db_wrapper(
+#' export_access_db(
 #'     dsn = "AMM_Ammersee_Germany/AMM_PrimaryData.accdb",
 #'     table = c("Broods", "Catches", "Chicks"),
 #'     output_dir = "exported_data"
 #' )
 #'
 #' # Export with custom CSV formatting
-#' export_access_db_wrapper(
+#' export_access_db(
 #'     dsn = "database.accdb",
 #'     table = "MyTable",
 #'     output_dir = "output",
