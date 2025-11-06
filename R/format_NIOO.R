@@ -57,7 +57,6 @@
 #'@import rlang
 #'@importFrom dplyr `%>%`
 #'@importFrom utils read.csv
-#'@importFrom rjackcess getTableNames
 
 format_NIOO <- function(db = choose_directory(),
                         species = NULL,
@@ -85,15 +84,19 @@ format_NIOO <- function(db = choose_directory(),
                      "dbo_vw_MI_CaptureCaptureData", "dbo_tbl_NestboxAppearance")
 
 
+  ## We don't have an equivalent of this check in our new Python-based export function
+  # so, greyed out for now.
+  # If we need a similar solution, it can be added later.
+
   # Check if any of the relevant tables is missing in the Access database file
-  missing_tables <- access_tables[!(access_tables %in% rjackcess::getTableNames(rjackcess::Database(dsn)))]
+  #missing_tables <- access_tables[!(access_tables %in% rjackcess::getTableNames(rjackcess::Database(dsn)))]
 
-  if(any(!(access_tables %in% rjackcess::getTableNames(rjackcess::Database(dsn))))) {
+  #if(any(!(access_tables %in% rjackcess::getTableNames(rjackcess::Database(dsn))))) {
 
-    stop(paste("The Access database does not contain these primary tables:\n",
-               paste0("'", missing_tables, "'", collapse = ", ")))
+  #  stop(paste("The Access database does not contain these primary tables:\n",
+  #             paste0("'", missing_tables, "'", collapse = ", ")))
 
-  }
+  #}
 
   table_dir <- paste0(db, "/NIOO_PrimaryData_tables")
 
@@ -348,8 +351,27 @@ create_brood_NIOO <- function(dir, location_data, species_filter, pop_filter){
     # There is no explicit information about minimum values (except for ClutchSizeMinimum)
     ##FIXME: Translate HatchDateAccuracy into min & max
     ##FIXME: Translate ExperimentID to the standard format
-    dplyr::mutate(ExperimentID = dplyr::na_if(.data$ExperimentCode, c("")),
-                  HatchDate_observed = lubridate::ymd(.data$HatchDate),
+
+    # Make a vector that contains the translation between ExperimentCode and ExperimentID
+    # Since we have 200+ unique ExperimentCodes, this approach avoids having
+    # lengthy case_when statements
+    experiment_translation <- c( # quick demonstration
+      "test_Diet" = "Phenology",
+      "test100_Diet" = "Phenology"
+    )
+
+  Brood_data <- Brood_data %>%
+    dplyr::mutate(
+      # Create ExperimentID with translation
+      # 1. If empty or whitespace -> NA
+      # 2. If matches translation -> use translated value
+      # 3. Otherwise -> "OTHER"
+      ExperimentID = dplyr::case_when(
+        is.na(.data$ExperimentCode) | nchar(trimws(.data$ExperimentCode)) == 0 ~ NA_character_,
+        .data$ExperimentCode %in% names(experiment_translation) ~ experiment_translation[.data$ExperimentCode],
+        TRUE ~ "OTHER"
+      ),
+      HatchDate_observed = lubridate::ymd(.data$HatchDate),
                   LayDate_observed = lubridate::ymd(.data$LayDate),
                   LayDate_max = .data$LayDate_observed + .data$LayDateDeviation,
                   FledgeDate_observed = lubridate::ymd(.data$FledgeDate),
