@@ -31,7 +31,13 @@ this argument can be ignored.}
 \item{output_type}{Should the pipeline generate .csv files ('csv') or R objects ('R').}
 }
 \value{
-4 data tables in the standard format (version 1.1.0). When `output_type = "R"`, a list of 4 data frames corresponding to the 4 standard data tables and 1 character vector indicating the protocol version on which the pipeline is based. When `output_type = "csv"`, 4 .csv files corresponding to the 4 standard data tables and 1 text file indicating the protocol version on which the pipeline is based.
+4 data tables in the standard format (version 1.1.0).
+When `output_type = "R"`, a list of 4 data frames corresponding to the 4
+standard data tables and 1 character vector indicating the protocol version
+on which the pipeline is based.
+When `output_type = "csv"`, 4 .csv files corresponding to the 4 standard
+data tables and 1 text file indicating the protocol version on which the
+pipeline is based.
 }
 \description{
 A pipeline to produce a standard output for the nest box population in Wytham
@@ -40,10 +46,12 @@ Woods, UK, administered by Edward Grey Institute Oxford (Ben Sheldon).
 \details{
 This section provides details on data management choices that are unique to
 this data. For a general description of the standard format please see
-\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
+\href{https://github.com/SPI-Birds/documentation/blob/master/
+standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 
-\strong{LocationID}: Unique locations are defined by using the nestbox IDs. These include
-plot information as nest box numbers are not unique across plots.
+\strong{LocationID}: Unique locations are defined by using the nestbox IDs.
+ These include plot information as nest box numbers are not unique
+across plots.
 
 \strong{ExperimentID}: There are experiment codes given, I have tried to
 adapt these to the ExperimentID categories described in the standard
@@ -52,7 +60,8 @@ protocol; however, these need to be checked by data owners. For now I assume:
 - Chick manipulation (code 3) is cross fostering.
 - Alter temperature in nest box (code 7) only affects phenology.
 - Feeding manipulation (code 8) affects phenology.
-- Altering parasites, predation, competition and territory quality (codes 9, 11, 12, 13) all affect survival.
+- Altering parasites, predation, competition and territory quality
+(codes 9, 11, 12, 13) all affect survival.
 
 \strong{Species}: We include nests form blue tits, great tits, coal tits,
 marsh tits, and nuthatches. Currently, mixed broods are treated as having no
@@ -65,27 +74,32 @@ column is less preferred (due to it's name). I only use this data where no
 other egg mass data is provided.
 
 \strong{AvgChickMass}: Average egg mass is recorded for each brood; however,
-this may include mass measurements taken outside of our focal period (14 - 16 days old).
-Therefore, this column is ignored and AvgChickMass is calculated manually from
-capture data.
+this may include mass measurements taken outside of our focal period
+(14 - 16 days old).
+Therefore, this column is ignored and AvgChickMass is calculated manually
+from capture data.
 
 \strong{HatchDate}: As with AvgEggMass, there is also a 'legacy' column for
 hatch date. This is only used if the regular column is empty.
 
 \strong{Age_observed}: Ages are assumed to follow EURING system and are
-included unchanged. The only exception to this is '3J', which is an old EURING
-code. This is treated as EURING age 3.
+included unchanged. The only exception to this is '3J',
+which is an old EURING code. This is treated as EURING age 3.
 
-\strong{Tarsus}: Tarsus method is either 'M', 'S', or NA. We have assumed that
-'M' and NA are the Oxford min/max method and converted accordingly. Currently, we treat
-'S' as Svensson's Alternative and do not convert. This needs to be clarified with
-data owner.
+\strong{Tarsus}: Tarsus method is either 'M', 'S', or NA.
+We have assumed that M' and NA are the Oxford min/max method
+and converted accordingly.
+Currently, we treat S' as Svensson's Alternative and do not convert.
+This needs to be clarified with data owner.
 
-\strong{Sex_observed, Sex_calculated}: Any uncertainty in sex is ignored. For example, 'm?' is treated as male.
+\strong{Sex_observed, Sex_calculated}: Any uncertainty in sex is ignored.
+For example, 'm?' is treated as male.
 
-\strong{BroodIDLaid and BroodIDFledged}: There are (some) cases where BroodIDLaid/Fledged
-have conflicting records for an individual. In these cases, BroodIDLaid/Fledged is
-simply listed as 'CONFLICTED'.
+\strong{BroodIDLaid and BroodIDFledged}:
+There are (some) cases where BroodIDLaid/Fledged
+have conflicting records for an individual.
+In these cases, BroodIDLaid/Fledged is simply listed as 'CONFLICTED'.
 
-\strong{CaptureAlive, ReleaseAlive}: All individuals are assumed to be captured and released alive.
+\strong{CaptureAlive, ReleaseAlive}: All individuals are assumed to
+be captured and released alive.
 }
