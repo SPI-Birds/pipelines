@@ -45,7 +45,7 @@ this data. For a general description of the standard format please see
 \strong{Species}: Species code 5 refers to Willow tit/Marsh tit. As we cannot
 confidently identify species, these are considered Unknown and removed. This
 currently only occurs once in the data. Similarly, species code 0 refers to
-'unknown' and is treated as NA and removed.
+' unknown' and is treated as NA and removed.
 
 \strong{ClutchType_observed}: Code 6 'Replacement First Replacement' is considered to be
 a 2nd replacement after the first (i.e. not successful clutch) and is defined as 'replacement'.

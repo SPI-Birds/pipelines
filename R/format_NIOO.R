@@ -57,7 +57,6 @@
 #'@import rlang
 #'@importFrom dplyr `%>%`
 #'@importFrom utils read.csv
-#'@importFrom rjackcess getTableNames
 
 format_NIOO <- function(db = choose_directory(),
                         species = NULL,
