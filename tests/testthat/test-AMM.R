@@ -57,7 +57,7 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(AMM_data, BroodID == "4375")$FledgeDate_max, as.Date(NA))
   expect_equal(subset(AMM_data, BroodID == "4375")$NumberFledged_observed, 0L)
   expect_equal(subset(AMM_data, BroodID == "4375")$NumberFledged_min, 0L)
-  expect_equal(subset(AMM_data, BroodID == "4375")$NumberFledged_max, 0L)
+  expect_equal(subset(AMM_data, BroodID == "4375")$NumberFledged_max, NA_integer_)
   #Measurements taken but not included in average because chick age was >16
   expect_equal(subset(AMM_data, BroodID == "4375")$AvgChickMass, NA_real_)
   expect_equal(subset(AMM_data, BroodID == "4375")$AvgTarsus, 20.25)
