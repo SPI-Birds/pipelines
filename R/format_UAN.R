@@ -57,8 +57,11 @@
 #'
 #'\strong{ReleaseAlive}: Individuals who were captured alive are assumed to be released alive.
 #'
+#'\strong{LocationID}: LocationIDs are formatted as <PopID>_<original LocationID> to avoid duplicates.
+#'
 #'\strong{Latitude and Longitude}: Location data is stored in Lambert72 CRS.
 #'This has been converted to WGS84 to be standard with other systems.
+#'
 #'
 #'@inheritParams pipeline_params
 #'
@@ -95,13 +98,13 @@ format_UAN <- function(db = choose_directory(),
 
   message("\nLoading all files")
 
-  BOX_info <- readxl::read_excel(paste0(db, "\\", "UAN_PrimaryData_BOX.xlsx"),
+  BOX_info <- readxl::read_excel(paste0(db, "/UAN_PrimaryData_BOX.xlsx"),
                                  col_types = c("text", "numeric", "numeric",
                                                "numeric", "numeric", "text",
                                                "text", "text", "text", "numeric",
                                                "numeric", "numeric"))
 
-  BROOD_info <- readxl::read_excel(paste0(db, "\\", "UAN_PrimaryData_BR.xlsx"),
+  BROOD_info <- readxl::read_excel(paste0(db, "/UAN_PrimaryData_BR.xlsx"),
                                   col_types = c(rep("text", 6),
                                                 rep("numeric", 6),
                                                 rep("text", 5),
@@ -118,7 +121,7 @@ format_UAN <- function(db = choose_directory(),
 
                                 }))
 
-  INDV_info <- readxl::read_excel(paste0(db, "\\", "UAN_PrimaryData_IND.xlsx"),
+  INDV_info <- readxl::read_excel(paste0(db, "/UAN_PrimaryData_IND.xlsx"),
                                   col_types = c("text", "text", "text",
                                                 "numeric", "text", "text",
                                                 "text", "text", "text",
@@ -135,12 +138,12 @@ format_UAN <- function(db = choose_directory(),
                                 }))
 
   ## TODO: Should PLOT_info be loaded and used?
-  PLOT_info <- readxl::read_excel(paste0(db, "\\", "UAN_PrimaryData_PLOT.xlsx"),
+  PLOT_info <- readxl::read_excel(paste0(db, "/UAN_PrimaryData_PLOT.xlsx"),
                                   col_types = c(rep("text", 4),
                                                 rep("numeric", 6),
                                                 rep("text", 3)))
 
-  CAPTURE_info <- readxl::read_excel(paste0(db, "\\", "UAN_PrimaryData_vG.xlsx"),
+  CAPTURE_info <- readxl::read_excel(paste0(db, "/UAN_PrimaryData_vG.xlsx"),
                                      col_types = c(rep("text", 11),
                                                    "numeric", "text",
                                                    rep("text", 3),
@@ -282,7 +285,7 @@ format_UAN <- function(db = choose_directory(),
 
   message("Compiling brood information...")
 
-  Brood_data <- create_brood_UAN(BROOD_info, CAPTURE_info, species, pop)
+  Brood_data <- create_brood_UAN(BROOD_info, CAPTURE_info, species, pop, protocol_version)
 
   # CAPTURE DATA
 
@@ -294,13 +297,13 @@ format_UAN <- function(db = choose_directory(),
 
   message("Compiling individual information...")
 
-  Individual_data <- create_individual_UAN(INDV_info, Capture_data, species)
+  Individual_data <- create_individual_UAN(INDV_info, Capture_data, species, protocol_version)
 
   # LOCATION DATA
 
   message("Compiling location information...")
 
-  Location_data <- create_location_UAN(BOX_info)
+  Location_data <- create_location_UAN(BOX_info, protocol_version)
 
   # WRANGLE DATA FOR EXPORT
 
@@ -317,13 +320,17 @@ format_UAN <- function(db = choose_directory(),
     dplyr::rowwise() %>%
     dplyr::mutate(AvgChickMass = ifelse(!is.na(.data$AvgChickMass_capture), .data$AvgChickMass_capture, .data$AvgChickMass),
                   AvgTarsus = ifelse(!is.na(.data$AvgTarsus_capture), .data$AvgTarsus_capture, .data$AvgTarsus)) %>%
-    dplyr::select(-"AvgChickMass_capture",
-                  -"AvgTarsus_capture") %>%
-    dplyr::select(names(brood_data_template)) %>%
-    dplyr::ungroup()
+    dplyr::ungroup() %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Brood_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Brood_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Brood_data))
 
   Capture_data <- Capture_data %>%
-    dplyr::select(-"BroodID")
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Capture_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Capture_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Capture_data))
 
   # EXPORT DATA
 
@@ -335,15 +342,15 @@ format_UAN <- function(db = choose_directory(),
 
     message("\nSaving .csv files...")
 
-    utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_UAN.csv"), row.names = FALSE)
+    utils::write.csv(x = Brood_data, file = paste0(path, "/Brood_data_UAN.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_UAN.csv"), row.names = FALSE)
+    utils::write.csv(x = Individual_data, file = paste0(path, "/Individual_data_UAN.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Capture_data, file = paste0(path, "\\Capture_data_UAN.csv"), row.names = FALSE)
+    utils::write.csv(x = Capture_data, file = paste0(path, "/Capture_data_UAN.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_UAN.csv"), row.names = FALSE)
+    utils::write.csv(x = Location_data, file = paste0(path, "/Location_data_UAN.csv"), row.names = FALSE)
 
-    utils::write.table(x = protocol_version, file = paste0(path, "\\protocol_version_UAN.txt"),
+    utils::write.table(x = protocol_version, file = paste0(path, "/protocol_version_UAN.txt"),
                        quote = FALSE, row.names = FALSE, col.names = FALSE)
 
     invisible(NULL)
@@ -373,10 +380,11 @@ format_UAN <- function(db = choose_directory(),
 #' @param CAPTURE_info Data frame. Primary capture data from University of Antwerp.
 #' @param species_filter 6 letter species codes for filtering data.
 #' @param pop_filter Population three letter codes from the standard protocol.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_brood_UAN <- function(BROOD_info, CAPTURE_info, species_filter, pop_filter){
+create_brood_UAN <- function(BROOD_info, CAPTURE_info, species_filter, pop_filter, protocol_version){
 
   # For every brood in the capture data table, determine whether measurements were
   # taken with Svensson's standard or alternative
@@ -395,6 +403,8 @@ create_brood_UAN <- function(BROOD_info, CAPTURE_info, species_filter, pop_filte
     # Convert columns to expected values
     dplyr::mutate(PopID = dplyr::case_when(.data$PopID == "FR" ~ "BOS",
                                            .data$PopID == "PB" ~ "PEE"),
+                  # Add PopID prefix to LocationID to avoid duplicated LocationIDs across sites
+                  LocationID = paste(.data$PopID, .data$LocationID, sep = "_"),
                   Species = dplyr::case_when(.data$Species == "pm" ~ species_codes[species_codes$speciesEURINGCode == 14640, ]$Species,
                                              .data$Species == "pc" ~ species_codes[species_codes$speciesEURINGCode == 14620, ]$Species),
                   ClutchType_observed = dplyr::case_when(.data$ClutchType_observed %in% c(1, 9) ~ "first",
@@ -402,25 +412,33 @@ create_brood_UAN <- function(BROOD_info, CAPTURE_info, species_filter, pop_filte
                                                          .data$ClutchType_observed %in% c(3, 4, 5, 8) ~ "replacement"),
                   ClutchSizeError = dplyr::case_when(.data$ClutchSizeError == "J" ~ 0,
                                                      .data$ClutchSizeError == "N" ~ 2),
-                  ClutchSize_min = .data$ClutchSize_observed - .data$ClutchSizeError,
-                  ClutchSize_max = .data$ClutchSize_observed + .data$ClutchSizeError) %>%
+                  ClutchSize_min = dplyr::case_when((.data$ClutchSize_observed - .data$ClutchSizeError) < 0 ~ 0L,
+                                                    TRUE ~ as.integer(.data$ClutchSize_observed - .data$ClutchSizeError)),
+                  ClutchSize_max = as.integer(.data$ClutchSize_observed + .data$ClutchSizeError)) %>%
     # Keep filtered species
     dplyr::filter(.data$Species %in% species_filter) %>%
     # Coerce BroodID to be character, convert LayDate
     dplyr::mutate(BroodID = as.character(.data$BroodID),
                   LayDate_observed = lubridate::ymd(.data$LayDate_observed),
                   NumberChicksTarsus = .data$NumberChicksMass) %>%
+    ###TODO: When updating to v2.0.0, check with data custodian what the codes mean
+    dplyr::mutate(ExperimentID = dplyr::case_when(!is.na(.data$ExperimentID) ~ "OTHER",
+                                                  TRUE ~ NA_character_)) %>%
+    ## Set only-letter IDs to NA
+    ###TODO: Check with data custodian what the expected ID format is to improve this check
+    dplyr::mutate(dplyr::across(c("FemaleID", "MaleID"),
+                                ~dplyr::case_when(stringr::str_detect(., "^[a-zA-Z]+$") ~ NA_character_,
+                                                  TRUE ~ .))) %>%
     # Calculate clutchtype, assuming NAs are true unknowns
+    dplyr::arrange(.data$LayDate_observed) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(., na.rm = FALSE, protocol_version = "1.1")) %>%
     dplyr::left_join(Tarsus_method,
                      by = "BroodID") %>%
     dplyr::filter(.data$PopID %in% pop_filter) %>%
-    # Keep only necessary columns
-    dplyr::select(dplyr::contains(names(brood_data_template))) %>%
     # Add missing columns
-    dplyr::bind_cols(brood_data_template[1, !(names(brood_data_template) %in% names(.))]) %>%
-    # Reorder columns
-    dplyr::select(names(brood_data_template))
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Brood_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Brood_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Brood_data))
 
   return(Brood_data)
 
@@ -443,9 +461,16 @@ create_capture_UAN <- function(CAPTURE_info, species_filter, pop_filter){
   # like mass, tarsus etc.). This will include first capture as nestling (for
   # residents) This means there will be multiple records for a single individual.
   Capture_data <- CAPTURE_info %>%
+    ## Set only-letter IDs to NA
+    ###TODO: Check with data custodian what the expected ID format is to improve this check
+    dplyr::mutate(IndvID = dplyr::case_when(stringr::str_detect(.data$IndvID, "^[a-zA-Z]+$") ~ NA_character_,
+                                                  TRUE ~ .data$IndvID)) %>%
+    dplyr::filter(!is.na(.data$IndvID)) %>%
     # Adjust species and PopID
     dplyr::mutate(CapturePopID = dplyr::case_when(.data$CapturePopID == "FR" ~ "BOS",
                                                   .data$CapturePopID == "PB" ~ "PEE"),
+                  # Add PopID prefix to LocationID to avoid duplicated LocationIDs across sites
+                  LocationID = paste(.data$CapturePopID, .data$LocationID, sep = "_"),
                   Species = dplyr::case_when(.data$Species == "pm" ~ species_codes[species_codes$speciesEURINGCode == 14640, ]$Species,
                                              .data$Species == "pc" ~ species_codes[species_codes$speciesEURINGCode == 14620, ]$Species)) %>%
     # Keep filtered species
@@ -470,6 +495,9 @@ create_capture_UAN <- function(CAPTURE_info, species_filter, pop_filter){
                                                                     pad = "0"), sep = ":"), "NA:NA"),
                   ReleasePopID = .data$CapturePopID,
                   ReleasePlot = .data$CapturePlot) %>%
+    ###TODO: When updating to v2.0.0, check with data custodian what the codes mean
+    dplyr::mutate(ExperimentID = dplyr::case_when(!is.na(.data$ExperimentID) ~ "OTHER",
+                                                  TRUE ~ NA_character_)) %>%
     # TODO: Uncertainty in sex observations (M?, W?) is ignored
     dplyr::mutate(Sex_observed = dplyr::case_when(.data$Sex %in% c("M", "M?") ~ "M",
                                                   .data$Sex %in% c("W", "W?") ~ "F",
@@ -502,14 +530,7 @@ create_capture_UAN <- function(CAPTURE_info, species_filter, pop_filter){
     dplyr::arrange(.data$IndvID, .data$CaptureDate) %>%
     dplyr::group_by(.data$IndvID) %>%
     dplyr::mutate(CaptureID = paste(.data$IndvID, 1:dplyr::n(), sep = "_")) %>%
-    dplyr::ungroup() %>%
-    # Arrange columns
-    # Keep only necessary columns, and BroodID (to be used when creating the individual table)
-    dplyr::select(tidyselect::contains(c(names(capture_data_template), "BroodID"))) %>%
-    # Add missing columns
-    dplyr::bind_cols(capture_data_template[1, !(names(capture_data_template) %in% names(.))]) %>%
-    # Reorder columns
-    dplyr::select(names(capture_data_template), "BroodID")
+    dplyr::ungroup()
 
   return(Capture_data)
 
@@ -523,13 +544,19 @@ create_capture_UAN <- function(CAPTURE_info, species_filter, pop_filter){
 #' @param INDV_info Data frame. Primary individual data from University of Antwerp.
 #' @param Capture_data Output of \code{\link{create_capture_UAN}}.
 #' @param species_filter 6 letter species codes for filtering data.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_individual_UAN <- function(INDV_info, Capture_data, species_filter){
+create_individual_UAN <- function(INDV_info, Capture_data, species_filter, protocol_version){
 
   # Take capture data and determine summary data for each individual
   individuals <- Capture_data %>%
+    ## Set only-letter IDs to NA
+    ###TODO: Check with data custodian what the expected ID format is to improve this check
+    dplyr::mutate(IndvID = dplyr::case_when(stringr::str_detect(.data$IndvID, "^[a-zA-Z]+$") ~ NA_character_,
+                                            TRUE ~ .data$IndvID)) %>%
+    dplyr::filter(!is.na(.data$IndvID)) %>%
     dplyr::arrange(.data$IndvID, .data$BreedingSeason, .data$CaptureDate, .data$CaptureTime) %>%
     dplyr::group_by(.data$IndvID) %>%
     dplyr::summarise(Species = dplyr::case_when(length(unique(.data$Species)) == 2 ~ "CCCCCC",
@@ -579,12 +606,10 @@ create_individual_UAN <- function(INDV_info, Capture_data, species_filter){
     dplyr::left_join(Sex_calc,
                      by = "IndvID") %>%
     dplyr::filter(.data$Species %in% species_filter) %>%
-    # Keep only necessary columns
-    dplyr::select(tidyselect::contains(names(individual_data_template))) %>%
     # Add missing columns
-    dplyr::bind_cols(individual_data_template[1, !(names(individual_data_template) %in% names(.))]) %>%
-    # Reorder columns
-    dplyr::select(names(individual_data_template))
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Individual_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Individual_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Individual_data))
 
   return(Indv_data)
 
@@ -596,20 +621,21 @@ create_individual_UAN <- function(INDV_info, Capture_data, species_filter){
 #' Antwerp, Belgium.
 #'
 #' @param BOX_info Data frame. Primary location data from University of Antwerp.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_location_UAN <- function(BOX_info){
+create_location_UAN <- function(BOX_info, protocol_version){
 
   Location_data <- BOX_info %>%
-    dplyr::mutate(LocationID = .data$GBPL,
-                  LocationType = dplyr::case_when(.data$TYPE %in% c("pc", "pm", "cb", "se") ~ "NB",
+    dplyr::mutate(LocationType = dplyr::case_when(.data$TYPE %in% c("pc", "pm", "cb", "se") ~ "NB",
                                                   is.na(.data$TYPE) ~ "NB",
                                                   .data$TYPE %in% c("PMO", "&", "FPT") ~ "MN"),
-                  NestboxID = dplyr::case_when(.data$LocationType == "NB" ~ .data$LocationID,
-                                               TRUE ~ NA_character_),
                   PopID = dplyr::case_when(.data$SA == "FR" ~ "BOS",
                                            .data$SA == "PB" ~ "PEE"),
+                  LocationID = paste(.data$PopID, .data$GBPL, sep = "_"),
+                  NestboxID = dplyr::case_when(.data$LocationType == "NB" ~ .data$GBPL,
+                                               TRUE ~ NA_character_),
                   Latitude = .data$Y_deg,
                   Longitude = .data$X_deg,
                   Latitude_Lambert = .data$Y,
@@ -633,12 +659,10 @@ create_location_UAN <- function(BOX_info){
   Location_data$'TRUE'$Latitude <- true_coords[, 2]
 
   Location_data <- dplyr::bind_rows(Location_data) %>%
-    # Keep only necessary columns
-    dplyr::select(tidyselect::contains(names(location_data_template))) %>%
     # Add missing columns
-    dplyr::bind_cols(location_data_template[1, !(names(location_data_template) %in% names(.))]) %>%
-    # Reorder columns
-    dplyr::select(names(location_data_template))
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Location_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Location_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Location_data))
 
   return(Location_data)
 

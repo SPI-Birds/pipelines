@@ -76,18 +76,14 @@
 #'the first nest recorded is more likely to be the 'true' nest until these are
 #'corrected.
 #'
-#'\strong{ReleasePlot/PopID:} Individuals transferred to aviaries are given ReleasePlot/PopID
-#''aviary'.
-#'
-#'\strong{ExperimentID:} Currently, broods are given an ExperimentID TRUE or FALSE.
-#'Experiments will be expanded to include exact experimental details at a later stage.
-#'
 #'\strong{LocationID:} When individual is captured as chick or in nest the LocationID
 #'is Plot_BoxNumber_NB. For non-chick captures, if there is no BoxNumber listed
 #'we return LocationID NA. Even if it wasn't a capture in a nestbox, we have no
 #'way of defining the location. If a BoxNumber is provided the LocationID is
 #'Plot_BoxNumber_X where X is NB for nest box/winter roost captures and MN for
 #'mist net or trap cage and caller captures.
+#'
+#'\strong{Habitat:} Locations that are in 'urban' habitat are assigned Habitat NA, because urban is not a valid habitat value in protocol v1.0.0.
 #'
 #'@inheritParams pipeline_params
 #'@param verbose Should messages be printed during the pipeline?
@@ -129,30 +125,46 @@ format_MON <- function(db = choose_directory(),
 
   message("Compiling capture data....")
 
-  Capture_data <- create_capture_MON(db = db, species_filter = species, pop_filter = pop)
+  Capture_data <- create_capture_MON(db = db,
+                                     species_filter = species,
+                                     pop_filter = pop)
 
   # BROOD DATA
 
   message("Compiling brood data...")
 
-  Brood_data <- create_brood_MON(db = db, species_filter = species, pop_filter = pop)
+  Brood_data <- create_brood_MON(db = db,
+                                 species_filter = species,
+                                 pop_filter = pop)
 
   # INDIVIDUAL DATA
 
   message("Compiling individual data...")
 
-  Individual_data <- create_individual_MON(Capture_data, Brood_data, verbose)
+  Individual_data <- create_individual_MON(Capture_data,
+                                           Brood_data,
+                                           protocol_version,
+                                           verbose)
 
   # LOCATION DATA
 
   message("Compiling location data...")
 
-  Location_data <- create_location_MON(db = db, Capture_data, Brood_data)
+  Location_data <- create_location_MON(db = db,
+                                       Capture_data,
+                                       Brood_data,
+                                       protocol_version)
 
   # WRANGLE DATA FOR EXPORT
 
   Capture_data <- Capture_data %>%
-    dplyr::select("IndvID":"ChickAge")
+    # Discard records with missing CaptureDate
+    # TODO: this can be resolved when updated to protocol v2.0.0
+    dplyr::filter(!is.na(.data$CaptureDate)) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Capture_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Capture_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Capture_data))
 
   #Remove chick rings from brood data
   #Add NAs for Avg measurements until we add them later
@@ -164,7 +176,10 @@ format_MON <- function(db = choose_directory(),
                   NumberChicksMass = NA_integer_,
                   AvgTarsus = NA_real_,
                   NumberChicksTarsus = NA_integer_) %>%
-    dplyr::select("BroodID":"NumberFledgedError", "AvgEggMass":"NumberChicksTarsus", "ExperimentID")
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Brood_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Brood_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Brood_data))
 
   # EXPORT DATA
 
@@ -176,16 +191,15 @@ format_MON <- function(db = choose_directory(),
 
     message("Saving .csv files...")
 
-    utils::write.csv(x = Brood_data, file = paste0(path, "\\Brood_data_MON.csv"), row.names = FALSE)
+    utils::write.csv(x = Brood_data, file = paste0(path, "/Brood_data_MON.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Individual_data, file = paste0(path, "\\Individual_data_MON.csv"), row.names = FALSE)
+    utils::write.csv(x = Individual_data, file = paste0(path, "/Individual_data_MON.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Capture_data %>% dplyr::select(-"Sex", -"BroodID"),
-                     file = paste0(path, "\\Capture_data_MON.csv"), row.names = FALSE)
+    utils::write.csv(x = Capture_data, file = paste0(path, "/Capture_data_MON.csv"), row.names = FALSE)
 
-    utils::write.csv(x = Location_data, file = paste0(path, "\\Location_data_MON.csv"), row.names = FALSE)
+    utils::write.csv(x = Location_data, file = paste0(path, "/Location_data_MON.csv"), row.names = FALSE)
 
-    utils::write.table(x = protocol_version, file = paste0(path, "\\protocol_version_MON.txt"),
+    utils::write.table(x = protocol_version, file = paste0(path, "/protocol_version_MON.txt"),
                        quote = FALSE, row.names = FALSE, col.names = FALSE)
 
     invisible(NULL)
@@ -220,7 +234,7 @@ format_MON <- function(db = choose_directory(),
 
 create_capture_MON <- function(db, species_filter, pop_filter){
 
-  Full_capture_data <- utils::read.csv(paste0(db, "\\", "MON_PrimaryData_MORPH.csv"), na.strings = "") %>%
+  Full_capture_data <- utils::read.csv(paste0(db, "/MON_PrimaryData_MORPH.csv"), na.strings = "") %>%
     #There is a potential issue in excel that numbers are stored as text in the excel sheets.
     #These can easily be coerced back to numerics, but this throws many warnings,
     #which will masks any real problematic coercion issues (e.g. NA introduced by coercion)
@@ -244,7 +258,7 @@ create_capture_MON <- function(db, species_filter, pop_filter){
     dplyr::filter(.data$Species %in% species_filter) %>%
     dplyr::mutate(CaptureDate = suppressWarnings(as.Date(.data$date_mesure, format = "%d/%m/%Y")),
                   CaptureTime = .data$heure,
-                  BreedingSeason = .data$an,
+                  BreedingSeason = as.numeric(.data$an),
                   IndvID = purrr::pmap_chr(.l = list(.data$bague),
                                            .f = ~{
 
@@ -285,14 +299,14 @@ create_capture_MON <- function(db, species_filter, pop_filter){
 
                                                    if(is.na(..1)){
 
-                                                     return(NA_integer_)
+                                                     return(NA_real_)
 
                                                    } else {
 
                                                      split_age <- strsplit(..1, split = "")
 
                                                      letter <- toupper(split_age[[1]][1])
-                                                     number <- as.integer(split_age[[1]][2])
+                                                     number <- as.numeric(split_age[[1]][2])
 
                                                      if(letter == "P"){
 
@@ -300,17 +314,17 @@ create_capture_MON <- function(db, species_filter, pop_filter){
                                                        # new issue related to 2021 data update
                                                        if(is.na(number)) {
 
-                                                         return(NA_integer_)
+                                                         return(NA_real_)
 
                                                        } else {
 
-                                                         if(number == 0L) {
+                                                         if(number == 0) {
 
-                                                           return(1L)
+                                                           return(1)
 
                                                          } else {
 
-                                                           return(3L + 2L*number)
+                                                           return(3 + 2*number)
 
                                                          }
 
@@ -318,15 +332,15 @@ create_capture_MON <- function(db, species_filter, pop_filter){
 
                                                      } else if(letter == "J"){
 
-                                                       return(3L + 2L*number)
+                                                       return(3 + 2*number)
 
                                                      } else if(letter == "A"){
 
-                                                       return(4L + 2L*number)
+                                                       return(4 + 2*number)
 
                                                      } else if(letter == "I"){
 
-                                                       return(4L + 2L*(number - 1L))
+                                                       return(4 + 2*(number - 1))
 
                                                      }
 
@@ -405,12 +419,12 @@ create_capture_MON <- function(db, species_filter, pop_filter){
                                             TRUE ~ .data$bague),
                   Mass = .data$poids,
                   ObserverID = .data$obs,
-                  ChickAge = as.integer(.data$age_plume),
+                  ChickAge = as.numeric(.data$age_plume),
                   ObservedSex = dplyr::case_when(.data$sex %in% c(1, 4) ~ "M",
                                                  .data$sex %in% c(2, 5) ~ "F"),
                   GeneticSex = dplyr::case_when(.data$sex_g == 1 ~ "M",
                                                 .data$sex_g == 2 ~ "F"),
-                  Age_observed = 1L,
+                  Age_observed = 1,
                   ExperimentDescription1 = dplyr::case_when(.data$expou == "1" ~ "Manipulation affect selective value (e.g. cross foster)",
                                                             .data$expou == "2" ~ "No manipulation that affects selective value (e.g. weighing)"),
                   ExperimentDescription2 = dplyr::case_when(.data$exp_p == "alimente" ~ "Supplemental feeding",
@@ -524,8 +538,11 @@ create_capture_MON <- function(db, species_filter, pop_filter){
   dplyr::mutate(IndvID = dplyr::case_when(nchar(.data$IndvID) %in% c(6,7,8) & stringr::str_detect(.data$IndvID, "^[:digit:]+$")  ~ .data$IndvID,
                                              TRUE ~ NA_character_)) %>%
 
-    ## Filter out NAs from IndvID
-    dplyr::filter(!is.na(.data$IndvID))
+    # Discard records with
+    # - NA in IndvID
+    # - release pop id 'aviary'
+    dplyr::filter(!is.na(.data$IndvID),
+                  .data$ReleasePopID != "aviary")
 
   return(Capture_data)
 
@@ -545,7 +562,7 @@ create_capture_MON <- function(db, species_filter, pop_filter){
 
 create_brood_MON <- function(db, species_filter, pop_filter){
 
-  Brood_data <- utils::read.csv(paste0(db, "\\", "MON_PrimaryData_DEMO.csv"), na.strings = "") %>%
+  Brood_data <- utils::read.csv(paste0(db, "/MON_PrimaryData_DEMO.csv"), na.strings = "") %>%
     dplyr::mutate(dplyr::across(c(21:36), as.character)) %>%
     dplyr::mutate(Species = dplyr::case_when(.data$espece == "ble" ~ species_codes$Species[which(species_codes$speciesEURINGCode == 14620)],
                                              .data$espece == "noi" ~ species_codes$Species[which(species_codes$speciesEURINGCode == 14610)],
@@ -563,10 +580,14 @@ create_brood_MON <- function(db, species_filter, pop_filter){
                   Plot = .data$lieu,
                   BoxNumber = .data$nic,
                   LocationID = paste(.data$Plot, .data$BoxNumber, "NB", sep = "_"),
-                  BreedingSeason = as.integer(.data$an),
-                  LayDate = suppressWarnings(as.Date(.data$date_ponte, format = "%d/%m/%Y")),
-                  BroodID = paste(.data$BreedingSeason, .data$Plot, .data$BoxNumber, .data$np,
-                                  sep = "_"),
+                  BreedingSeason = as.numeric(.data$an),
+                  LayingDate = suppressWarnings(as.Date(.data$date_ponte, format = "%d/%m/%Y")),
+                  BroodID = dplyr::case_when(!is.na(.data$LayingDate) ~ paste(.data$BreedingSeason, .data$Plot,
+                                                                              .data$BoxNumber, lubridate::yday(.data$LayingDate),
+                                                                              sep = "_"),
+                                             TRUE ~ paste(.data$BreedingSeason, .data$Plot,
+                                                          .data$BoxNumber, .data$np,
+                                                          sep = "_")),
                   ClutchType_observed = dplyr::case_when(.data$np == "1" ~ "first",
                                                          .data$np == "2" ~ "second",
                                                          .data$np == "3" ~ "replacement"),
@@ -590,7 +611,7 @@ create_brood_MON <- function(db, species_filter, pop_filter){
                                                   .data$mort == "CLI" ~ "Climatic event (e.g. storm)",
                                                   .data$mort == "MAL" ~ "Sickness",
                                                   .data$mort == "NCT" ~ "Not checked??"),
-                  LayDateError = NA_integer_,
+                  LayingDateError = NA_integer_,
                   ClutchSizeError = NA_integer_,
                   HatchDateError = NA_integer_,
                   BroodSizeError = NA_integer_,
@@ -600,16 +621,16 @@ create_brood_MON <- function(db, species_filter, pop_filter){
     dplyr::filter(.data$Species %in% species_filter) %>%
     #Only include capture pop and plot for now, until we work out how to code translocations
     dplyr::mutate(PopID = identify_PopID_MON(.data$lieu)) %>%
-    dplyr::arrange(.data$BreedingSeason, .data$Species, .data$FemaleID, .data$LayDate) %>%
+    dplyr::arrange(.data$BreedingSeason, .data$Species, .data$FemaleID, .data$LayingDate) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
-    dplyr::mutate(ExperimentID = dplyr::case_when((!is.na(.data$Crossfostering_treatment) | !is.na(.data$Brood_ExperimentDescription2) | .data$ParasiteTreatment == "Treated" | .data$expou == "2") ~ "TRUE",
-                                                  (is.na(.data$Crossfostering_treatment) & is.na(.data$Brood_ExperimentDescription2) & .data$ParasiteTreatment != "Treated" & .data$expou != "2") ~ "FALSE")) %>%
+    dplyr::mutate(ExperimentID = dplyr::case_when((!is.na(.data$Crossfostering_treatment) | !is.na(.data$Brood_ExperimentDescription2) | .data$ParasiteTreatment == "Treated" | .data$expou == "2") ~ "OTHER",
+                                                  (is.na(.data$Crossfostering_treatment) & is.na(.data$Brood_ExperimentDescription2) & .data$ParasiteTreatment != "Treated" & .data$expou != "2") ~ NA_character_)) %>%
     dplyr::filter(.data$PopID %in% pop_filter) %>%
     #Keep all chick codes because we will use these for individual data table and remove later
     #Keep box number to link to Capture data
     dplyr::select("BroodID", "PopID", "BreedingSeason", "Species", "Plot",
                   "LocationID", "FemaleID", "MaleID", "ClutchType_observed",
-                  "ClutchType_calculated", "LayDate", "LayDateError",
+                  "ClutchType_calculated", "LayingDate", "LayingDateError",
                   "ClutchSize", "ClutchSizeError", "HatchDate", "HatchDateError",
                   "BroodSize", "BroodSizeError", "FledgeDate", "FledgeDateError",
                   "NumberFledged", "NumberFledgedError", "ExperimentID",
@@ -624,6 +645,14 @@ create_brood_MON <- function(db, species_filter, pop_filter){
                     MaleID = dplyr::case_when(nchar(.data$MaleID) %in% c(6,7,8) & stringr::str_detect(.data$MaleID, "^[:digit:]+$")  ~ .data$MaleID,
                                                     TRUE ~ NA_character_))
 
+    # Remove duplicate records; keep records with most information
+    duplicated_broods <- Brood_data$BroodID[duplicated(Brood_data$BroodID)]
+
+    Brood_data <- Brood_data %>%
+      dplyr::mutate(BroodID = dplyr::case_when(.data$BroodID %in% {duplicated_broods} & is.na(.data$FemaleID) & is.na(.data$MaleID) ~ NA_character_,
+                                               TRUE ~ .data$BroodID)) %>%
+      dplyr::filter(!is.na(.data$BroodID))
+
   return(Brood_data)
 
 }
@@ -632,11 +661,12 @@ create_brood_MON <- function(db, species_filter, pop_filter){
 #'
 #' @param Capture_data Capture data generated by \code{\link{create_capture_MON}}.
 #' @param Brood_data Capture data generated by \code{\link{create_brood_MON}}.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #' @param verbose When chicks with duplicate nests are found, should a message be printed?
 #'
 #' @return A data frame with Individual data
 
-create_individual_MON <- function(Capture_data, Brood_data, verbose){
+create_individual_MON <- function(Capture_data, Brood_data, protocol_version, verbose){
 
   BroodAssignment <- Brood_data %>%
     dplyr::select("BroodIDLaid" = "BroodID", "pulbag1":"pulbag14") %>%
@@ -683,7 +713,7 @@ create_individual_MON <- function(Capture_data, Brood_data, verbose){
           dplyr::filter(.data$BreedingSeason == split_info[1],
                         .data$Plot == split_info[2],
                         .data$BoxNumber == split_info[3],
-                        .data$LayDate < CaptureDate)
+                        .data$LayingDate < CaptureDate)
 
         if(nrow(possible_nest) == 1){
 
@@ -722,7 +752,7 @@ create_individual_MON <- function(Capture_data, Brood_data, verbose){
           dplyr::filter(.data$BreedingSeason == lubridate::year(CaptureDate),
                         .data$Plot == split_info[1],
                         .data$BoxNumber == split_info[2],
-                        .data$LayDate < CaptureDate)
+                        .data$LayingDate < CaptureDate)
 
         if(nrow(possible_nest) > 1){
 
@@ -867,8 +897,14 @@ create_individual_MON <- function(Capture_data, Brood_data, verbose){
 
   #For any duplicate cases, we just take the first, which should be the most recent one
   Individual_data <- Individual_data_single_records %>%
+    tidyr::drop_na("IndvID") %>%
     dplyr::group_by(.data$IndvID) %>%
-    dplyr::slice(1)
+    dplyr::slice(1) %>%
+    dplyr::ungroup() %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Individual_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Individual_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Individual_data))
 
   return(Individual_data)
 
@@ -879,20 +915,21 @@ create_individual_MON <- function(Capture_data, Brood_data, verbose){
 #' @param Capture_data Capture data generated by \code{\link{create_capture_MON}}.
 #' @param db Location of primary data from Montpellier.
 #' @param Brood_data Capture data generated by \code{\link{create_brood_MON}}.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame with Individual data
 
-create_location_MON <- function(db, Capture_data, Brood_data){
+create_location_MON <- function(db, Capture_data, Brood_data, protocol_version){
 
   #Load lat/long for nest boxes
-  nestbox_latlong <- utils::read.csv(paste0(db, "\\", "MON_PrimaryData_NestBoxLocation.csv"), na.strings = "") %>%
+  nestbox_latlong <- utils::read.csv(paste0(db, "/MON_PrimaryData_NestBoxLocation.csv"), na.strings = "") %>%
     dplyr::filter(!is.na(.data$latitude)) %>%
     dplyr::mutate(LocationID_join = paste(.data$abr_station, .data$nichoir, sep = "_")) %>%
     dplyr::select("LocationID_join", "latitude", "longitude") %>%
     dplyr::mutate(dplyr::across(c("latitude":"longitude"), as.numeric))
 
   #There are some nestboxes outside the study area
-  nestbox_latlong_outside <- utils::read.csv(paste0(db, "\\", "MON_PrimaryData_OffSiteLocation.csv"), na.strings = "") %>%
+  nestbox_latlong_outside <- utils::read.csv(paste0(db, "/MON_PrimaryData_OffSiteLocation.csv"), na.strings = "") %>%
     dplyr::filter(!is.na(.data$la)) %>%
     dplyr::mutate(LocationID_join = paste(.data$st, .data$ni_localisation, sep = "_"),
                   latitude = .data$la,
@@ -920,7 +957,7 @@ create_location_MON <- function(db, Capture_data, Brood_data){
       dplyr::filter(!is.na(.data$longitude)) %>%
       dplyr::select("BreedingSeason", "latitude", "longitude") %>%
       dplyr::group_by(.data$latitude, .data$longitude) %>%
-      dplyr::summarise(StartSeason = min(.data$BreedingSeason),
+      dplyr::summarise(StartSeason = as.integer(min(.data$BreedingSeason)), # TODO fix as part of issue #252
                        EndSeason = NA_integer_,
                        PopID = "MIS",
                        NestboxID = NA_character_,
@@ -965,7 +1002,7 @@ create_location_MON <- function(db, Capture_data, Brood_data){
                      PopID = unique(.data$PopID),
                      Latitude = dplyr::first(.data$latitude),
                      Longitude = dplyr::first(.data$longitude),
-                     StartSeason = min(.data$BreedingSeason),
+                     StartSeason = as.integer(min(.data$BreedingSeason)), # TODO fix as part of issue #252
                      EndSeason = NA_integer_,
                      Plot = stringr::str_split(.data$LocationID,
                                                pattern = "_",
@@ -974,11 +1011,15 @@ create_location_MON <- function(db, Capture_data, Brood_data){
                                                 .data$Plot %in% c("fil", "ari", "gra",
                                                                   "pir", "tua") ~ "evergreen",
                                                 .data$Plot %in% c("bot", "cef", "fac", "font",
-                                                                  "gram", "mas", "mos", "val", "zoo") ~ "urban",
+                                                                  "gram", "mas", "mos", "val", "zoo") ~ NA_character_, # TODO: set to urban when updating with later protocol version
                                                 TRUE ~ NA_character_)) %>%
     dplyr::select(-"Plot")
 
-  Location_data <- dplyr::bind_rows(outside_locations, non_latlong_locations)
+  Location_data <- dplyr::bind_rows(outside_locations, non_latlong_locations) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Location_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Location_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Location_data))
 
   return(Location_data)
 

@@ -2,7 +2,7 @@
 % Please edit documentation in R/export_access_db.R
 \name{export_access_db}
 \alias{export_access_db}
-\title{Export selected tables from Access database to csv files through Jackcess}
+\title{Export Access Database Tables to CSV using Python AccessParser}
 \usage{
 export_access_db(
   dsn,
@@ -11,32 +11,71 @@ export_access_db(
   header = TRUE,
   delim = ",",
   quote = "\\"",
-  filter = rjackcess::SimpleExportFilter()$INSTANCE
+  python_script = system.file("extdata", "export_access_db.py", package = "pipelines")
 )
 }
 \arguments{
-\item{dsn}{Character. File path to MS Access database source name.}
+\item{dsn}{Character. File path to MS Access database source name (.mdb or .accdb file).}
 
-\item{table}{Character. Names of tables to export.}
+\item{table}{Character vector. Names of tables to export. Can be a single table name or vector of table names.}
 
-\item{output_dir}{Character. File path to directory where the new files will be created.}
+\item{output_dir}{Character. File path to directory where the new CSV files will be created. Directory will be created if it doesn't exist.}
 
-\item{header}{Logical. Include the column names in the header? Default: \code{TRUE}.}
+\item{header}{Logical. Include the column names in the header row? Default: TRUE.}
 
-\item{delim}{Character. The column delimiter in the output file. Default: ",".}
+\item{delim}{Character. The column delimiter in the output CSV file. Default: "," (comma).}
 
-\item{quote}{Character. The quote character in the output file. Default: '"'.}
+\item{quote}{Character. The quote character in the output CSV file. Default: '"' (double quote).}
 
-\item{filter}{a Jackcess ExportFilter object to filter columns or rows in the export. Default: \code{rjackcess::SimpleExportFilter()$INSTANCE}, which is the full, unfiltered instance (table).}
+\item{python_script}{Character. Path to the Python script containing export_access_db function. Default: "test_files/export_access_db.py".}
 }
 \value{
-csv files of selected tables from Access database
+Invisible NULL. Creates CSV files of selected tables from Access database in the specified output directory.
 }
 \description{
-Connect to MS Access database via Jackcess (a Java library) to export a selected tables as a  csv files.
+This function uses Python's AccessParser library via reticulate to export
+MS Access database tables to CSV files. This provides cross-platform
+compatibility for reading Access databases.
 }
 \details{
-Jackcess is a Java library for reading from and writing to MS Access databases.
-Previously, we used ODBC (Open Database Connectivity) to connect to MS Access databases,
-but this does not work on MacOS and Linux as straightforwardly as it does on Windows.
+This function requires the \code{reticulate} package and Python with the \code{access_parser} library installed.
+
+The function will:
+\itemize{
+  \item Connect to the specified Access database
+  \item Extract data from the specified table(s)
+  \item Create the output directory if it doesn't exist
+  \item Export each table as a separate CSV file named \code{tablename.csv}
+}
+}
+\examples{
+\dontrun{
+# Export single table
+export_access_db(
+    dsn = "AMM_Ammersee_Germany/AMM_PrimaryData.accdb",
+    table = "Broods",
+    output_dir = "exported_data"
+)
+
+# Export multiple tables
+export_access_db(
+    dsn = "AMM_Ammersee_Germany/AMM_PrimaryData.accdb",
+    table = c("Broods", "Catches", "Chicks"),
+    output_dir = "exported_data"
+)
+
+# Export with custom CSV formatting
+export_access_db(
+    dsn = "database.accdb",
+    table = "MyTable",
+    output_dir = "output",
+    header = TRUE,
+    delim = ";",
+    quote = "'"
+)
+}
+
+}
+\seealso{
+\url{https://github.com/mccartney/access_parser} for AccessParser documentation
 }

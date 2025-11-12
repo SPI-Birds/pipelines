@@ -23,7 +23,7 @@
 #'FL is unknown. We can't even attribute it to chick or adult.
 #'For this we use EURING 2 (able to fly freely but otherwise unknown).
 #'
-#'\strong{LayDateError & HatchDateError}: Accuracy of laying and hatch date
+#'\strong{LayingDateError & HatchDateError}: Accuracy of laying and hatch date
 #'are given as categories: 0-1; 1-2; 2-3; 'inaccurate'. Where error is a range,
 #'the more conservative error is used (i.e. 0-1 is recorded as 1).
 #'Cases listed as 'inaccurate' have an error of at least a week.
@@ -150,13 +150,13 @@ format_KEV <- function(db = choose_directory(),
 
   message("Compiling individual data...")
 
-  Individual_data <- create_individual_KEV(Capture_data = Capture_data)
+  Individual_data <- create_individual_KEV(Capture_data = Capture_data, protocol_version = protocol_version)
 
   # LOCATION DATA
 
   message("Compiling location data...")
 
-  Location_data <- create_location_KEV(db = db)
+  Location_data <- create_location_KEV(db = db, protocol_version = protocol_version)
 
   # WRANGLE DATA FOR EXPORT
 
@@ -167,8 +167,8 @@ format_KEV <- function(db = choose_directory(),
     dplyr::mutate(Mass = dplyr::na_if(.data$Mass, 0),
                   Tarsus = dplyr::na_if(.data$Tarsus, 0)) %>%
     dplyr::group_by(.data$BroodID) %>%
-    dplyr::summarise(AvgEggMass = NA,
-                     NumberEggs = NA,
+    dplyr::summarise(AvgEggMass = NA_real_,
+                     NumberEggs = NA_integer_,
                      AvgChickMass = mean(.data$Mass, na.rm = T)/10,
                      NumberChicksMass = dplyr::n(),
                      AvgTarsus = mean(.data$Tarsus, na.rm = T),
@@ -203,19 +203,18 @@ format_KEV <- function(db = choose_directory(),
   Brood_data <- dplyr::left_join(Brood_data, Chick_avg, by = "BroodID") %>%
     dplyr::left_join(Parents, by = "BroodID") %>%
     #Now we can do clutchtype_calculated (we couldn't do this until we have FemaleID)
-    dplyr::arrange(.data$BreedingSeason, .data$FemaleID, .data$LayDate) %>%
+    dplyr::arrange(.data$BreedingSeason, .data$FemaleID, .data$LayingDate) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE)) %>%
-    dplyr::select("BroodID", "PopID", "BreedingSeason", "Species", "Plot", "LocationID",
-                  "FemaleID", "MaleID", "ClutchType_observed", "ClutchType_calculated",
-                  "LayDate", "LayDateError", "ClutchSize", "ClutchSizeError",
-                  "HatchDate", "HatchDateError", "BroodSize", "BroodSizeError",
-                  "FledgeDate", "FledgeDateError", "NumberFledged", "NumberFledgedError",
-                  "AvgEggMass", "NumberEggs",
-                  "AvgChickMass", "NumberChicksMass", "AvgTarsus", "NumberChicksTarsus",
-                  "OriginalTarsusMethod", "ExperimentID")
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Brood_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Brood_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Brood_data))
 
   Capture_data <- Capture_data %>%
-    dplyr::select(-"Sex", -"BroodID", -"CaptureType", -"BirdStatus")
+        # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Capture_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Capture_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Capture_data))
 
   # EXPORT DATA
 
@@ -281,14 +280,15 @@ create_brood_KEV <- function(db, species_filter){
                   "ClutchType_observed" = "Pesa", "Habitat_Type_simple" = "Mety",
                   "Dist_to_humans" = "Dist", "Altitude" = "Mpy",
                   "Habitat_Type_detailed" = "Puut", "Habitat_Type_detailed2" = "Vart",
-                  "LayDate_day" = "Mpv", "LayDate_month" = "Mkk", "LayDateError" = "Mtar",
+                  "LayingDate_day" = "Mpv", "LayingDate_month" = "Mkk", "LayingDateError" = "Mtar",
                   "HatchDate_day" = "Kpv", "HatchDate_month" = "Kkk", "HatchDateError" = "Ktar",
                   "Incubation" = "Halku", "ClutchSize" = "Mulu", "BroodSize" = "Kuor",
                   "NumberRinged" = "Reng", "NumberFledged" = "Lent", "ReasonFailed" = "Tsyy")
 
   Brood_data <- Brood_data %>%
     #Create unique BroodID with year_locationID_BroodID
-    dplyr::mutate(BroodID = paste(.data$BreedingSeason, .data$LocationID, .data$BroodID, sep = "_")) %>%
+    dplyr::mutate(BreedingSeason = as.numeric(.data$BreedingSeason),
+                  BroodID = paste(.data$BreedingSeason, .data$LocationID, .data$BroodID, sep = "_")) %>%
     #Convert species codes to letter codes
     dplyr::mutate(Species = dplyr::case_when(.data$Species == "FICHYP" ~ species_codes$Species[which(species_codes$speciesEURINGCode == 13490)],
                                              .data$Species == "PARMAJ" ~ species_codes$Species[which(species_codes$speciesEURINGCode == 14640)],
@@ -303,23 +303,23 @@ create_brood_KEV <- function(db, species_filter){
                                                          .data$ClutchType_observed %in% c(2, 3, 6) ~ "replacement",
                                                          .data$ClutchType_observed == 5 ~ "second")) %>%
     #Create calendar date for laying date and hatch date
-    dplyr::mutate(LayDate = as.Date(paste(.data$LayDate_day, .data$LayDate_month, .data$BreedingSeason, sep = "/"),
+    dplyr::mutate(LayingDate = as.Date(paste(.data$LayingDate_day, .data$LayingDate_month, .data$BreedingSeason, sep = "/"),
                                     format = "%d/%m/%Y"),
                   HatchDate  = as.Date(paste(.data$HatchDate_day, .data$HatchDate_month, .data$BreedingSeason, sep = "/"),
                                        format = "%d/%m/%Y")) %>%
-    dplyr::mutate(LayDateError = dplyr::case_when(.data$LayDateError == "1" ~ 1L,
-                                                  .data$LayDateError == "2" ~ 2L,
-                                                  .data$LayDateError == "3" ~ 3L,
-                                                  .data$LayDateError == "4" ~ 7L),
+    dplyr::mutate(LayingDateError = dplyr::case_when(.data$LayingDateError == "1" ~ 1L,
+                                                     .data$LayingDateError == "2" ~ 2L,
+                                                     .data$LayingDateError == "3" ~ 3L,
+                                                     .data$LayingDateError == "4" ~ 7L),
                   HatchDateError = dplyr::case_when(.data$HatchDateError == "1" ~ 1L,
                                                     .data$HatchDateError == "2" ~ 2L,
                                                     .data$HatchDateError == "3" ~ 3L,
                                                     .data$HatchDateError == "4" ~ 7L),
                   FledgeDate = as.Date(NA),
-                  ClutchSizeError = NA_real_,
-                  BroodSizeError = NA_real_,
-                  FledgeDateError = NA_real_,
-                  NumberFledgedError = NA_real_,
+                  ClutchSizeError = NA_integer_,
+                  BroodSizeError = NA_integer_,
+                  FledgeDateError = NA_integer_,
+                  NumberFledgedError = NA_integer_,
                   BroodSize = as.integer(.data$BroodSize),
                   ExperimentID = NA_character_)
 
@@ -409,7 +409,8 @@ create_capture_KEV <- function(db, Brood_data, species_filter, return_errors){
 
   Capture_data <- Capture_data %>%
     #Create unique broodID
-    dplyr::mutate(BroodID = paste(.data$BreedingSeason, .data$LocationID, .data$BroodID, sep = "_"),
+    dplyr::mutate(BreedingSeason = as.numeric(.data$BreedingSeason),
+                  BroodID = paste(.data$BreedingSeason, .data$LocationID, .data$BroodID, sep = "_"),
                   CaptureDate = as.Date(paste(.data$Day, .data$Month, .data$BreedingSeason, sep = "/"),
                                         format = "%d/%m/%Y"),
                   CaptureTime = dplyr::na_if(paste0(.data$Time, ":00"), "NA:00")) %>%
@@ -434,7 +435,7 @@ create_capture_KEV <- function(db, Brood_data, species_filter, return_errors){
     dplyr::filter(!.data$Age %in% c("PP", "PM") | is.na(.data$Age)) %>%
     dplyr::mutate(Capture_type = "Adult",
                   Last2DigitsRingNr = NA,
-                  ChickAge = NA) %>%
+                  ChickAge = NA_real_) %>%
     dplyr::mutate(IndvID = paste(.data$RingSeries, .data$RingNumber, sep = "-")) %>%
     dplyr::select("IndvID", "BreedingSeason", "CaptureDate", "CaptureTime",
                   "ObserverID", "LocationID", "BroodID", "Species", "Sex", "Age",
@@ -465,7 +466,7 @@ create_capture_KEV <- function(db, Brood_data, species_filter, return_errors){
     #Join in Brood_data (with HatchDate) so we can determine ChickAge
     dplyr::mutate(Capture_type = "Chick",
                   Last2DigitsRingNr = NA,
-                  ChickAge = as.integer(.data$CaptureDate - .data$HatchDate),
+                  ChickAge = as.numeric(.data$CaptureDate - .data$HatchDate),
                   IndvID = paste(.data$RingSeries, .data$RingNumber, sep = "-")) %>%
     dplyr::select("IndvID", "BreedingSeason", "CaptureDate", "CaptureTime",
                   "ObserverID", "LocationID", "BroodID", "Species", "Sex", "Age",
@@ -499,7 +500,7 @@ create_capture_KEV <- function(db, Brood_data, species_filter, return_errors){
     dplyr::left_join(Brood_data %>%
                        dplyr::select("BroodID", "HatchDate"),
                      by = "BroodID") %>%
-    dplyr::mutate(ChickAge = as.integer(.data$CaptureDate - .data$HatchDate)) %>%
+    dplyr::mutate(ChickAge = as.numeric(.data$CaptureDate - .data$HatchDate)) %>%
     dplyr::select("IndvID", "BreedingSeason", "CaptureDate", "CaptureTime", "ObserverID",
                   "LocationID", "BroodID", "Species",
                   "Sex", "Age", "WingLength", "Mass", "CaptureType", "BirdStatus", "ChickAge")
@@ -589,9 +590,12 @@ create_capture_KEV <- function(db, Brood_data, species_filter, return_errors){
 
                                            })) %>%
     tidyr::unnest(cols = "RingNumber") %>%
+    tidyr::drop_na("RingNumber") %>%
     dplyr::select("LocationID", "BroodID", "RingSeries", "RingNumber",
                   "BreedingSeason", "Species", "Sex", "Age",
-                  "ObserverID", "CaptureType", "BirdStatus") %>%
+                  "ObserverID", "CaptureType", "BirdStatus",
+                  "CaptureDate_chick" = "CaptureDate",
+                  "CaptureTime_chick" = "CaptureTime") %>%
     dplyr::distinct()
 
   #Remove names so that it doesn't break tests
@@ -608,11 +612,19 @@ create_capture_KEV <- function(db, Brood_data, species_filter, return_errors){
     #N.B. We do left_join with BroodID and Last2Digits, so we can get multiple
     #records for each chick when they were captured more than once
     dplyr::left_join(Nestling_data %>%
-                       dplyr::select("BroodID", "CaptureDate", "CaptureTime",
+                       dplyr::select("BroodID",
+                                     "CaptureDate_nestling" = "CaptureDate",
+                                     "CaptureTime_nestling" = "CaptureTime",
                                      "Last2DigitsRingNr", "WingLength",
                                      "Mass", "ChickAge"),
                      by = c("BroodID", "Last2DigitsRingNr")) %>%
-    dplyr::mutate(IndvID = paste(.data$RingSeries, .data$RingNumber, sep = "-")) %>%
+    dplyr::mutate(IndvID = paste(.data$RingSeries, .data$RingNumber, sep = "-"),
+                  # Use CaptureDate and CaptureTime from nestling data if available
+                  # otherwise use from capture data
+                  CaptureDate = dplyr::case_when(is.na(.data$CaptureDate_nestling) ~ .data$CaptureDate_chick,
+                                                 TRUE ~ .data$CaptureDate_nestling),
+                  CaptureTime = dplyr::case_when(is.na(.data$CaptureTime_nestling) ~ .data$CaptureTime_chick,
+                                                 TRUE ~ .data$CaptureTime_nestling)) %>%
     dplyr::select("IndvID", "BreedingSeason", "CaptureDate", "CaptureTime", "ObserverID",
                   "LocationID", "BroodID", "Species", "Sex", "Age",
                   "WingLength", "Mass", "CaptureType", "BirdStatus", "ChickAge")
@@ -689,17 +701,25 @@ create_capture_KEV <- function(db, Brood_data, species_filter, return_errors){
   message("Calculating age at each capture...")
 
   Capture_data_output <- Capture_data_expanded %>%
+    # Set non-conforming IDs to NA
+    dplyr::mutate(IndvID = dplyr::case_when(stringr::str_detect(.data$IndvID, "^[:alpha:]{1,2}[-][:digit:]{5,6}$") ~ .data$IndvID,
+                                            TRUE ~ NA_character_)) %>%
+    # Drop records with NAs in Species, BreedingSeason, CaptureDate or IndvID
+    ### TODO: When updating to v2.0.0, individuals with missing ring numbers can be dealt with by creating new individualIDs not based on ring number
+    ### (and ring numbers are stored in captureTagID/releaseTagID columns)
+    ### TODO: When updating to v2.0.0, some records with missing CaptureDate can be dealt with if year is known
+    tidyr::drop_na(tidyselect::any_of(c("Species", "BreedingSeason", "CaptureDate", "IndvID"))) %>%
     dplyr::mutate(Mass = .data$Mass/10,
                   CapturePopID = "KEV",
                   CapturePlot = NA_character_,
                   ReleasePopID = "KEV",
                   ReleasePlot = NA_character_,
-                  Age_observed = dplyr::case_when(.data$Age %in% c("PM", "PP") ~ 1L,
-                                                  .data$Age == "FL" ~ 2L,
-                                                  .data$Age == "1" ~ 3L,
-                                                  .data$Age == "+1" ~ 4L,
-                                                  .data$Age == "2" ~ 5L,
-                                                  .data$Age == "+2" ~ 6L)) %>%
+                  Age_observed = dplyr::case_when(.data$Age %in% c("PM", "PP") ~ 1,
+                                                  .data$Age == "FL" ~ 2,
+                                                  .data$Age == "1" ~ 3,
+                                                  .data$Age == "+1" ~ 4,
+                                                  .data$Age == "2" ~ 5,
+                                                  .data$Age == "+2" ~ 6)) %>%
     #Determine age at first capture for every individual
     #First arrange the data chronologically within each individual
     dplyr::arrange(.data$IndvID, .data$CaptureDate, .data$CaptureTime) %>%
@@ -724,10 +744,11 @@ create_capture_KEV <- function(db, Brood_data, species_filter, return_errors){
 #' Create full individual data table in standard format for data from Kevo, Finland.
 #'
 #' @param Capture_data Output of \code{\link{create_capture_HAR}}.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_individual_KEV <- function(Capture_data){
+create_individual_KEV <- function(Capture_data, protocol_version){
 
   #Take capture data and determine summary data for each individual
   Indv_data <- Capture_data %>%
@@ -747,7 +768,7 @@ create_individual_KEV <- function(Capture_data){
 
                                                 } else {
 
-                                                  return("CONFLICTED")
+                                                  return("CCCCCC")
 
                                                 }
 
@@ -783,7 +804,11 @@ create_individual_KEV <- function(Capture_data){
                   BroodIDFledged = .data$BroodIDLaid) %>%
     #Ungroup to prevent warnings in debug report
     dplyr::ungroup() %>%
-    dplyr::arrange(.data$RingSeason, .data$IndvID)
+    dplyr::arrange(.data$RingSeason, .data$IndvID) %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Individual_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Individual_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Individual_data))
 
   return(Indv_data)
 
@@ -794,11 +819,12 @@ create_individual_KEV <- function(Capture_data){
 #' Create full location data table in standard format for data from Kevo, Finland.
 #'
 #' @param db Location of primary data from Kevo.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 #' @export
 
-create_location_KEV <- function(db){
+create_location_KEV <- function(db, protocol_version){
 
   message("Extracting location data from paradox database")
 
@@ -836,9 +862,11 @@ create_location_KEV <- function(db){
                      LocationType = "NB",
                      StartSeason = min(.data$BreedingSeason),
                      EndSeason = max(.data$BreedingSeason),
-                     Habitat = "Mixed") %>%
-    dplyr::select("LocationID", "NestboxID", "LocationType", "PopID",
-                  "Latitude", "Longitude", "StartSeason", "EndSeason", "Habitat")
+                     Habitat = "mixed") %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Location_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Location_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Location_data))
 
   return(Location_data)
 

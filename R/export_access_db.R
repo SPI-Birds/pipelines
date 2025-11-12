@@ -1,72 +1,109 @@
-#' Export selected tables from Access database to csv files through Jackcess
+#' Export Access Database Tables to CSV using Python AccessParser
 #'
-#' Connect to MS Access database via Jackcess (a Java library) to export a selected tables as a  csv files.
+#' This function uses Python's AccessParser library via reticulate to export
+#' MS Access database tables to CSV files. This provides cross-platform
+#' compatibility for reading Access databases.
 #'
-#' Jackcess is a Java library for reading from and writing to MS Access databases.
-#' Previously, we used ODBC (Open Database Connectivity) to connect to MS Access databases,
-#' but this does not work on MacOS and Linux as straightforwardly as it does on Windows.
+#' @param dsn Character. File path to MS Access database source name (.mdb or .accdb file).
+#' @param table Character vector. Names of tables to export. Can be a single table name or vector of table names.
+#' @param output_dir Character. File path to directory where the new CSV files will be created. Directory will be created if it doesn't exist.
+#' @param header Logical. Include the column names in the header row? Default: TRUE.
+#' @param delim Character. The column delimiter in the output CSV file. Default: "," (comma).
+#' @param quote Character. The quote character in the output CSV file. Default: '"' (double quote).
+#' @param python_script Character. Path to the Python script containing export_access_db function. Default: "test_files/export_access_db.py".
 #'
-#' @param dsn Character. File path to MS Access database source name.
-#' @param table Character. Names of tables to export.
-#' @param output_dir Character. File path to directory where the new files will be created.
-#' @param header Logical. Include the column names in the header? Default: \code{TRUE}.
-#' @param delim Character. The column delimiter in the output file. Default: ",".
-#' @param quote Character. The quote character in the output file. Default: '"'.
-#' @param filter a Jackcess ExportFilter object to filter columns or rows in the export. Default: \code{rjackcess::SimpleExportFilter()$INSTANCE}, which is the full, unfiltered instance (table).
+#' @return Invisible NULL. Creates CSV files of selected tables from Access database in the specified output directory.
 #'
-#' @returns csv files of selected tables from Access database
+#' @details
+#' This function requires the \code{reticulate} package and Python with the \code{access_parser} library installed.
 #'
-#' @importFrom rJava .jnew .jchar
-#' @importFrom rjackcess SimpleExportFilter Database
+#' The function will:
+#' \itemize{
+#'   \item Connect to the specified Access database
+#'   \item Extract data from the specified table(s)
+#'   \item Create the output directory if it doesn't exist
+#'   \item Export each table as a separate CSV file named \code{tablename.csv}
+#' }
+#'
+#' @examples
+#' \dontrun{
+#' # Export single table
+#' export_access_db(
+#'     dsn = "AMM_Ammersee_Germany/AMM_PrimaryData.accdb",
+#'     table = "Broods",
+#'     output_dir = "exported_data"
+#' )
+#'
+#' # Export multiple tables
+#' export_access_db(
+#'     dsn = "AMM_Ammersee_Germany/AMM_PrimaryData.accdb",
+#'     table = c("Broods", "Catches", "Chicks"),
+#'     output_dir = "exported_data"
+#' )
+#'
+#' # Export with custom CSV formatting
+#' export_access_db(
+#'     dsn = "database.accdb",
+#'     table = "MyTable",
+#'     output_dir = "output",
+#'     header = TRUE,
+#'     delim = ";",
+#'     quote = "'"
+#' )
+#' }
+#'
+#' @seealso
+#' \url{https://github.com/mccartney/access_parser} for AccessParser documentation
+#'
+#' @importFrom reticulate source_python
 #' @export
-
 export_access_db <- function(dsn,
-                             table,
-                             output_dir,
-                             header = TRUE,
-                             delim = ",",
-                             quote = '"',
-                             filter = rjackcess::SimpleExportFilter()$INSTANCE) {
+                                    table,
+                                    output_dir,
+                                    header = TRUE,
+                                    delim = ",",
+                                    quote = '"',
+                                    python_script = system.file("extdata", "export_access_db.py", package = "pipelines")) {
+    # Check if reticulate is installed
+    if (!requireNamespace("reticulate", quietly = TRUE)) {
+        stop("Package 'reticulate' is required but not installed.\nPlease install it with: install.packages('reticulate')")
+    }
 
-  if(!grepl("\\\\|\\/", output_dir)) {
+    # Check if Python script exists
+    if (!file.exists(python_script)) {
+        stop(paste("Python script not found:", python_script))
+    }
 
-    stop("`output_dir` should be a character vector giving the path to a directory")
+    # Source the Python function
+    tryCatch(
+        {
+            reticulate::source_python(python_script)
+            message("Python function loaded successfully")
+        },
+        error = function(e) {
+            stop(paste("Error sourcing Python script:", e$message))
+        }
+    )
 
-  }
+    # Call the Python function
+    tryCatch(
+        {
+            export_access_db(
+                dsn = dsn,
+                table = table,
+                output_dir = output_dir,
+                header = header,
+                delim = delim,
+                quote = quote
+            )
 
-  # Initialise Jackcess object to interact with MS Access database
-  db <- rjackcess::Database(dsn)
+            message("Tables exported successfully using Python AccessParser")
+            message(paste("Output directory:", output_dir))
+        },
+        error = function(e) {
+            stop(paste("Error in Python function:", e$message))
+        }
+    )
 
-  # Create directory where new files will be created
-  if(!dir.exists(output_dir)) {
-
-    dir.create(output_dir, recursive = TRUE)
-
-  }
-
-  # Retrieve non-exported ExportUtilBuilder from rjackcess
-  ExportUtilBuilder <- utils::getFromNamespace("ExportUtilBuilder", "rjackcess")
-
-  purrr::walk(.x = table,
-              .f = ~{
-
-                out_file <- paste0(output_dir, "/", .x, ".csv")
-
-                # Call the Jackcess exportFile utility class to export table .x to csv
-                ExportUtilBuilder()$exportFile(db,
-                                               .x,
-                                               rJava::.jnew("java/io/File", path.expand(out_file)),
-                                               header,
-                                               delim,
-                                               rJava::.jchar(quote),
-                                               filter)
-
-              })
-
-
-  # Close connection to database
-  db$close()
-
-  invisible(NULL)
-
+    invisible(NULL)
 }

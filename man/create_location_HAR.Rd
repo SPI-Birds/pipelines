@@ -4,10 +4,12 @@
 \alias{create_location_HAR}
 \title{Create location table for Harjavalta, Finland.}
 \usage{
-create_location_HAR(db)
+create_location_HAR(db, protocol_version)
 }
 \arguments{
 \item{db}{Location of primary data from Harjavalta.}
+
+\item{protocol_version}{Character string. The version of the standard protocol on which this pipeline is based.}
 }
 \value{
 A data frame.

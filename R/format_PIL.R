@@ -75,6 +75,8 @@ format_PIL <- function(db = choose_directory(),
   #We convert the data later
   PIL_data <- readxl::read_excel(path = paste0(db, "/PIL_PrimaryData.xlsx"), col_types = "text", na = "NA") %>%
     janitor::clean_names() %>%
+    # Drop records with NA in main breeding parameters
+    dplyr::filter(!(is.na(.data$nestbox) & is.na(.data$laying_date) & is.na(.data$number_hatchlings) & is.na(.data$clutch_size) & is.na(.data$number_fledglings))) %>%
     #Convert all date columns
     #Some are march days some are actual dates (but different formats)
     dplyr::mutate(mar_31 = as.Date(paste(.data$year, 3, 31, sep = "-")),
@@ -98,7 +100,14 @@ format_PIL <- function(db = choose_directory(),
                                                    grepl(pattern = "\\.", .x) ~ as.Date(.x, format = "%Y.%m.%d"),
                                                    TRUE ~ suppressWarnings(janitor::excel_numeric_to_date(as.numeric(.x))))
 
-                                }))
+                                })) %>%
+    # Some IDs contain 'change' or 'and', which seems to indicate
+    # uncertainty in identification. Set to NA
+    # TODO: check with data owner
+  dplyr::mutate(dplyr::across(c("femalering", "malering"),
+                                ~dplyr::case_when(stringr::str_detect(., "CHANGE|AND") ~ NA_character_,
+                                                  stringr::str_detect(., "^[:alnum:]{2}[:digit:]{3,5}[:alpha:]{0,1}$") ~ stringr::str_extract(., "[A-Za-z0-9]+"),
+                                                  TRUE ~ NA_character_)))
 
 
   # BROOD DATA
@@ -117,13 +126,13 @@ format_PIL <- function(db = choose_directory(),
 
   message("Compiling individual data...")
 
-  Individual_data <- create_individual_PIL(Capture_data = Capture_data)
+  Individual_data <- create_individual_PIL(Capture_data = Capture_data, protocol_version = protocol_version)
 
   # LOCATION DATA
 
   message("Compiling location data...")
 
-  Location_data <- create_location_PIL(PIL_data = PIL_data)
+  Location_data <- create_location_PIL(PIL_data = PIL_data, protocol_version = protocol_version)
 
   # WRANGLE DATA FOR EXPORT
 
@@ -161,20 +170,16 @@ format_PIL <- function(db = choose_directory(),
 
   # Remove unneccesary columns in Brood and Capture data
   Brood_data <- Brood_data %>%
-    # Keep only necessary columns
-    dplyr::select(tidyselect::contains(names(brood_data_template))) %>%
     # Add missing columns
-    dplyr::bind_cols(brood_data_template[1, !(names(brood_data_template) %in% names(.))]) %>%
-    # Reorder columns
-    dplyr::select(names(brood_data_template))
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Brood_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Brood_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Brood_data))
 
   Capture_data <- Capture_data %>%
-    # Keep only necessary columns
-    dplyr::select(tidyselect::contains(names(capture_data_template))) %>%
     # Add missing columns
-    dplyr::bind_cols(capture_data_template[1, !(names(capture_data_template) %in% names(.))]) %>%
-    # Reorder columns
-    dplyr::select(names(capture_data_template))
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Capture_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Capture_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Capture_data))
 
   # EXPORT DATA
 
@@ -259,7 +264,10 @@ create_brood_PIL <- function(PIL_data, species_filter){
                   MaleID = .data$malering) %>%
     dplyr::filter(.data$Species %in% species_filter) %>%
     dplyr::arrange(.data$BreedingSeason, .data$FemaleID, .data$LayDate_observed) %>%
-    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.1"))
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.1")) %>%
+    # Drop duplicated BroodIDs
+    # TODO: check with data owner
+    dplyr::distinct(.data$BroodID, .keep_all = TRUE)
 
   return(Brood_data)
 
@@ -302,7 +310,8 @@ create_capture_PIL <- function(PIL_data, species_filter){
                                              .data$species == "PARMAJ" ~ species_codes$Species[species_codes$speciesEURINGCode == 14640],
                                              .data$species == "FICALB" ~ species_codes$Species[species_codes$speciesEURINGCode == 13480],
                                              .data$species == "SITEUR" ~ species_codes$Species[species_codes$speciesEURINGCode == 14790],
-                                             .data$species == "FICHIB" ~ species_codes$Species[species_codes$speciesEURINGCode == 13480]))
+                                             .data$species == "FICHIB" ~ species_codes$Species[species_codes$speciesEURINGCode == 13480])) %>%
+    dplyr::filter(.data$Species %in% species_filter)
 
   # Male captures
   male_capture_data <- PIL_data %>%
@@ -328,7 +337,8 @@ create_capture_PIL <- function(PIL_data, species_filter){
                                              .data$species == "PARMAJ" ~ species_codes$Species[species_codes$speciesEURINGCode == 14640],
                                              .data$species == "FICALB" ~ species_codes$Species[species_codes$speciesEURINGCode == 13480],
                                              .data$species == "SITEUR" ~ species_codes$Species[species_codes$speciesEURINGCode == 14790],
-                                             .data$species == "FICHIB" ~ species_codes$Species[species_codes$speciesEURINGCode == 13490]))
+                                             .data$species == "FICHIB" ~ species_codes$Species[species_codes$speciesEURINGCode == 13490])) %>%
+    dplyr::filter(.data$Species %in% species_filter)
 
   # Chick captures
   chick_capture_data <- PIL_data %>%
@@ -391,6 +401,9 @@ create_capture_PIL <- function(PIL_data, species_filter){
   Capture_data <- dplyr::bind_rows(female_capture_data,
                                    male_capture_data,
                                    chick_capture_data) %>%
+    # Drop records with NAs in CaptureDate
+    # TODO: When updating to v2.0.0, some records with missing CaptureDate can be dealt with if year is known
+    tidyr::drop_na("CaptureDate") %>%
     dplyr::mutate(CaptureTime = NA_character_,
                   WingLength = NA_real_,
                   OriginalTarsusMethod = NA_character_,
@@ -417,10 +430,11 @@ create_capture_PIL <- function(PIL_data, species_filter){
 #' Create full individual data table in standard format for data from Pilis-Visegrád Mountains, Hungary.
 #'
 #' @param Capture_data Output of \code{\link{create_capture_PIL}}.
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_individual_PIL <- function(Capture_data){
+create_individual_PIL <- function(Capture_data, protocol_version){
 
   # Take capture data and determine summary data for each individual
   Indv_info <- Capture_data %>%
@@ -451,12 +465,10 @@ create_individual_PIL <- function(Capture_data){
   Indv_data <- Indv_info %>%
     dplyr::left_join(Sex_calc,
                      by = "IndvID") %>%
-    # Keep only necessary columns
-    dplyr::select(tidyselect::contains(names(individual_data_template))) %>%
     # Add missing columns
-    dplyr::bind_cols(individual_data_template[1, !(names(individual_data_template) %in% names(.))]) %>%
-    # Reorder columns
-    dplyr::select(names(individual_data_template))
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Individual_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Individual_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Individual_data))
 
   return(Indv_data)
 
@@ -467,10 +479,11 @@ create_individual_PIL <- function(Capture_data){
 #' Create location data table in standard format for data from Pilis-Visegrád Mountains, Hungary.
 #'
 #' @param PIL_data Data frame with primary data from Pilis-Visegrád Mountains
+#' @param protocol_version Character string. The version of the standard protocol on which this pipeline is based.
 #'
 #' @return A data frame.
 
-create_location_PIL <- function(PIL_data){
+create_location_PIL <- function(PIL_data, protocol_version){
 
   Location_data <- tibble::tibble(LocationID = unique(PIL_data$LocationID),
                                   NestboxID = unique(PIL_data$LocationID),
@@ -480,7 +493,11 @@ create_location_PIL <- function(PIL_data){
                                   Longitude = NA_real_,
                                   StartSeason = min(as.integer(PIL_data$year)),
                                   EndSeason = NA_integer_,
-                                  HabitatType = "deciduous")
+                                  HabitatType = "deciduous") %>%
+    # Add missing columns
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Location_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Location_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Location_data))
 
   return(Location_data)
 

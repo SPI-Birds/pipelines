@@ -4,10 +4,12 @@
 \alias{create_location_PEW}
 \title{Create location data table for Peerdsbos West, Belgium.}
 \usage{
-create_location_PEW(data)
+create_location_PEW(data, protocol_version)
 }
 \arguments{
 \item{data}{Data frame pew_data with primary data from Peerdsbos West, Belgium.}
+
+\item{protocol_version}{Character string. The version of the standard protocol on which this pipeline is based.}
 }
 \value{
 A data frame.

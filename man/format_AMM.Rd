@@ -45,7 +45,7 @@ this data. For a general description of the standard format please see
 \strong{Species}: Species code 5 refers to Willow tit/Marsh tit. As we cannot
 confidently identify species, these are considered Unknown and removed. This
 currently only occurs once in the data. Similarly, species code 0 refers to
-'unknown' and is treated as NA and removed.
+' unknown' and is treated as NA and removed.
 
 \strong{ClutchType_observed}: Code 6 'Replacement First Replacement' is considered to be
 a 2nd replacement after the first (i.e. not successful clutch) and is defined as 'replacement'.
@@ -57,13 +57,13 @@ as NA.
 In this case, we are giving the clutch size as the number of eggs of both species. We are thinking
 about ways to more effectively deal with multi-species clutches.
 
-\strong{BroodSize}: Use NumberHatched to determine observed BroodSize. BroodSize_minimum is equal to BroodSize
-observed. BroodSize_maximum is NumberHatched + ErrorHatched (i.e. number of eggs never observed either alive
+\strong{BroodSize}: Use NumberHatched to determine observed BroodSize. BroodSize_min is equal to BroodSize
+observed. BroodSize_max is NumberHatched + ErrorHatched (i.e. number of eggs never observed either alive
 or dead, so status was unknown).
 
 \strong{NumberFledged}: Use NumberFledged to determine observed number of fledglings.
-NumberFledged_minimum is equal to BroodSize_observed.
-BroodSize_maximum is NumberFledged + ErrorFledged (i.e. number of chicks never observed either alive
+NumberFledged_min is equal to BroodSize_observed.
+NumberFledged_max is NumberFledged + ErrorFledged (i.e. number of chicks never observed either alive
 or dead, so status was unknown).
 
 \strong{HatchDate}: The day a clutch hatched.

@@ -4,10 +4,12 @@
 \alias{create_individual_GRO}
 \title{Create individual table for great tits and blue tits in Grobla, Poland.}
 \usage{
-create_individual_GRO(Capture_data)
+create_individual_GRO(Capture_data, protocol_version)
 }
 \arguments{
-\item{Capture_data}{Capture data output based on modified primary data from Grobla, Poland}
+\item{Capture_data}{Capture data output based on modified primary data from Grobla, Poland.}
+
+\item{protocol_version}{Character string. The version of the standard protocol on which this pipeline is based.}
 }
 \value{
 A data frame.
