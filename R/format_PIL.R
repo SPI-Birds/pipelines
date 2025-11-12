@@ -143,7 +143,11 @@ format_PIL <- function(db = choose_directory(),
                        dplyr::select("BroodID", "HatchDate_observed"),
                      by = "BroodID") %>%
     dplyr::mutate(ChickAge = dplyr::case_when(is.na(.data$Age_observed) ~ NA_integer_,
-                                              !is.na(.data$Age_observed) ~ as.integer(.data$CaptureDate - .data$HatchDate_observed)))
+                                              !is.na(.data$Age_observed) ~ as.integer(.data$CaptureDate - .data$HatchDate_observed))) %>%
+    # Set negative ChickAge values to NA
+    # TODO: check with data owner
+    dplyr::mutate(ChickAge = dplyr::case_when(.data$ChickAge < 1 ~ NA_integer_,
+                                              TRUE ~ .data$ChickAge))
   ## FIXME: many-to-many relationship because of duplicated BroodIDs,
   ## where one or more of the components that make up BroodID are NA.
 
