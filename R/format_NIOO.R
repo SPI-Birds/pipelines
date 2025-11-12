@@ -83,21 +83,6 @@ format_NIOO <- function(db = choose_directory(),
                      "dbo_tbl_Individual", "dbo_tl_BroodType", "dbo_tbl_Brood", "dbo_tbl_Capture",
                      "dbo_vw_MI_CaptureCaptureData", "dbo_tbl_NestboxAppearance")
 
-
-  ## We don't have an equivalent of this check in our new Python-based export function
-  # so, greyed out for now.
-  # If we need a similar solution, it can be added later.
-
-  # Check if any of the relevant tables is missing in the Access database file
-  #missing_tables <- access_tables[!(access_tables %in% rjackcess::getTableNames(rjackcess::Database(dsn)))]
-
-  #if(any(!(access_tables %in% rjackcess::getTableNames(rjackcess::Database(dsn))))) {
-
-  #  stop(paste("The Access database does not contain these primary tables:\n",
-  #             paste0("'", missing_tables, "'", collapse = ", ")))
-
-  #}
-
   table_dir <- paste0(db, "/NIOO_PrimaryData_tables")
 
   export_access_db(dsn,
@@ -403,6 +388,8 @@ create_brood_NIOO <- function(dir, location_data, species_filter, pop_filter){
                                                          grepl(pattern = "second clutch after|probably second|third clutch", .data$ClutchType_observed) ~ "second",
                                                          grepl(pattern = "first clutch", .data$ClutchType_observed) ~ "first"),
                   Plot = as.character(.data$Plot)) %>%
+                  # Add PopID as prefix to LocationID to make it unique
+                  LocationID = paste0(.data$PopID, "_", .data$LocationID)) %>%
     dplyr::arrange(.data$PopID, .data$BreedingSeason, .data$Species, .data$FemaleID, .data$LayDate_observed) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = TRUE, protocol_version = "1.1"))
 
