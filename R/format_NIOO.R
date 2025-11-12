@@ -389,7 +389,7 @@ create_brood_NIOO <- function(dir, location_data, species_filter, pop_filter){
                                                          grepl(pattern = "first clutch", .data$ClutchType_observed) ~ "first"),
                   Plot = as.character(.data$Plot)) %>%
                   # Add PopID as prefix to LocationID to make it unique
-                  LocationID = paste0(.data$PopID, "_", .data$LocationID)) %>%
+                  LocationID = paste0(.data$PopID, "_", .data$LocationID) %>%
     dplyr::arrange(.data$PopID, .data$BreedingSeason, .data$Species, .data$FemaleID, .data$LayDate_observed) %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = TRUE, protocol_version = "1.1"))
 
