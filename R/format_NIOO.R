@@ -62,7 +62,8 @@ format_NIOO <- function(db = choose_directory(),
                         species = NULL,
                         pop = NULL,
                         path = ".",
-                        output_type = "R") {
+                        output_type = "R",
+                        skip_export_tables = FALSE) { # Hidden function to make rerunning faster
   # The version of the standard protocol on which this pipeline is based
   protocol_version <- "1.1.0"
 
@@ -86,10 +87,17 @@ format_NIOO <- function(db = choose_directory(),
 
   table_dir <- paste0(db, "/NIOO_PrimaryData_tables")
 
-  export_access_db(dsn,
-    table = access_tables,
-    output_dir = table_dir
-  )
+  # Check if CSV files already exist in table_dir
+  table_files_exist <- all(file.exists(paste0(table_dir, "/", access_tables, ".csv")))
+
+  if (skip_export_tables == TRUE & table_files_exist == TRUE) {
+    message("Export already exist. Skipping export.")
+  } else {
+      export_access_db(dsn,
+        table = access_tables,
+        output_dir = table_dir
+    )
+  }
 
   # LOCATION DATA
 
@@ -354,9 +362,10 @@ create_brood_NIOO <- function(dir, location_data, species_filter, pop_filter, pr
   # Make a vector that contains the translation between ExperimentCode and ExperimentID
   # Since we have 200+ unique ExperimentCodes, this approach avoids having
   # lengthy case_when statements
+  # Change this as needed
   experiment_translation <- c( # quick demonstration
-    "test_Diet" = "Phenology",
-    "test100_Diet" = "Phenology"
+    "test123" = "Phenology",
+    "test456" = "Phenology"
   )
 
   Brood_data <- Brood_data %>%
