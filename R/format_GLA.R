@@ -13,6 +13,8 @@
 #'\strong{IndvID}: Should be a 7 digit alphanumeric string. IndvIDs with a different number of characters are likely errors.
 #'These are set to NA and removed.
 #'
+#'\strong{LocationID}: LocationIDs are formatted as <PopID>_<NestboxNumber> to avoid duplicates.
+#'
 #'\strong{CaptureDate}: Some individuals were not recorded in the ringing records, but were observed breeding at a monitored nest.
 #'For these individuals, the CaptureDate is set as May 15 of the breeding year.
 #'
@@ -77,7 +79,7 @@ format_GLA <- function(db = choose_directory(),
 
     ## Reformat and rename important variables
     dplyr::mutate(BreedingSeason = as.integer(.data$Yr),
-                  LocationID = as.character(.data$NestboxNumber),
+                  NestboxNumber = as.character(.data$NestboxNumber),
                   Species = as.character(.data$Species),
                   PopID = as.character(.data$Site)) %>%
 
@@ -86,9 +88,7 @@ format_GLA <- function(db = choose_directory(),
 
     ## There are two formats for dates.
     ## The first can be handled with Lubridate, the second needs to be rearranged
-    dplyr::mutate(dplyr::across(.cols = c(.data$FirstEggDate,
-                                          .data$LayingComplete,
-                                          .data$ObservedHatch),
+    dplyr::mutate(dplyr::across(.cols = c("FirstEggDate", "LayingComplete", "ObservedHatch"),
                                 .fns = ~suppressWarnings(dplyr::case_when(grepl("/", .) ~ lubridate::dmy(., quiet = TRUE),
                                                                           TRUE ~ lubridate::ymd(paste(unlist(stringr::str_split(as.character(janitor::excel_numeric_to_date(as.numeric(.))),
                                                                                                                                 pattern = "-"))[c(1,3,2)],
@@ -103,7 +103,7 @@ format_GLA <- function(db = choose_directory(),
                   ClutchSize = as.integer(.data$ClutchSize)) %>%
 
     ## Arrange
-    dplyr::arrange(.data$PopID, .data$BreedingSeason, .data$LocationID, .data$FirstEggDate) %>%
+    dplyr::arrange(.data$PopID, .data$BreedingSeason, .data$NestboxNumber, .data$FirstEggDate) %>%
 
     ## Create additional variables that will be used in multiple data tables
     dplyr::mutate(ClutchSize_max = dplyr::case_when(.data$ClutchComplete == "TRUE" ~ as.numeric(.data$ClutchSize),
@@ -113,7 +113,7 @@ format_GLA <- function(db = choose_directory(),
                                              .data$Species == "piefl" ~ species_codes[species_codes$speciesEURINGCode == 13490,]$Species,
                                              .data$Species == "nutha" ~ species_codes[species_codes$speciesEURINGCode == 14790,]$Species,
                                              .data$Species == "tresp" ~ species_codes[species_codes$speciesEURINGCode == 15980,]$Species),
-                  BroodSize_observed = .data$ClutchSize - as.integer(.data$UnhatchedEggs),
+                  BroodSize_observed = .data$Hatchlings,
                   PopID = dplyr::case_when(.data$PopID == "cashel" ~ "CAS",
                                            .data$PopID == "garscube" ~ "GAR",
                                            .data$PopID == "kelvingrove_park" ~ "KEL",
@@ -138,7 +138,7 @@ format_GLA <- function(db = choose_directory(),
     ## Select variables of interest
     dplyr::select("BreedingSeason",
                   "PopID",
-                  "LocationID",
+                  "NestboxNumber",
                   "Species",
                   "ReplacementClutch",
                   "LayDate_observed",
@@ -174,7 +174,6 @@ format_GLA <- function(db = choose_directory(),
     dplyr::rename("BreedingSeason" = "Yr",
                   "PopID" = "Site",
                   "IndvID" = "RingNumber",
-                  "LocationID" = "NestboxNumber",
                   "CaptureDate" = "Date",
                   "CaptureTime" = "Time",
                   "ObserverID" = "Initial",
@@ -254,6 +253,12 @@ format_GLA <- function(db = choose_directory(),
   message("Compiling location information...")
   Location_data <- create_location_GLA(nest_data, rr_data, protocol_version)
 
+  # Add missing columns
+  Brood_data <- Brood_data %>%
+    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Brood_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Brood_data) %in% names(.))]) %>%
+    # Keep only columns that are in the standard format and order correctly
+    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Brood_data))
+
   time <- difftime(Sys.time(), start_time, units = "sec")
 
   message(paste0("All tables generated in ", round(time, 2), " seconds"))
@@ -312,7 +317,7 @@ create_brood_GLA <- function(nest_data, rr_data, protocol_version) {
 
   ## Get brood data from ringing records
   rr_data_brood_sum <- rr_data %>%
-    dplyr::filter(!is.na(.data$LocationID)) %>%
+    dplyr::filter(!is.na(.data$NestboxNumber)) %>%
 
     ## Determine whether a chick or adult
     dplyr::mutate(RingAge = ifelse(.data$Age_observed == 1, "chick", "adult")) %>%
@@ -321,7 +326,7 @@ create_brood_GLA <- function(nest_data, rr_data, protocol_version) {
     dplyr::filter(.data$RingAge == "chick") %>%
 
     ## Summarize brood information for each nest
-    dplyr::group_by(.data$BreedingSeason, .data$PopID, .data$Species, .data$LocationID) %>%
+    dplyr::group_by(.data$BreedingSeason, .data$PopID, .data$Species, .data$NestboxNumber) %>%
 
     ## If any chicks reach the age where they can be ringed at a nest box, that nest box will not be used again in the breeding season
     ## As such, for each location with chicks, there is only going to be one FemaleID and one MaleID
@@ -336,7 +341,7 @@ create_brood_GLA <- function(nest_data, rr_data, protocol_version) {
                    AvgTarsus = round(mean(.data$Tarsus[.data$ChickAge <= 16L & .data$ChickAge >= 14L ], na.rm = TRUE),1),
                    NumberChicksTarsus = sum(.data$ChickAge <= 16L & .data$ChickAge >= 14L & is.na(.data$Tarsus) == FALSE)) %>%
     dplyr::distinct() %>%
-    dplyr::group_by(.data$BreedingSeason, .data$PopID, .data$Species, .data$LocationID) %>%
+    dplyr::group_by(.data$BreedingSeason, .data$PopID, .data$Species, .data$NestboxNumber) %>%
 
     ## Replace NaNs and 0 with NA
     dplyr::mutate(dplyr::across(tidyselect::where(is.numeric), ~dplyr::na_if(., NaN)),
@@ -352,7 +357,7 @@ create_brood_GLA <- function(nest_data, rr_data, protocol_version) {
 
   ## Join brood data from ringing records to brood data from nest records
   Brood_data <- nest_data_brood_sum %>%
-    dplyr::group_by(.data$BreedingSeason, .data$PopID, .data$Species, .data$LocationID) %>%
+    dplyr::group_by(.data$BreedingSeason, .data$PopID, .data$Species, .data$NestboxNumber) %>%
     dplyr::mutate(last_rec = dplyr::case_when(.data$BroodID == max(.data$BroodID) ~ "yes",
                                               TRUE ~ "no")) %>%
 
@@ -361,7 +366,7 @@ create_brood_GLA <- function(nest_data, rr_data, protocol_version) {
     dplyr::left_join(rr_data_brood_sum %>%
                        dplyr::mutate(chicks_fledged = dplyr::case_when(!is.na(.data$NumberChicksMass) | !is.na(.data$NumberChicksTarsus) ~ "yes",
                                                                         TRUE ~ "no")),
-                     by = c("BreedingSeason", "PopID", "LocationID")) %>%
+                     by = c("BreedingSeason", "PopID", "NestboxNumber")) %>%
     dplyr::select(-"chicks_fledged", -"last_rec") %>%
 
     ## Merge Male and Female ID columns to fill in any that are missing
@@ -384,8 +389,7 @@ create_brood_GLA <- function(nest_data, rr_data, protocol_version) {
                   "Species" = "Species_j") %>%
 
   ## If FemaleID or MaleID differs from expected format, set to NA
-  dplyr::mutate(dplyr::across(.cols = c(.data$FemaleID,
-                                        .data$MaleID),
+  dplyr::mutate(dplyr::across(.cols = c("FemaleID", "MaleID"),
                               .fns = ~dplyr::case_when(stringr::str_detect(., "^[[:digit:][:alpha:]]{7}$") ~ .,
                                                        TRUE ~ NA_character_))) %>%
 
@@ -399,12 +403,9 @@ create_brood_GLA <- function(nest_data, rr_data, protocol_version) {
     dplyr::arrange(.data$PopID, .data$BreedingSeason, .data$Species, .data$FemaleID, .data$LayDate_observed) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data =. , protocol_version = "1.1", na.rm = FALSE)) %>%
-
-    ## Add missing columns
-    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Brood_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Brood_data) %in% names(.))]) %>%
-
-    ## Keep only columns that are in the standard format and order correctly
-    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Brood_data))
+    # Add PopID prefix to LocationID to avoid duplicated LocationIDs across sites
+    dplyr::mutate(LocationID = dplyr::case_when(is.na(.data$NestboxNumber) ~ NA_character_,
+                                                TRUE ~ paste(.data$PopID, .data$NestboxNumber, sep = "_")))
 
   return(Brood_data)
 
@@ -427,7 +428,7 @@ create_capture_GLA <- function(nest_data, rr_data, Brood_data, protocol_version)
   ## Capture data from ringing records
   ## TODO: Check on tarsus method
   Capture_data_rr <- rr_data %>%
-    dplyr::filter(!(.data$IndvID %in% c("too small", "too_small", "no_rings_COVID","unknown"))) %>% # Keep only records of banded individuals
+    dplyr::filter(!(.data$IndvID %in% c("too small", "too_small", "no_rings_COVID", "unknown"))) %>% # Keep only records of banded individuals
 
     ## Join Experiment info for chicks
     dplyr::filter(.data$Age == 1L) %>%
@@ -437,13 +438,13 @@ create_capture_GLA <- function(nest_data, rr_data, Brood_data, protocol_version)
                        dplyr::filter(!is.na(.data$ExperimentID)) %>%
                        dplyr::select("BreedingSeason",
                                      "PopID",
-                                     "LocationID",
+                                     "NestboxNumber",
                                      "ExperimentID"),
-                     by = c("BreedingSeason", "PopID","LocationID")) %>%
+                     by = c("BreedingSeason", "PopID", "NestboxNumber")) %>%
 
     ## Add in adults. Create ExperimentID column separately for this group if radio tagged
     dplyr::bind_rows(rr_data %>%
-                       dplyr::filter(!(.data$IndvID %in% c("too small", "too_small", "no_rings_COVID","unknown"))) %>% # Keep only records of banded individuals
+                       dplyr::filter(!(.data$IndvID %in% c("too small", "too_small", "no_rings_COVID", "unknown"))) %>% # Keep only records of banded individuals
                        dplyr::filter(.data$Age != 1L | is.na(.data$Age)) %>%
                        dplyr::mutate(ExperimentID = dplyr::case_when(.data$RadioTagFitted == TRUE | .data$RfidFitted == TRUE ~ "SURVIVAL"))) %>%
 
@@ -457,13 +458,8 @@ create_capture_GLA <- function(nest_data, rr_data, Brood_data, protocol_version)
                   ReleaseAlive = dplyr::case_when(.data$Retrap == "X" | .data$Age == "X" ~ FALSE,
                                                   .data$Retrap %in% c("N", "R", "C", "U", NA) ~ TRUE), ## Set ReleaseAlive to FALSE if Retrap is X or if Age is X (chick found dead at nest)
                   ReleasePopID = dplyr::case_when(.data$ReleaseAlive == FALSE ~ NA_character_,
-                                                  TRUE ~ as.character(.data$CapturePopID))) %>%  ## Set ReleasePopID to NA if ReleaseAlive is FALSE, otherwise same as CapturePopID
+                                                  TRUE ~ as.character(.data$CapturePopID))) ## Set ReleasePopID to NA if ReleaseAlive is FALSE, otherwise same as CapturePopID
 
-    ## Add missing columns
-    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Capture_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Capture_data) %in% names(.))]) %>%
-
-    ## Keep only columns that are in the standard format and order correctly
-    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Capture_data))
 
 
   ## Create capture data from nest data.
@@ -490,18 +486,11 @@ create_capture_GLA <- function(nest_data, rr_data, Brood_data, protocol_version)
                   CaptureAlive = TRUE, ## Set CaptureAlive to T
                   ReleaseAlive = TRUE) %>% ## Set ReleaseAlive to T
 
-    dplyr::ungroup() %>%
-
-    ## Add missing columns
-    dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Capture_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Capture_data) %in% names(.))]) %>%
-
-    ## Keep only columns that are in the standard format and order correctly
-    dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Capture_data))
-
+    dplyr::ungroup()
 
   ## Get records of individuals that were reported in the nest data, but not in the ringing records
   brood_recs_unique <- dplyr::anti_join(Capture_data_nest, Capture_data_rr,
-                                        by = c("BreedingSeason", "CapturePopID", "IndvID","LocationID"))
+                                        by = c("BreedingSeason", "CapturePopID", "IndvID","NestboxNumber"))
 
   ## Combine captures and add additional information
   Capture_data <- Capture_data_rr %>%
@@ -512,6 +501,9 @@ create_capture_GLA <- function(nest_data, rr_data, Brood_data, protocol_version)
                                    TRUE ~ NA_character_)) %>%
     dplyr::filter(!is.na(.data$IndvID)) %>%
 
+    # Add PopID prefix to LocationID to avoid duplicated LocationIDs across sites
+    dplyr::mutate(LocationID = dplyr::case_when(is.na(.data$NestboxNumber) ~ NA_character_,
+                                                TRUE ~ paste(.data$PopID, .data$NestboxNumber, sep = "_"))) %>%
     ##  Change column class
     dplyr::mutate(BreedingSeason = as.integer(.data$BreedingSeason)) %>%
 
@@ -609,7 +601,7 @@ create_individual_GLA <- function(Capture_data, Brood_data, protocol_version){
                        dplyr::group_by(.data$BreedingSeason, .data$PopID, .data$LocationID) %>%
                        dplyr::filter(.data$BroodID == dplyr::last(.data$BroodID)) %>%
                        dplyr::select("BreedingSeason", "PopID", "LocationID", "BroodID") %>%
-                       dplyr::rename(BroodIDLaid = .data$BroodID),
+                       dplyr::rename("BroodIDLaid" = "BroodID"),
                      by = c("BreedingSeason", "PopID", "LocationID")) %>%
 
     ## Add back in filtered records
@@ -666,26 +658,29 @@ create_location_GLA <- function(nest_data, rr_data, protocol_version) {
   ## Then join nest data
   ## No nest boxes have been removed
   Location_data <- rr_data %>%
-    dplyr::select("BreedingSeason", "PopID", "LocationID") %>%
-    dplyr::filter(!is.na(.data$LocationID)) %>%
+    dplyr::select("BreedingSeason", "PopID", "NestboxNumber") %>%
+    dplyr::filter(!is.na(.data$NestboxNumber)) %>%
 
     ## Add in locations from nest data
     dplyr::bind_rows(nest_data %>%
-                       dplyr::select("BreedingSeason", "PopID", "LocationID") %>%
-                       dplyr::filter(!is.na(.data$LocationID))) %>%
+                       dplyr::select("BreedingSeason", "PopID", "NestboxNumber") %>%
+                       dplyr::filter(!is.na(.data$NestboxNumber))) %>%
 
     ## Keep distinct records
-    dplyr::distinct(.data$PopID, .data$BreedingSeason, .data$LocationID, .keep_all = TRUE) %>%
+    dplyr::distinct(.data$PopID, .data$BreedingSeason, .data$NestboxNumber, .keep_all = TRUE) %>%
 
     ## All records shows be complete: remove any incomplete cases
     tidyr::drop_na() %>%
 
     ## Get additional information
-    dplyr::group_by(.data$PopID, .data$LocationID) %>%
+    dplyr::group_by(.data$PopID, .data$NestboxNumber) %>%
     dplyr::summarise(StartSeason = min(.data$BreedingSeason, na.rm = TRUE),
                      EndSeason = NA_integer_) %>%
     dplyr::ungroup() %>%
-    dplyr::mutate(NestboxID = .data$LocationID,
+    dplyr::mutate(NestboxID = .data$NestboxNumber,
+                  # Add PopID prefix to LocationID to avoid duplicated LocationIDs across sites
+                  LocationID = dplyr::case_when(is.na(.data$NestboxNumber) ~ NA_character_,
+                                                TRUE ~ paste(.data$PopID, .data$NestboxNumber, sep = "_")),
                   LocationType = "NB",
                   HabitatType = dplyr::case_when(.data$PopID == "GAR" ~ "urban",
                                                  .data$PopID == "CAS" ~ "deciduous",

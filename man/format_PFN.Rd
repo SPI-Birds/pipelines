@@ -94,4 +94,6 @@ All other populations, this data is not available at present. Locations for othe
 populations therefore have no coordinate information, and `StartSeason` and
 `EndSeason` are calculated as the first and last year in which birds were
 observed to be breeding within a box.
+
+\strong{LocationID}: LocationIDs are formatted as <PopID>_<NestboxNumber> to avoid duplicates across sites. Boxes that have moved inbetween years get a new ID (using an ordinal suffix; e.g., "_1", "_2").
 }

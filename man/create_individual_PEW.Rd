@@ -4,10 +4,12 @@
 \alias{create_individual_PEW}
 \title{Create individual table for Peerdsbos West, Belgium.}
 \usage{
-create_individual_PEW(data)
+create_individual_PEW(data, protocol_version)
 }
 \arguments{
 \item{data}{Capture_data, output of create_capture_PEW function.}
+
+\item{protocol_version}{Character string. The version of the standard protocol on which this pipeline is based.}
 }
 \value{
 A data frame.

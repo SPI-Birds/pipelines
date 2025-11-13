@@ -75,6 +75,8 @@ format_PIL <- function(db = choose_directory(),
   #We convert the data later
   PIL_data <- readxl::read_excel(path = paste0(db, "/PIL_PrimaryData.xlsx"), col_types = "text", na = "NA") %>%
     janitor::clean_names() %>%
+    # Drop records with NA in main breeding parameters
+    dplyr::filter(!(is.na(.data$nestbox) & is.na(.data$laying_date) & is.na(.data$number_hatchlings) & is.na(.data$clutch_size) & is.na(.data$number_fledglings))) %>%
     #Convert all date columns
     #Some are march days some are actual dates (but different formats)
     dplyr::mutate(mar_31 = as.Date(paste(.data$year, 3, 31, sep = "-")),
@@ -98,7 +100,14 @@ format_PIL <- function(db = choose_directory(),
                                                    grepl(pattern = "\\.", .x) ~ as.Date(.x, format = "%Y.%m.%d"),
                                                    TRUE ~ suppressWarnings(janitor::excel_numeric_to_date(as.numeric(.x))))
 
-                                }))
+                                })) %>%
+    # Some IDs contain 'change' or 'and', which seems to indicate
+    # uncertainty in identification. Set to NA
+    # TODO: check with data owner
+  dplyr::mutate(dplyr::across(c("femalering", "malering"),
+                                ~dplyr::case_when(stringr::str_detect(., "CHANGE|AND") ~ NA_character_,
+                                                  stringr::str_detect(., "^[:alnum:]{2}[:digit:]{3,5}[:alpha:]{0,1}$") ~ stringr::str_extract(., "[A-Za-z0-9]+"),
+                                                  TRUE ~ NA_character_)))
 
 
   # BROOD DATA
@@ -255,7 +264,10 @@ create_brood_PIL <- function(PIL_data, species_filter){
                   MaleID = .data$malering) %>%
     dplyr::filter(.data$Species %in% species_filter) %>%
     dplyr::arrange(.data$BreedingSeason, .data$FemaleID, .data$LayDate_observed) %>%
-    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.1"))
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.1")) %>%
+    # Drop duplicated BroodIDs
+    # TODO: check with data owner
+    dplyr::distinct(.data$BroodID, .keep_all = TRUE)
 
   return(Brood_data)
 
@@ -298,7 +310,8 @@ create_capture_PIL <- function(PIL_data, species_filter){
                                              .data$species == "PARMAJ" ~ species_codes$Species[species_codes$speciesEURINGCode == 14640],
                                              .data$species == "FICALB" ~ species_codes$Species[species_codes$speciesEURINGCode == 13480],
                                              .data$species == "SITEUR" ~ species_codes$Species[species_codes$speciesEURINGCode == 14790],
-                                             .data$species == "FICHIB" ~ species_codes$Species[species_codes$speciesEURINGCode == 13480]))
+                                             .data$species == "FICHIB" ~ species_codes$Species[species_codes$speciesEURINGCode == 13480])) %>%
+    dplyr::filter(.data$Species %in% species_filter)
 
   # Male captures
   male_capture_data <- PIL_data %>%
@@ -324,7 +337,8 @@ create_capture_PIL <- function(PIL_data, species_filter){
                                              .data$species == "PARMAJ" ~ species_codes$Species[species_codes$speciesEURINGCode == 14640],
                                              .data$species == "FICALB" ~ species_codes$Species[species_codes$speciesEURINGCode == 13480],
                                              .data$species == "SITEUR" ~ species_codes$Species[species_codes$speciesEURINGCode == 14790],
-                                             .data$species == "FICHIB" ~ species_codes$Species[species_codes$speciesEURINGCode == 13490]))
+                                             .data$species == "FICHIB" ~ species_codes$Species[species_codes$speciesEURINGCode == 13490])) %>%
+    dplyr::filter(.data$Species %in% species_filter)
 
   # Chick captures
   chick_capture_data <- PIL_data %>%
@@ -387,6 +401,9 @@ create_capture_PIL <- function(PIL_data, species_filter){
   Capture_data <- dplyr::bind_rows(female_capture_data,
                                    male_capture_data,
                                    chick_capture_data) %>%
+    # Drop records with NAs in CaptureDate
+    # TODO: When updating to v2.0.0, some records with missing CaptureDate can be dealt with if year is known
+    tidyr::drop_na("CaptureDate") %>%
     dplyr::mutate(CaptureTime = NA_character_,
                   WingLength = NA_real_,
                   OriginalTarsusMethod = NA_character_,

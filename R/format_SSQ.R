@@ -81,6 +81,12 @@ format_SSQ <- function(db = choose_directory(),
                   Plot = .data$HabitatOfRinging,
                   Latitude = .data$YCoord,
                   Longitude = .data$XCoord) %>%
+    ## If FemaleID or MaleID differs from expected format, set to NA
+    # TODO: Check "G12409" with data owner
+    dplyr::mutate(dplyr::across(.cols = c(.data$FemaleID,
+                                          .data$MaleID),
+                                .fns = ~dplyr::case_when(stringr::str_detect(.x, "^[A-Za-z0-9]{3}[0-9]{4}$") ~ .x,
+                                                         TRUE ~ NA_character_))) %>%
     #Add species codes
     dplyr::mutate(Species = dplyr::case_when(.data$Species == "Parus major" ~ species_codes[species_codes$speciesEURINGCode == 14640, ]$Species,
                                              .data$Species == "Cyanistes caeruleus" ~ species_codes[species_codes$speciesEURINGCode == 14620, ]$Species)) %>%
@@ -108,7 +114,10 @@ format_SSQ <- function(db = choose_directory(),
                   NumberChicksTarsus = NA_integer_,
                   ExperimentID = NA_character_,
                   LayDate_observed = as.Date(paste(.data$BreedingSeason, "03-01", sep = "-"), format = "%Y-%m-%d") + .data$LayDate_observed - 1,
-                  HatchDate_observed = as.Date(paste(.data$BreedingSeason, "03-01", sep = "-"), format = "%Y-%m-%d") + .data$HatchDate_observed - 1)
+                  HatchDate_observed = as.Date(paste(.data$BreedingSeason, "03-01", sep = "-"), format = "%Y-%m-%d") + .data$HatchDate_observed - 1) %>%
+    # Remove duplicated BroodIDs
+    # TODO: Check with data owner: "2012_025_077", "2013_024_063", "2017_00A_045", "2017_012_048", "2017_019_049"
+    dplyr::distinct(.data$BroodID, .keep_all = TRUE)
 
   # BROOD DATA
 
@@ -259,7 +268,7 @@ create_capture_SSQ <- function(data, protocol_version){
                   ReleasePlot = .data$CapturePlot,
                   CaptureDate = .data$LayDate_observed + .data$ClutchSize_observed + 27,
                   CaptureTime = NA_character_,
-                  Age_observed = 1,
+                  Age_observed = 1L,
                   Age = 1L) %>%
     dplyr::select(-"variable", -"LayDate_observed", -"ClutchSize_observed")
 
@@ -274,9 +283,16 @@ create_capture_SSQ <- function(data, protocol_version){
                   OriginalTarsusMethod = NA_character_,
                   WingLength = NA_real_,
                   ChickAge = NA_integer_,
-                  ObserverID = NA_character_) %>%
+                  ObserverID = NA_character_,
+                  CaptureAlive = TRUE,
+                  ReleaseAlive = TRUE) %>%
     calc_age(ID = .data$IndvID, Age = .data$Age,
              Date = .data$CaptureDate, Year = .data$BreedingSeason) %>%
+    # Create CaptureID
+    dplyr::arrange(.data$IndvID, .data$CaptureDate) %>%
+    dplyr::group_by(.data$IndvID) %>%
+    dplyr::mutate(CaptureID = paste(.data$IndvID, 1:dplyr::n(), sep = "_")) %>%
+    dplyr::ungroup() %>%
     ## Add missing columns
     dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Capture_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Capture_data) %in% names(.))]) %>%
     ## Keep only columns that are in the standard format and order correctly
@@ -325,6 +341,9 @@ create_individual_SSQ <- function(data, Capture_data, Brood_data, protocol_versi
                      by = "IndvID") %>%
     dplyr::mutate(BroodIDFledged = .data$BroodIDLaid,
                   PopID = "SSQ") %>%
+    # Remove duplicated IndvIDs
+    # TODO: Check with data owner: "6A33923" "LA43025" "LA43026" "LA43027" "LA43028" "LA44310" "LA44311" "LA44312" "LA44313" "LA44314" "LA44315" "LA44316" "LS03957"
+    dplyr::distinct(.data$IndvID, .keep_all = TRUE) %>%
     ## Add missing columns
     dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Individual_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Individual_data) %in% names(.))]) %>%
     ## Keep only columns that are in the standard format and order correctly
