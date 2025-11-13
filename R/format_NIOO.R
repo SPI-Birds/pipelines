@@ -333,12 +333,14 @@ create_brood_NIOO <- function(dir, location_data, species_filter, pop_filter, pr
       Female_ring = dplyr::case_when(
         .data$RingNumberFemale == "0000000000" ~ NA_character_,
         .data$RingNumberFemale == "" ~ NA_character_,
-        TRUE ~ .data$RingNumberFemale
+        .data$RingNumberFemale == "0" ~ NA_character_,
+        TRUE ~ as.character(.data$RingNumberFemale)
       ),
       Male_ring = dplyr::case_when(
         .data$RingNumberMale == "0000000000" ~ NA_character_,
         .data$RingNumberMale == "" ~ NA_character_,
-        TRUE ~ .data$RingNumberMale
+        .data$RingNumberFemale == "0" ~ NA_character_,
+        TRUE ~ as.character(.data$RingNumberMale)
       )
     ) %>%
     # Link the ClutchType description (e.g. first, second, replacement)
@@ -629,7 +631,7 @@ create_individual_NIOO <- function(dir, Capture_data, location_data, species_fil
       ),
       BroodIDLaid = dplyr::if_else(is.na(.data$GeneticBroodID), .data$BroodID, .data$GeneticBroodID),
       BroodIDFledged = dplyr::if_else(is.na(.data$BroodID), .data$GeneticBroodID, .data$BroodID),
-      IndvID = .data$ID
+      IndvID = as.character(.data$ID)
     )
 
   # Determine first captures (after removing eggs)
