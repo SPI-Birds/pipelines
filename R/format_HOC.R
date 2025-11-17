@@ -610,9 +610,9 @@ create_individual_HOC <- function(db) {
       "Sex_calculated", "Sex_genetic"
     )
 
-  # Remove duplicated individuals (keep first occurrence)
+  # Remove duplicated individuals (keep first occurrence by IndvID and PopID)
   Individual_data <- Individual_data %>%
-    dplyr::distinct(.data$IndvID, .keep_all = TRUE)
+    dplyr::distinct(.data$IndvID, .data$PopID, .keep_all = TRUE)
 
   return(Individual_data)
 }
