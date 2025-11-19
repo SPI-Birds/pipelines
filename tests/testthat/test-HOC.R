@@ -19,40 +19,40 @@ test_that("Brood_data returns an expected outcome...", {
   # Test 1: Brood where clutch type = first
   expect_equal(subset(HOC_data, BroodID == "2016-H101-1")$Species, "PARMAJ")
   expect_equal(subset(HOC_data, BroodID == "2016-H101-1")$ClutchType_calculated, "first")
-  expect_equal(subset(HOC_data, BroodID == "2016-H101-1")$LayDate, as.Date("2016-04-22"))
-  expect_equal(subset(HOC_data, BroodID == "2016-H101-1")$ClutchSize, 7L)
-  expect_equal(subset(HOC_data, BroodID == "2016-H101-1")$BroodSize, NA_integer_)
-  expect_equal(subset(HOC_data, BroodID == "2016-H101-1")$NumberFledged, 0L)
+  expect_equal(subset(HOC_data, BroodID == "2016-H101-1")$LayDate_observed, as.Date("2016-04-22"))
+  expect_equal(subset(HOC_data, BroodID == "2016-H101-1")$ClutchSize_observed, 7L)
+  expect_equal(subset(HOC_data, BroodID == "2016-H101-1")$BroodSize_observed, NA_integer_)
+  expect_equal(subset(HOC_data, BroodID == "2016-H101-1")$NumberFledged_observed, 0L)
   expect_equal(subset(HOC_data, BroodID == "2016-H101-1")$AvgChickMass, NA_real_)
   expect_equal(subset(HOC_data, BroodID == "2016-H101-1")$AvgTarsus, NA_real_)
 
   # Test 2: Brood where clutch type = replacement (because first is known to have failed)
   expect_equal(subset(HOC_data, BroodID == "2016-H111-2")$Species, "PARMAJ")
   expect_equal(subset(HOC_data, BroodID == "2016-H111-2")$ClutchType_calculated, "replacement")
-  expect_equal(subset(HOC_data, BroodID == "2016-H111-2")$LayDate, as.Date("2016-05-30"))
-  expect_equal(subset(HOC_data, BroodID == "2016-H111-2")$ClutchSize, 6)
-  expect_equal(subset(HOC_data, BroodID == "2016-H111-2")$BroodSize, NA_integer_)
-  expect_equal(subset(HOC_data, BroodID == "2016-H111-2")$NumberFledged, 4)
+  expect_equal(subset(HOC_data, BroodID == "2016-H111-2")$LayDate_observed, as.Date("2016-05-30"))
+  expect_equal(subset(HOC_data, BroodID == "2016-H111-2")$ClutchSize_observed, 6)
+  expect_equal(subset(HOC_data, BroodID == "2016-H111-2")$BroodSize_observed, NA_integer_)
+  expect_equal(subset(HOC_data, BroodID == "2016-H111-2")$NumberFledged_observed, 4)
   expect_equal(round(subset(HOC_data, BroodID == "2016-H111-2")$AvgChickMass, 2), 13.65)
   expect_equal(round(subset(HOC_data, BroodID == "2016-H111-2")$AvgTarsus, 2), 18.20)
 
   # Test 3: Brood where clutch type = replacement (past the cutoff)
   expect_equal(subset(HOC_data, BroodID == "2017-H101-2")$Species, "PARMAJ")
   expect_equal(subset(HOC_data, BroodID == "2017-H101-2")$ClutchType_calculated, "replacement")
-  expect_equal(subset(HOC_data, BroodID == "2017-H101-2")$LayDate, as.Date("2017-06-03"))
-  expect_equal(subset(HOC_data, BroodID == "2017-H101-2")$ClutchSize, 6L)
-  expect_equal(subset(HOC_data, BroodID == "2017-H101-2")$BroodSize, NA_integer_)
-  expect_equal(subset(HOC_data, BroodID == "2017-H101-2")$NumberFledged, 1L)
+  expect_equal(subset(HOC_data, BroodID == "2017-H101-2")$LayDate_observed, as.Date("2017-06-03"))
+  expect_equal(subset(HOC_data, BroodID == "2017-H101-2")$ClutchSize_observed, 6L)
+  expect_equal(subset(HOC_data, BroodID == "2017-H101-2")$BroodSize_observed, NA_integer_)
+  expect_equal(subset(HOC_data, BroodID == "2017-H101-2")$NumberFledged_observed, 1L)
   expect_equal(round(subset(HOC_data, BroodID == "2017-H101-2")$AvgChickMass, 2), 12.00)
   expect_equal(round(subset(HOC_data, BroodID == "2017-H101-2")$AvgTarsus, 2), 15.92)
 
   # Test 4: Brood where clutch type = second
   expect_equal(subset(HOC_data, BroodID == "2017-H71-2")$Species, "PARMAJ")
   expect_equal(subset(HOC_data, BroodID == "2017-H71-2")$ClutchType_calculated, "second")
-  expect_equal(subset(HOC_data, BroodID == "2017-H71-2")$LayDate, as.Date("2017-05-31"))
-  expect_equal(subset(HOC_data, BroodID == "2017-H71-2")$ClutchSize, 8L)
-  expect_equal(subset(HOC_data, BroodID == "2017-H71-2")$BroodSize, NA_integer_)
-  expect_equal(subset(HOC_data, BroodID == "2017-H71-2")$NumberFledged, 4L)
+  expect_equal(subset(HOC_data, BroodID == "2017-H71-2")$LayDate_observed, as.Date("2017-05-31"))
+  expect_equal(subset(HOC_data, BroodID == "2017-H71-2")$ClutchSize_observed, 8L)
+  expect_equal(subset(HOC_data, BroodID == "2017-H71-2")$BroodSize_observed, NA_integer_)
+  expect_equal(subset(HOC_data, BroodID == "2017-H71-2")$NumberFledged_observed, 4L)
   expect_equal(round(subset(HOC_data, BroodID == "2017-H71-2")$AvgChickMass, 2), 13.75)
   expect_equal(round(subset(HOC_data, BroodID == "2017-H71-2")$AvgTarsus, 2), 18.55)
 })
@@ -64,7 +64,7 @@ test_that("Individual data returns an expected outcome...", {
   HOC_data <- dplyr::filter(pipeline_output$Individual_data, PopID %in% "HOC")
 
   # Test 1: First as adult
-  expect_equal(subset(HOC_data, IndvID == "C1X0940")$Sex, "F")
+  expect_equal(subset(HOC_data, IndvID == "C1X0940")$Sex_calculated, "F")
   expect_equal(subset(HOC_data, IndvID == "C1X0940")$Species, "PARMAJ")
   # They should have no BroodIDLaid or Fledged because she was never caught as a chick
   expect_equal(subset(HOC_data, IndvID == "C1X0940")$BroodIDLaid, NA_character_)
@@ -74,7 +74,7 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(subset(HOC_data, IndvID == "C1X0940")$RingAge, "adult")
 
   # Test 2: Caught first as chick
-  expect_equal(subset(HOC_data, IndvID == "C1X0972")$Sex, NA_character_)
+  expect_equal(subset(HOC_data, IndvID == "C1X0972")$Sex_calculated, NA_character_)
   expect_equal(subset(HOC_data, IndvID == "C1X0972")$Species, "PARMAJ")
   # Check that BroodIDLaid/Fledged are as expected
   expect_equal(subset(HOC_data, IndvID == "C1X0972")$BroodIDLaid, "2014-H61-1")
@@ -168,17 +168,17 @@ test_that("Location_data returns an expected outcome...", {
   HOC_data <- dplyr::filter(pipeline_output$Location_data, PopID %in% "HOC")
 
   # Test 1: Nestbox check
-  expect_true(subset(HOC_data, LocationID == "H1")$LocationType == "NB")
+  expect_true(subset(HOC_data, LocationID == "HOC_H1")$LocationType == "NB")
   # Expect LocationID and NestboxID are the same
-  expect_true(subset(HOC_data, LocationID == "H1")$NestboxID == "H1")
+  expect_true(subset(HOC_data, LocationID == "HOC_H1")$NestboxID == "HOC_H1")
   # Expect Start and EndSeason is as expected
-  expect_equal(subset(HOC_data, LocationID == "H1")$StartSeason, 2014L)
-  expect_equal(subset(HOC_data, LocationID == "H1")$EndSeason, NA_integer_)
+  expect_equal(subset(HOC_data, LocationID == "HOC_H1")$StartSeason, 2014L)
+  expect_equal(subset(HOC_data, LocationID == "HOC_H1")$EndSeason, NA_integer_)
   # Check that LocationID is in the expected PopID
-  expect_equal(subset(HOC_data, LocationID == "H1")$PopID, "HOC")
+  expect_equal(subset(HOC_data, LocationID == "HOC_H1")$PopID, "HOC")
   # Check that latitude and longitude are as expected
-  expect_equal(round(subset(HOC_data, LocationID == "H1")$Latitude, 2) %>% setNames(nm = NULL), 11.26)
-  expect_equal(round(subset(HOC_data, LocationID == "H1")$Longitude, 2) %>% setNames(nm = NULL), 48.06)
+  expect_equal(round(subset(HOC_data, LocationID == "HOC_H1")$Latitude, 2) %>% setNames(nm = NULL), 11.26)
+  expect_equal(round(subset(HOC_data, LocationID == "HOC_H1")$Longitude, 2) %>% setNames(nm = NULL), 48.06)
 })
 
 ## General tests
