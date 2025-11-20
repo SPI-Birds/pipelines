@@ -508,3 +508,108 @@ test_date_columns <- function(pipeline_output,
     }
   }
 }
+
+#' Test time columns
+#'
+#' Time columns should only include certain ranges.
+#' For example, 'CaptureTime' should have hours between 0 and 23 and
+#' minutes between 0 and 59.
+#' This test makes sure that there are no unexpected or non-valid
+#' values in these time columns.
+#'
+#' @param pipeline_output A list of data frames returned from format_X,
+#' where X is the pipeline code.
+#' @param protocol_version The protocol version of the SPI-Birds
+#' standard data being used to process the primary data. Either "1.0.0",
+#' "1.1.0", or "2.0.0".
+#' @param debug Logical (TRUE/FALSE) for whether the function returns the
+#' test output (FALSE) or a list of columns (and the unexpected values in
+#' them) that failed this test (TRUE).
+#'
+#' @return See `debug`.
+#' @export
+#'
+
+test_time_columns <- function(pipeline_output,
+                              protocol_version,
+                              debug = FALSE) {
+  # Read in the expected time columns for this protocol version
+  columns <- data_templates[[paste0("v", protocol_version)]]
+
+  # Create vector to store table + column name
+  time_column_names <- vector()
+
+  # Extract time column names
+  for (i in names(columns)) {
+    filt_columns <- colnames(columns[[i]] %>%
+      dplyr::select(dplyr::contains("Time") &
+        !dplyr::contains("Error")))
+
+    if (length(filt_columns) > 0) {
+      filt_columns <- paste0(i, "$", filt_columns)
+    }
+
+    time_column_names <- c(time_column_names, filt_columns)
+  }
+
+  # Create list to store invalid values for debug mode
+  invalid_values <- list()
+
+  # Now we can test if the time data complies with the protocol
+  for (i in seq_along(time_column_names)) {
+    str_parts <- strsplit(time_column_names[i], "\\$")[[1]]
+
+    # Get the time column
+    time_col <- pipeline_output[[str_parts[1]]][[str_parts[2]]]
+
+    # Extract hours and minutes from time
+    # The protocol does not specify it, but it can have seconds
+    # Parse time to HH:MM:SS or HH:MM
+    time_parsed <- lubridate::parse_date_time(time_col, orders = c("HMS", "HM"))
+    Hour <- lubridate::hour(time_parsed)
+    Minute <- lubridate::minute(time_parsed)
+
+    # Run testthat on Hour
+    if (!is.null(Hour)) {
+      invalid_hour <- Hour[!is.na(Hour) & (Hour < 0 | Hour > 23)]
+      if (length(invalid_hour) > 0) {
+        invalid_values[[paste0(time_column_names[i], "_Hour")]] <- invalid_hour
+      }
+
+      if (debug == FALSE) {
+        testthat::expect_true(
+          all(is.na(Hour) | (Hour >= 0 & Hour <= 23)),
+          info = paste0("Hour values out of range in ", time_column_names[i])
+        )
+      }
+    }
+
+    # Run testthat on Minute
+    if (!is.null(Minute)) {
+      invalid_minute <- Minute[!is.na(Minute) & (Minute < 0 | Minute > 59)]
+      if (length(invalid_minute) > 0) {
+        invalid_values[[paste0(time_column_names[i], "_Minute")]] <- invalid_minute
+      }
+
+      if (debug == FALSE) {
+        testthat::expect_true(
+          all(is.na(Minute) | (Minute >= 0 & Minute <= 59)),
+          info = paste0("Minute values out of range in ", time_column_names[i])
+        )
+      }
+    }
+  }
+
+  # Return a list with the invalid value if debug is enabled
+  if (debug == FALSE) {
+    message(paste0("All times conform protocol ", protocol_version))
+    invisible(TRUE)
+  } else {
+    if (length(invalid_values) == 0) {
+      message("No invalid time values found")
+      return(list())
+    } else {
+      return(invalid_values)
+    }
+  }
+}
