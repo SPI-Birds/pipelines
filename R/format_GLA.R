@@ -683,19 +683,19 @@ create_individual_GLA <- function(Capture_data, Brood_data, protocol_version) {
     ## Keep distinct records by PopID and InvdID
     dplyr::distinct(.data$PopID, .data$IndvID, .keep_all = TRUE) %>%
     ## Arrange
-    dplyr::arrange(.data$CaptureID) %>%
+    dplyr::arrange(.data$CaptureDate) %>%
+    ## Keep only the first capture per individual (earliest CaptureDate)
+    dplyr::group_by(.data$IndvID) %>%
+    dplyr::slice_min(.data$CaptureDate, n = 1, with_ties = FALSE) %>%
     dplyr::ungroup() %>%
     ## Add missing columns
     dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Individual_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Individual_data) %in% names(.))]) %>%
     ## Keep only columns that are in the standard format and order correctly
     dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Individual_data))
 
-  # Remove duplicated individuals (keep first occurrence)
-  Individual_data <- Individual_data %>%
-    dplyr::distinct(.data$IndvID, .keep_all = TRUE)
-
   return(Individual_data)
 }
+
 
 #' Create location data table for great tits and blue tits in Glasgow, Scotland.
 #'
