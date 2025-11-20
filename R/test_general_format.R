@@ -613,3 +613,155 @@ test_time_columns <- function(pipeline_output,
     }
   }
 }
+
+#' Test minimum and maximum columns
+#'
+#' Some columns should only include certain ranges.
+#' For example, 'ClutchSize' should have hours between 0 and 99 and
+#' ChickAge should be greater then 0.
+#' This test makes sure that there are no unexpected or non-valid
+#' values in these columns.
+#'
+#' @param pipeline_output A list of data frames returned from format_X,
+#' where X is the pipeline code.
+#' @param protocol_version The protocol version of the SPI-Birds
+#' standard data being used to process the primary data. Either "1.0.0",
+#' "1.1.0", or "2.0.0".
+#' @param debug Logical (TRUE/FALSE) for whether the function returns the
+#' test output (FALSE) or a list of columns (and the unexpected values in
+#' them) that failed this test (TRUE).
+#'
+#' @return See `debug`.
+#' @export
+#'
+
+test_min_max_columns <- function(pipeline_output,
+                                protocol_version,
+                                debug = FALSE) {
+
+    # Store to check tables in variables
+    table_brood <- pipeline_output$Brood_data
+    table_capture <- pipeline_output$Capture_data
+
+    # Create list to store invalid values for debug mode
+    invalid_values <- list()
+
+    # Select the relevant columns based on protocol version
+    # These are the columns that should have values between 0 and 99
+    if(protocol_version == "1.0.0") {
+        value_0_99 <- table_brood %>%
+            select(
+                ClutchSize,
+                BroodSize,
+                NumberFledged
+                )
+    } else if (protocol_version == "1.1.0") {
+        value_0_99 <- table_brood %>%
+            select(
+                ClutchSize_observed,
+                ClutchSize_min,
+                BroodSize_min,
+                NumberFledged_observed,
+                NumberFledged_min
+                )
+    }  else if (protocol_version == "2.0.0") {
+        value_0_99 <- table_brood %>%
+            select(
+                observedClutchSize,
+	            minimumClutchSize,
+                observedBroodSize,
+                minimumBroodSize,
+                observedNumberFledged,
+                minimumNumberFledged
+            )
+    }
+
+    # Check columns with values between 0 and 99
+    for (col in names(value_0_99)) {
+        invalid_vals <- value_0_99[[col]][!is.na(value_0_99[[col]]) & 
+                            (value_0_99[[col]] < 0 | value_0_99[[col]] > 99)]
+        if (length(invalid_vals) > 0) {
+            invalid_values[[paste0("Brood_data$", col)]] <- invalid_vals
+        }
+    }
+
+    if (debug == FALSE) {
+        testthat::expect_true(
+            all(is.na(value_0_99) | (value_0_99 >= 0 & value_0_99 <= 99))
+        )
+    }
+    
+    # Check the columns that should have a minimum of 1
+    if(protocol_version == "1.1.0") {
+        value_1 <- table_brood %>%
+            select(
+                ClutchSize_max,
+                BroodSize_max,
+                NumberFledged_max
+            )
+    }else if (protocol_version == "2.0.0") {
+       value_1 <- table_brood %>%
+            select(
+                maximumClutchSize,
+                maximumBroodSize,
+                maximumNumberFledged
+            )
+    }
+
+    # Check columns with minimum value 1
+    if (exists("value_1")) {
+        for (col in names(value_1)) {
+            invalid_vals <- value_1[[col]][!is.na(value_1[[col]]) & value_1[[col]] < 1]
+            if (length(invalid_vals) > 0) {
+                invalid_values[[paste0("Brood_data$", col)]] <- invalid_vals
+            }
+        }
+
+        if (debug == FALSE) {
+            testthat::expect_true(
+                all(is.na(value_1) | (value_1 >= 1))
+            )
+        }
+    }
+
+    # Check chickAge, should be at least 0
+    if(protocol_version == "1.0.0" | protocol_version == "1.1.0") {
+        chick_age <- table_capture$ChickAge
+        invalid_age <- chick_age[!is.na(chick_age) & chick_age < 0]
+        if (length(invalid_age) > 0) {
+            invalid_values[["Capture_data$ChickAge"]] <- invalid_age
+        }
+
+        if (debug == FALSE) {
+            testthat::expect_true(
+                all(is.na(chick_age) | (chick_age >= 0))
+            )
+        }
+    } else if (protocol_version == "2.0.0") {
+        chick_age <- table_capture$chickAge
+        invalid_age <- chick_age[!is.na(chick_age) & chick_age < 0]
+        if (length(invalid_age) > 0) {
+            invalid_values[["Capture_data$chickAge"]] <- invalid_age
+        }
+
+        if (debug == FALSE) {
+            testthat::expect_true(
+                all(is.na(chick_age) | (chick_age >= 0))
+            )
+        }
+    }
+
+    # Return results based on debug mode
+    if (debug == FALSE) {
+        message(paste0("All count values conform protocol ", protocol_version))
+        invisible(TRUE)
+    } else {
+        if (length(invalid_values) == 0) {
+            message("No invalid count values found")
+            return(list())
+        } else {
+            return(invalid_values)
+        }
+    }
+
+}
