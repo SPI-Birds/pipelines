@@ -31,7 +31,7 @@ this argument can be ignored.}
 \item{output_type}{Should the pipeline generate .csv files ('csv') or R objects ('R').}
 }
 \value{
-4 data tables in the standard format (version 1.0.0). When
+4 data tables in the standard format (version 1.1.0). When
 output_type = "R", a list of 4 data frames corresponding to the 4
 standard data tables and 1 character vector indicating the protocol
 version on which the pipeline is based. When output_type = "csv",
@@ -49,7 +49,7 @@ This section provides details on data management choices that are
 unique to this data. For a general description of the standard
 protocol please see:
 https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/
-SPI_Birds_Protocol_v1.0.0.pdf
+SPI_Birds_Protocol_v1.1.0.pdf
 
 AvgEggMass: Clutch mass is recorded in many cases; however, these
 measurements are taken on or after the start of incubation. As egg
