@@ -647,14 +647,14 @@ test_min_max_columns <- function(pipeline_output,
   # These are the columns that should have values between 0 and 99
   if (protocol_version == "1.0.0") {
     value_0_99 <- table_brood %>%
-      select(
+      dplyr::select(
         ClutchSize,
         BroodSize,
         NumberFledged
       )
   } else if (protocol_version == "1.1.0") {
     value_0_99 <- table_brood %>%
-      select(
+      dplyr::select(
         ClutchSize_observed,
         ClutchSize_min,
         BroodSize_min,
@@ -663,7 +663,7 @@ test_min_max_columns <- function(pipeline_output,
       )
   } else if (protocol_version == "2.0.0") {
     value_0_99 <- table_brood %>%
-      select(
+      dplyr::select(
         observedClutchSize,
         minimumClutchSize,
         observedBroodSize,
@@ -691,14 +691,14 @@ test_min_max_columns <- function(pipeline_output,
   # Check the columns that should have a minimum of 1
   if (protocol_version == "1.1.0") {
     value_1 <- table_brood %>%
-      select(
+      dplyr::select(
         ClutchSize_max,
         BroodSize_max,
         NumberFledged_max
       )
   } else if (protocol_version == "2.0.0") {
     value_1 <- table_brood %>%
-      select(
+      dplyr::select(
         maximumClutchSize,
         maximumBroodSize,
         maximumNumberFledged
