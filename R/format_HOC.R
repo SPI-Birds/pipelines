@@ -281,7 +281,7 @@ create_brood_HOC <- function(db) {
       FemaleID = .data$social_female_bird_id,
       MaleID = .data$social_male_bird_id,
       ClutchType_observed =
-        case_when(
+        dplyr::case_when(
           .data$clutch_no == 1 ~ "first",
           .data$clutch_no == 2 ~ "second",
           TRUE ~ NA_character_
