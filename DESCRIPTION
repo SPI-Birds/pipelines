@@ -38,7 +38,7 @@ Authors@R:
            email = "r.vanderwoude@nioo.knaw.nl"))
 Description: Tailor-made pipelines that create bird data following SPI-Birds standard data format, and data quality checkp procedure to ensure data quality and integrity.
 Depends: R (>= 3.6.0)
-License: Apache License 2.0 + see LICENSE document
+License: Apache License (>= 2.0)
 URL: https://github.com/SPI-Birds/pipelines/
 BugReports: https://github.com/SPI-Birds/pipelines/issues
 Encoding: UTF-8
