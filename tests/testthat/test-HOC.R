@@ -222,8 +222,8 @@ test_that("Key columns only contain unique values", {
   ## CaptureID has only unique values
   test_unique_values(pipeline_output, "CaptureID")
 
-  ## PopID-IndvID has only unique values
-  test_unique_values(pipeline_output, "PopID-IndvID")
+  ## IndvID has only unique values
+  test_unique_values(pipeline_output, "IndvID")
 })
 
 

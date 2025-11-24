@@ -297,9 +297,9 @@ create_brood_HOC <- function(db) {
       ) - as.numeric(.data$lay_date_error),
       ClutchSize_observed = as.integer(.data$clutch_size),
       ClutchSize_min = as.integer(.data$clutch_size) -
-        as.numeric(.data$clutch_size_error),
+        as.integer(.data$clutch_size_error),
       ClutchSize_max = as.integer(.data$clutch_size) +
-        as.numeric(.data$clutch_size_error),
+        as.integer(.data$clutch_size_error),
       HatchDate_observed = janitor::excel_numeric_to_date(
         as.numeric(.data$hatch_date)
       ),
@@ -311,9 +311,9 @@ create_brood_HOC <- function(db) {
       ) + as.numeric(.data$hatch_date_error),
       BroodSize_observed = as.integer(.data$hatch_number),
       BroodSize_min = as.integer(.data$hatch_number) -
-        as.numeric(.data$hatch_number_error),
+        as.integer(.data$hatch_number_error),
       BroodSize_max = as.integer(.data$hatch_number) +
-        as.numeric(.data$hatch_number_error),
+        as.integer(.data$hatch_number_error),
       FledgeDate_observed = janitor::excel_numeric_to_date(
         as.numeric(.data$fledge_date)
       ),
@@ -324,10 +324,10 @@ create_brood_HOC <- function(db) {
         as.numeric(.data$fledge_date)
       ) + as.numeric(.data$fledge_date_error),
       NumberFledged_observed = as.integer(.data$fledge_number),
-      NumberFledged_min = as.numeric(.data$fledge_number) -
-        as.numeric(.data$fledge_number_error),
-      NumberFledged_max = as.numeric(.data$fledge_number) +
-        as.numeric(.data$fledge_number_error),
+      NumberFledged_min = as.integer(.data$fledge_number) -
+        as.integer(.data$fledge_number_error),
+      NumberFledged_max = as.integer(.data$fledge_number) +
+        as.integer(.data$fledge_number_error),
       AvgEggMass = NA_real_,
       NumberEggs = NA_integer_
     ) %>%
@@ -484,7 +484,11 @@ create_capture_HOC <- function(db) {
         TRUE ~ "OTHER"
       )
     ) %>%
-    dplyr::ungroup()
+    dplyr::ungroup() %>%
+    dplyr::mutate(
+      CaptureAlive = !.data$FoundDead,
+      ReleaseAlive = !.data$FoundDead
+    )
 
   Death_captures <- readxl::read_excel(
     paste0(db, "/HOC_PrimaryData.xlsx"),
@@ -530,7 +534,13 @@ create_capture_HOC <- function(db) {
       BroodID = NA_character_,
       ExperimentID = NA,
       FoundDead = TRUE,
-      capture_method = NA_character_
+      capture_method = NA_character_,
+      CaptureID = paste(.data$Species, .data$IndvID,
+        format(.data$CaptureDate, "%Y-%m-%d"),
+        sep = "_"
+      ),
+      CaptureAlive = FALSE,
+      ReleaseAlive = FALSE
     )
 
   Capture_data_combined <- dplyr::bind_rows(
@@ -550,13 +560,23 @@ create_capture_HOC <- function(db) {
       Date = .data$CaptureDate,
       Year = .data$BreedingSeason
     ) %>%
+    # Keep the first occurrence of duplicated CaptureIDs
+    # TODO: check with owner
+    dplyr::distinct(.data$CaptureID, .keep_all = TRUE) %>%
     dplyr::select(
       "IndvID", "Species", "BreedingSeason", "CaptureDate",
       "CaptureTime", "ObserverID", "LocationID", "CapturePopID",
       "CapturePlot", "ReleasePopID", "ReleasePlot", "Mass", "Tarsus",
       "OriginalTarsusMethod", "WingLength", "Age_observed",
-      "Age_calculated", "ChickAge", "FoundDead", "BroodID",
-      "ExperimentID", "capture_method"
+      "Age_calculated", "ChickAge", "CaptureID", "CaptureAlive",
+      "ReleaseAlive", "FoundDead", "BroodID", "ExperimentID",
+      "capture_method"
+    )
+
+  # Make sure BreedingSeason is integer
+  Capture_data_combined <- Capture_data_combined %>%
+    dplyr::mutate(
+      BreedingSeason = as.integer(.data$BreedingSeason)
     )
 
   return(Capture_data_combined)
@@ -584,11 +604,11 @@ create_individual_HOC <- function(db) {
       PopID = "HOC",
       BroodIDLaid = .data$nest_of_origin_id,
       BroodIDFledged = .data$rearing_nest_id,
-      RingSeason = lubridate::year(
+      RingSeason = as.integer(lubridate::year(
         janitor::excel_numeric_to_date(
           as.numeric(.data$date_ringed)
         )
-      ),
+      )),
       RingAge = dplyr::case_when(
         .data$age_simple == "adult" ~ "adult",
         .data$age_simple == "nestling" ~ "chick"
