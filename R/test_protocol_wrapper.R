@@ -16,8 +16,10 @@
 #' @export
 
 test_protocol_compliance <- function(pipeline_output,
-                                     protocol_version,
                                      ID_format = FALSE) {
+    # Retrieve protocol version from the pipeline output
+    protocol_version <- pipeline_output$protocol_version
+
     # Select tables to test based on protocol version
     if (protocol_version %in% c("1.0.0", "1.1.0")) {
         tables <- c(
