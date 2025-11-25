@@ -3,18 +3,15 @@ testthat::skip_if(!exists("data_path"))
 pipeline_output <- format_GRO(db = paste0(data_path, "/GRO_GroblaNiepolomice_Poland"))
 
 test_that("GRO outputs all files...", {
-
   expect_true(all("GRO" %in% pipeline_output$Brood_data$PopID))
   expect_true(all("GRO" %in% pipeline_output$Capture_data$CapturePopID))
   expect_true(all("GRO" %in% pipeline_output$Individual_data$PopID))
   expect_true(all("GRO" %in% pipeline_output$Location_data$PopID))
   expect_true(pipeline_output$protocol_version == "1.1.0")
-
 })
 
 test_that("Individual data returns an expected outcome...", {
-
-  #Take a subset of only GRO data
+  # Take a subset of only GRO data
   GRO_data <- dplyr::filter(pipeline_output$Individual_data, PopID %in% "GRO")
 
   ## Blue tit female ringed as adult
@@ -56,224 +53,337 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(subset(GRO_data, IndvID == "KP76626")$Sex_genetic, NA_character_)
   expect_equal(subset(GRO_data, IndvID == "KP76626")$BroodIDLaid, NA_character_)
   expect_equal(subset(GRO_data, IndvID == "KP76626")$RingSeason, 1999)
-
 })
 
 test_that("Brood_data returns an expected outcome...", {
-
   ## Take a subset of only GRO data
   GRO_data <- dplyr::filter(pipeline_output$Brood_data, PopID %in% "GRO")
 
   ## PARMAJ nest H41 in 1999
-  expect_equal(subset(GRO_data,
-                      LocationID == "H41" &
-                      BreedingSeason == 1999)$FemaleID, "KP46859")
-  expect_equal(subset(GRO_data,
-                      LocationID == "H41" &
-                      BreedingSeason == 1999)$MaleID, NA_character_)
-  expect_equal(subset(GRO_data,
-                      LocationID == "H41" &
-                      BreedingSeason == 1999)$LayDate_observed, as.Date("1999-04-17"))
-  expect_equal(subset(GRO_data,
-                      LocationID == "H41" &
-                      BreedingSeason == 1999)$HatchDate_observed, as.Date("1999-11-10"))
-  expect_equal(subset(GRO_data,
-                      LocationID == "H41" &
-                      BreedingSeason == 1999)$ClutchSize_observed, 12)
-  expect_equal(subset(GRO_data,
-                      LocationID == "H41" &
-                        BreedingSeason == 1999)$BroodSize_observed, 12)
-  expect_equal(subset(GRO_data,
-                      LocationID == "H41" &
-                        BreedingSeason == 1999)$NumberFledged_observed, NA_integer_)
+  expect_equal(subset(
+    GRO_data,
+    LocationID == "H41" &
+      BreedingSeason == 1999
+  )$FemaleID, "KP46859")
+  expect_equal(subset(
+    GRO_data,
+    LocationID == "H41" &
+      BreedingSeason == 1999
+  )$MaleID, NA_character_)
+  expect_equal(subset(
+    GRO_data,
+    LocationID == "H41" &
+      BreedingSeason == 1999
+  )$LayDate_observed, as.Date("1999-04-17"))
+  expect_equal(subset(
+    GRO_data,
+    LocationID == "H41" &
+      BreedingSeason == 1999
+  )$HatchDate_observed, as.Date("1999-11-10"))
+  expect_equal(subset(
+    GRO_data,
+    LocationID == "H41" &
+      BreedingSeason == 1999
+  )$ClutchSize_observed, 12)
+  expect_equal(subset(
+    GRO_data,
+    LocationID == "H41" &
+      BreedingSeason == 1999
+  )$BroodSize_observed, 12)
+  expect_equal(subset(
+    GRO_data,
+    LocationID == "H41" &
+      BreedingSeason == 1999
+  )$NumberFledged_observed, NA_integer_)
 
   ## PARMAJ nest E67 in 2018
-  expect_equal(subset(GRO_data,
-                      LocationID == "E67" &
-                        BreedingSeason == 2018)$FemaleID, NA_character_)
-  expect_equal(subset(GRO_data,
-                      LocationID == "E67" &
-                        BreedingSeason == 2018)$MaleID, NA_character_)
-  expect_equal(subset(GRO_data,
-                      LocationID == "E67" &
-                        BreedingSeason == 2018)$LayDate_observed, as.Date("2018-04-13"))
-  expect_equal(subset(GRO_data,
-                      LocationID == "E67" &
-                        BreedingSeason == 2018)$HatchDate_observed, as.Date("2018-05-06"))
-  expect_equal(subset(GRO_data,
-                      LocationID == "E67" &
-                        BreedingSeason == 2018)$ClutchSize_observed, NA_integer_)
-  expect_equal(subset(GRO_data,
-                      LocationID == "E67" &
-                          BreedingSeason == 2018)$BroodSize_observed, 10)
-  expect_equal(subset(GRO_data,
-                      LocationID == "E67" &
-                        BreedingSeason == 2018)$NumberFledged_observed, 10)
+  expect_equal(subset(
+    GRO_data,
+    LocationID == "E67" &
+      BreedingSeason == 2018
+  )$FemaleID, NA_character_)
+  expect_equal(subset(
+    GRO_data,
+    LocationID == "E67" &
+      BreedingSeason == 2018
+  )$MaleID, NA_character_)
+  expect_equal(subset(
+    GRO_data,
+    LocationID == "E67" &
+      BreedingSeason == 2018
+  )$LayDate_observed, as.Date("2018-04-13"))
+  expect_equal(subset(
+    GRO_data,
+    LocationID == "E67" &
+      BreedingSeason == 2018
+  )$HatchDate_observed, as.Date("2018-05-06"))
+  expect_equal(subset(
+    GRO_data,
+    LocationID == "E67" &
+      BreedingSeason == 2018
+  )$ClutchSize_observed, NA_integer_)
+  expect_equal(subset(
+    GRO_data,
+    LocationID == "E67" &
+      BreedingSeason == 2018
+  )$BroodSize_observed, 10)
+  expect_equal(subset(
+    GRO_data,
+    LocationID == "E67" &
+      BreedingSeason == 2018
+  )$NumberFledged_observed, 10)
 
   ## FICALB nest I42 in 1998
-  expect_equal(subset(GRO_data,
-                      LocationID == "I42" &
-                        Species == "FICALB" &
-                        BreedingSeason == 1998)$FemaleID, NA_character_)
-  expect_equal(subset(GRO_data,
-                      LocationID == "I42" &
-                        Species == "FICALB" &
-                        BreedingSeason == 1998)$MaleID, NA_character_)
-  expect_equal(subset(GRO_data,
-                      LocationID == "I42" &
-                        Species == "FICALB" &
-                        BreedingSeason == 1998)$LayDate_observed, as.Date("1998-05-30"))
-  expect_equal(subset(GRO_data,
-                      LocationID == "I42" &
-                        Species == "FICALB" &
-                        BreedingSeason == 1998)$HatchDate_observed, lubridate::NA_Date_)
-  expect_equal(subset(GRO_data,
-                      LocationID == "I42" &
-                        Species == "FICALB" &
-                        BreedingSeason == 1998)$ClutchSize_observed, 4)
-  expect_equal(subset(GRO_data,
-                      LocationID == "I42" &
-                        Species == "FICALB" &
-                        BreedingSeason == 1998)$BroodSize_observed, 3)
-  expect_equal(subset(GRO_data,
-                      LocationID == "I42" &
-                        Species == "FICALB" &
-                        BreedingSeason == 1998)$NumberFledged_observed, 0)
+  expect_equal(subset(
+    GRO_data,
+    LocationID == "I42" &
+      Species == "FICALB" &
+      BreedingSeason == 1998
+  )$FemaleID, NA_character_)
+  expect_equal(subset(
+    GRO_data,
+    LocationID == "I42" &
+      Species == "FICALB" &
+      BreedingSeason == 1998
+  )$MaleID, NA_character_)
+  expect_equal(subset(
+    GRO_data,
+    LocationID == "I42" &
+      Species == "FICALB" &
+      BreedingSeason == 1998
+  )$LayDate_observed, as.Date("1998-05-30"))
+  expect_equal(subset(
+    GRO_data,
+    LocationID == "I42" &
+      Species == "FICALB" &
+      BreedingSeason == 1998
+  )$HatchDate_observed, lubridate::NA_Date_)
+  expect_equal(subset(
+    GRO_data,
+    LocationID == "I42" &
+      Species == "FICALB" &
+      BreedingSeason == 1998
+  )$ClutchSize_observed, 4)
+  expect_equal(subset(
+    GRO_data,
+    LocationID == "I42" &
+      Species == "FICALB" &
+      BreedingSeason == 1998
+  )$BroodSize_observed, 3)
+  expect_equal(subset(
+    GRO_data,
+    LocationID == "I42" &
+      Species == "FICALB" &
+      BreedingSeason == 1998
+  )$NumberFledged_observed, 0)
 
   ## PARMAJ nest I42 in 1998
-  expect_equal(subset(GRO_data,
-                      LocationID == "I42" &
-                        Species == "PARMAJ" &
-                        BreedingSeason == 1998)$FemaleID, NA_character_)
-  expect_equal(subset(GRO_data,
-                      LocationID == "I42" &
-                        Species == "PARMAJ" &
-                        BreedingSeason == 1998)$MaleID, NA_character_)
-  expect_equal(subset(GRO_data,
-                      LocationID == "I42" &
-                        Species == "PARMAJ" &
-                        BreedingSeason == 1998)$LayDate_observed, lubridate::NA_Date_)
-  expect_equal(subset(GRO_data,
-                      LocationID == "I42" &
-                        Species == "PARMAJ" &
-                        BreedingSeason == 1998)$HatchDate_observed, as.Date("1998-05-03"))
-  expect_equal(subset(GRO_data,
-                      LocationID == "I42" &
-                        Species == "PARMAJ" &
-                        BreedingSeason == 1998)$ClutchSize_observed, 13)
-  expect_equal(subset(GRO_data,
-                      LocationID == "I42" &
-                        Species == "PARMAJ" &
-                        BreedingSeason == 1998)$BroodSize_observed, 12)
-  expect_equal(subset(GRO_data,
-                      LocationID == "I42" &
-                        Species == "PARMAJ" &
-                        BreedingSeason == 1998)$NumberFledged_observed, 12)
+  expect_equal(subset(
+    GRO_data,
+    LocationID == "I42" &
+      Species == "PARMAJ" &
+      BreedingSeason == 1998
+  )$FemaleID, NA_character_)
+  expect_equal(subset(
+    GRO_data,
+    LocationID == "I42" &
+      Species == "PARMAJ" &
+      BreedingSeason == 1998
+  )$MaleID, NA_character_)
+  expect_equal(subset(
+    GRO_data,
+    LocationID == "I42" &
+      Species == "PARMAJ" &
+      BreedingSeason == 1998
+  )$LayDate_observed, lubridate::NA_Date_)
+  expect_equal(subset(
+    GRO_data,
+    LocationID == "I42" &
+      Species == "PARMAJ" &
+      BreedingSeason == 1998
+  )$HatchDate_observed, as.Date("1998-05-03"))
+  expect_equal(subset(
+    GRO_data,
+    LocationID == "I42" &
+      Species == "PARMAJ" &
+      BreedingSeason == 1998
+  )$ClutchSize_observed, 13)
+  expect_equal(subset(
+    GRO_data,
+    LocationID == "I42" &
+      Species == "PARMAJ" &
+      BreedingSeason == 1998
+  )$BroodSize_observed, 12)
+  expect_equal(subset(
+    GRO_data,
+    LocationID == "I42" &
+      Species == "PARMAJ" &
+      BreedingSeason == 1998
+  )$NumberFledged_observed, 12)
 
   ## CYACAE nest N02 in 2010
-  expect_equal(subset(GRO_data,
-                      LocationID == "N02" &
-                        Species == "CYACAE" &
-                        BreedingSeason == 2010)$FemaleID, "K9B8683")
-  expect_equal(subset(GRO_data,
-                      LocationID == "N02" &
-                        Species == "CYACAE" &
-                        BreedingSeason == 2010)$MaleID, "K9B8684")
-  expect_equal(subset(GRO_data,
-                      LocationID == "N02" &
-                        Species == "CYACAE" &
-                        BreedingSeason == 2010)$LayDate_observed, as.Date("2010-04-16"))
-  expect_equal(subset(GRO_data,
-                      LocationID == "N02" &
-                        Species == "CYACAE" &
-                        BreedingSeason == 2010)$HatchDate_observed, as.Date("2010-05-08"))
-  expect_equal(subset(GRO_data,
-                      LocationID == "N02" &
-                        Species == "CYACAE" &
-                        BreedingSeason == 2010)$ClutchSize_observed, 11)
-  expect_equal(subset(GRO_data,
-                      LocationID == "N02" &
-                        Species == "CYACAE" &
-                        BreedingSeason == 2010)$BroodSize_observed, 11)
-  expect_equal(subset(GRO_data,
-                      LocationID == "N02" &
-                        Species == "CYACAE" &
-                        BreedingSeason == 2010)$NumberFledged_observed, 8)
-
+  expect_equal(subset(
+    GRO_data,
+    LocationID == "N02" &
+      Species == "CYACAE" &
+      BreedingSeason == 2010
+  )$FemaleID, "K9B8683")
+  expect_equal(subset(
+    GRO_data,
+    LocationID == "N02" &
+      Species == "CYACAE" &
+      BreedingSeason == 2010
+  )$MaleID, "K9B8684")
+  expect_equal(subset(
+    GRO_data,
+    LocationID == "N02" &
+      Species == "CYACAE" &
+      BreedingSeason == 2010
+  )$LayDate_observed, as.Date("2010-04-16"))
+  expect_equal(subset(
+    GRO_data,
+    LocationID == "N02" &
+      Species == "CYACAE" &
+      BreedingSeason == 2010
+  )$HatchDate_observed, as.Date("2010-05-08"))
+  expect_equal(subset(
+    GRO_data,
+    LocationID == "N02" &
+      Species == "CYACAE" &
+      BreedingSeason == 2010
+  )$ClutchSize_observed, 11)
+  expect_equal(subset(
+    GRO_data,
+    LocationID == "N02" &
+      Species == "CYACAE" &
+      BreedingSeason == 2010
+  )$BroodSize_observed, 11)
+  expect_equal(subset(
+    GRO_data,
+    LocationID == "N02" &
+      Species == "CYACAE" &
+      BreedingSeason == 2010
+  )$NumberFledged_observed, 8)
 })
 
 test_that("Capture_data returns an expected outcome...", {
-
-
   ## Take a subset of only GRO data
   GRO_data <- dplyr::filter(pipeline_output$Capture_data, CapturePopID %in% "GRO")
 
   ## FICALB individual LE31523 caught in two years with conflicting sex
-  expect_equal(subset(GRO_data,
-                      IndvID == "LE31523")$BreedingSeason, c(1999, 2002))
-  expect_equal(subset(GRO_data,
-                      IndvID == "LE31523")$Sex_observed, c("M", "F"))
-  expect_equal(subset(GRO_data,
-                      IndvID == "LE31523")$LocationID, c("I01", "S19"))
+  expect_equal(subset(
+    GRO_data,
+    IndvID == "LE31523"
+  )$BreedingSeason, c(1999, 2002))
+  expect_equal(subset(
+    GRO_data,
+    IndvID == "LE31523"
+  )$Sex_observed, c("M", "F"))
+  expect_equal(subset(
+    GRO_data,
+    IndvID == "LE31523"
+  )$LocationID, c("I01", "S19"))
 
 
   ## PARMAJ individual KP46833 caught twice in same year
-  expect_equal(unique(subset(GRO_data,
-                             IndvID == "KP46833")$BreedingSeason), 1999)
-  expect_equal(unique(subset(GRO_data,
-                             IndvID == "KP46833")$Species), "PARMAJ")
-  expect_equal(unique(subset(GRO_data,
-                             IndvID == "KP46833")$Mass), NA_real_)
-  expect_equal(unique(subset(GRO_data,
-                             IndvID == "KP46833")$WingLength), NA_real_)
-  expect_equal(unique(subset(GRO_data,
-                             IndvID == "KP46833")$CaptureAlive), TRUE)
-  expect_equal(unique(subset(GRO_data,
-                             IndvID == "KP46833")$Sex_observed), "F")
-  expect_equal(unique(subset(GRO_data,
-                             IndvID == "KP46833")$LocationID), "I19")
+  expect_equal(unique(subset(
+    GRO_data,
+    IndvID == "KP46833"
+  )$BreedingSeason), 1999)
+  expect_equal(unique(subset(
+    GRO_data,
+    IndvID == "KP46833"
+  )$Species), "PARMAJ")
+  expect_equal(unique(subset(
+    GRO_data,
+    IndvID == "KP46833"
+  )$Mass), NA_real_)
+  expect_equal(unique(subset(
+    GRO_data,
+    IndvID == "KP46833"
+  )$WingLength), NA_real_)
+  expect_equal(unique(subset(
+    GRO_data,
+    IndvID == "KP46833"
+  )$CaptureAlive), TRUE)
+  expect_equal(unique(subset(
+    GRO_data,
+    IndvID == "KP46833"
+  )$Sex_observed), "F")
+  expect_equal(unique(subset(
+    GRO_data,
+    IndvID == "KP46833"
+  )$LocationID), "I19")
 
 
   ## CYACAE individual K1L7504
-  expect_equal(subset(GRO_data,
-                      IndvID == "K1L7504")$BreedingSeason, 2015)
-  expect_equal(subset(GRO_data,
-                      IndvID == "K1L7504")$Sex_observed, "F")
-  expect_equal(subset(GRO_data,
-                      IndvID == "K1L7504")$Species, "CYACAE")
-  expect_equal(subset(GRO_data,
-                      IndvID == "K1L7504")$Mass, NA_real_)
-  expect_equal(subset(GRO_data,
-                      IndvID == "K1L7504")$WingLength, NA_real_)
-  expect_equal(subset(GRO_data,
-                      IndvID == "K1L7504")$CaptureAlive, TRUE)
-  expect_equal(subset(GRO_data,
-                      IndvID == "K1L7504")$LocationID, "H63")
+  expect_equal(subset(
+    GRO_data,
+    IndvID == "K1L7504"
+  )$BreedingSeason, 2015)
+  expect_equal(subset(
+    GRO_data,
+    IndvID == "K1L7504"
+  )$Sex_observed, "F")
+  expect_equal(subset(
+    GRO_data,
+    IndvID == "K1L7504"
+  )$Species, "CYACAE")
+  expect_equal(subset(
+    GRO_data,
+    IndvID == "K1L7504"
+  )$Mass, NA_real_)
+  expect_equal(subset(
+    GRO_data,
+    IndvID == "K1L7504"
+  )$WingLength, NA_real_)
+  expect_equal(subset(
+    GRO_data,
+    IndvID == "K1L7504"
+  )$CaptureAlive, TRUE)
+  expect_equal(subset(
+    GRO_data,
+    IndvID == "K1L7504"
+  )$LocationID, "H63")
 
 
   ## FICALB individual LE31496
-  expect_equal(subset(GRO_data,
-                      IndvID == "LE31496")$BreedingSeason, 2002)
-  expect_equal(subset(GRO_data,
-                      IndvID == "LE31496")$Sex_observed, "F")
-  expect_equal(subset(GRO_data,
-                      IndvID == "LE31496")$Species, "FICALB")
-  expect_equal(subset(GRO_data,
-                      IndvID == "LE31496")$Mass, NA_real_)
-  expect_equal(subset(GRO_data,
-                      IndvID == "LE31496")$WingLength, NA_real_)
-  expect_equal(subset(GRO_data,
-                      IndvID == "LE31496")$CaptureAlive, TRUE)
-  expect_equal(subset(GRO_data,
-                      IndvID == "LE31496")$LocationID, "I37")
-  expect_equal(subset(GRO_data,
-                      IndvID == "LE31496")$CaptureDate, as.Date("2002-05-28"))
-
+  expect_equal(subset(
+    GRO_data,
+    IndvID == "LE31496"
+  )$BreedingSeason, 2002)
+  expect_equal(subset(
+    GRO_data,
+    IndvID == "LE31496"
+  )$Sex_observed, "F")
+  expect_equal(subset(
+    GRO_data,
+    IndvID == "LE31496"
+  )$Species, "FICALB")
+  expect_equal(subset(
+    GRO_data,
+    IndvID == "LE31496"
+  )$Mass, NA_real_)
+  expect_equal(subset(
+    GRO_data,
+    IndvID == "LE31496"
+  )$WingLength, NA_real_)
+  expect_equal(subset(
+    GRO_data,
+    IndvID == "LE31496"
+  )$CaptureAlive, TRUE)
+  expect_equal(subset(
+    GRO_data,
+    IndvID == "LE31496"
+  )$LocationID, "I37")
+  expect_equal(subset(
+    GRO_data,
+    IndvID == "LE31496"
+  )$CaptureDate, as.Date("2002-05-28"))
 })
 
 test_that("Location_data returns an expected outcome...", {
-
-  #Take a subset of only GRO data
+  # Take a subset of only GRO data
   GRO_data <- dplyr::filter(pipeline_output$Location_data, PopID %in% "GRO")
 
   # All should have the same latitude equal to 50.06
@@ -287,111 +397,8 @@ test_that("Location_data returns an expected outcome...", {
 
   # StartSeason for nestbox C12 is 1999 (nest box occurs in FICALB and PARMAJ data)
   expect_equal(subset(GRO_data, LocationID == "I04")$StartSeason, 1999)
-
-
-
 })
 
 
-## General tests
-
-test_that("Expected columns are present", {
-
-  ## Will fail if not all the expected columns are present
-
-  ## Brood data: Test that all columns are present
-  test_col_present(pipeline_output, "Brood", pipeline_output$protocol_version)
-
-  ## Capture data: Test that all columns are present
-  test_col_present(pipeline_output, "Capture", pipeline_output$protocol_version)
-
-  ## Individual data: Test that all columns are present
-  test_col_present(pipeline_output, "Individual", pipeline_output$protocol_version)
-
-  ## Location data: Test that all columns are present
-  test_col_present(pipeline_output, "Location", pipeline_output$protocol_version)
-
-})
-
-test_that("Column classes are as expected", {
-
-  ## Will fail if columns that are shared by the output and the templates have different classes.
-
-  # ## Brood data: Test that all column classes are expected
-  test_col_classes(pipeline_output, "Brood", pipeline_output$protocol_version)
-
-  ## Capture data: Test that all column classes are expected
-  test_col_classes(pipeline_output, "Capture", pipeline_output$protocol_version)
-
-  ## Individual data: Test that all column classes are expected
-  test_col_classes(pipeline_output, "Individual", pipeline_output$protocol_version)
-
-  ## Location data: Test that all column classes are expected
-  test_col_classes(pipeline_output, "Location", pipeline_output$protocol_version)
-
-})
-
-
-test_that("ID columns match the expected format for the pipeline", {
-
-  # ## FemaleID format is as expected
-  test_ID_format(pipeline_output, column = "FemaleID", format = "^[[:digit:][:alpha:]]{7}$")
-
-  # ## MaleID format is as expected
-  test_ID_format(pipeline_output, column = "MaleID", format = "^[[:digit:][:alpha:]]{7}$")
-
-  # ## IndvID format in Capture data  is as expected
-  test_ID_format(pipeline_output, column = "IndvID", table = "Capture", format = "^[[:digit:][:alpha:]]{7}$")
-
-  ## IndvID format in Individual data is as expected
-  test_ID_format(pipeline_output, column = "IndvID", table = "Individual", format = "^[[:digit:][:alpha:]]{7}$")
-
-})
-
-
-test_that("Key columns only contain unique values", {
-
-  # ## BroodID has only unique values
-  test_unique_values(pipeline_output, "BroodID")
-
-  ## CaptureID has only unique values
-  test_unique_values(pipeline_output, "CaptureID")
-
-  ## PopID-IndvID has only unique values
-  test_unique_values(pipeline_output, "IndvID")
-
-})
-
-
-test_that("Key columns in each table do not have NAs", {
-
-  ## Brood
-  test_NA_columns(pipeline_output, "Brood")
-
-  ## Capture
-  test_NA_columns(pipeline_output, "Capture")
-
-  ## Individual
-  test_NA_columns(pipeline_output, "Individual")
-
-  ## Location
-  test_NA_columns(pipeline_output, "Location")
-
-})
-
-
-test_that("Categorical columns do not have unexpected values", {
-
-  ## Brood
-  test_category_columns(pipeline_output, "Brood")
-
-  ## Capture
-  test_category_columns(pipeline_output, "Capture")
-
-  ## Individual
-  test_category_columns(pipeline_output, "Individual")
-
-  ## Location
-  test_category_columns(pipeline_output, "Location")
-
-})
+## Test protocol compliance
+test_protocol_compliance(pipeline_output)

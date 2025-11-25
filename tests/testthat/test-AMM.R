@@ -4,23 +4,20 @@ testthat::skip_if(!exists("data_path"))
 pipeline_output <- format_AMM(db = paste0(data_path, "/AMM_Ammersee_Germany"))
 
 test_that("AMM outputs all files...", {
-
   expect_true(all("AMM" %in% pipeline_output$Brood_data$PopID))
   expect_true(all("AMM" %in% pipeline_output$Capture_data$CapturePopID))
   expect_true(all("AMM" %in% pipeline_output$Individual_data$PopID))
   expect_true(all("AMM" %in% pipeline_output$Location_data$PopID))
   expect_true(pipeline_output$protocol_version == "1.1.0")
-
 })
 
 test_that("Brood_data returns an expected outcome...", {
+  # We want to run tests for all possible outcomes of ClutchType_calculated
 
-  #We want to run tests for all possible outcomes of ClutchType_calculated
-
-  #Take a subset of only AMM data
+  # Take a subset of only AMM data
   AMM_data <- dplyr::filter(pipeline_output$Brood_data, PopID %in% "AMM")
 
-  #Test 1: Brood where clutch type = first
+  # Test 1: Brood where clutch type = first
   expect_equal(subset(AMM_data, BroodID == "3642")$Species, "PARMAJ")
   expect_equal(subset(AMM_data, BroodID == "3642")$ClutchType_observed, "first")
   expect_equal(subset(AMM_data, BroodID == "3642")$ClutchType_calculated, "first")
@@ -39,7 +36,7 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(round(subset(AMM_data, BroodID == "3642")$AvgChickMass, 2), NA_real_)
   expect_equal(round(subset(AMM_data, BroodID == "3642")$AvgTarsus, 2), 20.46)
 
-  #Test 2: Brood where clutch type = replacement (because first is known to have failed)
+  # Test 2: Brood where clutch type = replacement (because first is known to have failed)
   expect_equal(subset(AMM_data, BroodID == "4375")$Species, "PARMAJ")
   expect_equal(subset(AMM_data, BroodID == "4375")$ClutchType_observed, "replacement")
   expect_equal(subset(AMM_data, BroodID == "4375")$ClutchType_calculated, "replacement")
@@ -58,11 +55,11 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(AMM_data, BroodID == "4375")$NumberFledged_observed, 0L)
   expect_equal(subset(AMM_data, BroodID == "4375")$NumberFledged_min, 0L)
   expect_equal(subset(AMM_data, BroodID == "4375")$NumberFledged_max, NA_integer_)
-  #Measurements taken but not included in average because chick age was >16
+  # Measurements taken but not included in average because chick age was >16
   expect_equal(subset(AMM_data, BroodID == "4375")$AvgChickMass, NA_real_)
   expect_equal(subset(AMM_data, BroodID == "4375")$AvgTarsus, 20.25)
 
-  #Test 3: Brood where clutch type = replacement (past the cutoff)
+  # Test 3: Brood where clutch type = replacement (past the cutoff)
   expect_equal(subset(AMM_data, BroodID == "59")$Species, "CYACAE")
   expect_equal(subset(AMM_data, BroodID == "59")$ClutchType_observed, "replacement")
   expect_equal(subset(AMM_data, BroodID == "59")$ClutchType_calculated, "replacement")
@@ -73,7 +70,7 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(AMM_data, BroodID == "59")$AvgChickMass, NA_real_)
   expect_equal(subset(AMM_data, BroodID == "59")$AvgTarsus, NA_real_)
 
-  #Test 4: Brood where clutch type = second
+  # Test 4: Brood where clutch type = second
   expect_equal(subset(AMM_data, BroodID == "581")$Species, "PARMAJ")
   expect_equal(subset(AMM_data, BroodID == "581")$ClutchType_observed, "second")
   expect_equal(subset(AMM_data, BroodID == "581")$ClutchType_calculated, "second")
@@ -84,7 +81,7 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(AMM_data, BroodID == "581")$AvgChickMass, NA_real_)
   expect_equal(round(subset(AMM_data, BroodID == "581")$AvgTarsus, 2), 18.82)
 
-  #Test 5: Brood with error in measurements in counts (e.g. clutch/brood/nrfledge)
+  # Test 5: Brood with error in measurements in counts (e.g. clutch/brood/nrfledge)
   expect_equal(subset(AMM_data, BroodID == "1")$Species, "CYACAE")
   expect_equal(subset(AMM_data, BroodID == "1")$ClutchType_observed, "first")
   expect_equal(subset(AMM_data, BroodID == "1")$ClutchType_calculated, "first")
@@ -97,7 +94,7 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(AMM_data, BroodID == "1")$AvgChickMass, NA_real_)
   expect_equal(subset(AMM_data, BroodID == "1")$AvgTarsus, NA_real_)
 
-  #Test 5: Brood with error in date
+  # Test 5: Brood with error in date
   expect_equal(subset(AMM_data, BroodID == "1241")$Species, "PARMAJ")
   expect_equal(subset(AMM_data, BroodID == "1241")$ClutchType_observed, "replacement")
   expect_equal(subset(AMM_data, BroodID == "1241")$ClutchType_calculated, "replacement")
@@ -109,17 +106,15 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(AMM_data, BroodID == "1241")$NumberFledged_observed, 0L)
   expect_equal(subset(AMM_data, BroodID == "1241")$AvgChickMass, NA_real_)
   expect_equal(subset(AMM_data, BroodID == "1241")$AvgTarsus, NA_real_)
-
 })
 
 test_that("Individual data returns an expected outcome...", {
+  # We want to run a test for each sex for individuals caught as adults and chicks
 
-  #We want to run a test for each sex for individuals caught as adults and chicks
-
-  #Take a subset of only AMM data
+  # Take a subset of only AMM data
   AMM_data <- dplyr::filter(pipeline_output$Individual_data, PopID %in% "AMM")
 
-  #Test 1: First caught as adult
+  # Test 1: First caught as adult
   expect_equal(subset(AMM_data, IndvID == "251")$Sex_calculated, "F")
   expect_equal(subset(AMM_data, IndvID == "251")$Sex_genetic, NA_character_)
   expect_equal(subset(AMM_data, IndvID == "251")$Species, "PARMAJ")
@@ -128,7 +123,7 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(subset(AMM_data, IndvID == "251")$RingSeason, 2010L)
   expect_equal(subset(AMM_data, IndvID == "251")$RingAge, "adult")
 
-  #Test 2: Caught first as chick (not cross fostered)
+  # Test 2: Caught first as chick (not cross fostered)
   expect_equal(subset(AMM_data, IndvID == "15412")$Sex_calculated, "F")
   expect_equal(subset(AMM_data, IndvID == "15412")$Sex_genetic, NA_character_)
   expect_equal(subset(AMM_data, IndvID == "15412")$Species, "PARMAJ")
@@ -137,7 +132,7 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(subset(AMM_data, IndvID == "15412")$RingSeason, 2015L)
   expect_equal(subset(AMM_data, IndvID == "15412")$RingAge, "chick")
 
-  #Test 2: Caught first as chick (cross fostered)
+  # Test 2: Caught first as chick (cross fostered)
   expect_equal(subset(AMM_data, IndvID == "2108")$Sex_calculated, NA_character_)
   expect_equal(subset(AMM_data, IndvID == "2108")$Sex_genetic, "M")
   expect_equal(subset(AMM_data, IndvID == "2108")$Species, "PARMAJ")
@@ -145,15 +140,13 @@ test_that("Individual data returns an expected outcome...", {
   expect_equal(subset(AMM_data, IndvID == "2108")$BroodIDFledged, "331")
   expect_equal(subset(AMM_data, IndvID == "2108")$RingSeason, 2011L)
   expect_equal(subset(AMM_data, IndvID == "2108")$RingAge, "chick")
-
 })
 
 test_that("Capture data returns an expected outcome...", {
-
-  #Take a subset of only AMM data
+  # Take a subset of only AMM data
   AMM_data <- dplyr::filter(pipeline_output$Capture_data, CapturePopID %in% "AMM")
 
-  #Test 1: Individual ringed as a chick
+  # Test 1: Individual ringed as a chick
   expect_equal(nrow(subset(AMM_data, IndvID == "952")), 12L)
   expect_equal(subset(AMM_data, IndvID == "952")$CaptureDate[1], as.Date("2010-05-10"))
   expect_equal(subset(AMM_data, IndvID == "952")$CaptureDate[12], as.Date("2015-01-14"))
@@ -162,7 +155,7 @@ test_that("Capture data returns an expected outcome...", {
   expect_equal(subset(AMM_data, IndvID == "952")$Age_calculated[1], 1L)
   expect_equal(subset(AMM_data, IndvID == "952")$Age_calculated[12], 13L)
 
-  #Test 2: Individual caught only as adult
+  # Test 2: Individual caught only as adult
   expect_equal(nrow(subset(AMM_data, IndvID == "15450")), 11)
   expect_equal(subset(AMM_data, IndvID == "15450")$CaptureDate[1], as.Date("2015-10-20"))
   expect_equal(subset(AMM_data, IndvID == "15450")$CaptureDate[11], as.Date("2019-06-17"))
@@ -170,17 +163,15 @@ test_that("Capture data returns an expected outcome...", {
   expect_equal(subset(AMM_data, IndvID == "15450")$Age_observed[11], 6L)
   expect_equal(subset(AMM_data, IndvID == "15450")$Age_calculated[1], 4L)
   expect_equal(subset(AMM_data, IndvID == "15450")$Age_calculated[11], 12L)
-
 })
 
 test_that("Location_data returns an expected outcome...", {
+  # We want to run tests for nest boxes (there are no mistnets)
 
-  #We want to run tests for nest boxes (there are no mistnets)
-
-  #Take a subset of only NIOO data
+  # Take a subset of only NIOO data
   AMM_data <- dplyr::filter(pipeline_output$Location_data, PopID %in% "AMM")
 
-  #Test 1: Nestbox check
+  # Test 1: Nestbox check
   expect_true(subset(AMM_data, LocationID == "1144")$LocationType == "NB")
   expect_true(subset(AMM_data, LocationID == "1144")$NestboxID == "1144")
   expect_equal(subset(AMM_data, LocationID == "1144")$StartSeason, 2010L)
@@ -188,104 +179,7 @@ test_that("Location_data returns an expected outcome...", {
   expect_equal(subset(AMM_data, LocationID == "1144")$PopID, "AMM")
   expect_equal(round(subset(AMM_data, LocationID == "1144")$Latitude, 2) %>% setNames(nm = NULL), 47.98)
   expect_equal(round(subset(AMM_data, LocationID == "1144")$Longitude, 2) %>% setNames(nm = NULL), 11.16)
-
 })
 
-## General tests
-
-test_that("Expected columns are present", {
-
-  ## Will fail if not all the expected columns are present
-
-  ## Brood data: Test that all columns are present
-  test_col_present(pipeline_output, "Brood", pipeline_output$protocol_version)
-
-  ## Capture data: Test that all columns are present
-  test_col_present(pipeline_output, "Capture", pipeline_output$protocol_version)
-
-  ## Individual data: Test that all columns are present
-  test_col_present(pipeline_output, "Individual", pipeline_output$protocol_version)
-
-  ## Location data: Test that all columns are present
-  test_col_present(pipeline_output, "Location", pipeline_output$protocol_version)
-
-})
-
-test_that("Column classes are as expected", {
-
-  ## Will fail if columns that are shared by the output and the templates have different classes.
-
-  ## Brood data: Test that all column classes are expected
-  test_col_classes(pipeline_output, "Brood", pipeline_output$protocol_version)
-
-  ## Capture data: Test that all column classes are expected
-  test_col_classes(pipeline_output, "Capture", pipeline_output$protocol_version)
-
-  ## Individual data: Test that all column classes are expected
-  test_col_classes(pipeline_output, "Individual", pipeline_output$protocol_version)
-
-  ## Location data: Test that all column classes are expected
-  test_col_classes(pipeline_output, "Location", pipeline_output$protocol_version)
-
-})
-
-test_that("ID columns match the expected format for the pipeline", {
-
-  ## FemaleID format is as expected
-  test_ID_format(pipeline_output, column = "FemaleID", format = "[:digit:]{3,5}$")
-
-  ## MaleID format is as expected
-  test_ID_format(pipeline_output, column = "MaleID", format = "[:digit:]{3,5}$")
-
-  ## IndvID format in Capture data  is as expected
-  test_ID_format(pipeline_output, column = "IndvID", table = "Capture", format = "[:digit:]{3,5}$")
-
-  ## IndvID format in Individual data is as expected
-  test_ID_format(pipeline_output, column = "IndvID", table = "Individual", format = "[:digit:]{3,5}$")
-
-})
-
-test_that("Key columns only contain unique values", {
-
-  ## BroodID has only unique values
-  test_unique_values(pipeline_output, "BroodID")
-
-  ## CaptureID has only unique values
-  test_unique_values(pipeline_output, "CaptureID")
-
-  ## PopID-IndvID has only unique values
-  test_unique_values(pipeline_output, "IndvID")
-
-})
-
-test_that("Key columns in each table do not have NAs", {
-
-  ## Brood
-  test_NA_columns(pipeline_output, "Brood")
-
-  ## Capture
-  test_NA_columns(pipeline_output, "Capture")
-
-  ## Individual
-  test_NA_columns(pipeline_output, "Individual")
-
-  ## Location
-  test_NA_columns(pipeline_output, "Location")
-
-})
-
-test_that("Categorical columns do not have unexpected values", {
-
-  ## Brood
-  test_category_columns(pipeline_output, "Brood")
-
-  ## Capture
-  test_category_columns(pipeline_output, "Capture")
-
-  ## Individual
-  test_category_columns(pipeline_output, "Individual")
-
-  ## Location
-  test_category_columns(pipeline_output, "Location")
-
-})
+## Test protocol compliance
+test_protocol_compliance(pipeline_output)
