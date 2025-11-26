@@ -35,7 +35,7 @@ this argument can be ignored.}
 nestling with no corresponding ringing data.}
 }
 \value{
-4 data tables in the standard format (version 1.0.0). When `output_type = "R"`, a list of 4 data frames corresponding to the 4 standard data tables and 1 character vector indicating the protocol version on which the pipeline is based. When `output_type = "csv"`, 4 .csv files corresponding to the 4 standard data tables and 1 text file indicating the protocol version on which the pipeline is based.
+4 data tables in the standard format (version 1.1.0). When `output_type = "R"`, a list of 4 data frames corresponding to the 4 standard data tables and 1 character vector indicating the protocol version on which the pipeline is based. When `output_type = "csv"`, 4 .csv files corresponding to the 4 standard data tables and 1 text file indicating the protocol version on which the pipeline is based.
 }
 \description{
 A pipeline to produce the standard format for the hole nesting bird population
@@ -60,7 +60,7 @@ hand (i.e. still not able to fly). 1 = 3 (i.e. fully grown in first year).
 FL is unknown. We can't even attribute it to chick or adult.
 For this we use EURING 2 (able to fly freely but otherwise unknown).
 
-\strong{LayingDateError & HatchDateError}: Accuracy of laying and hatch date
+\strong{LayDate_min/LayDate_max & HatchDate_min/HatchDate_max}: Accuracy of laying and hatch date
 are given as categories: 0-1; 1-2; 2-3; 'inaccurate'. Where error is a range,
 the more conservative error is used (i.e. 0-1 is recorded as 1).
 Cases listed as 'inaccurate' have an error of at least a week.
@@ -119,20 +119,54 @@ collected on them (e.g. Mass). We give them an 'empty' record in Capture_data
 B, C, D) (e.g. Brood 2011_0003_1)
 
 We assume these were chicks captured before they were old enough to be ringed.
-We keep these as a legitimate capture record as they can tell us something
-about chick growth.
+We generate temporary IndvIDs using BroodID + letter designation
+to enable CaptureID generation for the Capture table.
 
 \item #8.	Record in Nestling_data that has ring number information, but there
 is no corresponding record of chicks with those rings being captured from that
 brood in Capture_data (e.g. Brood 1985_2081_1 with individuals 71, 72, 73,
 74).
 
-We cannot determine the identity of the captured individual without a matching
-record in Capture_data because we only know the last 2 digits of the ring
-number. Currently, we include them as captures with IndvID = NA. These can
-still be used to estimate AvgChickMass, AvgTarsus for a given BroodID even
-though the individual cannot be identified; however, we suspect these are
-mistakes in the primary data.}
+\item #9.	CaptureAlive and ReleaseAlive are for now a guess.
+The original data has codes in Finnish that are translated as:
+Assume for now that "D" means in Condition means Dead
+Assume all other birds (even NA ones) are released alive
+TODO: Check with data owner
+Assume for now that "P", "M", "E" means that they are released alive
+Assume "T" means killed when handling
+
+Condition code translations according to a translator.
+| Code | Finnish/English      | Meaning         |
+|------|---------------------|-----------------|
+| D    | Död/Dead            | Dead            |
+| V    | Voimissaan/Vigorous | Healthy/Strong  |
+| H    | Heikko              | Weak            |
+| NA   |                     | Not recorded    |
+
+ExtraInfo code translations:
+| Code | Finnish/English | Meaning           |
+|------|-----------------|-------------------|
+| P    | Päästetty        | Released          |
+| T    | Tuntematon       | Unknown           |
+| NA   |                  | Not recorded      |
+
+BirdStatus code translations:
+| Code | Finnish      | English (meaning)   |
+|------|--------------|---------------------|
+| M    | Merkitty     | Marked/tagged       |
+| P    | Päästetty    | Released            |
+| E    | Elossa       | Alive               |
+| T    | Tapettu      | Killed              |
+| O    | Otettu       | Taken/removed       |
+| H    | Hukkunut     | Lost/drowned        |
+| NA   |              | Not recorded        |
+
+We cannot determine the full identity of the captured individual without a
+matching record in Capture_data because we only know the last 2 digits of the
+ring number. We generate temporary IndvIDs using BroodID + the last 2 digits
+to enable CaptureID generation. These can still be used to
+estimate AvgChickMass, AvgTarsus for a given BroodID; however,
+these may represent data entry errors. Check with data custodian if needed.}
 
 \strong{Mass}: Mass of birds is measured in mg. This is converted
 to grams to match other populations.
