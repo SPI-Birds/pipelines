@@ -71,8 +71,8 @@ format_XXX <- function(db = choose_directory(),
   # Apply filters
   raw_data <- apply_filters(
     raw_data,
-    species_filter = species %||% config$default_species,
-    pop_filter = pop %||% config$default_pops
+    species_filter = dplyr::coalesce(species, config$default_species),
+    pop_filter = dplyr::coalesce(pop, config$default_pops)
   )
 
   # ---- CREATE TABLES ----
@@ -217,7 +217,14 @@ build_brood_table_XXX <- function(data, config) {
       broodID = as.character(.data$brood_id),
       speciesID = config$species_map[.data$species],
       studyID = config$study_id,
-      siteID = if (length(config$site_id) > 1) paste(config$site_id, collapse = ",") else config$site_id,
+      siteID = if (length(config$site_id) > 1) {
+        paste(
+          config$site_id,
+          collapse = ","
+        )
+      } else {
+        config$site_id
+      },
       plotID = as.character(.data$plot),
       locationID = as.character(.data$location),
       femaleID = as.character(.data$female_ring),
@@ -265,8 +272,22 @@ build_capture_table_XXX <- function(data, config) {
       captureMonth = lubridate::month(.data$capture_date),
       captureDay = lubridate::day(.data$capture_date),
       captureTime = format(.data$capture_time, "%H:%M:%S"),
-      captureSiteID = if (length(config$site_id) > 1) paste(config$site_id, collapse = ",") else config$site_id,
-      releaseSiteID = if (length(config$site_id) > 1) paste(config$site_id, collapse = ",") else config$site_id,
+      captureSiteID = if (length(config$site_id) > 1) {
+        paste(
+          config$site_id,
+          collapse = ","
+        )
+      } else {
+        config$site_id
+      },
+      releaseSiteID = if (length(config$site_id) > 1) {
+        paste(
+          config$site_id,
+          collapse = ","
+        )
+      } else {
+        config$site_id
+      },
       capturePlotID = as.character(.data$plot),
       releasePlotID = as.character(.data$plot),
       captureLocationID = as.character(.data$location),
@@ -303,7 +324,9 @@ build_individual_table_XXX <- function(Capture_data, Brood_data, config) {
       tagMonth = dplyr::first(.data$captureMonth[.data$captureYear == tagYear]),
       tagDay = dplyr::first(.data$captureDay[.data$captureYear == tagYear]),
       min_chick_age = min(.data$chickAge, na.rm = TRUE),
-      first_location = dplyr::first(.data$captureLocationID[.data$captureYear == tagYear]),
+      first_location = dplyr::first(
+        .data$captureLocationID[.data$captureYear == tagYear]
+      ),
       .groups = "drop"
     ) %>%
     dplyr::mutate(
@@ -328,7 +351,14 @@ build_individual_table_XXX <- function(Capture_data, Brood_data, config) {
       ),
       broodIDFledged = .data$broodIDLaid,
       row = dplyr::row_number(),
-      siteID = if (length(config$site_id) > 1) paste(config$site_id, collapse = ",") else config$site_id,
+      siteID = if (length(config$site_id) > 1) {
+        paste(
+          config$site_id,
+          collapse = ","
+        )
+      } else {
+        config$site_id
+      },
       geneticSex = NA_character_
     ) %>%
     add_quality_columns() %>%
@@ -350,7 +380,14 @@ build_location_table_XXX <- function(data, config) {
       locationType = "nest",
       locationDetails = paste("Nestbox", .data$location),
       studyID = config$study_id,
-      siteID = if (length(config$site_id) > 1) paste(config$site_id, collapse = ",") else config$site_id,
+      siteID = if (length(config$site_id) > 1) {
+        paste(
+          config$site_id,
+          collapse = ","
+        )
+      } else {
+        config$site_id
+      },
       decimalLatitude = as.numeric(.data$latitude),
       decimalLongitude = as.numeric(.data$longitude),
       elevation = NA_real_,
@@ -424,7 +461,14 @@ add_brood_identifiers <- function(data, config) {
       broodID = as.character(.data$brood_id),
       speciesID = config$species_map[.data$species],
       studyID = config$study_id,
-      siteID = if (length(config$site_id) > 1) paste(config$site_id, collapse = ",") else config$site_id,
+      siteID = if (length(config$site_id) > 1) {
+        paste(
+          config$site_id,
+          collapse = ","
+        )
+      } else {
+        config$site_id
+      },
       plotID = as.character(.data$plot),
       locationID = as.character(.data$location)
     )
@@ -532,8 +576,22 @@ add_capture_datetime <- function(data) {
 add_capture_location <- function(data, config) {
   data$primary %>%
     dplyr::mutate(
-      captureSiteID = if (length(config$site_id) > 1) paste(config$site_id, collapse = ",") else config$site_id,
-      releaseSiteID = if (length(config$site_id) > 1) paste(config$site_id, collapse = ",") else config$site_id,
+      captureSiteID = if (length(config$site_id) > 1) {
+        paste(
+          config$site_id,
+          collapse = ","
+        )
+      } else {
+        config$site_id
+      },
+      releaseSiteID = if (length(config$site_id) > 1) {
+        paste(
+          config$site_id,
+          collapse = ","
+        )
+      } else {
+        config$site_id
+      },
       capturePlotID = as.character(.data$plot),
       releasePlotID = as.character(.data$plot),
       captureLocationID = as.character(.data$location),
@@ -647,7 +705,14 @@ add_individual_identifiers <- function(data, config) {
   data %>%
     dplyr::mutate(
       row = dplyr::row_number(),
-      siteID = if (length(config$site_id) > 1) paste(config$site_id, collapse = ",") else config$site_id,
+      siteID = if (length(config$site_id) > 1) {
+        paste(
+          config$site_id,
+          collapse = ","
+        )
+      } else {
+        config$site_id
+      },
       geneticSex = NA_character_
     )
 }
@@ -697,7 +762,14 @@ add_location_identifiers <- function(data, config) {
       locationType = "nest",
       locationDetails = paste("Nestbox", .data$location),
       studyID = config$study_id,
-      siteID = if (length(config$site_id) > 1) paste(config$site_id, collapse = ",") else config$site_id
+      siteID = if (length(config$site_id) > 1) {
+        paste(
+          config$site_id,
+          collapse = ","
+        )
+      } else {
+        config$site_id
+      }
     )
 }
 
@@ -885,7 +957,3 @@ export_tables <- function(tables, output_type, path, site_code,
     return(tables)
   }
 }
-
-
-# Null-coalescing operator
-`%||%` <- function(x, y) if (is.null(x)) y else x
