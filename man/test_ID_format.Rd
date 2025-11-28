@@ -7,22 +7,33 @@
 test_ID_format(pipeline_output, column, table = NULL, format)
 }
 \arguments{
-\item{pipeline_output}{A list of data frames returned from format_X, where X is the pipeline code.}
+\item{pipeline_output}{A list of data frames returned from format_X,
+where X is the pipeline code.}
 
-\item{column}{Character string. Which ID column should be tested? For v1.0.0 and v1.1.0, one of: "FemaleID", "MaleID", "IndvID". For v2.0.0, one of: "femaleID", "maleID", "individualID".}
+\item{column}{Character string. Which ID column should be tested? For
+v1.0.0 and v1.1.0, one of: "FemaleID", "MaleID", "IndvID". For v2.0.0,
+one of: "femaleID", "maleID", "individualID".}
 
-\item{table}{Character string. If testing "IndvID"/"individualID", the table in which the column is tested. Either, "Individual" or "Capture". NULL (default) for all other IDs in `ID_col`.}
+\item{table}{Character string. If testing "IndvID"/"individualID", the
+table in which the column is tested. Either, "Individual" or "Capture".
+NULL (default) for all other IDs in `ID_col`.}
 
-\item{format}{Character string. Regular expression corresponding to the expected ID format.}
+\item{format}{Character string. Regular expression corresponding to the
+expected ID format.}
 }
 \value{
-Logical (TRUE/FALSE) for whether all of IDs are formatted as expected.
+Logical (TRUE/FALSE) for whether all of IDs are formatted as
+expected.
 }
 \description{
-Test that ID formats for each column are expected. There are 4 ID columns. "IndvID"/"individualID" in the Capture and
-Individual data, and "FemaleID"/"femaleID" and "MaleID"/"maleID" in the Brood data. This function will take the regular expression that matches
-the expected ID format for the pipeline and will make sure that the ID column does not have entries that do not match the expected format.
+Test that ID formats for each column are expected. There are 4 ID columns.
+"IndvID"/"individualID" in the Capture and Individual data, and
+"FemaleID"/"femaleID" and "MaleID"/"maleID" in the Brood data. This
+function will take the regular expression that matches the expected ID
+format for the pipeline and will make sure that the ID column does not
+have entries that do not match the expected format.
 }
 \details{
-This function is intended to be used in the test for every pipeline in order to ensure consistency between pipelines.
+This function is intended to be used in the test for every pipeline in
+order to ensure consistency between pipelines.
 }

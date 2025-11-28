@@ -7,19 +7,31 @@
 test_unique_values(pipeline_output, column, debug = FALSE)
 }
 \arguments{
-\item{pipeline_output}{A list of data frames returned from format_X, where X is the pipeline code.}
+\item{pipeline_output}{A list of data frames returned from format_X,
+where X is the pipeline code.}
 
-\item{column}{Character string. Which column should be checked for duplicates? For v1.0.0 and v1.1.0, one of: "BroodID", "CaptureID", or "PopID-IndvID". For v2.0.0, one of: "broodID", "captureID", "individualID", "measurementID", "locationID", "treatmentID".}
+\item{column}{Character string. Which column should be checked for
+duplicates? For v1.0.0 and v1.1.0, one of: "BroodID", "CaptureID", or
+"PopID-IndvID". For v2.0.0, one of: "broodID", "captureID",
+"individualID", "measurementID", "locationID", "treatmentID".}
 
-\item{debug}{Logical (TRUE/FALSE) for whether the function returns the test output (FALSE) or a vector of IDs that failed this test (TRUE).}
+\item{debug}{Logical (TRUE/FALSE) for whether the function returns the
+test output (FALSE) or a vector of IDs that failed this test (TRUE).}
 }
 \value{
 See `debug`.
 }
 \description{
-Some columns are not allowed to have duplicated values. Namely, BroodID/broodID (Brood data), CaptureID/captureID (Capture data), IndvID/individualID (Individual data), measurementID (Measurement data), locationID (Location data; NB: only in >v2.0.0), treatmentID (Experiment data)
-This function takes a column name and returns a logical value corresponding to whether all values in the column are unique (TRUE) or not (FALSE).
+Some columns are not allowed to have duplicated values. Namely,
+BroodID/broodID (Brood data), CaptureID/captureID (Capture data),
+IndvID/individualID (Individual data), measurementID (Measurement data),
+locationID (Location data; NB: only in >v2.0.0), treatmentID (Experiment
+data)
+This function takes a column name and returns a logical value
+corresponding to whether all values in the column are unique (TRUE) or
+not (FALSE).
 }
 \details{
-This function is intended to be used in the test for every pipeline in order to ensure consistency between pipelines.
+This function is intended to be used in the test for every pipeline in
+order to ensure consistency between pipelines.
 }

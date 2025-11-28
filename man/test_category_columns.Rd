@@ -7,17 +7,23 @@
 test_category_columns(pipeline_output, table, debug = FALSE)
 }
 \arguments{
-\item{pipeline_output}{A list of data frames returned from format_X, where X is the pipeline code.}
+\item{pipeline_output}{A list of data frames returned from format_X,
+where X is the pipeline code.}
 
-\item{table}{Which table should be checked? One of: "Brood", "Capture", "Individual", "Location", "Measurement", or "Experiment".}
+\item{table}{Which table should be checked? One of: "Brood", "Capture",
+"Individual", "Location", "Measurement", or "Experiment".}
 
-\item{debug}{Logical (TRUE/FALSE) for whether the function returns the test output (FALSE) or a list of columns (and the unexpected values in them) that failed this test (TRUE).}
+\item{debug}{Logical (TRUE/FALSE) for whether the function returns the
+test output (FALSE) or a list of columns (and the unexpected values in
+them) that failed this test (TRUE).}
 }
 \value{
 See `debug`.
 }
 \description{
 Some columns should only include particular categorical values.
-For example, 'observedClutchType' should only include any of "first", "second", "replacement" or NA.
-This test makes sure that there are no unexpected values in these different category columns.
+For example, 'observedClutchType' should only include any of "first",
+"second", "replacement" or NA.
+This test makes sure that there are no unexpected values in these
+different category columns.
 }
