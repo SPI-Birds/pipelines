@@ -312,23 +312,25 @@ Every pipeline should have a set of unit tests in the /test/testthat folder usin
 
 - The unit testing code for each pipeline should be stored in a file `test-XXX.R`, where XXX is the data owner code. The file should start with an option to skip if the data path is missing. It should then run the corresponding `format_XXX()` function for the pipeline, followed by the required tests. Unit tests should ensure that primary data has been properly converted to the standard format. This will usually involve comparing the values for a range of different individuals in the standard format (e.g. different species, different sex) to those that would be expected from the primary data. In other words, these tests require some _manual_ inspection of the primary data to determine the correct output expected for each individual.
 
-- Each pipeline should undergo five sets of unit tests:
-  - Test standard format structure. Have the four tables Brood_data, Capture_data, Individual_data, and Location_data been created.
+- Each pipeline should undergo the following sets of unit tests:
+  - Test whether the pipeline fulfils the standard protocol. Use the wrapper function `test_protocol_wrapper()` for this.
   - Test brood data.
   - Test capture data.
   - Test individual data.
   - Test location data.
+  - Test measurement data (for protocol v2.0.0).
+  - Test experiment data (for protocol v2.0.0).
 - See examples from completed pipelines to better understand the structure of unit testing code.
 
-### `test_pipeline()`
+### `testthat::test_local()`
 
 Once you have finished the pipeline and written relevant unit tests you should make sure these tests pass.
 
-- Firstly, run unit tests just for your new pipeline. In the console type `test_pipeline(filter = "XXX")`, where XXX is the data owner code of your new pipeline.
+- Firstly, run unit tests just for your new pipeline. In the console type `testthat::test_local(filter = "XXX")`, where XXX is the pipeline code. 
 
-- Once your pipeline passes the relevant tests next run the unit tests for _all_ existing pipelines by removing the filter argument: `test_pipeline()`. This can be time consuming and a bit annoying, but it is important to regularly test all pipelines in case old code has broken due to e.g. package updates.
+- Once your pipeline passes the relevant tests next run the unit tests for _all_ existing pipelines by removing the filter argument: `testthat::test_local()`. This can be time consuming and a bit annoying, but it is important to regularly test all pipelines in case old code has broken due to e.g. package updates.
 
-- If one or more tests fail you can fix them and trouble shoot using the filter argument as shown above. To test more than one pipeline simultaneously use `test_pipeline(filter = "XXX|YYY")`, where XXX and YYY are two different data owner codes.
+- If one or more tests fail you can fix them and trouble shoot using the filter argument as shown above. To test more than one pipeline simultaneously use `testthat::test_local(filter = "XXX|YYY")`, where XXX and YYY are two different pipeline codes.
 
 ### `devtools::check()`
 
