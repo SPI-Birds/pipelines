@@ -631,7 +631,7 @@ create_individual_NIOO <- function(dir, Capture_data, location_data, species_fil
       ),
       BroodIDLaid = dplyr::if_else(is.na(.data$GeneticBroodID), .data$BroodID, .data$GeneticBroodID),
       BroodIDFledged = dplyr::if_else(is.na(.data$BroodID), .data$GeneticBroodID, .data$BroodID),
-      IndvID = as.character(.data$ID)
+      IndvID = .data$ID
     )
 
   # Determine first captures (after removing eggs)
