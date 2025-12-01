@@ -1,5 +1,3 @@
-testthat::skip_if(!exists("data_path"))
-
 pipeline_output <- format_BAN(db = paste0(data_path, "/BAN_BandonValley_Ireland"))
 
 test_that("BAN outputs all files...", {

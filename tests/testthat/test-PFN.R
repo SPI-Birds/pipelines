@@ -1,5 +1,3 @@
-testthat::skip_if(!exists("data_path"))
-
 pipeline_output <- format_PFN(db = paste0(data_path, "/PFN_PiedFlyNet_UK"))
 
 PFN_PopIDs <- c("DIN", "EDM", "KAT", "NAG", "OKE", "TEI")

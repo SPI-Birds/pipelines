@@ -1,5 +1,3 @@
-testthat::skip_if(!exists("data_path"))
-
 pipeline_output <- format_GRO(db = paste0(data_path, "/GRO_GroblaNiepolomice_Poland"))
 
 test_that("GRO outputs all files...", {

@@ -1,5 +1,3 @@
-testthat::skip_if(!exists("data_path"))
-
 pipeline_output <- format_PIL(db = paste0(data_path, "/PIL_PilisVisegradMountains_Hungary"))
 
 test_that("PIL outputs all files...", {

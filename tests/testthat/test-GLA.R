@@ -1,5 +1,3 @@
-testthat::skip_if(!exists("data_path"))
-
 pipeline_output <- format_GLA(db = paste0(data_path, "/GLA_Glasgow_Scotland"))
 
 test_that("GLA outputs all files...", {
