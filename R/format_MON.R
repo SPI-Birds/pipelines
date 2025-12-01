@@ -433,7 +433,7 @@ create_capture_MON <- function(db, species_filter, pop_filter) {
       ),
       Mass = .data$poids,
       ObserverID = .data$obs,
-      ChickAge = as.integer(.data$age_plume),
+      ChickAge = as.numeric(round(.data$age_plume)),
       ObservedSex = dplyr::case_when(
         .data$sex %in% c(1, 4) ~ "M",
         .data$sex %in% c(2, 5) ~ "F"
