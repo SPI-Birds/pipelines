@@ -4,17 +4,17 @@
 \alias{test_protocol_compliance}
 \title{Test protocol compliance}
 \usage{
-test_protocol_compliance(pipeline_output, protocol_version, ID_format = FALSE)
+test_protocol_compliance(pipeline_output, ID_format = FALSE)
 }
 \arguments{
 \item{pipeline_output}{A list of data frames returned from format_X,
 where X is the pipeline code.}
 
-\item{protocol_version}{The protocol version of the SPI-Birds standard
-data being used. Either "1.0.0", "1.1.0", or "2.0.0".}
-
 \item{ID_format}{Regular expression pattern for validating ID formats.
 Default is FALSE, which skips this test.}
+
+\item{protocol_version}{The protocol version of the SPI-Birds standard
+data being used. Either "1.0.0", "1.1.0", or "2.0.0".}
 }
 \value{
 Invisible TRUE if all tests pass, errors otherwise.
