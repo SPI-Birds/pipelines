@@ -1,6 +1,7 @@
 import os
 import csv
 import re
+import gc
 from pathlib import Path
 from datetime import date, datetime, time
 from access_parser import AccessParser
@@ -62,7 +63,7 @@ def export_access_db(dsn, table, output_dir, header=True, delim=",", quote='"'):
                 # Run the csv_writer function with the input parameters
                 if quote:
                     csv_writer = csv.writer(csvfile, delimiter=delim, quotechar=quote, 
-                                          quoting=csv.QUOTE_MINIMAL)
+                                        quoting=csv.QUOTE_MINIMAL)
                 else:
                     csv_writer = csv.writer(csvfile, delimiter=delim, quoting=csv.QUOTE_NONE)
                 
@@ -117,5 +118,11 @@ def export_access_db(dsn, table, output_dir, header=True, delim=",", quote='"'):
             
         except Exception as e:
             print(f"Error exporting table '{table_name}': {str(e)}")
+        
+        finally:
+            # Do garbage collection: remove table data to free up memory
+            if 'table_data' in locals():
+                del table_data
+            gc.collect()
     
     
