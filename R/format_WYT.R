@@ -5,8 +5,7 @@
 #'
 #' This section provides details on data management choices that are unique to
 #' this data. For a general description of the standard format please see
-#' \href{https://github.com/SPI-Birds/documentation/blob/master/
-#' standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
+#' \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 #'
 #' \strong{LocationID}: Unique locations are defined by using the nestbox IDs.
 #'  These include plot information as nest box numbers are not unique
@@ -328,8 +327,7 @@ get_species_by_euring <- function(code) {
 #' @param species_filter Species of interest.
 #' The 6 letter codes of all the species of
 #'  interest as listed in the
-#'  \href{https://github.com/SPI-Birds/documentation/blob/master/
-#' standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{standard protocol}.
+#'  \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{standard protocol}.
 #'
 #' @return A data frame with Brood data
 
@@ -389,7 +387,10 @@ create_brood_WYT <- function(db, species_filter) {
       ),
       ClutchSize_observed = .data$clutch_size,
       BroodSize_observed = .data$num_chicks,
-      NumberFledged_observed = .data$num_fledglings,
+      # TODO: ask data owner about negative number of fledged birds
+      NumberFledged_observed = ifelse(.data$num_fledglings < 0, 0,
+        data$num_fledglings
+      ),
       FemaleID = toupper(
         dplyr::na_if(.data$mother, "")
       ),
@@ -738,8 +739,10 @@ create_capture_WYT <- function(db, Brood_data, species_filter) {
   # Remove rows with missing LocationID, missing IndvID, and/or missing CaptureDate
   ## TODO: When updating to v2.0.0, records with missing CaptureDate can be dealt with if year is known
   Capture_data <- Capture_data %>%
-    dplyr::filter(!is.na(.data$LocationID) & .data$LocationID != "",
-                  !is.na(.data$IndvID), !is.na(.data$CaptureDate))
+    dplyr::filter(
+      !is.na(.data$LocationID) & .data$LocationID != "",
+      !is.na(.data$IndvID), !is.na(.data$CaptureDate)
+    )
 
   return(Capture_data)
 }

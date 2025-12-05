@@ -7,21 +7,28 @@
 test_col_classes(pipeline_output, table, protocol_version, debug = FALSE)
 }
 \arguments{
-\item{pipeline_output}{A list of data frames returned from format_X, where X is the pipeline code.}
+\item{pipeline_output}{A list of data frames returned from format_X,
+where X is the pipeline code.}
 
-\item{table}{Character string. Which data table should be tested? One of: "Brood", "Individual", "Capture", "Location", "Measurement" or "Experiment".}
+\item{table}{Character string. Which data table should be tested? One of:
+"Brood", "Individual", "Capture", "Location", "Measurement" or
+"Experiment".}
 
 \item{protocol_version}{The protocol version of the SPI-Birds
-standard data being used to process the primary data. Either "1.0.0", "1.1.0", or "2.0.0".}
+standard data being used to process the primary data. Either "1.0.0",
+"1.1.0", or "2.0.0".}
 
-\item{debug}{Logical (TRUE/FALSE) for whether the function returns the test output (FALSE) or a vector of columns that failed this test (TRUE).}
+\item{debug}{Logical (TRUE/FALSE) for whether the function returns the
+test output (FALSE) or a vector of columns that failed this test (TRUE).}
 }
 \value{
 See `debug`.
 }
 \description{
-Test whether column classes for pipeline outputs match the expected column classes as specified in the standard format.
+Test whether column classes for pipeline outputs match the expected column
+classes as specified in the standard format.
 }
 \details{
-This function is intended to be used in the test for every pipeline in order to ensure consistency between pipelines.
+This function is intended to be used in the test for every pipeline in
+order to ensure consistency between pipelines.
 }
