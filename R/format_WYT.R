@@ -389,7 +389,7 @@ create_brood_WYT <- function(db, species_filter) {
       BroodSize_observed = .data$num_chicks,
       # TODO: ask data owner about negative number of fledged birds
       NumberFledged_observed = ifelse(.data$num_fledglings < 0, 0,
-        data$num_fledglings
+        .data$num_fledglings
       ),
       FemaleID = toupper(
         dplyr::na_if(.data$mother, "")
