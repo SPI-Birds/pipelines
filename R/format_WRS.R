@@ -14,6 +14,11 @@
 #' that also includes 'XX' so this should not be used to filter out these records. The
 #' regular expression "^[:digit:]{2}XX" along with stringr::str_detect can be used to
 #' identify and filter out these records.
+#' For one record, no IndvID is given. This record is removed from the data.
+#'
+#' \strong{CaptureDate}: For chicks, the CaptureDate is inferred based on the d15_date column.
+#' Sometimes, this column is empty of NA. These captures are removed from the data.
+#'
 #'
 #' @inheritParams pipeline_params
 #'
@@ -28,6 +33,9 @@ format_WRS <- function(
     output_type = "R") {
     # Force choose_directory() if used
     force(db)
+
+    # The version of the standard protocol on which this pipeline is based
+    protocol_version <- "1.1.0"
 
     start_time <- Sys.time()
 
@@ -151,6 +159,8 @@ format_WRS <- function(
     )) %>%
         janitor::clean_names() %>%
         janitor::remove_empty(which = "rows") %>%
+        dplyr::mutate(d15_date = trimws(d15_date)) %>%
+        dplyr::filter(!is.na(d15_date) & d15_date != "") %>% # Drop records without a d15 date
         ## Rename variables
         ## TODO: Check about capture dates for dead chicks
         dplyr::rename(
@@ -167,14 +177,15 @@ format_WRS <- function(
         # If chicks die before banding, the CaptureDate is set to the last day it was handled.
         # TODO: check why we now only have weight on day 15, and not other days
         dplyr::mutate(dplyr::across(where(is.character), ~ dplyr::na_if(., "NA")),
-            CaptureDate = suppressWarnings(dplyr::case_when(
+            CaptureDate = dplyr::case_when(
                 grepl("-|/", .data$d15_date) ~ lubridate::dmy(.data$d15_date, quiet = TRUE),
-                !is.na(janitor::excel_numeric_to_date(as.numeric(.data$d15_date))) ~ janitor::excel_numeric_to_date(as.numeric(.data$d15_date)),
+                !is.na(suppressWarnings(as.numeric(.data$d15_date))) ~ janitor::excel_numeric_to_date(as.numeric(.data$d15_date)),
                 !is.na(.data$weight_d15) ~ .data$HatchDate_observed + 15L,
                 !is.na(.data$HatchDate_observed) ~ .data$HatchDate_observed,
-                TRUE ~ lubridate::NA_Date_
-            ))
+                TRUE ~ as.Date(NA_character_)
+            )
         ) %>%
+        dplyr::filter(!is.na(.data$CaptureDate)) %>%
         ## Adjust variables
         ## TODO: Check about 'dead chick' ID codes
         dplyr::mutate(
@@ -184,19 +195,20 @@ format_WRS <- function(
                 .data$chick_exp != 0 | .data$chick_pred != 0 | .data$fledged == 0 ~ FALSE,
                 TRUE ~ TRUE
             ),
-            Tarsus = suppressWarnings(as.numeric(.data$tarsus)),
+            Tarsus = suppressWarnings(as.numeric(.data$Tarsus)),
+            # Weight d10, d5 and d2 are not in the data anymore, only d15
             Mass = suppressWarnings(round(as.numeric(dplyr::case_when(
                 !is.na(.data$weight_d15) ~ .data$weight_d15,
-                !is.na(.data$weight_d10) ~ .data$weight_d10,
-                !is.na(.data$weight_d5) ~ .data$weight_d5,
-                !is.na(.data$weight_d2) ~ .data$weight_d2,
+                #    !is.na(.data$weight_d10) ~ .data$weight_d10,
+                #    !is.na(.data$weight_d5) ~ .data$weight_d5,
+                #    !is.na(.data$weight_d2) ~ .data$weight_d2,
                 TRUE ~ NA_character_
             )), 3)),
             ChickAge = dplyr::case_when(
                 !is.na(.data$weight_d15) ~ 15L,
-                !is.na(.data$weight_d10) ~ 10L,
-                !is.na(.data$weight_d5) ~ 5L,
-                !is.na(.data$weight_d2) ~ 2L,
+                #    !is.na(.data$weight_d10) ~ 10L,
+                #    !is.na(.data$weight_d5) ~ 5L,
+                #    !is.na(.data$weight_d2) ~ 2L,
                 TRUE ~ NA_integer_
             ),
             Species = dplyr::case_when(
@@ -210,6 +222,7 @@ format_WRS <- function(
                 TRUE ~ NA_character_
             )
         ) %>%
+        dplyr::filter(!is.na(.data$IndvID)) %>%
         dplyr::select(
             .data$BreedingSeason,
             .data$PopID,
@@ -234,6 +247,8 @@ format_WRS <- function(
     )) %>%
         janitor::clean_names() %>%
         janitor::remove_empty(which = "rows") %>%
+        dplyr::mutate(ring_id = trimws(ring_id)) %>%
+        dplyr::filter(!toupper(ring_id) %in% c("NO RING", "NOT RINGED")) %>% # Drop rows without a ring
         dplyr::rename(
             BreedingSeason = year,
             Plot = site,
@@ -246,14 +261,16 @@ format_WRS <- function(
             WingLength = wing_length,
             Tarsus = tarsus
         ) %>%
-        dplyr::mutate(CaptureDate = suppressWarnings(dplyr::case_when(
-            grepl("/", .data$date) ~ lubridate::dmy(.data$date, quiet = TRUE),
-            TRUE ~ janitor::excel_numeric_to_date(as.numeric(.data$date))
-        ))) %>%
+        dplyr::mutate(
+            CaptureDate = suppressWarnings(dplyr::case_when(
+                grepl("[-/]", .data$date) ~ lubridate::dmy(.data$date, quiet = TRUE),
+                TRUE ~ janitor::excel_numeric_to_date(as.numeric(.data$date))
+            )) %>% as.Date()
+        ) %>%
         dplyr::mutate(dplyr::across(where(is.character), ~ dplyr::na_if(., "NA")),
             PopID = "WRS",
-            BreedingSeason = as.integer(.data$breeding_season),
-            dplyr::across(c(.data$Mass, .data$wing_length, .data$tarsus), ~ suppressWarnings(as.numeric(.x))),
+            BreedingSeason = as.integer(.data$BreedingSeason),
+            dplyr::across(c(.data$Mass, .data$WingLength, .data$Tarsus), ~ suppressWarnings(as.numeric(.x))),
             CaptureTime = suppressWarnings(case_when(
                 grepl(":", .data$hour) ~ as.character(.data$hour),
                 TRUE ~ format(as.POSIXct(Sys.Date() + as.numeric(.data$hour)), "%H:%M", tz = "UTC")
@@ -275,14 +292,16 @@ format_WRS <- function(
             Age_observed = dplyr::case_when(
                 .data$Age_observed == 2 ~ 5L,
                 toupper(.data$Age_observed) == "PO2" ~ 6L,
-                TRUE ~ as.integer(.data$Age_observed)
+                TRUE ~ suppressWarnings(as.integer(.data$Age_observed))
             ),
+            # The aggress column is removed, so comment it out for now
             ExperimentID = dplyr::case_when(
-                !is.na(.data$aggress) ~ "OTHER",
+                # !is.na(.data$aggress) ~ "OTHER",
                 TRUE ~ NA_character_
             ),
             dplyr::across(where(is.character), ~ dplyr::na_if(., "NA"))
         ) %>%
+        dplyr::filter(!is.na(.data$IndvID)) %>%
         dplyr::select(
             BreedingSeason,
             PopID,
@@ -329,52 +348,52 @@ format_WRS <- function(
     ## Brood data
     Brood_data <- Brood_data_temp %>%
         ## Keep only necessary columns
-        dplyr::select(dplyr::contains(names(brood_data_template))) %>%
+        dplyr::select(dplyr::contains(names(data_templates[["v1.1.0"]]$Brood_data))) %>%
         ## Add missing columns
-        dplyr::bind_cols(brood_data_template[, !(names(brood_data_template) %in% names(.))]) %>%
+        dplyr::bind_cols(data_templates[["v1.1.0"]]$Brood_data[, !(names(data_templates[["v1.1.0"]]$Brood_data) %in% names(.))]) %>%
         ## Reorder columns
-        dplyr::select(names(brood_data_template))
+        dplyr::select(names(data_templates[["v1.1.0"]]$Brood_data))
 
     # ## Check column classes
-    # purrr::map_df(brood_data_template, class) == purrr::map_df(Brood_data, class)
+    # purrr::map_df(data_templates$1.1.0$Brood_data, class) == purrr::map_df(Brood_data, class)
 
 
     ## Capture data
     Capture_data <- Capture_data_temp %>%
         ## Keep only necessary columns
-        dplyr::select(dplyr::contains(names(capture_data_template))) %>%
+        dplyr::select(dplyr::contains(names(data_templates[["v1.1.0"]]$Capture_data))) %>%
         ## Add missing columns
-        dplyr::bind_cols(capture_data_template[, !(names(capture_data_template) %in% names(.))]) %>%
+        dplyr::bind_cols(data_templates[["v1.1.0"]]$Capture_data[, !(names(data_templates[["v1.1.0"]]$Capture_data) %in% names(.))]) %>%
         ## Reorder columns
-        dplyr::select(names(capture_data_template))
+        dplyr::select(names(data_templates[["v1.1.0"]]$Capture_data))
 
     # ## Check column classes
-    # purrr::map_df(capture_data_template, class) == purrr::map_df(Capture_data, class)
+    # purrr::map_df(data_templates[["1.1.0"]]$Capture_data, class) == purrr::map_df(Capture_data, class)
 
 
     ## Individual data
     Individual_data <- Individual_data_temp %>%
         ## Keep only necessary columns
-        dplyr::select(dplyr::contains(names(individual_data_template))) %>%
+        dplyr::select(dplyr::contains(names(data_templates[["v1.1.0"]]$Individual_data))) %>%
         ## Add missing columns
-        dplyr::bind_cols(individual_data_template[, !(names(individual_data_template) %in% names(.))]) %>%
+        dplyr::bind_cols(data_templates[["v1.1.0"]]$Individual_data[, !(names(data_templates[["v1.1.0"]]$Individual_data) %in% names(.))]) %>%
         ## Reorder columns
-        dplyr::select(names(individual_data_template))
+        dplyr::select(names(data_templates[["v1.1.0"]]$Individual_data))
 
     # ## Check column classes
-    # purrr::map_df(individual_data_template, class) == purrr::map_df(Individual_data, class)
+    # purrr::map_df(data_templates[["1.1.0"]]$Individual_data, class) == purrr::map_df(Individual_data, class)
 
     ## Location data
     Location_data <- Location_data_temp %>%
         ## Keep only necessary columns
-        dplyr::select(dplyr::contains(names(location_data_template))) %>%
+        dplyr::select(dplyr::contains(names(data_templates[["v1.1.0"]]$Location_data))) %>%
         ## Add missing columns
-        dplyr::bind_cols(location_data_template[, !(names(location_data_template) %in% names(.))]) %>%
+        dplyr::bind_cols(data_templates[["v1.1.0"]]$Location_data[, !(names(data_templates[["v1.1.0"]]$Location_data) %in% names(.))]) %>%
         ## Reorder columns
-        dplyr::select(names(location_data_template))
+        dplyr::select(names(data_templates[["v1.1.0"]]$Location_data))
 
     # ## Check column classes
-    # purrr::map_df(location_data_template, class) == purrr::map_df(Location_data, class)
+    # purrr::map_df(data_templates[["1.1.0"]]$Location_data, class) == purrr::map_df(Location_data, class)
 
 
 
@@ -428,7 +447,8 @@ format_WRS <- function(
             Brood_data = Brood_data,
             Capture_data = Capture_data,
             Individual_data = Individual_data,
-            Location_data = Location_data
+            Location_data = Location_data,
+            protocol_version = protocol_version
         ))
     }
 }
@@ -483,7 +503,7 @@ create_brood_WRS <- function(nest_data, chick_data, adult_data) {
         dplyr::mutate(BroodID = paste(.data$Plot, 1:dplyr::n(), sep = "-")) %>%
         dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., protocol_version = "1.1", na.rm = FALSE)) %>%
         ## Reorder columns
-        dplyr::select(dplyr::any_of(names(brood_data_template)), dplyr::everything())
+        dplyr::select(dplyr::any_of(names(data_templates[["1.1.0"]]$Brood_data)), dplyr::everything())
 
     return(Brood_data_temp)
 }
@@ -536,7 +556,7 @@ create_capture_WRS <- function(chick_data, adult_data) {
         dplyr::arrange(.data$BreedingSeason, .data$IndvID, .data$CaptureDate) %>%
         dplyr::mutate(CaptureID = paste(.data$IndvID, dplyr::row_number(), sep = "_")) %>%
         ## Reorder columns
-        dplyr::select(dplyr::any_of(names(capture_data_template)), dplyr::everything())
+        dplyr::select(dplyr::any_of(names(data_templates[["1.1.0"]]$Capture_data)), dplyr::everything())
 
 
     return(Capture_data_temp)
@@ -640,7 +660,7 @@ create_individual_WRS <- function(Capture_data_temp, Brood_data_temp) {
         dplyr::arrange(.data$CaptureID) %>%
         dplyr::ungroup() %>%
         ## Reorder columns
-        dplyr::select(dplyr::any_of(names(individual_data_template)), dplyr::everything())
+        dplyr::select(dplyr::any_of(names(data_templates[["1.1.0"]]$Individual_data)), dplyr::everything())
 
 
     return(Individual_data_temp)
@@ -663,7 +683,7 @@ create_location_WRS <- function(nest_data) {
         ) %>%
         ## Summarize information for each nest box
         dplyr::group_by(.data$PopID, .data$LocationID) %>%
-        dplyr::summarise(
+        dplyr::reframe(
             NestboxID = .data$LocationID,
             LocationType = "NB",
             StartSeason = min(.data$BreedingSeason, na.rm = TRUE),

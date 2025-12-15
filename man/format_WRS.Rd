@@ -49,4 +49,8 @@ The first two numbers give the year in which the chick died. There is one adult 
 that also includes 'XX' so this should not be used to filter out these records. The
 regular expression "^[:digit:]{2}XX" along with stringr::str_detect can be used to
 identify and filter out these records.
+For one record, no IndvID is given. This record is removed from the data.
+
+\strong{CaptureDate}: For chicks, the CaptureDate is inferred based on the d15_date column.
+Sometimes, this column is empty of NA. These captures are removed from the data.
 }
