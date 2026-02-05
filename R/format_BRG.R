@@ -8,7 +8,14 @@
 #'
 #' \strong{Species}: Primarily Great tits and Blue tits.
 #'
-#' \strong{IndvID}: Should be a character s  tring of length 7 where the first two characters are either a letter or number and the last five characters are all numbers.
+#' \strong{IndvID}: Should be a character string of length 7 where the first two characters are either a letter or number and the last five characters are all numbers.
+#'
+#' \strong{CaptureAlive}: A individual is assumed to be captured alive,
+#' if the comment cell in the primary data file is empty.
+#' If that cell contains the words "prior" and "died" or "dead",
+#' individual is assumed to be captured dead.
+#'
+#' \strong{ReleaseAlive}: We apply the same rules as for CaptureAlive.
 #'
 #' @inheritParams pipeline_params
 #'
