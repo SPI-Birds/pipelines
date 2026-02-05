@@ -47,7 +47,6 @@ format_BRG <- function(db = choose_directory(),
     original_options <- options(dplyr.summarise.inform = FALSE)
     on.exit(options(original_options), add = TRUE, after = FALSE)
 
-
     ## Read in nest data
     nest_data <- readxl::read_xlsx(
         path = paste0(db, "/BRG_PrimaryData.xlsx"),
@@ -101,7 +100,8 @@ format_BRG <- function(db = choose_directory(),
             where(is.character),
             ~ dplyr::na_if(., ".")
         )) %>%
-        dplyr::transmute(
+        dplyr::mutate(
+            .keep = "none",
             PopID = "BRG",
             BreedingSeason = as.integer(.data$Year),
             Species = dplyr::case_when(
@@ -112,14 +112,24 @@ format_BRG <- function(db = choose_directory(),
             ),
             Plot = .data$Location,
             LocationID = as.character(.data$Nestbox),
+            CaptureAlive = dplyr::case_when(
+                stringr::str_detect(.data$Comment, "prior|found") & stringr::str_detect(.data$Comment, "died|dead") ~ FALSE,
+                TRUE ~ TRUE
+            ),
+            ReleaseAlive = dplyr::case_when(
+                stringr::str_detect(.data$Comment, "prior|found") & stringr::str_detect(.data$Comment, "died|dead") ~ FALSE,
+                TRUE ~ TRUE
+            ),
             CaptureDate = suppressWarnings(as.Date(paste(.data$Year, .data$Month, .data$Day, sep = "-"))),
             IndvID = .data$Ring,
             RingAge = .data$Age,
             ChickAge = as.integer(.data$ChickAge),
-            CaptureTime = gsub("--", ":00", .data$Time),
+            CaptureTime = format(
+                suppressWarnings(lubridate::hm(gsub("--", ":00", .data$Time))),
+                "%H:%M"
+            ),
             Mass = round(suppressWarnings(as.numeric(.data$Weight)), 1)
         )
-
 
     ## Read in adult data
     adult_data <- suppressWarnings(readxl::read_xlsx(
@@ -130,7 +140,8 @@ format_BRG <- function(db = choose_directory(),
     )) %>%
         janitor::clean_names(case = "upper_camel") %>%
         janitor::remove_empty(which = "rows") %>%
-        ## Rename and process columns
+        ## Rename and process columns, cast time to integer
+        dplyr::mutate(Time = readr::parse_integer(.data$Time, na = c("", ".", "--"))) %>%
         dplyr::mutate(dplyr::across(
             where(is.character),
             ~ dplyr::na_if(., ".")
@@ -146,6 +157,15 @@ format_BRG <- function(db = choose_directory(),
             ),
             Plot = .data$Location,
             LocationID = as.character(.data$Nestbox),
+            # We keep the same logic as with chicks, although there are no comments indicating dead.
+            CaptureAlive = dplyr::case_when(
+                stringr::str_detect(.data$Comment, "prior|found") & stringr::str_detect(.data$Comment, "died|dead") ~ FALSE,
+                TRUE ~ TRUE
+            ),
+            ReleaseAlive = dplyr::case_when(
+                stringr::str_detect(.data$Comment, "prior|found") & stringr::str_detect(.data$Comment, "died|dead") ~ FALSE,
+                TRUE ~ TRUE
+            ),
             CaptureDate = suppressWarnings(as.Date(paste(.data$Year, .data$Month, .data$Day, sep = "-"))),
             IndvID = .data$Ring,
             Sex_observed = .data$Sex,
@@ -153,7 +173,18 @@ format_BRG <- function(db = choose_directory(),
                 .data$ObsAge == "juv" ~ 5L,
                 .data$ObsAge == "ad" ~ 6L
             ),
-            CaptureTime = paste0(substr(.data$Time, 1, 2), ":", substr(.data$Time, 3, 4)),
+            CaptureTime = dplyr::if_else(
+                is.na(.data$Time),
+                NA_character_,
+                format(
+                    suppressWarnings(lubridate::hm(sprintf(
+                        "%02d:%02d",
+                        .data$Time %/% 100,
+                        .data$Time %% 100
+                    ))),
+                    "%H:%M"
+                )
+            ),
             Mass = round(suppressWarnings(as.numeric(.data$Weight)), 1),
             WingLength = as.numeric(.data$WingLength)
         )
