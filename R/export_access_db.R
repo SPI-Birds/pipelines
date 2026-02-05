@@ -74,19 +74,6 @@ export_access_db <- function(dsn,
         stop(paste("Python script not found:", python_script))
     }
 
-    # Try to use system Python if available
-    if (!reticulate::py_available(initialize = FALSE)) {
-        python_path <- Sys.which("python")
-        if (nzchar(python_path)) {
-            reticulate::use_python(python_path, required = FALSE)
-        }
-    }
-
-    # Fallback to reticulate installed Python if system Python is not available
-    if (!reticulate::py_module_available("access_parser")) {
-        reticulate::py_require("access_parser")
-    }
-
     # Source the Python function
     tryCatch(
         {

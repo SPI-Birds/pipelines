@@ -50,6 +50,9 @@
 #' taken from BroodIDFledged (in Individual_data) and the CaptureDate. We include chick ages for all individuals
 #' up until 30 days post hatching to accommodate possible late fledging.
 #'
+#' \strong{LocationType:} The NIOO database has some nestbox types in their NestBoxType table that are hard to classify.
+#' NestBoxTypes that we could no easily classify, have been assigned as mistnet captures for now.
+#' We might need to update that later, but, they are about half of the 7000 records in the Location_data table.
 #' @inheritParams pipeline_params
 #'
 #' @return 4 data tables in the standard format (version 1.1.0). When `output_type = "R"`, a list of 4 data frames corresponding to the 4 standard data tables and 1 character vector indicating the protocol version on which the pipeline is based. When `output_type = "csv"`, 4 .csv files corresponding to the 4 standard data tables and 1 text file indicating the protocol version on which the pipeline is based.
@@ -93,9 +96,9 @@ format_NIOO <- function(db = choose_directory(),
   if (skip_export_tables == TRUE & table_files_exist == TRUE) {
     message("Export already exist. Skipping export.")
   } else {
-      export_access_db(dsn,
-        table = access_tables,
-        output_dir = table_dir
+    export_access_db(dsn,
+      table = access_tables,
+      output_dir = table_dir
     )
   }
 
@@ -381,21 +384,42 @@ create_brood_NIOO <- function(dir, location_data, species_filter, pop_filter, pr
         .data$ExperimentCode %in% names(experiment_translation) ~ experiment_translation[.data$ExperimentCode],
         TRUE ~ "OTHER"
       ),
+      NumberHatched_clean = dplyr::case_when(
+        is.na(.data$NumberHatched) & is.na(.data$NumberHatchedDeviation) ~ NA_real_,
+        is.na(.data$NumberHatched) & !is.na(.data$NumberHatchedDeviation) ~ 0,
+        TRUE ~ as.numeric(.data$NumberHatched)
+      ),
+      NumberHatchedDeviation_clean = dplyr::case_when(
+        is.na(.data$NumberHatched) & is.na(.data$NumberHatchedDeviation) ~ NA_real_,
+        !is.na(.data$NumberHatched) & is.na(.data$NumberHatchedDeviation) ~ 0,
+        TRUE ~ as.numeric(.data$NumberHatchedDeviation)
+      ),
+      NumberHatched_sum = .data$NumberHatched_clean + .data$NumberHatchedDeviation_clean,
+      NumberHatched_clean = dplyr::if_else(.data$NumberHatched_sum == 0, NA_real_, .data$NumberHatched_clean),
+      NumberHatchedDeviation_clean = dplyr::if_else(.data$NumberHatched_sum == 0, NA_real_, .data$NumberHatchedDeviation_clean),
       HatchDate_observed = lubridate::ymd(.data$HatchDate),
       LayDate_observed = lubridate::ymd(.data$LayDate),
       LayDate_max = .data$LayDate_observed + .data$LayDateDeviation,
       FledgeDate_observed = lubridate::ymd(.data$FledgeDate),
       ClutchSize_observed = .data$ClutchSize,
       ClutchSize_min = .data$ClutchSizeMinimum,
-      BroodSize_observed = .data$NumberHatched,
-      BroodSize_max = .data$NumberHatched + .data$NumberHatchedDeviation,
+      BroodSize_observed = as.integer(.data$NumberHatched_clean),
+      BroodSize_max = as.integer(.data$NumberHatched_clean + .data$NumberHatchedDeviation_clean),
       NumberFledged_observed = .data$NumberFledged,
-      NumberFledged_max = .data$NumberFledged + .data$NumberFledgedDeviation,
+      NumberFledged_max = dplyr::case_when(
+        is.na(.data$NumberFledged) & is.na(.data$NumberFledgedDeviation) ~ NA_integer_,
+        (.data$NumberFledged + .data$NumberFledgedDeviation) == 0 ~ NA_integer_,
+        TRUE ~ as.integer(.data$NumberFledged + .data$NumberFledgedDeviation)
+      ),
       ClutchType_observed = .data$Description,
       BreedingSeason = .data$BroodYear,
       BroodID = as.character(.data$ID),
       LocationID = as.character(.data$BroodLocationID)
     ) %>%
+    dplyr::select(
+      -NumberHatched_clean, -NumberHatchedDeviation_clean,
+      -NumberHatched_sum,
+    ) %>% # Remove columns only used for calculations
     dplyr::left_join(
       location_data %>%
         dplyr::select("Plot" = "AreaID", "BroodLocationID" = "ID", "PopID"),
@@ -722,7 +746,8 @@ create_location_NIOO <- function(dir, location_data, species_filter, pop_filter,
       NestboxID = as.character(.data$NestboxID),
       LocationType = dplyr::case_when(
         .data$LocationType %in% c(0:22, 40:41) ~ "NB",
-        .data$LocationType %in% c(90, 101) ~ "MN"
+        .data$LocationType %in% c(90, 101) ~ "MN",
+        TRUE ~ "MN" # TEMPORARY. TODO: Ask about other nestbox types
       ),
       HabitatType = dplyr::case_when(
         .data$PopID %in% c("VLI", "HOG", "WES", "BUU") ~ "mixed",
@@ -734,7 +759,6 @@ create_location_NIOO <- function(dir, location_data, species_filter, pop_filter,
     dplyr::bind_cols(data_templates[[paste0("v", protocol_version)]]$Location_data[1, !(names(data_templates[[paste0("v", protocol_version)]]$Location_data) %in% names(.))]) %>%
     ## Keep only columns that are in the standard format and order correctly
     dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Location_data))
-
 
 
   return(Location_data)
