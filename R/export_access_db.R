@@ -58,12 +58,12 @@
 #' @importFrom reticulate source_python
 #' @export
 export_access_db <- function(dsn,
-                                    table,
-                                    output_dir,
-                                    header = TRUE,
-                                    delim = ",",
-                                    quote = '"',
-                                    python_script = system.file("extdata", "export_access_db.py", package = "pipelines")) {
+                             table,
+                             output_dir,
+                             header = TRUE,
+                             delim = ",",
+                             quote = '"',
+                             python_script = system.file("extdata", "export_access_db.py", package = "pipelines")) {
     # Check if reticulate is installed
     if (!requireNamespace("reticulate", quietly = TRUE)) {
         stop("Package 'reticulate' is required but not installed.\nPlease install it with: install.packages('reticulate')")
@@ -72,6 +72,19 @@ export_access_db <- function(dsn,
     # Check if Python script exists
     if (!file.exists(python_script)) {
         stop(paste("Python script not found:", python_script))
+    }
+
+    # Try to use system Python if available
+    if (!reticulate::py_available(initialize = FALSE)) {
+        python_path <- Sys.which("python")
+        if (nzchar(python_path)) {
+            reticulate::use_python(python_path, required = FALSE)
+        }
+    }
+
+    # Fallback to reticulate installed Python if system Python is not available
+    if (!reticulate::py_module_available("access_parser")) {
+        reticulate::py_require("access_parser")
     }
 
     # Source the Python function
