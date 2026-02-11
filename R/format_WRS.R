@@ -107,7 +107,7 @@ format_WRS <- function(
         ) %>%
         # Recode column information
         dplyr::mutate(
-            dplyr::across(where(is.character), ~ dplyr::na_if(., "NA")),
+            dplyr::across(tidyselect::where(is.character), ~ dplyr::na_if(., "NA")),
             PopID = "WRS",
             # TODO: Current version does not have more species then listed below
             Species = dplyr::case_when(
