@@ -267,7 +267,7 @@ format_WRS <- function(
                 TRUE ~ janitor::excel_numeric_to_date(as.numeric(.data$date))
             )) %>% as.Date()
         ) %>%
-        dplyr::mutate(dplyr::across(where(is.character), ~ dplyr::na_if(., "NA")),
+        dplyr::mutate(dplyr::across(tidyselect::where(is.character), ~ dplyr::na_if(., "NA")),
             PopID = "WRS",
             BreedingSeason = as.integer(.data$BreedingSeason),
             dplyr::across(c(.data$Mass, .data$WingLength, .data$Tarsus), ~ suppressWarnings(as.numeric(.x))),
