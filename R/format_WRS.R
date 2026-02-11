@@ -299,7 +299,7 @@ format_WRS <- function(
                 # !is.na(.data$aggress) ~ "OTHER",
                 TRUE ~ NA_character_
             ),
-            dplyr::across(where(is.character), ~ dplyr::na_if(., "NA"))
+            dplyr::across(tidyselect::where(is.character), ~ dplyr::na_if(., "NA"))
         ) %>%
         dplyr::filter(!is.na(.data$IndvID)) %>%
         dplyr::select(
