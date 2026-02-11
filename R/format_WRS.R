@@ -271,7 +271,7 @@ format_WRS <- function(
             PopID = "WRS",
             BreedingSeason = as.integer(.data$BreedingSeason),
             dplyr::across(c(.data$Mass, .data$WingLength, .data$Tarsus), ~ suppressWarnings(as.numeric(.x))),
-            CaptureTime = suppressWarnings(case_when(
+            CaptureTime = suppressWarnings(dplyr::case_when(
                 grepl(":", .data$hour) ~ as.character(.data$hour),
                 TRUE ~ format(as.POSIXct(Sys.Date() + as.numeric(.data$hour)), "%H:%M", tz = "UTC")
             )),
