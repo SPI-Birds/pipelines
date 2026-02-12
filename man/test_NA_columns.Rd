@@ -7,20 +7,27 @@
 test_NA_columns(pipeline_output, table, debug = FALSE)
 }
 \arguments{
-\item{pipeline_output}{A list of data frames returned from format_X, where X is the pipeline code.}
+\item{pipeline_output}{A list of data frames returned from format_X,
+where X is the pipeline code.}
 
-\item{table}{Which data table should be checked for NAs in the key columns? One of: "Brood", "Capture", "Individual", "Measurement, "Location", or "Experiment".}
+\item{table}{Which data table should be checked for NAs in the key
+columns? One of: "Brood", "Capture", "Individual", "Measurement,
+"Location", or "Experiment".}
 
-\item{debug}{Logical (TRUE/FALSE) for whether the function returns the test output (FALSE) or a vector of columns that failed this test (TRUE).}
+\item{debug}{Logical (TRUE/FALSE) for whether the function returns the
+test output (FALSE) or a vector of columns that failed this test (TRUE).}
 }
 \value{
 See `debug`.
 }
 \description{
-Some key columns are not allowed to have NAs. The data templates for each table have dummy values entered when the column cannot contain any NAs.
-This function takes a table name and returns a logical value corresponding to whether there are any NAs in the key columns in each data table.
+Some key columns are not allowed to have NAs. The data templates for each
+table have dummy values entered when the column cannot contain any NAs.
+This function takes a table name and returns a logical value corresponding
+to whether there are any NAs in the key columns in each data table.
 In the case of NAs, the test fails.
 }
 \details{
-This function is intended to be used in the test for every pipeline in order to ensure consistency between pipelines.
+This function is intended to be used in the test for every pipeline in
+order to ensure consistency between pipelines.
 }

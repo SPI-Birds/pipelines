@@ -248,19 +248,28 @@ create_brood_AMM <- function(dir, species_filter) {
       LayDate_min = .data$EndMarch + (.data$FirstEggDay - .data$FirstEggDayError),
       ClutchSize_observed = .data$ClutchSize,
       ClutchSize_min = .data$ClutchSize_observed,
-      ClutchSize_max = .data$ClutchSize_observed,
+      ClutchSize_max = dplyr::case_when(
+        .data$ClutchSize_observed == 0 ~ NA_integer_,
+        TRUE ~ .data$ClutchSize_observed
+      ),
       HatchDate_observed = .data$EndMarch + .data$HatchDay,
       HatchDate_max = .data$HatchDate_observed,
       HatchDate_min = .data$EndMarch + (.data$HatchDay - .data$HatchDayError),
       BroodSize_observed = .data$NumberHatched,
       BroodSize_min = .data$NumberHatched,
-      BroodSize_max = .data$NumberHatched + .data$ErrorHatched,
+      BroodSize_max = dplyr::case_when(
+        .data$NumberHatched == 0 ~ NA_integer_,
+        TRUE ~ .data$NumberHatched + .data$ErrorHatched
+      ),
       FledgeDate_observed = .data$EndMarch + .data$FledgeDay,
       FledgeDate_min = .data$EndMarch + .data$FledgeDay,
       FledgeDate_max = .data$EndMarch + .data$FledgeDay,
       NumberFledged_observed = .data$NumberFledged,
       NumberFledged_min = .data$NumberFledged,
-      NumberFledged_max = .data$NumberFledged + .data$FledgedError,
+      NumberFledged_max = dplyr::case_when(
+        .data$NumberFledged == 0 ~ NA_integer_,
+        TRUE ~ .data$NumberFledged + .data$FledgedError
+      ),
       Species = dplyr::case_when(
         .data$Species == 1L ~ !!species_codes$Species[species_codes$speciesEURINGCode == "14640"],
         .data$Species == 2L ~ !!species_codes$Species[species_codes$speciesEURINGCode == "14620"],

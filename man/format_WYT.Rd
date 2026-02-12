@@ -46,8 +46,7 @@ Woods, UK, administered by Edward Grey Institute Oxford (Ben Sheldon).
 \details{
 This section provides details on data management choices that are unique to
 this data. For a general description of the standard format please see
-\href{https://github.com/SPI-Birds/documentation/blob/master/
-standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
+\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 
 \strong{LocationID}: Unique locations are defined by using the nestbox IDs.
  These include plot information as nest box numbers are not unique
