@@ -122,13 +122,13 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(NIOO_data, BroodID == "64597")$LayDate_observed, as.Date("2016-05-14"))
   # Clutch size, brood size and numberfledged is as expected
   expect_equal(subset(NIOO_data, BroodID == "64597")$ClutchSize_observed, 9L)
-  expect_equal(subset(NIOO_data, BroodID == "64597")$BroodSize_observed, 0L)
+  expect_equal(subset(NIOO_data, BroodID == "64597")$BroodSize_observed, NA_real_)
   expect_equal(subset(NIOO_data, BroodID == "64597")$NumberFledged_observed, 0L)
   # AvgChickMass and AvgTarsus are as expected
   expect_equal(subset(NIOO_data, BroodID == "64597")$AvgChickMass, NA_real_)
   expect_equal(subset(NIOO_data, BroodID == "64597")$AvgTarsus, NA_real_)
   # Test ExperimentID is as expected
-  expect_equal(subset(NIOO_data, BroodID == "64597")$ExperimentID, "SAMUEL")
+  expect_equal(subset(NIOO_data, BroodID == "64597")$ExperimentID, "OTHER")
   # Check that Plot is as expected
   expect_equal(subset(NIOO_data, BroodID == "64597")$Plot, "41")
 
@@ -141,7 +141,7 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(NIOO_data, BroodID == "64825")$LayDate_observed, as.Date("2016-06-01"))
   # Clutch size, brood size and numberfledged is as expected
   expect_equal(subset(NIOO_data, BroodID == "64825")$ClutchSize_observed, 7L)
-  expect_equal(subset(NIOO_data, BroodID == "64825")$BroodSize_observed, 0L)
+  expect_equal(subset(NIOO_data, BroodID == "64825")$BroodSize_observed, NA_real_)
   expect_equal(subset(NIOO_data, BroodID == "64825")$NumberFledged_observed, 0L)
   # AvgChickMass and AvgTarsus are as expected
   expect_equal(round(subset(NIOO_data, BroodID == "64825")$AvgChickMass, 1), NA_real_)
@@ -220,30 +220,30 @@ test_that("Location_data returns an expected outcome...", {
 
   # Test 1: Nestbox check
   # Location has multiple records (it had multiple nestboxes over time)
-  expect_equal(nrow(subset(NIOO_data, LocationID == "47")), 3)
+  expect_equal(nrow(subset(NIOO_data, LocationID == "HOG_47")), 3)
   # All records have expected LocationType
   # THIS RETURNS AN ERROR BECAUSE ONE OF THEM IS LISTED AS 'OUT OF USE'. This is a mistake in the database
   # expect_true(all(subset(NIOO_data, LocationID == "47")$LocationType == "NB"))
   # Expect Start and EndSeason of first box at this location is as expected
-  expect_equal(subset(NIOO_data, LocationID == "47")$StartSeason[1], 1996L)
-  expect_equal(subset(NIOO_data, LocationID == "47")$EndSeason[1], 1996L)
+  expect_equal(subset(NIOO_data, LocationID == "HOG_47")$StartSeason[1], 1996L)
+  expect_equal(subset(NIOO_data, LocationID == "HOG_47")$EndSeason[1], 1996L)
   # Expect Start and EndSeason of second box at this location is as expected
-  expect_equal(subset(NIOO_data, LocationID == "47")$StartSeason[2], 1997L)
-  expect_equal(subset(NIOO_data, LocationID == "47")$EndSeason[2], 2006L)
+  expect_equal(subset(NIOO_data, LocationID == "HOG_47")$StartSeason[2], 1997L)
+  expect_equal(subset(NIOO_data, LocationID == "HOG_47")$EndSeason[2], 2006L)
   # Check that LocationID is in the expected PopID
-  expect_equal(subset(NIOO_data, LocationID == "47")$PopID[1], "HOG")
+  expect_equal(subset(NIOO_data, LocationID == "HOG_47")$PopID[1], "HOG")
 
   # Test 1: Mistnet check
   # Location has only one record
-  expect_equal(nrow(subset(NIOO_data, LocationID == "1841")), 1)
+  expect_equal(nrow(subset(NIOO_data, LocationID == "OOS_1841")), 1)
   # All records have expected LocationType
-  expect_true(all(subset(NIOO_data, LocationID == "1841")$LocationType == "MN"))
+  expect_true(all(subset(NIOO_data, LocationID == "OOS_1841")$LocationType == "MN"))
   # Expect Start and EndSeason of first box at this location is as expected
-  expect_equal(subset(NIOO_data, LocationID == "1841")$StartSeason, 1977L)
-  expect_equal(subset(NIOO_data, LocationID == "1841")$EndSeason, NA_integer_)
+  expect_equal(subset(NIOO_data, LocationID == "OOS_1841")$StartSeason, 1977L)
+  expect_equal(subset(NIOO_data, LocationID == "OOS_1841")$EndSeason, NA_integer_)
   # Check that LocationID is in the expected PopID
-  expect_equal(subset(NIOO_data, LocationID == "1841")$PopID, "OOS")
+  expect_equal(subset(NIOO_data, LocationID == "OOS_1841")$PopID, "OOS")
 })
 
-## Test protocol compliance
+## General tests
 test_protocol_compliance(pipeline_output)

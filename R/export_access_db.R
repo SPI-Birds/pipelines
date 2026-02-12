@@ -58,12 +58,12 @@
 #' @importFrom reticulate source_python
 #' @export
 export_access_db <- function(dsn,
-                                    table,
-                                    output_dir,
-                                    header = TRUE,
-                                    delim = ",",
-                                    quote = '"',
-                                    python_script = system.file("extdata", "export_access_db.py", package = "pipelines")) {
+                             table,
+                             output_dir,
+                             header = TRUE,
+                             delim = ",",
+                             quote = '"',
+                             python_script = system.file("extdata", "export_access_db.py", package = "pipelines")) {
     # Check if reticulate is installed
     if (!requireNamespace("reticulate", quietly = TRUE)) {
         stop("Package 'reticulate' is required but not installed.\nPlease install it with: install.packages('reticulate')")

@@ -13,5 +13,4 @@ debug_report
 figure/
 Hackathon*
 *.code-workspace
-pipelines.code-workspace
-*.lintr
+test/
