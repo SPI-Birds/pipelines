@@ -65,7 +65,7 @@ format_BRG <- function(db = choose_directory(),
         janitor::remove_empty(which = "rows") %>%
         ## Rename and process columns
         dplyr::mutate(dplyr::across(
-            where(is.character),
+            tidyselect::where(is.character),
             ~ dplyr::na_if(., ".")
         )) %>%
         dplyr::transmute(
@@ -79,32 +79,32 @@ format_BRG <- function(db = choose_directory(),
             ),
             Plot = .data$Location,
             LocationID = as.character(.data$Nestbox),
-            LayDate_observed = suppressWarnings(as.Date(as.numeric(.data$LayDate),
+            LayDate_observed = as.Date(as.numeric(.data$LayDate),
                 origin = as.Date(paste0(.data$BreedingSeason, "-03-31"))
-            )),
-            HatchDate_observed = suppressWarnings(as.Date(as.numeric(.data$HatchDate),
+            ),
+            HatchDate_observed = as.Date(as.numeric(.data$HatchDate),
                 origin = as.Date(paste0(.data$BreedingSeason, "-03-31"))
-            )),
-            ClutchSize_observed = suppressWarnings(as.integer(.data$ClutchSize)),
-            BroodSize_observed = suppressWarnings(as.integer(.data$BroodSize)),
-            NumberFledged_observed = suppressWarnings(as.integer(.data$Fledged)),
+            ),
+            ClutchSize_observed = as.integer(.data$ClutchSize),
+            BroodSize_observed = as.integer(.data$BroodSize),
+            NumberFledged_observed = as.integer(.data$Fledged),
             HabitatType = tolower(.data$Vegetation)
         ) %>%
         dplyr::arrange(.data$PopID, .data$BreedingSeason, .data$Plot, .data$LocationID)
 
 
     ## Read in chick data
-    chick_data <- suppressWarnings(readxl::read_xlsx(
+    chick_data <- readxl::read_xlsx(
         path = paste0(db, "/BRG_PrimaryData.xlsx"),
         sheet = "Chicks",
         guess_max = 5000,
         col_types = "text"
-    )) %>%
+    ) %>%
         janitor::clean_names(case = "upper_camel") %>%
         janitor::remove_empty(which = "rows") %>%
         ## Rename and process columns
         dplyr::mutate(dplyr::across(
-            where(is.character),
+            tidyselect::where(is.character),
             ~ dplyr::na_if(., ".")
         )) %>%
         dplyr::mutate(
@@ -135,22 +135,22 @@ format_BRG <- function(db = choose_directory(),
                 suppressWarnings(lubridate::hm(gsub("--", ":00", .data$Time))),
                 "%H:%M"
             ),
-            Mass = round(suppressWarnings(as.numeric(.data$Weight)), 1)
+            Mass = round(as.numeric(.data$Weight), 1)
         )
 
     ## Read in adult data
-    adult_data <- suppressWarnings(readxl::read_xlsx(
+    adult_data <- readxl::read_xlsx(
         path = paste0(db, "/BRG_PrimaryData.xlsx"),
         sheet = "Adults",
         guess_max = 5000,
         col_types = "text"
-    )) %>%
+    ) %>%
         janitor::clean_names(case = "upper_camel") %>%
         janitor::remove_empty(which = "rows") %>%
         ## Rename and process columns, cast time to integer
         dplyr::mutate(Time = readr::parse_integer(.data$Time, na = c("", ".", "--"))) %>%
         dplyr::mutate(dplyr::across(
-            where(is.character),
+            tidyselect::where(is.character),
             ~ dplyr::na_if(., ".")
         )) %>%
         dplyr::transmute(
@@ -229,12 +229,9 @@ format_BRG <- function(db = choose_directory(),
         dplyr::select(names(data_templates[["v1.1.0"]]$Brood_data)) %>%
         dplyr::ungroup() %>%
         ## Remove any NAs from critical columns
-        dplyr::filter_at(vars(
-            .data$BroodID,
-            .data$PopID,
-            .data$BreedingSeason,
-            .data$Species
-        ), dplyr::all_vars(!is.na(.)))
+        dplyr::filter(dplyr::if_all(
+            c("BroodID", "PopID", "BreedingSeason", "Species"), ~ !is.na(.)
+        ))
 
 
     ## Capture data
@@ -248,14 +245,16 @@ format_BRG <- function(db = choose_directory(),
         dplyr::select(names(data_templates[["v1.1.0"]]$Capture_data)) %>%
         dplyr::ungroup() %>%
         ## Remove any NAs from critical columns
-        dplyr::filter_at(vars(
-            .data$CaptureID,
-            .data$CapturePopID,
-            .data$BreedingSeason,
-            .data$IndvID,
-            .data$Species,
-            .data$CaptureDate
-        ), dplyr::all_vars(!is.na(.)))
+        dplyr::filter(
+            if_all(c(
+                "CaptureID",
+                "CapturePopID",
+                "BreedingSeason",
+                "IndvID",
+                "Species",
+                CaptureDate
+            ), ~ !is.na(.))
+        )
 
 
     ## Individual data
@@ -271,12 +270,9 @@ format_BRG <- function(db = choose_directory(),
         dplyr::select(names(data_templates[["v1.1.0"]]$Individual_data)) %>%
         dplyr::ungroup() %>%
         ## Remove any NAs from critical columns
-        dplyr::filter_at(vars(
-            .data$PopID,
-            .data$IndvID,
-            .data$Species,
-            .data$RingSeason
-        ), dplyr::all_vars(!is.na(.)))
+        dplyr::filter(dplyr::if_all(
+            c("PopID", "IndvID", "Species", "RingSeason"), ~ !is.na(.)
+        ))
 
 
     ## Location data
@@ -381,20 +377,20 @@ create_brood_BRG <- function(nest_data, chick_data, adult_data) {
         dplyr::left_join(
             adult_data %>%
                 dplyr::select(
-                    .data$BreedingSeason,
-                    .data$Plot,
-                    .data$LocationID,
-                    .data$IndvID,
-                    .data$Sex_observed
+                    "BreedingSeason",
+                    "Plot",
+                    "LocationID",
+                    "IndvID",
+                    "Sex_observed"
                 ) %>%
                 tidyr::pivot_wider(
                     id_cols = c(
-                        .data$BreedingSeason,
-                        .data$Plot,
-                        .data$LocationID
+                        "BreedingSeason",
+                        "Plot",
+                        "LocationID"
                     ),
-                    values_from = .data$IndvID,
-                    names_from = .data$Sex_observed
+                    values_from = "IndvID",
+                    names_from = "Sex_observed"
                 ) %>%
                 dplyr::rename(
                     FemaleID = "F",
@@ -410,8 +406,8 @@ create_brood_BRG <- function(nest_data, chick_data, adult_data) {
         ## Set improperly formatted IDs to NA
         dplyr::mutate(dplyr::across(
             c(
-                .data$FemaleID,
-                .data$MaleID
+                "FemaleID",
+                "MaleID"
             ),
             ~ dplyr::case_when(
                 stringr::str_detect(., "^[:alpha:]{2}[:digit:]{5}$") ~ .,
@@ -443,10 +439,10 @@ create_capture_BRG <- function(chick_data, adult_data, Brood_data_temp) {
             dplyr::left_join(
                 Brood_data_temp %>%
                     dplyr::select(
-                        .data$BreedingSeason,
-                        .data$Plot,
-                        .data$LocationID,
-                        .data$BroodID
+                        "BreedingSeason",
+                        "Plot",
+                        "LocationID",
+                        "BroodID"
                     ),
                 by = c("BreedingSeason", "Plot", "LocationID")
             )) %>%
