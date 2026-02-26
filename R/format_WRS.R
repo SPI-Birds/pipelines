@@ -118,7 +118,7 @@ format_WRS <- function(
                 .data$species == "CT" ~ species_codes[species_codes$speciesEURINGCode == 14610, ]$Species,
                 .data$species == "RS" ~ species_codes[species_codes$speciesEURINGCode == 11220, ]$Species,
                 .data$species == "SP" ~ species_codes[species_codes$speciesEURINGCode == 15980, ]$Species,
-                TRUE ~ NA_character_
+                .default = NA_character_
             ),
             # TODO: Check about camera and experiments
             # Current version does not seem to have any experiments included
@@ -164,11 +164,11 @@ format_WRS <- function(
         ## Rename variables
         ## TODO: Check about capture dates for dead chicks
         dplyr::rename(
-            BreedingSeason = .data$year,
-            Plot = .data$site,
-            LocationID = .data$nestbox_id,
-            IndvID = .data$ring_id,
-            Tarsus = .data$tarsus_d15
+            BreedingSeason = year,
+            Plot = site,
+            LocationID = nestbox_id,
+            IndvID = ring_id,
+            Tarsus = tarsus_d15
         ) %>%
         dplyr::left_join(nest_data[, c("unique_breeding_event", "HatchDate_observed")],
             by = "unique_breeding_event"
@@ -182,7 +182,7 @@ format_WRS <- function(
                 !is.na(suppressWarnings(as.numeric(.data$d15_date))) ~ janitor::excel_numeric_to_date(as.numeric(.data$d15_date)),
                 !is.na(.data$weight_d15) ~ .data$HatchDate_observed + 15L,
                 !is.na(.data$HatchDate_observed) ~ .data$HatchDate_observed,
-                TRUE ~ as.Date(NA_character_)
+                .default = as.Date(NA_character_)
             )
         ) %>%
         dplyr::filter(!is.na(.data$CaptureDate)) %>%
@@ -193,7 +193,7 @@ format_WRS <- function(
             BreedingSeason = as.integer(.data$BreedingSeason),
             ReleaseAlive = dplyr::case_when(
                 .data$chick_exp != 0 | .data$chick_pred != 0 | .data$fledged == 0 ~ FALSE,
-                TRUE ~ TRUE
+                .default = TRUE
             ),
             Tarsus = suppressWarnings(as.numeric(.data$Tarsus)),
             # Weight d10, d5 and d2 are not in the data anymore, only d15
@@ -202,14 +202,14 @@ format_WRS <- function(
                 #    !is.na(.data$weight_d10) ~ .data$weight_d10,
                 #    !is.na(.data$weight_d5) ~ .data$weight_d5,
                 #    !is.na(.data$weight_d2) ~ .data$weight_d2,
-                TRUE ~ NA_character_
+                .default = NA_character_
             )), 3)),
             ChickAge = dplyr::case_when(
                 !is.na(.data$weight_d15) ~ 15L,
                 #    !is.na(.data$weight_d10) ~ 10L,
                 #    !is.na(.data$weight_d5) ~ 5L,
                 #    !is.na(.data$weight_d2) ~ 2L,
-                TRUE ~ NA_integer_
+                .default = NA_integer_
             ),
             Species = dplyr::case_when(
                 .data$species == "GT" ~ species_codes[species_codes$speciesEURINGCode == 14640, ]$Species,
@@ -219,23 +219,23 @@ format_WRS <- function(
                 .data$species == "CT" ~ species_codes[species_codes$speciesEURINGCode == 14610, ]$Species,
                 .data$species == "RS" ~ species_codes[species_codes$speciesEURINGCode == 11220, ]$Species,
                 .data$species == "SP" ~ species_codes[species_codes$speciesEURINGCode == 15980, ]$Species,
-                TRUE ~ NA_character_
+                .default = NA_character_
             )
         ) %>%
         dplyr::filter(!is.na(.data$IndvID)) %>%
         dplyr::select(
-            .data$BreedingSeason,
-            .data$PopID,
-            .data$Plot,
-            .data$LocationID,
-            .data$Species,
-            .data$IndvID,
-            .data$CaptureDate,
-            .data$Mass,
-            .data$Tarsus,
-            .data$ChickAge,
-            .data$ReleaseAlive,
-            .data$unique_breeding_event
+            BreedingSeason,
+            PopID,
+            Plot,
+            LocationID,
+            Species,
+            IndvID,
+            CaptureDate,
+            Mass,
+            Tarsus,
+            ChickAge,
+            ReleaseAlive,
+            unique_breeding_event
         )
 
     ## Read in primary data from adults
@@ -264,16 +264,16 @@ format_WRS <- function(
         dplyr::mutate(
             CaptureDate = suppressWarnings(dplyr::case_when(
                 grepl("[-/]", .data$date) ~ lubridate::dmy(.data$date, quiet = TRUE),
-                TRUE ~ janitor::excel_numeric_to_date(as.numeric(.data$date))
+                .default = janitor::excel_numeric_to_date(as.numeric(.data$date))
             )) %>% as.Date()
         ) %>%
         dplyr::mutate(dplyr::across(tidyselect::where(is.character), ~ dplyr::na_if(., "NA")),
             PopID = "WRS",
             BreedingSeason = as.integer(.data$BreedingSeason),
-            dplyr::across(c(.data$Mass, .data$WingLength, .data$Tarsus), ~ suppressWarnings(as.numeric(.x))),
+            dplyr::across(c(Mass, WingLength, Tarsus), ~ suppressWarnings(as.numeric(.x))),
             CaptureTime = suppressWarnings(dplyr::case_when(
                 grepl(":", .data$hour) ~ as.character(.data$hour),
-                TRUE ~ format(as.POSIXct(Sys.Date() + as.numeric(.data$hour)), "%H:%M", tz = "UTC")
+                .default = format(as.POSIXct(Sys.Date() + as.numeric(.data$hour)), "%H:%M", tz = "UTC")
             )),
             Species = dplyr::case_when(
                 .data$species == "GT" ~ species_codes[species_codes$speciesEURINGCode == 14640, ]$Species,
@@ -283,22 +283,19 @@ format_WRS <- function(
                 .data$species == "CT" ~ species_codes[species_codes$speciesEURINGCode == 14610, ]$Species,
                 .data$species == "RS" ~ species_codes[species_codes$speciesEURINGCode == 11220, ]$Species,
                 .data$species == "SP" ~ species_codes[species_codes$speciesEURINGCode == 15980, ]$Species,
-                TRUE ~ NA_character_
+                .default = NA_character_
             ),
             ReleaseAlive = dplyr::case_when(
                 .data$adult_exp == 1 ~ FALSE,
-                TRUE ~ TRUE
+                .default = TRUE
             ),
             Age_observed = dplyr::case_when(
                 .data$Age_observed == 2 ~ 5L,
                 toupper(.data$Age_observed) == "PO2" ~ 6L,
-                TRUE ~ suppressWarnings(as.integer(.data$Age_observed))
+                .default = suppressWarnings(as.integer(.data$Age_observed))
             ),
             # The aggress column is removed, so comment it out for now
-            ExperimentID = dplyr::case_when(
-                # !is.na(.data$aggress) ~ "OTHER",
-                TRUE ~ NA_character_
-            ),
+            ExperimentID = NA_character_,
             dplyr::across(tidyselect::where(is.character), ~ dplyr::na_if(., "NA"))
         ) %>%
         dplyr::filter(!is.na(.data$IndvID)) %>%
@@ -478,19 +475,19 @@ create_brood_WRS <- function(nest_data, chick_data, adult_data) {
         dplyr::left_join(
             adult_data %>%
                 dplyr::select(
-                    .data$unique_breeding_event,
-                    .data$Sex_observed,
-                    .data$IndvID
+                    unique_breeding_event,
+                    Sex_observed,
+                    IndvID
                 ) %>%
                 stats::na.omit() %>%
                 ## A few cases where the same individuals were caught multiple times for a single breeding event
                 ## Keeping only distinct records by breeding event and sex
                 ## TODO: Check about whether this is robust
-                dplyr::distinct(.data$unique_breeding_event, .data$Sex_observed, .keep_all = T) %>%
+                dplyr::distinct(unique_breeding_event, Sex_observed, .keep_all = TRUE) %>%
                 tidyr::pivot_wider(
-                    id_cols = .data$unique_breeding_event,
-                    values_from = .data$IndvID,
-                    names_from = .data$Sex_observed
+                    id_cols = unique_breeding_event,
+                    values_from = IndvID,
+                    names_from = Sex_observed
                 ) %>%
                 dplyr::rename(
                     FemaleID = "F",
@@ -530,7 +527,7 @@ create_capture_WRS <- function(chick_data, adult_data) {
                 RingAge_temp = "chick",
                 CaptureAlive = dplyr::case_when(
                     grepl("XX", .data$IndvID) & is.na(.data$Mass) ~ FALSE,
-                    TRUE ~ TRUE
+                    .default = TRUE
                 ),
                 Age_observed = 1L
             )) %>%
@@ -625,16 +622,16 @@ create_individual_WRS <- function(Capture_data_temp, Brood_data_temp) {
             .data$RingAge == "chick" &
                 .data$RingSeason == .data$BreedingSeason &
                 !is.na(.data$LocationID) ~ "yes",
-            TRUE ~ NA_character_
+            .default = NA_character_
         )) %>%
         ## Only join BroodID to chick records
         dplyr::left_join(
             Brood_data_temp %>%
                 dplyr::mutate(brood_record = "yes") %>%
                 dplyr::select(
-                    .data$brood_record,
-                    .data$unique_breeding_event,
-                    .data$BroodID
+                    brood_record,
+                    unique_breeding_event,
+                    BroodID
                 ),
             by = c("brood_record", "unique_breeding_event")
         ) %>%
@@ -655,7 +652,7 @@ create_individual_WRS <- function(Capture_data_temp, Brood_data_temp) {
             BroodIDFledged = .data$BroodIDLaid
         ) %>%
         ## Keep distinct records by PopID and InvdID
-        dplyr::distinct(.data$PopID, .data$IndvID, .keep_all = TRUE) %>%
+        dplyr::distinct(PopID, IndvID, .keep_all = TRUE) %>%
         ## Arrange
         dplyr::arrange(.data$CaptureID) %>%
         dplyr::ungroup() %>%
@@ -707,7 +704,7 @@ create_location_WRS <- function(nest_data) {
             )
         ) %>%
         ## Keep distinct records
-        dplyr::distinct(.data$PopID, .data$LocationID, .keep_all = TRUE) %>%
+        dplyr::distinct(PopID, LocationID, .keep_all = TRUE) %>%
         dplyr::ungroup()
 
     return(Location_data_temp)
