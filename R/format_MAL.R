@@ -142,8 +142,12 @@ format_MAL <- function(db = choose_directory(),
             ClutchSize_observed = suppressWarnings(as.integer(.data$ClutchSize)),
             BroodSize_observed = suppressWarnings(as.integer(.data$NumberHatched)),
             NumberFledged_observed = suppressWarnings(as.integer(.data$NumberAtD14)),
-            NumberFledged_min = suppressWarnings(as.integer(.data$NumberAtD14)),
-            NumberFledged_max = suppressWarnings(as.integer(.data$NumberAtD14)),
+            NumberFledged_min = dplyr::na_if(
+                suppressWarnings(as.integer(.data$NumberAtD14)), 0L
+            ),
+            NumberFledged_max = dplyr::na_if(
+                suppressWarnings(as.integer(.data$NumberAtD14)), 0L
+            ),
 
             ## Year is not entered in some cases, retrieve it from other date columns when possible
             ## TODO: Inform about missing years
@@ -186,8 +190,12 @@ format_MAL <- function(db = choose_directory(),
             ClutchSize_observed = suppressWarnings(as.integer(.data$ClutchSize)),
             BroodSize_observed = suppressWarnings(as.integer(.data$NumberHatched)),
             NumberFledged_observed = suppressWarnings(as.integer(.data$NumberAtD14D15)),
-            NumberFledged_min = suppressWarnings(as.integer(.data$NumberAtD14D15)),
-            NumberFledged_max = suppressWarnings(as.integer(.data$NumberAtD14D15))
+            NumberFledged_min = dplyr::na_if(
+                suppressWarnings(as.integer(.data$NumberAtD14D15)), 0L
+            ),
+            NumberFledged_max = dplyr::na_if(
+                suppressWarnings(as.integer(.data$NumberAtD14D15)), 0L
+            )
         )
 
     ## Combine two primary data formats and process further
