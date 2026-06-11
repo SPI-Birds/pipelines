@@ -6,13 +6,21 @@
 #' this data. For a general description of the standard format please see
 #' \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 #'
-#' \strong{Species}:
+#' \strong{Species}: Data includes great tit  and blue tit.
+#' Records with species RS or NA are excluded.
 #'
-#' \strong{BroodID}:
+#' \strong{BroodID}: Generated as PopID-row_number (e.g. "MAL-1"). Only broods
+#' with a known species receive a BroodID.
 #'
-#' \strong{IndvID}:
+#' \strong{IndvID}: Taken directly from the Id column in the ringing records.
+#' Some IDs may not be standard ring numbers.
 #'
-#' \strong{CaptureDate}:
+#' \strong{CaptureDate}: Taken from the Date column in the ringing records.
+#'
+#' \strong{ClutchType_observed}: Clutch type is derived from the 'Nesting
+#' attempt' column in the primary data. Attempt 1 is classified as 'first' and
+#' attempt 2 is classified as 'second'. No distinction between
+#' 'second' and 'replacement'.
 #'
 #' @inheritParams pipeline_params
 #'
@@ -92,7 +100,7 @@ format_MAL <- function(db = choose_directory(),
                 .data$Age == "3K" ~ 5L,
                 .data$Age == "3K+" ~ 5L
             ),
-            Sex_observed = case_when(
+            Sex_observed = dplyr::case_when(
                 .data$Sex == "FEMALE" ~ "F",
                 .data$Sex == "MALE" ~ "M",
                 TRUE ~ NA_character_
@@ -125,11 +133,17 @@ format_MAL <- function(db = choose_directory(),
             ),
             Plot = stringr::str_extract(.data$SiteNest, "[:alpha:]+"),
             LocationID = .data$SiteNest,
+            ClutchType_observed = dplyr::case_when(
+                .data$NestingAttempt == 1 ~ "first",
+                .data$NestingAttempt == 2 ~ "second"
+            ),
             LayDate_observed = lubridate::ymd(.data$FirstEgg),
             HatchDate_observed = lubridate::ymd(.data$HatchDate),
             ClutchSize_observed = suppressWarnings(as.integer(.data$ClutchSize)),
             BroodSize_observed = suppressWarnings(as.integer(.data$NumberHatched)),
-            FledgeSize_observed = suppressWarnings(as.integer(.data$NumberAtD14)),
+            NumberFledged_observed = suppressWarnings(as.integer(.data$NumberAtD14)),
+            NumberFledged_min = suppressWarnings(as.integer(.data$NumberAtD14)),
+            NumberFledged_max = suppressWarnings(as.integer(.data$NumberAtD14)),
 
             ## Year is not entered in some cases, retrieve it from other date columns when possible
             ## TODO: Inform about missing years
@@ -161,18 +175,24 @@ format_MAL <- function(db = choose_directory(),
             ),
             Plot = stringr::str_extract(.data$SiteNest, "[:alpha:]+"),
             LocationID = .data$SiteNest,
+            ClutchType_observed = dplyr::case_when(
+                .data$NestingAttempt == 1 ~ "first",
+                .data$NestingAttempt == 2 ~ "second"
+            ),
             LayDate_observed = lubridate::ymd(.data$FirstEgg),
             HatchDate_observed = suppressWarnings(as.Date(as.numeric(.data$HatchDay),
                 origin = as.Date(paste0(.data$BreedingSeason, "-03-31"))
             )),
             ClutchSize_observed = suppressWarnings(as.integer(.data$ClutchSize)),
             BroodSize_observed = suppressWarnings(as.integer(.data$NumberHatched)),
-            FledgeSize_observed = suppressWarnings(as.integer(.data$NumberAtD14D15))
+            NumberFledged_observed = suppressWarnings(as.integer(.data$NumberAtD14D15)),
+            NumberFledged_min = suppressWarnings(as.integer(.data$NumberAtD14D15)),
+            NumberFledged_max = suppressWarnings(as.integer(.data$NumberAtD14D15))
         )
 
     ## Combine two primary data formats and process further
     ## TODO: Species missing in a surprising number of cases
-    nest_data <- bind_rows(nest_data_13_16, nest_data_17_19) %>%
+    nest_data <- dplyr::bind_rows(nest_data_13_16, nest_data_17_19) %>%
         dplyr::arrange(.data$BreedingSeason, .data$Plot, .data$LocationID, .data$LayDate_observed) %>%
         ## Create BroodID based on Po pID and row number
         dplyr::mutate(BroodID = dplyr::case_when(!is.na(.data$Species) ~ paste(.data$PopID, dplyr::row_number(), sep = "-")))
@@ -197,7 +217,7 @@ format_MAL <- function(db = choose_directory(),
         ) %>%
         dplyr::arrange(.data$sitenest, .data$Year) %>%
         dplyr::group_by(.data$sitenest) %>%
-        dplyr::mutate(removed = case_when(
+        dplyr::mutate(removed = dplyr::case_when(
             .data$Present == "N" & .data$Year == max(.data$Year) ~ "Y",
             TRUE ~ "N"
         )) %>%
@@ -296,7 +316,7 @@ create_brood_MAL <- function(nest_data, rr_data, protocol_version) {
         ## Get number of distinct M or F IDs associated with Location
         ## Remove records with multiple adult IDs of the same sex recorded since it will not be possible to infer the parent ID for that sex
         dplyr::group_by(.data$BreedingSeason, .data$PopID, .data$Species, .data$Plot, .data$LocationID, .data$Sex_observed) %>%
-        dplyr::mutate(IDs = n_distinct(.data$IndvID)) %>%
+        dplyr::mutate(IDs = dplyr::n_distinct(.data$IndvID)) %>%
         dplyr::filter(IDs == 1) %>%
         ## Keep only distinct records for:
         dplyr::distinct(.data$BreedingSeason, .data$PopID, .data$Species, .data$Plot, .data$LocationID, .data$Sex_observed, .keep_all = T) %>%
