@@ -101,8 +101,8 @@ format_MAL <- function(db = choose_directory(),
                 .data$Age == "3K+" ~ 5L
             ),
             Sex_observed = dplyr::case_when(
-                .data$Sex == "FEMALE" ~ "F",
-                .data$Sex == "MALE" ~ "M",
+                .data$Sex %in% c("FEMALE", "F") ~ "F",
+                .data$Sex %in% c("MALE", "M") ~ "M",
                 TRUE ~ NA_character_
             ),
             ObserverID = .data$Handler

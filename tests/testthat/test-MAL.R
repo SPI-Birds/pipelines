@@ -11,73 +11,73 @@ test_that("MAL outputs all files...", {
 test_that("Individual_data returns an expected outcome...", {
   MAL_data <- dplyr::filter(pipeline_output$Individual_data, PopID == "MAL")
 
-  # Test 1: Adult great tit female
-  # TODO: Replace IndvID with a known female PARMAJ from the primary data
-  # expect_equal(subset(MAL_data, IndvID == "???")$Sex_calculated, "F")
-  # expect_equal(subset(MAL_data, IndvID == "???")$Species, "PARMAJ")
-  # expect_equal(subset(MAL_data, IndvID == "???")$RingAge, "adult")
-  # expect_equal(subset(MAL_data, IndvID == "???")$RingSeason, ???)
+  # Adult great tit female ringed 2013 (raw Sex = 'F')
+  expect_equal(subset(MAL_data, IndvID == "2KS91300")$Sex_calculated, "F")
+  expect_equal(subset(MAL_data, IndvID == "2KS91300")$Species, "PARMAJ")
+  expect_equal(subset(MAL_data, IndvID == "2KS91300")$RingAge, "adult")
+  expect_equal(subset(MAL_data, IndvID == "2KS91300")$RingSeason, 2013L)
 
-  # Test 2: Adult great tit male
-  # TODO: Replace IndvID with a known male PARMAJ from the primary data
-  # expect_equal(subset(MAL_data, IndvID == "???")$Sex_calculated, "M")
-  # expect_equal(subset(MAL_data, IndvID == "???")$Species, "PARMAJ")
+  # Adult blue tit male ringed 2013 (raw Sex = 'M')
+  expect_equal(subset(MAL_data, IndvID == "1EP63904")$Sex_calculated, "M")
+  expect_equal(subset(MAL_data, IndvID == "1EP63904")$Species, "CYACAE")
+  expect_equal(subset(MAL_data, IndvID == "1EP63904")$RingAge, "adult")
+  expect_equal(subset(MAL_data, IndvID == "1EP63904")$RingSeason, 2013L)
 
-  # Test 3: Adult blue tit female
-  # TODO: Replace IndvID with a known female CYACAE from the primary data
-  # expect_equal(subset(MAL_data, IndvID == "???")$Sex_calculated, "F")
-  # expect_equal(subset(MAL_data, IndvID == "???")$Species, "CYACAE")
-
-  # Test 4: Adult blue tit male
-  # TODO: Replace IndvID with a known male CYACAE from the primary data
-  # expect_equal(subset(MAL_data, IndvID == "???")$Sex_calculated, "M")
-  # expect_equal(subset(MAL_data, IndvID == "???")$Species, "CYACAE")
-
-  # Test 5: Individual ringed as chick — check BroodIDLaid is filled
-  # TODO: Replace IndvID with a known chick from the primary data
-  # expect_equal(subset(MAL_data, IndvID == "???")$RingAge, "chick")
-  # expect_false(is.na(subset(MAL_data, IndvID == "???")$BroodIDLaid))
+  # Great tit chick ringed at K25 in 2013 — BroodIDLaid must link to that brood
+  expect_equal(subset(MAL_data, IndvID == "2KS92212")$RingAge, "chick")
+  expect_equal(subset(MAL_data, IndvID == "2KS92212")$Species, "PARMAJ")
+  expect_equal(
+    subset(MAL_data, IndvID == "2KS92212")$BroodIDLaid,
+    subset(pipeline_output$Brood_data, LocationID == "K25" & BreedingSeason == 2013)$BroodID
+  )
 })
 
 test_that("Brood_data returns an expected outcome...", {
   MAL_data <- dplyr::filter(pipeline_output$Brood_data, PopID == "MAL")
 
-  # Test 1: First clutch great tit
-  # TODO: Replace BroodID with a known first-clutch PARMAJ brood
-  # expect_equal(subset(MAL_data, BroodID == "MAL-???")$Species, "PARMAJ")
-  # expect_equal(subset(MAL_data, BroodID == "MAL-???")$ClutchType_calculated, "first")
-  # expect_equal(subset(MAL_data, BroodID == "MAL-???")$LayDate_observed, as.Date("????-??-??"))
-  # expect_equal(subset(MAL_data, BroodID == "MAL-???")$ClutchSize_observed, ???L)
-  # expect_equal(subset(MAL_data, BroodID == "MAL-???")$BroodSize_observed, ???L)
-  # expect_equal(subset(MAL_data, BroodID == "MAL-???")$NumberFledged_observed, ???L)
+  # First clutch PARMAJ at K25 in 2013
+  expect_equal(subset(MAL_data, LocationID == "K25" & BreedingSeason == 2013)$Species, "PARMAJ")
+  expect_equal(subset(MAL_data, LocationID == "K25" & BreedingSeason == 2013)$ClutchType_calculated, "first")
+  expect_equal(subset(MAL_data, LocationID == "K25" & BreedingSeason == 2013)$LayDate_observed, as.Date("2013-05-06"))
+  expect_equal(subset(MAL_data, LocationID == "K25" & BreedingSeason == 2013)$HatchDate_observed, as.Date("2013-05-26"))
+  expect_equal(subset(MAL_data, LocationID == "K25" & BreedingSeason == 2013)$ClutchSize_observed, 8L)
+  expect_equal(subset(MAL_data, LocationID == "K25" & BreedingSeason == 2013)$NumberFledged_observed, 7L)
 
-  # Test 2: Second clutch or replacement
-  # TODO: Replace BroodID with a known second/replacement clutch
-  # expect_equal(subset(MAL_data, BroodID == "MAL-???")$ClutchType_calculated, "second")
+  # Failed brood at P12 in 2017: _max must be NA (protocol: _max cannot be 0)
+  expect_equal(subset(MAL_data, LocationID == "P12" & BreedingSeason == 2017)$ClutchSize_observed, 8L)
+  expect_equal(subset(MAL_data, LocationID == "P12" & BreedingSeason == 2017)$BroodSize_observed, 0L)
+  expect_equal(subset(MAL_data, LocationID == "P12" & BreedingSeason == 2017)$NumberFledged_observed, 0L)
+  expect_true(is.na(subset(MAL_data, LocationID == "P12" & BreedingSeason == 2017)$NumberFledged_max))
 })
 
 test_that("Capture_data returns an expected outcome...", {
   MAL_data <- dplyr::filter(pipeline_output$Capture_data, CapturePopID == "MAL")
 
-  # Test 1: Individual with multiple captures — check capture count and dates
-  # TODO: Replace IndvID with a known individual captured multiple times
-  # expect_equal(nrow(subset(MAL_data, IndvID == "???")), ???)
-  # expect_equal(min(subset(MAL_data, IndvID == "???")$CaptureDate, na.rm = TRUE), as.Date("????-??-??"))
+  # Individual with 4 captures across multiple years
+  expect_equal(nrow(subset(MAL_data, IndvID == "2KS91300")), 4L)
+  expect_equal(min(subset(MAL_data, IndvID == "2KS91300")$CaptureDate, na.rm = TRUE), as.Date("2013-06-01"))
+  expect_equal(unique(subset(MAL_data, IndvID == "2KS91300")$Sex_observed), "F")
+  expect_equal(unique(subset(MAL_data, IndvID == "2KS91300")$Species), "PARMAJ")
+  expect_equal(unique(subset(MAL_data, IndvID == "2KS91300")$CaptureAlive), TRUE)
 
-  # Test 2: Check Age_calculated increments correctly across years
-  # TODO: Replace IndvID with a known adult with captures in multiple years
-  # expect_equal(subset(MAL_data, IndvID == "???")$Age_calculated[1], 4L)
+  # Individual with a single capture
+  expect_equal(nrow(subset(MAL_data, IndvID == "1EP63904")), 1L)
+  expect_equal(subset(MAL_data, IndvID == "1EP63904")$CaptureDate, as.Date("2013-06-02"))
+  expect_equal(subset(MAL_data, IndvID == "1EP63904")$Sex_observed, "M")
+  expect_equal(subset(MAL_data, IndvID == "1EP63904")$Species, "CYACAE")
+  expect_equal(subset(MAL_data, IndvID == "1EP63904")$CaptureAlive, TRUE)
 })
 
 test_that("Location_data returns an expected outcome...", {
   MAL_data <- dplyr::filter(pipeline_output$Location_data, PopID == "MAL")
 
-  # Test 1: Nestbox check
-  # TODO: Replace LocationID with a known nestbox from the primary data
-  # expect_equal(subset(MAL_data, LocationID == "???")$LocationType, "NB")
-  # expect_equal(subset(MAL_data, LocationID == "???")$LocationID,
-  #              subset(MAL_data, LocationID == "???")$NestboxID)
-  # expect_equal(subset(MAL_data, LocationID == "???")$StartSeason, ???L)
+  # Nestbox K1
+  expect_equal(subset(MAL_data, LocationID == "K1")$LocationType, "NB")
+  expect_equal(subset(MAL_data, LocationID == "K1")$NestboxID, "K1")
+  expect_equal(subset(MAL_data, LocationID == "K1")$StartSeason, 2017L)
+  expect_true(is.na(subset(MAL_data, LocationID == "K1")$EndSeason))
+  expect_equal(subset(MAL_data, LocationID == "K1")$Latitude, 55.602979)
+  expect_equal(subset(MAL_data, LocationID == "K1")$Longitude, 12.989224)
 })
 
 ## Test protocol compliance
