@@ -69,7 +69,14 @@ format_VAL <- function(db = choose_directory(),
   all_sheets      <- readxl::excel_sheets(data_file)
   chick_sheet_nrs <- which(stringr::str_detect(all_sheets, pattern = "Chicks"))
   chick_sheet_yrs <- as.integer(stringr::str_extract(all_sheets[chick_sheet_nrs], "[0-9]+"))
-  early_broods    <- readxl::read_excel(data_file, sheet = 1, na = c("", "-")) %>%
+  early_broods    <- readxl::read_excel(data_file, sheet = 1, na = c("", "-"), ,
+                                        col_types = c(rep("guess", 51), "text",
+                                                      rep("guess", 6), "text",
+                                                      rep("guess", 3), "text",
+                                                      rep("guess", 17), "text",
+                                                      rep("guess", 2), "text",
+                                                      rep("guess", 23), "text",
+                                                      rep("guess", 10))) %>%
     janitor::clean_names()
   late_broods     <- readxl::read_excel(data_file, sheet = 2, na = c("", "-")) %>%
     janitor::clean_names()
@@ -81,7 +88,7 @@ format_VAL <- function(db = choose_directory(),
 
   experiment_data <- readxl::read_excel(data_file, sheet = length(all_sheets), na = c("", "-")) %>%
     janitor::clean_names() %>%
-    dplyr::rename(ExperimentID = spi_code)
+    dplyr::rename(ExperimentID = "spi_code")
 
   GPS_2015 <- sf::st_read(paste0(db, "/VAL_PrimaryData_GPS2015.gpx"), layer = "waypoints")
   GPS_2017 <- sf::st_read(paste0(db, "/VAL_PrimaryData_GPS2017.gpx"), layer = "waypoints")
@@ -262,7 +269,7 @@ create_brood_VAL <- function(early_broods, late_broods, chick_data, experiment_d
 
   early_broods_format <- early_broods %>%
     dplyr::left_join(experiment_data %>%
-                       dplyr::select(year, ExperimentID),
+                       dplyr::select("year", "ExperimentID"),
                      by = "year") %>%
     dplyr::mutate(MarchDay = as.Date(paste(.data$year, "03", "31", sep = "-")),
                   PopID = "VAL",
@@ -304,16 +311,17 @@ create_brood_VAL <- function(early_broods, late_broods, chick_data, experiment_d
                   ExperimentID = dplyr::case_when(is.na(.data$manip) ~ NA_character_,
                                                   TRUE ~ .data$ExperimentID)) %>% #checked with data custodian, ignore manip values for years assigned without experiment
     dplyr::arrange(.data$FemaleID, .data$LayDate_observed) %>%
+    # Recreate BroodID to account for multiple broods at the same location within the same year
     dplyr::group_by(.data$BroodID) %>%
-    dplyr::mutate(BroodID = paste0(.data$BroodID, "_", 1:n())) %>%
+    dplyr::mutate(BroodID = paste0(.data$BroodID, "_", 1:dplyr::n())) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., protocol_version = "1.1", na.rm = FALSE)) %>%
-    dplyr::select(PopID:ClutchType_calculated, ExperimentID)
+    dplyr::select("PopID":"ClutchType_calculated", "ExperimentID")
 
 
   late_broods_format <- late_broods %>%
     dplyr::left_join(experiment_data %>%
-                       dplyr::select(year, ExperimentID),
+                       dplyr::select("year", "ExperimentID"),
                      by = "year") %>%
     dplyr::mutate(MarchDay = as.Date(paste(.data$year, "03", "31", sep = "-")),
                   PopID = "VAL",
@@ -356,14 +364,14 @@ create_brood_VAL <- function(early_broods, late_broods, chick_data, experiment_d
                   ExperimentID = dplyr::case_when(is.na(.data$treatment) ~ NA_character_,
                                                   TRUE ~ .data$ExperimentID)) %>%
 
-        #When there are multiple nests in a brood in a year, give them different letter suffixes
+    # Recreate BroodID to account for multiple broods at the same location within the same year
     dplyr::arrange(.data$FemaleID, as.Date(.data$LayDate_observed, format = "%Y-%m-%d")) %>%
     dplyr::group_by(.data$BroodID) %>%
-    dplyr::mutate(BroodID = paste0(.data$BroodID, "_", 1:n())) %>%
+    dplyr::mutate(BroodID = paste0(.data$BroodID, "_", 1:dplyr::n())) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., protocol_version = "1.1", na.rm = FALSE)) %>%
-    dplyr::select(PopID:ClutchType_calculated,
-                  ExperimentID)
+    dplyr::select("PopID":"ClutchType_calculated",
+                  "ExperimentID")
 
 
 
@@ -395,10 +403,10 @@ create_capture_VAL <- function(early_broods, late_broods, chick_data, experiment
     dplyr::left_join(experiment_data %>%
                        dplyr::filter(.data$ExperimentID == "SURVIVAL" &
                                        stringr::str_detect(description, "adults|prolactin|Female handicap")) %>% #detailed with data custodian
-                       dplyr::select(year, ExperimentID),
+                       dplyr::select("year", "ExperimentID"),
                      by = "year") %>%
-    dplyr::select(year, nido, female, ano_anilla_52, fage, surv_fem, fcapture, ftarsus, fwing, fweight,
-                  male, ano_anilla_84, mage, surv_man, mcapture, mtarsus, mwing, mweight, manip, ExperimentID) %>%
+    dplyr::select("year", "nido", "female", "ano_anilla_52", "fage", "surv_fem", "fcapture", "ftarsus", "fwing", "fweight",
+                  "male", "ano_anilla_84", "mage", "surv_man", "mcapture", "mtarsus", "mwing", "mweight", "manip", "ExperimentID") %>%
     tidyr::pivot_longer(cols = c(female, male), names_to = "Sex_observed", values_to = "IndvID") %>%
     dplyr::mutate(MarchDay = as.Date(paste(.data$year, "03", "31", sep = "-")),
                   Species = species_codes[species_codes$speciesEURINGCode == 13490, ]$Species,
@@ -425,16 +433,16 @@ create_capture_VAL <- function(early_broods, late_broods, chick_data, experiment
                   ChickAge = NA_integer_,
                   ExperimentID = dplyr::case_when(is.na(.data$manip) ~ NA_character_,
                                                   TRUE ~ .data$ExperimentID)) %>%
-    dplyr::select(IndvID, Species, Sex_observed, BreedingSeason:ChickAge, ExperimentID)
+    dplyr::select("IndvID", "Species", "Sex_observed", "BreedingSeason":"ChickAge", "ExperimentID")
 
   late_adult_captures <- late_broods %>%
     dplyr::left_join(experiment_data %>%
                        dplyr::filter(.data$ExperimentID == "SURVIVAL"  &
                                        stringr::str_detect(description, "adults|prolactin|Female handicap")) %>% #detailed with data custodian)
-                       dplyr::select(year, ExperimentID),
+                       dplyr::select("year", "ExperimentID"),
                      by = "year") %>%
-    dplyr::select(year, nest, female, f_age, f_tarsus, f_wing, f_weight, obs_24,
-                  male, m_age, m_tarsus, m_wing, m_weight, obs_38, hd, treatment, ExperimentID) %>%
+    dplyr::select("year", "nest", "female", "f_age", "f_tarsus", "f_wing", "f_weight", "obs_24",
+                  "male", "m_age", "m_tarsus", "m_wing", "m_weight", "obs_38", "hd", "treatment", "ExperimentID") %>%
     tidyr::pivot_longer(cols = c(female, male), names_to = "Sex_observed", values_to = "IndvID") %>%
     dplyr::mutate(MarchDay = as.Date(paste(.data$year, "03", "31", sep = "-")),
                   Species = species_codes[species_codes$speciesEURINGCode == 13490, ]$Species,
@@ -462,18 +470,18 @@ create_capture_VAL <- function(early_broods, late_broods, chick_data, experiment
                   ChickAge = NA_integer_,
                   ExperimentID = dplyr::case_when(is.na(.data$treatment) ~ NA_character_,
                                                   TRUE ~ .data$ExperimentID)) %>%
-    dplyr::select(IndvID,
-                  Species,
-                  Sex_observed,
-                  BreedingSeason:ChickAge,
-                  ExperimentID)
+    dplyr::select("IndvID",
+                  "Species",
+                  "Sex_observed",
+                  "BreedingSeason":"ChickAge",
+                  "ExperimentID")
 
   #No information on chick rings before 2011. This data is not digitised.
 
   early_chick <- chick_data %>%
     #Combining information from late_broods with information from early_chick to get hd information
     dplyr::left_join(late_broods %>%
-                       select(nest, year, hd),
+                       dplyr::select("nest", "year", "hd"),
                      by = c("year", "NestboxID" = "nest")) %>%
     dplyr::mutate(MarchDay = as.Date(paste(.data$year, "03", "31", sep = "-")),
                   IndvID = .data$anilla,
@@ -495,16 +503,16 @@ create_capture_VAL <- function(early_broods, late_broods, chick_data, experiment
                   Age_observed = 1L, #All chicks are caught pre-fledgling (i.e. in nest)
                   ChickAge = 13L, #Chicks are caught and ringed at 13 days
                   ExperimentID = NA_character_) %>%
-    dplyr::select(IndvID:ExperimentID)
+    dplyr::select("IndvID":"ExperimentID")
 
   all_captures <- dplyr::bind_rows(early_adult_captures, late_adult_captures, early_chick) %>%
     dplyr::filter(!is.na(.data$IndvID)) %>%
     dplyr::arrange(.data$IndvID, .data$BreedingSeason, as.Date(.data$CaptureDate, format = "%Y-%m-%d")) %>%
     calc_age(ID = IndvID, Age = Age_observed, Date = CaptureDate, Year = BreedingSeason) %>%
     dplyr::group_by(IndvID) %>%
-    dplyr::mutate(CaptureID = paste(IndvID, 1:n(), sep = "_"),
+    dplyr::mutate(CaptureID = paste(IndvID, 1:dplyr::n(), sep = "_"),
                   BreedingSeason = as.integer(.data$BreedingSeason)) %>%
-    dplyr::select(CaptureID, IndvID:Age_observed, Age_calculated, ChickAge, ExperimentID)
+    dplyr::select("CaptureID", "IndvID":"Age_observed", "Age_calculated", "ChickAge", "ExperimentID")
 
   return(all_captures)
 
@@ -576,19 +584,20 @@ create_individual_VAL <- function(Capture_data_temp){
 create_location_VAL <- function(Brood_data_temp, GPS){
 
   #Extract latitude and longitude from gps file
-  GPS <- GPS %>%
-    dplyr::bind_cols(as_tibble(sf::st_coordinates(.))) %>%
-    dplyr::rename(Longitude = X, Latitude = Y) %>%
-    dplyr::select(NestboxID, Longitude, Latitude) %>%
+  GPS <- All_GPS %>%
+    dplyr::bind_cols(tibble::as_tibble(sf::st_coordinates(.))) %>%
+    dplyr::rename(Longitude = "X", Latitude = "Y") %>%
+    dplyr::select("NestboxID", "Longitude", "Latitude") %>%
     sf::st_drop_geometry() %>%
     #Where there are multiple records from the same box, just take the first one
     #There is no box movement so these are duplicate
     dplyr::group_by(NestboxID) %>%
-    slice(1)
+    dplyr::distinct(NestboxID, .keep_all = TRUE)
+
 
   Location_data <- Brood_data_temp %>%
     dplyr::group_by(LocationID) %>%
-    dplyr::summarise(NestboxID = first(.data$LocationID),
+    dplyr::summarise(NestboxID = dplyr::first(.data$LocationID),
                   LocationType = "NB",
                   PopID = "VAL",
                   StartSeason = as.integer(min(.data$BreedingSeason)),
@@ -596,7 +605,7 @@ create_location_VAL <- function(Brood_data_temp, GPS){
                   HabitatType = "deciduous",
                   .groups = "drop") %>%
     dplyr::left_join(GPS, by = "NestboxID") %>%
-    dplyr::select(LocationID:PopID, Latitude, Longitude, everything())
+    dplyr::select("LocationID":"PopID", "Latitude", "Longitude", everything())
 
   return(Location_data)
 
