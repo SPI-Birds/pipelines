@@ -129,23 +129,23 @@ format_WRS <- function(
     dplyr::ungroup() %>%
     ## Select variables of interest
     dplyr::select(
-      BreedingSeason,
-      PopID,
-      Plot,
-      LocationID,
-      Species,
-      LayDate_observed,
-      HatchDate_observed,
-      ClutchSize_observed,
-      BroodSize_observed,
-      NumberFledged_observed,
-      NumberEggs,
-      AvgEggMass,
-      ExperimentID,
-      Latitude,
-      Longitude,
-      UniqueBreedingEvent,
-      broodID2
+      "BreedingSeason",
+      "PopID",
+      "Plot",
+      "LocationID",
+      "Species",
+      "LayDate_observed",
+      "HatchDate_observed",
+      "ClutchSize_observed",
+      "BroodSize_observed",
+      "NumberFledged_observed",
+      "NumberEggs",
+      "AvgEggMass",
+      "ExperimentID",
+      "Latitude",
+      "Longitude",
+      "UniqueBreedingEvent",
+      "broodID2"
     )
 
   ## Read in primary data from chicks
@@ -162,10 +162,10 @@ format_WRS <- function(
                                 ~ dplyr::na_if(., "NA"))) %>%
     dplyr::filter(!is.na(D15Date) & D15Date != "") %>% # Drop records without a d15 date
     dplyr::rename(
-      BreedingSeason = Year,
-      Plot = Site,
-      LocationID = NestboxId,
-      IndvID = RingId,
+      BreedingSeason = "Year",
+      Plot = "Site",
+      LocationID = "NestboxId",
+      IndvID = "RingId",
     ) %>%
     # Handling different date formats in Excel
     # If chicks die before banding, the CaptureDate is set to the last day it was handled.
@@ -210,22 +210,22 @@ format_WRS <- function(
                   ReleaseAlive = FALSE)
 
   ## Bind new dataframe to existed one (on chicks)
-  chick_data <- bind_rows(chick_data_temp, chick_dead)  %>%
+  chick_data <- dplyr::bind_rows(chick_data_temp, chick_dead)  %>%
     dplyr::filter(!is.na(.data$IndvID) & stringr::str_detect(IndvID, "^K")) %>% #discard individuals with no ID
     dplyr::select(
-      BreedingSeason,
-      PopID,
-      Plot,
-      LocationID,
-      Species,
-      IndvID,
-      CaptureDate,
-      Mass,
-      Tarsus,
-      ChickAge,
-      CaptureAlive,
-      ReleaseAlive,
-      UniqueBreedingEvent)
+      "BreedingSeason",
+      "PopID",
+      "Plot",
+      "LocationID",
+      "Species",
+      "IndvID",
+      "CaptureDate",
+      "Mass",
+      "Tarsus",
+      "ChickAge",
+      "CaptureAlive",
+      "ReleaseAlive",
+      "UniqueBreedingEvent")
 
   ## Read in primary data from adults
   #TODO: ask data custodian about ObserverID
@@ -238,13 +238,13 @@ format_WRS <- function(
     janitor::remove_empty(which = "rows") %>%
     dplyr::filter(!toupper(RingId) %in% c("NORING", "NOTRINGED")) %>% # Drop rows without a ring
     dplyr::rename(
-      BreedingSeason = Year,
-      Plot = Site,
-      LocationID = NestboxId,
-      IndvID = RingId,
-      Sex_observed = Sex,
-      Age_observed = Age,
-      Mass = Weight
+      BreedingSeason = "Year",
+      Plot = "Site",
+      LocationID = "NestboxId",
+      IndvID = "RingId",
+      Sex_observed = "Sex",
+      Age_observed = "Age",
+      Mass = "Weight"
     ) %>%
     dplyr::mutate(
       #Clean multiple formats for dates in 3 steps
@@ -263,7 +263,7 @@ format_WRS <- function(
       dplyr::across(tidyselect::where(is.character), ~ dplyr::na_if(., "NA")),
       PopID = "WRS",
       BreedingSeason = as.integer(.data$BreedingSeason),
-      dplyr::across(c(Mass, WingLength, Tarsus), ~ suppressWarnings(as.numeric(.x))),
+      dplyr::across(c("Mass", "WingLength", "Tarsus"), ~ suppressWarnings(as.numeric(.x))),
       CaptureTime = suppressWarnings(dplyr::case_when(
         grepl(":", .data$Hour) ~ as.character(.data$Hour),
         .default = format(as.POSIXct(Sys.Date() + as.numeric(.data$Hour)), "%H:%M", tz = "UTC")
@@ -284,22 +284,22 @@ format_WRS <- function(
     ) %>%
     dplyr::filter(!is.na(.data$IndvID)) %>%
     dplyr::select(
-      BreedingSeason,
-      PopID,
-      Plot,
-      LocationID,
-      Species,
-      IndvID,
-      CaptureDate,
-      CaptureTime,
-      Sex_observed,
-      Age_observed,
-      Mass,
-      WingLength,
-      Tarsus,
-      ReleaseAlive,
-      ExperimentID,
-      UniqueBreedingEvent
+      "BreedingSeason",
+      "PopID",
+      "Plot",
+      "LocationID",
+      "Species",
+      "IndvID",
+      "CaptureDate",
+      "CaptureTime",
+      "Sex_observed",
+      "Age_observed",
+      "Mass",
+      "WingLength",
+      "Tarsus",
+      "ReleaseAlive",
+      "ExperimentID",
+      "UniqueBreedingEvent"
     )
 
   #### BROOD DATA
@@ -362,7 +362,7 @@ format_WRS <- function(
         "BreedingSeason",
         "IndvID",
         "Species",
-        CaptureDate
+        "CaptureDate"
       ), ~ !is.na(.))
     )
 
@@ -489,9 +489,9 @@ create_brood_WRS <- function(nest_data, chick_data, adult_data) {
     dplyr::left_join(
       adult_data %>%
         dplyr::select(
-          UniqueBreedingEvent,
-          Sex_observed,
-          IndvID
+          "UniqueBreedingEvent",
+          "Sex_observed",
+          "IndvID"
         ) %>%
         stats::na.omit() %>%
         ## A few cases where the same individuals were caught multiple times for a single breeding event
@@ -640,9 +640,9 @@ create_individual_WRS <- function(Capture_data_temp, Brood_data_temp) {
       Brood_data_temp %>%
         dplyr::mutate(brood_record = "yes") %>%
         dplyr::select(
-          brood_record,
-          broodID2,
-          BroodID
+          "brood_record",
+          "broodID2",
+          "BroodID"
         ),
       by = c("brood_record", c("UniqueBreedingEvent" = "broodID2"))
     ) %>%
