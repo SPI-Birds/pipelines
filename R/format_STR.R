@@ -183,7 +183,8 @@ format_STR <- function(db = choose_directory(),
                   ReleaseAlive = dplyr::case_when(.data$es == "MORT" ~ FALSE,
                                                   .data$action == "Reprise" ~ FALSE,
                                                   TRUE ~ TRUE),
-                  OriginalTarsusMethod = "Alternative")  %>%
+                  OriginalTarsusMethod = dplyr::case_when(!is.na(.data$Tarsus) ~ "Alternative",
+                                                          TRUE ~ NA_character_))  %>%
     dplyr::group_by(.data$bg) %>%
     # Anonymize observers
     dplyr::mutate(recordedBy = paste0("obs_", dplyr::cur_group_id())) %>%
@@ -465,12 +466,14 @@ create_brood_STR <- function(nest_data, capture_data, broodAssignment) {
     #calculate average chick mass and average chick tarsus for each brood
     dplyr::group_by(.data$broodID2) %>%
     dplyr::summarise(
-      AvgChickMass = mean(.data$Mass, na.rm = T),
+      AvgChickMass = round(mean(.data$Mass, na.rm = T), digits = 3),
       NumberChicksMass = sum(!is.na(.data$Mass)),
-      AvgChickTarsus = dplyr::case_when(sum(!is.na(.data$Tarsus)) > 0 ~ mean(.data$Tarsus, na.rm = TRUE),
+      AvgTarsus = dplyr::case_when(sum(!is.na(.data$Tarsus)) > 0 ~ round(mean(.data$Tarsus, na.rm = TRUE), digits = 3),
                                         TRUE ~ NA_real_),
-      NumberChickTarsus = dplyr::case_when(sum(!is.na(.data$Tarsus)) > 0 ~ sum(!is.na(.data$Tarsus)),
-                                           TRUE ~ NA_integer_))
+      NumberChicksTarsus = dplyr::case_when(sum(!is.na(.data$Tarsus)) > 0 ~ sum(!is.na(.data$Tarsus)),
+                                           TRUE ~ NA_integer_),
+      OriginalTarsusMethod = dplyr::case_when(sum(!is.na(.data$Tarsus)) > 0 ~ "Alternative",
+                                              TRUE ~ NA_character_),)
 
 
   ## Combine primary data to create brood data
