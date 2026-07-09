@@ -262,6 +262,6 @@ testthat::test_that("Location_data returns an expected outcome...", {
 
 
 
-## General tests (for pipelines formatted to standard protocol version 2.0)
+## General tests (for pipelines formatted to standard protocol version 1.1)
 
 test_protocol_compliance(pipeline_output)
