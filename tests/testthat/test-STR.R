@@ -94,8 +94,8 @@ testthat::test_that("Individual data returns an expected outcome...", {
   testthat::expect_equal(subset(STR_data, IndvID == "7971215")$RingAge, "adult")
 
   #Test 3: Caught as chick
-  #Individual 7971346 should be listed as a [conflicted sex] great tit
-  testthat::expect_equal(subset(STR_data, IndvID == "7971346")$Sex_calculated, "C")
+  #Individual 7971346 should be listed as a male great tit
+  testthat::expect_equal(subset(STR_data, IndvID == "7971346")$Sex_calculated, "M")
   testthat::expect_equal(subset(STR_data, IndvID == "7971346")$Species, "PARMAJ")
   #Check that broodIDLaid/Fledged are as expected
   #This individual was not cross-fostered, so they should be the same
@@ -116,7 +116,6 @@ testthat::test_that("Individual data returns an expected outcome...", {
 testthat::test_that("Capture data returns an expected outcome...", {
 
   #We want to run tests for captures as both chicks, males, and females
-  #Currently we have no chick data, so we can only test adults
 
   #Take a subset of only STR data
   STR_data <- dplyr::filter(pipeline_output$Capture_data, CapturePopID %in% c("STR", "WAN", "ROB"))
@@ -126,9 +125,13 @@ testthat::test_that("Capture data returns an expected outcome...", {
   testthat::expect_equal(nrow(subset(STR_data, IndvID == "8211502")), 7)
   #Test that the first capture is as expected (2017-06-09)
   testthat::expect_equal(subset(STR_data, IndvID == "8211502")$CaptureDate[1], as.Date('2017-06-09', format = "%Y-%m-%d"))
-
   #Test that the 6th capture of the male is as expected (2022-05-06)
   testthat::expect_equal(subset(STR_data, IndvID == "8211502")$CaptureDate[6], as.Date('2022-05-06', format = "%Y-%m-%d"))
+  #Test that observed age and calculated age are correct on first capture and sixth capture
+  testthat::expect_equal(subset(STR_data, IndvID == "8211502")$Age_observed[1], 1L)
+  testthat::expect_equal(subset(STR_data, IndvID == "8211502")$Age_observed[5], 6L)
+  testthat::expect_equal(subset(STR_data, IndvID == "8211502")$Age_calculated[1], 1L)
+  testthat::expect_equal(subset(STR_data, IndvID == "8211502")$Age_calculated[6], 13L)
 
 
   #Test 2: Female caught only as adult
@@ -138,6 +141,11 @@ testthat::test_that("Capture data returns an expected outcome...", {
   testthat::expect_equal(subset(STR_data, IndvID == "8211824")$CaptureDate[1], as.Date('2018-05-08', format = "%Y-%m-%d"))
   #Test that the 5th capture is as expected (2021-06-11)
   testthat::expect_equal(subset(STR_data, IndvID == "8211824")$CaptureDate[5], as.Date('2021-06-11', format = "%Y-%m-%d"))
+  #Test that observed age and calculated age are correct on first capture and fifth capture
+  testthat::expect_equal(subset(STR_data, IndvID == "8211824")$Age_observed[1], 4L)
+  testthat::expect_equal(subset(STR_data, IndvID == "8211824")$Age_observed[5], 6L)
+  testthat::expect_equal(subset(STR_data, IndvID == "8211824")$Age_calculated[1], 4L)
+  testthat::expect_equal(subset(STR_data, IndvID == "8211824")$Age_calculated[5], 10L)
 
 
   #Test 3: Male caught only as adult
@@ -147,7 +155,11 @@ testthat::test_that("Capture data returns an expected outcome...", {
   testthat::expect_equal(subset(STR_data, IndvID == "7971525")$CaptureDate[1], as.Date('2018-05-18', format = "%Y-%m-%d"))
   #Test that the 4th capture is as expected (2022-05-24)
   testthat::expect_equal(subset(STR_data, IndvID == "7971525")$CaptureDate[4], as.Date('2022-05-24', format = "%Y-%m-%d"))
-
+  #Test that observed age and calculated age are correct on first capture and fourth capture
+  testthat::expect_equal(subset(STR_data, IndvID == "7971525")$Age_observed[1], 4L)
+  testthat::expect_equal(subset(STR_data, IndvID == "7971525")$Age_observed[4], 6L)
+  testthat::expect_equal(subset(STR_data, IndvID == "7971525")$Age_calculated[1], 4L)
+  testthat::expect_equal(subset(STR_data, IndvID == "7971525")$Age_calculated[4], 12L)
 
   #Test 4: IndvIDs are all properly formatted
   testthat::expect_true(all(nchar(STR_data$IndvID) %in% c(6,7,8) & stringr::str_detect(STR_data$IndvID, "^(V|[0-9])+[:digit:]+$")))

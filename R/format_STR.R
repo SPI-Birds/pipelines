@@ -8,34 +8,30 @@
 #'
 #' This section provides details on data management choices that are unique to these data.
 #'
-#' \strong{exactAge, minimumAge}: based on age when tagged. exactAge is calculated for individuals tagged as "PUL". Individuals tagged as "2A" were assigned "subadult"
-#' age (their age is known and refers as "as second year of life") and individuals tagged as "+2A" were assigned "adult". This helps calculting minimumAge. All others
-#' values ("?", "+2?", "2A?") were set to NAs. Check with data custodian that "?" could never be assigned to an individual tagged before fledging.
+#' \strong{age_calculated}: based on age when tagged. Individuals tagged as "PUL" were assigned "chick". Others were assigned "adult"
 #'
-#' \strong{capturePhysical}: all individuals are assumed to be physical captured.
+#' \strong{ChickAge}: all chicks with measurements were assumed to be 15 days old.
 #'
-#' \strong{individualID}: individuals are banded with metal ring with 7 digits (adults for both species, chicks before 2022) or a "V" followed by 6 digits (for chicks starting 2022)
+#' \strong{IndvID}: individuals are banded with metal ring with 7 or 8 digits (adults for both species, chicks before 2022) or a "V" followed by 6 digits (for chicks starting 2022)
 #'
 #' \strong{brood data}: Empty nestboxes or nestboxes occupied by other species ("MAMM") are removed
 #'
-#' \strong{observedClutchType}: Only classified as "1" or "2" in the original dataset. Most likely correspond to breeding attempt ("1" or "2") in the associated nestbox
+#' \strong{ClutchType_observed}: Only classified as "1" or "2" in the original dataset. Most likely correspond to breeding attempt ("1" or "2") in the associated nestbox
 #' (regardless of female ID or first egg laid on the site)
 #'
-#' \strong{location data}: locationID for capture event (with mist net or clap-net) are assumed to be at the same coordinates for each site (only one ID per site)
 #'
-#' \strong{habitatID}: roughly defined based on data information "G1" for forest population (WAN), "J1" for downtown population (STR) and "J2" for suburban population (ROB)
+#' \strong{HabitatType}: roughly defined based on data information "deciduous" for forest population (WAN), "urban" for downtown population (STR) and suburban population (ROB)
 #'#'
-#' \strong{locationID}: generate a second row for the same nest box when there was a gap in monitoring nest box (e.g. if nest box was monitored since 2014, but not
-#' monitored in 2019, the first row indicates startYear as 2014 and endYear as 2018; the second row indicates startYear as 2020 and endYear as NA)
+#' \strong{NestboxID}: generate a second row for the same nest box when there was a gap in monitoring nest box (e.g. if nest box was monitored since 2014, but not
+#' monitored in 2019, the first row indicates StartSeason as 2014 and EndSeason as 2018; the second row indicates StartSeason as 2020 and EndSeason as NA)
 #'
-#' \strong{Experiment data}: Experiment data described based on custodian information
 #'
-#' \strong{ExperimentID}: accidental events which may affect breeding attempt are reported and detailed
+#' \strong{ExperimentID}: accidental events which may affect breeding attempt are reported as "OTHER"
 #'
 #'
 #' @inheritParams pipeline_params
 #'
-#' @return Generates either 6 .csv files or 6 data frames in the standard format (v2.0.0).
+#' @return Generates either 4 .csv files or 4 data frames in the standard format (v1.1.0).
 #' @export
 
 format_STR <- function(db = choose_directory(),
@@ -112,7 +108,7 @@ format_STR <- function(db = choose_directory(),
                   NumberFledged_observed = suppressWarnings(as.integer(.data$p_envol)),
                   MaleID = .data$id_male,
                   FemaleID = .data$id_femelle,
-                  ClutchType_observed = dplyr::case_when(.data$ponte == "1" ~ "first", #Check with data custodians, I don't think "1" and "2" correspond to Clutch type
+                  ClutchType_observed = dplyr::case_when(.data$ponte == "1" ~ "first",
                                                          .data$ponte == "2" ~ "second",
                                                          TRUE ~ "replacement"),
                   ExperimentID = dplyr::case_when(stringr::str_detect(.data$remarques,
@@ -166,16 +162,15 @@ format_STR <- function(db = choose_directory(),
                   Tarsus = suppressWarnings(round(as.numeric(.data$lt), 2)),
                   WingLength = suppressWarnings(round(as.numeric(.data$lp), 1)),
                   Mass = suppressWarnings(round(as.numeric(.data$ma), 1)),
-                  Age = dplyr::case_when(.data$age == "PUL" ~ "chick",
-                                           .data$age == "2A" ~ "juv",
-                                           .data$age == "+2A" ~ "ad",
-                                           TRUE ~ NA_character_),
+                  # Age = dplyr::case_when(.data$age == "PUL" ~ "chick",
+                  #                          .data$age == "2A" ~ "juv",
+                  #                          .data$age == "+2A" ~ "ad",
+                  #                          TRUE ~ NA_character_),
                   Age_observed = dplyr::case_when(.data$age == "PUL" ~ 1L,
                                                   .data$age == "1A" ~ 3L,
                                                   .data$age == "2A" ~ 5L,
                                                   .data$age == "+2A" ~ 6L,
-                                                  .data$age %in% c("2A?", "+2?") ~ 4L,
-                                                  TRUE ~ 2L),
+                                                  TRUE ~ 4L),
                   #Clarifying age in chicks
                   #Some chicks are handled twice (some are banded before age 15 but they should all be measured only at age 15)
                   ChickAge = dplyr::case_when(.data$age == "PUL" & !is.na(.data$ma) ~ 15L,
@@ -351,10 +346,6 @@ format_STR <- function(db = choose_directory(),
     )
 
 
-  # ## Check column classes
-  # purrr::map_df(data_templates[["1.1.0"]]$Capture_data, class) == purrr::map_df(Capture_data, class)
-
-
   ## Individual data
   Individual_data <- Individual_data_temp %>%
     ## Keep only necessary columns
@@ -372,9 +363,6 @@ format_STR <- function(db = choose_directory(),
       c("PopID", "IndvID", "Species", "RingSeason"), ~ !is.na(.)
     ))
 
-
-  # ## Check column classes
-  # purrr::map_df(data_templates[["1.1.0"]]$Individual_data, class) == purrr::map_df(Individual_data, class)
 
   ## Location data
   Location_data <- Location_data_temp %>%
