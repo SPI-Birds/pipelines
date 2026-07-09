@@ -112,7 +112,7 @@ format_VAL <- function(db = choose_directory(),
 
   # LOCATION DATA
   message("Compiling location information...")
-  Location_data_temp <- create_location_VAL(Brood_data = Brood_data_temp, GPS = All_GPS)
+  Location_data_temp <- create_location_VAL(Brood_data = Brood_data_temp, All_GPS)
 
 
   time <- difftime(Sys.time(), start_time, units = "sec")
@@ -581,7 +581,7 @@ create_individual_VAL <- function(Capture_data_temp){
 #' @return A data frame.
 #' @export
 
-create_location_VAL <- function(Brood_data_temp, GPS){
+create_location_VAL <- function(Brood_data_temp, All_GPS){
 
   #Extract latitude and longitude from gps file
   GPS <- All_GPS %>%
