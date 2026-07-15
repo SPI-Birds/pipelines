@@ -574,10 +574,23 @@ create_individual_FOR <- function(Capture_data, Brood_data, table_dir) {
 #' @return A data frame.
 
 create_location_FOR <- function(Capture_data, table_dir) {
-  Location_data <- read.csv(paste0(table_dir, "/", "Coordinates_19_24", ".csv")) %>%
+  coords <- read.csv(paste0(table_dir, "/", "Coordinates_19_24", ".csv"))
+
+  # The exported Access table has mislabeled columns: the header "BoxIDYear"
+  # holds an autonumber byte while the box-ID-per-year value (e.g. "A01_2019")
+  # is exported under a different, shifted header. Rather than trust the header
+  # name, pick the column whose values actually match the NestBox_Year pattern
+  # (a "_YYYY" suffix), so this survives the export being corrected later.
+  id_col <- names(coords)[which.max(vapply(
+    coords,
+    function(x) mean(grepl("_[0-9]{4}$", as.character(x))),
+    numeric(1)
+  ))]
+
+  Location_data <- coords %>%
     dplyr::mutate(
-      LocationID = as.character(.data$BoxIDYear),
-      NestboxID = as.character(.data$BoxIDYear),
+      LocationID = as.character(.data[[id_col]]),
+      NestboxID = as.character(.data[[id_col]]),
       Latitude = as.numeric(.data$Latitude), ## Needed because these variables are stored as
       Longitude = as.numeric(.data$Longitude), ## named vectors, not regular numeric vectors
       LocationType = "NB",
