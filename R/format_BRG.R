@@ -131,10 +131,10 @@ format_BRG <- function(db = choose_directory(),
             IndvID = .data$Ring,
             RingAge = .data$Age,
             ChickAge = as.integer(.data$ChickAge),
-            CaptureTime = format(
-                suppressWarnings(lubridate::hm(gsub("--", ":00", .data$Time))),
-                "%H:%M"
-            ),
+            CaptureTime = {
+                period <- suppressWarnings(lubridate::hm(gsub("--", ":00", .data$Time)))
+                sprintf("%02d:%02d", lubridate::hour(period), lubridate::minute(period))
+            },
             Mass = round(as.numeric(.data$Weight), 1)
         )
 
@@ -183,14 +183,7 @@ format_BRG <- function(db = choose_directory(),
             CaptureTime = dplyr::if_else(
                 is.na(.data$Time),
                 NA_character_,
-                format(
-                    suppressWarnings(lubridate::hm(sprintf(
-                        "%02d:%02d",
-                        .data$Time %/% 100,
-                        .data$Time %% 100
-                    ))),
-                    "%H:%M"
-                )
+                sprintf("%02d:%02d", .data$Time %/% 100, .data$Time %% 100)
             ),
             Mass = round(suppressWarnings(as.numeric(.data$Weight)), 1),
             WingLength = as.numeric(.data$WingLength)
@@ -472,7 +465,9 @@ create_capture_BRG <- function(chick_data, adult_data, Brood_data_temp) {
         ## Create CaptureID
         ## Arrange
         dplyr::arrange(.data$BreedingSeason, .data$IndvID, .data$CaptureDate) %>%
+        dplyr::group_by(.data$IndvID) %>%
         dplyr::mutate(CaptureID = paste(.data$IndvID, dplyr::row_number(), sep = "_")) %>%
+        dplyr::ungroup() %>%
         ## Reorder columns
         dplyr::select(dplyr::any_of(names(data_templates[["v1.1.0"]]$Capture_data)), tidyselect::everything())
 
