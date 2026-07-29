@@ -250,12 +250,12 @@ create_brood_FOR <- function(table_dir) {
         NA_integer_,
         .data$NumberFledged
       ),
-      Species = dplyr::case_match(
-        .data$Species,
-        1L ~ species_codes$Species[species_codes$speciesEURINGCode == 14640],
-        2L ~ species_codes$Species[species_codes$speciesEURINGCode == 14620],
-        3L ~ species_codes$Species[species_codes$speciesEURINGCode == 14610],
-        4L ~ species_codes$Species[species_codes$speciesEURINGCode == 14790]
+      Species = dplyr::case_when(
+        .data$Species == 1L ~ species_codes$Species[species_codes$speciesEURINGCode == 14640],
+        .data$Species == 2L ~ species_codes$Species[species_codes$speciesEURINGCode == 14620],
+        .data$Species == 3L ~ species_codes$Species[species_codes$speciesEURINGCode == 14610],
+        .data$Species == 4L ~ species_codes$Species[species_codes$speciesEURINGCode == 14790],
+        TRUE ~ NA_character_
       ),
       AvgEggMass = NA_real_,
       NumberEggs = NA_integer_,
@@ -265,11 +265,11 @@ create_brood_FOR <- function(table_dir) {
     dplyr::arrange(.data$BreedingSeason, .data$FemaleID, .data$LayDate_observed) %>%
     dplyr::mutate(
       ClutchType_calculated = calc_clutchtype(data = ., na.rm = FALSE, protocol_version = "1.1"),
-      ClutchType_observed = dplyr::case_match(
-        .data$ClutchNumber,
-        1L ~ "first",
-        c(2L, 4L) ~ "second",
-        c(3L, 5L, 6L) ~ "replacement"
+      ClutchType_observed = dplyr::case_when(
+        .data$ClutchNumber == 1L ~ "first",
+        .data$ClutchNumber %in% c(2L, 4L) ~ "second",
+        .data$ClutchNumber %in% c(3L, 5L, 6L) ~ "replacement",
+        TRUE ~ NA_character_
       )
     ) %>%
     ### We need to remove  the BroodIDS for nests in which nothing happened (generated automatically by the db). In these nests CS is 0 and LD is unknown, no clutch type or species either, no data
@@ -334,12 +334,12 @@ create_capture_FOR <- function(Brood_data, table_dir) {
     dplyr::filter(.data$CatchYear < 2024) %>% # empty rows were created for 2024 to prepare for the field season. remove these.
     dplyr::filter(!is.na(.data$RingNumber)) %>% # remove individuals without bird ids (escaped before the ring was read)
     dplyr::mutate(
-      Species = dplyr::case_match(
-        .data$Species,
-        1L ~ species_codes$Species[species_codes$speciesEURINGCode == 14640],
-        2L ~ species_codes$Species[species_codes$speciesEURINGCode == 14620],
-        3L ~ species_codes$Species[species_codes$speciesEURINGCode == 14610],
-        4L ~ species_codes$Species[species_codes$speciesEURINGCode == 14790]
+      Species = dplyr::case_when(
+        .data$Species == 1L ~ species_codes$Species[species_codes$speciesEURINGCode == 14640],
+        .data$Species == 2L ~ species_codes$Species[species_codes$speciesEURINGCode == 14620],
+        .data$Species == 3L ~ species_codes$Species[species_codes$speciesEURINGCode == 14610],
+        .data$Species == 4L ~ species_codes$Species[species_codes$speciesEURINGCode == 14790],
+        TRUE ~ NA_character_
       ),
       CaptureTime = dplyr::if_else(
         is.na(.data$CatchTime),
@@ -360,19 +360,17 @@ create_capture_FOR <- function(Brood_data, table_dir) {
         .default = TRUE
       ),
       OriginalTarsusMethod = "Alternative",
-      Age_observed = dplyr::case_match(.data$AgeObserved, ## These age categories match our EURING codes exactly
-        7 ~ NA_integer_,
-        0 ~ NA_integer_,
-        .default = .data$AgeObserved
+      Age_observed = dplyr::case_when( ## These age categories match our EURING codes exactly
+        .data$AgeObserved %in% c(0, 7) ~ NA_integer_,
+        TRUE ~ .data$AgeObserved
       ),
       ChickAge = NA_integer_,
       ObserverID = as.character(dplyr::na_if(.data$MorphologyObserver, -99L)),
       BroodID = as.character(.data$BroodID),
-      Sex_observed = dplyr::case_match(
-        .data$Sex,
-        1L ~ "F",
-        2L ~ "M",
-        .default = NA_character_
+      Sex_observed = dplyr::case_when(
+        .data$Sex == 1L ~ "F",
+        .data$Sex == 2L ~ "M",
+        TRUE ~ NA_character_
       ),
       ExperimentID = as.character(NA),
       Mass = round(.data$BodyMass, 2),
@@ -416,10 +414,10 @@ create_capture_FOR <- function(Brood_data, table_dir) {
       CapturePopID = "FOR",
       ReleasePopID = "FOR",
       IndvID = as.character(.data$RingNumber),
-      Species = dplyr::case_match(
-        .data$Species,
-        1L ~ species_codes$Species[species_codes$speciesEURINGCode == 14640],
-        2L ~ species_codes$Species[species_codes$speciesEURINGCode == 14620]
+      Species = dplyr::case_when(
+        .data$Species == 1L ~ species_codes$Species[species_codes$speciesEURINGCode == 14640],
+        .data$Species == 2L ~ species_codes$Species[species_codes$speciesEURINGCode == 14620],
+        TRUE ~ NA_character_
       )
     ) %>%
     dplyr::mutate(
