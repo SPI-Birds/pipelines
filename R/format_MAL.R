@@ -108,7 +108,7 @@ format_MAL <- function(db = choose_directory(),
             ObserverID = .data$Handler
         ) %>%
         ## Arrange
-        dplyr::arrange(.data$BreedingSeason, .data$Plot, .data$LocationID, .data$CaptureDate)
+        dplyr::arrange(BreedingSeason, Plot, LocationID, CaptureDate)
 
 
     ## Read in primary data from nest records (new format)
@@ -201,7 +201,7 @@ format_MAL <- function(db = choose_directory(),
     ## Combine two primary data formats and process further
     ## TODO: Species missing in a surprising number of cases
     nest_data <- dplyr::bind_rows(nest_data_13_16, nest_data_17_19) %>%
-        dplyr::arrange(.data$BreedingSeason, .data$Plot, .data$LocationID, .data$LayDate_observed) %>%
+        dplyr::arrange(BreedingSeason, Plot, LocationID, LayDate_observed) %>%
         ## Create BroodID based on Po pID and row number
         dplyr::mutate(BroodID = dplyr::case_when(!is.na(.data$Species) ~ paste(.data$PopID, dplyr::row_number(), sep = "-")))
 
@@ -410,7 +410,7 @@ create_capture_MAL <- function(rr_data, protocol_version) {
     ## Capture data from ringing records
     Capture_data <- rr_data %>%
         ## Arrange
-        dplyr::arrange(.data$BreedingSeason, .data$PopID, .data$IndvID, .data$CaptureDate) %>%
+        dplyr::arrange(BreedingSeason, PopID, IndvID, CaptureDate) %>%
         ## Add additional data
         dplyr::mutate(
             CapturePopID = .data$PopID,
@@ -528,16 +528,16 @@ create_individual_MAL <- function(Capture_data, Brood_data, protocol_version) {
             Brood_data %>%
                 dplyr::mutate(brood_record = "yes") %>%
                 dplyr::select(
-                    .data$brood_record,
-                    .data$BreedingSeason,
-                    .data$Species,
-                    .data$Plot,
-                    .data$LocationID,
-                    .data$BroodID
+                    "brood_record",
+                    "BreedingSeason",
+                    "Species",
+                    "Plot",
+                    "LocationID",
+                    "BroodID"
                 ),
             by = c("brood_record", "BreedingSeason", "Species", "CapturePlot" = "Plot", "LocationID")
         ) %>%
-        dplyr::rename(BroodIDLaid = .data$BroodID) %>%
+        dplyr::rename("BroodIDLaid" = "BroodID") %>%
         ## Add BroodIDFledged
         dplyr::mutate(BroodIDFledged = .data$BroodIDLaid) %>%
         ## Keep distinct records by PopID and InvdID
@@ -571,19 +571,19 @@ create_location_MAL <- function(loc_data, protocol_version) {
     ## TODO: Check whether nest boxes have been removed
     Location_data <- loc_data %>%
         dplyr::rename(
-            HabitatType = habitat,
-            LocationID = sitenest,
-            Latitude = latitude,
-            Longitude = longitude
+            "HabitatType" = "habitat",
+            "LocationID" = "sitenest",
+            "Latitude" = "latitude",
+            "Longitude" = "longitude"
         ) %>%
         dplyr::group_by(.data$LocationID) %>%
         dplyr::mutate(
             PopID = "MAL",
-            HabitatType = tolower(HabitatType),
+            HabitatType = tolower(.data$HabitatType),
             NestboxID = .data$LocationID,
             StartSeason = as.integer(min(.data$Year[.data$Present == "Y"], na.rm = TRUE)),
             EndSeason = as.integer(dplyr::case_when(
-                any(removed == "Y") ~ max(.data$Year),
+                any(.data$removed == "Y") ~ max(.data$Year),
                 TRUE ~ NA_integer_
             )),
             LocationType = "NB"
