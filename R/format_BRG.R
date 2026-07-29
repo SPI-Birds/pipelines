@@ -105,7 +105,7 @@ format_BRG <- function(db = choose_directory(),
         ## Rename and process columns
         dplyr::mutate(dplyr::across(
             tidyselect::where(is.character),
-            ~ dplyr::na_if(., ".")
+            ~ dplyr::if_else(. %in% c(".", "-"), NA_character_, .)
         )) %>%
         dplyr::mutate(
             .keep = "none",
@@ -135,7 +135,7 @@ format_BRG <- function(db = choose_directory(),
                 period <- suppressWarnings(lubridate::hm(gsub("--", ":00", .data$Time)))
                 sprintf("%02d:%02d", lubridate::hour(period), lubridate::minute(period))
             },
-            Mass = round(as.numeric(.data$Weight), 1)
+            Mass = round(as.numeric(stringr::str_replace(.data$Weight, ",", ".")), 1)
         )
 
     ## Read in adult data
@@ -245,7 +245,7 @@ format_BRG <- function(db = choose_directory(),
                 "BreedingSeason",
                 "IndvID",
                 "Species",
-                CaptureDate
+                "CaptureDate"
             ), ~ !is.na(.))
         )
 
