@@ -1,98 +1,98 @@
-#'Construct standard format for data from Zeromski Park and Kowale, Poland.
+#' Construct standard format for data from Zeromski Park and Kowale, Poland.
 #'
-#'A pipeline to produce the standard format for the Common Blackbird population
-#'in Szczecin, Poland (sites: Zeromski Park and Kowale), administered by the
-#'University of Szczecin.
+#' A pipeline to produce the standard format for the Common Blackbird population
+#' in Szczecin, Poland (sites: Zeromski Park and Kowale), administered by the
+#' University of Szczecin.
 #'
-#'This section provides details on data management choices that are unique to
-#'this data. For a general description of the standard protocol please see
-#'\href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
+#' This section provides details on data management choices that are unique to
+#' this data. For a general description of the standard protocol please see
+#' \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 #'
-#'\strong{Species}: Only Common Blackbird (\emph{Turdus merula}, TURMER) is
-#'present in this dataset.
+#' \strong{Species}: Only Common Blackbird (\emph{Turdus merula}, TURMER) is
+#' present in this dataset.
 #'
-#'\strong{Sites}: Data covers two sites in Szczecin, Poland: Zeromski Park
-#'(PopID \code{"ZER"}) and Kowale (PopID \code{"KOW"}). Use the \code{pop}
-#'argument to restrict output to one site; if \code{pop} is \code{NULL} (the
-#'default) both sites are included.
+#' \strong{Sites}: Data covers two sites in Szczecin, Poland: Zeromski Park
+#' (PopID \code{"ZER"}) and Kowale (PopID \code{"KOW"}). Use the \code{pop}
+#' argument to restrict output to one site; if \code{pop} is \code{NULL} (the
+#' default) both sites are included.
 #'
-#'\strong{Age}: The source data records capture stage as \code{adult},
-#'\code{subadult}, \code{pubadult}, or \code{chick}. \code{chick} maps to
-#'EURING 1 (pullus). \code{subadult} and \code{pubadult} are treated as adult
-#'and both map to EURING 4 (born before calendar year of observation, exact age
-#'unknown). The distinction between subadult and pubadult in the source data is
-#'unclear and treating them as adults is the most conservative approach.
+#' \strong{Age}: The data distinguishes three biological age classes:
+#' \code{chick} (ringed in the nest), \code{subadult} (first calendar year), and
+#' \code{adult} (second calendar year or older). The source also contains the
+#' label \code{pubadult}, which is treated as adult.
 #'
-#'\strong{ClutchType_observed}: The source data encodes clutch type as numeric
-#'codes 1--7. A legend for these codes has not yet been received from the data
-#'owner. \code{ClutchType_observed} is therefore set to \code{NA} for all
-#'records. \code{ClutchType_calculated} is derived from laying dates and female
-#'identity using \code{\link{calc_clutchtype}}.
+#' \strong{ClutchType_observed}: The source column named \code{ClutchType}
+#' contains the brood number within a breeding season (1--7), not the protocol's
+#' clutch categories. In particular, a later brood number does not distinguish a
+#' replacement clutch from a true second clutch. \code{ClutchType_observed} is
+#' therefore set to \code{NA} for all records. \code{ClutchType_calculated} is
+#' derived from laying dates and female identity using
+#' \code{\link{calc_clutchtype}}.
 #'
-#'\strong{FledgeDate}: A systematic data entry error in the source data sets
-#'\code{FledgeYear} to 2018 for many broods laid before 2018. \code{FledgeDate_observed}
-#'(and its min/max) is set to \code{NA} whenever \code{FledgeYear} is more than
-#'one year after \code{LayYear}.
+#' \strong{FledgeDate}: A systematic bulk-entry error in the supplied source
+#' data sets \code{FledgeYear} to 2018 for many broods laid before 2018.
+#' \code{FledgeDate_observed} (and its min/max) is set to \code{NA} for those
+#' records. Dates are also removed whenever \code{FledgeYear} is more than one
+#' year after \code{LayYear}.
 #'
-#'\strong{CaptureAlive, ReleaseAlive}: No mortality information is recorded.
-#'Both are set to \code{TRUE} for all captures.
+#' \strong{CaptureAlive, ReleaseAlive}: No mortality information is recorded.
+#' Both are set to \code{TRUE} for all captures.
 #'
-#'\strong{LocationType}: All captures are assumed to have been made by mist net.
-#'\code{LocationType} is therefore set to \code{"MN"} for all location records.
+#' \strong{LocationType}: Birds were captured by mist net at all locations.
+#' The exception being chicks, which were handled in the nests.
+#' \code{LocationType} is set to \code{"MN"} for alllocation records.
 #'
-#'\strong{Measurements}: Mass (g), tarsus length (mm), and wing length (mm) are
-#'stored in a separate long-format sheet and joined to captures by
-#'\code{captureID}. Some values use comma decimal notation (e.g. \code{35,5});
-#'these are converted to standard decimal notation before coercion to numeric.
+#' \strong{Measurements}: Mass (g), tarsus length (mm), and wing length (mm) are
+#' stored in a separate long-format sheet and joined to captures by
+#' \code{captureID}. Some values use comma decimal notation (e.g. \code{35,5});
+#' these are converted to standard decimal notation before coercion to numeric.
 #'
-#'\strong{LocationID}: The \code{locationID} field in the source data is used
-#'directly as the SPI-Birds \code{LocationID}, representing the exact brood
-#'location (i.e. nest site, e.g. \code{"1998-1"}) rather than a plot. Location
-#'coordinates are only available at site level; all nest locations within a site
-#'therefore share the same coordinates. Note that the capture sheet also contains
-#'\code{locationID} values, and these are used as \code{LocationID} in
-#'\code{Capture_data}. This implies that captures were made at nest locations,
-#'which is unusual given that all captures are assumed to be by mist net (see
-#'above). The association of capture locations with nest IDs should be confirmed
-#'with the data owner.
+#' \strong{LocationID}: The \code{locationID} field in the source data is used
+#' directly as the SPI-Birds \code{LocationID}, representing the exact brood
+#' location (i.e. nest site, e.g. \code{"1998-1"}) rather than a plot. Location
+#' coordinates are only available at site level; all nest locations within a site
+#' therefore share the same coordinates. The
+#' within-site coordinate differences are negligible. The capture sheet's
+#' \code{locationID} values are used as \code{LocationID} in
+#' \code{Capture_data}; adults were mist-netted at these localities, while chicks
+#' were handled at the nests.
 #'
-#'\strong{Missing species in captures}: 81 capture records have no
-#'\code{speciesID} in the source data. As this is a single-species study, these
-#'are assumed to be Common Blackbird and filled with \code{"TURMER"}.
+#' \strong{Missing species in captures}: 81 capture records have no
+#' \code{speciesID} in the source data. As this is a single-species study, these
+#' are assumed to be Common Blackbird and filled with \code{"TURMER"}.
 #'
-#'\strong{NumberFledged}: The source data records 0 fledglings for failed
-#'broods. The protocol requires \code{NumberFledged_observed >= 1} or
-#'\code{NA}; values of 0 are therefore converted to \code{NA}.
+#' \strong{NumberFledged}: The source data records 0 fledglings for failed
+#' broods. The protocol requires \code{NumberFledged_observed >= 1} or
+#' \code{NA}; values of 0 are therefore converted to \code{NA}.
 #'
-#'\strong{Broods without LayYear}: Brood records with no \code{LayYear} (and
-#'therefore no \code{BreedingSeason}) are excluded from \code{Brood_data}.
+#' \strong{Broods without LayYear}: Brood records with no \code{LayYear} (and
+#' therefore no \code{BreedingSeason}) are excluded from \code{Brood_data}.
 #'
-#'\strong{BroodIDFledged}: No fledging brood information is recorded
-#'separately. \code{BroodIDFledged} is assumed equal to \code{BroodIDLaid}
-#'on the basis that blackbirds do not move between broods before fledging.
+#' \strong{BroodIDFledged}: No fledging brood information is recorded
+#' separately. \code{BroodIDFledged} is assumed equal to \code{BroodIDLaid}
+#' on the basis that blackbirds do not move between broods before fledging.
 #'
-#'\strong{Individuals not in individual sheet}: Some \code{IndvID} values
-#'present in the capture data have no corresponding record in the individual
-#'data sheet. For these, \code{Species}, \code{PopID}, and \code{RingSeason} are
-#'derived from the earliest capture record; \code{RingAge} defaults to
-#'\code{"adult"}.
+#' \strong{Individuals not in individual sheet}: Some \code{IndvID} values
+#' present in the capture data have no corresponding record in the individual
+#' data sheet. For these, \code{Species}, \code{PopID}, and \code{RingSeason} are
+#' derived from the earliest capture record; \code{RingAge} defaults to
+#' \code{"adult"}.
 #'
-#'@inheritParams pipeline_params
+#' @inheritParams pipeline_params
 #'
-#'@return 4 data tables in the standard format (version 1.1.0). When
+#' @return 4 data tables in the standard format (version 1.1.0). When
 #'  \code{output_type = "R"}, a list of 4 data frames corresponding to the 4
 #'  standard data tables and 1 character vector indicating the protocol version
 #'  on which the pipeline is based. When \code{output_type = "csv"}, 4 .csv
 #'  files corresponding to the 4 standard data tables and 1 text file indicating
 #'  the protocol version on which the pipeline is based.
-#'@export
+#' @export
 
 format_ZER <- function(db = choose_directory(),
                        path = ".",
                        species = NULL,
                        pop = NULL,
                        output_type = "R") {
-
   protocol_version <- "1.1.0"
 
   force(db)
@@ -111,43 +111,57 @@ format_ZER <- function(db = choose_directory(),
 
   xl_path <- file.path(db, "ZER_PrimaryData.xlsx")
 
-  brood_raw <- readxl::read_excel(
-    xl_path, sheet = "Brood Blackbird",
-    col_types = c("text", "text", "text", "text", "text", "text", "text",
-                  "numeric",                        # ClutchType
-                  "numeric", "numeric", "numeric",  # LayYear/Month/Day
-                  "numeric",                        # ClutchSize
-                  "numeric", "numeric", "numeric",  # HatchYear/Month/Day
-                  "numeric",                        # BroodSize
-                  "numeric", "numeric", "numeric",  # FledgeYear/Month/Day
-                  "numeric"))                       # NumberFledged
+  brood_raw <- suppressWarnings(
+    readxl::read_excel(
+      xl_path,
+      sheet = "Brood Blackbird",
+      col_types = c(
+        "text", "text", "text", "text", "text", "text", "text",
+        "numeric", # ClutchType
+        "numeric", "numeric", "numeric", # LayYear/Month/Day
+        "numeric", # ClutchSize
+        "numeric", "numeric", "numeric", # HatchYear/Month/Day
+        "numeric", # BroodSize
+        "numeric", "numeric", "numeric", # FledgeYear/Month/Day
+        "numeric"
+      )
+    ) # NumberFledged
+  )
 
-  # Suppress coercion warnings: a few tagYear cells are date-formatted in Excel
-  # but coerce correctly to the numeric year value
   capture_raw <- suppressWarnings(
     readxl::read_excel(
-      xl_path, sheet = "Capture Blackbird",
-      col_types = c("text", "text", "text", "text",  # captureID, individualID, speciesID, Sex
-                    "numeric", "numeric", "numeric",  # tagYear, tag1onth, tagDay
-                    "text", "text", "text",            # siteID, plotID, locationID
-                    "numeric"))                        # chickAge
+      xl_path,
+      sheet = "Capture Blackbird",
+      col_types = c(
+        "text", "text", "text", "text", # captureID, individualID, speciesID, Sex
+        "numeric", "numeric", "numeric", # tagYear, tag1onth, tagDay
+        "text", "text", "text", # siteID, plotID, locationID
+        "numeric"
+      )
+    ) # chickAge
   )
 
   individual_raw <- readxl::read_excel(
-    xl_path, sheet = "Ind Data Blackbird",
+    xl_path,
+    sheet = "Ind Data Blackbird",
     range = readxl::cell_cols("A:I"),
-    col_types = c("text", "text", "text", "text",  # individualID, speciesID, siteID, broodIDLaid
-                  "numeric", "numeric", "numeric",  # tagYear, tag1onth, tagDay
-                  "text", "text"))                  # tagStage, Sex
+    col_types = c(
+      "text", "text", "text", "text",
+      "text", "text", "text",
+      "text", "text"
+    )
+  )
 
-  # Suppress coercion warnings: year/month/day cells are text-formatted in Excel
-  # but coerce correctly to numeric
   measurement_raw <- suppressWarnings(
     readxl::read_excel(
-      xl_path, sheet = "Measurement Blackbird",
-      col_types = c("text", "text", "text",           # measurementID, captureID, siteID
-                    "text", "text", "text",            # measurementType, measurementValue, measurementUnit
-                    "numeric", "numeric", "numeric"))  # measurementYear/Month/Day
+      xl_path,
+      sheet = "Measurement Blackbird",
+      col_types = c(
+        "text", "text", "text", # measurementID, captureID, siteID
+        "text", "text", "text", # measurementType, measurementValue, measurementUnit
+        "numeric", "numeric", "numeric"
+      )
+    ) # measurementYear/Month/Day
   )
 
   location_raw <- readxl::read_excel(xl_path, sheet = "Location Blackbirds")
@@ -168,32 +182,31 @@ format_ZER <- function(db = choose_directory(),
   message(paste0("All tables generated in ", round(time, 2), " seconds"))
 
   if (output_type == "csv") {
-
     message("Saving .csv files...")
 
     utils::write.csv(x = Brood_data, file = file.path(path, "Brood_data_ZER.csv"), row.names = FALSE)
     utils::write.csv(x = Capture_data, file = file.path(path, "Capture_data_ZER.csv"), row.names = FALSE)
     utils::write.csv(x = Individual_data, file = file.path(path, "Individual_data_ZER.csv"), row.names = FALSE)
     utils::write.csv(x = Location_data, file = file.path(path, "Location_data_ZER.csv"), row.names = FALSE)
-    utils::write.table(x = protocol_version, file = file.path(path, "protocol_version_ZER.txt"),
-                       quote = FALSE, row.names = FALSE, col.names = FALSE)
+    utils::write.table(
+      x = protocol_version, file = file.path(path, "protocol_version_ZER.txt"),
+      quote = FALSE, row.names = FALSE, col.names = FALSE
+    )
 
     invisible(NULL)
-
   }
 
   if (output_type == "R") {
-
     message("Returning R objects...")
 
-    return(list(Brood_data = Brood_data,
-                Capture_data = Capture_data,
-                Individual_data = Individual_data,
-                Location_data = Location_data,
-                protocol_version = protocol_version))
-
+    return(list(
+      Brood_data = Brood_data,
+      Capture_data = Capture_data,
+      Individual_data = Individual_data,
+      Location_data = Location_data,
+      protocol_version = protocol_version
+    ))
   }
-
 }
 
 # Normalise siteID: uppercase and strip Polish diacritics (e.g. Ż -> Z)
@@ -211,40 +224,46 @@ normalise_site_ZER <- function(x) {
 #' @return A data frame.
 
 create_brood_ZER <- function(data, species_filter, pop_filter, protocol_version) {
-
   Brood_data <- data %>%
     dplyr::mutate(
       siteID    = normalise_site_ZER(.data$siteID),
       speciesID = trimws(.data$speciesID)
     ) %>%
-    dplyr::filter(.data$siteID %in% pop_filter,
-                  .data$speciesID %in% species_filter,
-                  !is.na(.data$LayYear)) %>%
+    dplyr::filter(
+      .data$siteID %in% pop_filter,
+      .data$speciesID %in% species_filter,
+      !is.na(.data$LayYear)
+    ) %>%
     dplyr::mutate(
-      BroodID          = .data$broodID,
-      PopID            = .data$siteID,
-      BreedingSeason   = as.integer(.data$LayYear),
-      Species          = .data$speciesID,
-      Plot             = NA_character_,
-      LocationID       = .data$locationID,
-      FemaleID         = dplyr::na_if(trimws(.data$femaleID), "NA"),
-      MaleID           = dplyr::na_if(trimws(.data$maleID), "NA"),
-      # TODO: update when clutch type legend is received from data owner
+      BroodID = .data$broodID,
+      PopID = .data$siteID,
+      BreedingSeason = as.integer(.data$LayYear),
+      Species = .data$speciesID,
+      Plot = NA_character_,
+      LocationID = .data$locationID,
+      FemaleID = dplyr::na_if(trimws(.data$femaleID), "NA"),
+      MaleID = dplyr::na_if(trimws(.data$maleID), "NA"),
+      # Raw ClutchType is brood number within season, not first/second/replacement
       ClutchType_observed = NA_character_,
       LayDate_observed = as.Date(
         paste(.data$LayYear, .data$LayMonth, .data$LayDay, sep = "-"),
-        format = "%Y-%m-%d"),
-      ClutchSize_observed  = as.integer(.data$ClutchSize),
-      HatchDate_observed   = as.Date(
+        format = "%Y-%m-%d"
+      ),
+      ClutchSize_observed = as.integer(.data$ClutchSize),
+      HatchDate_observed = as.Date(
         paste(.data$HatchYear, .data$HatchMonth, .data$HatchDay, sep = "-"),
-        format = "%Y-%m-%d"),
-      BroodSize_observed   = as.integer(.data$BroodSize),
-      # FledgeDate set to NA when FledgeYear is >1 year after LayYear (bulk data entry error)
-      FledgeDate_observed  = dplyr::case_when(
-        is.na(.data$FledgeYear) | (.data$FledgeYear - .data$LayYear) > 1 ~ as.Date(NA_character_),
+        format = "%Y-%m-%d"
+      ),
+      BroodSize_observed = as.integer(.data$BroodSize),
+      # Remove the confirmed 2018 bulk-entry error
+      FledgeDate_observed = dplyr::case_when(
+        is.na(.data$FledgeYear) |
+          (.data$FledgeYear == 2018 & .data$LayYear < 2018) |
+          (.data$FledgeYear - .data$LayYear) > 1 ~ as.Date(NA_character_),
         TRUE ~ as.Date(
           paste(.data$FledgeYear, .data$FledgeMonth, .data$FledgeDay, sep = "-"),
-          format = "%Y-%m-%d")
+          format = "%Y-%m-%d"
+        )
       ),
       # 0 fledglings = failed brood; protocol represents this as NA (min value is 1)
       NumberFledged_observed = dplyr::na_if(as.integer(.data$NumberFledged), 0L)
@@ -274,12 +293,12 @@ create_brood_ZER <- function(data, species_filter, pop_filter, protocol_version)
     ) %>%
     dplyr::bind_cols(
       data_templates[[paste0("v", protocol_version)]]$Brood_data[
-        1, !(names(data_templates[[paste0("v", protocol_version)]]$Brood_data) %in% names(.))]
+        1, !(names(data_templates[[paste0("v", protocol_version)]]$Brood_data) %in% names(.))
+      ]
     ) %>%
     dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Brood_data))
 
   return(Brood_data)
-
 }
 
 #' Create capture data table for Zeromski Park / Kowale, Poland.
@@ -293,7 +312,6 @@ create_brood_ZER <- function(data, species_filter, pop_filter, protocol_version)
 #' @return A data frame.
 
 create_capture_ZER <- function(capture_data, measurement_data, species_filter, pop_filter, protocol_version) {
-
   # Pivot measurements from long to wide, handling comma decimal notation
   measurements_wide <- measurement_data %>%
     dplyr::mutate(
@@ -317,27 +335,30 @@ create_capture_ZER <- function(capture_data, measurement_data, species_filter, p
       # Fill NA speciesID: this is a blackbird-only study
       speciesID = dplyr::coalesce(trimws(.data$speciesID), "TURMER")
     ) %>%
-    dplyr::filter(.data$siteID %in% pop_filter,
-                  .data$speciesID %in% species_filter) %>%
+    dplyr::filter(
+      .data$siteID %in% pop_filter,
+      .data$speciesID %in% species_filter
+    ) %>%
     dplyr::left_join(measurements_wide, by = "captureID") %>%
     dplyr::mutate(
-      CaptureID    = .data$captureID,
-      IndvID       = .data$individualID,
-      Species      = .data$speciesID,
+      CaptureID = .data$captureID,
+      IndvID = .data$individualID,
+      Species = .data$speciesID,
       Sex_observed = dplyr::na_if(trimws(.data$Sex), "NA"),
       BreedingSeason = as.integer(.data$tagYear),
-      CaptureDate  = as.Date(
+      CaptureDate = as.Date(
         paste(.data$tagYear, .data$tag1onth, .data$tagDay, sep = "-"),
-        format = "%Y-%m-%d"),
-      CaptureTime  = NA_character_,
-      ObserverID   = NA_character_,
-      LocationID   = .data$locationID,
+        format = "%Y-%m-%d"
+      ),
+      CaptureTime = NA_character_,
+      ObserverID = NA_character_,
+      LocationID = .data$locationID,
       CaptureAlive = TRUE,
       ReleaseAlive = TRUE,
       CapturePopID = .data$siteID,
-      CapturePlot  = .data$plotID,
+      CapturePlot = .data$plotID,
       ReleasePopID = .data$siteID,
-      ReleasePlot  = .data$plotID,
+      ReleasePlot = .data$plotID,
       OriginalTarsusMethod = dplyr::case_when(
         !is.na(.data$Tarsus) ~ "Standard",
         TRUE ~ NA_character_
@@ -347,22 +368,24 @@ create_capture_ZER <- function(capture_data, measurement_data, species_filter, p
         !is.na(.data$chickAge) ~ 1L,
         TRUE ~ NA_integer_
       ),
-      ChickAge     = dplyr::case_when(
+      ChickAge = dplyr::case_when(
         !is.na(.data$chickAge) ~ as.integer(.data$chickAge),
         TRUE ~ NA_integer_
       ),
       ExperimentID = NA_character_
     ) %>%
-    calc_age(ID = IndvID, Age = Age_observed,
-             Date = CaptureDate, Year = BreedingSeason) %>%
+    calc_age(
+      ID = IndvID, Age = Age_observed,
+      Date = CaptureDate, Year = BreedingSeason
+    ) %>%
     dplyr::bind_cols(
       data_templates[[paste0("v", protocol_version)]]$Capture_data[
-        1, !(names(data_templates[[paste0("v", protocol_version)]]$Capture_data) %in% names(.))]
+        1, !(names(data_templates[[paste0("v", protocol_version)]]$Capture_data) %in% names(.))
+      ]
     ) %>%
     dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Capture_data))
 
   return(Capture_data)
-
 }
 
 #' Create individual data table for Zeromski Park / Kowale, Poland.
@@ -375,17 +398,16 @@ create_capture_ZER <- function(capture_data, measurement_data, species_filter, p
 #' @return A data frame.
 
 create_individual_ZER <- function(Capture_data, individual_data, pop_filter, protocol_version) {
-
   ind_clean <- individual_data %>%
     dplyr::mutate(
-      siteID       = normalise_site_ZER(.data$siteID),
-      BroodIDLaid  = dplyr::na_if(trimws(.data$broodIDLaid), "NA"),
-      tagStage     = trimws(tolower(.data$tagStage)),
-      RingSeason   = as.integer(.data$tagYear),
-      Species      = trimws(.data$speciesID),
-      PopID        = .data$siteID,
-      RingAge      = dplyr::case_when(
-        .data$tagStage == "chick"                           ~ "chick",
+      siteID = normalise_site_ZER(.data$siteID),
+      BroodIDLaid = dplyr::na_if(trimws(.data$broodIDLaid), "NA"),
+      tagStage = trimws(tolower(.data$tagStage)),
+      RingSeason = as.integer(.data$tagYear),
+      Species = trimws(.data$speciesID),
+      PopID = .data$siteID,
+      RingAge = dplyr::case_when(
+        .data$tagStage == "chick" ~ "chick",
         .data$tagStage %in% c("adult", "subadult", "pubadult") ~ "adult",
         TRUE ~ NA_character_
       )
@@ -399,20 +421,25 @@ create_individual_ZER <- function(Capture_data, individual_data, pop_filter, pro
     dplyr::group_by(.data$IndvID) %>%
     dplyr::summarise(
       # Derive key columns directly from captures as reliable fallback
-      Species_cap    = dplyr::first(stats::na.omit(.data$Species)),
-      PopID_cap      = dplyr::first(.data$CapturePopID),
+      Species_cap = dplyr::first(stats::na.omit(.data$Species)),
+      PopID_cap = dplyr::first(.data$CapturePopID),
       RingSeason_cap = dplyr::first(.data$BreedingSeason),
-      RingAge_cap    = dplyr::case_when(
+      RingAge_cap = dplyr::case_when(
         dplyr::first(.data$Age_observed) == 1L ~ "chick",
         TRUE ~ "adult"
       ),
       Sex_calculated = purrr::map_chr(
         .x = list(unique(.data$Sex_observed)),
-        .f = ~{
-          if (all(c("F", "M") %in% ..1))  return("C")
-          else if ("F" %in% ..1)           return("F")
-          else if ("M" %in% ..1)           return("M")
-          else                             return(NA_character_)
+        .f = ~ {
+          if (all(c("F", "M") %in% ..1)) {
+            return("C")
+          } else if ("F" %in% ..1) {
+            return("F")
+          } else if ("M" %in% ..1) {
+            return("M")
+          } else {
+            return(NA_character_)
+          }
         }
       ),
       .groups = "drop"
@@ -421,21 +448,21 @@ create_individual_ZER <- function(Capture_data, individual_data, pop_filter, pro
     dplyr::distinct(.data$IndvID, .keep_all = TRUE) %>%
     dplyr::mutate(
       # Coalesce: prefer individual_raw values; fall back to capture-derived values
-      Species    = dplyr::coalesce(.data$Species,    .data$Species_cap),
-      PopID      = dplyr::coalesce(.data$PopID,      .data$PopID_cap),
+      Species = dplyr::coalesce(.data$Species, .data$Species_cap),
+      PopID = dplyr::coalesce(.data$PopID, .data$PopID_cap),
       RingSeason = dplyr::coalesce(.data$RingSeason, .data$RingSeason_cap),
-      RingAge    = dplyr::coalesce(.data$RingAge,    .data$RingAge_cap),
+      RingAge = dplyr::coalesce(.data$RingAge, .data$RingAge_cap),
       BroodIDFledged = .data$BroodIDLaid,
-      Sex_genetic    = NA_character_
+      Sex_genetic = NA_character_
     ) %>%
     dplyr::bind_cols(
       data_templates[[paste0("v", protocol_version)]]$Individual_data[
-        1, !(names(data_templates[[paste0("v", protocol_version)]]$Individual_data) %in% names(.))]
+        1, !(names(data_templates[[paste0("v", protocol_version)]]$Individual_data) %in% names(.))
+      ]
     ) %>%
     dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Individual_data))
 
   return(Individual_data)
-
 }
 
 #' Create location data table for Zeromski Park / Kowale, Poland.
@@ -449,7 +476,6 @@ create_individual_ZER <- function(Capture_data, individual_data, pop_filter, pro
 #' @return A data frame.
 
 create_location_ZER <- function(brood_data, capture_data, location_data, pop_filter, protocol_version) {
-
   # Site-level coordinates lookup
   site_coords <- location_data %>%
     dplyr::mutate(siteID = toupper(trimws(.data$siteID))) %>%
@@ -481,10 +507,10 @@ create_location_ZER <- function(brood_data, capture_data, location_data, pop_fil
     ) %>%
     dplyr::bind_cols(
       data_templates[[paste0("v", protocol_version)]]$Location_data[
-        1, !(names(data_templates[[paste0("v", protocol_version)]]$Location_data) %in% names(.))]
+        1, !(names(data_templates[[paste0("v", protocol_version)]]$Location_data) %in% names(.))
+      ]
     ) %>%
     dplyr::select(names(data_templates[[paste0("v", protocol_version)]]$Location_data))
 
   return(Location_data)
-
 }

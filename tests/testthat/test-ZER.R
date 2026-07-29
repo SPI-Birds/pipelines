@@ -10,7 +10,7 @@ test_that("ZER outputs all files...", {
 
   # Single-species study: only Common Blackbird
   expect_equal(unique(pipeline_output$Brood_data$Species), "TURMER")
-  # No clutch-type legend received, so ClutchType_observed is NA throughout
+  # ClutchType contains brood sequence numbers, not protocol clutch categories
   expect_true(all(is.na(pipeline_output$Brood_data$ClutchType_observed)))
 })
 
@@ -48,6 +48,23 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(ZER_data, BroodID == "1998-13-1k")$PopID, "KOW")
   expect_equal(subset(ZER_data, BroodID == "1998-13-1k")$LayDate_observed, as.Date("1998-05-04"))
   expect_equal(subset(ZER_data, BroodID == "1998-13-1k")$ClutchSize_observed, 5L)
+
+  # The source's bulk-entered 2018 fledge year is invalid for pre-2018 broods.
+  brood_raw <- readxl::read_excel(
+    file.path(data_path, "ZER_ZeromskiPark_Poland", "ZER_PrimaryData.xlsx"),
+    sheet = "Brood Blackbird"
+  )
+  suspect_ids <- brood_raw$broodID[
+    !is.na(brood_raw$broodID) &
+      brood_raw$LayYear < 2018 &
+      brood_raw$FledgeYear == 2018
+  ]
+  expect_gt(length(suspect_ids), 0)
+  expect_true(all(is.na(
+    pipeline_output$Brood_data$FledgeDate_observed[
+      pipeline_output$Brood_data$BroodID %in% suspect_ids
+    ]
+  )))
 })
 
 test_that("Individual data returns an expected outcome...", {
@@ -116,7 +133,9 @@ test_that("Location_data returns an expected outcome...", {
 
 test_that("pop argument restricts output to a single site...", {
   # Requesting only ZER should drop all KOW records
-  zer_only <- format_ZER(db = paste0(data_path, "/ZER_ZeromskiPark_Poland"), pop = "ZER")
+  zer_only <- suppressWarnings(
+    format_ZER(db = paste0(data_path, "/ZER_ZeromskiPark_Poland"), pop = "ZER")
+  )
   expect_equal(unique(zer_only$Brood_data$PopID), "ZER")
   expect_equal(unique(zer_only$Capture_data$CapturePopID), "ZER")
   expect_false("KOW" %in% zer_only$Location_data$PopID)
