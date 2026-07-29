@@ -6,6 +6,8 @@ test_that("MAY outputs all files...", {
   expect_true(all("MAY" %in% pipeline_output$Individual_data$PopID))
   expect_true(all("MAY" %in% pipeline_output$Location_data$PopID))
   expect_true(pipeline_output$protocol_version == "1.1.0")
+  expect_true(all(c("FICHYP", "PARMAJ") %in%
+    subset(pipeline_output$Brood_data, BreedingSeason == 2024)$Species))
 })
 
 test_that("Brood_data returns an expected outcome...", {
@@ -49,12 +51,12 @@ test_that("Individual data returns an expected outcome...", {
   MAY_data <- dplyr::filter(pipeline_output$Individual_data, PopID %in% "MAY")
 
   # Test 1: Pied flycatcher ringed as chick, recruited as breeding adult (female)
-  expect_equal(subset(MAY_data, IndvID == "530579")$Species, "FICHYP")
-  expect_equal(subset(MAY_data, IndvID == "530579")$Sex_calculated, "F")
-  expect_equal(subset(MAY_data, IndvID == "530579")$BroodIDLaid, "1981_L_17_155")
-  expect_equal(subset(MAY_data, IndvID == "530579")$BroodIDFledged, "1981_L_17_155")
-  expect_equal(subset(MAY_data, IndvID == "530579")$RingSeason, 1981L)
-  expect_equal(subset(MAY_data, IndvID == "530579")$RingAge, "chick")
+  expect_equal(subset(MAY_data, IndvID == "XB530579")$Species, "FICHYP")
+  expect_equal(subset(MAY_data, IndvID == "XB530579")$Sex_calculated, "F")
+  expect_equal(subset(MAY_data, IndvID == "XB530579")$BroodIDLaid, "1981_L_17_155")
+  expect_equal(subset(MAY_data, IndvID == "XB530579")$BroodIDFledged, "1981_L_17_155")
+  expect_equal(subset(MAY_data, IndvID == "XB530579")$RingSeason, 1981L)
+  expect_equal(subset(MAY_data, IndvID == "XB530579")$RingAge, "chick")
 
   # Test 2: Great tit first caught as breeding adult (female), no brood of origin
   expect_equal(subset(MAY_data, IndvID == "XA593689")$Species, "PARMAJ")
@@ -76,13 +78,13 @@ test_that("Capture data returns an expected outcome...", {
   MAY_data <- dplyr::filter(pipeline_output$Capture_data, CapturePopID %in% "MAY")
 
   # Test 1: Individual ringed as a chick, recaptured as a breeding adult 2 years later
-  expect_equal(nrow(subset(MAY_data, IndvID == "530579")), 2)
-  expect_equal(subset(MAY_data, IndvID == "530579")$CaptureID, c("530579_1", "530579_2"))
-  expect_equal(subset(MAY_data, IndvID == "530579")$CaptureDate[1], as.Date("1981-06-02"))
-  expect_equal(subset(MAY_data, IndvID == "530579")$CaptureDate[2], as.Date("1983-05-28"))
+  expect_equal(nrow(subset(MAY_data, IndvID == "XB530579")), 2)
+  expect_equal(subset(MAY_data, IndvID == "XB530579")$CaptureID, c("XB530579_1", "XB530579_2"))
+  expect_equal(subset(MAY_data, IndvID == "XB530579")$CaptureDate[1], as.Date("1981-06-02"))
+  expect_equal(subset(MAY_data, IndvID == "XB530579")$CaptureDate[2], as.Date("1983-05-28"))
   # First capture is as a chick (age observed 1), then as an adult
-  expect_equal(subset(MAY_data, IndvID == "530579")$Age_observed, c(1L, 6L))
-  expect_equal(subset(MAY_data, IndvID == "530579")$Age_calculated, c(1L, 7L))
+  expect_equal(subset(MAY_data, IndvID == "XB530579")$Age_observed, c(1L, 6L))
+  expect_equal(subset(MAY_data, IndvID == "XB530579")$Age_calculated, c(1L, 7L))
 
   # Test 2: Adult female caught once in her ringing season
   expect_equal(nrow(subset(MAY_data, IndvID == "XA593689")), 1)
@@ -103,15 +105,14 @@ test_that("Location_data returns an expected outcome...", {
   # Expect LocationID and NestboxID are the same
   expect_true(subset(MAY_data, LocationID == "L_17")$NestboxID == "L_17")
   expect_equal(subset(MAY_data, LocationID == "L_17")$PopID, "MAY")
-  expect_equal(subset(MAY_data, LocationID == "L_17")$StartSeason, 1979L)
+  expect_equal(subset(MAY_data, LocationID == "L_17")$StartSeason, 1980L)
 
   # Test 2: A brood LocationID resolves in Location_data
   expect_true("B_47B" %in% pipeline_output$Location_data$LocationID)
   expect_true(subset(MAY_data, LocationID == "B_47B")$LocationType == "NB")
 
-  # NOTE: coordinates and habitat type are not yet available in the primary data,
-  # so they are currently NA for all boxes (pending confirmation with the data owner).
-  expect_true(all(is.na(MAY_data$Latitude)))
+  expect_false(is.na(subset(MAY_data, LocationID == "L_17")$Latitude))
+  expect_false(is.na(subset(MAY_data, LocationID == "L_17")$Longitude))
   expect_true(all(is.na(MAY_data$HabitatType)))
 })
 

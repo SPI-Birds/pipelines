@@ -11,8 +11,8 @@
 #' \strong{Plot}: The "line of nest boxes" column in the Excel is used as Plot.
 #'
 #' \strong{Species}: Pied flycatcher and great tit are stored in separate
-#' primary data files, with no species column. All individuals in a given
-#' file are assumed to be of that file's species.
+#' sheets of the primary data workbook, with no species column. All individuals
+#' in a given sheet are assumed to be of that sheet's species.
 #'
 #' \strong{LayDate_observed, HatchDate_observed}: Dates are recorded as days
 #' since 1 May, sometimes with special characters (e.g. "<32", "32?", "(32)"),
@@ -38,9 +38,9 @@
 #' letters followed by 5 or 6 digits; many great tit and pied flycatcher
 #' records are missing their letters and are set to NA.
 #'
-#' \strong{StartSeason}: Assume all nest boxes were placed in the first year
-#' of the study.
-#' TODO: Ask if this assumption is correct.
+#' \strong{Location}: Coordinates are provided for each nest record.
+#' \code{StartSeason} is the first year in which a location occurs. When a
+#' location has multiple coordinate pairs, the most recent pair is used.
 #'
 #' \strong{HabitatType}: No habitat information is recorded in the primary
 #' data, so this is left blank.
@@ -71,21 +71,39 @@ format_MAY <- function(db = choose_directory(),
 
   message("Importing primary data...")
 
+  primary_data <- file.path(db, "MAY_PrimaryData.xls")
+
   # Read in pied flycatcher data
-  pf_data <- suppressMessages(readxl::read_excel(paste0(db, "/MAY_PrimaryData_PF.xls"),
-    guess_max = 4000
+  pf_data <- suppressMessages(readxl::read_excel(
+    primary_data,
+    sheet = "Ficedula hypoleuca 1979-2024",
+    guess_max = 5000
   )) %>%
     janitor::clean_names() %>%
+    dplyr::rename(
+      males_age = "males_age_1_one_year_old_bird_hatched_last_breeding_season_2_two_or_more_years_old_an_adult_hatched_before_the_last_calendar_year_age_3_years_or_more_based_on_ringing_data",
+      male_wing_length = "male_wing_length_mm",
+      male_tarsus_length = "male_tarsus_length_mm_svensson_s_alternative_method",
+      female_wing_length = "female_wing_length_mm",
+      female_tarsus_length = "female_tarsus_length_mm_svensson_s_alternative_method"
+    ) %>%
+    dplyr::filter(!is.na(.data$year)) %>%
     dplyr::mutate(no_nest_box = stringr::str_replace_all(.data$no_nest_box, c("-" = "", " " = "")))
 
   # Read in great tit data
-  gt_data <- suppressMessages(readxl::read_excel(paste0(db, "/MAY_PrimaryData_GT.xlsx"),
+  gt_data <- suppressMessages(readxl::read_excel(
+    primary_data,
+    sheet = "Parus_major 1979-2024",
     skip = 1,
-    guess_max = 4000
+    guess_max = 5000
   )) %>%
-    # Remove empty columns that contain no information
-    dplyr::select(1:22) %>%
     janitor::clean_names() %>%
+    janitor::remove_empty(which = "rows") %>%
+    dplyr::rename(
+      males_age = "males_age_1_one_year_old_bird_hatched_last_breeding_season_2_two_or_more_years_old_an_adult_hatched_before_the_last_calendar_year_age_3_years_or_more_based_on_ringing_data",
+      females_age = "females_age_1_one_year_old_bird_hatched_last_breeding_season_2_two_or_more_years_old_an_adult_hatched_before_the_last_calendar_year_3_or_4_age_3_4_or_more_years"
+    ) %>%
+    dplyr::filter(!is.na(.data$year)) %>%
     dplyr::mutate(no_nest_box = stringr::str_replace_all(.data$no_nest_box, c("-" = "", " " = "")))
 
   # BROOD DATA
@@ -220,6 +238,8 @@ parse_MAY_date <- function(x, year) {
 
   cleaned <- dplyr::case_when(
     is.na(x) ~ NA_character_,
+    x == "" ~ NA_character_,
+    stringr::str_detect(x, "[:alpha:]") ~ NA_character_,
     stringr::str_detect(x, "<") ~ stringr::str_remove(x, "<"),
     stringr::str_detect(x, ">") ~ stringr::str_remove(x, ">"),
     stringr::str_detect(x, "^\\?") ~ NA_character_,
@@ -245,11 +265,10 @@ parse_MAY_date <- function(x, year) {
 # Rows with letter are assumed unkown.
 parse_MAY_count <- function(x) {
   cleaned <- stringr::str_replace_all(x, " ", "")
+  cleaned <- stringr::str_remove_all(cleaned, "[<>()?]")
 
   cleaned <- dplyr::case_when(
     is.na(cleaned) ~ NA_character_,
-    stringr::str_detect(cleaned, "\\?") ~ dplyr::na_if(stringr::str_remove(cleaned, "\\?"), ""),
-    stringr::str_detect(cleaned, "\\(") ~ stringr::str_extract(cleaned, "(?<=\\()[:digit:]{1,2}(?=\\))"),
     stringr::str_detect(cleaned, "[:alpha:]") ~ NA_character_,
     TRUE ~ cleaned
   )
@@ -259,7 +278,11 @@ parse_MAY_count <- function(x) {
       return(NA_integer_)
     }
 
-    as.integer(eval(parse(text = value)))
+    if (!stringr::str_detect(value, "^[0-9]+(?:[+-][0-9]+)*$")) {
+      return(NA_integer_)
+    }
+
+    sum(as.integer(stringr::str_extract_all(value, "[+-]?[0-9]+")[[1]]))
   })
 }
 
@@ -492,10 +515,6 @@ create_capture_MAY <- function(gt_data,
   gt_parents <- gt_data %>%
     tidyr::unite("FemaleID", "females_ring_series", "females_ring", remove = FALSE, na.rm = TRUE, sep = "") %>%
     tidyr::unite("MaleID", "males_ring_series", "males_ring", remove = FALSE, na.rm = TRUE, sep = "") %>%
-    dplyr::rename(
-      FemaleAge = "females_age_1_one_year_old_bird_hatched_last_breeding_season_2_two_or_more_years_old_an_adult_hatched_before_the_last_calendar_year_3_or_4_age_3_4_or_more_years",
-      MaleAge = "males_age_1_one_year_old_bird_hatched_last_breeding_season_2_two_or_more_years_old_an_adult_hatched_before_the_last_calendar_year_3_or_4_age_3_4_or_more_years"
-    ) %>%
     dplyr::mutate(
       dplyr::across(
         .cols = c("FemaleID", "MaleID"),
@@ -516,7 +535,7 @@ create_capture_MAY <- function(gt_data,
     dplyr::filter(!is.na(.data$IndvID)) %>%
     dplyr::mutate(
       Sex_observed = dplyr::if_else(.data$sex == "FemaleID", "F", "M"),
-      age = dplyr::if_else(.data$Sex_observed == "F", .data$FemaleAge, .data$MaleAge),
+      age = dplyr::if_else(.data$Sex_observed == "F", .data$females_age, .data$males_age),
       age = dplyr::na_if(.data$age, "registered earlier this season"),
       # No morphometric measurements were taken for great tits
       Tarsus = NA_real_,
@@ -589,6 +608,19 @@ create_capture_MAY <- function(gt_data,
     # CaptureDate cannot be approximated without a lay date and clutch size; such captures are dropped
     # TODO: Correct?
     dplyr::filter(!is.na(.data$CaptureDate)) %>%
+    dplyr::group_by(
+      .data$Species,
+      ring_number = stringr::str_remove(.data$IndvID, "^[[:alpha:]]+")
+    ) %>%
+    dplyr::mutate(
+      IndvID = {
+        prefixed_ids <- unique(.data$IndvID[stringr::str_detect(.data$IndvID, "^[[:alpha:]]")])
+
+        if (length(prefixed_ids) == 1) prefixed_ids else .data$IndvID
+      }
+    ) %>%
+    dplyr::ungroup() %>%
+    dplyr::select(-"ring_number") %>%
     dplyr::arrange(.data$IndvID, .data$BreedingSeason, .data$CaptureDate) %>%
     dplyr::group_by(.data$IndvID) %>%
     dplyr::mutate(CaptureID = paste(.data$IndvID, dplyr::row_number(), sep = "_")) %>%
@@ -666,23 +698,25 @@ create_individual_MAY <- function(capture_data,
 create_location_MAY <- function(gt_data,
                                 pf_data) {
   combined <- dplyr::bind_rows(
-    pf_data %>% dplyr::select("the_line_of_nest_boxes", "no_nest_box", "year"),
-    gt_data %>% dplyr::select("the_line_of_nest_boxes", "no_nest_box", "year")
+    pf_data %>% dplyr::select("the_line_of_nest_boxes", "no_nest_box", "year", "longitude_e", "latitude_n"),
+    gt_data %>% dplyr::select("the_line_of_nest_boxes", "no_nest_box", "year", "longitude_e", "latitude_n")
   )
 
-  # There are no coordinates known, or type of next boxes used.
   Location_data <- combined %>%
+    dplyr::filter(!is.na(.data$the_line_of_nest_boxes), !is.na(.data$no_nest_box)) %>%
     dplyr::mutate(LocationID = paste(.data$the_line_of_nest_boxes, .data$no_nest_box, sep = "_")) %>%
-    dplyr::select("LocationID") %>%
-    tidyr::drop_na() %>%
-    dplyr::distinct() %>%
+    dplyr::arrange(.data$LocationID, dplyr::desc(.data$year)) %>%
+    dplyr::group_by(.data$LocationID) %>%
+    dplyr::summarise(
+      Latitude = dplyr::first(.data$latitude_n[!is.na(.data$latitude_n)], default = NA_real_),
+      Longitude = dplyr::first(.data$longitude_e[!is.na(.data$longitude_e)], default = NA_real_),
+      StartSeason = as.integer(min(.data$year, na.rm = TRUE)),
+      .groups = "drop"
+    ) %>%
     dplyr::mutate(
       NestboxID = .data$LocationID,
       LocationType = "NB",
       PopID = "MAY",
-      Latitude = NA_real_,
-      Longitude = NA_real_,
-      StartSeason = as.integer(min(combined$year, na.rm = TRUE)),
       EndSeason = NA_integer_,
       HabitatType = NA_character_
     )
@@ -706,6 +740,27 @@ create_location_MAY <- function(gt_data,
 #' retrieve_chickIDs_MAY("856840,1,55-62")
 #'
 retrieve_chickIDs_MAY <- function(chickID) {
+  if (is.na(chickID)) {
+    return(NA_character_)
+  }
+
+  chick_groups <- stringr::str_split(
+    chickID,
+    ";|\\s+(?=[[:alpha:]]{1,2}\\s*[[:digit:]])",
+    simplify = FALSE
+  )[[1]]
+
+  if (length(chick_groups) > 1) {
+    output <- unlist(purrr::map(chick_groups, retrieve_chickIDs_MAY), use.names = FALSE)
+    output <- output[!is.na(output)]
+
+    if (length(output) == 0 || length(output) > 15) {
+      return(NA_character_)
+    }
+
+    return(output)
+  }
+
   # Chicks from the same brood get ringed in one sitting, so their ring numbers
   # are sequential. Rather than writing out every full number, whoever filled
   # in the sheet wrote the first one in full and then just the digits that
@@ -725,6 +780,10 @@ retrieve_chickIDs_MAY <- function(chickID) {
   chickID <- stringr::str_remove_all(chickID, pattern = "\\(.*\\)")
   chickID <- stringr::str_replace_all(chickID, pattern = ";", replacement = ",")
   chickID <- stringr::str_replace_all(chickID, pattern = "\\+", replacement = ",")
+
+  if (stringr::str_detect(chickID, "^[[:alpha:]]{0,2}[[:digit:]]{5,6}$")) {
+    return(chickID)
+  }
 
   # A handful of rows aren't a ring sequence at all and trying to force them
   # through the logic below would just produce garbage, so we bail out to NA
@@ -756,6 +815,10 @@ retrieve_chickIDs_MAY <- function(chickID) {
     id_series <- stringr::str_split(id_numbers, pattern = "[-,]")[[1]]
 
     special_chars <- stringr::str_extract_all(chickID, "[-,]")[[1]]
+
+    if (sum(special_chars == "-") > 1 && !any(special_chars == ",")) {
+      return(NA_character_)
+    }
 
     # Eventually every fragment is padded against the very first number in
     # the row (see new_series below). But "79699-700,157-60" means 79699,
@@ -829,7 +892,10 @@ retrieve_chickIDs_MAY <- function(chickID) {
     # 862, we just let R's own range operator do that for us.
     new_string <- paste0("c(", stringr::str_replace_all(stringr::str_flatten(c(new_series, special_chars)[order(c(seq_along(new_series), seq_along(special_chars)))]), pattern = "-", replacement = ":"), ")")
 
-    new_ids <- eval(parse(text = new_string))
+    new_ids <- tryCatch(
+      eval(parse(text = new_string)),
+      error = function(e) NA
+    )
 
     # Expanding a range through R's integer arithmetic drops any leading
     # zero the original fragment had (e.g. "099362" becomes 99362), so pad
