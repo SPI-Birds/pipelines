@@ -23,24 +23,36 @@
 #' \strong{ClutchSize_observed, BroodSize_observed, NumberFledged_observed}:
 #' Some values contain special characters (e.g. "?", "()"), which are ignored,
 #' or are written as an arithmetic expression (e.g. "7+4"), which is evaluated
-#' (i.e. 11 in the example). No uncertainty range is recorded for these counts,
-#' so only the observed value is reported.
-#' TODO: 7 + 4 might be an uncertainty range. Ask.
+#' (i.e. 11 in the example). A plus sign denotes an enlarged clutch, either
+#' experimental or resulting from another female laying in an existing clutch.
+#' Parentheses denote a probable value.
 #'
-#' \strong{CaptureDate}: No exact capture dates are recorded. For adults,
-#' the start of incubation (lay date + clutch size) as a proxy. Chick
-#' captures use the same proxy.
+#' \strong{ExperimentID}: Records explicitly marked as experiments concern
+#' parental movement and territory fidelity after clutch loss, or nestling
+#' growth and survival in enlarged broods. These are coded as \code{"OTHER"}.
+#'
+#' \strong{CaptureDate}: Exact ringing dates are not included. Most parents
+#' were caught while feeding chicks and most chicks were ringed at 10--12 days.
+#' Capture date is estimated as hatch date plus 11 days. If hatch date is
+#' unavailable, it is estimated using a 12-day incubation period.
 #'
 #' \strong{CaptureAlive, ReleaseAlive}: All individuals are assumed to be
 #' captured and released alive.
 #'
 #' \strong{IndvID}: Individual IDs are only kept when they consist of 0-2
-#' letters followed by 5 or 6 digits; many great tit and pied flycatcher
-#' records are missing their letters and are set to NA.
+#' letters followed by 5 or 6 digits. Chick records often omit the series
+#' letters. A missing prefix is restored only when its numeric suffix has one
+#' unique prefixed match for the same species.
 #'
-#' \strong{Location}: Coordinates are provided for each nest record.
-#' \code{StartSeason} is the first year in which a location occurs. When a
-#' location has multiple coordinate pairs, the most recent pair is used.
+#' \strong{Age and measurements}: Age 1 denotes a bird hatched in the preceding
+#' breeding season; age 2 denotes an older adult; higher ages are based on
+#' ringing history. Wing and tarsus are measured in mm. Tarsus uses Svensson's
+#' alternative method.
+#'
+#' \strong{Location}: Coordinates are provided for each nest record. Exact
+#' installation years and habitat types are unavailable, so \code{StartSeason}
+#' and \code{HabitatType} are left blank. When a location has multiple
+#' coordinate pairs, the most recent pair is used.
 #'
 #' \strong{HabitatType}: No habitat information is recorded in the primary
 #' data, so this is left blank.
@@ -80,6 +92,7 @@ format_MAY <- function(db = choose_directory(),
     guess_max = 5000
   )) %>%
     janitor::clean_names() %>%
+    dplyr::mutate(source_row = dplyr::row_number() + 1L) %>%
     dplyr::rename(
       males_age = "males_age_1_one_year_old_bird_hatched_last_breeding_season_2_two_or_more_years_old_an_adult_hatched_before_the_last_calendar_year_age_3_years_or_more_based_on_ringing_data",
       male_wing_length = "male_wing_length_mm",
@@ -99,6 +112,7 @@ format_MAY <- function(db = choose_directory(),
   )) %>%
     janitor::clean_names() %>%
     janitor::remove_empty(which = "rows") %>%
+    dplyr::mutate(source_row = dplyr::row_number() + 2L) %>%
     dplyr::rename(
       males_age = "males_age_1_one_year_old_bird_hatched_last_breeding_season_2_two_or_more_years_old_an_adult_hatched_before_the_last_calendar_year_age_3_years_or_more_based_on_ringing_data",
       females_age = "females_age_1_one_year_old_bird_hatched_last_breeding_season_2_two_or_more_years_old_an_adult_hatched_before_the_last_calendar_year_3_or_4_age_3_4_or_more_years"
@@ -233,27 +247,29 @@ format_MAY <- function(db = choose_directory(),
 # which is converted into a minimum and maximum date.
 # The observed date is the rounded average of the range.
 parse_MAY_date <- function(x, year) {
-  # A leading minus sign is not a range, but a data before May 1st.
-  has_range <- stringr::str_detect(x, "[:digit:]-[:digit:]") & !is.na(x)
-
-  cleaned <- dplyr::case_when(
-    is.na(x) ~ NA_character_,
-    x == "" ~ NA_character_,
-    stringr::str_detect(x, "[:alpha:]") ~ NA_character_,
-    stringr::str_detect(x, "<") ~ stringr::str_remove(x, "<"),
-    stringr::str_detect(x, ">") ~ stringr::str_remove(x, ">"),
-    stringr::str_detect(x, "^\\?") ~ NA_character_,
-    stringr::str_detect(x, "\\?") ~ stringr::str_remove(x, "\\?"),
-    stringr::str_detect(x, "\\(") ~ stringr::str_extract(x, "(?<=\\()[:digit:]{1,2}(?=\\))"),
-    has_range ~ as.character(floor((as.integer(stringr::str_extract(x, "[:digit:]{1,2}(?=-)")) +
-      as.integer(stringr::str_extract(x, "(?<=-)[:digit:]{1,2}"))) / 2)),
-    TRUE ~ x
-  )
-
+  x <- stringr::str_trim(as.character(x))
+  range_parts <- stringr::str_match(x, "^(-?[0-9]+)\\s*-\\s*(-?[0-9]+)$")
+  has_range <- !is.na(range_parts[, 1])
+  has_lower_bound <- stringr::str_detect(x, "^>")
+  has_upper_bound <- stringr::str_detect(x, "^<")
+  invalid <- is.na(x) | x == "" | stringr::str_detect(x, "^[?]") |
+    stringr::str_detect(x, "[:alpha:]")
+  value <- suppressWarnings(as.integer(stringr::str_extract(x, "-?[0-9]+")))
   base <- lubridate::as_date(paste0(year, "-04-30"))
-  observed <- base + as.integer(cleaned)
-  min_date <- dplyr::if_else(has_range, base + as.integer(stringr::str_extract(x, "[:digit:]{1,2}(?=-)")), observed)
-  max_date <- dplyr::if_else(has_range, base + as.integer(stringr::str_extract(x, "(?<=-)[:digit:]{1,2}")), observed)
+  exact <- !invalid & !has_range & !has_lower_bound & !has_upper_bound
+  observed <- dplyr::if_else(exact, base + value, as.Date(NA))
+  min_date <- dplyr::case_when(
+    invalid | has_upper_bound ~ as.Date(NA),
+    has_range ~ base + as.integer(range_parts[, 2]),
+    has_lower_bound ~ base + value + 1L,
+    TRUE ~ observed
+  )
+  max_date <- dplyr::case_when(
+    invalid | has_lower_bound ~ as.Date(NA),
+    has_range ~ base + as.integer(range_parts[, 3]),
+    has_upper_bound ~ base + value - 1L,
+    TRUE ~ observed
+  )
 
   tibble::tibble(observed = observed, min = min_date, max = max_date)
 }
@@ -284,6 +300,59 @@ parse_MAY_count <- function(x) {
 
     sum(as.integer(stringr::str_extract_all(value, "[+-]?[0-9]+")[[1]]))
   })
+}
+
+estimate_MAY_capture_date <- function(lay_observed, lay_min, lay_max,
+                                      hatch_observed, hatch_min, hatch_max,
+                                      clutch_size) {
+  hatch_mid <- dplyr::if_else(
+    !is.na(hatch_min) & !is.na(hatch_max),
+    hatch_min + floor(as.numeric(hatch_max - hatch_min) / 2),
+    as.Date(NA)
+  )
+  lay_mid <- dplyr::if_else(
+    !is.na(lay_min) & !is.na(lay_max),
+    lay_min + floor(as.numeric(lay_max - lay_min) / 2),
+    as.Date(NA)
+  )
+  hatch <- dplyr::coalesce(hatch_observed, hatch_mid)
+  lay <- dplyr::coalesce(lay_observed, lay_mid)
+
+  dplyr::case_when(
+    !is.na(hatch) ~ hatch + 11L,
+    !is.na(lay) & !is.na(clutch_size) ~ lay + clutch_size + 23L,
+    TRUE ~ as.Date(NA)
+  )
+}
+
+parse_MAY_chick_ids <- function(data, sheet, progress_bar) {
+  issues <- character()
+
+  ids <- purrr::map2(
+    data$nestling_rings,
+    data$source_row,
+    function(rings, row) {
+      progress_bar$tick()
+
+      withCallingHandlers(
+        retrieve_chickIDs_MAY(rings, paste0(sheet, " sheet row ", row)),
+        warning = function(w) {
+          issues <<- c(issues, conditionMessage(w))
+          invokeRestart("muffleWarning")
+        }
+      )
+    }
+  )
+
+  if (length(issues) > 0) {
+    message(
+      length(issues), " ", sheet,
+      " ring sequences exceeded 15 IDs and were skipped:\n",
+      paste0("- ", issues, collapse = "\n")
+    )
+  }
+
+  ids
 }
 
 
@@ -345,11 +414,15 @@ create_brood_MAY <- function(gt_data,
       # TODO: Does the column 'line of nest boxes' indicate plot?
       Plot = toupper(.data$the_line_of_nest_boxes),
       LocationID = paste(.data$the_line_of_nest_boxes, .data$no_nest_box, sep = "_"),
-      # TODO: No clutch type info for pied flycatchers, correct?
-      ClutchType_observed = NA_character_,
-      # TODO: Some nests are marked as "experiment".
-      # Check what kind of experiment.
-      ExperimentID = dplyr::if_else(stringr::str_detect(.data$the_cause_of_the_nests_death, "experiment"),
+      ClutchType_observed = dplyr::case_when(
+        stringr::str_to_lower(stringr::str_trim(.data$status_and_re_nesting)) == "first nest of female" ~ "first",
+        stringr::str_to_lower(stringr::str_trim(.data$status_and_re_nesting)) == "repeat nest" ~ "replacement",
+        TRUE ~ NA_character_
+      ),
+      ExperimentID = dplyr::if_else(stringr::str_detect(
+        .data$the_cause_of_the_nests_death,
+        stringr::regex("experiment", ignore_case = TRUE)
+      ),
         "OTHER", NA_character_
       )
     ) %>%
@@ -393,11 +466,11 @@ create_brood_MAY <- function(gt_data,
       Species = "PARMAJ",
       Plot = toupper(.data$the_line_of_nest_boxes),
       LocationID = paste(.data$the_line_of_nest_boxes, .data$no_nest_box, sep = "_"),
-      # TODO: Ambiguous "x or repeat" entries are mapped to "second", correct?
       ClutchType_observed = dplyr::case_when(
-        .data$clutchType %in% c("1", "(1)") ~ "first",
-        stringr::str_detect(.data$clutchType, "1.*repeat") ~ "replacement",
-        stringr::str_detect(.data$clutchType, "[2-3]") ~ "second",
+        stringr::str_trim(.data$clutchType) == "1" ~ "first",
+        stringr::str_trim(.data$clutchType) == "2" ~ "second",
+        stringr::str_detect(.data$clutchType, "^\\s*\\(") ~ NA_character_,
+        stringr::str_detect(.data$clutchType, stringr::regex("repeat", ignore_case = TRUE)) ~ "replacement",
         TRUE ~ NA_character_
       ),
       ExperimentID = NA_character_
@@ -448,10 +521,15 @@ create_capture_MAY <- function(gt_data,
         .data$MaleID, NA_character_
       ),
       ClutchSize = parse_MAY_count(.data$clutch_size),
-      lay = parse_MAY_date(.data$start_date_of_laying_1_may_1, .data$year)
+      lay = parse_MAY_date(.data$start_date_of_laying_1_may_1, .data$year),
+      hatch = parse_MAY_date(.data$hatching_date_1_may_1, .data$year)
     ) %>%
-    tidyr::unpack("lay", names_sep = "_") %>%
-    dplyr::mutate(CaptureDate = .data$lay_observed + .data$ClutchSize) %>%
+    tidyr::unpack(c("lay", "hatch"), names_sep = "_") %>%
+    dplyr::mutate(CaptureDate = estimate_MAY_capture_date(
+      .data$lay_observed, .data$lay_min, .data$lay_max,
+      .data$hatch_observed, .data$hatch_min, .data$hatch_max,
+      .data$ClutchSize
+    )) %>%
     tidyr::pivot_longer(cols = c("FemaleID", "MaleID"), names_to = "sex", values_to = "IndvID") %>%
     dplyr::filter(!is.na(.data$IndvID)) %>%
     dplyr::mutate(
@@ -481,16 +559,10 @@ create_capture_MAY <- function(gt_data,
   # 2. Pied flycatcher chicks
   message("Completing sequence of pied flycatcher chick IDs")
   pb_pf <- progress::progress_bar$new(total = nrow(pf_data))
+  pf_chick_ids <- parse_MAY_chick_ids(pf_data, "Ficedula", pb_pf)
 
   pf_chicks <- pf_data %>%
-    dplyr::mutate(IndvID = purrr::map(
-      .x = .data$nestling_rings,
-      .f = ~ {
-        pb_pf$tick()
-
-        retrieve_chickIDs_MAY(.x)
-      }
-    )) %>%
+    dplyr::mutate(IndvID = pf_chick_ids) %>%
     tidyr::unnest(cols = "IndvID") %>%
     dplyr::mutate(IndvID = dplyr::if_else(stringr::str_detect(.data$IndvID, "^[:upper:]{0,2}[:digit:]{5,6}$"),
       .data$IndvID, NA_character_
@@ -498,11 +570,16 @@ create_capture_MAY <- function(gt_data,
     dplyr::filter(!is.na(.data$IndvID)) %>%
     dplyr::mutate(
       ClutchSize = parse_MAY_count(.data$clutch_size),
-      lay = parse_MAY_date(.data$start_date_of_laying_1_may_1, .data$year)
+      lay = parse_MAY_date(.data$start_date_of_laying_1_may_1, .data$year),
+      hatch = parse_MAY_date(.data$hatching_date_1_may_1, .data$year)
     ) %>%
-    tidyr::unpack("lay", names_sep = "_") %>%
+    tidyr::unpack(c("lay", "hatch"), names_sep = "_") %>%
     dplyr::mutate(
-      CaptureDate = .data$lay_observed + .data$ClutchSize,
+      CaptureDate = estimate_MAY_capture_date(
+        .data$lay_observed, .data$lay_min, .data$lay_max,
+        .data$hatch_observed, .data$hatch_min, .data$hatch_max,
+        .data$ClutchSize
+      ),
       Sex_observed = NA_character_,
       Tarsus = NA_real_,
       WingLength = NA_real_,
@@ -527,10 +604,15 @@ create_capture_MAY <- function(gt_data,
         .data$MaleID, NA_character_
       ),
       ClutchSize = parse_MAY_count(.data$clutch_size_in_brackets_possibly_number_of_eggs),
-      lay = parse_MAY_date(.data$start_date_of_laying_1_may_1, .data$year)
+      lay = parse_MAY_date(.data$start_date_of_laying_1_may_1, .data$year),
+      hatch = parse_MAY_date(.data$hatching_date_1_may_1, .data$year)
     ) %>%
-    tidyr::unpack("lay", names_sep = "_") %>%
-    dplyr::mutate(CaptureDate = .data$lay_observed + .data$ClutchSize) %>%
+    tidyr::unpack(c("lay", "hatch"), names_sep = "_") %>%
+    dplyr::mutate(CaptureDate = estimate_MAY_capture_date(
+      .data$lay_observed, .data$lay_min, .data$lay_max,
+      .data$hatch_observed, .data$hatch_min, .data$hatch_max,
+      .data$ClutchSize
+    )) %>%
     tidyr::pivot_longer(cols = c("FemaleID", "MaleID"), names_to = "sex", values_to = "IndvID") %>%
     dplyr::filter(!is.na(.data$IndvID)) %>%
     dplyr::mutate(
@@ -547,16 +629,10 @@ create_capture_MAY <- function(gt_data,
   # 4. Great tit chicks
   message("Completing sequence of great tit chick IDs")
   pb_gt <- progress::progress_bar$new(total = nrow(gt_data))
+  gt_chick_ids <- parse_MAY_chick_ids(gt_data, "Parus", pb_gt)
 
   gt_chicks <- gt_data %>%
-    dplyr::mutate(IndvID = purrr::map(
-      .x = .data$nestling_rings,
-      .f = ~ {
-        pb_gt$tick()
-
-        retrieve_chickIDs_MAY(.x)
-      }
-    )) %>%
+    dplyr::mutate(IndvID = gt_chick_ids) %>%
     tidyr::unnest(cols = "IndvID") %>%
     dplyr::mutate(IndvID = dplyr::if_else(stringr::str_detect(.data$IndvID, "^[:upper:]{0,2}[:digit:]{5,6}$"),
       .data$IndvID, NA_character_
@@ -564,12 +640,16 @@ create_capture_MAY <- function(gt_data,
     dplyr::filter(!is.na(.data$IndvID)) %>%
     dplyr::mutate(
       ClutchSize = parse_MAY_count(.data$clutch_size_in_brackets_possibly_number_of_eggs),
-      lay = parse_MAY_date(.data$start_date_of_laying_1_may_1, .data$year)
+      lay = parse_MAY_date(.data$start_date_of_laying_1_may_1, .data$year),
+      hatch = parse_MAY_date(.data$hatching_date_1_may_1, .data$year)
     ) %>%
-    tidyr::unpack("lay", names_sep = "_") %>%
-    # TODO: Chick capture date uses the same lay date + clutch size proxy as parents as the exact ringing date is unkown/unrecorded.
+    tidyr::unpack(c("lay", "hatch"), names_sep = "_") %>%
     dplyr::mutate(
-      CaptureDate = .data$lay_observed + .data$ClutchSize,
+      CaptureDate = estimate_MAY_capture_date(
+        .data$lay_observed, .data$lay_min, .data$lay_max,
+        .data$hatch_observed, .data$hatch_min, .data$hatch_max,
+        .data$ClutchSize
+      ),
       Sex_observed = NA_character_,
       Tarsus = NA_real_,
       WingLength = NA_real_,
@@ -621,6 +701,9 @@ create_capture_MAY <- function(gt_data,
     ) %>%
     dplyr::ungroup() %>%
     dplyr::select(-"ring_number") %>%
+    dplyr::group_by(.data$IndvID) %>%
+    dplyr::filter(dplyr::n_distinct(.data$Species) == 1) %>%
+    dplyr::ungroup() %>%
     dplyr::arrange(.data$IndvID, .data$BreedingSeason, .data$CaptureDate) %>%
     dplyr::group_by(.data$IndvID) %>%
     dplyr::mutate(CaptureID = paste(.data$IndvID, dplyr::row_number(), sep = "_")) %>%
@@ -656,9 +739,8 @@ create_individual_MAY <- function(capture_data,
                                   species_filter) {
   Individual_data <- capture_data %>%
     dplyr::arrange(.data$IndvID, .data$BreedingSeason, .data$CaptureDate) %>%
-    dplyr::group_by(.data$IndvID) %>%
-    dplyr::summarise( # TODO: Check individuals recorded as both great tit and pied flycatcher with data custodian
-      Species = dplyr::if_else(dplyr::n_distinct(.data$Species) > 1, "CCCCCC", dplyr::first(.data$Species)),
+    dplyr::group_by(.data$Species, .data$IndvID) %>%
+    dplyr::summarise(
       RingSeason = as.integer(dplyr::first(.data$BreedingSeason)),
       RingAge = dplyr::if_else(dplyr::first(.data$Age_observed) == 1L, "chick", "adult"),
       FirstBroodID = dplyr::first(.data$BroodID),
@@ -710,13 +792,13 @@ create_location_MAY <- function(gt_data,
     dplyr::summarise(
       Latitude = dplyr::first(.data$latitude_n[!is.na(.data$latitude_n)], default = NA_real_),
       Longitude = dplyr::first(.data$longitude_e[!is.na(.data$longitude_e)], default = NA_real_),
-      StartSeason = as.integer(min(.data$year, na.rm = TRUE)),
       .groups = "drop"
     ) %>%
     dplyr::mutate(
       NestboxID = .data$LocationID,
       LocationType = "NB",
       PopID = "MAY",
+      StartSeason = NA_integer_,
       EndSeason = NA_integer_,
       HabitatType = NA_character_
     )
@@ -730,6 +812,7 @@ create_location_MAY <- function(gt_data,
 #' In MAY primary data, the chick IDs in a brood are stored as series of partially incomplete character sequences (e.g., "856840,1,55-62", "099362-65"). This function extracts the full sequence of characters for each ID in the series. "-" are interpreted as a range; "," are interpreted as a regular separator. Values in other formats (e.g., "without a rings", "531094.95999999996") and sequences that lead to an excessive number of IDs (e.g. "54522-291") are set to NA.
 #'
 #' @param chickID Character. The series of partially incomplete chick IDs of a brood.
+#' @param context Character. Optional source location used in warnings.
 #'
 #' @return A vector with the complete chick IDs of a brood, or NA.
 #'
@@ -739,7 +822,7 @@ create_location_MAY <- function(gt_data,
 #'
 #' retrieve_chickIDs_MAY("856840,1,55-62")
 #'
-retrieve_chickIDs_MAY <- function(chickID) {
+retrieve_chickIDs_MAY <- function(chickID, context = NULL) {
   if (is.na(chickID)) {
     return(NA_character_)
   }
@@ -751,10 +834,24 @@ retrieve_chickIDs_MAY <- function(chickID) {
   )[[1]]
 
   if (length(chick_groups) > 1) {
-    output <- unlist(purrr::map(chick_groups, retrieve_chickIDs_MAY), use.names = FALSE)
+    output <- unlist(purrr::map(
+      chick_groups,
+      ~ retrieve_chickIDs_MAY(.x, context)
+    ), use.names = FALSE)
     output <- output[!is.na(output)]
 
-    if (length(output) == 0 || length(output) > 15) {
+    if (length(output) > 15) {
+      warning(
+        paste0("Ring sequence exceeds 15 IDs",
+          if (!is.null(context)) paste0(" at ", context) else "",
+          ": ", chickID
+        ),
+        call. = FALSE
+      )
+      return(NA_character_)
+    }
+
+    if (length(output) == 0) {
       return(NA_character_)
     }
 
@@ -884,6 +981,20 @@ retrieve_chickIDs_MAY <- function(chickID) {
       }
     )
 
+    for (i in seq_along(special_chars)) {
+      if (special_chars[i] == "-") {
+        range_start <- as.integer(new_series[i])
+        range_end <- as.integer(new_series[i + 1])
+        rollover <- 10^nchar(id_series[i + 1])
+
+        while (range_end < range_start &&
+          stringr::str_detect(id_series[i + 1], "^0+$")) {
+          range_end <- range_end + rollover
+        }
+
+        new_series[i + 1] <- as.character(range_end)
+      }
+    }
 
     # We now have full numbers but have lost track of which gaps were ranges,
     # so weave the separators back in between them in their original order,
@@ -916,6 +1027,13 @@ retrieve_chickIDs_MAY <- function(chickID) {
   # failed rather than as real data.
   # TODO: Check with data custodian
   if (length(output) > 15) {
+    warning(
+      paste0("Ring sequence exceeds 15 IDs",
+        if (!is.null(context)) paste0(" at ", context) else "",
+        ": ", chickID
+      ),
+      call. = FALSE
+    )
     output <- NA
   }
 

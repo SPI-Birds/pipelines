@@ -8,6 +8,7 @@ test_that("MAY outputs all files...", {
   expect_true(pipeline_output$protocol_version == "1.1.0")
   expect_true(all(c("FICHYP", "PARMAJ") %in%
     subset(pipeline_output$Brood_data, BreedingSeason == 2024)$Species))
+  expect_false(anyDuplicated(pipeline_output$Individual_data$IndvID) > 0)
 })
 
 test_that("Brood_data returns an expected outcome...", {
@@ -20,6 +21,7 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(MAY_data, BroodID == "1979_B_47B_4")$LocationID, "B_47B")
   expect_equal(subset(MAY_data, BroodID == "1979_B_47B_4")$FemaleID, "XA593689")
   expect_equal(subset(MAY_data, BroodID == "1979_B_47B_4")$MaleID, "XA593797")
+  expect_true(is.na(subset(MAY_data, BroodID == "1979_B_47B_4")$ClutchType_observed))
   expect_equal(subset(MAY_data, BroodID == "1979_B_47B_4")$ClutchType_calculated, "first")
   expect_equal(subset(MAY_data, BroodID == "1979_B_47B_4")$LayDate_observed, as.Date("1979-05-29"))
   expect_equal(subset(MAY_data, BroodID == "1979_B_47B_4")$ClutchSize_observed, 10L)
@@ -44,6 +46,10 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(MAY_data, BroodID == "1981_L_17_155")$ClutchSize_observed, 7L)
   expect_equal(subset(MAY_data, BroodID == "1981_L_17_155")$BroodSize_observed, 7L)
   expect_equal(subset(MAY_data, BroodID == "1981_L_17_155")$NumberFledged_observed, 7L)
+
+  expect_equal(subset(MAY_data, BroodID == "1981_M_85_117")$ClutchType_observed, "first")
+  expect_equal(subset(MAY_data, BroodID == "1981_M_47_119")$ClutchType_observed, "replacement")
+  expect_equal(subset(MAY_data, BroodID == "1979_M_23_3")$ClutchType_observed, "replacement")
 })
 
 test_that("Individual data returns an expected outcome...", {
@@ -80,8 +86,8 @@ test_that("Capture data returns an expected outcome...", {
   # Test 1: Individual ringed as a chick, recaptured as a breeding adult 2 years later
   expect_equal(nrow(subset(MAY_data, IndvID == "XB530579")), 2)
   expect_equal(subset(MAY_data, IndvID == "XB530579")$CaptureID, c("XB530579_1", "XB530579_2"))
-  expect_equal(subset(MAY_data, IndvID == "XB530579")$CaptureDate[1], as.Date("1981-06-02"))
-  expect_equal(subset(MAY_data, IndvID == "XB530579")$CaptureDate[2], as.Date("1983-05-28"))
+  expect_equal(subset(MAY_data, IndvID == "XB530579")$CaptureDate[1], as.Date("1981-06-26"))
+  expect_equal(subset(MAY_data, IndvID == "XB530579")$CaptureDate[2], as.Date("1983-06-21"))
   # First capture is as a chick (age observed 1), then as an adult
   expect_equal(subset(MAY_data, IndvID == "XB530579")$Age_observed, c(1L, 6L))
   expect_equal(subset(MAY_data, IndvID == "XB530579")$Age_calculated, c(1L, 7L))
@@ -91,7 +97,7 @@ test_that("Capture data returns an expected outcome...", {
   expect_equal(subset(MAY_data, IndvID == "XA593689")$CaptureID, "XA593689_1")
   expect_equal(subset(MAY_data, IndvID == "XA593689")$Species, "PARMAJ")
   expect_equal(subset(MAY_data, IndvID == "XA593689")$Sex_observed, "F")
-  expect_equal(subset(MAY_data, IndvID == "XA593689")$CaptureDate, as.Date("1979-06-08"))
+  expect_equal(subset(MAY_data, IndvID == "XA593689")$CaptureDate, as.Date("1979-07-02"))
   expect_equal(subset(MAY_data, IndvID == "XA593689")$LocationID, "B_47B")
   expect_equal(subset(MAY_data, IndvID == "XA593689")$Age_observed, 5L)
 })
@@ -105,7 +111,7 @@ test_that("Location_data returns an expected outcome...", {
   # Expect LocationID and NestboxID are the same
   expect_true(subset(MAY_data, LocationID == "L_17")$NestboxID == "L_17")
   expect_equal(subset(MAY_data, LocationID == "L_17")$PopID, "MAY")
-  expect_equal(subset(MAY_data, LocationID == "L_17")$StartSeason, 1980L)
+  expect_true(is.na(subset(MAY_data, LocationID == "L_17")$StartSeason))
 
   # Test 2: A brood LocationID resolves in Location_data
   expect_true("B_47B" %in% pipeline_output$Location_data$LocationID)
@@ -114,6 +120,30 @@ test_that("Location_data returns an expected outcome...", {
   expect_false(is.na(subset(MAY_data, LocationID == "L_17")$Latitude))
   expect_false(is.na(subset(MAY_data, LocationID == "L_17")$Longitude))
   expect_true(all(is.na(MAY_data$HabitatType)))
+})
+
+test_that("MAY uncertainty parsers return protocol bounds...", {
+  dates <- parse_MAY_date(c("<32", ">32", "32-35", "32"), rep(2020, 4))
+
+  expect_equal(dates$observed, as.Date(c(NA, NA, NA, "2020-06-01")))
+  expect_equal(dates$min, as.Date(c(NA, "2020-06-02", "2020-06-01", "2020-06-01")))
+  expect_equal(dates$max, as.Date(c("2020-05-31", NA, "2020-06-04", "2020-06-01")))
+  expect_equal(parse_MAY_count(c("7+4", "(7)", ">6", "5-2")), c(11L, 7L, 6L, 3L))
+})
+
+test_that("MAY oversized ring sequences are reported...", {
+  expect_equal(
+    retrieve_chickIDs_MAY("700995-00"),
+    as.character(700995:701000)
+  )
+  expect_equal(
+    retrieve_chickIDs_MAY("726096-00"),
+    as.character(726096:726100)
+  )
+  expect_warning(
+    expect_true(is.na(retrieve_chickIDs_MAY("54522-291", "Parus sheet row test"))),
+    "exceeds 15 IDs"
+  )
 })
 
 ### Test protocol compliance
