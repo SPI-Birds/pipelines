@@ -108,7 +108,7 @@ format_MAL <- function(db = choose_directory(),
             ObserverID = .data$Handler
         ) %>%
         ## Arrange
-        dplyr::arrange(BreedingSeason, Plot, LocationID, CaptureDate)
+        dplyr::arrange(.data$BreedingSeason, .data$Plot, .data$LocationID, .data$CaptureDate)
 
 
     ## Read in primary data from nest records (new format)
@@ -201,7 +201,7 @@ format_MAL <- function(db = choose_directory(),
     ## Combine two primary data formats and process further
     ## TODO: Species missing in a surprising number of cases
     nest_data <- dplyr::bind_rows(nest_data_13_16, nest_data_17_19) %>%
-        dplyr::arrange(BreedingSeason, Plot, LocationID, LayDate_observed) %>%
+        dplyr::arrange(.data$BreedingSeason, .data$Plot, .data$LocationID, .data$LayDate_observed) %>%
         ## Create BroodID based on Po pID and row number
         dplyr::mutate(BroodID = dplyr::case_when(!is.na(.data$Species) ~ paste(.data$PopID, dplyr::row_number(), sep = "-")))
 
@@ -219,7 +219,7 @@ format_MAL <- function(db = choose_directory(),
         janitor::remove_empty(which = "rows") %>%
         dplyr::rename_with(~ tolower(gsub("X", "", .x, fixed = TRUE))) %>%
         tidyr::pivot_longer(
-            cols = matches("20.*"),
+            cols = tidyselect::matches("20.*"),
             values_to = "Present",
             names_to = "Year"
         ) %>%
@@ -325,16 +325,16 @@ create_brood_MAL <- function(nest_data, rr_data, protocol_version) {
         ## Remove records with multiple adult IDs of the same sex recorded since it will not be possible to infer the parent ID for that sex
         dplyr::group_by(.data$BreedingSeason, .data$PopID, .data$Species, .data$Plot, .data$LocationID, .data$Sex_observed) %>%
         dplyr::mutate(IDs = dplyr::n_distinct(.data$IndvID)) %>%
-        dplyr::filter(IDs == 1) %>%
+        dplyr::filter(.data$IDs == 1) %>%
         ## Keep only distinct records for:
         dplyr::distinct(.data$BreedingSeason, .data$PopID, .data$Species, .data$Plot, .data$LocationID, .data$Sex_observed, .keep_all = T) %>%
         ## Create brood record to use as ID column
         dplyr::mutate(Brood_rec = paste(.data$BreedingSeason, .data$PopID, .data$Species, .data$Plot, .data$LocationID)) %>%
         ## Get adults for each brood
         tidyr::pivot_wider(
-            values_from = .data$IndvID,
-            names_from = .data$Sex_observed,
-            id_cols = .data$Brood_rec
+            values_from = "IndvID",
+            names_from = "Sex_observed",
+            id_cols = "Brood_rec"
         ) %>%
         ## Create FemaleID/MaleID columns (pivot may omit a sex if no records exist)
         dplyr::mutate(
@@ -363,8 +363,8 @@ create_brood_MAL <- function(nest_data, rr_data, protocol_version) {
         ) %>%
         ## Replace NaNs and 0 with NA
         dplyr::mutate(
-            dplyr::across(where(is.numeric), ~ dplyr::na_if(., NaN)),
-            dplyr::across(where(is.numeric), ~ dplyr::na_if(., 0))
+            dplyr::across(tidyselect::where(is.numeric), ~ dplyr::na_if(., NaN)),
+            dplyr::across(tidyselect::where(is.numeric), ~ dplyr::na_if(., 0))
         )
 
 
@@ -410,7 +410,7 @@ create_capture_MAL <- function(rr_data, protocol_version) {
     ## Capture data from ringing records
     Capture_data <- rr_data %>%
         ## Arrange
-        dplyr::arrange(BreedingSeason, PopID, IndvID, CaptureDate) %>%
+        dplyr::arrange(.data$BreedingSeason, .data$PopID, .data$IndvID, .data$CaptureDate) %>%
         ## Add additional data
         dplyr::mutate(
             CapturePopID = .data$PopID,
