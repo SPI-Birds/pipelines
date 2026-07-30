@@ -21,6 +21,7 @@
 #'
 #' @return Generates either 4 .csv files or 4 data frames in the standard format.
 #' @export
+#' @importFrom stats setNames
 
 format_BRG <- function(db = choose_directory(),
                        path = ".",
@@ -239,7 +240,7 @@ format_BRG <- function(db = choose_directory(),
         dplyr::ungroup() %>%
         ## Remove any NAs from critical columns
         dplyr::filter(
-            if_all(c(
+            dplyr::if_all(c(
                 "CaptureID",
                 "CapturePopID",
                 "BreedingSeason",
@@ -257,7 +258,7 @@ format_BRG <- function(db = choose_directory(),
         ## Add missing template columns
         {
             missing_cols <- setdiff(names(data_templates[["v1.1.0"]]$Individual_data), names(.))
-            dplyr::mutate(., !!!setNames(rep(list(NA), length(missing_cols)), missing_cols))
+            dplyr::mutate(., !!!stats::setNames(rep(list(NA), length(missing_cols)), missing_cols))
         } %>%
         ## Reorder columns
         dplyr::select(names(data_templates[["v1.1.0"]]$Individual_data)) %>%
@@ -275,7 +276,7 @@ format_BRG <- function(db = choose_directory(),
         ## Add missing template columns
         {
             missing_cols <- setdiff(names(data_templates[["v1.1.0"]]$Location_data), names(.))
-            dplyr::mutate(., !!!setNames(rep(list(NA), length(missing_cols)), missing_cols))
+            dplyr::mutate(., !!!stats::setNames(rep(list(NA), length(missing_cols)), missing_cols))
         } %>%
         ## Reorder and keep only template columns
         dplyr::select(names(data_templates[["v1.1.0"]]$Location_data)) %>%
