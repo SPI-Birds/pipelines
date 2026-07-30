@@ -417,8 +417,8 @@ create_brood_NIOO <- function(dir, location_data, species_filter, pop_filter, pr
       LocationID = as.character(.data$BroodLocationID)
     ) %>%
     dplyr::select(
-      -NumberHatched_clean, -NumberHatchedDeviation_clean,
-      -NumberHatched_sum,
+      -"NumberHatched_clean", -"NumberHatchedDeviation_clean",
+      -"NumberHatched_sum",
     ) %>% # Remove columns only used for calculations
     dplyr::left_join(
       location_data %>%
@@ -576,7 +576,7 @@ create_capture_NIOO <- function(dir, Brood_data, location_data, species_filter, 
     # Make mass in g, and tarsus and wing length in mm
     dplyr::mutate(
       BroodID = as.character(.data$BroodID),
-      LocationID = as.character(paste0(CapturePopID, "_", .data$CaptureLocation)),
+      LocationID = as.character(paste0(.data$CapturePopID, "_", .data$CaptureLocation)),
       Mass = dplyr::na_if(.data$Weight / 100, y = 0),
       Tarsus = dplyr::na_if(.data$Tarsus / 10, y = 0),
       WingLength = dplyr::na_if(.data$P3_Length / 10, y = 0)

@@ -360,7 +360,7 @@ create_capture_HOC <- function(db) {
     col_types = "text"
   ) %>%
     janitor::clean_names() %>%
-    dplyr::select(ring_number, sex_observed)
+    dplyr::select("ring_number", "sex_observed")
 
   Capture_data <- readxl::read_excel(
     paste0(db, "/HOC_PrimaryData.xlsx"),
