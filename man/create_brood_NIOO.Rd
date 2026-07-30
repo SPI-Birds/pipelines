@@ -4,7 +4,13 @@
 \alias{create_brood_NIOO}
 \title{Create brood data table for NIOO pipeline.}
 \usage{
-create_brood_NIOO(dir, location_data, species_filter, pop_filter)
+create_brood_NIOO(
+  dir,
+  location_data,
+  species_filter,
+  pop_filter,
+  protocol_version
+)
 }
 \arguments{
 \item{dir}{Path to directory containing the relevant table exports from the NIOO Access database.}
@@ -16,6 +22,8 @@ Used to filter the data.}
 
 \item{pop_filter}{Population three letter codes from the standard protocol.
 Used to filter the data.}
+
+\item{protocol_version}{Version of the standard protocol.}
 }
 \value{
 A data frame.

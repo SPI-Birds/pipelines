@@ -9,7 +9,8 @@ format_NIOO(
   species = NULL,
   pop = NULL,
   path = ".",
-  output_type = "R"
+  output_type = "R",
+  skip_export_tables = FALSE
 )
 }
 \arguments{
@@ -54,7 +55,7 @@ Vlieland, Oosterhout, and Liesbos.
 
 \strong{Sex}: We condense sex information to only include groups M, F, and C
 (conflicting). Uncertainty in sex was ignored (e.g.
-'male?' or 'female?').
+' male?' or 'female?').
 
 \strong{Measurement error}: For BroodSize, NumberFledged, and LayDate a best
 estimate is provided. Best estimate is halfway between the minimum and maximum
@@ -84,4 +85,8 @@ we don't include this data, but we hope to in the future. Therefore, AvgEggMass 
 \strong{ChickAge:} For every capture, we estimate the age of a chick as the difference between the hatch date
 taken from BroodIDFledged (in Individual_data) and the CaptureDate. We include chick ages for all individuals
 up until 30 days post hatching to accommodate possible late fledging.
+
+\strong{LocationType:} The NIOO database has some nestbox types in their NestBoxType table that are hard to classify.
+NestBoxTypes that we could no easily classify, have been assigned as mistnet captures for now.
+We might need to update that later, but, they are about half of the 7000 records in the Location_data table.
 }

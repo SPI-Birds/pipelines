@@ -4,7 +4,14 @@
 \alias{create_capture_NIOO}
 \title{Create capture data table for NIOO pipeline.}
 \usage{
-create_capture_NIOO(dir, Brood_data, location_data, species_filter, pop_filter)
+create_capture_NIOO(
+  dir,
+  Brood_data,
+  location_data,
+  species_filter,
+  pop_filter,
+  protocol_version
+)
 }
 \arguments{
 \item{dir}{Path to directory containing the relevant table exports from the NIOO Access database.}
@@ -19,6 +26,8 @@ Used to filter the data.}
 
 \item{pop_filter}{Population three letter codes from the standard protocol.
 Used to filter the data.}
+
+\item{protocol_version}{Version of the standard protocol.}
 }
 \value{
 A data frame.

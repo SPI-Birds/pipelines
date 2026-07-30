@@ -27,15 +27,15 @@ We need to identify when the box number starts (the first numeric) and
 separate plot and box number if both are present.
 }
 \examples{
-#Return box number if only box number is provided
+# Return box number if only box number is provided
 find_box("11")
 
-#Return separate plot and box number if both provided
+# Return separate plot and box number if both provided
 find_box("ava11")
 
-#Still return box number of it is alpha-numeric
+# Still return box number of it is alpha-numeric
 find_box("ava11bis")
 
-#Return NA if no information is provided
+# Return NA if no information is provided
 find_box(NA)
 }
