@@ -2,3 +2,4 @@
 ^\.Rproj\.user$
 Hackathon*
 ^data-raw$
+^LICENSE\.md$
