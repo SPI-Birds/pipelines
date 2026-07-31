@@ -12,7 +12,6 @@
 #' \strong{IndvID}: IndvID codes have 7 characters and start with letter "K".
 #' Chicks and adults with no ring/no ID were removed from the dataset
 #' FIXME There are 3 adult rings with an extra character - asking data custodian about it
-
 #'
 #' \strong{CaptureDate}: For chicks, CaptureDate is inferred based on D15Date column.
 #' Sometimes, this column is empty or NA. CaptureDate is thus inferred from Hd (hatching date).
@@ -158,9 +157,9 @@ format_WRS <- function(
   )) %>%
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
-    dplyr::mutate(dplyr::across(where(is.character),
+    dplyr::mutate(dplyr::across(tidyselect::where(is.character),
                                 ~ dplyr::na_if(., "NA"))) %>%
-    dplyr::filter(!is.na(D15Date) & D15Date != "") %>% # Drop records without a d15 date
+    dplyr::filter(!is.na(.data$D15Date) & .data$D15Date != "") %>% # Drop records without a d15 date
     dplyr::rename(
       BreedingSeason = "Year",
       Plot = "Site",
@@ -204,14 +203,14 @@ format_WRS <- function(
 
   ## Create new rows for every chick that did not fledge
   chick_dead <- chick_data_temp %>%
-    dplyr::filter(.data$Fledged == "0" & !is.na(D15Date)) %>%
+    dplyr::filter(.data$Fledged == "0" & !is.na(.data$D15Date)) %>%
     dplyr::mutate(CaptureDate = as.Date(.data$CaptureDate, format = "%Y-%m-%d") + lubridate::days(10), # considering they were found dead when checking fledging event (~10 days after banding chicks)
                   CaptureAlive = FALSE,
                   ReleaseAlive = FALSE)
 
   ## Bind new dataframe to existed one (on chicks)
   chick_data <- dplyr::bind_rows(chick_data_temp, chick_dead)  %>%
-    dplyr::filter(!is.na(.data$IndvID) & stringr::str_detect(IndvID, "^K")) %>% #discard individuals with no ID
+    dplyr::filter(!is.na(.data$IndvID) & stringr::str_detect(.data$IndvID, "^K")) %>% #discard individuals with no ID
     dplyr::select(
       "BreedingSeason",
       "PopID",
@@ -236,7 +235,7 @@ format_WRS <- function(
   )) %>%
     janitor::clean_names(case = "upper_camel") %>%
     janitor::remove_empty(which = "rows") %>%
-    dplyr::filter(!toupper(RingId) %in% c("NORING", "NOTRINGED")) %>% # Drop rows without a ring
+    dplyr::filter(!toupper(.data$RingId) %in% c("NORING", "NOTRINGED")) %>% # Drop rows without a ring
     dplyr::rename(
       BreedingSeason = "Year",
       Plot = "Site",
@@ -356,7 +355,7 @@ format_WRS <- function(
     dplyr::ungroup() %>%
     ## Remove any NAs from critical columns
     dplyr::filter(
-      if_all(c(
+      dplyr::if_all(c(
         "CaptureID",
         "CapturePopID",
         "BreedingSeason",
@@ -378,7 +377,7 @@ format_WRS <- function(
     ## Add missing template columns
     {
       missing_cols <- setdiff(names(data_templates[["v1.1.0"]]$Individual_data), names(.))
-      dplyr::mutate(., !!!setNames(rep(list(NA), length(missing_cols)), missing_cols))
+      dplyr::mutate(., !!!stats::setNames(rep(list(NA), length(missing_cols)), missing_cols))
     } %>%
     ## Reorder columns
     dplyr::select(names(data_templates[["v1.1.0"]]$Individual_data)) %>%
@@ -399,7 +398,7 @@ format_WRS <- function(
     ## Add missing template columns
     {
       missing_cols <- setdiff(names(data_templates[["v1.1.0"]]$Location_data), names(.))
-      dplyr::mutate(., !!!setNames(rep(list(NA), length(missing_cols)), missing_cols))
+      dplyr::mutate(., !!!stats::setNames(rep(list(NA), length(missing_cols)), missing_cols))
     } %>%
     ## Reorder and keep only template columns
     dplyr::select(names(data_templates[["v1.1.0"]]$Location_data)) %>%
@@ -498,9 +497,9 @@ create_brood_WRS <- function(nest_data, chick_data, adult_data) {
         ## Keeping only distinct records by breeding event and sex
         dplyr::distinct(.data$UniqueBreedingEvent, .data$Sex_observed, .keep_all = T) %>%
         tidyr::pivot_wider(
-          id_cols = UniqueBreedingEvent,
-          values_from = IndvID,
-          names_from = Sex_observed
+          id_cols = "UniqueBreedingEvent",
+          values_from = "IndvID",
+          names_from = "Sex_observed"
         ) %>%
         dplyr::rename(
           FemaleID = "F",
@@ -663,7 +662,7 @@ create_individual_WRS <- function(Capture_data_temp, Brood_data_temp) {
       BroodIDFledged = .data$BroodIDLaid
     ) %>%
     ## Keep distinct records by PopID and InvdID
-    dplyr::distinct(PopID, IndvID, .keep_all = TRUE) %>%
+    dplyr::distinct(.data$PopID, .data$IndvID, .keep_all = TRUE) %>%
     ## Arrange
     dplyr::arrange(.data$CaptureID) %>%
     dplyr::ungroup() %>%
@@ -715,7 +714,7 @@ create_location_WRS <- function(nest_data) {
       )
     ) %>%
     ## Keep distinct records
-    dplyr::distinct(PopID, LocationID, .keep_all = TRUE) %>%
+    dplyr::distinct(.data$PopID, .data$LocationID, .keep_all = TRUE) %>%
     dplyr::ungroup()
 
   return(Location_data_temp)

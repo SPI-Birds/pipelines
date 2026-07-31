@@ -42,15 +42,12 @@ This section provides details on data management choices that are unique to
 this data. For a general description of the standard format please see
 \href{https://github.com/SPI-Birds/documentation/blob/master/standard_protocol/SPI_Birds_Protocol_v1.1.0.pdf}{here}.
 
-\strong{Species}: Only PARMAJ and CYACAE are entered in the Capture and Individual tables.
+\strong{Species}: Only PARMAJ and CYACAE are available.
 
-\strong{IndvID}: IndvID codes of the form '19XX' (two numbers + XX) indicate a chick that died before fledging.
-The first two numbers give the year in which the chick died. There is one adult band
-that also includes 'XX' so this should not be used to filter out these records. The
-regular expression "^[:digit:]{2}XX" along with stringr::str_detect can be used to
-identify and filter out these records.
-For one record, no IndvID is given. This record is removed from the data.
+\strong{IndvID}: IndvID codes have 7 characters and start with letter "K".
+Chicks and adults with no ring/no ID were removed from the dataset
+FIXME There are 3 adult rings with an extra character - asking data custodian about it
 
-\strong{CaptureDate}: For chicks, the CaptureDate is inferred based on the d15_date column.
-Sometimes, this column is empty of NA. These captures are removed from the data.
+\strong{CaptureDate}: For chicks, CaptureDate is inferred based on D15Date column.
+Sometimes, this column is empty or NA. CaptureDate is thus inferred from Hd (hatching date).
 }
