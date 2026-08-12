@@ -12,9 +12,6 @@ where X is the pipeline code.}
 
 \item{ID_format}{Regular expression pattern for validating ID formats.
 Default is FALSE, which skips this test.}
-
-\item{protocol_version}{The protocol version of the SPI-Birds standard
-data being used. Either "1.0.0", "1.1.0", or "2.0.0".}
 }
 \value{
 Invisible TRUE if all tests pass, errors otherwise.

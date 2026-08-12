@@ -34,14 +34,13 @@ Authors@R:
            email = "r.vanderwoude@nioo.knaw.nl"))
 Description: Tailor-made pipelines that standardise bird data across the globe using the SPI-Birds standard protocol.
 Depends: R (>= 3.6.0)
-License: Apache License (>= 2.0)
+License: Apache License (>= 2)
 URL: https://github.com/SPI-Birds/pipelines/
 BugReports: https://github.com/SPI-Birds/pipelines/issues
 Encoding: UTF-8
 LazyData: true
 Imports: 
     crayon,
-    devtools,
     dplyr,
     janitor,
     leaflet,

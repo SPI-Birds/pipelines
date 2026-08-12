@@ -7,8 +7,6 @@
 #'
 #' @param pipeline_output A list of data frames returned from format_X,
 #' where X is the pipeline code.
-#' @param protocol_version The protocol version of the SPI-Birds standard
-#' data being used. Either "1.0.0", "1.1.0", or "2.0.0".
 #' @param ID_format Regular expression pattern for validating ID formats.
 #' Default is FALSE, which skips this test.
 #'
