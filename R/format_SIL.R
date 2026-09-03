@@ -16,10 +16,6 @@
 #'@export
 
 
-library(pipelines)
-library(tidyr)
-species_codes <- read.csv("C:/Users/Antoine/Dropbox/Documents/Post Doc - Uniwersytet Jagielloński w Krakowie/Data/SPI-Birds/pipelines/inst/extdata/species_codes.csv")
-
 format_SIL <- function(db = choose_directory(),
                        path = ".",
                        species = NULL,
