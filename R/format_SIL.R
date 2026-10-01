@@ -25,62 +25,66 @@ format_SIL <- function(db = choose_directory(),
   #Force choose_directory() if used
   force(db)
 
+  # The version of the standard protocol on which this pipeline is based
+  protocol_version <- "1.1.0"
+
   start_time <- Sys.time()
 
   message("Importing primary data...")
 
   #### Determine species and population codes for filtering
   if(is.null(species)){
-
     species_filter <- NULL
-
   } else {
-
     species_filter <- species
-
   }
 
   if(is.null(pop)){
-
     pop_filter <- NULL
-
   } else {
-
     pop_filter <- pop
-
   }
 
   start_time <- Sys.time()
 
   ## Set options
-  options(dplyr.summarise.inform = FALSE)
+  original_options <- options(dplyr.summarise.inform = FALSE)
+  on.exit(options(original_options), add = TRUE, after = FALSE)
 
   # db <- "/Users/tyson/Documents/academia/institutions/NIOO/SPI-Birds/my_pipelines/SIL/data/SIL_Silwood_UK"
 
   ## Read in brood data
   ## TODO: There are 3 FemaleIDs (Z04792, f.A18BFS09, f.E07FS09) that are likely incorrect
-  brood_data <- read.csv(file = paste0(db, "/SIL_PrimaryData_Breeding.csv"))  %>%
-    janitor::remove_empty(which = "rows") %>%
-
-    ## Rename and process columns
+  brood_data <- rbind(read.csv(file = paste0(db, "/NestBoxes_breeding_2002_2013.csv")) %>%
+                        dplyr::rename(NestBoxID = "NestboxID") %>%
+                        dplyr::bind_cols(read.csv(file = paste0(db, "/NestBoxes_breeding_2015On.csv"))[0, !(names(read.csv(file = paste0(db, "/NestBoxes_breeding_2015On.csv"))) %in% names(.))] %>%
+                                           tibble::add_row()) %>%
+                        dplyr::select("NestBox_Record", "BroodID", "Year", "NestBoxID", "Nestbox_Fate", "Species", "LayingDate", "LayingDate_Estimated", "ClutchSize_CheckDate",
+                                      "ClutchSize", "Hatching_CheckDate", "HatchingDate", "HatchingDate_Estimated", "ChickNumber", "Day7_CheckDate", "Day7_Date", "Day7_ChickNumber",
+                                      "Day14_CheckDate", "Day14_Date", "Day14_ChickNumber", "EggsUnhatched", "Fledge_CheckDate", "Fledge_Date", "Fledged_ChickNumber",
+                                      "FullNest_DeadDate", "ManipulationID", "ObserverID", "Notes"),
+                      read.csv(file = paste0(db, "/NestBoxes_breeding_2015On.csv"), encoding = "latin1") %>%
+                        dplyr::bind_cols(read.csv(file = paste0(db, "/NestBoxes_breeding_2002_2013.csv"))[0, !(names(read.csv(file = paste0(db, "/NestBoxes_breeding_2002_2013.csv"))) %in% names(.))] %>%
+                                           tibble::add_row()) %>%
+                        dplyr::select("NestBox_Record", "BroodID", "Year", "NestBoxID", "Nestbox_Fate", "Species", "LayingDate", "LayingDate_Estimated", "ClutchSize_CheckDate",
+                                      "ClutchSize", "Hatching_CheckDate", "HatchingDate", "HatchingDate_Estimated", "ChickNumber", "Day7_CheckDate", "Day7_Date", "Day7_ChickNumber",
+                                      "Day14_CheckDate", "Day14_Date", "Day14_ChickNumber", "EggsUnhatched", "Fledge_CheckDate", "Fledge_Date", "Fledged_ChickNumber",
+                                      "FullNest_DeadDate", "ManipulationID", "ObserverID", "Notes")) %>%
     dplyr::mutate(dplyr::across(where(is.character), ~dplyr::na_if(., "."))) %>%
-    dplyr::transmute(PopID = "SIL",
-                     BreedingSeason = as.integer(.data$year),
-                     Species = species_codes[species_codes$SpeciesID == 14620,]$Species,
-                     LocationID = as.character(.data$nest_box),
-                     FemaleID = case_when(stringr::str_detect(.data$female_BTO_ring, "^[[:alpha:][:digit:]]{3}[:digit:]{4}$") ~ .data$female_BTO_ring,
-                                            TRUE ~ NA_character_),
-                     MaleID = .data$male_BTO_ring,
-                     LayDate_observed = suppressWarnings(as.Date(as.numeric(.data$lay_date),
-                                                                 origin = as.Date(paste0(.data$BreedingSeason, "-03-31")))),
-                     HatchDate_observed = suppressWarnings(as.Date(as.numeric(.data$hatch_date),
-                                                                   origin = as.Date(paste0(.data$BreedingSeason, "-03-31")))),
-                     ClutchSize_observed = suppressWarnings(as.integer(.data$clutch_size)),
-                     BroodSize_observed = suppressWarnings(as.integer(.data$no_hatchlings)),
-                     NumberFledged_observed = suppressWarnings(as.integer(.data$no_day14))) %>%
-
-    dplyr::arrange(.data$PopID, .data$BreedingSeason, .data$LocationID)
-
+    dplyr::mutate(PopID = "SIL",
+                  BreedingSeason = Year,
+                  Species = dplyr::case_when(.data$Species == "Blue Tit" ~ species_codes[species_codes$speciesEURINGCode == 14620, ]$Species),
+                  LayDate_observed = as.Date(as.numeric(.data$LayingDate_Estimated),
+                                             origin = as.Date(paste0(.data$Year, "-03-31"))),
+                  LayDate_min = as.Date(as.numeric(.data$LayingDate),
+                                        origin = as.Date(paste0(.data$Year, "-03-31"))),
+                  HatchDate_observed = as.Date(as.numeric(.data$HatchingDate_Estimated),
+                                               origin = as.Date(paste0(.data$Year, "-03-31"))),
+                  HatchDate_min = as.Date(as.numeric(.data$HatchingDate),
+                                          origin = as.Date(paste0(.data$Year, "-03-31"))),
+                  FledgeDate_observed = as.Date(as.numeric(.data$Fledge_Date),
+                                                origin = as.Date(paste0(.data$Year, "-03-31"))),
+                  ClutchSize_observed = .data$ClutchSize)
 
   ## Read in adult data
   adult_data <- read.csv(file = paste0(db, "/SIL_PrimaryData_capture.csv"))  %>%
