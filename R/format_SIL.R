@@ -54,7 +54,6 @@ format_SIL <- function(db = choose_directory(),
   # db <- "/Users/tyson/Documents/academia/institutions/NIOO/SPI-Birds/my_pipelines/SIL/data/SIL_Silwood_UK"
 
   ## Read in brood data
-  ## Read in brood data
   ## TODO: CHECK WHAT TO DO WITH OTHER SPECIES
   brood_data <- rbind(read.csv(file = paste0(db, "/NestBoxes_breeding_2002_2013.csv")) %>%
                         janitor::remove_empty(which = "rows") %>%
@@ -77,7 +76,7 @@ format_SIL <- function(db = choose_directory(),
     dplyr::transmute(PopID = "SIL",
                      BroodID = as.character(.data$BroodID),
                      BreedingSeason = as.integer(.data$Year),
-                     LocationID = as.character(.data$NestBoxID),
+                     LocationID = ifelse(.data$NestBoxID == "A22b", "A22B", as.character(.data$NestBoxID)),
                      Species = dplyr::case_when(.data$Species == "Blue Tit" ~ species_codes[species_codes$speciesEURINGCode == 14620, ]$Species),
                      LayDate_observed = as.Date(as.numeric(.data$LayingDate_Estimated),
                                                 origin = as.Date(paste0(.data$Year, "-03-31"))),
@@ -111,6 +110,7 @@ format_SIL <- function(db = choose_directory(),
     dplyr::arrange(.data$PopID, .data$BreedingSeason, .data$LocationID)
 
   ## Read in adult data
+  ## TODO: Check if missing ring for nest 2009_E07 can be added (present in the comment)
   adult_data <- rbind(read.csv(file = paste0(db, "/Parents_2002_2013.csv")) %>%
                         janitor::remove_empty(which = "rows") %>%
                         dplyr::bind_cols(read.csv(file = paste0(db, "/Parents_2015On.csv"))[0, !(names(read.csv(file = paste0(db, "/Parents_2015On.csv"))) %in% names(.))] %>%
@@ -128,29 +128,67 @@ format_SIL <- function(db = choose_directory(),
                      BroodID = as.character(BroodID),
                      BreedingSeason = as.integer(.data$Year),
                      Species = dplyr::case_when(.data$Species == "BLUTI" ~ species_codes[species_codes$speciesEURINGCode == 14620, ]$Species),
-                     LocationID = as.character(.data$nest_box),
-                     CaptureDate = dplyr::case_when(!is.na(.data$capture_date) ~ as.Date(as.numeric(.data$capture_date),
-                                                                                         origin = as.Date(paste0(.data$BreedingSeason, "-03-31"))),
-                                                    TRUE ~ as.Date(36, origin = as.Date(paste0(.data$BreedingSeason, "-03-31")))),
-                     IndvID = case_when(stringr::str_detect(.data$BTO_ring, "^[[:alpha:][:digit:]]{3}[:digit:]{4}$") ~ .data$BTO_ring,
-                                        TRUE ~ NA_character_),
-                     Sex_observed = .data$sex,
-                     Age_observed = .data$age,
-                     CaptureTime = format(strptime(.data$capture_time,format = "%H:%M"), "%H:%M"),
-                     Mass = round(suppressWarnings(as.numeric(.data$mass)), 2),
-                     WingLength = as.numeric(.data$wing),
-                     Tarsus = as.numeric(.data$tarsus)) %>%
-
+                     LocationID = as.character(.data$NestBoxID),
+                     CaptureDate = as.Date(as.numeric(.data$CaptureDate), origin = as.Date(paste0(.data$BreedingSeason, "-03-31"))),
+                     CaptureTime = format(strptime(.data$CaptureTime,format = "%H:%M"), "%H:%M"),
+                     IndvID = RingNumber,
+                     Sex_observed = .data$Sex,
+                     Age_observed = .data$Age,
+                     Mass = round(suppressWarnings(as.numeric(.data$Weight)), 2),
+                     WingLength = as.numeric(.data$Wing),
+                     Tarsus = as.numeric(.data$Tarsus),
+                     ObserverID = .data$ObserverID) %>%
     dplyr::filter(!is.na(.data$IndvID))
+
+
+  ## Read in chick data
+  ## TODO: Finish this up and understand how to deal; with capture measurements
+  chick_data <- rbind(read.csv(file = paste0(db, "/Chicks_2002_2013.csv")) %>%
+                        janitor::remove_empty(which = "rows") %>%
+                        dplyr::rename(ManipulationID = "Manipulation",
+                                      Day14_Wing = "Wing",
+                                      Day14_Tarsus = "Tarsus",
+                                      Day14_Weight = "Weight") %>%
+                        dplyr::bind_cols(read.csv(file = paste0(db, "/Chicks_2015On.csv"))[0, !(names(read.csv(file = paste0(db, "/Chicks_2015On.csv"))) %in% names(.))] %>%
+                                           tibble::add_row()) %>%
+                        dplyr::select("Chick_Record", "BroodID", "Year", "NestBoxID", "Species", "RingNumber", "Age", "ChickID",
+                                      "Day7_CaptureDate", "Day7_CaptureTime", "Day7_Weight", "Day14_CaptureDate", "Day14_CaptureTime",
+                                      "Day14_Wing", "Day14_Tarsus", "Day14_Head", "Day14_Beak", "Day14_Weight", "Day14_Mites", "Fledge_Date",
+                                      "Dead_Date", "Fate", "ManipulationID", "ObserverID", "Notes"),
+                      read.csv(file = paste0(db, "/Chicks_2015On.csv")) %>%
+                        janitor::remove_empty(which = "rows") %>%
+                        dplyr::bind_cols(read.csv(file = paste0(db, "/Chicks_2002_2013.csv"))[0, !(names(read.csv(file = paste0(db, "/Chicks_2002_2013.csv"))) %in% names(.))] %>%
+                                           tibble::add_row()) %>%
+                        dplyr::select("Chick_Record", "BroodID", "Year", "NestBoxID", "Species", "RingNumber", "Age", "ChickID",
+                                      "Day7_CaptureDate", "Day7_CaptureTime", "Day7_Weight", "Day14_CaptureDate", "Day14_CaptureTime",
+                                      "Day14_Wing", "Day14_Tarsus", "Day14_Head", "Day14_Beak", "Day14_Weight", "Day14_Mites", "Fledge_Date",
+                                      "Dead_Date", "Fate", "ManipulationID", "ObserverID", "Notes")) %>%
+    dplyr::mutate(dplyr::across(where(is.character), ~dplyr::na_if(., "."))) %>%
+    dplyr::transmute(PopID = "SIL",
+                     BroodID = as.character(BroodID),
+                     BreedingSeason = as.integer(.data$Year),
+                     Species = dplyr::case_when(.data$Species == "BLUTI" ~ species_codes[species_codes$speciesEURINGCode == 14620, ]$Species),
+                     LocationID = as.character(.data$NestBoxID),
+                     IndivID = .data$RingNumber)
 
 
 
   ## Read in nest data
-  nest_data <- read.csv(file = paste0(db, "/SIL_PrimaryData_nestboxlocations.csv"))  %>%
+  ## TODO: CHECK WHAT TO DO WITH MISSING NEST J07
+  nest_data <- read.csv(file = paste0(db, "/NextBoxes_location.csv"))  %>%
     janitor::remove_empty(which = "rows") %>%
-    dplyr::select(LocationID = .data$NestBox,
-                  Latitude = .data$latitude,
-                  Longitude = .data$longitude) %>%
+    dplyr::transmute(LocationID = .data$NestBoxID,
+                     NestBoxID = .data$NestBoxID,
+                     Latitude = .data$latitude,
+                     Longitude = .data$longitude,
+                     year = .data$year,
+                     InOut = .data$InOut,
+                     action = .data$action,
+                     Habitat_Type = dplyr::case_when(.data$species %in% c("Fagus_sylvatica", "Quercus_robur", "Acer_pseudoplatanus", "Betula_pendula",
+                                                                          "Castanea_sativa", "Alnus_sp", "betula_pendula", "Quercus_sp",
+                                                                          "Aesculus_hippocastanum", "Crataegus_sp", "Ulmus_sp", "Carpinus_betulus",
+                                                                          "Juglans_regia", "Salix_alba", "Populus_sp") ~ "deciduous",
+                                                     .data$species %in% c("Conifer", "Pinus_sp") ~ "evergreen")) %>%
     dplyr::mutate(PopID = "SIL")
 
 
