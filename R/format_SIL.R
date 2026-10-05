@@ -169,7 +169,15 @@ format_SIL <- function(db = choose_directory(),
                      BreedingSeason = as.integer(.data$Year),
                      Species = dplyr::case_when(.data$Species == "BLUTI" ~ species_codes[species_codes$speciesEURINGCode == 14620, ]$Species),
                      LocationID = as.character(.data$NestBoxID),
-                     IndivID = .data$RingNumber)
+                     IndivID = .data$RingNumber,
+                     Day7_CaptureDate = as.Date(as.numeric(.data$Day7_CaptureDate), origin = as.Date(paste0(.data$BreedingSeason, "-03-31"))),
+                     Day7_CaptureTime = format(strptime(.data$Day7_CaptureTime,format = "%H:%M"), "%H:%M"),
+                     Day7_Weight = as.numeric(Day7_Weight),
+                     Day14_CaptureDate = as.Date(as.numeric(.data$Day14_CaptureDate), origin = as.Date(paste0(.data$BreedingSeason, "-03-31"))),
+                     Day14_CaptureTime = format(strptime(.data$Day14_CaptureTime,format = "%H:%M"), "%H:%M"),
+                     Day14_Weight = as.numeric(Day14_Weight),
+                     Day14_Wing = as.numeric(Day14_Wing),
+                     Day14_Tarsus = as.numeric(Day14_Tarsus))
 
 
 
@@ -195,7 +203,7 @@ format_SIL <- function(db = choose_directory(),
 
   #### BROOD DATA
   message("Compiling brood information...")
-  Brood_data_temp <- create_brood_SIL(brood_data)
+  Brood_data_temp <- create_brood_SIL(brood_data, adult_data, chick_data)
 
   #### CAPTURE DATA
   message("Compiling capture information...")
@@ -363,6 +371,15 @@ create_brood_SIL <- function(brood_data) {
 
   ## Combine primary data to create brood data
   Brood_data_temp <- brood_data %>%
+    dplyr::left_join(chick_data %>%
+                       select()
+
+
+                     , by = c("BroodID"))
+
+
+
+
 
     ## Create BroodID
     dplyr::group_by(.data$BreedingSeason) %>%
