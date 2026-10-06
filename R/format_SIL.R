@@ -73,6 +73,7 @@ format_SIL <- function(db = choose_directory(),
                                       "Day14_CheckDate", "Day14_Date", "Day14_ChickNumber", "EggsUnhatched", "Fledge_CheckDate", "Fledge_Date", "Fledged_ChickNumber",
                                       "FullNest_DeadDate", "ManipulationID", "ObserverID", "Notes")) %>%
     dplyr::mutate(dplyr::across(where(is.character), ~dplyr::na_if(., "."))) %>%
+    dplyr::filter(.data$Nestbox_Fate != "unused") %>%
     dplyr::transmute(PopID = "SIL",
                      BroodID = as.character(.data$BroodID),
                      BreedingSeason = as.integer(.data$Year),
@@ -207,7 +208,7 @@ format_SIL <- function(db = choose_directory(),
 
   #### CAPTURE DATA
   message("Compiling capture information...")
-  Capture_data_temp <- create_capture_SIL(adult_data)
+  Capture_data_temp <- create_capture_SIL(adult_data, chick_data)
 
   #### INDIVIDUAL DATA
   message("Compiling individual information...")
@@ -225,79 +226,77 @@ format_SIL <- function(db = choose_directory(),
 
   ## Brood data
   Brood_data <- Brood_data_temp %>%
-
     ## Keep only necessary columns
-    dplyr::select(dplyr::contains(names(brood_data_template))) %>%
-
+    dplyr::select(dplyr::contains(names(data_templates[["v1.1.0"]]$Brood_data))) %>%
     ## Add missing columns
-    dplyr::bind_cols(brood_data_template[0, !(names(brood_data_template) %in% names(.))] %>%
+    dplyr::bind_cols(data_templates[["v1.1.0"]]$Brood_data[0, !(names(data_templates[["v1.1.0"]]$Brood_data) %in% names(.))] %>%
                        tibble::add_row()) %>%
-
     ## Reorder columns
-    dplyr::select(names(brood_data_template)) %>%
-    dplyr::ungroup()
+    dplyr::select(names(data_templates[["v1.1.0"]]$Brood_data)) %>%
+    dplyr::ungroup() %>%
+    ## Remove any NAs from critical columns
+    dplyr::filter(dplyr::if_all(
+      c("BroodID", "PopID", "BreedingSeason", "Species"), ~ !is.na(.)
+    ))
 
-  # ## Check column classes
-  # purrr::map_df(brood_data_template, class) == purrr::map_df(Brood_data, class)
 
-
-  ## Capture data
+  # Capture data
   Capture_data <- Capture_data_temp %>%
-
     ## Keep only necessary columns
-    dplyr::select(dplyr::contains(names(capture_data_template))) %>%
-
+    dplyr::select(dplyr::contains(names(data_templates[["v1.1.0"]]$Capture_data))) %>%
     ## Add missing columns
-    dplyr::bind_cols(capture_data_template[0, !(names(capture_data_template) %in% names(.))] %>%
+    dplyr::bind_cols(data_templates[["v1.1.0"]]$Capture_data[0, !(names(data_templates[["v1.1.0"]]$Capture_data) %in% names(.))] %>%
                        tibble::add_row()) %>%
-
     ## Reorder columns
-    dplyr::select(names(capture_data_template)) %>%
-    dplyr::ungroup()
-
-  # ## Check column classes
-  # purrr::map_df(capture_data_template, class) == purrr::map_df(Capture_data, class)
+    dplyr::select(names(data_templates[["v1.1.0"]]$Capture_data)) %>%
+    dplyr::ungroup() %>%
+    ## Remove any NAs from critical columns
+    dplyr::filter(
+      if_all(c(
+        "CaptureID",
+        "CapturePopID",
+        "BreedingSeason",
+        "IndvID",
+        "Species",
+        "CaptureDate"
+      ), ~ !is.na(.))
+    )
 
 
   ## Individual data
   Individual_data <- Individual_data_temp %>%
-
     ## Keep only necessary columns
-    dplyr::select(dplyr::contains(names(individual_data_template))) %>%
-
-    ## Add missing columns
-    dplyr::bind_cols(individual_data_template[0, !(names(individual_data_template) %in% names(.))] %>%
-                       tibble::add_row()) %>%
-
+    dplyr::select(dplyr::contains(names(data_templates[["v1.1.0"]]$Individual_data))) %>%
+    ## Add missing template columns
+    {
+      missing_cols <- setdiff(names(data_templates[["v1.1.0"]]$Individual_data), names(.))
+      dplyr::mutate(., !!!setNames(rep(list(NA), length(missing_cols)), missing_cols))
+    } %>%
     ## Reorder columns
-    dplyr::select(names(individual_data_template))  %>%
-    dplyr::ungroup()
+    dplyr::select(names(data_templates[["v1.1.0"]]$Individual_data)) %>%
+    dplyr::ungroup() %>%
+    ## Remove any NAs from critical columns
+    dplyr::filter(dplyr::if_all(
+      c("PopID", "IndvID", "Species", "RingSeason"), ~ !is.na(.)
+    ))
 
-  # ## Check column classes
-  # purrr::map_df(individual_data_template, class) == purrr::map_df(Individual_data, class)
 
   ## Location data
   Location_data <- Location_data_temp %>%
-
-    ## Keep only necessary columns
-    dplyr::select(dplyr::contains(names(location_data_template))) %>%
-
-    ## Add missing columns
-    dplyr::bind_cols(location_data_template[0, !(names(location_data_template) %in% names(.))] %>%
-                       tibble::add_row()) %>%
-
-    ## Reorder columns
-    dplyr::select(names(location_data_template))  %>%
+    ## Keep only template columns that exist
+    dplyr::select(dplyr::any_of(names(data_templates[["v1.1.0"]]$Location_data))) %>%
+    ## Add missing template columns
+    {
+      missing_cols <- setdiff(names(data_templates[["v1.1.0"]]$Location_data), names(.))
+      dplyr::mutate(., !!!setNames(rep(list(NA), length(missing_cols)), missing_cols))
+    } %>%
+    ## Reorder and keep only template columns
+    dplyr::select(names(data_templates[["v1.1.0"]]$Location_data)) %>%
     dplyr::ungroup()
-
-  # ## Check column classes
-  # purrr::map_df(location_data_template, class) == purrr::map_df(Location_data, class)
-
 
 
   ## Filter to keep only desired Species if specified for Brood, Capture, and Individual tables
-  if(!is.null(species_filter)){
-
+  if (!is.null(species_filter)) {
     Brood_data <- Brood_data %>%
       dplyr::filter(.data$Species %in% species_filter & !(is.na(.data$Species)))
 
@@ -306,12 +305,10 @@ format_SIL <- function(db = choose_directory(),
 
     Individual_data <- Individual_data %>%
       dplyr::filter(.data$Species %in% species_filter & !(is.na(.data$Species)))
-
   }
 
   ## Filter to keep only desired Pops if specified for Brood, Capture, Individual, and Location tables
-  if(!is.null(pop_filter)){
-
+  if (!is.null(pop_filter)) {
     Brood_data <- Brood_data %>%
       dplyr::filter(.data$Species %in% species_filter & !(is.na(.data$Species)))
 
@@ -323,7 +320,6 @@ format_SIL <- function(db = choose_directory(),
 
     Location_data <- Location_data %>%
       dplyr::filter(.data$PopID %in% pop_filter & !(is.na(.data$PopID)))
-
   }
 
   #### EXPORT DATA
@@ -367,30 +363,37 @@ format_SIL <- function(db = choose_directory(),
 #'
 #' @return A data frame.
 
-create_brood_SIL <- function(brood_data) {
+create_brood_SIL <- function(brood_data, adult_data, chick_data) {
 
   ## Combine primary data to create brood data
   Brood_data_temp <- brood_data %>%
-    dplyr::left_join(chick_data %>%
-                       select()
-
-
-                     , by = c("BroodID"))
-
-
-
-
-
-    ## Create BroodID
-    dplyr::group_by(.data$BreedingSeason) %>%
-    dplyr::mutate(BroodID = paste(.data$BreedingSeason, 1:dplyr::n(), sep = "-")) %>%
-    dplyr::ungroup() %>%
-
+    dplyr::left_join(adult_data %>%
+                       dplyr::select("BroodID", "IndvID", "Sex_observed") %>%
+                       tidyr::pivot_wider(
+                         id_cols = c(
+                           "BroodID"),
+                         values_from = "IndvID",
+                         names_from = "Sex_observed"
+                       ) %>%
+                       dplyr::rename(
+                         FemaleID = "F",
+                         MaleID = "M"),
+                     by = c("BroodID")) %>%
+    dplyr::left_join(
+      chick_data %>%
+        dplyr::group_by(.data$BroodID) %>%
+        dplyr::summarise(
+          AvgChickMass = mean(.data$Day14_Weight, na.rm = T),
+          NumberChicksMass = sum(!is.na(.data$Day14_Weight)),
+          AvgTarsus = mean(.data$Day14_Tarsus, na.rm = T),
+          NumberChicksTarsus = sum(!is.na(.data$Day14_Tarsus))
+        ),
+      by = c("BroodID")) %>%
     ## Calculate clutch type
-    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data =., protocol_version = "1.1", na.rm = FALSE)) %>%
+    # dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., protocol_version = "1.1", na.rm = FALSE)) %>%
 
     ## Reorder columns
-    dplyr::select(dplyr::any_of(names(brood_data_template)), dplyr::everything())
+    dplyr::select(dplyr::any_of(names(data_templates[["v1.1.0"]]$Brood_data)), tidyselect::everything())
 
   return(Brood_data_temp)
 
