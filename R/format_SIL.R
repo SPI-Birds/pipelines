@@ -107,7 +107,8 @@ format_SIL <- function(db = choose_directory(),
                                                                                  "foster_time_lag",
                                                                                  "fed",
                                                                                  "AE", "AL", "AS", "DL", "DS", "DE") ~ "PARENTAGE",
-                                                     .data$ManipulationID %in% c("C", "EE", "ES", "EL") ~ "OTHER")) %>%
+                                                     .data$ManipulationID %in% c("C", "EE", "ES", "EL") ~ "OTHER"),
+                     Notes = Notes) %>%
     dplyr::arrange(.data$PopID, .data$BreedingSeason, .data$LocationID)
 
   ## Read in adult data
@@ -138,7 +139,8 @@ format_SIL <- function(db = choose_directory(),
                      Mass = round(suppressWarnings(as.numeric(.data$Weight)), 2),
                      WingLength = as.numeric(.data$Wing),
                      Tarsus = as.numeric(.data$Tarsus),
-                     ObserverID = .data$ObserverID) %>%
+                     ObserverID = .data$ObserverID,
+                     Notes = Notes) %>%
     dplyr::filter(!is.na(.data$IndvID))
 
 
@@ -178,7 +180,8 @@ format_SIL <- function(db = choose_directory(),
                      Day14_CaptureTime = format(strptime(.data$Day14_CaptureTime,format = "%H:%M"), "%H:%M"),
                      Day14_Weight = as.numeric(Day14_Weight),
                      Day14_Wing = as.numeric(Day14_Wing),
-                     Day14_Tarsus = as.numeric(Day14_Tarsus))
+                     Day14_Tarsus = as.numeric(Day14_Tarsus),
+                     Notes = Notes)
 
 
 
@@ -405,11 +408,14 @@ create_brood_SIL <- function(brood_data, adult_data, chick_data) {
 #'
 #' @return A data frame.
 
-create_capture_SIL <- function(adult_data) {
+create_capture_SIL <- function(adult_data, chick_data) {
 
 
   ## Combine primary data to create capture data
-  Capture_data_temp <- adult_data %>%
+  Capture_data_temp <- rbind(chick_data %>%
+                               mutate(Age_observed = 1L) %>%
+                               left_join(),
+                             adult_data) %>%
 
     ## Create new columns
     dplyr::mutate(CapturePopID = .data$PopID,
