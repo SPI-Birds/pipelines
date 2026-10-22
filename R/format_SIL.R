@@ -55,6 +55,7 @@ format_SIL <- function(db = choose_directory(),
 
   ## Read in brood data
   ## TODO: CHECK WHAT TO DO WITH OTHER SPECIES
+  ## For now filtered out
   brood_data <- rbind(read.csv(file = paste0(db, "/NestBoxes_breeding_2002_2013.csv")) %>%
                         janitor::remove_empty(which = "rows") %>%
                         dplyr::rename(NestBoxID = "NestboxID") %>%
@@ -78,7 +79,10 @@ format_SIL <- function(db = choose_directory(),
                      BroodID = as.character(.data$BroodID),
                      BreedingSeason = as.integer(.data$Year),
                      LocationID = ifelse(.data$NestBoxID == "A22b", "A22B", as.character(.data$NestBoxID)),
-                     Species = dplyr::case_when(.data$Species == "Blue Tit" ~ species_codes[species_codes$speciesEURINGCode == 14620, ]$Species),
+                     Species = dplyr::case_when(.data$Species == "Blue Tit" ~ species_codes[species_codes$speciesEURINGCode == 14620, ]$Species,
+                                                .data$Species == "Great Tit" ~ species_codes[species_codes$speciesEURINGCode == 14640, ]$Species,
+                                                .data$Species == "Nuthatch" ~ species_codes[species_codes$speciesEURINGCode == 14790, ]$Species,
+                                                .data$Species == "Coal Tit" ~ species_codes[species_codes$speciesEURINGCode == 14610, ]$Species),
                      LayDate_observed = as.Date(as.numeric(.data$LayingDate_Estimated),
                                                 origin = as.Date(paste0(.data$Year, "-03-31"))),
                      LayDate_min = as.Date(as.numeric(.data$LayingDate),
@@ -109,6 +113,7 @@ format_SIL <- function(db = choose_directory(),
                                                                                  "AE", "AL", "AS", "DL", "DS", "DE") ~ "PARENTAGE",
                                                      .data$ManipulationID %in% c("C", "EE", "ES", "EL") ~ "OTHER"),
                      Notes = Notes) %>%
+    dplyr::filter(.data$Species == "CYACAE") %>%
     dplyr::arrange(.data$PopID, .data$BreedingSeason, .data$LocationID)
 
   ## Read in adult data
@@ -129,7 +134,10 @@ format_SIL <- function(db = choose_directory(),
     dplyr::transmute(PopID = "SIL",
                      BroodID = as.character(BroodID),
                      BreedingSeason = as.integer(.data$Year),
-                     Species = dplyr::case_when(.data$Species == "BLUTI" ~ species_codes[species_codes$speciesEURINGCode == 14620, ]$Species),
+                     Species = dplyr::case_when(.data$Species == "BLUTI" ~ species_codes[species_codes$speciesEURINGCode == 14620, ]$Species,
+                                                .data$Species == "GRETI" ~ species_codes[species_codes$speciesEURINGCode == 14640, ]$Species,
+                                                .data$Species == "NUTHA" ~ species_codes[species_codes$speciesEURINGCode == 14790, ]$Species,
+                                                .data$Species == "COATI" ~ species_codes[species_codes$speciesEURINGCode == 14610, ]$Species),
                      LocationID = as.character(.data$NestBoxID),
                      CaptureDate = as.Date(as.numeric(.data$CaptureDate), origin = as.Date(paste0(.data$BreedingSeason, "-03-31"))),
                      CaptureTime = format(strptime(.data$CaptureTime,format = "%H:%M"), "%H:%M"),
@@ -141,7 +149,8 @@ format_SIL <- function(db = choose_directory(),
                      Tarsus = as.numeric(.data$Tarsus),
                      ObserverID = .data$ObserverID,
                      Notes = Notes) %>%
-    dplyr::filter(!is.na(.data$IndvID))
+    dplyr::filter(!is.na(.data$IndvID),
+                  .data$Species == "CYACAE")
 
 
   ## Read in chick data
@@ -170,7 +179,10 @@ format_SIL <- function(db = choose_directory(),
     dplyr::transmute(PopID = "SIL",
                      BroodID = as.character(BroodID),
                      BreedingSeason = as.integer(.data$Year),
-                     Species = dplyr::case_when(.data$Species == "BLUTI" ~ species_codes[species_codes$speciesEURINGCode == 14620, ]$Species),
+                     Species = dplyr::case_when(.data$Species == "BLUTI" ~ species_codes[species_codes$speciesEURINGCode == 14620, ]$Species,
+                                                .data$Species == "GRETI" ~ species_codes[species_codes$speciesEURINGCode == 14640, ]$Species,
+                                                .data$Species == "NUTHA" ~ species_codes[species_codes$speciesEURINGCode == 14790, ]$Species,
+                                                .data$Species == "COATI" ~ species_codes[species_codes$speciesEURINGCode == 14610, ]$Species),
                      LocationID = as.character(.data$NestBoxID),
                      IndivID = .data$RingNumber,
                      Day7_CaptureDate = as.Date(as.numeric(.data$Day7_CaptureDate), origin = as.Date(paste0(.data$BreedingSeason, "-03-31"))),
@@ -181,7 +193,8 @@ format_SIL <- function(db = choose_directory(),
                      Day14_Weight = as.numeric(Day14_Weight),
                      Day14_Wing = as.numeric(Day14_Wing),
                      Day14_Tarsus = as.numeric(Day14_Tarsus),
-                     Notes = Notes)
+                     Notes = Notes) %>%
+    dplyr::filter(.data$Species == "CYACAE")
 
 
 
@@ -202,7 +215,6 @@ format_SIL <- function(db = choose_directory(),
                                                                           "Juglans_regia", "Salix_alba", "Populus_sp") ~ "deciduous",
                                                      .data$species %in% c("Conifer", "Pinus_sp") ~ "evergreen")) %>%
     dplyr::mutate(PopID = "SIL")
-
 
 
   #### BROOD DATA
@@ -372,6 +384,11 @@ create_brood_SIL <- function(brood_data, adult_data, chick_data) {
   Brood_data_temp <- brood_data %>%
     dplyr::left_join(adult_data %>%
                        dplyr::select("BroodID", "IndvID", "Sex_observed") %>%
+                       ## TODO : Check with data owner cases where several individuals (>1 male or >1 female) in nests
+                       ## For now selecting for only first male and female found
+                       dplyr::group_by(.data$BroodID) %>%
+                       dplyr::distinct(Sex_observed, .keep_all = T) %>%
+                       dplyr::ungroup() %>%
                        tidyr::pivot_wider(
                          id_cols = c(
                            "BroodID"),
@@ -382,18 +399,17 @@ create_brood_SIL <- function(brood_data, adult_data, chick_data) {
                          FemaleID = "F",
                          MaleID = "M"),
                      by = c("BroodID")) %>%
-    dplyr::left_join(
-      chick_data %>%
-        dplyr::group_by(.data$BroodID) %>%
-        dplyr::summarise(
-          AvgChickMass = mean(.data$Day14_Weight, na.rm = T),
-          NumberChicksMass = sum(!is.na(.data$Day14_Weight)),
-          AvgTarsus = mean(.data$Day14_Tarsus, na.rm = T),
-          NumberChicksTarsus = sum(!is.na(.data$Day14_Tarsus))
-        ),
-      by = c("BroodID")) %>%
+    dplyr::left_join(chick_data %>%
+                       dplyr::group_by(.data$BroodID) %>%
+                       dplyr::summarise(
+                         AvgChickMass = mean(.data$Day14_Weight, na.rm = T),
+                         NumberChicksMass = sum(!is.na(.data$Day14_Weight)),
+                         AvgTarsus = mean(.data$Day14_Tarsus, na.rm = T),
+                         NumberChicksTarsus = sum(!is.na(.data$Day14_Tarsus))
+                       ),
+                     by = c("BroodID")) %>%
     ## Calculate clutch type
-    # dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., protocol_version = "1.1", na.rm = FALSE)) %>%
+    dplyr::mutate(ClutchType_calculated = calc_clutchtype(data = ., protocol_version = "1.1", na.rm = FALSE)) %>%
 
     ## Reorder columns
     dplyr::select(dplyr::any_of(names(data_templates[["v1.1.0"]]$Brood_data)), tidyselect::everything())
@@ -413,8 +429,15 @@ create_capture_SIL <- function(adult_data, chick_data) {
 
   ## Combine primary data to create capture data
   Capture_data_temp <- rbind(chick_data %>%
-                               mutate(Age_observed = 1L) %>%
-                               left_join(),
+                               dplyr::mutate(Age_observed = 1L,
+                                      Sex_observed = NA) %>%
+                               tidyr::pivot_longer(
+                                 cols = matches("^Day(7|14)_"),
+                                 names_to = c("Day", ".value"),
+                                 names_sep = "_"
+                               )
+                             # |>
+                             #   mutate(Day = as.integer(sub("Day", "", Day))),
                              adult_data) %>%
 
     ## Create new columns
