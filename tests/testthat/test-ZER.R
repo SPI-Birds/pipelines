@@ -1,145 +1,49 @@
-pipeline_output <- format_ZER(db = paste0(data_path, "/ZER_ZeromskiPark_Poland"))
+zer_data_dir <- Sys.getenv("ZER_DATA_DIR", unset = "")
+testthat::skip_if(
+  !nzchar(zer_data_dir) ||
+    !file.exists(file.path(zer_data_dir, "ZER_PrimaryData_new.xlsx")),
+  "Set ZER_DATA_DIR to the folder with ZER_PrimaryData_new.xlsx"
+)
 
-test_that("ZER outputs all files...", {
-  # This pipeline covers two sites: Zeromski Park (ZER) and Kowale (KOW)
-  expect_true(all(c("ZER", "KOW") %in% pipeline_output$Brood_data$PopID))
-  expect_true(all(c("ZER", "KOW") %in% pipeline_output$Capture_data$CapturePopID))
-  expect_true(all(c("ZER", "KOW") %in% pipeline_output$Individual_data$PopID))
-  expect_true(all(c("ZER", "KOW") %in% pipeline_output$Location_data$PopID))
-  expect_true(pipeline_output$protocol_version == "1.1.0")
+zer_output <- format_ZER(db = zer_data_dir)
 
-  # Single-species study: only Common Blackbird
-  expect_equal(unique(pipeline_output$Brood_data$Species), "TURMER")
-  # ClutchType contains brood sequence numbers, not protocol clutch categories
-  expect_true(all(is.na(pipeline_output$Brood_data$ClutchType_observed)))
+testthat::test_that("ZER uses the new breeding workbook", {
+  brood <- zer_output$Brood_data
+  testthat::expect_identical(zer_output$protocol_version, "2.0.0")
+  testthat::expect_equal(nrow(brood), 3074L)
+  testthat::expect_true(all(brood$siteID == "ZER"))
+  testthat::expect_true(all(brood$speciesID == "Turdus merula"))
+  testthat::expect_false(anyDuplicated(brood$broodID) > 0L)
+  testthat::expect_true(all(brood$locationID %in% zer_output$Location_data$locationID))
+
+  first <- brood[brood$broodID == "ZER-1997-2", ]
+  testthat::expect_equal(c(first$observedLayYear,
+                           first$observedLayMonth,
+                           first$observedLayDay), c(1997L, 4L, 8L))
+  testthat::expect_equal(first$observedClutchSize, 4L)
+  testthat::expect_identical(first$siteID, "ZER")
+  testthat::expect_true(all(is.na(brood$observedClutchType)))
 })
 
-test_that("Brood_data returns an expected outcome...", {
-  ZER_data <- dplyr::filter(pipeline_output$Brood_data, PopID %in% c("ZER", "KOW"))
-
-  # Test 1: First clutch at ZER with both parents known
-  expect_equal(subset(ZER_data, BroodID == "1998-10")$PopID, "ZER")
-  expect_equal(subset(ZER_data, BroodID == "1998-10")$Species, "TURMER")
-  expect_equal(subset(ZER_data, BroodID == "1998-10")$LocationID, "1998-4")
-  expect_equal(subset(ZER_data, BroodID == "1998-10")$FemaleID, "HC92428")
-  expect_equal(subset(ZER_data, BroodID == "1998-10")$MaleID, "HC99418")
-  expect_equal(subset(ZER_data, BroodID == "1998-10")$ClutchType_calculated, "first")
-  expect_equal(subset(ZER_data, BroodID == "1998-10")$LayDate_observed, as.Date("1998-04-20"))
-  expect_equal(subset(ZER_data, BroodID == "1998-10")$ClutchSize_observed, 5L)
-  expect_equal(subset(ZER_data, BroodID == "1998-10")$HatchDate_observed, as.Date("1998-05-06"))
-  expect_equal(subset(ZER_data, BroodID == "1998-10")$BroodSize_observed, 5L)
-  expect_equal(subset(ZER_data, BroodID == "1998-10")$NumberFledged_observed, 5L)
-
-  # Test 2: Second clutch (calculated), same season
-  expect_equal(subset(ZER_data, BroodID == "1998-9,1")$ClutchType_calculated, "second")
-  expect_equal(subset(ZER_data, BroodID == "1998-9,1")$FemaleID, "HC92520")
-  expect_equal(subset(ZER_data, BroodID == "1998-9,1")$LayDate_observed, as.Date("1998-05-27"))
-  expect_equal(subset(ZER_data, BroodID == "1998-9,1")$ClutchSize_observed, 3L)
-
-  # Test 3: Failed brood - 0 fledglings is stored as NA (protocol: min value is 1),
-  # and the _max value must also be NA (cannot be 0)
-  expect_equal(subset(ZER_data, BroodID == "1998-05")$ClutchSize_observed, 4L)
-  expect_equal(subset(ZER_data, BroodID == "1998-05")$BroodSize_observed, 3L)
-  expect_true(is.na(subset(ZER_data, BroodID == "1998-05")$NumberFledged_observed))
-  expect_true(is.na(subset(ZER_data, BroodID == "1998-05")$NumberFledged_min))
-  expect_true(is.na(subset(ZER_data, BroodID == "1998-05")$NumberFledged_max))
-
-  # Test 4: A brood at the second site (Kowale)
-  expect_equal(subset(ZER_data, BroodID == "1998-13-1k")$PopID, "KOW")
-  expect_equal(subset(ZER_data, BroodID == "1998-13-1k")$LayDate_observed, as.Date("1998-05-04"))
-  expect_equal(subset(ZER_data, BroodID == "1998-13-1k")$ClutchSize_observed, 5L)
-
-  # The source's bulk-entered 2018 fledge year is invalid for pre-2018 broods.
-  brood_raw <- readxl::read_excel(
-    file.path(data_path, "ZER_ZeromskiPark_Poland", "ZER_PrimaryData.xlsx"),
-    sheet = "Brood Blackbird"
-  )
-  suspect_ids <- brood_raw$broodID[
-    !is.na(brood_raw$broodID) &
-      brood_raw$LayYear < 2018 &
-      brood_raw$FledgeYear == 2018
-  ]
-  expect_gt(length(suspect_ids), 0)
-  expect_true(all(is.na(
-    pipeline_output$Brood_data$FledgeDate_observed[
-      pipeline_output$Brood_data$BroodID %in% suspect_ids
-    ]
-  )))
+testthat::test_that("source errors and repeated row numbers are handled", {
+  brood <- zer_output$Brood_data
+  wrong_year <- brood[brood$broodID == "ZER-2014-2543", ]
+  testthat::expect_equal(nrow(wrong_year), 1L)
+  testthat::expect_true(is.na(wrong_year$observedLayYear))
+  testthat::expect_equal(wrong_year$observedClutchSize, 5L)
+  testthat::expect_true(all(c("ZER-2005-1198", "ZER-2005-1198-1") %in% brood$broodID))
+  testthat::expect_true(all(c("ZER-2018-3268", "ZER-2018-3268-1") %in% brood$broodID))
 })
 
-test_that("Individual data returns an expected outcome...", {
-  ZER_data <- dplyr::filter(pipeline_output$Individual_data, PopID %in% c("ZER", "KOW"))
-
-  # Test 1: Adult female (parent of brood 1998-10), first caught earlier in 1996
-  expect_equal(subset(ZER_data, IndvID == "HC92428")$Species, "TURMER")
-  expect_equal(subset(ZER_data, IndvID == "HC92428")$PopID, "ZER")
-  expect_equal(subset(ZER_data, IndvID == "HC92428")$Sex_calculated, "F")
-  expect_equal(subset(ZER_data, IndvID == "HC92428")$RingSeason, 1996L)
-  expect_equal(subset(ZER_data, IndvID == "HC92428")$RingAge, "adult")
-  expect_equal(subset(ZER_data, IndvID == "HC92428")$BroodIDLaid, NA_character_)
-
-  # Test 2: Ringed as a chick, recruited as a breeding adult (male)
-  expect_equal(subset(ZER_data, IndvID == "HE83515")$Species, "TURMER")
-  expect_equal(subset(ZER_data, IndvID == "HE83515")$Sex_calculated, "M")
-  expect_equal(subset(ZER_data, IndvID == "HE83515")$RingSeason, 2012L)
-  expect_equal(subset(ZER_data, IndvID == "HE83515")$RingAge, "chick")
-  # BroodIDFledged is assumed equal to BroodIDLaid (blackbirds don't move before fledging)
-  expect_equal(subset(ZER_data, IndvID == "HE83515")$BroodIDLaid, "2012-40")
-  expect_equal(subset(ZER_data, IndvID == "HE83515")$BroodIDFledged, "2012-40")
+testthat::test_that("no capture or ringing events are invented", {
+  testthat::expect_equal(nrow(zer_output$Capture_data), 0L)
+  testthat::expect_equal(nrow(zer_output$Individual_data), 0L)
+  testthat::expect_equal(nrow(zer_output$Measurement_data), 0L)
+  testthat::expect_equal(nrow(zer_output$Experiment_data), 0L)
+  testthat::expect_true(all(zer_output$Location_data$locationType == "nest"))
+  testthat::expect_true(any(!is.na(zer_output$Brood_data$maleID)))
+  testthat::expect_true(any(!is.na(zer_output$Brood_data$femaleID)))
+  testthat::expect_error(format_ZER(db = zer_data_dir, pop = "KOW"), "only Zeromski")
 })
 
-test_that("Capture data returns an expected outcome...", {
-  ZER_data <- dplyr::filter(pipeline_output$Capture_data, CapturePopID %in% c("ZER", "KOW"))
-
-  # No mortality info is recorded, so every capture is alive on capture and release
-  expect_true(all(ZER_data$CaptureAlive))
-  expect_true(all(ZER_data$ReleaseAlive))
-
-  # Test 1: Chick recruit - ringed as chick in 2012, recaptured as adult in 2013
-  expect_equal(nrow(subset(ZER_data, IndvID == "HE83515")), 2)
-  expect_equal(subset(ZER_data, IndvID == "HE83515")$CaptureDate[1], as.Date("2012-07-21"))
-  expect_equal(subset(ZER_data, IndvID == "HE83515")$CaptureDate[2], as.Date("2013-11-23"))
-  # First capture is a chick (age observed 1) with a recorded chick age
-  expect_equal(subset(ZER_data, IndvID == "HE83515")$Age_observed[1], 1L)
-  expect_equal(subset(ZER_data, IndvID == "HE83515")$ChickAge[1], 5L)
-  # Age calculated: 1 (chick) then 5 (at least one year old)
-  expect_equal(subset(ZER_data, IndvID == "HE83515")$Age_calculated, c(1L, 5L))
-
-  # Test 2: Adult female, single capture; age not observed but calculated as adult (4)
-  expect_equal(nrow(subset(ZER_data, IndvID == "HC92428")), 1)
-  expect_equal(subset(ZER_data, IndvID == "HC92428")$Sex_observed, "F")
-  expect_equal(subset(ZER_data, IndvID == "HC92428")$CaptureDate, as.Date("1996-05-21"))
-  expect_equal(subset(ZER_data, IndvID == "HC92428")$Age_observed, NA_integer_)
-  expect_equal(subset(ZER_data, IndvID == "HC92428")$Age_calculated, 4L)
-})
-
-test_that("Location_data returns an expected outcome...", {
-  ZER_data <- dplyr::filter(pipeline_output$Location_data, PopID %in% c("ZER", "KOW"))
-
-  # All captures assumed to be by mist net
-  expect_true(all(ZER_data$LocationType == "MN"))
-
-  # Test 1: A ZER nest location, carrying the ZER site-level coordinates
-  expect_equal(subset(ZER_data, LocationID == "1998-4")$PopID, "ZER")
-  expect_equal(subset(ZER_data, LocationID == "1998-4")$LocationType, "MN")
-  expect_equal(subset(ZER_data, LocationID == "1998-4")$Latitude, 53.260)
-  expect_equal(subset(ZER_data, LocationID == "1998-4")$Longitude, 14.3342)
-
-  # Test 2: A KOW nest location, carrying the KOW site-level coordinates
-  expect_equal(subset(ZER_data, LocationID == "1998-7")$PopID, "KOW")
-  expect_equal(subset(ZER_data, LocationID == "1998-7")$Latitude, 53.273)
-  expect_equal(subset(ZER_data, LocationID == "1998-7")$Longitude, 14.3250)
-})
-
-test_that("pop argument restricts output to a single site...", {
-  # Requesting only ZER should drop all KOW records
-  zer_only <- suppressWarnings(
-    format_ZER(db = paste0(data_path, "/ZER_ZeromskiPark_Poland"), pop = "ZER")
-  )
-  expect_equal(unique(zer_only$Brood_data$PopID), "ZER")
-  expect_equal(unique(zer_only$Capture_data$CapturePopID), "ZER")
-  expect_false("KOW" %in% zer_only$Location_data$PopID)
-})
-
-### Test protocol compliance
-test_protocol_compliance(pipeline_output)
+test_protocol_compliance(zer_output)
