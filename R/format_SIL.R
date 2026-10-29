@@ -10,6 +10,8 @@
 #'
 #'\strong{IndvID}: Should be a character string of length 7 where the first three characters are either a letter or number and the last four characters are all numbers.
 #'
+#'\strong{CaptureAlive/ RealeaseAlive}: Assumed from comments for adults, but kept as NA for chicks due to complexity of notes (initially one single note for Day7 and Day14 captures, making assumptions difficult)
+#'
 #'@inheritParams pipeline_params
 #'
 #'@return Generates either 4 .csv files or 4 data frames in the standard format.
@@ -65,7 +67,7 @@ format_SIL <- function(db = choose_directory(),
                                       "ClutchSize", "Hatching_CheckDate", "HatchingDate", "HatchingDate_Estimated", "ChickNumber", "Day7_CheckDate", "Day7_Date", "Day7_ChickNumber",
                                       "Day14_CheckDate", "Day14_Date", "Day14_ChickNumber", "EggsUnhatched", "Fledge_CheckDate", "Fledge_Date", "Fledged_ChickNumber",
                                       "FullNest_DeadDate", "ManipulationID", "ObserverID", "Notes"),
-                      read.csv(file = paste0(db, "/NestBoxes_breeding_2015On.csv")) %>%
+                      read.csv(file = paste0(db, "/NestBoxes_breeding_2015On.csv"), encoding = "latin1") %>%
                         janitor::remove_empty(which = "rows") %>%
                         dplyr::bind_cols(read.csv(file = paste0(db, "/NestBoxes_breeding_2002_2013.csv"))[0, !(names(read.csv(file = paste0(db, "/NestBoxes_breeding_2002_2013.csv"))) %in% names(.))] %>%
                                            tibble::add_row()) %>%
@@ -184,7 +186,7 @@ format_SIL <- function(db = choose_directory(),
                                                 .data$Species == "NUTHA" ~ species_codes[species_codes$speciesEURINGCode == 14790, ]$Species,
                                                 .data$Species == "COATI" ~ species_codes[species_codes$speciesEURINGCode == 14610, ]$Species),
                      LocationID = as.character(.data$NestBoxID),
-                     IndivID = .data$RingNumber,
+                     IndvID = .data$RingNumber,
                      Day7_CaptureDate = as.Date(as.numeric(.data$Day7_CaptureDate), origin = as.Date(paste0(.data$BreedingSeason, "-03-31"))),
                      Day7_CaptureTime = format(strptime(.data$Day7_CaptureTime,format = "%H:%M"), "%H:%M"),
                      Day7_Weight = as.numeric(Day7_Weight),
@@ -428,23 +430,32 @@ create_capture_SIL <- function(adult_data, chick_data) {
 
 
   ## Combine primary data to create capture data
-  Capture_data_temp <- rbind(chick_data %>%
-                               dplyr::mutate(Age_observed = 1L,
-                                      Sex_observed = NA) %>%
-                               tidyr::pivot_longer(
-                                 cols = matches("^Day(7|14)_"),
-                                 names_to = c("Day", ".value"),
-                                 names_sep = "_"
-                               )
-                             # |>
-                             #   mutate(Day = as.integer(sub("Day", "", Day))),
-                             adult_data) %>%
+  Capture_data_temp <- adult_data %>%
+    dplyr::mutate(Notes = tolower(.data$Notes),
+                  CaptureAlive = dplyr::case_when(
+                    stringr::str_detect(.data$Notes, "prior|found|inside") & stringr::str_detect(.data$Notes, "died|dead") & !stringr::str_detect(.data$Notes, "chick")~ FALSE,
+                    .data$Notes == "dead" ~ FALSE,
+                    TRUE ~ TRUE
+                  ),
+                  ReleaseAlive = dplyr::case_when(
+                    stringr::str_detect(.data$Notes, "died|dead") & stringr::str_detect(.data$Notes, "handling|ringing") ~ FALSE,
+                    .data$CaptureAlive == FALSE ~ FALSE,
+                    TRUE ~ TRUE
+                  )) %>%
+    dplyr::bind_rows(chick_data %>%
+                       dplyr::mutate(Age_observed = 1L,
+                                     Sex_observed = NA) %>%
+                       tidyr::pivot_longer(
+                         cols = matches("^Day(7|14)_"),
+                         names_to = c("Day", ".value"),
+                         names_sep = "_"
+                       ) %>%
+                       dplyr::mutate(ChickAge = dplyr::case_when(.data$Day == "Day7" ~ 7,
+                                                                 .data$Day == "Day14" ~14))) %>%
 
     ## Create new columns
     dplyr::mutate(CapturePopID = .data$PopID,
-                  ReleasePopID = .data$PopID,
-                  CaptureAlive = TRUE,
-                  ReleaseAlive = TRUE) %>%
+                  ReleasePopID = .data$PopID) %>%
 
     ## Arrange
     dplyr::arrange(.data$IndvID, .data$CaptureDate) %>%
@@ -455,19 +466,18 @@ create_capture_SIL <- function(adult_data, chick_data) {
              Age = .data$Age_observed,
              Date = .data$CaptureDate,
              Year = .data$BreedingSeason) %>%
+    dplyr::ungroup() %>%
 
     ## Create CaptureID
     ## Arrange
     dplyr::arrange(.data$BreedingSeason, .data$IndvID, .data$CaptureDate) %>%
     dplyr::group_by(.data$IndvID) %>%
     dplyr::mutate(CaptureID = paste(.data$IndvID, dplyr::row_number(), sep = "_")) %>%
-
-    ## Reorder columns
-    dplyr::select(dplyr::any_of(names(capture_data_template)), dplyr::everything())
-
+    dplyr::ungroup()
 
   return(Capture_data_temp)
 
+   # TODO : add ExperimentID (from BroodID and Brood_data)
 }
 
 #' Create individual table for Silwood, UK.
