@@ -116,7 +116,8 @@ format_SIL <- function(db = choose_directory(),
                                                      .data$ManipulationID %in% c("C", "EE", "ES", "EL") ~ "OTHER"),
                      Notes = Notes) %>%
     dplyr::filter(.data$Species == "CYACAE") %>%
-    dplyr::arrange(.data$PopID, .data$BreedingSeason, .data$LocationID)
+    dplyr::arrange(.data$PopID, .data$BreedingSeason, .data$LocationID) %>%
+    dplyr::distinct()
 
   ## Read in adult data
   ## TODO: Check if missing ring for nest 2009_E07 can be added (present in the comment)
@@ -152,7 +153,8 @@ format_SIL <- function(db = choose_directory(),
                      ObserverID = .data$ObserverID,
                      Notes = Notes) %>%
     dplyr::filter(!is.na(.data$IndvID),
-                  .data$Species == "CYACAE")
+                  .data$Species == "CYACAE") %>%
+    dplyr::distinct()
 
 
   ## Read in chick data
@@ -196,9 +198,8 @@ format_SIL <- function(db = choose_directory(),
                      Day14_Wing = as.numeric(Day14_Wing),
                      Day14_Tarsus = as.numeric(Day14_Tarsus),
                      Notes = Notes) %>%
-    dplyr::filter(.data$Species == "CYACAE")
-
-
+    dplyr::filter(.data$Species == "CYACAE") %>%
+    dplyr::distinct()
 
   ## Read in nest data
   ## TODO: CHECK WHAT TO DO WITH MISSING NEST J07
@@ -216,7 +217,8 @@ format_SIL <- function(db = choose_directory(),
                                                                           "Aesculus_hippocastanum", "Crataegus_sp", "Ulmus_sp", "Carpinus_betulus",
                                                                           "Juglans_regia", "Salix_alba", "Populus_sp") ~ "deciduous",
                                                      .data$species %in% c("Conifer", "Pinus_sp") ~ "evergreen")) %>%
-    dplyr::mutate(PopID = "SIL")
+    dplyr::mutate(PopID = "SIL") %>%
+    dplyr::distinct()
 
 
   #### BROOD DATA
@@ -225,7 +227,7 @@ format_SIL <- function(db = choose_directory(),
 
   #### CAPTURE DATA
   message("Compiling capture information...")
-  Capture_data_temp <- create_capture_SIL(adult_data, chick_data)
+  Capture_data_temp <- create_capture_SIL(adult_data, chick_data, Brood_data_temp)
 
   #### INDIVIDUAL DATA
   message("Compiling individual information...")
@@ -426,7 +428,7 @@ create_brood_SIL <- function(brood_data, adult_data, chick_data) {
 #'
 #' @return A data frame.
 
-create_capture_SIL <- function(adult_data, chick_data) {
+create_capture_SIL <- function(adult_data, chick_data, Brood_data_temp) {
 
 
   ## Combine primary data to create capture data
@@ -473,11 +475,16 @@ create_capture_SIL <- function(adult_data, chick_data) {
     dplyr::arrange(.data$BreedingSeason, .data$IndvID, .data$CaptureDate) %>%
     dplyr::group_by(.data$IndvID) %>%
     dplyr::mutate(CaptureID = paste(.data$IndvID, dplyr::row_number(), sep = "_")) %>%
-    dplyr::ungroup()
+    dplyr::ungroup() %>%
+    dplyr::left_join(Brood_data_temp %>% dplyr::select("BroodID", "ExperimentID"),
+                     by = c("BroodID")) %>%
+
+    ## Reorder columns
+    dplyr::select(dplyr::any_of(names(data_templates[["v1.1.0"]]$Capture_data)), tidyselect::everything())
+
 
   return(Capture_data_temp)
 
-   # TODO : add ExperimentID (from BroodID and Brood_data)
 }
 
 #' Create individual table for Silwood, UK.
@@ -532,7 +539,24 @@ create_individual_SIL <- function(Capture_data_temp){
                                               } else if(..1 > 3L){
                                                 return("adult")
                                               }
-                                            }))  %>%
+                                            })) %>%
+
+    # TODO : Check that and find a way to find out specific nests laid/ fledged when crossfostering
+    ## Add BroodID information
+    # dplyr::group_by(.data$IndvID) %>%
+    dplyr::mutate(
+      BroodIDLaid = purrr::map_chr(
+        .x = list(unique(stats::na.omit(.data$BroodID))),
+        .f = ~ {
+          if (length(..1) != 1) {
+            return(NA_character_)
+          } else if (length(..1) == 1) {
+            return(..1)
+          }
+        }
+      ),
+      BroodIDFledged = .data$BroodIDLaid
+    ) %>%
 
     ## Keep distinct records by PopID and InvdID
     dplyr::distinct(.data$PopID, .data$IndvID, .keep_all = TRUE) %>%
@@ -542,9 +566,9 @@ create_individual_SIL <- function(Capture_data_temp){
     dplyr::ungroup() %>%
 
     ## Reorder columns
-    dplyr::select(dplyr::any_of(names(individual_data_template)), dplyr::everything())
+    dplyr::select(dplyr::any_of(names(data_templates[["v1.1.0"]]$Individual_data)), tidyselect::everything())
 
-  return(Individual_data_temp)
+   return(Individual_data_temp)
 
 }
 
