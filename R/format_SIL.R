@@ -545,14 +545,28 @@ create_individual_SIL <- function(Capture_data_temp){
     ## Add BroodID information
     # dplyr::group_by(.data$IndvID) %>%
     dplyr::mutate(
-      BroodIDLaid = purrr::map_chr(
-        .x = list(unique(stats::na.omit(.data$BroodID))),
-        .f = ~ {
-          if (length(..1) != 1) {
-            return(NA_character_)
-          } else if (length(..1) == 1) {
-            return(..1)
+      BroodIDLaid = purrr::map2_chr(
+        .x = list(.data$BroodID),
+        .y = list(.data$ChickAge),
+        .f = function(brood, age) {
+          ids <- unique(stats::na.omit(brood))
+
+          if (length(ids) == 1) {
+            if (any(is.na(age))) {return(NA_character_)
+              } else {
+            return(ids)
+              }
           }
+          if (length(ids) == 0 | all(is.na(age))) {
+            return(NA_character_)
+          }
+          # If more than one distinct BroodID (captured as a chick and then as a breeding adult) : take the one on the row
+          # where ChickAge is smallest (ignoring NA ages and NA BroodIDs)
+          valid <- !is.na(brood) & !is.na(age)
+          if (!any(valid)) {
+            return(NA_character_)
+          }
+          brood[valid][which.min(age[valid])]
         }
       ),
       BroodIDFledged = .data$BroodIDLaid
@@ -584,8 +598,6 @@ create_individual_SIL <- function(Capture_data_temp){
 create_location_SIL <- function(nest_data, Brood_data_temp) {
 
   ## Build location data based on nest data
-  ## TODO: Check about the boxes that have been repositioned
-  ## TODO: Check about habitat types
   Location_data_temp <- nest_data %>%
 
     ## Summarize information for each nest box
