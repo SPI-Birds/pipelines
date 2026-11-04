@@ -124,5 +124,3 @@ def export_access_db(dsn, table, output_dir, header=True, delim=",", quote='"'):
             if 'table_data' in locals():
                 del table_data
             gc.collect()
-    
-    

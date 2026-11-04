@@ -65,31 +65,6 @@ run_pipelines <- function(path = choose_directory(),
 
   }
 
-  #Determine operating system
-  OS <- tolower(utils::sessionInfo()$running)
-
-  #Drop populations from Access-based primary data if running on Mac
-  PopID_Access <- c("HOG", "OOS", "VLI", "BUU", "LIE", "WAR", "WES", "AMM")
-
-  if(grepl(pattern = 'mac', x = OS)){
-
-    if(length(PopID[which(PopID%in%PopID_Access)] > 0)){
-      warning(paste0('Pipelines not run for the following populations due to OS incompatibility: ',
-                    toString(PopID[which(PopID%in%PopID_Access)]),
-                    ". To obtain standard format data for these populations, please run on a Windows OS.")
-              )
-    }
-
-    PopID <- PopID[which(!(PopID%in%PopID_Access))]
-
-  }else if(!grepl(pattern = 'mac|windows', x = OS)){
-    stop(paste0('Operating system ', OS, ' not supported'))
-  }
-
-  if(length(PopID) == 0){
-    stop(paste0('None of the selected pipeline(s) could not be run due to OS incompatibility. Please run on a Windows OS.'))
-  }
-
   #Assign species for filtering
   if(is.null(Species)){
 
