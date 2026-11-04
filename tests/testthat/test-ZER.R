@@ -36,12 +36,13 @@ test_that("Brood_data returns an expected outcome...", {
   expect_equal(subset(ZER_data, BroodID == "1998-9,1")$LayDate_observed, as.Date("1998-05-27"))
   expect_equal(subset(ZER_data, BroodID == "1998-9,1")$ClutchSize_observed, 3L)
 
-  # Test 3: Failed brood - 0 fledglings is stored as NA (protocol: min value is 1),
-  # and the _max value must also be NA (cannot be 0)
+  # Test 3: Failed brood - 0 fledglings is a valid observed value; the protocol
+  # allows 0-99 for NumberFledged_observed/_min. Only _max must be >= 1, so
+  # that one is NA for a failed brood.
   expect_equal(subset(ZER_data, BroodID == "1998-05")$ClutchSize_observed, 4L)
   expect_equal(subset(ZER_data, BroodID == "1998-05")$BroodSize_observed, 3L)
-  expect_true(is.na(subset(ZER_data, BroodID == "1998-05")$NumberFledged_observed))
-  expect_true(is.na(subset(ZER_data, BroodID == "1998-05")$NumberFledged_min))
+  expect_equal(subset(ZER_data, BroodID == "1998-05")$NumberFledged_observed, 0L)
+  expect_equal(subset(ZER_data, BroodID == "1998-05")$NumberFledged_min, 0L)
   expect_true(is.na(subset(ZER_data, BroodID == "1998-05")$NumberFledged_max))
 
   # Test 4: A brood at the second site (Kowale)
@@ -129,6 +130,31 @@ test_that("Location_data returns an expected outcome...", {
   expect_equal(subset(ZER_data, LocationID == "1998-7")$PopID, "KOW")
   expect_equal(subset(ZER_data, LocationID == "1998-7")$Latitude, 53.273)
   expect_equal(subset(ZER_data, LocationID == "1998-7")$Longitude, 14.3250)
+
+  # Test 3: StartSeason/EndSeason are derived from the seasons in which each
+  # location is referenced. They must not be entirely NA: quality_check()
+  # substitutes min(StartSeason, na.rm = TRUE) for missing values, which is
+  # Inf for an all-NA column, and tidyr::uncount() then rejects the weight.
+  expect_true(any(!is.na(ZER_data$StartSeason)))
+  expect_true(is.integer(ZER_data$StartSeason))
+  expect_true(is.integer(ZER_data$EndSeason))
+  expect_true(all(ZER_data$EndSeason >= ZER_data$StartSeason, na.rm = TRUE))
+  expect_equal(subset(ZER_data, LocationID == "1998-4")$StartSeason, 1998L)
+  expect_equal(subset(ZER_data, LocationID == "1998-4")$EndSeason, 1998L)
+})
+
+test_that("site codes with Polish diacritics are normalised...", {
+  # The source spells the Zeromski Park site "ZER", "Zer" and "Żer". All three
+  # must map to PopID "ZER"; none of the rows may be dropped. Transliteration
+  # is done with chartr() rather than iconv(to = "ASCII//TRANSLIT"), which is
+  # locale- and platform-dependent.
+  capture_raw <- suppressWarnings(readxl::read_excel(
+    file.path(data_path, "ZER_ZeromskiPark_Poland", "ZER_PrimaryData.xlsx"),
+    sheet = "Capture Blackbird"
+  ))
+  expect_true(any(grepl("\u017b", capture_raw$siteID)))
+  expect_equal(nrow(pipeline_output$Capture_data), nrow(capture_raw))
+  expect_setequal(unique(pipeline_output$Capture_data$CapturePopID), c("ZER", "KOW"))
 })
 
 test_that("pop argument restricts output to a single site...", {

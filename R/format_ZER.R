@@ -40,7 +40,7 @@
 #'
 #' \strong{LocationType}: Birds were captured by mist net at all locations.
 #' The exception being chicks, which were handled in the nests.
-#' \code{LocationType} is set to \code{"MN"} for alllocation records.
+#' \code{LocationType} is set to \code{"MN"} for all location records.
 #'
 #' \strong{Measurements}: Mass (g), tarsus length (mm), and wing length (mm) are
 #' stored in a separate long-format sheet and joined to captures by
@@ -62,8 +62,14 @@
 #' are assumed to be Common Blackbird and filled with \code{"TURMER"}.
 #'
 #' \strong{NumberFledged}: The source data records 0 fledglings for failed
-#' broods. The protocol requires \code{NumberFledged_observed >= 1} or
-#' \code{NA}; values of 0 are therefore converted to \code{NA}.
+#' broods. This is kept as an observed value, because the protocol allows
+#' 0--99 for \code{NumberFledged_observed} and \code{NumberFledged_min}. Only
+#' \code{NumberFledged_max} must be \code{>= 1}, so it is set to \code{NA}
+#' for these broods.
+#'
+#' \strong{StartSeason, EndSeason}: Not recorded in the source data. They are
+#' derived per location as the first and last breeding season in which that
+#' location appears in the brood or capture sheet.
 #'
 #' \strong{Broods without LayYear}: Brood records with no \code{LayYear} (and
 #' therefore no \code{BreedingSeason}) are excluded from \code{Brood_data}.
@@ -209,9 +215,15 @@ format_ZER <- function(db = choose_directory(),
   }
 }
 
-# Normalise siteID: uppercase and strip Polish diacritics (e.g. Ż -> Z)
+# Normalise siteID: uppercase and strip Polish diacritics (e.g. Ż -> Z).
+# The source records the Zeromski Park site as "ZER", "Zer" and "Żer".
+# iconv(to = "ASCII//TRANSLIT") is locale- and platform-dependent -- outside a
+# glibc UTF-8 locale it can return "?er" or NA, which would silently drop those
+# rows -- so the transliteration is done explicitly with chartr().
 normalise_site_ZER <- function(x) {
-  toupper(iconv(trimws(x), to = "ASCII//TRANSLIT"))
+  toupper(chartr("ŻŹŁĄĆĘŃÓŚżźłąćęńóś",
+                 "ZZLACENOSzzlacenos",
+                 trimws(x)))
 }
 
 #' Create brood data table for Zeromski Park / Kowale, Poland.
@@ -265,8 +277,10 @@ create_brood_ZER <- function(data, species_filter, pop_filter, protocol_version)
           format = "%Y-%m-%d"
         )
       ),
-      # 0 fledglings = failed brood; protocol represents this as NA (min value is 1)
-      NumberFledged_observed = dplyr::na_if(as.integer(.data$NumberFledged), 0L)
+      # 0 fledglings = failed brood. This is a valid observed value: the
+      # protocol allows 0-99 for NumberFledged_observed and _min. Only
+      # NumberFledged_max must be >= 1 (handled below).
+      NumberFledged_observed = as.integer(.data$NumberFledged)
     ) %>%
     dplyr::mutate(
       ClutchType_calculated  = calc_clutchtype(., na.rm = FALSE, protocol_version = "1.1"),
@@ -281,7 +295,8 @@ create_brood_ZER <- function(data, species_filter, pop_filter, protocol_version)
       FledgeDate_min         = .data$FledgeDate_observed,
       FledgeDate_max         = .data$FledgeDate_observed,
       NumberFledged_min      = .data$NumberFledged_observed,
-      NumberFledged_max      = .data$NumberFledged_observed,
+      # _max must be >= 1 or NA, so a failed brood (0) has no maximum
+      NumberFledged_max      = dplyr::na_if(.data$NumberFledged_observed, 0L),
       AvgEggMass             = NA_real_,
       NumberEggs             = NA_integer_,
       AvgChickMass           = NA_real_,
@@ -413,7 +428,12 @@ create_individual_ZER <- function(Capture_data, individual_data, pop_filter, pro
       )
     ) %>%
     dplyr::filter(.data$siteID %in% pop_filter) %>%
-    dplyr::select("individualID", "Species", "PopID", "BroodIDLaid", "RingSeason", "RingAge")
+    dplyr::select("individualID", "Species", "PopID", "BroodIDLaid", "RingSeason", "RingAge") %>%
+    # Two individualIDs occur twice in the source sheet. Keep the ringing
+    # record: earliest season first, and prefer the row that carries a
+    # BroodIDLaid so the brood link is not lost.
+    dplyr::arrange(.data$individualID, .data$RingSeason, is.na(.data$BroodIDLaid)) %>%
+    dplyr::distinct(.data$individualID, .keep_all = TRUE)
 
   Individual_data <- Capture_data %>%
     dplyr::filter(!is.na(.data$IndvID)) %>%
@@ -481,18 +501,37 @@ create_location_ZER <- function(brood_data, capture_data, location_data, pop_fil
     dplyr::mutate(siteID = toupper(trimws(.data$siteID))) %>%
     dplyr::select("siteID", "decimalLatitude", "decimalLongitude")
 
+  # Each location is dated by the seasons it is actually referenced in, so that
+  # StartSeason/EndSeason are populated. Leaving them NA makes quality_check()
+  # fail: capture_check()/individual_check() substitute
+  # min(StartSeason, na.rm = TRUE) for missing values, which is Inf when the
+  # whole column is NA, and tidyr::uncount() then rejects the non-integer weight.
   brood_locs <- brood_data %>%
     dplyr::mutate(siteID = normalise_site_ZER(.data$siteID)) %>%
     dplyr::filter(.data$siteID %in% pop_filter, !is.na(.data$locationID)) %>%
-    dplyr::select("locationID", "siteID")
+    dplyr::transmute(.data$locationID, .data$siteID,
+                     Season = as.integer(.data$LayYear))
 
   capture_locs <- capture_data %>%
     dplyr::mutate(siteID = normalise_site_ZER(.data$siteID)) %>%
     dplyr::filter(.data$siteID %in% pop_filter, !is.na(.data$locationID)) %>%
-    dplyr::select("locationID", "siteID")
+    dplyr::transmute(.data$locationID, .data$siteID,
+                     Season = as.integer(.data$tagYear))
 
   Location_data <- dplyr::bind_rows(brood_locs, capture_locs) %>%
-    dplyr::distinct(.data$locationID, .keep_all = TRUE) %>%
+    dplyr::group_by(.data$locationID) %>%
+    dplyr::summarise(
+      siteID      = dplyr::first(.data$siteID),
+      StartSeason = ifelse(all(is.na(.data$Season)), NA_integer_,
+                           min(.data$Season, na.rm = TRUE)),
+      EndSeason   = ifelse(all(is.na(.data$Season)), NA_integer_,
+                           max(.data$Season, na.rm = TRUE)),
+      .groups = "drop"
+    ) %>%
+    dplyr::mutate(
+      StartSeason = as.integer(.data$StartSeason),
+      EndSeason   = as.integer(.data$EndSeason)
+    ) %>%
     dplyr::left_join(site_coords, by = "siteID") %>%
     dplyr::mutate(
       LocationID   = .data$locationID,
@@ -501,8 +540,6 @@ create_location_ZER <- function(brood_data, capture_data, location_data, pop_fil
       PopID        = .data$siteID,
       Latitude     = .data$decimalLatitude,
       Longitude    = .data$decimalLongitude,
-      StartSeason  = NA_integer_,
-      EndSeason    = NA_integer_,
       HabitatType  = NA_character_
     ) %>%
     dplyr::bind_cols(
