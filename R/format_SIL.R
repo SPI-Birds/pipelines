@@ -212,7 +212,7 @@ format_SIL <- function(db = choose_directory(),
                      year = .data$year,
                      InOut = .data$InOut,
                      action = .data$action,
-                     Habitat_Type = dplyr::case_when(.data$species %in% c("Fagus_sylvatica", "Quercus_robur", "Acer_pseudoplatanus", "Betula_pendula",
+                     HabitatType = dplyr::case_when(.data$species %in% c("Fagus_sylvatica", "Quercus_robur", "Acer_pseudoplatanus", "Betula_pendula",
                                                                           "Castanea_sativa", "Alnus_sp", "betula_pendula", "Quercus_sp",
                                                                           "Aesculus_hippocastanum", "Crataegus_sp", "Ulmus_sp", "Carpinus_betulus",
                                                                           "Juglans_regia", "Salix_alba", "Populus_sp") ~ "deciduous",
@@ -235,7 +235,7 @@ format_SIL <- function(db = choose_directory(),
 
   #### LOCATION DATA
   message("Compiling location information...")
-  Location_data_temp <- create_location_SIL(nest_data, Brood_data_temp)
+  Location_data_temp <- create_location_SIL(nest_data)
 
   time <- difftime(Sys.time(), start_time, units = "sec")
 
@@ -287,10 +287,8 @@ format_SIL <- function(db = choose_directory(),
     ## Keep only necessary columns
     dplyr::select(dplyr::contains(names(data_templates[["v1.1.0"]]$Individual_data))) %>%
     ## Add missing template columns
-    {
-      missing_cols <- setdiff(names(data_templates[["v1.1.0"]]$Individual_data), names(.))
-      dplyr::mutate(., !!!setNames(rep(list(NA), length(missing_cols)), missing_cols))
-    } %>%
+    dplyr::bind_cols(data_templates[["v1.1.0"]]$Individual_data[0, !(names(data_templates[["v1.1.0"]]$Individual_data) %in% names(.))] %>%
+                       tibble::add_row()) %>%
     ## Reorder columns
     dplyr::select(names(data_templates[["v1.1.0"]]$Individual_data)) %>%
     dplyr::ungroup() %>%
@@ -305,10 +303,8 @@ format_SIL <- function(db = choose_directory(),
     ## Keep only template columns that exist
     dplyr::select(dplyr::any_of(names(data_templates[["v1.1.0"]]$Location_data))) %>%
     ## Add missing template columns
-    {
-      missing_cols <- setdiff(names(data_templates[["v1.1.0"]]$Location_data), names(.))
-      dplyr::mutate(., !!!setNames(rep(list(NA), length(missing_cols)), missing_cols))
-    } %>%
+    dplyr::bind_cols(data_templates[["v1.1.0"]]$Location_data[0, !(names(data_templates[["v1.1.0"]]$Location_data) %in% names(.))] %>%
+                       tibble::add_row()) %>%
     ## Reorder and keep only template columns
     dplyr::select(names(data_templates[["v1.1.0"]]$Location_data)) %>%
     dplyr::ungroup()
@@ -595,28 +591,21 @@ create_individual_SIL <- function(Capture_data_temp){
 #'
 #' @return A data frame.
 
-create_location_SIL <- function(nest_data, Brood_data_temp) {
+create_location_SIL <- function(nest_data) {
 
   ## Build location data based on nest data
   Location_data_temp <- nest_data %>%
 
     ## Summarize information for each nest box
-    ## TODO: Check that nest boxes have not been removed
-    dplyr::group_by(.data$PopID, .data$LocationID) %>%
-
-    dplyr::left_join(Brood_data_temp %>%
-                       dplyr::select(.data$LocationID,
-                                     .data$BreedingSeason),
-                     by = "LocationID") %>%
     dplyr::group_by(.data$LocationID) %>%
-    dplyr::mutate(StartSeason = min(.data$BreedingSeason),
-                  EndSeason = NA_integer_,
-                  NestboxID = .data$LocationID,
-                  LocationType = "NB",
-                  HabitatType = "mixed") %>%
+
+    ## Calculate dates of installation/ removal
+    dplyr::mutate(StartSeason = min(.data$year),
+                  EndSeason = if (dplyr::n_distinct(year, na.rm = TRUE) > 1) max(year, na.rm = TRUE) else NA_integer_,
+                  LocationType = "NB") %>%
 
     ## Keep distinct records
-    dplyr::distinct(.data$PopID, .data$LocationID, .keep_all = TRUE) %>%
+    dplyr::distinct(.data$LocationID, .keep_all = TRUE) %>%
     dplyr::ungroup()
 
   return(Location_data_temp)
