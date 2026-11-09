@@ -388,6 +388,8 @@ create_brood_SIL <- function(brood_data, adult_data, chick_data) {
                        ## For now selecting for only first male and female found
                        dplyr::group_by(.data$BroodID) %>%
                        dplyr::distinct(Sex_observed, .keep_all = T) %>%
+                       ## Line below can be used if problem of two M/F found in same nest, as it solves the issue of same M/F captured several times
+                       # dplyr::distinct(Sex_observed, IndvID, .keep_all = T) %>%
                        dplyr::ungroup() %>%
                        tidyr::pivot_wider(
                          id_cols = c(
