@@ -12,11 +12,12 @@
 #'
 #'\strong{CaptureAlive/ RealeaseAlive}: Assumed from comments for adults, but kept as NA for chicks due to complexity of notes (initially one single note for Day7 and Day14 captures, making assumptions difficult)
 #'
+#'\strong{BroodIDLaid/ BroodIDFledged}: Information on crossfostering experiment direction only available in 2024
+#'
 #'@inheritParams pipeline_params
 #'
 #'@return Generates either 4 .csv files or 4 data frames in the standard format.
 #'@export
-
 
 format_SIL <- function(db = choose_directory(),
                        path = ".",
@@ -169,16 +170,16 @@ format_SIL <- function(db = choose_directory(),
                                            tibble::add_row()) %>%
                         dplyr::select("Chick_Record", "BroodID", "Year", "NestBoxID", "Species", "RingNumber", "Age", "ChickID",
                                       "Day7_CaptureDate", "Day7_CaptureTime", "Day7_Weight", "Day14_CaptureDate", "Day14_CaptureTime",
-                                      "Day14_Wing", "Day14_Tarsus", "Day14_Head", "Day14_Beak", "Day14_Weight", "Day14_Mites", "Fledge_Date",
-                                      "Dead_Date", "Fate", "ManipulationID", "ObserverID", "Notes"),
+                                      "Day14_Wing", "Day14_Tarsus", "Day14_Head", "Day14_Beak", "Day14_Weight", "Day14_Mites",
+                                      "Fate_Date", "Fate", "ManipulationID", "ObserverID", "Notes"),
                       read.csv(file = paste0(db, "/Chicks_2015On.csv")) %>%
                         janitor::remove_empty(which = "rows") %>%
                         dplyr::bind_cols(read.csv(file = paste0(db, "/Chicks_2002_2013.csv"))[0, !(names(read.csv(file = paste0(db, "/Chicks_2002_2013.csv"))) %in% names(.))] %>%
                                            tibble::add_row()) %>%
                         dplyr::select("Chick_Record", "BroodID", "Year", "NestBoxID", "Species", "RingNumber", "Age", "ChickID",
                                       "Day7_CaptureDate", "Day7_CaptureTime", "Day7_Weight", "Day14_CaptureDate", "Day14_CaptureTime",
-                                      "Day14_Wing", "Day14_Tarsus", "Day14_Head", "Day14_Beak", "Day14_Weight", "Day14_Mites", "Fledge_Date",
-                                      "Dead_Date", "Fate", "ManipulationID", "ObserverID", "Notes")) %>%
+                                      "Day14_Wing", "Day14_Tarsus", "Day14_Head", "Day14_Beak", "Day14_Weight", "Day14_Mites", "Fate_Date",
+                                      "Fate", "ManipulationID", "ObserverID", "Notes")) %>%
     dplyr::mutate(dplyr::across(where(is.character), ~dplyr::na_if(., "."))) %>%
     dplyr::transmute(PopID = "SIL",
                      BroodID = as.character(BroodID),
@@ -220,6 +221,11 @@ format_SIL <- function(db = choose_directory(),
     dplyr::mutate(PopID = "SIL") %>%
     dplyr::distinct()
 
+  experiments <- read.csv(file = paste0(db, "/NextBoxes_manipulations.csv"))  %>%
+    janitor::remove_empty(which = "rows") %>%
+    dplyr::mutate(Brood_origin = paste(.data$Year, .data$Foster_NestBoxID, sep = "_")) %>%
+    dplyr::filter(!is.na(.data$Foster_NestBoxID) & .data$Own_in == 0)
+
 
   #### BROOD DATA
   message("Compiling brood information...")
@@ -231,7 +237,7 @@ format_SIL <- function(db = choose_directory(),
 
   #### INDIVIDUAL DATA
   message("Compiling individual information...")
-  Individual_data_temp <- create_individual_SIL(Capture_data_temp)
+  Individual_data_temp <- create_individual_SIL(Capture_data_temp, experiments)
 
   #### LOCATION DATA
   message("Compiling location information...")
@@ -491,7 +497,7 @@ create_capture_SIL <- function(adult_data, chick_data, Brood_data_temp) {
 #'
 #' @return A data frame.
 
-create_individual_SIL <- function(Capture_data_temp){
+create_individual_SIL <- function(Capture_data_temp, experiments){
 
   ## Create individual data from capture data
   Individual_data_temp <- Capture_data_temp %>%
@@ -543,7 +549,7 @@ create_individual_SIL <- function(Capture_data_temp){
     ## Add BroodID information
     # dplyr::group_by(.data$IndvID) %>%
     dplyr::mutate(
-      BroodIDLaid = purrr::map2_chr(
+      BroodIDFledged = purrr::map2_chr(
         .x = list(.data$BroodID),
         .y = list(.data$ChickAge),
         .f = function(brood, age) {
@@ -551,9 +557,9 @@ create_individual_SIL <- function(Capture_data_temp){
 
           if (length(ids) == 1) {
             if (any(is.na(age))) {return(NA_character_)
-              } else {
-            return(ids)
-              }
+            } else {
+              return(ids)
+            }
           }
           if (length(ids) == 0 | all(is.na(age))) {
             return(NA_character_)
@@ -566,8 +572,7 @@ create_individual_SIL <- function(Capture_data_temp){
           }
           brood[valid][which.min(age[valid])]
         }
-      ),
-      BroodIDFledged = .data$BroodIDLaid
+      )
     ) %>%
 
     ## Keep distinct records by PopID and InvdID
@@ -577,10 +582,15 @@ create_individual_SIL <- function(Capture_data_temp){
     dplyr::arrange(.data$CaptureID) %>%
     dplyr::ungroup() %>%
 
+    dplyr::group_by(.data$IndvID) %>%
+    dplyr::mutate(BroodIDLaid = ifelse(.data$BroodID %in% experiments$BroodID,
+                                               experiments$Brood_origin[experiments$BroodID == .data$BroodID],
+                                               .data$BroodIDFledged)) %>%
+
     ## Reorder columns
     dplyr::select(dplyr::any_of(names(data_templates[["v1.1.0"]]$Individual_data)), tidyselect::everything())
 
-   return(Individual_data_temp)
+  return(Individual_data_temp)
 
 }
 
